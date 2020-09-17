@@ -70,7 +70,7 @@ name = 'NV3'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LP'
 # Motor structural mass [kg]:
-m_motor = 0.78
+m_motor = 14.5
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -86,15 +86,15 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 78e-3
+D_grain = 120e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([38, 38, 38, 38, 38, 38]) * 1e-3
+D_core = np.array([51, 51, 51, 51, 51, 51, 51]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([140, 140, 140, 140, 140, 140]) * 1e-3
+L_grain = np.array([203, 203, 203, 203, 203, 203, 203]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'kner'
+propellant = 'knsb'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
@@ -106,7 +106,7 @@ P_igniter = 1e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 18.5e-3
+D_throat = 37e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -117,11 +117,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 82.55e-3
+D_in = 139.7e-3
 # Chamber outside diameter [m]
-D_out = 88.9e-3
+D_out = 152.4e-3
 # Grain spacing [m]
-grain_spacing = 10e-3
+grain_spacing = 15e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
@@ -361,9 +361,7 @@ else:
 print(' Mean Kn: %.4f' % np.mean(Kn))
 print(' Initial to final Kn ratio: %.4f' % (A_burn[0] / A_burn[-1]))
 print(f' Volumetric efficiency: {(V_prop_CP[0] * 100 / V_empty):.2f} %')
-
-for i in range(N):
-    print(' Grain #%i length for neutral profile: %.4f' % ((i + 1), optimal_grain_length[i]))
+print(f' Grain length for neutral profile vector: {optimal_grain_length}')
 
 print(' Burn profile: ' + burn_profile)
 print(f' Initial port-to-throat (grain #{N:.0f}): {initial_port_to_throat:.2f}')
