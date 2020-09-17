@@ -94,7 +94,7 @@ L_grain = np.array([203, 203, 203, 203, 203, 203, 203]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'knsb'
+propellant = 'kner'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
@@ -106,7 +106,7 @@ P_igniter = 1e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 37e-3
+D_throat = 28.5e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
