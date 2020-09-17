@@ -84,7 +84,7 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count
-N = 6
+N = 7
 # Grain external diameter [m]
 D_grain = 78e-3
 # Grains 1 to 'N' core diameter [m]
