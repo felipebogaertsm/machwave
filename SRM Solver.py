@@ -70,7 +70,7 @@ name = 'NV3'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LP'
 # Motor structural mass [kg]:
-m_motor = 14.5
+m_motor = 4.5
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
