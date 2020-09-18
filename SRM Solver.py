@@ -84,13 +84,13 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count
-N = 6
+N = 8
 # Grain external diameter [m]
-D_grain = 78e-3
+D_grain = 103e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([42, 42, 42, 42, 42, 42]) * 1e-3
+D_core = np.array([50, 50, 50, 50, 50, 50, 50, 50]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([138, 138, 138, 138, 138, 138]) * 1e-3
+L_grain = np.array([182, 182, 182, 182, 182, 182, 182, 182]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
@@ -106,7 +106,7 @@ P_igniter = 2e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 24e-3
+D_throat = 35e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -117,11 +117,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 82.55e-3
+D_in = 114.3e-3
 # Chamber outside diameter [m]
-D_out = 88.9e-3
+D_out = 127e-3
 # Grain spacing [m]
-grain_spacing = 5e-3
+grain_spacing = 15e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
@@ -366,7 +366,8 @@ print(f' Grain length for neutral profile vector: {optimal_grain_length}')
 print(' Burn profile: ' + burn_profile)
 print(f' Initial port-to-throat (grain #{N:.0f}): {initial_port_to_throat:.2f}')
 print(' Motor L/D ratio: %.2f' % (np.sum(L_grain) / D_grain))
-print(' Max initial mass flux: %.4f kg/s-m-m' % (np.max(grain_mass_flux)))
+print(f' Max initial mass flux: {np.max(grain_mass_flux):.4f} kg/s-m-m or '
+      f'{np.max(grain_mass_flux) * 1.42233e-3:.4f} lb/s-in-in')
 
 print('\nCHAMBER PRESSURE')
 print(f' Maximum, average chamber pressure: {(np.max(P0) * 1e-6):.4f}, {(np.mean(P0) * 1e-6):.4} MPa')
