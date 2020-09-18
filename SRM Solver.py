@@ -142,11 +142,11 @@ max_number_of_screws = 30
 
 # The Propellant name input above triggers the function inside 'Propellant.py' to return the required
 # data.
-ce, pp, kCh, kEx, T0ideal, MCh, MEx, Isp_frozen, Isp_shifting, qsiCh, qsiEx = prop_data(propellant)
+ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 # Gas constant per molecular weight calculations
-RCh, REx = scipy.constants.R / MCh, scipy.constants.R / MEx
+R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]
-T0 = ce * T0ideal
+T0 = ce * T0_ideal
 
 # Nozzle throat area [m-m]
 A_throat = circle_area(D_throat)
@@ -216,7 +216,7 @@ optimal_grain_length = grain.optimalLength()
 V0, V_empty = chamber_volume(L_cc, D_in, V_prop)
 
 # Critical pressure (isentropic supersonic flow):
-critical_pressure_ratio = (2 / (kCh + 1)) ** (kCh / (kCh - 1))
+critical_pressure_ratio = (2 / (k_ch + 1)) ** (k_ch / (k_ch - 1))
 
 # Initial conditions:
 P0, x, t, time_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
@@ -268,10 +268,10 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
     # The values above are then used to solve the differential equation by the Range-Kutta 4th order
     # method.
-    k1 = dP0dt(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, kCh, RCh, T0, r[i])
-    k2 = dP0dt(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, kCh, RCh, T0, r[i])
-    k3 = dP0dt(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, kCh, RCh, T0, r[i])
-    k4 = dP0dt(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, kCh, RCh, T0, r[i])
+    k1 = dP0dt(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k2 = dP0dt(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k3 = dP0dt(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k4 = dP0dt(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
@@ -307,7 +307,7 @@ P0_psi_avg = np.mean(P0_psi)
 # ______________________________________________________________
 # EXPANSION RATIO AND EXIT PRESSURE
 
-E = expansion_ratio(P_external, P0, kEx, index, critical_pressure_ratio)
+E = expansion_ratio(P_external, P0, k_ex, index, critical_pressure_ratio)
 E_avg = np.mean(E)
 
 # ______________________________________________________________
@@ -316,15 +316,15 @@ E_avg = np.mean(E)
 n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
 
 n_kin, n_tp, n_bl = operational_correction_factors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
-                                                   D_throat, qsiCh, index, critical_pressure_ratio, C1,
-                                                   C2, V0, MCh, t)
+                                                   D_throat, qsi_ch, index, critical_pressure_ratio, C1,
+                                                   C2, V0, M_ch, t)
 
 n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
 
 # ______________________________________________________________
 # THRUST AND IMPULSE
 
-Cf = thrust_coefficient(P0, P_external, kEx, n_cf)
+Cf = thrust_coefficient(P0, P_external, k_ex, n_cf)
 T = Cf * A_throat * P0
 
 T_avg = np.mean(T)
