@@ -1,3 +1,6 @@
+# Burn rate data was gathered from Nakka and Magnus Gudnason paper 's072205'.
+# Propellant data was gathered from ProPEP3.
+#
 # ce: Combustion, two phase, heat loss, friction inefficiency factor
 # pp: Propellant density [kg/m^3]
 # kCh: Isentropic exponent (chamber)
@@ -77,3 +80,52 @@ def prop_data(prop: str):
                                                                                       knsb.Isp_shifting, \
                                                                                       knsb.qsiCh, knsb.qsiEx
     return ce, pp, kCh, kEx, T0ideal, MCh, MEx, Isp_frozen, Isp_shifting, qsiCh, qsiEx
+
+
+def burn_rate_coefs(prop: str, P0: float):
+    """ Sets the burn rate coefficients 'a' and 'n' according to the instantaneous chamber pressure """
+    if prop.lower() == 'kndx':
+        if P0 * 1e-6 <= 0.779:
+            a, n = 8.875, 0.619
+        elif 0.779 < P0 * 1e-6 <= 2.572:
+            a, n = 7.553, -0.009
+        elif 2.572 < P0 * 1e-6 <= 5.930:
+            a, n = 3.841, 0.688
+        elif 5.930 < P0 * 1e-6 <= 8.502:
+            a, n = 17.2, -0.148
+        elif 8.502 < P0 * 1e-6 <= 11.20:
+            a, n = 4.775, 0.442
+        else:
+            print('\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n')
+            a, n = -1, -1
+    elif prop.lower() == 'knsb-nakka':
+        if P0 * 1e-6 <= 0.807:
+            a, n = 10.708, 0.625
+        elif 0.807 < P0 * 1e-6 <= 1.503:
+            a, n = 8.763, -0.314
+        elif 1.503 < P0 * 1e-6 <= 3.792:
+            a, n = 7.852, -0.013
+        elif 3.792 < P0 * 1e-6 <= 7.033:
+            a, n = 3.907, 0.535
+        elif 7.033 < P0 * 1e-6 <= 10.67:
+            a, n = 9.653, 0.064
+        else:
+            print('\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n')
+            a, n = -1, -1
+    elif prop.lower() == 'knsb':
+        a, n = 5.132, 0.222
+    elif prop.lower() == 'knsu':
+        a, n = 8.260, 0.319
+    elif prop.lower() == 'kndxio':
+        a, n = 9.25, 0.342
+    elif prop.lower() == 'kndxch':
+        a, n = 11.784, 0.297
+    elif prop.lower() == 'rnx57':
+        a, n = 2.397, 0.446
+    elif prop.lower() == 'kner':
+        a, n = 2.903, 0.395
+    elif prop.lower() == 'knmn':
+        a, n = 5.126, 0.224
+    elif prop.lower() == 'custom':
+        a, n = input('Type value of "a": '), input('Type value of "n": ')
+    return a, n
