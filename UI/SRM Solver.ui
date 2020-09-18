@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1300</width>
-    <height>850</height>
+    <height>825</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>SRM Solver</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="tabWidget">
@@ -42,10 +42,10 @@
         <x>10</x>
         <y>10</y>
         <width>411</width>
-        <height>325</height>
+        <height>291</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2">
+      <layout class="QGridLayout" name="gridMainInputs">
        <item row="8" column="0">
         <widget class="QLabel" name="labelDin_3">
          <property name="text">
@@ -107,7 +107,7 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QComboBox" name="comboBox_2"/>
+        <widget class="QComboBox" name="comboBoxPropellant"/>
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="labelDin">
@@ -218,13 +218,13 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="grainPlots" native="true">
+     <widget class="QWidget" name="grainRadialPlots" native="true">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>350</y>
+        <y>310</y>
         <width>921</width>
-        <height>391</height>
+        <height>421</height>
        </rect>
       </property>
      </widget>
@@ -232,19 +232,19 @@
       <property name="geometry">
        <rect>
         <x>430</x>
-        <y>270</y>
+        <y>180</y>
         <width>501</width>
-        <height>61</height>
+        <height>51</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_3">
+      <layout class="QGridLayout" name="gridGrainDims">
        <item row="1" column="2">
-        <widget class="QComboBox" name="comboBox"/>
+        <widget class="QComboBox" name="comboBoxGrainNumber"/>
        </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="labelL_grain">
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelGrain1">
          <property name="text">
-          <string>Segment Length [mm]</string>
+          <string>Grain #</string>
          </property>
         </widget>
        </item>
@@ -252,6 +252,13 @@
         <widget class="QLabel" name="labelD_core">
          <property name="text">
           <string>Core Diameter [mm]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="labelL_grain">
+         <property name="text">
+          <string>Segment Length [mm]</string>
          </property>
         </widget>
        </item>
@@ -281,27 +288,20 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="labelGrain1">
-         <property name="text">
-          <string>Grain #</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="gridLayoutWidget_4">
       <property name="geometry">
        <rect>
         <x>430</x>
-        <y>230</y>
+        <y>140</y>
         <width>501</width>
         <height>31</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_4">
+      <layout class="QGridLayout" name="gridBurnProfile">
        <item row="0" column="0">
-        <widget class="QCheckBox" name="checkBox">
+        <widget class="QCheckBox" name="checkBoxNeutralBP">
          <property name="text">
           <string>Neutral Burn Profile</string>
          </property>
@@ -315,19 +315,19 @@
         <x>430</x>
         <y>10</y>
         <width>501</width>
-        <height>131</height>
+        <height>121</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="gridSimInputs">
        <item row="0" column="0">
-        <widget class="QLabel" name="labelMotorName_2">
+        <widget class="QLabel" name="labelWeb_res">
          <property name="text">
           <string>Web Regression Resolution</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="lineMotorName_2">
+        <widget class="QLineEdit" name="lineWeb_res">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -340,28 +340,28 @@
         </widget>
        </item>
        <item row="3" column="0">
-        <widget class="QLabel" name="labelMotorName_6">
+        <widget class="QLabel" name="labelExternalP">
          <property name="text">
           <string>External Pressure [Pa]</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="labelMotorName_3">
+        <widget class="QLabel" name="labelTimeStep">
          <property name="text">
           <string>Time Step [s]</string>
          </property>
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="labelMotorName_5">
+        <widget class="QLabel" name="labelExternalT">
          <property name="text">
           <string>External Temperature [K]</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="lineMotorName_3">
+        <widget class="QLineEdit" name="lineTimeStep">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -374,7 +374,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="lineMotorName_4">
+        <widget class="QLineEdit" name="lineExternalT">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -387,7 +387,7 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QLineEdit" name="lineMotorName_5">
+        <widget class="QLineEdit" name="lineExternalP">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -401,11 +401,11 @@
        </item>
       </layout>
      </widget>
-     <widget class="QPushButton" name="runButton">
+     <widget class="QPushButton" name="buttonRun">
       <property name="geometry">
        <rect>
-        <x>1160</x>
-        <y>720</y>
+        <x>1140</x>
+        <y>700</y>
         <width>113</width>
         <height>32</height>
        </rect>
@@ -414,21 +414,242 @@
        <string>Run</string>
       </property>
      </widget>
-     <widget class="QWidget" name="widget" native="true">
+     <widget class="QWidget" name="grainAxialPlots" native="true">
       <property name="geometry">
        <rect>
         <x>940</x>
         <y>10</y>
         <width>311</width>
-        <height>701</height>
+        <height>681</height>
        </rect>
       </property>
+     </widget>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="geometry">
+       <rect>
+        <x>940</x>
+        <y>710</y>
+        <width>191</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+     <widget class="QWidget" name="gridLayoutWidget_6">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>240</y>
+        <width>501</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridGrainInfo">
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelVolEff">
+         <property name="text">
+          <string>Volumetric Efficiency [%]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelMeanKn">
+         <property name="text">
+          <string>Mean Kn</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="labeVolEffOut">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelMeanKnOut">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
     <widget class="QWidget" name="outputTab">
      <attribute name="title">
       <string>Tab 2</string>
      </attribute>
+     <widget class="QWidget" name="gridLayoutWidget_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1251</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridOutputs">
+       <item row="7" column="2">
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Thrust Time [s]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Mean Kn</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Average Pressure [MPa]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Total Impulse [N-s]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2">
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Burnout Time [s]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_21">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Motor L/D ratio</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Maximum Thrust [N]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>Average Thrust [N]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Propellant Initial Mass [kg]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Volumetric Efficiency [%]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Initial to Final Kn Ratio</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Initial Port to Throat</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Specific Impulse [s]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Maximum Pressure [MPa]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Burn Profile</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Initial Mass Flux [kg/s-m-m]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_22">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="gridLayoutWidget_7">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>240</y>
+        <width>1251</width>
+        <height>491</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridOutPlots">
+       <item row="0" column="0">
+        <widget class="QWidget" name="widgetKn" native="true"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QWidget" name="widgetPropMass" native="true"/>
+       </item>
+       <item row="0" column="2">
+        <widget class="QWidget" name="widgetP0" native="true"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QWidget" name="widgetMassFlux" native="true"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QWidget" name="widgetT" native="true"/>
+       </item>
+       <item row="1" column="2">
+        <widget class="QWidget" name="widgetP0psi" native="true"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </widget>
   </widget>
@@ -448,7 +669,14 @@
     <addaction name="actionExport_to_eng"/>
     <addaction name="actionExport_to_csv"/>
    </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionVersion_1_0"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave">
@@ -464,6 +692,11 @@
   <action name="actionExport_to_csv">
    <property name="text">
     <string>Export to .csv</string>
+   </property>
+  </action>
+  <action name="actionVersion_1_0">
+   <property name="text">
+    <string>Version 1.0</string>
    </property>
   </action>
  </widget>
