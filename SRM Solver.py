@@ -102,7 +102,7 @@ T_external = 297
 # External pressure [Pa]
 P_external = 0.101325e6
 # Igniter pressure [Pa]
-P_igniter = 1e6
+P_igniter = 2e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
@@ -268,10 +268,10 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
     # The values above are then used to solve the differential equation by the Range-Kutta 4th order
     # method.
-    k1 = dP0dt(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k2 = dP0dt(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k3 = dP0dt(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k4 = dP0dt(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
