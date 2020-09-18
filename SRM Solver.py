@@ -84,13 +84,13 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count
-N = 8
+N = 7
 # Grain external diameter [m]
-D_grain = 103e-3
+D_grain = 110e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([50, 50, 50, 50, 50, 50, 50, 50]) * 1e-3
+D_core = np.array([50, 50, 50, 50, 50, 50, 50]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([182, 182, 182, 182, 182, 182, 182, 182]) * 1e-3
+L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
@@ -117,9 +117,9 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 114.3e-3
+D_in = 127e-3
 # Chamber outside diameter [m]
-D_out = 127e-3
+D_out = 139.7e-3
 # Grain spacing [m]
 grain_spacing = 15e-3
 # Chamber yield strength [Pa]
