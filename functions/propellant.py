@@ -50,7 +50,7 @@ def prop_data(prop: str):
                                                                                         kndx.M_ex, kndx.Isp_frozen, \
                                                                                         kndx.Isp_shifting, \
                                                                                         kndx.qsi_ch, kndx.qsi_ex
-    elif prop.lower() == 'knsb':
+    elif prop.lower() == 'knsb' or prop.lower() == 'knsb-nakka':
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = knsb.ce, knsb.pp, \
                                                                                         knsb.k_ch, knsb.k_ex, \
                                                                                         knsb.T0_ideal, knsb.M_ch, \

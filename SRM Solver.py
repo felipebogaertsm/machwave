@@ -70,7 +70,7 @@ name = 'NV3'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LP'
 # Motor structural mass [kg]:
-m_motor = 4.5
+m_motor = 20
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -84,17 +84,17 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count
-N = 7
+N = 6
 # Grain external diameter [m]
-D_grain = 120e-3
+D_grain = 78e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([51, 51, 51, 51, 51, 51, 51]) * 1e-3
+D_core = np.array([42, 42, 42, 42, 42, 42]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([203, 203, 203, 203, 203, 203, 203]) * 1e-3
+L_grain = np.array([138, 138, 138, 138, 138, 138]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'kner'
+propellant = 'knsb-nakka'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
@@ -106,7 +106,7 @@ P_igniter = 1e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 28.5e-3
+D_throat = 24e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -117,11 +117,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 139.7e-3
+D_in = 82.55e-3
 # Chamber outside diameter [m]
-D_out = 152.4e-3
+D_out = 88.9e-3
 # Grain spacing [m]
-grain_spacing = 15e-3
+grain_spacing = 5e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
