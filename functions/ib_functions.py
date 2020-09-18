@@ -82,8 +82,8 @@ class BATES:
         return grain_mass_flux
 
 
-def dP0dt(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: float,
-          k: float, R: float, T0: float, r: float):
+def CP_Seidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: float,
+              k: float, R: float, T0: float, r: float):
     """ Calculates the chamber pressure by solving Hans Seidel's differential equation """
     P_critical_ratio = (2 / (k + 1)) ** (k / (k - 1))
     if Pe / P0 <= P_critical_ratio:
