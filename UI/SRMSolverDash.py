@@ -163,20 +163,4 @@ optimal_grain_length = grain.optimalLength()
 # ________________________________________________________________________________
 # APP LAYOUT
 
-app.layout = html.Div([
 
-    html.H1("SRM Solver powered by Dash", style={'text-align': 'center'})
-
-    dcc.Dropdown(id="propellant",
-                 options=[
-                     {"label": "KNSB", "value": knsb},
-                     {"label": "KNER", "value": kner}],
-                 style={'width': "40%"}
-                 )
-
-    html.Div(id='output_container', children=[])
-    html.Br(),
-
-    dcc.Graph(id='grain_data', figure={})
-
-])
