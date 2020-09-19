@@ -1,3 +1,4 @@
+# SRM Solver
 # Written by: Felipe Bogaerts de Mattos
 # Created on August, 2020
 # This program simulates the Internal Ballistics of a Solid Rocket Motor using a BATES grain geometry.
