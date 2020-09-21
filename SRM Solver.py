@@ -58,6 +58,7 @@ import time
 from functions.ib_functions import *
 from functions.propellant import *
 from functions.structural_functions import *
+from functions.plot_functions import *
 
 # ______________________________________________________________
 # TIME FUNCTION START
@@ -80,7 +81,7 @@ web_res = 1000
 # .eng file resolution
 eng_res = 25
 # Time step [s]
-dt = 0.001
+dt = 0.01
 # Minimal safety factor
 sf = 4
 
@@ -437,3 +438,4 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 plot_performance(T, P0, t)
 plot_main(t, T, P0, Kn, m_prop)
 plot_mass_flux(t, grain_mass_flux)
+interactive_plot(t, T, P0, Kn, m_prop)
