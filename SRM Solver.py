@@ -400,11 +400,14 @@ print('\n')
 
 # ______________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
-# This program exports the motor data into two separate files.
+# This program exports the motor data into three separate files.
 # The .eng file is compatible with most rocket ballistic simulators such as openRocket and
-# RASAero. The .csv file contains thrust, time and Propellant mass data.
+# RASAero.
+# The output .csv file contains thrust, time and propellant mass, Kn, chamber pressure,
+# web thickness and burn rate data.
+# The input .txt file contains all info used in the input section.
 
-# Forming a new time vector that has exactly 32 points (independent of time step input)
+# Forming a new time vector that has exactly 'eng_res' points (independent of time step input)
 t_out = np.linspace(0, t[-1] + dt, eng_res)
 # Interpolating old thrust-time data into new time vector
 T_out = np.interp(t_out, t, T, left=0, right=0)
@@ -423,9 +426,26 @@ for i in range(eng_res):
 saveFile.write(';')
 saveFile.close()
 
-# Writing to CSV file:
-thrustTimeCSV = pd.DataFrame({'Time': t_out, 'Thrust': T_out, 'Prop_mass': m_prop_out})
-thrustTimeCSV.to_csv('output/motordata.csv', decimal='.')
+# Writing to output CSV file:
+motor_data = {'Time': t, 'Thrust': T, 'Prop. Mass': m_prop, 'Chamber Pressure': P0,
+              'Klemmung': Kn, 'Web Thickness': x}
+motor_data_df = pd.DataFrame(motor_data)
+motor_data_df.to_csv('output/motor_data.csv', decimal='.')
+
+# Writing the input CSV file:
+motor_input = {'Name': name, 'Manufacturer': manufacturer, 'Motor Structural Mass': m_motor,
+               'Grain Count': N, 'Grain Diam.': D_grain, 'Core Diam.': D_core,
+               'Grain Length': L_grain, 'Propellant': propellant.upper(), 'Throat Diam.': D_throat,
+               'Chamber Inside Diam.': D_in, 'Chamber Outside Diam.': D_out, 'Grain Spacing': grain_spacing,
+               'Screw Diam.': D_screw, 'Clearance Diam.': D_clearance, 'Tensile Screw': U_screw,
+               'Max. Number of Screws': max_number_of_screws, 'C1': C1, 'C2': C2,
+               'Chamber Yield': Y_cc, 'Bulkhead Yield': Y_bulkhead, 'Nozzle Yield': Y_nozzle,
+               'Nozzle Convergent Angle': Conv_angle, 'Nozzle Divergent Angle': Div_angle,
+               'External Temperature': T_external, 'External Pressure': P_external,
+               'Igniter Pressure': P_igniter, 'Web Regression Res.': web_res, 'ENG File Res.': eng_res,
+               'Time Step': dt, 'Minimal Safety Factor': sf}
+motor_input_df = pd.DataFrame(motor_input)
+motor_input_df.to_csv('output/motor_input.csv', decimal='.')
 
 # ______________________________________________________________
 # TIME FUNCTION END
