@@ -81,7 +81,7 @@ web_res = 1000
 # .eng file resolution
 eng_res = 25
 # Time step [s]
-dt = 0.01
+dt = 0.001
 # Minimal safety factor
 sf = 4
 
