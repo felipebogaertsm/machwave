@@ -12,6 +12,7 @@
 # displayed in the Command Window. Inside the output folder created, a .eng and a .csv file will
 # also be available with the important data for a rocket ballistic simulation.
 # Make sure all the modules are properly installed!
+# Note that the grain #1 is the grain closest to the bulkhead and farthest from the nozzle.
 #
 # The following assertions were taken into consideration:
 # - Propellant consisting of 2D BATES grain segments
@@ -67,11 +68,11 @@ start = time.time()
 # INPUTS
 
 # Motor name (NO SPACES):
-name = 'NV3'
+name = 'SRM3K'
 # Motor manufacturer (NO SPACES):
-manufacturer = 'LP'
+manufacturer = 'SR'
 # Motor structural mass [kg]:
-m_motor = 20
+m_motor = 4.2
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -79,7 +80,7 @@ web_res = 1000
 # .eng file resolution
 eng_res = 25
 # Time step [s]
-dt = 1e-3
+dt = 0.001
 # Minimal safety factor
 sf = 4
 
@@ -87,11 +88,11 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 110e-3
+D_grain = 75e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([40, 40, 40, 40, 40, 40, 40]) * 1e-3
+D_core = np.array([32, 32, 32, 32, 32, 32, 32]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([185, 185, 185, 185, 185, 185, 185]) * 1e-3
+L_grain = np.array([130, 130, 130, 130, 130, 130, 130]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
@@ -103,11 +104,11 @@ T_external = 297
 # External pressure [Pa]
 P_external = 0.101325e6
 # Igniter pressure [Pa]
-P_igniter = 2e6
+P_igniter = 1.5e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 26e-3
+D_throat = 18.5e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -118,11 +119,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 127e-3
+D_in = 82.55e-3
 # Chamber outside diameter [m]
-D_out = 139.7e-3
+D_out = 88.9e-3
 # Grain spacing [m]
-grain_spacing = 15e-3
+grain_spacing = 10e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
