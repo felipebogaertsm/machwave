@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 
 
-def interactive_plot(t, T, P0, Kn, m_prop):
+def interactive_plot(t, F, P0, Kn, m_prop):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',
@@ -19,16 +19,16 @@ def interactive_plot(t, T, P0, Kn, m_prop):
     pyo.plot(fig, filename='scatter.html')
 
 
-def plot_performance(T, P0, t):
+def plot_performance(F, P0, t):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder """
     fig1, ax1 = plt.subplots()
 
     ax1.set_xlim(0, t[-1])
-    ax1.set_ylim(0, 1.05 * np.max(T))
+    ax1.set_ylim(0, 1.05 * np.max(F))
     ax1.set_ylabel('Thrust [N]', color='#6a006a')
     ax1.set_xlabel('Time [s]')
     ax1.grid(color='#dc96ea', linestyle='-', linewidth='.4')
-    ax1.plot(t, T, color='#6a006a', linewidth='1.5')
+    ax1.plot(t, F, color='#6a006a', linewidth='1.5')
     ax1.tick_params(axis='y', labelcolor='k')
 
     ax2 = ax1.twinx()
@@ -43,7 +43,7 @@ def plot_performance(T, P0, t):
     fig1.savefig('output/pressure_thrust.png', dpi=300)
 
 
-def plot_main(t, T, P0, Kn, m_prop):
+def plot_main(t, F, P0, Kn, m_prop):
     fig3 = plt.figure(3)
     fig3.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
@@ -51,10 +51,10 @@ def plot_main(t, T, P0, Kn, m_prop):
     ax1 = plt.subplot(gs1[0, 0])
     ax1.set_ylabel('Thrust [N]')
     ax1.set_xlabel('Time [s]')
-    ax1.set_ylim(0, np.max(T) * 1.05)
+    ax1.set_ylim(0, np.max(F) * 1.05)
     ax1.set_xlim(0, t[-1])
     ax1.grid(linestyle='-', linewidth='.4')
-    ax1.plot(t, T, color='#6a006a', linewidth='1.5')
+    ax1.plot(t, F, color='#6a006a', linewidth='1.5')
 
     ax2 = plt.subplot(gs1[0, 1])
     ax2.set_ylabel('Pressure [MPa]')
