@@ -88,11 +88,11 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 75e-3
+D_grain = 103e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([32, 32, 32, 32, 32, 32, 32]) * 1e-3
+D_core = np.array([42, 42, 42, 42, 42, 42, 42]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([130, 130, 130, 130, 130, 130, 130]) * 1e-3
+L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
@@ -108,7 +108,7 @@ P_igniter = 1.5e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 18.5e-3
+D_throat = 23e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -119,11 +119,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 82.55e-3
+D_in = 114.3e-3
 # Chamber outside diameter [m]
-D_out = 88.9e-3
+D_out = 127e-3
 # Grain spacing [m]
-grain_spacing = 10e-3
+grain_spacing = 15e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
