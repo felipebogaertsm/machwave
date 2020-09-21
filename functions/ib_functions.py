@@ -104,18 +104,18 @@ def chamber_volume(L_cc: float, D_in: float, V_prop: np.array):
     return V0, V_empty
 
 
-def thrust_coefficient(P0, P_external, kEx, n_cf):
+def thrust_coefficient(P0, P_external, k_ex, n_cf):
     """ Returns value for thrust coefficient based on the chamber pressure and correction factor """
     Pr = P_external / P0
     Cf_ideal = np.sqrt(
-        ((2 * kEx ** 2) / (kEx - 1)) * ((2 / (kEx + 1)) **
-                                        ((kEx + 1) / (kEx - 1))) * (1 - Pr ** ((kEx - 1) / kEx)))
+        ((2 * k_ex ** 2) / (k_ex - 1)) * ((2 / (k_ex + 1)) **
+                                        ((k_ex + 1) / (k_ex - 1))) * (1 - Pr ** ((k_ex - 1) / k_ex)))
     Cf = Cf_ideal * n_cf
     return Cf
 
 
-def impulse(T_avg, t, m_prop):
-    I_total = T_avg * t[-1]
+def impulse(F_avg, t, m_prop):
+    I_total = F_avg * t[-1]
     I_sp = I_total / (m_prop[0] * 9.81)
     return I_total, I_sp
 
