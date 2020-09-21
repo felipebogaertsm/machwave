@@ -30,7 +30,7 @@
 #
 # List of fully supported propellants:
 # - KNDX (Nakka burn rate data)
-# - KNSB (Nakka burn rate data)
+# - KNSB-NAKKA (Nakka burn rate data) and KNSB (Magnus Gudnason burn rate data)
 # - KNSU (Nakka burn rate data)
 # - KNER (Nakka burn rate data)
 #
