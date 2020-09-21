@@ -6,7 +6,11 @@ import matplotlib.gridspec as gs
 
 
 def interactive_plot(t, T, P0, Kn, m_prop):
-    data = [go.Scatter(x=t, y=P0*1e-6)]
+    data = [go.Scatter(x=t,
+                       y=P0 * 1e-6,
+                       mode='lines',
+                       name='lines'
+                       )]
     layout = go.Layout(title='Pressure-Time Curve',
                        xaxis=dict(title='Time [s]'),
                        yaxis=dict(title='Pressure [MPa]'),
@@ -37,6 +41,7 @@ def plot_performance(T, P0, t):
     fig1.tight_layout()
     fig1.set_size_inches(10, 6, forward=True)
     fig1.savefig('output/pressure_thrust.png', dpi=300)
+
 
 def plot_main(t, T, P0, Kn, m_prop):
     fig3 = plt.figure(3)
@@ -79,6 +84,7 @@ def plot_main(t, T, P0, Kn, m_prop):
 
     fig3.set_size_inches(12, 8, forward=True)
     fig3.savefig('output/motor_plots.png', dpi=300)
+
 
 def plot_mass_flux(t, grain_mass_flux):
     """ Plots and saves figure of the mass flux for all the grain segments """

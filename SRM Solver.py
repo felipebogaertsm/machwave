@@ -400,7 +400,7 @@ print('\n')
 
 # ______________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
-# This program exports the motor data into three separate files.
+# This program exports the motor data into two separate files.
 # The .eng file is compatible with most rocket ballistic simulators such as openRocket and
 # RASAero. The .csv file contains thrust, time and Propellant mass data.
 
