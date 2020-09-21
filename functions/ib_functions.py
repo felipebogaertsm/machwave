@@ -202,94 +202,65 @@ def plot_performance(T, P0, t):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder """
     fig1, ax1 = plt.subplots()
 
-    plt.title('Performance curves')
     ax1.set_xlim(0, t[-1])
-    ax1.set_ylim(0, 1.1 * np.max(T))
+    ax1.set_ylim(0, 1.05 * np.max(T))
     ax1.set_ylabel('Thrust [N]', color='#6a006a')
     ax1.set_xlabel('Time [s]')
-    ax1.grid(color='#dc96ea', linestyle='-.', linewidth='.4')
+    ax1.grid(color='#dc96ea', linestyle='-', linewidth='.4')
     ax1.plot(t, T, color='#6a006a', linewidth='1.5')
     ax1.tick_params(axis='y', labelcolor='k')
 
     ax2 = ax1.twinx()
-    ax2.set_ylim(0, 1.2 * np.max(P0) * 1e-6)
-    ax2.set_ylabel('Chamber pressure [MPa]', color='#008141')
-    ax2.grid(color='#a4ea96', linestyle='-.', linewidth='.4')
+    ax2.set_ylim(0, 1.1 * np.max(P0) * 1e-6)
+    ax2.set_ylabel('Chamber Pressure [MPa]', color='#008141')
+    ax2.grid(color='#a4ea96', linestyle='-', linewidth='.4')
     ax2.plot(t, P0 * 1e-6, color='#008141', linewidth='1.5')
     ax2.tick_params(axis='y', labelcolor='k')
 
     fig1.tight_layout()
-    fig1.set_size_inches(12, 8, forward=True)
-    fig1.savefig('output/Pressure-Thrust.png', dpi=300)
-
-
-def plot_data(t, time_burnout, AbCP, Kn, VpCP, pp, T):
-    """ Plots burn area, Klemmung, Propellant mass and thrust """
-    fig2, axs = plt.subplots(2, 2)
-    fig2.suptitle('Motor data')
-
-    axs[0, 0].grid(color='k', linestyle='-.', linewidth='.4')
-    axs[0, 0].set_xlim(0, time_burnout)
-    axs[0, 0].plot(t, AbCP, color='r')
-    axs[0, 0].set_title('Burn area')
-
-    axs[0, 1].grid(color='k', linestyle='-.', linewidth='.4')
-    axs[0, 1].set_xlim(0, time_burnout)
-    axs[0, 1].plot(t, Kn, color='b')
-    axs[0, 1].set_title('Klemmung')
-
-    axs[1, 0].grid(color='k', linestyle='-.', linewidth='.4')
-    axs[1, 0].set_xlim(0, time_burnout)
-    axs[1, 0].plot(t, VpCP * pp, color='m')
-    axs[1, 0].set_title('Grain mass')
-
-    axs[1, 1].grid(color='k', linestyle='-.', linewidth='.4')
-    axs[1, 1].set_xlim(0, t[-1])
-    axs[1, 1].plot(t, T, color='k')
-    axs[1, 1].set_title('Thrust')
-
-    fig2.set_size_inches(12, 8, forward=True)
+    fig1.set_size_inches(10, 6, forward=True)
+    fig1.savefig('output/pressure_thrust.png', dpi=300)
 
     plt.show()
 
 
 def plot_main(t, T, P0, Kn, m_prop):
     fig3 = plt.figure(3)
-    fig3.suptitle('Motor data')
+    fig3.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
 
     ax1 = plt.subplot(gs1[0, 0])
     ax1.set_ylabel('Thrust [N]')
     ax1.set_xlabel('Time [s]')
-    ax1.set_ylim(0, np.max(T) * 1.1)
+    ax1.set_ylim(0, np.max(T) * 1.05)
     ax1.set_xlim(0, t[-1])
-    ax1.grid(color='k', linestyle='-.', linewidth='.4')
+    ax1.grid(linestyle='-', linewidth='.4')
     ax1.plot(t, T, color='#6a006a', linewidth='1.5')
 
     ax2 = plt.subplot(gs1[0, 1])
     ax2.set_ylabel('Pressure [MPa]')
     ax2.yaxis.set_label_position('right')
     ax2.set_xlabel('Time [s]')
-    ax2.set_ylim(0, np.max(P0) * 1e-6 * 1.1)
+    ax2.set_ylim(0, np.max(P0) * 1e-6 * 1.05)
     ax2.set_xlim(0, t[-1])
-    ax2.grid(color='k', linestyle='-.', linewidth='.4')
+    ax2.grid(linestyle='-', linewidth='.4')
     ax2.plot(t, P0 * 1e-6, color='#008141', linewidth='1.5')
 
     ax3 = plt.subplot(gs1[1, 0])
     ax3.set_ylabel('Klemmung')
     ax3.set_xlabel('Time [s]')
-    ax3.set_ylim(0, np.max(Kn) * 1.1)
+    ax3.set_ylim(0, np.max(Kn) * 1.05)
     ax3.set_xlim(0, t[-1])
-    ax3.grid(color='k', linestyle='-.', linewidth='.4')
+    ax3.grid(linestyle='-', linewidth='.4')
     ax3.plot(t, Kn, color='b', linewidth='1.5')
 
     ax4 = plt.subplot(gs1[1, 1])
-    ax4.set_ylabel('Propellant mass [kg]')
+    ax4.set_ylabel('Propellant Mass [kg]')
     ax4.yaxis.set_label_position('right')
     ax4.set_xlabel('Time [s]')
-    ax4.set_ylim(0, np.max(m_prop) * 1.1)
+    ax4.set_ylim(0, np.max(m_prop) * 1.05)
     ax4.set_xlim(0, t[-1])
-    ax4.grid(color='k', linestyle='-.', linewidth='.4')
+    ax4.grid(linestyle='-', linewidth='.4')
     ax4.plot(t, m_prop, color='r', linewidth='1.5')
 
     fig3.set_size_inches(12, 8, forward=True)
@@ -303,9 +274,10 @@ def plot_mass_flux(t, grain_mass_flux):
     N, index = grain_mass_flux.shape
     for i in range(N):
         plt.plot(t, grain_mass_flux[i, :] * 1.42233e-3)
-    plt.title('Mass flux data')
-    plt.ylabel('Mass flux [lb/s-in-in]')
+    plt.ylabel('Mass Flux [lb/s-in-in]')
     plt.xlabel('Time [s]')
-    plt.grid(color='k', linestyle='-.', linewidth='.4')
+    plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)
+    plt.xlim(0, t[-1])
+    plt.grid(linestyle='-', linewidth='.4')
     plt.savefig('output/grain_mass_flux.png', dpi=300)
     plt.show()
