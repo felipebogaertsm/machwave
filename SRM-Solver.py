@@ -73,7 +73,7 @@ name = 'SRM3K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'SR'
 # Motor structural mass [kg]:
-m_motor = 4.2
+m_motor = 17
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -89,15 +89,15 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 103e-3
+D_grain = 110e-3
 # Grains 1 to 'N' core diameter [m]
 D_core = np.array([42, 42, 42, 42, 42, 42, 42]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
+L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'kner'
+propellant = 'KNSB-NAKKA'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
@@ -105,7 +105,7 @@ T_external = 297
 # External pressure [Pa]
 P_external = 0.101325e6
 # Igniter pressure [Pa]
-P_igniter = 1.5e6
+P_igniter = 1e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
@@ -427,8 +427,8 @@ saveFile.write(';')
 saveFile.close()
 
 # Writing to output CSV file:
-motor_data = {'Time': t, 'Thrust': F, 'Prop. Mass': m_prop, 'Chamber Pressure': P0,
-              'Klemmung': Kn, 'Web Thickness': x}
+motor_data = {'Time': t, 'Thrust': F, 'Prop_Mass': m_prop, 'Chamber_Pressure': P0,
+              'Klemmung': Kn, 'Web_Thickness': x}
 motor_data_df = pd.DataFrame(motor_data)
 motor_data_df.to_csv('output/motor_data.csv', decimal='.')
 
