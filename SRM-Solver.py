@@ -97,7 +97,7 @@ L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'KNSB-NAKKA'
+propellant = 'KNER'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
