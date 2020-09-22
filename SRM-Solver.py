@@ -73,7 +73,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17
+m_motor = 13
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -89,11 +89,11 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 110e-3
+D_grain = 103e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([50, 50, 50, 50, 50, 50, 50]) * 1e-3
+D_core = np.array([42, 42, 42, 42, 42, 42, 42]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
+L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
@@ -109,7 +109,7 @@ P_igniter = 1e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 35e-3
+D_throat = 23e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -120,11 +120,11 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 127e-3
+D_in = 114.3e-3
 # Chamber outside diameter [m]
-D_out = 139.7e-3
+D_out = 127e-3
 # Grain spacing [m]
-grain_spacing = 15e-3
+grain_spacing = 10e-3
 # Chamber yield strength [Pa]
 Y_cc = 240e6
 # Bulkhead yield strength [Pa]
