@@ -27,14 +27,13 @@ def plot_performance(F, P0, t):
     ax1.set_ylim(0, 1.05 * np.max(F))
     ax1.set_ylabel('Thrust [N]', color='#6a006a')
     ax1.set_xlabel('Time [s]')
-    ax1.grid(color='#dc96ea', linestyle='-', linewidth='.4')
+    ax1.grid(linestyle='-', linewidth='.4')
     ax1.plot(t, F, color='#6a006a', linewidth='1.5')
     ax1.tick_params(axis='y', labelcolor='k')
 
     ax2 = ax1.twinx()
-    ax2.set_ylim(0, 1.1 * np.max(P0) * 1e-6)
+    ax2.set_ylim(0, 1.15 * np.max(P0) * 1e-6)
     ax2.set_ylabel('Chamber Pressure [MPa]', color='#008141')
-    ax2.grid(color='#a4ea96', linestyle='-', linewidth='.4')
     ax2.plot(t, P0 * 1e-6, color='#008141', linewidth='1.5')
     ax2.tick_params(axis='y', labelcolor='k')
 
