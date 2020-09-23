@@ -37,7 +37,8 @@ class BATES:
     def burnArea(self, x: float, j: int):
         """ Calculates the BATES burn area given the web distance and segment number """
         wr, N, D_grain, D_core, L_grain = self.wr, self.N, self.D_grain, self.D_core, self.L_grain
-        Ab = np.pi * (((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2 + (L_grain[j] - 2 * x) * (D_core[j] + 2 * x))
+        Ab = np.pi * (((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2 + (L_grain[j] - 2 * x) *
+                      (D_core[j] + 2 * x))
         return Ab
 
     def grainVolume(self, x: float, j: int):
