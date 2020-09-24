@@ -89,15 +89,15 @@ sf = 4
 # Grain count
 N = 7
 # Grain external diameter [m]
-D_grain = 103e-3
+D_grain = 110e-3
 # Grains 1 to 'N' core diameter [m]
-D_core = np.array([42, 42, 42, 42, 42, 42, 42]) * 1e-3
+D_core = np.array([50, 50, 50, 50, 50, 50, 50]) * 1e-3
 # Grains 1 to 'N' length [m]
-L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
+L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name
-propellant = 'KNER'
+propellant = 'KNSB-NAKKA'
 
 # EXTERNAL CONDITIONS
 # External temperature [K]
@@ -105,11 +105,11 @@ T_external = 297
 # External pressure [Pa]
 P_external = 0.101325e6
 # Igniter pressure [Pa]
-P_igniter = 1e6
+P_igniter = 1.5e6
 
 # NOZZLE DIMENSIONS
 # Throat diameter [m]
-D_throat = 23e-3
+D_throat = 35e-3
 # Nozzle material yield strength [Pa]
 Y_nozzle = 215e6
 # Nozzle divergent and convergent angle [degrees]
@@ -120,9 +120,9 @@ C2 = 0.00000
 
 # COMBUSTION CHAMBER
 # Chamber inside diameter [m]
-D_in = 114.3e-3
+D_in = 127e-3
 # Chamber outside diameter [m]
-D_out = 127e-3
+D_out = 139.7e-3
 # Grain spacing [m]
 grain_spacing = 10e-3
 # Chamber yield strength [Pa]

@@ -38,7 +38,7 @@ def plot_performance(F, P0, t):
     ax2.tick_params(axis='y', labelcolor='k')
 
     fig1.tight_layout()
-    fig1.set_size_inches(10, 6, forward=True)
+    fig1.set_size_inches(10, 7, forward=True)
     fig1.savefig('output/pressure_thrust.png', dpi=300)
 
 
