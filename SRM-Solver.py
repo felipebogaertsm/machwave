@@ -58,7 +58,7 @@ import time
 from functions.ib_functions import *
 from functions.propellant import *
 from functions.structural_functions import *
-from functions.plot_functions import *
+from functions.functions import *
 
 # ______________________________________________________________
 # TIME FUNCTION START
@@ -339,7 +339,7 @@ I_total, I_sp = impulse(F_avg, t, m_prop)
 # MOTOR STRUCTURE
 
 # Casing thickness assuming thin wall [m]:
-casing_thickness = structure.casingThickness(Y_cc, P0)
+casing_sf = structure.casingSafetyFactor(Y_cc, P0)
 
 # Nozzle thickness assuming thin wall [m]:
 nozzle_conv_t, nozzle_div_t, = structure.nozzleThickness(Y_nozzle, Div_angle, Conv_angle, P0)
@@ -386,7 +386,7 @@ print(f' Nozzle exit diameter: {D_throat * np.sqrt(E_avg) * 1e3:.3f} mm')
 print(f' Average nozzle efficiency: {np.mean(n_cf) * 100:.3f} %')
 
 print('\nPRELIMINARY STRUCTURAL PROJECT')
-print(f' Minimal casing thickness: {casing_thickness * 1e3:.3f} mm')
+print(f' Casing safety factor: {casing_sf:.2f}')
 print(f' Minimal nozzle convergent, divergent thickness: {nozzle_conv_t * 1e3:.3f}, '
       f'{nozzle_div_t * 1e3:.3f} mm')
 print(f' Minimal bulkhead thickness: {bulkhead_t * 1e3:.3f} mm')
@@ -445,7 +445,7 @@ motor_input = {'Name': name, 'Manufacturer': manufacturer, 'Motor Structural Mas
                'Igniter Pressure': P_igniter, 'Web Regression Res.': web_res, 'ENG File Res.': eng_res,
                'Time Step': dt, 'Minimal Safety Factor': sf}
 motor_input_df = pd.DataFrame(motor_input)
-motor_input_df.to_csv('output/motor_input.csv', decimal='.')
+motor_input_df.to_csv(f'output/{name}_input.csv', decimal='.')
 
 # ______________________________________________________________
 # TIME FUNCTION END

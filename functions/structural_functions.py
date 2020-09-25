@@ -17,11 +17,6 @@ class MotorStructure:
         bulkhead_t = self.D_in * np.sqrt((0.75 * np.max(P0)) / (Y_bulkhead / self.sf))
         return bulkhead_t
 
-    def casingThickness(self, Y_cc, P0):
-        """ Returns the thickness for a cylindrical pressure vessel """
-        casing_thickness = np.max(P0) * self.D_in * self.sf / (2 * Y_cc)
-        return casing_thickness
-
     def nozzleThickness(self, Y_nozzle, Div_angle, Conv_angle, P0):
         """ Returns nozzle convergent and divergent thickness """
         nozzle_conv_t = (np.max(P0) * self.D_in / 2) / (Y_nozzle / self.sf - 0.6 * np.max(P0)
@@ -29,6 +24,11 @@ class MotorStructure:
         nozzle_div_t = (np.max(P0) * self.D_in / 2) / (Y_nozzle / self.sf - 0.6 * np.max(P0)
                                                        * (np.cos(np.deg2rad(Div_angle))))
         return nozzle_conv_t, nozzle_div_t
+
+    def casingSafetyFactor(self, Y_cc, P0):
+        """ Returns the thickness for a cylindrical pressure vessel """
+        casing_sf = Y_cc * (self.D_out - self.D_in) / (np.max(P0) * self.D_in)
+        return casing_sf
 
     def optimalFasteners(self, max_number_of_screws, P0, Y_cc, U_screw):
         shear_sf = np.zeros(max_number_of_screws)
