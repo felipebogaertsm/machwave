@@ -5,12 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 
 
-def save_dat(name, manufacturer, m_motor, N, D_grain, D_core, L_grain, propellant, D_throat, D_in, D_out,
-             grain_spacing, D_screw, D_clearance, U_screw, max_number_of_screws, C1, C2, Y_cc, Y_nozzle, Y_bulkhead,
-             Conv_angle, Div_angle, T_external, P_external, P_igniter, web_res, eng_res, dt, sf):
-    saveFile = open(f'/output/{name}.dat', 'w')
-
-
 def interactive_plot(t, F, P0, Kn, m_prop):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
