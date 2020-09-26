@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 
 
-def interactive_plot(t, F, P0, Kn, m_prop):
+def interactive_plot(t, P0):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',

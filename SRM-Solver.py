@@ -2,15 +2,16 @@
 # Written by: Felipe Bogaerts de Mattos
 # Created on August, 2020
 # This program simulates the Internal Ballistics of a Solid Rocket Motor using a BATES grain geometry.
-# The length and core diameter can be input for each individual grain, guaranteeing more flexibility
-# while designing an SRM. The list of standard propellants and its specifications can be found inside
-# the 'functions.py' file. The nozzle correction factors were obtained from the a015140 paper.
+# The length and core diameter can be input for each individual grain, guaranteeing more flexibility while designing an
+# SRM. The list of standard propellants and its specifications can be found inside the 'functions.py' file.
+# Nozzle correction factors were obtained from the a015140 paper.
 # No erosive burning correction has been written (yet).
 #
 # HOW TO USE:
-# Input the desired motor data in the INPUTS section. Run the program and the main results will be
-# displayed in the Command Window. Inside the output folder created, a .eng and a .csv file will
-# also be available with the important data for a rocket ballistic simulation.
+# Input the desired motor data inside the INPUTS section. Run the program and the main results will be displayed in the
+# Command Window. Inside the output folder created, a .eng and a .csv file will also be available with the important
+# data for a rocket ballistic simulation. Also, plots with the motor thrust, chamber pressure, Kn, propellant mass and
+# mass flux will be stored inside the same output folder.
 # Make sure all the modules are properly installed!
 # Note that the grain #1 is the grain closest to the bulkhead and farthest from the nozzle.
 #
@@ -25,14 +26,14 @@
 # Correction factors applied:
 # - Divergent CD nozzle angle
 # - Two phase flow
-# - Kinetics losses
+# - Kinetic losses
 # - Boundary layer losses
 #
 # List of fully supported propellants:
 # - KNDX (Nakka burn rate data)
 # - KNSB-NAKKA (Nakka burn rate data) and KNSB (Magnus Gudnason burn rate data)
 # - KNSU (Nakka burn rate data)
-# - KNER (Nakka burn rate data)
+# - KNER (Magnus Gudnason burn rate data)
 #
 # The code was structured according to the following main sections:
 # 1) Time Function Start
@@ -54,18 +55,19 @@ import matplotlib.pyplot as plt
 import scipy.constants
 import pandas as pd
 import time
+import json
 
 from functions.ib_functions import *
 from functions.propellant import *
 from functions.structural_functions import *
 from functions.functions import *
 
-# ______________________________________________________________
+# _____________________________________________________________________________________________________________________
 # TIME FUNCTION START
 
 start = time.time()
 
-# ______________________________________________________________
+# _____________________________________________________________________________________________________________________
 # INPUTS
 
 # Motor name (NO SPACES):
@@ -78,89 +80,88 @@ m_motor = 13
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
 web_res = 1000
-# .eng file resolution
+# .eng file resolution:
 eng_res = 25
-# Time step [s]
+# Time step [s]:
 dt = 1e-3
-# Minimal safety factor
+# Minimal safety factor:
 sf = 4
 
 # BATES PROPELLANT INPUT
-# Grain count
+# Grain count:
 N = 7
-# Grain external diameter [m]
+# Grain external diameter [m]:
 D_grain = 110e-3
-# Grains 1 to 'N' core diameter [m]
+# Grains 1 to 'N' core diameter [m]:
 D_core = np.array([50, 50, 50, 50, 50, 50, 50]) * 1e-3
-# Grains 1 to 'N' length [m]
+# Grains 1 to 'N' length [m]:
 L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
+# Grain spacing (used to determine chamber length) [m]:
+grain_spacing = 10e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
-# Propellant name
+# Propellant name:
 propellant = 'KNSB-NAKKA'
 
-# EXTERNAL CONDITIONS
-# External temperature [K]
-T_external = 297
-# External pressure [Pa]
-P_external = 0.101325e6
-# Igniter pressure [Pa]
-P_igniter = 1.5e6
-
-# NOZZLE DIMENSIONS
-# Throat diameter [m]
+# THRUST CHAMBER
+# Chamber inside diameter [m]:
+D_in = 127e-3
+# Chamber outside diameter [m]:
+D_out = 139.7e-3
+# Throat diameter [m]:
 D_throat = 35e-3
-# Nozzle material yield strength [Pa]
-Y_nozzle = 215e6
-# Nozzle divergent and convergent angle [degrees]
+# Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 10, 30
-# Nozzle materials heat properties 1 and 2 (page 87 of a015140)
+# Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
 
-# COMBUSTION CHAMBER
-# Chamber inside diameter [m]
-D_in = 127e-3
-# Chamber outside diameter [m]
-D_out = 139.7e-3
-# Grain spacing [m]
-grain_spacing = 10e-3
-# Chamber yield strength [Pa]
+# EXTERNAL CONDITIONS
+# External temperature [K]:
+T_external = 297
+# External pressure [Pa]:
+P_external = 0.101325e6
+# Igniter pressure [Pa]:
+P_igniter = 1.5e6
+
+# MECHANICAL DATA
+# Chamber yield strength [Pa]:
 Y_cc = 240e6
-# Bulkhead yield strength [Pa]
+# Bulkhead yield strength [Pa]:
 Y_bulkhead = 255e6
+# Nozzle material yield strength [Pa]:
+Y_nozzle = 215e6
 
 # FASTENER DATA
-# Screw diameter (excluding threads) [m]
+# Screw diameter (excluding threads) [m]:
 D_screw = 6.75e-3
-# Screw clearance hole diameter [m]
+# Screw clearance hole diameter [m]:
 D_clearance = 8.5e-3
-# Tensile strength of the screw [Pa]
+# Tensile strength of the screw [Pa]:
 U_screw = 510e6
-# Maximum number of fasteners
+# Maximum number of fasteners:
 max_number_of_screws = 30
 
 # ______________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
 
-# The Propellant name input above triggers the function inside 'Propellant.py' to return the required
-# data.
+# The Propellant name input above triggers the function inside 'Propellant.py' to return the required data.
 ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
-# Gas constant per molecular weight calculations
+# Gas constant per molecular weight calculations:
 R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
-# Real combustion temperature based on the ideal temp. and the combustion efficiency [K]
+# Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
 T0 = ce * T0_ideal
 
-# Nozzle throat area [m-m]
+# Nozzle throat area [m-m]:
 A_throat = circle_area(D_throat)
 
-# Combustion chamber length [m]
+# Combustion chamber length [m]:
 L_cc = np.sum(L_grain) + (N - 1) * grain_spacing
 
 # Defining 'grain' as an instance of BATES:
 grain = BATES(web_res, N, D_grain, D_core, L_grain)
 
-# Defining 'structure' as an instance of MotorStructure:
+# Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(sf, m_motor, D_in, D_out, L_cc, D_screw, D_clearance)
 
 # ______________________________________________________________
@@ -169,8 +170,8 @@ structure = MotorStructure(sf, m_motor, D_in, D_out, L_cc, D_screw, D_clearance)
 # Creating a web distance array, for each grain:
 w = grain.web()
 
-# Pre-allocating the burn area and volume matrix for each grain segment. Rows are the grain segment
-# number and columns are the burn area or volume value for each web regression step.
+# Pre-allocating the burn area and volume matrix for each grain segment. Rows are the grain segment number and columns
+# are the burn area or volume value for each web regression step.
 gAb = np.zeros((N, web_res))
 gVp = np.zeros((N, web_res))
 
@@ -179,10 +180,10 @@ for j in range(N):
         gAb[j, i] = grain.burnArea(w[j, i], j)
         gVp[j, i] = grain.grainVolume(w[j, i], j)
 
-# In case there are different initial core diameters or grain lengths, the for loop below interpolates
-# all the burn area and Propellant volume data in respect to the largest web thickness of the motor.
-# This ensures that that all grains ignite at the same time in the simulation and also that the
-# distance between steps is equal for all grains in the matrix gAb and gVp.
+# In case there are different initial core diameters or grain lengths, the for loop below interpolates all the burn
+# area and Propellant volume data in respect to the largest web thickness of the motor.
+# This ensures that that all grains ignite at the same time in the simulation and also that the distance between
+# steps is equal for all grains in the matrix gAb and gVp.
 
 D_core_min_index = grain.minCoreDiamIndex()
 
@@ -190,8 +191,8 @@ for j in range(N):
     gAb[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gAb[j, :], left=0, right=0)
     gVp[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gVp[j, :], left=0, right=0)
 
-# Adding the columns of the matrices gAb and gVp to generate the vectors Ab and Vp, that contain
-# the sum of the data for all grains in function of the web steps.
+# Adding the columns of the matrices gAb and gVp to generate the vectors A_burn and V_prop, that contain the sum of
+# the data for all grains in function of the web steps.
 A_burn = gAb.sum(axis=0)
 V_prop = gVp.sum(axis=0)
 
@@ -204,7 +205,7 @@ for j in range(N):
     A_core = np.append(A_core, circle_area(D_core[j]))
 # Port area:
 A_port = A_core[-1]
-# Port to throat area ratio (grain #1):
+# Port to throat area ratio:
 initial_port_to_throat = A_port / A_throat
 
 # Getting the burn profile
@@ -226,51 +227,46 @@ P0, x, t, time_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
 # Declaring arrays:
 r0, re, r = np.array([]), np.array([]), np.array([])
 
-# While loop iterates until the new instant web thickness vector 'x' is larger than the web thickness
-# (last element of vector 'w') or the internal chamber pressure is smaller than critical pressure
-# (making the nozzle exhaust subsonic).
+# While loop iterates until the new instant web thickness vector 'x' is larger than the web thickness (last element of
+# vector 'w') or the internal chamber pressure is smaller than critical pressure (making the nozzle exhaust subsonic).
 
 i = 0
 
 while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
-    # burn_rate_coefs selects value for a and n that suits the current chamber pressure of the iteration
-    # step.
+    # burn_rate_coefs selects value for a and n that suits the current chamber pressure of the iteration step.
     a, n = burn_rate_coefs(propellant, P0[i])
 
-    # if 'a' and 'n' are negative, stop while loop (lacking burn rate data for the current iteration
-    # of P0)
+    # if 'a' and 'n' are negative, exit the program (lacking burn rate data for the current iteration of P0).
     if a < 0:
         exit()
 
-    # The first time the while loop operates, the values for the burn rate are declared and written
-    # based on the initial igniter pressure. 'r0' stands for the non-erosive burn rate term and 'r'
-    # stands for the total burn rate. Currently, the program does not support erosive burning yet,
-    # so 'r0 = r'.
-
+    # The first time the while loop operates, the values for the burn rate are declared and written based on the
+    # initial igniter pressure. 'r0' stands for the non-erosive burn rate term and 'r' stands for the total burn rate.
+    # Currently, the program does not support erosive burning yet, o 'r0 = r'.
+    # 'r0' is calculated using St. Robert's Burn Rate Law.
     r0 = np.append(r0, (a * (P0[i] * 1e-6) ** n) * 1e-3)
     re = np.append(re, 0)
     r = np.append(r, r0[i] + re[i])
 
     # The web distance that the combustion consumes on each time step 'dt' is represented by 'dx'.
     dx = dt * r[i]
-    # The instant web thickness vector is modified and 'dx' is added to the last term.
+    # The instant web distance vector is appended with latest 'dx' value.
     x = np.append(x, x[i] + dx)
     # The time vector 't' is also modified and the time step 'dt' is added to the last 't[i]' value.
     t = np.append(t, t[i] + dt)
 
-    # In order for the burn area, chamber volume and Propellant volume vectors to be in function of
-    # time ('t') or in function of web distance ('x') the old vectors 'A_burn', 'V0' and 'V_prop' must be
-    # interpolated from the old set of web thickness data 'w' to the new vector 'x'.
-    # A_burnCP is the interpolated value for A_burn, in function of x and t;
-    # V0CP is the interpolated value for V0, in function of x and t;
-    # V_propCP is the interpolated value for V_prop, in function of x and t.
+    # In order for the burn area, chamber volume and Propellant volume vectors to be in function of time ('t') or in
+    # function of web distance ('x') the old vectors 'A_burn', 'V0' and 'V_prop' must be interpolated from the old
+    # set of web thickness data 'w' to the new vector 'x'.
+    # A_burn_CP is the interpolated value for A_burn, in function of x and t;
+    # V0_CP is the interpolated value for V0, in function of x and t;
+    # V_prop_CP is the interpolated value for V_prop, in function of x and t.
     A_burn_CP = np.interp(x, w, A_burn, left=0, right=0)
     V0_CP = np.interp(x, w, V0, right=V_empty)
     V_prop_CP = np.interp(x, w, V_prop, right=0)
 
-    # The values above are then used to solve the differential equation by the Range-Kutta 4th order
-    # method.
+    # The values above are then used to solve the differential equation by the Range-Kutta 4th order method.
     k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
     k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
     k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
@@ -278,9 +274,9 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
-    # 'time_burnout' stands for the time on which the Propellant is done burning. If the value for
-    # 'time_burnout' (declared before the while loop) is 0 and the current iteration of 'AbCP' is
-    # also 0, time_burnout is set to the current time value 't[i]'.
+    # 'time_burnout' stands for the time on which the Propellant is done burning. If the value for 'time_burnout'
+    # (declared before the while loop) is 0 and the current iteration of 'AbCP' is also 0, time_burnout is set to the
+    # current time value 't[i]'.
     if time_burnout == 0 and A_burn_CP[i] == 0:
         time_burnout = t[i]
 
@@ -289,9 +285,8 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 # Mass flux per grain:
 grain_mass_flux = grain.massFluxPerGrain(r, pp, x)
 
-# The value for 'index' is used later to iterate on other useful vectors. I_total is set to the total
-# length of the 'P0' vector in order to guarantee that future vectors will cover all the same
-# instants that 'P0' covers.
+# The value for 'index' is used later to iterate on other useful vectors. I_total is set to the total length of the 'P0'
+# vector in order to guarantee that future vectors will cover all the same instants that 'P0' covers.
 index = np.size(P0)
 
 # Klemmung in respect to time:
@@ -401,25 +396,22 @@ print('\n')
 # ______________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
 # This program exports the motor data into three separate files.
-# The .eng file is compatible with most rocket ballistic simulators such as openRocket and
-# RASAero.
-# The output .csv file contains thrust, time and propellant mass, Kn, chamber pressure,
-# web thickness and burn rate data.
-# The input .txt file contains all info used in the input section.
+# The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
+# The output .csv file contains thrust, time, propellant mass, Kn, chamber pressure, web thickness and burn rate data.
+# The input .csv file contains all info used in the input section.
 
-# Forming a new time vector that has exactly 'eng_res' points (independent of time step input)
+# Forming a new time vector that has exactly 'eng_res' points (independent on time step input):
 t_out = np.linspace(0, t[-1] + dt, eng_res)
-# Interpolating old thrust-time data into new time vector
+# Interpolating old thrust-time data into new time vector:
 F_out = np.interp(t_out, t, F, left=0, right=0)
-# Interpolating the Propellant volume with the new time vector (to find prop. mass with t)
+# Interpolating the Propellant volume with the new time vector (to find prop. mass with t):
 m_prop_out = pp * np.interp(t_out, t, V_prop_CP, right=0)
 
 # Writing to the ENG file:
 eng_header = f'{name} {D_out * 1e3:.4f} {L_cc * 1e3:.4f} P ' \
              f'{m_prop_out[0]:.4f} {m_prop_out[0] + m_motor:.4f} {manufacturer}\n'
 saveFile = open(f'output/{name}.eng', 'w')
-saveFile.write('; Generated by SRM Solver program written by ' +
-               'Felipe Bogaerts de Mattos\n; Juiz de Fora, Brasil\n')
+saveFile.write('; Generated by SRM Solver program written by Felipe Bogaerts de Mattos\n; Juiz de Fora, Brasil\n')
 saveFile.write(eng_header)
 for i in range(eng_res):
     saveFile.write('   %.2f %.0f\n' % ((t_out[i]), (F_out[i])))
@@ -458,4 +450,3 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 plot_performance(F, P0, t)
 plot_main(t, F, P0, Kn, m_prop)
 plot_mass_flux(t, grain_mass_flux)
-# interactive_plot(t, F, P0, Kn, m_prop)
