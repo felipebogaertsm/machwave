@@ -94,6 +94,7 @@ def plot_main(t, F, P0, Kn, m_prop):
 def plot_mass_flux(t, grain_mass_flux):
     """ Plots and saves figure of the mass flux for all the grain segments """
     N, index = grain_mass_flux.shape
+    fig4 = plt.figure()
     for i in range(N):
         plt.plot(t, grain_mass_flux[i, :] * 1.42233e-3)
     plt.ylabel('Mass Flux [lb/s-in-in]')
@@ -101,4 +102,4 @@ def plot_mass_flux(t, grain_mass_flux):
     plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)
     plt.xlim(0, t[-1])
     plt.grid(linestyle='-', linewidth='.4')
-    plt.savefig('output/grain_mass_flux.png', dpi=300)
+    fig4.savefig('output/grain_mass_flux.png', dpi=300)
