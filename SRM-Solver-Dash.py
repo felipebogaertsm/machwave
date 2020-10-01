@@ -5,7 +5,6 @@ import numpy as np
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import scipy.constants
 
 from functions.ib_functions import *
 from functions.propellant import *
@@ -16,7 +15,8 @@ app = dash.Dash()
 
 exec(open('SRM-Solver.py').read())
 
-app.layout = html.Div([dcc.Graph(id='pressure',
+app.layout = html.Div(['Graphs',
+                       dcc.Graph(id='pressure',
                                  figure={'data': [
                                      go.Scatter(
                                          x=t,
@@ -39,7 +39,8 @@ app.layout = html.Div([dcc.Graph(id='pressure',
                                          }
                                      )],
                                      'layout': go.Layout(title='Thrust Plot')}
-                                 )])
+                                 )],
+                      style={'color': 'black', 'border': '10px blue solid'})
 
 if __name__ == '__main__':
     app.run_server()
