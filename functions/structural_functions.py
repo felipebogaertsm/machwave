@@ -28,7 +28,7 @@ class MotorStructure:
     def casingSafetyFactor(self, Y_cc, P0):
         """ Returns the thickness for a cylindrical pressure vessel """
         thickness = (self.D_out - self.D_in)
-        P_bursting = Y_cc * thickness / (self.D_in * 0.5 + 0.6 * thickness)
+        P_bursting = (Y_cc * thickness) / (self.D_in * 0.5 + 0.6 * thickness)
         casing_sf = P_bursting / np.max(P0)
         return casing_sf
 
