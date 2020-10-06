@@ -91,25 +91,25 @@ sf = 4
 # Grain count:
 N = 7
 # Grain external diameter [m]:
-D_grain = 110e-3
+D_grain = 103e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([50, 50, 50, 50, 50, 50, 50]) * 1e-3
+D_core = np.array([42, 42, 42, 42, 42, 42, 42]) * 1e-3
 # Grains 1 to 'N' length [m]:
-L_grain = np.array([190, 190, 190, 190, 190, 190, 190]) * 1e-3
+L_grain = np.array([176, 176, 176, 176, 176, 176, 176]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-propellant = 'KNSB-NAKKA'
+propellant = 'KNER'
 
 # THRUST CHAMBER
 # Chamber inside diameter [m]:
-D_in = 127e-3
+D_in = 114.3e-3
 # Chamber outside diameter [m]:
-D_out = 139.7e-3
+D_out = 127e-3
 # Throat diameter [m]:
-D_throat = 35e-3
+D_throat = 23e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 10, 30
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
