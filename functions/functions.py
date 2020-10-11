@@ -1,5 +1,4 @@
 import numpy as np
-import plotly.offline as pyo
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
@@ -15,8 +14,8 @@ def interactive_plot(t, P0):
                        xaxis=dict(title='Time [s]'),
                        yaxis=dict(title='Pressure [MPa]'),
                        hovermode='closest')
-    fig = go.Figure(data=data, layout=layout)
-    pyo.plot(fig, filename='scatter.html')
+    figure_plotly = go.Figure(data=data, layout=layout)
+    figure_plotly.show()
 
 
 def plot_performance(F, P0, t):
