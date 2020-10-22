@@ -1,2 +1,0 @@
-def clicked():
-    print('clicked')

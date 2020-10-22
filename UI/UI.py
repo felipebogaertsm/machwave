@@ -7,6 +7,8 @@
 # WARNING! All changes made in this file will be lost!
 
 
+import numpy as np
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -128,9 +130,6 @@ class Ui_MainWindow(object):
         self.label_propellant = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label_propellant.setObjectName("label_propellant")
         self.grid_Inputs_2.addWidget(self.label_propellant, 0, 0, 1, 1)
-        self.line_propellant = QtWidgets.QLineEdit(self.gridLayoutWidget)
-        self.line_propellant.setObjectName("line_propellant")
-        self.grid_Inputs_2.addWidget(self.line_propellant, 0, 1, 1, 1)
         self.label_P_igniter = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label_P_igniter.setObjectName("label_P_igniter")
         self.grid_Inputs_2.addWidget(self.label_P_igniter, 6, 0, 1, 1)
@@ -143,6 +142,14 @@ class Ui_MainWindow(object):
         self.line_P_external = QtWidgets.QLineEdit(self.gridLayoutWidget)
         self.line_P_external.setObjectName("line_P_external")
         self.grid_Inputs_2.addWidget(self.line_P_external, 7, 1, 1, 1)
+        self.combo_propellant = QtWidgets.QComboBox(self.gridLayoutWidget)
+        self.combo_propellant.setObjectName("combo_propellant")
+        self.combo_propellant.addItem("")
+        self.combo_propellant.addItem("")
+        self.combo_propellant.addItem("")
+        self.combo_propellant.addItem("")
+        self.combo_propellant.addItem("")
+        self.grid_Inputs_2.addWidget(self.combo_propellant, 0, 1, 1, 1)
         self.label_Inputs = QtWidgets.QLabel(self.centralwidget)
         self.label_Inputs.setGeometry(QtCore.QRect(10, 0, 71, 31))
         font = QtGui.QFont()
@@ -306,14 +313,14 @@ class Ui_MainWindow(object):
         self.action_Export_to_csv.setObjectName("action_Export_to_csv")
         self.action_Version_1_0 = QtWidgets.QAction(MainWindow)
         self.action_Version_1_0.setObjectName("action_Version_1_0")
-        self.menuFile.addAction(self.action_Export_to_eng)
-        self.menuFile.addAction(self.action_Export_to_csv)
         self.menuAbout.addAction(self.action_Version_1_0)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        self.button_Run.clicked.connect(run)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -339,6 +346,11 @@ class Ui_MainWindow(object):
         self.label_propellant.setText(_translate("MainWindow", "Propellant"))
         self.label_P_igniter.setText(_translate("MainWindow", "Igniter Pressure [MPa]"))
         self.label_P_external.setText(_translate("MainWindow", "External Pressure [MPa]"))
+        self.combo_propellant.setItemText(0, _translate("MainWindow", "KNSB Nakka"))
+        self.combo_propellant.setItemText(1, _translate("MainWindow", "KNSB Gudnason"))
+        self.combo_propellant.setItemText(2, _translate("MainWindow", "KNDX Nakka"))
+        self.combo_propellant.setItemText(3, _translate("MainWindow", "KNSU Nakka"))
+        self.combo_propellant.setItemText(4, _translate("MainWindow", "KNER Gudnason"))
         self.label_Inputs.setText(_translate("MainWindow", "Inputs"))
         self.label_Outputs.setText(_translate("MainWindow", "Outputs"))
         self.label_motor_name.setText(_translate("MainWindow", "Motor Name"))
@@ -374,6 +386,15 @@ class Ui_MainWindow(object):
         self.action_Export_to_eng.setText(_translate("MainWindow", "Export to .eng"))
         self.action_Export_to_csv.setText(_translate("MainWindow", "Export to .csv"))
         self.action_Version_1_0.setText(_translate("MainWindow", "Version 1.0"))
+
+    def run(self):
+        name, manuf = self.line_motor_name.text(), self.line_motor_manuf.text()
+        m_motor = self.line_m_motor
+        N, D_grain, grain_spacing = self.line_N, self.line_D_grain, self.line_grain_spacing
+        D_core, L_grain = np.array([self.line_D_core]), np.array([self.line_L_grain])
+        ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, \
+        qsi_ch, qsi_ex = prop_data(self.line_propellant)
+        print(name)
 
 
 if __name__ == "__main__":

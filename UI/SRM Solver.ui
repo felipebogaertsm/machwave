@@ -244,7 +244,7 @@
       <widget class="QLineEdit" name="line_P_external"/>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="comboBox">
+      <widget class="QComboBox" name="combo_propellant">
        <item>
         <property name="text">
          <string>KNSB Nakka</string>
@@ -622,8 +622,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="action_Export_to_eng"/>
-    <addaction name="action_Export_to_csv"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
