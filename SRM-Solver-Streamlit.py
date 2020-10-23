@@ -1,6 +1,7 @@
 # October 2020, Felipe Bogaerts de Mattos
 # All the measurements are in SI, unless specified otherwise in the variable comment above.
 
+# _____________________________________________________________________________________________________________________
 # IMPORT SECTION
 
 import numpy as np
@@ -12,6 +13,7 @@ import plotly.subplots
 from functions.propellant import *
 from functions.ib_functions import *
 
+# _____________________________________________________________________________________________________________________
 # INITIAL DEFINITIONS
 
 prop_dict = {
@@ -27,6 +29,7 @@ dt = 1e-3
 # Web regression resolution:
 web_res = 1000
 
+# _____________________________________________________________________________________________________________________
 # STREAMLIT TITLE
 
 st.title("SRM Solver")
@@ -35,6 +38,7 @@ st.write("""
 ### Simulate a BATES grain Solid Rocket Motors from your web browser
 """)
 
+# _____________________________________________________________________________________________________________________
 # STREAMLIT SIDEBAR
 
 # Sidebar:
@@ -56,10 +60,11 @@ if neutral_burn_profile:
 else:
     st.sidebar.write("""### Grain length""")
     for i in range(N):
-        L_grain[i] = st.sidebar.number_input(f'Grain length #{i + 1} [mm]', value=68.0) * 1e-3
+        L_grain[i] = st.sidebar.number_input(f'Grain length #{i + 1} [mm]',
+                                             value=0.5 * (3 * D_grain + D_core[i]) * 1e3) * 1e-3
 st.sidebar.write("""### Combustion chamber""")
 D_in = st.sidebar.number_input('Combustion chamber inside diameter [mm]',
-                               min_value=D_grain * 1e3, step=0.05, value=44.45) * 1e-3
+                               min_value=0.1, step=0.05, value=44.45) * 1e-3
 D_throat = st.sidebar.number_input('Throat diameter [mm]',
                                    min_value=0.1, max_value=D_in * 1e3, step=0.05, value=9.5) * 1e-3
 Div_angle = st.sidebar.number_input('Divergent angle [deg]',
@@ -68,13 +73,14 @@ steel_nozzle = st.sidebar.checkbox('Steel nozzle', value=True)
 P_igniter = st.sidebar.number_input('Igniter pressure [MPa]', min_value=0.1, step=0.5, value=1.5) * 1e6
 P_external = st.sidebar.number_input('External pressure [MPa]', min_value=0.1, step=0.5, value=0.101325) * 1e6
 
+# _____________________________________________________________________________________________________________________
 # CALCULATIONS
 
 if steel_nozzle:
     C1 = 0.00506
     C2 = 0.00000
 
-ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
+ce, pp, k_mix_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 T0 = ce * T0_ideal
 A_throat = circle_area(D_throat)
@@ -110,7 +116,7 @@ burn_profile = getBurnProfile(A_burn)
 optimal_grain_length = grain.optimalLength()
 
 V0, V_empty = chamber_volume(L_cc, D_in, V_prop)
-critical_pressure_ratio = (2 / (k_ch + 1)) ** (k_ch / (k_ch - 1))
+critical_pressure_ratio = (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
 P0, x, t, time_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
 r0, re, r = np.array([]), np.array([]), np.array([])
 
@@ -128,10 +134,10 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     A_burn_CP = np.interp(x, w, A_burn, left=0, right=0)
     V0_CP = np.interp(x, w, V0, right=V_empty)
     V_prop_CP = np.interp(x, w, V_prop, right=0)
-    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
     if time_burnout == 0 and A_burn_CP[i] == 0:
         time_burnout = t[i]
@@ -157,6 +163,7 @@ F_avg = np.mean(F)
 Cf_avg = np.mean(Cf)
 I_total, I_sp = impulse(F_avg, t, m_prop)
 
+# _____________________________________________________________________________________________________________________
 # PLOTS
 
 plot_thrust = go.Scatter(y=F, x=t, name='Thrust (N)')
