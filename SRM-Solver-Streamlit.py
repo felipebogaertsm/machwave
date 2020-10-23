@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants
 import streamlit as st
+import plotly.graph_objects as go
 from functions.propellant import *
 from functions.ib_functions import *
 
@@ -47,7 +48,7 @@ neutral_burn_profile = st.sidebar.checkbox('Neutral burn profile', value=True)
 st.sidebar.write("""### Core diameter""")
 for i in range(N):
     D_core[i] = st.sidebar.number_input(f'Core diameter #{i + 1} [mm]',
-                                        max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5)
+                                        max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
 if neutral_burn_profile:
     for i in range(N):
         L_grain[i] = 0.5 * (3 * D_grain + D_core[i])
@@ -157,4 +158,11 @@ I_total, I_sp = impulse(F_avg, t, m_prop)
 
 # PLOTS
 
+figure_performance = go.Figure(
+    data=go.Scatter(y=F, x=t, name='Thrust'),
+    layout=go.Layout(
+        title=go.layout.Title(text='Performance curves')
+    )
+)
 
+st.write(figure_performance)
