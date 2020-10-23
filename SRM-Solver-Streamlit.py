@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import scipy.constants
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.subplots
 from functions.propellant import *
 from functions.ib_functions import *
 
@@ -158,11 +159,16 @@ I_total, I_sp = impulse(F_avg, t, m_prop)
 
 # PLOTS
 
+plot_thrust = go.Scatter(y=F, x=t, name='Thrust (N)')
+
 figure_performance = go.Figure(
-    data=go.Scatter(y=F, x=t, name='Thrust'),
+    data=plot_thrust,
     layout=go.Layout(
         title=go.layout.Title(text='Performance curves')
     )
 )
+
+figure_performance.add_scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)')
+figure_performance.add_scatter(y=grain_mass_flux[- 1], x=t, name=f'Mass flux (kg/s-m-m)')
 
 st.write(figure_performance)
