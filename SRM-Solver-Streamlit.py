@@ -55,7 +55,7 @@ if neutral_burn_profile:
 else:
     st.sidebar.write("""### Grain length""")
     for i in range(N):
-        L_grain[i] = st.sidebar.number_input(f'Grain length #{i + 1} [mm]')
+        L_grain[i] = st.sidebar.number_input(f'Grain length #{i + 1} [mm]', value=68.0) * 1e-3
 st.sidebar.write("""### Combustion chamber""")
 D_in = st.sidebar.number_input('Combustion chamber inside diameter [mm]',
                                min_value=D_grain * 1e3, step=0.05, value=44.45) * 1e-3
