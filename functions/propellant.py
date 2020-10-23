@@ -45,40 +45,46 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1392, 1.1518, 1608, 38.570 * 1e-3,
 def prop_data(prop: str):
     if prop.lower() == 'kndx':
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = kndx.ce, kndx.pp, \
-                                                                                        kndx.k_ch, kndx.k_ex, \
-                                                                                        kndx.T0_ideal, kndx.M_ch, \
-                                                                                        kndx.M_ex, kndx.Isp_frozen, \
-                                                                                        kndx.Isp_shifting, \
-                                                                                        kndx.qsi_ch, kndx.qsi_ex
+                                                                                             kndx.k_ch, kndx.k_ex, \
+                                                                                             kndx.T0_ideal, kndx.M_ch, \
+                                                                                             kndx.M_ex, \
+                                                                                             kndx.Isp_frozen, \
+                                                                                             kndx.Isp_shifting, \
+                                                                                             kndx.qsi_ch, kndx.qsi_ex
     elif prop.lower() == 'knsb' or prop.lower() == 'knsb-nakka':
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = knsb.ce, knsb.pp, \
-                                                                                        knsb.k_ch, knsb.k_ex, \
-                                                                                        knsb.T0_ideal, knsb.M_ch, \
-                                                                                        knsb.M_ex, knsb.Isp_frozen, \
-                                                                                        knsb.Isp_shifting, \
-                                                                                        knsb.qsi_ch, knsb.qsi_ex
+                                                                                             knsb.k_ch, knsb.k_ex, \
+                                                                                             knsb.T0_ideal, knsb.M_ch, \
+                                                                                             knsb.M_ex, \
+                                                                                             knsb.Isp_frozen, \
+                                                                                             knsb.Isp_shifting, \
+                                                                                             knsb.qsi_ch, knsb.qsi_ex
     elif prop.lower() == 'knsu':
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = knsu.ce, knsu.pp, \
-                                                                                        knsu.k_ch, knsu.k_ex, \
-                                                                                        knsu.T0_ideal, knsu.M_ch, \
-                                                                                        knsu.M_ex, knsu.Isp_frozen, \
-                                                                                        knsu.Isp_shifting, \
-                                                                                        knsu.qsi_ch, knsu.qsi_ex
+                                                                                             knsu.k_ch, knsu.k_ex, \
+                                                                                             knsu.T0_ideal, knsu.M_ch, \
+                                                                                             knsu.M_ex, \
+                                                                                             knsu.Isp_frozen, \
+                                                                                             knsu.Isp_shifting, \
+                                                                                             knsu.qsi_ch, knsu.qsi_ex
     elif prop.lower() == 'kner':
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = kner.ce, kner.pp, \
-                                                                                        kner.k_ch, kner.k_ex, \
-                                                                                        kner.T0_ideal, kner.M_ch, \
-                                                                                        kner.M_ex, kner.Isp_frozen, \
-                                                                                        kner.Isp_shifting, \
-                                                                                        kner.qsi_ch, kner.qsi_ex
+                                                                                             kner.k_ch, kner.k_ex, \
+                                                                                             kner.T0_ideal, kner.M_ch, \
+                                                                                             kner.M_ex, \
+                                                                                             kner.Isp_frozen, \
+                                                                                             kner.Isp_shifting, \
+                                                                                             kner.qsi_ch, kner.qsi_ex
     else:
         print('\nPropellant name not recognized. Using values for KNSB instead.')
         ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = knsb.ce, knsb.pp, \
-                                                                                        knsb.k_ch, knsb.k_ex, \
-                                                                                        knsb.T0_ideal, knsb.M_ch, \
-                                                                                        knsb.M_ex, knsb.Isp_frozen, \
-                                                                                        knsb.Isp_shifting, \
-                                                                                        knsb.qsi_ch, knsb.qsi_ex
+                                                                                             knsb.k_ch, knsb.k_ex, \
+                                                                                             knsb.T0_ideal, knsb.M_ch, \
+                                                                                             knsb.M_ex, \
+                                                                                             knsb.Isp_frozen, \
+                                                                                             knsb.Isp_shifting, \
+                                                                                             knsb.qsi_ch, knsb.qsi_ex
+
     return ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 
 
