@@ -75,7 +75,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17
+m_motor = 0.85
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -89,29 +89,29 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-N = 6
+N = 4
 # Grain external diameter [m]:
-D_grain = 114e-3
+D_grain = 41e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([45, 45, 45, 45, 45, 45]) * 1e-3
+D_core = np.array([15, 15, 15, 15]) * 1e-3
 # Grains 1 to 'N' length [m]:
-L_grain = np.array([170, 170, 170, 170, 170, 170]) * 1e-3
+L_grain = np.array([68, 68, 68, 68]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
-grain_spacing = 10e-3
+grain_spacing = 5e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-propellant = 'KNSB-NAKKA'
+propellant = 'kndx'
 
 # THRUST CHAMBER
 # Chamber inside diameter [m]:
-D_in = 127e-3
+D_in = 44.45e-3
 # Chamber outside diameter [m]:
-D_out = 139.7e-3
+D_out = 50.8e-3
 # Throat diameter [m]:
-D_throat = 32e-3
+D_throat = 9.5e-3
 # Nozzle divergent and convergent angle [degrees]:
-Div_angle, Conv_angle = 10, 30
+Div_angle, Conv_angle = 12, 30
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
@@ -146,7 +146,7 @@ max_number_of_screws = 30
 # PRE CALCULATIONS AND DEFINITIONS
 
 # The Propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
+ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 # Gas constant per molecular weight calculations:
 R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
@@ -220,7 +220,7 @@ optimal_grain_length = grain.optimalLength()
 V0, V_empty = chamber_volume(L_cc, D_in, V_prop)
 
 # Critical pressure (isentropic supersonic flow):
-critical_pressure_ratio = (2 / (k_ch + 1)) ** (k_ch / (k_ch - 1))
+critical_pressure_ratio = (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
 
 # Initial conditions:
 P0, x, t, time_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
@@ -267,10 +267,10 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     V_prop_CP = np.interp(x, w, V_prop, right=0)
 
     # The values above are then used to solve the differential equation by the Range-Kutta 4th order method.
-    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
-    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_ch, R_ch, T0, r[i])
+    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
@@ -305,7 +305,7 @@ P0_psi_avg = np.mean(P0_psi)
 # _____________________________________________________________________________________________________________________
 # EXPANSION RATIO AND EXIT PRESSURE
 
-E = expansion_ratio(P_external, P0, k_ex, index, critical_pressure_ratio)
+E = expansion_ratio(P_external, P0, k_2ph_ex, index, critical_pressure_ratio)
 E_avg = np.mean(E)
 
 # _____________________________________________________________________________________________________________________
@@ -322,7 +322,7 @@ n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
 # _____________________________________________________________________________________________________________________
 # THRUST AND IMPULSE
 
-Cf = thrust_coefficient(P0, P_external, k_ex, n_cf)
+Cf = thrust_coefficient(P0, P_external, k_2ph_ex, n_cf)
 F = Cf * A_throat * P0
 
 F_avg = np.mean(F)
@@ -450,4 +450,3 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 plot_performance(F, P0, t)
 plot_main(t, F, P0, Kn, m_prop)
 plot_mass_flux(t, grain_mass_flux)
-interactive_plot(t, P0)
