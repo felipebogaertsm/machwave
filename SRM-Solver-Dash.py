@@ -19,89 +19,114 @@ label_col_width = 1
 # Input object column width:
 input_col_width = 2
 
+prop_dict = {
+    'KNSB (Nakka)': 'knsb-nakka',
+    'KNSB (Gudnason)': 'knsb',
+    'KNER (Gudnason)': 'kner',
+    'KNDX (Nakka)': 'kndx'
+}
+
 # _____________________________________________________________________________________________________________________
-# DASH COMPONENTS
+# INPUT COMPONENTS
 
-title_row = dbc.Row([
-    dbc.Col(
-        html.H1("SRM Solver", style={'textAlign': 'center'}),
-        width={'size': 12}
-    )
-])
-
-input_row_1 = dbc.Row([
-    dbc.Col(
-        html.Label('Motor Name: '),
-        width=label_col_width
-    ),
-    dbc.Col(
-        html.Div([
-            dbc.Input(
-                placeholder='Insert text...', id='motor_name', value='', type='text'
-            )
-        ]),
-        width=input_col_width
-    ),
-    dbc.Col(
-        html.Label('Manufacturer: '),
-        width=label_col_width
-    ),
-    dbc.Col(
-        html.Div([
-            dbc.Input(
-                placeholder='Insert text...', id='motor_manuf', value='', type='text'
-            )
-        ]),
-        width=input_col_width
-    )
-])
-
-input_row_2 = dbc.Row([
-    dbc.Col(
-        html.Label('Propellant: '),
-        width=1
-    ),
-    dbc.Col(
-        dcc.Dropdown(
-            options=[
-                {'label': 'KNSB (Nakka)', 'value': 'knsb-nakka'},
-                {'label': 'KNSB (Gudnason)', 'value': 'knsb'},
-                {'label': 'KNDX (Nakka)', 'value': 'kndx'},
-                {'label': 'KNER (Gudnason)', 'value': 'kner'},
-                {'label': 'KNSU (Nakka)', 'value': 'knsu'}
-            ],
-            placeholder='Select propellant...'
+input_row_1 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Name'),
+                    dbc.Input(
+                        type='text',
+                        id='motor_name',
+                        placeholder='Enter motor name...'
+                    )
+                ]
+            ),
+            width=3
         ),
-        width=2
-    ),
-    dbc.Col(
-        html.Label(['Grain Count: ', dbc.Input(placeholder='Set integer...', id='N', value='4', type='number')]),
-        width={'size': 3, 'offset': 1}
-    )
-], no_gutters=False)
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Manufacturer'),
+                    dbc.Input(
+                        type='text',
+                        id='motor_manufacturer',
+                        placeholder='Enter motor manufacturer...'
+                    )
+                ]
+            ),
+            width=3
+        )
+    ]
+)
 
-input_row_3 = dbc.Row([
-    html.Div(
-        html.Label(['Grain Diameter: ',
-                    dbc.Input(placeholder='Insert value...', id='D_grain', value='', type='text')
-                    ]),
-        width=3
-    )
-])
+input_row_2 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Propellant'),
+                    dbc.Select(
+                        id='propellant_select',
+                        options=[
+                            {'label': 'KNSB (Nakka)', 'value': 'knsb-nakka'},
+                            {'label': 'KNSB (Gudnason)', 'value': 'knsb'},
+                            {'label': 'KNDX', 'value': 'kndx'},
+                            {'label': 'KNER', 'value': 'kner'},
+                        ],
+                    )
+                ]
+            ),
+            width=3
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Grain count'),
+                    dbc.Input(
+                        placeholder='Set integer...',
+                        id='N',
+                        value='4',
+                        type='number'
+                    )
+                ]
+            ),
+            width=3
+        )
+    ]
+)
+
+input_row_3 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Grain diameter'),
+                    dbc.Input(
+                        placeholder='Insert grain diameter',
+                        id='D_grain',
+                        value='',
+                        type='number'
+                    )
+                ]
+            ),
+            width=3
+        ),
+        dbc.Col(
+            dbc.Checklist(
+                options=[
+                    {'label': 'Neutral burn profile', 'value': True},
+                ],
+                value=[],
+                id='neutral_burn_profile',
+                switch=True,
+            ),
+            width=3
+        )
+    ]
+)
 
 input_row_4 = dbc.Row([
-    dbc.Col(
-        dcc.Dropdown(
-            id='grain_dropdown',
-            searchable=False,
-            clearable=False,
-            placeholder='Select a grain...'
-        ),
-        width=6
-    )
-])
-
-input_row_5 = dbc.Row([
     dbc.Col(
         html.Label(['Grain core diameter: ',
                     dbc.Input(placeholder='Insert value...', id='D_core', value='', type='number')
@@ -112,43 +137,64 @@ input_row_5 = dbc.Row([
 ])
 
 # _____________________________________________________________________________________________________________________
+# TABS
+
+input_tab = dbc.Tab(label='Inputs', children=[
+    dbc.Card(
+        dbc.CardBody([
+            html.H2([dbc.Badge('Motor Data')]),
+            input_row_1,
+            html.H2([dbc.Badge('Propellant')]),
+            input_row_2,
+            input_row_3,
+            html.H3([dbc.Badge('Grain segments')]),
+            input_row_4
+        ])
+    )
+])
+
+ib_tab = dbc.Tab(label='Internal Ballistics', children=[
+    html.P('.')
+])
+
+structure_tab = dbc.Tab(label='Structure', children=[
+    html.P('.')
+])
+
+ta_tab = dbc.Tab(label='Thermal Analysis', children=[
+    html.P('.')
+])
+
+ballistic_tab = dbc.Tab(label='Ballistic', children=[
+    html.P('.')
+])
+
+# _____________________________________________________________________________________________________________________
 # DASH APP EXECUTION
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SANDSTONE])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SLATE])
 
 app.layout = html.Div([
 
-    title_row,
+    dbc.Row([
+        dbc.Col([
+            html.H1("SRM Solver", style={'textAlign': 'center'}),
+            html.H5('Build a BATES grain Solid Rocket Motor inside your own browser', style={'textAlign': 'center'})
+        ],
+            width={'size': 12}
+        )
+    ]),
 
-    dcc.Tabs([
-        dcc.Tab(label='Inputs', children=[
-            dbc.Card(
-                dbc.CardBody([
-                    html.P(''),
-                    html.H2('Motor Data'),
-                    input_row_1,
-                    html.P(''),
-                    html.H2('Propellant Data'),
-                    input_row_2,
-                    input_row_3,
-                    html.P(''),
-                    html.H3('Grain segments'),
-                    input_row_4
-                ])
-            )
-        ]),
-        dcc.Tab(label='Internal Ballistics', children=[
-            html.P('.')
-        ]),
-        dcc.Tab(label='Structure', children=[
-            html.P('.')
-        ]),
-        dcc.Tab(label='Thermal Analysis', children=[
-            html.P('.')
-        ]),
-        dcc.Tab(label='Ballistic', children=[
-            html.P('.')
-        ])
+    dbc.Tabs([
+        input_tab,
+        ib_tab,
+        structure_tab,
+        ta_tab,
+        ballistic_tab
+    ]),
+
+    html.Div([
+        dcc.Markdown('Written by Felipe Bogaerts de Mattos, October 2020.', style={'textAlign': 'right'})
     ])
 
 ])
