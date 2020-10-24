@@ -65,7 +65,7 @@ input_row_2 = dbc.Row(
         dbc.Col(
             dbc.FormGroup(
                 [
-                    dbc.Label('Propellant'),
+                    dbc.Label('Propellant composition'),
                     dbc.Select(
                         id='propellant_select',
                         options=[
@@ -82,7 +82,7 @@ input_row_2 = dbc.Row(
         dbc.Col(
             dbc.FormGroup(
                 [
-                    dbc.Label('Grain count'),
+                    dbc.Label('Grain segment count'),
                     dbc.Input(
                         placeholder='Set integer...',
                         id='N',
@@ -128,13 +128,30 @@ input_row_3 = dbc.Row(
 
 input_row_4 = dbc.Row([
     dbc.Col(
-        html.Label(['Grain core diameter: ',
+        html.Label(['Grain core diameter',
                     dbc.Input(placeholder='Insert value...', id='D_core', value='', type='number')
                     ]),
         width=3
     )
 
 ])
+
+# _____________________________________________________________________________________________________________________
+# GRAPHS
+
+figure_grain_radial = go.Figure(
+    data=go.Scatter(
+        x=[0, 0],
+        y=[0, 0]
+    )
+)
+
+figure_grain_radial.add_shape(
+    type='circle',
+    xref='x', yref='y',
+    fillcolor='#0DAC00',
+    x0=- 2, x1=2, y0=- 2, y1=2
+)
 
 # _____________________________________________________________________________________________________________________
 # TABS
@@ -150,6 +167,12 @@ input_tab = dbc.Tab(label='Inputs', children=[
             html.H3([dbc.Badge('Grain segments')]),
             input_row_4
         ])
+    ),
+    dbc.Card(
+        dcc.Graph(
+            id='grain_radial',
+            figure=figure_grain_radial
+        )
     )
 ])
 
