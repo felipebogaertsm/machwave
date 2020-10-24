@@ -51,9 +51,14 @@ grain_spacing = st.sidebar.number_input('Grain spacing [mm]', max_value=D_grain 
 D_core, L_grain = np.zeros(N), np.zeros(N)
 neutral_burn_profile = st.sidebar.checkbox('Neutral burn profile', value=True)
 st.sidebar.write("""### Core diameter""")
-for i in range(N):
-    D_core[i] = st.sidebar.number_input(f'Core diameter #{i + 1} [mm]',
-                                        max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
+single_core_diameter = st.sidebar.checkbox('Single core diameter', value=True)
+if single_core_diameter:
+    D_core = np.ones(N) * st.sidebar.number_input(f'Core diameter [mm]',
+                                                  max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
+else:
+    for i in range(N):
+        D_core[i] = st.sidebar.number_input(f'Core diameter #{i + 1} [mm]',
+                                            max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
 if neutral_burn_profile:
     for i in range(N):
         L_grain[i] = 0.5 * (3 * D_grain + D_core[i])
@@ -179,3 +184,15 @@ figure_performance.add_scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)')
 figure_performance.add_scatter(y=grain_mass_flux[- 1], x=t, name=f'Mass flux (kg/s-m-m)')
 
 st.write(figure_performance)
+
+# _____________________________________________________________________________________________________________________
+# RESULTS
+
+st.write(f"""
+Total, specific impulse: {I_total:.2f} N.s, {I_sp:.2f} s\n
+Propellant mass: {m_prop[0]:.3f} kg\n
+Maximum, mean pressure: {np.max(P0) * 1e-6:.2f} MPa, {np.mean(P0) * 1e-6:.2f} MPa\n
+Maximum, mean thrust: {np.max(F):.2f} N, {np.mean(F):.2f} N\n
+Thrust, burn time: {t[-1]:.2f} s, {time_burnout:.2f} s\n
+Optimal expansion ratio: {E_avg:.2f}\n
+""")
