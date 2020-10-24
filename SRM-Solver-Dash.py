@@ -23,9 +23,10 @@ input_col_width = 2
 # DASH COMPONENTS
 
 title_row = dbc.Row([
-    dbc.Col(html.H1("SRM Solver"),
-            width={'size': 6, 'offset': 0},
-            )
+    dbc.Col(
+        html.H1("SRM Solver", style={'textAlign': 'center'}),
+        width={'size': 12}
+    )
 ])
 
 input_row_1 = dbc.Row([
@@ -80,7 +81,7 @@ input_row_2 = dbc.Row([
 ], no_gutters=False)
 
 input_row_3 = dbc.Row([
-    dbc.Col(
+    html.Div(
         html.Label(['Grain Diameter: ',
                     dbc.Input(placeholder='Insert value...', id='D_grain', value='', type='text')
                     ]),
@@ -133,7 +134,8 @@ app.layout = html.Div([
                     html.P(''),
                     html.H3('Grain segments'),
                     input_row_4
-                ]))
+                ])
+            )
         ]),
         dcc.Tab(label='Internal Ballistics', children=[
             html.P('.')
