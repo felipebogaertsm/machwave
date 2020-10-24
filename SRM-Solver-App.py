@@ -42,7 +42,7 @@ input_row_1 = dbc.Row(
                     )
                 ]
             ),
-            width=3
+            width=6
         ),
         dbc.Col(
             dbc.FormGroup(
@@ -55,7 +55,7 @@ input_row_1 = dbc.Row(
                     )
                 ]
             ),
-            width=3
+            width=6
         )
     ]
 )
@@ -71,13 +71,13 @@ input_row_2 = dbc.Row(
                         options=[
                             {'label': 'KNSB (Nakka)', 'value': 'knsb-nakka'},
                             {'label': 'KNSB (Gudnason)', 'value': 'knsb'},
-                            {'label': 'KNDX', 'value': 'kndx'},
-                            {'label': 'KNER', 'value': 'kner'},
+                            {'label': 'KNDX (Nakka)', 'value': 'kndx'},
+                            {'label': 'KNER (Gudnason)', 'value': 'kner'},
                         ],
                     )
                 ]
             ),
-            width=3
+            width=6
         ),
         dbc.Col(
             dbc.FormGroup(
@@ -91,7 +91,7 @@ input_row_2 = dbc.Row(
                     )
                 ]
             ),
-            width=3
+            width=6
         )
     ]
 )
@@ -110,7 +110,7 @@ input_row_3 = dbc.Row(
                     )
                 ]
             ),
-            width=3
+            width=6
         ),
         dbc.Col(
             dbc.Checklist(
@@ -121,7 +121,7 @@ input_row_3 = dbc.Row(
                 id='neutral_burn_profile',
                 switch=True,
             ),
-            width=3
+            width=6
         )
     ]
 )
@@ -131,7 +131,7 @@ input_row_4 = dbc.Row([
         html.Label(['Grain core diameter',
                     dbc.Input(placeholder='Insert value...', id='D_core', value='', type='number')
                     ]),
-        width=3
+        width=6
     )
 
 ])
@@ -143,37 +143,58 @@ figure_grain_radial = go.Figure(
     data=go.Scatter(
         x=[0, 0],
         y=[0, 0]
+    ),
+    layout=go.Layout(
+        title='Grain radial perspective',
+        yaxis={'scaleanchor': 'x', 'scaleratio': 1}
     )
 )
 
 figure_grain_radial.add_shape(
     type='circle',
     xref='x', yref='y',
-    fillcolor='#0DAC00',
+    fillcolor='#dac36d',
     x0=- 2, x1=2, y0=- 2, y1=2
+)
+
+figure_grain_radial.add_shape(
+    type='circle',
+    xref='x', yref='y',
+    fillcolor='#e3e3e3',
+    x0=- 1, x1=1, y0=- 1, y1=1
 )
 
 # _____________________________________________________________________________________________________________________
 # TABS
 
 input_tab = dbc.Tab(label='Inputs', children=[
-    dbc.Card(
-        dbc.CardBody([
-            html.H2([dbc.Badge('Motor Data')]),
-            input_row_1,
-            html.H2([dbc.Badge('Propellant')]),
-            input_row_2,
-            input_row_3,
-            html.H3([dbc.Badge('Grain segments')]),
-            input_row_4
-        ])
-    ),
-    dbc.Card(
-        dcc.Graph(
-            id='grain_radial',
-            figure=figure_grain_radial
+    dbc.Row([
+        dbc.Col(
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        html.H2([dbc.Badge('Motor data')]),
+                        input_row_1,
+                        html.H2([dbc.Badge('Propellant grain')]),
+                        input_row_2,
+                        input_row_3,
+                        html.H3([dbc.Badge('Grain segments')]),
+                        input_row_4
+                    ]
+                )
+            ),
+            width=6
+            ),
+        dbc.Col(
+            dbc.Card(
+                dcc.Graph(
+                    id='grain_radial',
+                    figure=figure_grain_radial
+                )
+            ),
+            width=6
         )
-    )
+    ])
 ])
 
 ib_tab = dbc.Tab(label='Internal Ballistics', children=[
