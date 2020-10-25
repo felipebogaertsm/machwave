@@ -74,6 +74,7 @@ input_row_2 = dbc.Row(
                             {'label': 'KNDX (Nakka)', 'value': 'kndx'},
                             {'label': 'KNER (Gudnason)', 'value': 'kner'},
                         ],
+                        value='knsb-nakka'
                     )
                 ]
             ),
@@ -101,11 +102,11 @@ input_row_3 = dbc.Row(
         dbc.Col(
             dbc.FormGroup(
                 [
-                    dbc.Label('Grain diameter'),
+                    dbc.Label('Grain diameter (mm)'),
                     dbc.Input(
                         placeholder='Insert grain diameter',
                         id='D_grain',
-                        value='',
+                        value='41',
                         type='number'
                     )
                 ]
@@ -128,9 +129,13 @@ input_row_3 = dbc.Row(
 
 input_row_4 = dbc.Row([
     dbc.Col(
-        html.Label(['Grain core diameter',
-                    dbc.Input(placeholder='Insert value...', id='D_core', value='', type='number')
-                    ]),
+        html.Label(
+            ['Grain core diameter (mm)',
+             dbc.Input(
+                 placeholder='Insert value...',
+                 id='D_core', value='',
+                 type='number')
+             ]),
         width=6
     )
 
@@ -184,7 +189,7 @@ input_tab = dbc.Tab(label='Inputs', children=[
                 )
             ),
             width=6
-            ),
+        ),
         dbc.Col(
             dbc.Card(
                 dcc.Graph(

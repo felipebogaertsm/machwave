@@ -32,7 +32,7 @@ web_res = 1000
 # _____________________________________________________________________________________________________________________
 # STREAMLIT TITLE
 
-st.title("SRM Solver")
+st.title("SRM Solver Lite")
 
 st.write("""
 ### Simulate a BATES grain Solid Rocket Motors from your web browser
