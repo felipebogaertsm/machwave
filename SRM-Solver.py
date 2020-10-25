@@ -105,7 +105,7 @@ propellant = 'knsb-nakka'
 
 # THRUST CHAMBER
 # Chamber inside diameter [m]:
-D_in = 127e-3
+D_in = 121e-3
 # Chamber outside diameter [m]:
 D_out = 139.7e-3
 # Throat diameter [m]:
