@@ -96,9 +96,9 @@ N = 6
 # Grain external diameter [m]:
 D_grain = 114e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([55, 55, 55, 55, 55, 55]) * 1e-3
+D_core = np.array([55, 55, 55, 55, 55, 55, 55]) * 1e-3
 # Grains 1 to 'N' length [m]:
-L_grain = np.array([200, 200, 200, 200, 200, 200]) * 1e-3
+L_grain = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
