@@ -544,7 +544,7 @@ def main_function(D_throat, grain_spacing, D_core, D_grain, N, L_grain, propella
     A_throat = circle_area(D_throat)
     L_cc = np.sum(L_grain) + (N - 1) * grain_spacing
     grain = BATES(web_res, N, D_grain, D_core, L_grain)
-    # structure = MotorStructure(sf, m_motor, D_in, D_out, L_cc, D_screw, D_clearance)
+    # structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clearance)
 
     # BATES grain calculation:
     w = grain.web()
