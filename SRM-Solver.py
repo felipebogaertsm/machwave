@@ -50,7 +50,7 @@
 # 9) Motor Structure
 # 10) Results
 # 11) Output to .eng and .csv file
-# 12) Time function end
+# 12) Time function End
 # 13) Plots
 
 import numpy as np
