@@ -5,6 +5,7 @@
 # The length and core diameter can be input for each individual grain, guaranteeing more flexibility while designing an
 # SRM. The list of standard propellants and its specifications can be found inside the 'functions.py' file.
 # Nozzle correction factors were obtained from the a015140 paper.
+#
 # No erosive burning correction has been written (yet).
 #
 # HOW TO USE:
@@ -12,7 +13,9 @@
 # Command Window. Inside the output folder created, a .eng and a .csv file will also be available with the important
 # data for a rocket ballistic simulation. Also, plots with the motor thrust, chamber pressure, Kn, propellant mass and
 # mass flux will be stored inside the same output folder.
+#
 # Make sure all the modules are properly installed!
+#
 # Note that the grain #1 is the grain closest to the bulkhead and farthest from the nozzle.
 #
 # The following assertions were taken into consideration:
