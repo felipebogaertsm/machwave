@@ -387,7 +387,7 @@ ib_row_1 = dbc.Row(
                 [
                     dbc.Label(
                         children=[
-                            'hello'
+                            '.'
                         ]
                     )
                 ]
@@ -437,51 +437,70 @@ input_tab = dbc.Tab(label='Inputs', children=[
     )
 ])
 
-ib_tab = dbc.Tab(label='Internal Ballistics', children=[
-    dbc.Row(
-        [
-            dbc.Col(
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            html.H2([dbc.Badge('IB parameters')]),
-                            html.H3([dbc.Badge('Burn Regression')]),
-                            ib_row_1,
-                        ]
-                    )
-                ), width=6
-            ),
-            dbc.Col(
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            dcc.Graph(
-                                id='burn_regression_graph'
-                            )
-                        ]
-                    )
-                ), width=6
-            )
-        ]
-    )
-])
+ib_tab = dbc.Tab(
+    label='Internal Ballistics',
+    children=[
+        dbc.Row(
+            [
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                html.H2([dbc.Badge('IB parameters')]),
+                                html.H3([dbc.Badge('Burn Regression')]),
+                                ib_row_1,
+                            ]
+                        )
+                    ), width=6
+                ),
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                dcc.Graph(
+                                    id='burn_regression_graph'
+                                )
+                            ]
+                        )
+                    ), width=6
+                )
+            ]
+        )
+    ]
+)
 
-structure_tab = dbc.Tab(label='Structure', children=[
-    html.P('.')
-])
+nozzle_tab = dbc.Tab(
+    label='Nozzle Design',
+    children=[
+        html.P('.')
+    ]
+)
 
-ta_tab = dbc.Tab(label='Thermal Analysis', children=[
-    html.P('.')
-])
+structure_tab = dbc.Tab(
+    label='Structure',
+    children=[
+        html.P('.')
+    ]
+)
 
-ballistic_tab = dbc.Tab(label='Ballistic', children=[
-    html.P('.')
-])
+ta_tab = dbc.Tab(
+    label='Thermal Analysis',
+    children=[
+        html.P('.')
+    ]
+)
+
+ballistic_tab = dbc.Tab(
+    label='Rocket Trajectory',
+    children=[
+        html.P('.')
+    ]
+)
 
 # _____________________________________________________________________________________________________________________
 # DASH APP EXECUTION
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SANDSTONE])
 
 app.layout = html.Div([
 
@@ -529,7 +548,6 @@ app.layout = html.Div([
     ]
 )
 def main_function(D_throat, grain_spacing, D_core, D_grain, N, L_grain, propellant, single_core_diameter):
-
     D_throat, grain_spacing, D_core, D_grain, N, L_grain = float(D_throat), float(grain_spacing), float(D_core), \
                                                            float(D_grain), int(N), float(L_grain)
 
