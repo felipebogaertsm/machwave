@@ -9,7 +9,7 @@
 # T0: Real combustion temperature [K]
 # M_ch: Molar weight (chamber) [100g/mole]
 # M_ex: Molar weight (exhaust) [100g/mole]
-# Isp_frozen, Isp_shifting: Frozen and shifting specific impulse [s]
+# Isp_frozen, Isp_shifting: Frozen and shifting specific getImpulses [s]
 # qsi_ch: Number of condensed phase moles per 100 gram (chamber) [mole]
 # qsi_ex: Number of condensed phase moles per 100 gram (exhaust) [mole]
 

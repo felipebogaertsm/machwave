@@ -559,20 +559,20 @@ def main_function(D_throat, grain_spacing, D_core, D_grain, N, L_grain, propella
     ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
     R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
     T0 = ce * T0_ideal
-    A_throat = circle_area(D_throat)
+    A_throat = getCircleArea(D_throat)
     L_cc = np.sum(L_grain) + (N - 1) * grain_spacing
     grain = BATES(web_res, N, D_grain, D_core, L_grain)
     # structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clearance)
 
     # BATES grain calculation:
-    w = grain.web()
+    w = grain.getWebArray()
     gAb = np.zeros((N, web_res))
     gVp = np.zeros((N, web_res))
     for j in range(N):
         for i in range(web_res):
-            gAb[j, i] = grain.burnArea(w[j, i], j)
-            gVp[j, i] = grain.grainVolume(w[j, i], j)
-    D_core_min_index = grain.minCoreDiamIndex()
+            gAb[j, i] = grain.getBurnArea(w[j, i], j)
+            gVp[j, i] = grain.getPropellantVolume(w[j, i], j)
+    D_core_min_index = grain.getMinCoreDiameterIndex()
     for j in range(N):
         gAb[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gAb[j, :], left=0, right=0)
         gVp[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gVp[j, :], left=0, right=0)
@@ -581,11 +581,11 @@ def main_function(D_throat, grain_spacing, D_core, D_grain, N, L_grain, propella
     w = w[D_core_min_index, :]
     A_core = np.array([])
     for j in range(N):
-        A_core = np.append(A_core, circle_area(D_core[j]))
+        A_core = np.append(A_core, getCircleArea(D_core[j]))
     A_port = A_core[-1]
     initial_port_to_throat = A_port / A_throat
-    burn_profile = getBurnProfile(A_burn)
-    optimal_grain_length = grain.optimalLength()
+    burn_profile = burn_profile(A_burn)
+    optimal_grain_length = grain.getOptimalSegmentLength()
 
     burn_regression_graph_data = [
         go.Scatter(
