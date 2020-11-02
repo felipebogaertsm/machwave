@@ -158,7 +158,7 @@ R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 T0 = ce * T0_ideal
 
 # Nozzle throat area [m-m]:
-A_throat = circle_area(D_throat)
+A_throat = getCircleArea(D_throat)
 
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
@@ -175,7 +175,7 @@ structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clear
 # BATES GRAIN CALCULATION
 
 # Creating a web distance array, for each grain:
-w = grain.web()
+w = grain.getWebArray()
 
 # Pre-allocating the burn area and volume matrix for each grain segment. Rows are the grain segment number and columns
 # are the burn area or volume value for each web regression step.
@@ -184,15 +184,15 @@ gVp = np.zeros((N, web_res))
 
 for j in range(N):
     for i in range(web_res):
-        gAb[j, i] = grain.burnArea(w[j, i], j)
-        gVp[j, i] = grain.grainVolume(w[j, i], j)
+        gAb[j, i] = grain.getBurnArea(w[j, i], j)
+        gVp[j, i] = grain.getPropellantVolume(w[j, i], j)
 
 # In case there are different initial core diameters or grain lengths, the for loop below interpolates all the burn
 # area and Propellant volume data in respect to the largest web thickness of the motor.
 # This ensures that that all grains ignite at the same time in the simulation and also that the distance between
 # steps is equal for all grains in the matrix gAb and gVp.
 
-D_core_min_index = grain.minCoreDiamIndex()
+D_core_min_index = grain.getMinCoreDiameterIndex()
 
 for j in range(N):
     gAb[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gAb[j, :], left=0, right=0)
@@ -209,7 +209,7 @@ w = w[D_core_min_index, :]
 # Core area:
 A_core = np.array([])
 for j in range(N):
-    A_core = np.append(A_core, circle_area(D_core[j]))
+    A_core = np.append(A_core, getCircleArea(D_core[j]))
 # Port area:
 A_port = A_core[-1]
 # Port to throat area ratio:
@@ -218,13 +218,13 @@ initial_port_to_throat = A_port / A_throat
 # Getting the burn profile
 burn_profile = getBurnProfile(A_burn)
 # Getting the optimal length for each grain segment
-optimal_grain_length = grain.optimalLength()
+optimal_grain_length = grain.getOptimalSegmentLength()
 
 # _____________________________________________________________________________________________________________________
 # CHAMBER PRESSURE RK4 SOLVER
 
 # Calculating the free chamber volume for each web step:
-V0, V_empty = chamber_volume(L_chamber, D_chamber, V_prop)
+V0, V_empty = getChamberVolume(L_chamber, D_chamber, V_prop)
 
 # Critical pressure (isentropic supersonic flow):
 critical_pressure_ratio = (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
@@ -274,10 +274,10 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     V_prop_CP = np.interp(x, w, V_prop, right=0)
 
     # The values above are then used to solve the differential equation by the Range-Kutta 4th order method.
-    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k1 = solveCPSeidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k2 = solveCPSeidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k3 = solveCPSeidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k4 = solveCPSeidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
@@ -290,7 +290,7 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     i = i + 1
 
 # Mass flux per grain:
-grain_mass_flux = grain.massFluxPerGrain(r, pp, x)
+grain_mass_flux = grain.getMassFluxPerSegment(r, pp, x)
 
 # The value for 'index' is used later to iterate on other useful vectors. I_total is set to the total length of the
 # 'P0' vector in order to guarantee that future vectors will cover all the same instants that 'P0' covers.
@@ -312,30 +312,32 @@ P0_psi_avg = np.mean(P0_psi)
 # _____________________________________________________________________________________________________________________
 # EXPANSION RATIO AND EXIT PRESSURE
 
-E = expansion_ratio(P_external, P0, k_2ph_ex, index, critical_pressure_ratio)
-E_avg = np.mean(E)
+E = getExpansionRatio(P_external, P0, k_2ph_ex, index, critical_pressure_ratio)
+E = np.mean(E)
+
+P_exit = getExitPressure(k_2ph_ex, E, P0)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR PERFORMANCE LOSSES (a015140 paper)
 
 n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
 
-n_kin, n_tp, n_bl = operational_correction_factors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
-                                                   D_throat, qsi_ch, index, critical_pressure_ratio, C1,
-                                                   C2, V0, M_ch, t)
+n_kin, n_tp, n_bl = getOperationalCorrectionFactors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
+                                                    D_throat, qsi_ch, index, critical_pressure_ratio, C1,
+                                                    C2, V0, M_ch, t)
 
 n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
 
 # _____________________________________________________________________________________________________________________
 # THRUST AND IMPULSE
 
-Cf = thrust_coefficient(P0, P_external, k_2ph_ex, n_cf)
+Cf = getThrustCoefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf)
 F = Cf * A_throat * P0
 
 F_avg = np.mean(F)
 Cf_avg = np.mean(Cf)
 
-I_total, I_sp = impulse(F_avg, t, m_prop)
+I_total, I_sp = getImpulses(F_avg, t, m_prop)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
@@ -379,12 +381,12 @@ print(f' Maximum, average chamber pressure: {(np.max(P0) * 1e-6):.3f}, {(np.mean
 
 print('\nTHRUST AND IMPULSE')
 print(f' Maximum, average thrust: {np.max(F):.3f}, {np.mean(F):.3f} N')
-print(f' Total, specific impulse: {I_total:.3f} N-s, {I_sp:.3f} s')
+print(f' Total, specific getImpulses: {I_total:.3f} N-s, {I_sp:.3f} s')
 print(f' Burnout time, thrust time: {time_burnout:.3f}, {t[-1]:.3f} s')
 
 print('\nNOZZLE DESIGN')
-print(f' Average opt. exp. ratio: {E_avg:.3f}')
-print(f' Nozzle exit diameter: {D_throat * np.sqrt(E_avg) * 1e3:.3f} mm')
+print(f' Average opt. exp. ratio: {np.mean(E):.3f}')
+print(f' Nozzle exit diameter: {D_throat * np.sqrt(np.mean(E)) * 1e3:.3f} mm')
 print(f' Average nozzle efficiency: {np.mean(n_cf) * 100:.3f} %')
 
 print('\nPRELIMINARY STRUCTURAL PROJECT')

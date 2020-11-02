@@ -17,13 +17,13 @@ from functions.ib_functions import *
 # INITIAL DEFINITIONS
 
 prop_dict = {
+    'KNDX (Nakka)': 'kndx',
     'KNSB (Nakka)': 'knsb-nakka',
     'KNSB (Gudnason)': 'knsb',
-    'KNER (Gudnason)': 'kner',
-    'KNDX (Nakka)': 'kndx'
+    'KNER (Gudnason)': 'kner'
 }
 prop_list = prop_dict.keys()
-prop_list = ['KNSB (Nakka)', 'KNSB (Gudnason)', 'KNER (Gudnason)', 'KNDX (Nakka)']
+prop_list = ['KNDX (Nakka)', 'KNSB (Gudnason)', 'KNER (Gudnason)', 'KNSB (Nakka)']
 # Time step [s]:
 dt = 1e-3
 # Web regression resolution:
@@ -35,7 +35,7 @@ web_res = 1000
 st.title("SRM Solver Lite")
 
 st.write("""
-### Simulate a BATES grain Solid Rocket Motors from your web browser
+### Simulate a BATES grain Solid Rocket Motors from your getWebArray browser
 """)
 
 # _____________________________________________________________________________________________________________________
@@ -88,20 +88,20 @@ if steel_nozzle:
 ce, pp, k_mix_ch, k_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 T0 = ce * T0_ideal
-A_throat = circle_area(D_throat)
+A_throat = getCircleArea(D_throat)
 L_cc = np.sum(L_grain) + (N - 1) * grain_spacing
 grain = BATES(web_res, N, D_grain, D_core, L_grain)
 
-w = grain.web()
+w = grain.getWebArray()
 gAb = np.zeros((N, web_res))
 gVp = np.zeros((N, web_res))
 
 for j in range(N):
     for i in range(web_res):
-        gAb[j, i] = grain.burnArea(w[j, i], j)
-        gVp[j, i] = grain.grainVolume(w[j, i], j)
+        gAb[j, i] = grain.getBurnArea(w[j, i], j)
+        gVp[j, i] = grain.getPropellantVolume(w[j, i], j)
 
-D_core_min_index = grain.minCoreDiamIndex()
+D_core_min_index = grain.getMinCoreDiameterIndex()
 
 for j in range(N):
     gAb[j, :] = np.interp(w[D_core_min_index, :], w[j, :], gAb[j, :], left=0, right=0)
@@ -114,13 +114,13 @@ w = w[D_core_min_index, :]
 
 A_core = np.array([])
 for j in range(N):
-    A_core = np.append(A_core, circle_area(D_core[j]))
+    A_core = np.append(A_core, getCircleArea(D_core[j]))
 A_port = A_core[-1]
 initial_port_to_throat = A_port / A_throat
 burn_profile = getBurnProfile(A_burn)
-optimal_grain_length = grain.optimalLength()
+optimal_grain_length = grain.getOptimalSegmentLength()
 
-V0, V_empty = chamber_volume(L_cc, D_in, V_prop)
+V0, V_empty = getChamberVolume(L_cc, D_in, V_prop)
 critical_pressure_ratio = (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
 P0, x, t, time_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
 r0, re, r = np.array([]), np.array([]), np.array([])
@@ -139,39 +139,41 @@ while x[i] <= w[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     A_burn_CP = np.interp(x, w, A_burn, left=0, right=0)
     V0_CP = np.interp(x, w, V0, right=V_empty)
     V_prop_CP = np.interp(x, w, V_prop, right=0)
-    k1 = CP_Seidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k2 = CP_Seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k3 = CP_Seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k4 = CP_Seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k1 = solveCPSeidel(P0[i], P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k2 = solveCPSeidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k3 = solveCPSeidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k4 = solveCPSeidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i], V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
     if time_burnout == 0 and A_burn_CP[i] == 0:
         time_burnout = t[i]
     i = i + 1
 
-grain_mass_flux = grain.massFluxPerGrain(r, pp, x)
+grain_mass_flux = grain.getMassFluxPerSegment(r, pp, x)
 index = np.size(P0)
 Kn = A_burn_CP / A_throat
 m_prop = V_prop_CP * pp
 P0_avg = np.mean(P0)
 P0_psi = P0 * 1.45e-4
 P0_psi_avg = np.mean(P0_psi)
-E = expansion_ratio(P_external, P0, k_ex, index, critical_pressure_ratio)
+E = getExpansionRatio(P_external, P0, k_ex, index, critical_pressure_ratio)
 E_avg = np.mean(E)
 n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
-n_kin, n_tp, n_bl = operational_correction_factors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
-                                                   D_throat, qsi_ch, index, critical_pressure_ratio, C1,
-                                                   C2, V0, M_ch, t)
+n_kin, n_tp, n_bl = getOperationalCorrectionFactors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
+                                                    D_throat, qsi_ch, index, critical_pressure_ratio, C1,
+                                                    C2, V0, M_ch, t)
 n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
-Cf = thrust_coefficient(P0, P_external, k_ex, n_cf)
+Cf = getThrustCoefficient(P0, P_external, k_ex, n_cf)
 F = Cf * A_throat * P0
-I_total, I_sp = impulse(np.mean(F), t, m_prop)
+I_total, I_sp = getImpulses(np.mean(F), t, m_prop)
 
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
 plot_thrust = [
-    go.Scatter(y=F, x=t, name='Thrust (N)', mode='lines'),
-    go.Scatter(y=np.mean(F) * np.ones(index), x=t, name='Mean thrust (N)', mode='lines')
+    go.Scatter(y=F, x=t, name='Thrust (N)', mode='lines', marker=dict(color='#7d199c')),
+    go.Scatter(y=np.mean(F) * np.ones(index), x=t, name='Mean thrust', mode='lines',
+               line={'dash': 'dash', 'color': '#C70039'}
+               )
 ]
 
 figure_thrust = go.Figure(
@@ -182,8 +184,10 @@ figure_thrust = go.Figure(
 )
 
 plot_pressure = [
-    go.Scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)'),
-    go.Scatter(y=np.mean(P0 * 1e-6) * np.ones(index), x=t, name='Mean pressure (MPa)')
+    go.Scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)', line={'color': '#008141'}),
+    go.Scatter(y=np.mean(P0 * 1e-6) * np.ones(index), x=t, name='Mean pressure', mode='lines',
+               line={'dash': 'dash', 'color': '#C70039'}
+               )
 ]
 
 figure_pressure = go.Figure(
@@ -193,8 +197,24 @@ figure_pressure = go.Figure(
     )
 )
 
-st.write(figure_thrust)
+plot_Cf = [
+    go.Scatter(y=Cf, x=t, name='Cf', line={'color': '#252525'}),
+    go.Scatter(y=np.mean(Cf) * np.ones(index), x=t, name='Mean Cf', mode='lines',
+               line={'dash': 'dash', 'color': '#C70039'}
+               ),
+    go.Scatter(y=n_cf, x=t, name='Nozzle corrections', line={'color': '#5d5d5d'})
+]
+
+figure_Cf = go.Figure(
+    data=plot_Cf,
+    layout=go.Layout(
+        title=go.layout.Title(text='Correction factors curves')
+    )
+)
+
 st.write(figure_pressure)
+st.write(figure_thrust)
+st.write(figure_Cf)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
