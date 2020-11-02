@@ -164,26 +164,37 @@ n_kin, n_tp, n_bl = operational_correction_factors(P0, P_external, P0_psi, Isp_f
 n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
 Cf = thrust_coefficient(P0, P_external, k_ex, n_cf)
 F = Cf * A_throat * P0
-F_avg = np.mean(F)
-Cf_avg = np.mean(Cf)
-I_total, I_sp = impulse(F_avg, t, m_prop)
+I_total, I_sp = impulse(np.mean(F), t, m_prop)
 
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-plot_thrust = go.Scatter(y=F, x=t, name='Thrust (N)')
+plot_thrust = [
+    go.Scatter(y=F, x=t, name='Thrust (N)', mode='lines'),
+    go.Scatter(y=np.mean(F) * np.ones(index), x=t, name='Mean thrust (N)', mode='lines')
+]
 
-figure_performance = go.Figure(
+figure_thrust = go.Figure(
     data=plot_thrust,
     layout=go.Layout(
-        title=go.layout.Title(text='Performance curves')
+        title=go.layout.Title(text='Thrust curves')
     )
 )
 
-figure_performance.add_scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)')
-figure_performance.add_scatter(y=grain_mass_flux[- 1], x=t, name=f'Mass flux (kg/s-m-m)')
+plot_pressure = [
+    go.Scatter(y=P0 * 1e-6, x=t, name='Pressure (MPa)'),
+    go.Scatter(y=np.mean(P0 * 1e-6) * np.ones(index), x=t, name='Mean pressure (MPa)')
+]
 
-st.write(figure_performance)
+figure_pressure = go.Figure(
+    data=plot_pressure,
+    layout=go.Layout(
+        title=go.layout.Title(text='Pressure curves')
+    )
+)
+
+st.write(figure_thrust)
+st.write(figure_pressure)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
