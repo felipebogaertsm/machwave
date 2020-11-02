@@ -78,7 +78,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 15
+m_motor = 17
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -92,11 +92,11 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-N = 6
+N = 7
 # Grain external diameter [m]:
 D_grain = 114e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([55, 55, 55, 55, 55, 55, 55]) * 1e-3
+D_core = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
 # Grains 1 to 'N' length [m]:
 L_grain = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
