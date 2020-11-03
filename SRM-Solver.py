@@ -381,7 +381,7 @@ print(f' Maximum, average chamber pressure: {(np.max(P0) * 1e-6):.3f}, {(np.mean
 
 print('\nTHRUST AND IMPULSE')
 print(f' Maximum, average thrust: {np.max(F):.3f}, {np.mean(F):.3f} N')
-print(f' Total, specific getImpulses: {I_total:.3f} N-s, {I_sp:.3f} s')
+print(f' Total, specific impulses: {I_total:.3f} N-s, {I_sp:.3f} s')
 print(f' Burnout time, thrust time: {time_burnout:.3f}, {t[-1]:.3f} s')
 
 print('\nNOZZLE DESIGN')
@@ -428,25 +428,9 @@ saveFile.write(';')
 saveFile.close()
 
 # Writing to output CSV file:
-motor_data = {'Time': t, 'Thrust': F, 'Prop_Mass': m_prop, 'Chamber_Pressure': P0,
-              'Klemmung': Kn, 'Web_Thickness': x}
+motor_data = {'Time': t, 'Thrust': F, 'Prop_Mass': m_prop}
 motor_data_df = pd.DataFrame(motor_data)
 motor_data_df.to_csv(f'output/{name}.csv', decimal='.')
-
-# Writing the input CSV file:
-motor_input = {'Name': name, 'Manufacturer': manufacturer, 'Motor Structural Mass': m_motor,
-               'Grain Count': N, 'Grain Diam.': D_grain, 'Core Diam.': D_core,
-               'Grain Length': L_grain, 'Propellant': propellant.upper(), 'Throat Diam.': D_throat,
-               'Chamber Inside Diam.': D_in, 'Chamber Outside Diam.': D_out, 'Grain Spacing': grain_spacing,
-               'Screw Diam.': D_screw, 'Clearance Diam.': D_clearance, 'Tensile Screw': U_screw,
-               'Max. Number of Screws': max_number_of_screws, 'C1': C1, 'C2': C2,
-               'Chamber Yield': Y_chamber, 'Bulkhead Yield': Y_bulkhead, 'Nozzle Yield': Y_nozzle,
-               'Nozzle Convergent Angle': Conv_angle, 'Nozzle Divergent Angle': Div_angle,
-               'External Temperature': T_external, 'External Pressure': P_external,
-               'Igniter Pressure': P_igniter, 'Web Regression Res.': web_res, 'ENG File Res.': eng_res,
-               'Time Step': dt, 'Minimal Safety Factor': sf}
-motor_input_df = pd.DataFrame(motor_input)
-motor_input_df.to_csv(f'output/{name}_input.csv', decimal='.')
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END

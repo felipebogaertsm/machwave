@@ -121,7 +121,6 @@ def getThrustCoefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf):
                                                   ((k_2ph_ex + 1) / (k_2ph_ex - 1))) *
         (1 - Pr ** ((k_2ph_ex - 1) / k_2ph_ex)))
     Cf = (Cf_ideal - E * (P_exit - P_external) / P0) * n_cf
-    print(E * (P_exit - P_external) / P0)
     return Cf
 
 
