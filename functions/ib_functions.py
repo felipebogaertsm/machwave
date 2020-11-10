@@ -14,7 +14,7 @@ class BATES:
         self.L_grain = L_grain
 
     def getMinCoreDiameterIndex(self):
-        """ Finds the smallest core diameter and its index 'j' """
+        """ Finds the smallest core diameter and its index 'j'. """
         N, D_core = self.N, self.D_core
         D_core_min = np.amin(D_core)
         # If there is more than one one index where the initial core diameter is minimal, the for loop
@@ -26,16 +26,17 @@ class BATES:
         return D_core_min_index
 
     def getBurnArea(self, x: float, j: int):
-        """ Calculates the BATES burn area given the web distance and segment number """
-        wr, N, D_grain, D_core, L_grain = self.wr, self.N, self.D_grain, self.D_core, self.L_grain
+        """ Calculates the BATES burn area given the web distance and segment number. """
+        N, D_grain, D_core, L_grain = self.N, self.D_grain, self.D_core, self.L_grain
         Ab = np.pi * (((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2 + (L_grain[j] - 2 * x) *
                       (D_core[j] + 2 * x))
         return Ab
 
     def getPropellantVolume(self, x: float, j: int):
-        """ Calculates the BATES grain volume given the web distance and segment number """
-        wr, N, D_grain, D_core, L_grain = self.wr, self.N, self.D_grain, self.D_core, self.L_grain
-        Vp = (np.pi / 4) * (((D_grain ** 2) - ((D_core[j] + 2 * x) ** 2)) * (L_grain[j] - 2 * x))
+        """ Calculates the BATES grain volume given the web distance and segment number. """
+        N, D_grain, D_core, L_grain = self.N, self.D_grain, self.D_core, self.L_grain
+        Vp = (np.pi / 4) * (((D_grain ** 2) -
+                             ((D_core[j] + 2 * x) ** 2)) * (L_grain[j] - 2 * x))
         return Vp
 
     def getWebArray(self):
@@ -66,10 +67,17 @@ class BATES:
             for i in range(np.size(r)):
                 for k in range(j + 1):
                     # print(j, i, k)
-                    total_grain_Ab[j, i] = total_grain_Ab[j, i] + self.getBurnArea(x[i], k)
+                    total_grain_Ab[j, i] = total_grain_Ab[j,
+                                                          i] + self.getBurnArea(x[i], k)
                 segment_mass_flux[j, i] = (total_grain_Ab[j, i] * pp * r[i])
-                segment_mass_flux[j, i] = (segment_mass_flux[j, i]) / getCircleArea(self.D_core[j] + x[i])
+                segment_mass_flux[j, i] = (
+                    segment_mass_flux[j, i]) / getCircleArea(self.D_core[j] + x[i])
         return segment_mass_flux
+
+
+def getCriticalPressure(k_mix_ch):
+    """Returns value of the critical pressure ratio."""
+    return (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
 
 
 def solveCPSeidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: float,
@@ -79,15 +87,18 @@ def solveCPSeidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: flo
     if Pe / P0 <= P_critical_ratio:
         H = ((k / (k + 1)) ** 0.5) * ((2 / (k + 1)) ** (1 / (k - 1)))
     else:
-        H = ((Pe / P0) ** (1 / k)) * (((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5)
-    dP0dt = ((R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
+        H = ((Pe / P0) ** (1 / k)) * \
+            (((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5)
+    dP0dt = ((R * T0 * Ab * pp * r) -
+             (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
     return dP0dt
 
 
 def getExitMach(k: float, E: float):
     E = np.mean(E)
     M_exit = scipy.optimize.fsolve(
-        lambda x: (((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1))) ** ((k + 1) / (2 * (k - 1)))) / x - E,
+        lambda x: (((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1)))
+                   ** ((k + 1) / (2 * (k - 1)))) / x - E,
         [10]
     )
     return M_exit[0]
@@ -97,7 +108,8 @@ def getExitPressure(k_2ph_ex, E, P0):
     P_exit = np.zeros(np.size(P0))
     Mach_exit = getExitMach(k_2ph_ex, E)
     for i in range(np.size(P0)):
-        P_exit[i] = P0[i] * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit ** 2) ** (- k_2ph_ex / (k_2ph_ex - 1))
+        P_exit[i] = P0[i] * (1 + 0.5 * (k_2ph_ex - 1) *
+                             Mach_exit ** 2) ** (- k_2ph_ex / (k_2ph_ex - 1))
     return P_exit
 
 
@@ -145,7 +157,8 @@ def getOperationalCorrectionFactors(P0: list, Pe: float, P0psi: list, Isp_frozen
                                     C1: float, C2: float, V0: float, M: float, t: list):
     """ Returns kinetic, two-phase and boundary layer correction factors based on a015140 """
     C7, termC2, E_cf = np.zeros(index), np.zeros(index), np.zeros(index)
-    n_cf, n_kin, n_bl, n_tp = np.zeros(index), np.zeros(index), np.zeros(index), np.zeros(index)
+    n_cf, n_kin, n_bl, n_tp = np.zeros(index), np.zeros(
+        index), np.zeros(index), np.zeros(index)
 
     for i in range(index):
 
@@ -158,12 +171,14 @@ def getOperationalCorrectionFactors(P0: list, Pe: float, P0psi: list, Isp_frozen
         # Boundary layer and two phase flow losses
         if Pe / P0[i] <= critical_pressure_ratio:
 
-            termC2[i] = 1 + 2 * np.exp(-C2 * (P0psi[i]) ** 0.8 * t[i] / ((Dt / 0.0254) ** 0.2))
+            termC2[i] = 1 + 2 * np.exp(-C2 * (P0psi[i])
+                                       ** 0.8 * t[i] / ((Dt / 0.0254) ** 0.2))
             E_cf[i] = 1 + 0.016 * E ** -9
-            n_bl[i] = C1 * ((P0psi[i] ** 0.8) / ((Dt / 0.0254) ** 0.2)) * (termC2[i]) * E_cf[i]
+            n_bl[i] = C1 * ((P0psi[i] ** 0.8) / ((Dt / 0.0254)
+                                                 ** 0.2)) * (termC2[i]) * E_cf[i]
 
             C7[i] = 0.454 * (P0psi[i] ** 0.33) * (qsi ** 0.33) * (
-                    1 - np.exp(-0.004 * (V0[1] / getCircleArea(Dt)) / 0.0254) * (1 + 0.045 * Dt / 0.0254))
+                1 - np.exp(-0.004 * (V0[1] / getCircleArea(Dt)) / 0.0254) * (1 + 0.045 * Dt / 0.0254))
             if 1 / M >= 0.9:
                 C4 = 0.5
                 if Dt / 0.0254 < 1:
@@ -198,15 +213,15 @@ def getOperationalCorrectionFactors(P0: list, Pe: float, P0psi: list, Isp_frozen
     return n_kin, n_tp, n_bl
 
 
-def getExpansionRatio(Pe: float, P0: list, k: float, index: int, critical_pressure_ratio: float):
+def getExpansionRatio(Pe: float, P0: list, k: float, critical_pressure_ratio: float):
     """ Returns array of the optimal expansion ratio for each pressure ratio """
-    E = np.zeros(index)
+    E = np.zeros(np.size(P0))
 
-    for i in range(index):
+    for i in range(np.size(P0)):
         if Pe / P0[i] <= critical_pressure_ratio:
             pressure_ratio = Pe / P0[i]
             E[i] = (((k + 1) / 2) ** (1 / (k - 1)) * pressure_ratio ** (1 / k) * (
                     (k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k))) ** 0.5) ** -1
         else:
             E[i] = 1
-    return E
+    return np.mean(E)
