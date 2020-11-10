@@ -67,7 +67,7 @@ def prop_data(prop: str):
     return ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 
 
-def burn_rate_coefs(prop: str, P0: float):
+def getBurnRateCoefs(prop: str, P0: float):
     """ Sets the burn rate coefficients 'a' and 'n' according to the instantaneous chamber pressure """
     if prop.lower() == 'kndx':
         if P0 * 1e-6 <= 0.779:
