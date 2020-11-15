@@ -31,14 +31,22 @@ def interactivePlot(t, P0):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',
-                       name='lines'
+                       name='lines',
+                       marker={'color': '#009933'}
                        )]
-    layout = go.Layout(title='Pressure-Time Curve',
+    layout = go.Layout(title='Pressure-time curve',
                        xaxis=dict(title='Time [s]'),
                        yaxis=dict(title='Pressure [MPa]'),
                        hovermode='closest')
     figure_plotly = go.Figure(data=data, layout=layout)
-    figure_plotly.show()
+    figure_plotly.add_shape(
+        type='line',
+        x0=0,
+        y0=np.mean(P0) * 1e-6,
+        x1=t[-1],
+        y1=np.mean(P0) * 1e-6,
+        line={'color': '#ff0000', }
+    )
     return figure_plotly
 
 
