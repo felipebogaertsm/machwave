@@ -153,6 +153,10 @@ grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clearance)
 
+if steel_nozzle:
+    C1 = 0.00506
+    C2 = 0.0
+
 # ______________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS
 
@@ -229,5 +233,18 @@ P0_avg = np.mean(P0)
 P0_psi = P0 * 1.45e-4
 P0_psi_avg = np.mean(P0_psi)
 
+E = getExpansionRatio(P_external, P0, k_2ph_ex, critical_pressure_ratio)
+P_exit = getExitPressure(k_2ph_ex, E, P0)
+
+n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
+n_kin, n_tp, n_bl = getOperationalCorrectionFactors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
+                                                    D_throat, qsi_ch, index, critical_pressure_ratio, C1,
+                                                    C2, V0, M_ch, t)
+n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
+Cf = getThrustCoefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf)
+F = Cf * A_throat * P0
+I_total, I_sp = getImpulses(np.mean(F), t, m_prop)
+
 with st.beta_expander('Internal Ballistics'):
-    st.plotly_chart(interactivePlot(t, P0))
+    st.plotly_chart(pressurePlot(t, P0))
+    st.plotly_chart(thrustPlot(t, F))
