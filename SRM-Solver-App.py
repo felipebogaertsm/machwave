@@ -1,230 +1,699 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.constants
-import streamlit as st
 import plotly.graph_objects as go
-import plotly.subplots
+import numpy as np
+import scipy.constants
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_daq as daq
+import dash_bootstrap_components as dbc
 
+from dash.dependencies import Input, Output, State
 from functions.ib_functions import *
 from functions.propellant import *
 from functions.structural_functions import *
 from functions.functions import *
 
-# ______________________________________________________________________________________________________________________
+# _____________________________________________________________________________________________________________________
 # INITIAL DEFINITIONS
 
-prop_dict = {
-    'KNDX (Nakka)': 'kndx',
-    'KNSB (Nakka)': 'knsb-nakka',
-    'KNSB (Gudnason)': 'knsb',
-    'KNER (Gudnason)': 'kner'
-}
-prop_list = list(prop_dict.keys())
-material_dict = {
-    '6061-T6 Aluminum': '6061_t6',
-    '1045 Steel': '1045_steel',
-    '304 Stainless': '304_stainless'
-}
-material_list = list(material_dict.keys())
-# Time step [s]:
-dt = 1e-3
-# Web regression resolution:
 web_res = 1000
 
+# Input label column width:
+label_col_width = 1
+# Input object column width:
+input_col_width = 2
+
+prop_dict = {
+    'KNSB (Nakka)': 'knsb-nakka',
+    'KNSB (Gudnason)': 'knsb',
+    'KNER (Gudnason)': 'kner',
+    'KNDX (Nakka)': 'kndx'
+}
+
+material_list = [
+    {'label': '6061-T6', 'value': '6061_t6'},
+    {'label': '1045 steel', 'value': '1045_steel'},
+    {'label': '304 stainless', 'value': '304_stainless'}
+]
+
 # _____________________________________________________________________________________________________________________
-# STREAMLIT TITLE
+# INPUT TAB
 
-st.title("SRM Solver")
-st.write("""
-### Simulate a BATES grain Solid Rocket Motors from your web browser
-""")
+input_row_1 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Name'),
+                    dbc.Input(
+                        type='text',
+                        id='motor_name',
+                        placeholder='Enter motor name...'
+                    )
+                ]
+            ),
+            width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Manufacturer'),
+                    dbc.Input(
+                        type='text',
+                        id='motor_manufacturer',
+                        placeholder='Enter motor manufacturer...'
+                    )
+                ]
+            ),
+            width=6
+        )
+    ]
+)
 
-# ______________________________________________________________________________________________________________________
-# STREAMLIT SIDEBAR INPUTS
+input_row_2 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Propellant composition'),
+                    dbc.Select(
+                        id='propellant_select',
+                        options=[
+                            {'label': i, 'value': j} for i in list(prop_dict.keys()) for j in list(prop_dict.values())
+                        ],
+                        value='knsb-nakka'
+                    )
+                ]
+            ),
+            width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Grain segment count'),
+                    dbc.Input(
+                        placeholder='Set integer...',
+                        id='N',
+                        value='4',
+                        type='number'
+                    )
+                ]
+            ),
+            width=6
+        )
+    ]
+)
 
-st.sidebar.header('Input section')
-propellant = st.sidebar.selectbox('Select propellant', prop_list)
-propellant = prop_dict[propellant]
-N = st.sidebar.number_input('Grain count', min_value=1, max_value=20, step=1, value=4)
-D_grain = st.sidebar.number_input('Grain external diameter [mm]',
-                                  min_value=0.1, max_value=1000.0, value=41.0, step=0.5) * 1e-3
-grain_spacing = st.sidebar.number_input('Grain spacing [mm]', max_value=D_grain * 1e3, value=5.0, step=1.0) * 1e-3
-D_core, L_grain = np.zeros(N), np.zeros(N)
-neutral_burn_profile = st.sidebar.checkbox('Neutral burn profile', value=True)
-st.sidebar.write("""### Core diameter""")
-single_core_diameter = st.sidebar.checkbox('Single core diameter', value=True)
-if single_core_diameter:
-    D_core = np.ones(N) * st.sidebar.number_input(f'Core diameter [mm]',
-                                                  max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
-else:
-    for i in range(N):
-        D_core[i] = st.sidebar.number_input(f'Core diameter #{i + 1} [mm]',
-                                            max_value=D_grain * 1e3, min_value=0.1, value=15.0, step=0.5) * 1e-3
-if neutral_burn_profile:
-    for i in range(N):
-        L_grain[i] = 0.5 * (3 * D_grain + D_core[i])
-else:
-    st.sidebar.write("""### Grain length""")
-    for i in range(N):
-        L_grain[i] = st.sidebar.number_input(f'Grain length #{i + 1} [mm]',
-                                             value=0.5 * (3 * D_grain + D_core[i]) * 1e3, step=0.5) * 1e-3
-st.sidebar.write("""### Combustion chamber""")
-D_in = st.sidebar.number_input('Combustion chamber inside diameter [mm]',
-                               min_value=0.1, step=0.05, value=43.0) * 1e-3
-D_out = st.sidebar.number_input('Combustion chamber outer diameter [mm]',
-                                min_value=D_in, max_value=1000.0, value=50.8)
-liner_thickness = st.sidebar.number_input('Thermal liner thickness [mm]',
-                                          min_value=0.1, step=0.25, value=0.725) * 1e-3
-D_throat = st.sidebar.number_input('Throat diameter [mm]',
-                                   min_value=0.1, max_value=D_in * 1e3, step=0.05, value=9.5) * 1e-3
-Div_angle = st.sidebar.number_input('Divergent angle [deg]',
-                                    min_value=0.0, max_value=60.0, value=12.0, step=2.0)
-steel_nozzle = st.sidebar.checkbox('Steel nozzle', value=True)
-P_igniter = st.sidebar.number_input('Igniter pressure [MPa]', min_value=0.1, step=0.5, value=1.5) * 1e6
-P_external = st.sidebar.number_input('External pressure [MPa]', min_value=0.1, step=0.05, value=0.101325) * 1e6
-st.sidebar.write("""### Structural design""")
-nozzle_material = st.sidebar.selectbox('Nozzle material', material_list)
-casing_material = st.sidebar.selectbox('Casing material', material_list)
-bulkhead_material = st.sidebar.selectbox('Bulkhead material', material_list)
-sf = st.sidebar.number_input('Safety factor',
-                                        min_value=1.5, max_value=10.0, step=0.5, value=4.0)
-st.sidebar.write("""### Vehicle data""")
-m_rocket = st.sidebar.number_input('Rocket mass w/o the motor [kg]',
-                                   min_value=0.01, max_value=1000.0, step=0.1, value=2.8)
-m_motor = st.sidebar.number_input('Motor structural mass [kg]',
-                                  min_value=0.01, max_value=1000.0, step=0.01, value=0.85)
-Cd = st.sidebar.number_input('Drag coefficient',
-                             min_value=0.1, max_value=2.0, step=0.01, value=0.95)
-D_rocket = st.sidebar.number_input('Rocket frontal diameter [mm]',
-                                   min_value=10.0, max_value=1000.0, step=0.1, value=67.5) * 1e-3
-D_screw = st.sidebar.number_input('Screw diameter w/o threads [mm]',
-                                  min_value=1.0, max_value=100.0, step=0.1, value=4.2) * 1e-3
-D_clearance = st.sidebar.number_input('Screw clearance diameter [mm]',
-                                      min_value=D_screw, max_value=100.0, step=0.1, value=5.0) * 1e-3
+input_row_3 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Grain diameter (mm)'),
+                    dbc.Input(
+                        placeholder='Insert grain diameter',
+                        id='D_grain',
+                        value='41',
+                        type='number'
+                    )
+                ]
+            ),
+            width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Grain spacing (mm)'),
+                    dbc.Input(
+                        placeholder='Insert grain spacing...',
+                        id='grain_spacing',
+                        value='2',
+                        type='number'
+                    )
+                ]
+            )
+        )
+    ]
+)
 
-# ______________________________________________________________________________________________________________________
-# PROPELLANT GRAIN DIMENSIONS
-
-R_grain = D_grain / 2 * 1e3
-R_core = D_core[0] / 2 * 1e3
-
-plot_radial_grain = go.Figure(
-    layout=go.Layout(
-        title='Grain radial perspective',
-        yaxis={'scaleanchor': 'x', 'scaleratio': 1, 'range': [- R_grain * 1.01, R_grain * 1.01]},
+input_row_4 = html.Div([
+    dbc.Row(
+        [
+            dbc.Col(
+                dbc.FormGroup(
+                    [
+                        daq.BooleanSwitch(
+                            id='neutral_burn_profile',
+                            label='Neutral burn profile',
+                            on=True
+                        )
+                    ]
+                ), width=6
+            ),
+            dbc.Col(
+                dbc.FormGroup(
+                    [
+                        daq.BooleanSwitch(
+                            id='single_core_diameter',
+                            label='Single core diameter',
+                            on=True
+                        )
+                    ]
+                ), width=6
+            )
+        ]
     )
+])
+
+input_row_5 = dbc.Row(
+    [
+        dbc.Col(
+            id='core_diameter_inputs',
+            children=[]
+        ),
+        dbc.Col(
+            id='segment_length_inputs',
+            children=[]
+        )
+    ]
 )
-plot_radial_grain.add_shape(
-    type='circle',
-    xref='x', yref='y',
-    fillcolor='#dac36d',
-    x0=- R_grain, x1=R_grain, y0=- R_grain, y1=R_grain
+
+input_row_6 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Throat diameter (mm)'),
+                    dbc.Input(
+                        placeholder='Insert throat diameter...',
+                        id='D_throat',
+                        value='9.5',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Divergent angle (°)'),
+                    dbc.Input(
+                        placeholder='Enter divergent angle...',
+                        id='Div_angle',
+                        value='12',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Convergent angle (°)'),
+                    dbc.Input(
+                        placeholder='Enter convergent angle...',
+                        id='Conv_angle',
+                        value='30',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        )
+    ]
 )
-plot_radial_grain.add_shape(
-    type='circle',
-    xref='x', yref='y',
-    fillcolor='#e3e3e3',
-    x0=- R_core, x1=R_core, y0=- R_core, y1=R_core
+
+input_row_7 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Inside diameter (mm)'),
+                    dbc.Input(
+                        placeholder='Insert inside diameter...',
+                        id='D_in',
+                        value='44.45',
+                        type='number'
+                    ),
+                    dbc.FormText('Including the thermal liner!'),
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Outside diameter (mm)'),
+                    dbc.Input(
+                        placeholder='Insert outside diameter...',
+                        id='D_out',
+                        value='50.8',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Liner thickness (mm)'),
+                    dbc.Input(
+                        placeholder='Insert liner thickness...',
+                        id='liner_thickness',
+                        value='1',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        )
+    ]
 )
 
-st.write(' ### Propellant grain dimensions')
-st.plotly_chart(plot_radial_grain)
+input_row_8 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Structural safety factor'),
+                    dbc.Input(
+                        placeholder='Enter safety factor...',
+                        id='sf',
+                        type='number',
+                        value='4'
+                    )
+                ]
+            ), width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    daq.BooleanSwitch(
+                        id='steel_nozzle',
+                        label='Steel nozzle',
+                        on=True
+                    )
+                ]
+            )
+        )
+    ]
+)
 
-# ______________________________________________________________________________________________________________________
-# PRE CALCULATIONS AND DEFINITIONS
+input_row_9 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Casing Material'),
+                    dbc.Select(
+                        options=material_list,
+                        id='casing_material',
+                        value='6061_t6',
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Nozzle material'),
+                    dbc.Select(
+                        options=material_list,
+                        id='nozzle_material',
+                        value='304_stainless',
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Bulkhead material'),
+                    dbc.Select(
+                        options=material_list,
+                        id='bulkhead_material',
+                        value='6061_t6',
+                    )
+                ]
+            )
+        )
+    ]
+)
 
-# The Propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
-# Gas constant per molecular weight calculations:
-R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
-# Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
-T0 = ce * T0_ideal
-# Nozzle throat area [m-m]:
-A_throat = getCircleArea(D_throat)
-# Combustion chamber length [m]:
-L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
-# Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
-D_chamber = D_in - 2 * liner_thickness
-# Defining 'grain' as an instance of BATES:
-grain = BATES(web_res, N, D_grain, D_core, L_grain)
-# Defining 'structure' as an instance of the MotorStructure class:
-structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clearance)
+input_row_10 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Rocket mass w/o the motor (kg)'),
+                    dbc.Input(
+                        placeholder='Enter the rocket mass without the motor...',
+                        id='m_rocket',
+                        type='number',
+                        value='2.8'
+                    )
+                ]
+            ), width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Motor structural mass (kg)'),
+                    dbc.Input(
+                        placeholder='Enter the motor structural mass...',
+                        id='m_motor',
+                        type='number',
+                        value='0.85'
+                    )
+                ]
+            ), width=6
+        )
+    ]
+)
 
-# ______________________________________________________________________________________________________________________
-# INTERNAL BALLISTICS
+input_row_11 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Rocket drag coefficient'),
+                    dbc.Input(
+                        placeholder='Enter the drag coefficient of the rocket...',
+                        id='Cd',
+                        type='number',
+                        value='0.4'
+                    )
+                ]
+            ), width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Frontal diameter (mm)'),
+                    dbc.Input(
+                        placeholder='Enter the rocket frontal diameter...',
+                        id='D_rocket',
+                        type='number',
+                        value='67.5'
+                    )
+                ]
+            ), width=6
+        )
+    ]
+)
 
-web = grain.getWebArray()
+# _____________________________________________________________________________________________________________________
+# GRAPHS
 
-A_burn_segment = np.zeros((N, web_res))
-V_propellant_segment = np.zeros((N, web_res))
+# _____________________________________________________________________________________________________________________
+# INTERNAL BALLISTICS TAB
 
-for j in range(N):
-    for i in range(web_res):
-        A_burn_segment[j, i] = grain.getBurnArea(web[j, i], j)
-        V_propellant_segment[j, i] = grain.getPropellantVolume(web[j, i], j)
+ib_row_1 = dbc.Row(
+    [
+        dbc.Col(
+            html.Div(
+                [
+                    dbc.Label(
+                        children=[
+                            '.'
+                        ]
+                    )
+                ]
+            )
+        )
+    ]
+)
 
-D_core_min_index = grain.getMinCoreDiameterIndex()
-for j in range(N):
-    A_burn_segment[j, :] = np.interp(web[D_core_min_index, :], web[j, :],
-                                     A_burn_segment[j, :], left=0, right=0)
-    V_propellant_segment[j, :] = np.interp(web[D_core_min_index, :], web[j, :],
-                                           V_propellant_segment[j, :], left=0, right=0)
-A_burn = A_burn_segment.sum(axis=0)
-V_prop = V_propellant_segment.sum(axis=0)
+# _____________________________________________________________________________________________________________________
+# TABS
 
-web = web[D_core_min_index, :]
+input_tab = dbc.Tab(label='Inputs', children=[
+    dbc.Row(
+        [
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H2([dbc.Badge('Motor data')]),
+                            input_row_1,
+                            html.H2([dbc.Badge('Propellant grain')]),
+                            input_row_2,
+                            input_row_3,
+                            html.H3([dbc.Badge('Grain segments')]),
+                            input_row_4,
+                            input_row_5,
+                            html.H2([dbc.Badge('Thrust chamber')]),
+                            input_row_6,
+                            html.H3([dbc.Badge('Combustion chamber')]),
+                            input_row_7,
+                            input_row_8,
+                            input_row_9,
+                            html.H2([dbc.Badge('Vehicle data')]),
+                            input_row_10,
+                            input_row_11,
+                        ]
+                    )
+                ),
+                width=6
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dcc.Graph(
+                        id='grain_radial',
+                        figure={}
+                    )
+                ),
+                width=6
+            )
+        ]
+    )
+])
 
-A_core = np.array([])
-for j in range(N):
-    A_core = np.append(A_core, getCircleArea(D_core[j]))
-A_port = A_core[-1]
-initial_port_to_throat = A_port / A_throat
-burn_profile = getBurnProfile(A_burn)
-optimal_grain_length = grain.getOptimalSegmentLength()
+ib_tab = dbc.Tab(
+    label='Internal Ballistics',
+    id='ib_tab',
+    disabled=[],
+    children=[
+        dbc.Row(
+            [
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                html.H2([dbc.Badge('IB parameters')]),
+                                html.H3([dbc.Badge('Burn Regression')]),
+                                ib_row_1,
+                            ]
+                        )
+                    ), width=6
+                ),
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                dcc.Graph(
+                                    id='burn_regression_graph',
+                                )
+                            ]
+                        )
+                    ), width=6
+                )
+            ]
+        )
+    ]
+)
 
-V0, V_empty = getChamberVolume(L_chamber, D_chamber, V_prop)
-critical_pressure_ratio = getCriticalPressure(k_mix_ch)
+nozzle_tab = dbc.Tab(
+    label='Nozzle Design',
+    children=[
+        html.P('.')
+    ]
+)
 
-P0, x, t, t_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
-r0, re, r = np.array([]), np.array([]), np.array([])
+structure_tab = dbc.Tab(
+    label='Structure',
+    children=[
+        html.P('.')
+    ]
+)
 
-i = 0
-while x[i] <= web[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
-    a, n = getBurnRateCoefs(propellant, P0[i])
-    if a < 0:
-        exit()
-    r0 = np.append(r0, (a * (P0[i] * 1e-6) ** n) * 1e-3)
-    re = np.append(re, 0)
-    r = np.append(r, r0[i] + re[i])
-    dx = dt * r[i]
-    x = np.append(x, x[i] + dx)
-    t = np.append(t, t[i] + dt)
-    A_burn_CP = np.interp(x, web, A_burn, left=0, right=0)
-    V0_CP = np.interp(x, web, V0, right=V_empty)
-    V_prop_CP = np.interp(x, web, V_prop, right=0)
-    k1 = solveCPSeidel(P0[i], P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k2 = solveCPSeidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k3 = solveCPSeidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k4 = solveCPSeidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
-    if t_burnout == 0 and A_burn_CP[i] == 0:
-        t_burnout = t[i]
+ta_tab = dbc.Tab(
+    label='Thermal Analysis',
+    children=[
+        html.P('.')
+    ]
+)
 
-    i = i + 1
+ballistic_tab = dbc.Tab(
+    label='Rocket Trajectory',
+    children=[
+        html.P('.')
+    ]
+)
 
-grain_mass_flux = grain.getMassFluxPerSegment(r, pp, x)
+# _____________________________________________________________________________________________________________________
+# DASH APP EXECUTION
 
-index = np.size(P0)
-Kn = A_burn_CP / A_throat
-m_prop = V_prop_CP * pp
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-P0_avg = np.mean(P0)
-P0_psi = P0 * 1.45e-4
-P0_psi_avg = np.mean(P0_psi)
+app.layout = html.Div([
+    dbc.Row([
+        dbc.Col([
+            html.H1("SRM Solver", style={'textAlign': 'center'}),
+            html.H5('Build a BATES grain Solid Rocket Motor inside your own browser', style={'textAlign': 'center'}),
+        ],
+            width={'size': 12}
+        )
+    ],
+    ),
+    dbc.Tabs([
+        input_tab,
+        ib_tab,
+        structure_tab,
+        ta_tab,
+        ballistic_tab
+    ]),
 
-with st.beta_expander('Internal Ballistics'):
-    st.plotly_chart(interactivePlot(t, P0))
+    html.Div([
+        dcc.Markdown('Written by Felipe Bogaerts de Mattos, October 2020.', style={'textAlign': 'right'})
+    ])
+
+])
+
+
+# _____________________________________________________________________________________________________________________
+# CALLBACKS
+
+
+@app.callback(
+    Output(component_id='grain_radial', component_property='figure'),
+    [
+        Input(component_id='D_grain', component_property='value'),
+        Input(component_id='D_core', component_property='value')
+    ]
+)
+def update_grain_radial_graph(D_grain, D_core):
+    D_grain = float(D_grain)
+    D_core = float(D_core)
+    R_grain = D_grain / 2
+    R_core = D_core / 2
+    x = np.linspace(0.5 * - 1 * D_grain, 0.5 * D_grain)
+    figure_grain_radial = go.Figure(
+        data=go.Scatter(
+            x=[0, R_grain],
+            y=[R_core, 0]
+        ),
+        layout=go.Layout(
+            title='Grain radial perspective',
+            yaxis={'scaleanchor': 'x', 'scaleratio': 1},
+        )
+    )
+    figure_grain_radial.add_shape(
+        type='circle',
+        xref='x', yref='y',
+        fillcolor='#dac36d',
+        x0=- R_grain, x1=R_grain, y0=- R_grain, y1=R_grain
+    )
+    figure_grain_radial.add_shape(
+        type='circle',
+        xref='x', yref='y',
+        fillcolor='#e3e3e3',
+        x0=- R_core, x1=R_core, y0=- R_core, y1=R_core
+    )
+    return figure_grain_radial
+
+
+# Update the core diameter input boxes:
+@app.callback(
+    Output(component_id='core_diameter_inputs', component_property='children'),
+    [
+        Input(component_id='single_core_diameter', component_property='on'),
+        Input(component_id='neutral_burn_profile', component_property='on'),
+        Input(component_id='N', component_property='value')
+    ]
+)
+def update_core_input_box(single_core_diameter, neutral_burn_profile, N):
+    N = int(N)
+    if single_core_diameter:
+        core_col = dbc.FormGroup(
+            children=[
+                dbc.Label('Core diameter (mm)'),
+                dbc.Input(
+                    placeholder='Insert core diameter...',
+                    id='D_core',
+                    value='15',
+                    type='number'
+                )
+            ]
+        )
+    else:
+        core_col = [dbc.FormGroup(
+            children=[
+                dbc.Label(f'Core #{i + 1} diameter (mm)'),
+                dbc.Input(
+                    placeholder=f'Insert #{i + 1} core diameter...',
+                    id=f'D_core_{i + 1}',
+                    value='15',
+                    type='number'
+                )
+            ]
+        ) for i in range(N)]
+    return core_col
+
+
+# Update the length input boxes:
+@app.callback(
+    Output(component_id='segment_length_inputs', component_property='children'),
+    [
+        Input(component_id='single_core_diameter', component_property='on'),
+        Input(component_id='neutral_burn_profile', component_property='on'),
+        Input(component_id='N', component_property='value'),
+        Input(component_id='D_core', component_property='value'),
+        Input(component_id='D_grain', component_property='value')
+    ]
+)
+def update_length_input_box(single_core_diameter, neutral_burn_profile, N, D_core, D_grain):
+    D_core = float(D_core)
+    D_grain = float(D_grain)
+    N = int(N)
+    if single_core_diameter and neutral_burn_profile:
+        length_col = dbc.FormGroup(
+            children=[
+                dbc.Label('Segment length (mm)'),
+                dbc.Input(
+                    placeholder='Insert segment length...',
+                    id='L_grain',
+                    value=f'{0.5 * (3 * D_grain + D_core)}',
+                    type='number',
+                    disabled=True,
+                ),
+                dbc.FormText('To edit this value, disable \"Neutral burn profile\"')
+            ]
+        )
+    elif single_core_diameter is True and neutral_burn_profile is False:
+        length_col = dbc.FormGroup(
+            children=[
+                dbc.Label('Segment length (mm)'),
+                dbc.Input(
+                    placeholder='Insert segment length...',
+                    id='L_grain',
+                    value=f'{0.5 * (3 * D_grain + D_core)}',
+                    type='number',
+                    disabled=False
+                )
+            ]
+        )
+    elif single_core_diameter is False and neutral_burn_profile is False:
+        length_col = [dbc.FormGroup(
+            children=[
+                dbc.Label(f'Segment #{i + 1} length (mm)'),
+                dbc.Input(
+                    placeholder=f'Insert #{i + 1} segment length...',
+                    id=f'L_grain_{i + 1}',
+                    value='68',
+                    type='number'
+                )
+            ]
+        ) for i in range(N)]
+    return length_col
+
+
+if __name__ == '__main__':
+    app.run_server()
