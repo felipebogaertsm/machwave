@@ -27,7 +27,7 @@ def motorToEng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_mot
     saveFile.close()
 
 
-def interactivePlot(t, P0):
+def pressurePlot(t, P0):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',
@@ -45,6 +45,29 @@ def interactivePlot(t, P0):
         y0=np.mean(P0) * 1e-6,
         x1=t[-1],
         y1=np.mean(P0) * 1e-6,
+        line={'color': '#ff0000', }
+    )
+    return figure_plotly
+
+
+def thrustPlot(t, F):
+    data = [go.Scatter(x=t,
+                       y=F,
+                       mode='lines',
+                       name='lines',
+                       marker={'color': '#6a006a'}
+                       )]
+    layout = go.Layout(title='Thrust-time curve',
+                       xaxis=dict(title='Time [s]'),
+                       yaxis=dict(title='Pressure [MPa]'),
+                       hovermode='closest')
+    figure_plotly = go.Figure(data=data, layout=layout)
+    figure_plotly.add_shape(
+        type='line',
+        x0=0,
+        y0=np.mean(F),
+        x1=t[-1],
+        y1=np.mean(F),
         line={'color': '#ff0000', }
     )
     return figure_plotly
