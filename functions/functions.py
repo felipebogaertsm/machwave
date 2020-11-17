@@ -153,3 +153,14 @@ def massFluxPlot(t, grain_mass_flux):
     plt.grid(linestyle='-', linewidth='.4')
     mass_flux_figure.savefig('output/grain_mass_flux.png', dpi=300)
     return mass_flux_figure
+
+
+def ballisticsODE(y, v, T, D, M, g):
+    if v < 0:
+        x = -1
+    else:
+        x = 1
+    dvdt = (T - x * D * (v ** 2)) / M - g
+    dydt = v
+    return dydt, dvdt
+

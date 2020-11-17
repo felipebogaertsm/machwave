@@ -7,6 +7,7 @@ import scipy.constants
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.subplots
+import fluids.atmosphere as atm
 
 from functions.ib_functions import *
 from functions.propellant import *
@@ -90,7 +91,11 @@ nozzle_material = st.sidebar.selectbox('Nozzle material', material_list)
 casing_material = st.sidebar.selectbox('Casing material', material_list)
 bulkhead_material = st.sidebar.selectbox('Bulkhead material', material_list)
 sf = st.sidebar.number_input('Safety factor',
-                                        min_value=1.5, max_value=10.0, step=0.5, value=4.0)
+                             min_value=1.5, max_value=10.0, step=0.5, value=4.0)
+D_screw = st.sidebar.number_input('Screw diameter w/o threads [mm]',
+                                  min_value=1.0, max_value=100.0, step=0.1, value=4.2) * 1e-3
+D_clearance = st.sidebar.number_input('Screw clearance diameter [mm]',
+                                      min_value=D_screw, max_value=100.0, step=0.1, value=5.0) * 1e-3
 st.sidebar.write("""### Vehicle data""")
 m_rocket = st.sidebar.number_input('Rocket mass w/o the motor [kg]',
                                    min_value=0.01, max_value=1000.0, step=0.1, value=2.8)
@@ -100,10 +105,28 @@ Cd = st.sidebar.number_input('Drag coefficient',
                              min_value=0.1, max_value=2.0, step=0.01, value=0.95)
 D_rocket = st.sidebar.number_input('Rocket frontal diameter [mm]',
                                    min_value=10.0, max_value=1000.0, step=0.1, value=67.5) * 1e-3
-D_screw = st.sidebar.number_input('Screw diameter w/o threads [mm]',
-                                  min_value=1.0, max_value=100.0, step=0.1, value=4.2) * 1e-3
-D_clearance = st.sidebar.number_input('Screw clearance diameter [mm]',
-                                      min_value=D_screw, max_value=100.0, step=0.1, value=5.0) * 1e-3
+
+# Initial height above sea level [m]
+h0 = 4
+# Launch rail length [m]
+rain_length = 5
+# Drag coefficient
+Cd = 0.45
+# Rocket mass (without motor) and payload mass [kg]
+m_payload = 5
+# Recovery data:
+# Time after apogee for drogue parachute activation [s]
+drogue_time = 1
+# Drogue drag coefficient
+Cd_drogue = 1.75
+# Drogue effective diameter [m]
+D_drogue = 1.25
+# Main parachute drag coefficient [m]
+Cd_main = 2
+# Main parachute effective diameter [m]
+D_main = 2.66
+# Main parachute height activation [m]
+main_chute_activation_height = 500
 
 # ______________________________________________________________________________________________________________________
 # PROPELLANT GRAIN DIMENSIONS
@@ -248,3 +271,57 @@ I_total, I_sp = getImpulses(np.mean(F), t, m_prop)
 with st.beta_expander('Internal Ballistics'):
     st.plotly_chart(pressurePlot(t, P0))
     st.plotly_chart(thrustPlot(t, F))
+
+# ______________________________________________________________________________________________________________________
+# ROCKET BALLISTICS
+
+y, v, t_flight = np.array([0]), np.array([0]), np.array([0])
+apogee = 0
+apogee_time = - 1
+main_time = 0
+dt = 0.01
+r = D_rocket / 2
+
+i = 0
+while y[i] >= 0 or m_prop_flight[i - 1] > 0:
+    T = np.interp(t_flight, t, F, left=0, right=0)
+    m_prop_flight = np.interp(t_flight, t, m_prop, left=m_prop[0], right=0)
+    if i == 0:
+        a = np.array([T[0] * (m_rocket + m_payload + m_prop_flight[0] + m_motor) * 0])
+    p_air = atm.ATMOSPHERE_1976(y[i] + h0).rho
+    g = atm.ATMOSPHERE_1976.gravity(h0 + y[i])
+    M = m_rocket + m_payload + m_motor + m_prop_flight[i]
+    if i == 0:
+        Minitial = M
+    if v[i] < 0 and y[i] <= main_chute_activation_height and m_prop_flight[i] == 0:
+        if main_time == 0:
+            main_time = t[i]
+        Adrag = (np.pi * r ** 2) * Cd + (np.pi * D_drogue ** 2) * 0.25 * Cd_drogue + \
+                (np.pi * D_main ** 2) * 0.25 * Cd_main
+    elif apogee_time >= 0 and t[i] >= apogee_time + drogue_time:
+        Adrag = (np.pi * r ** 2) * Cd + (np.pi * D_drogue ** 2) * 0.25 * Cd_drogue
+    else:
+        Adrag = (np.pi * r ** 2) * Cd
+    D = (Adrag * p_air) * 0.5
+    k1, l1 = ballisticsODE(y[i], v[i], T[i], D, M, g)
+    k2, l2 = ballisticsODE(y[i] + 0.5 * k1 * dt, v[i] + 0.5 * l1 * dt, T[i], D, M, g)
+    k3, l3 = ballisticsODE(y[i] + 0.5 * k2 * dt, v[i] + 0.5 * l2 * dt, T[i], D, M, g)
+    k4, l4 = ballisticsODE(y[i] + 0.5 * k3 * dt, v[i] + 0.5 * l3 * dt, T[i], D, M, g)
+    y = np.append(y, y[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
+    v = np.append(v, v[i] + (1 / 6) * (l1 + 2 * (l2 + l3) + l4) * dt)
+    a = np.append(a, (1 / 6) * (l1 + 2 * (l2 + l3) + l4))
+    t_flight = np.append(t, t_flight[i] + dt)
+    if y[i + 1] <= y[i] and m_prop_flight[i] == 0 and apogee == 0:
+        apogee = y[i]
+        apogee_time = t_flight[np.where(y == apogee)]
+    i = i + 1
+
+if y[-1] < 0:
+    y = np.delete(y, -1)
+    v = np.delete(v, -1)
+    a = np.delete(a, -1)
+    t = np.delete(t, -1)
+
+v_rail = v[np.where(y >= rain_length)]
+v_rail = v_rail[0]
+y_burnout = y[np.where(v == np.max(v))]
