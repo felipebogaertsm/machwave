@@ -23,6 +23,9 @@ label_col_width = 1
 # Input object column width:
 input_col_width = 2
 
+# Number of input boxes of grain cores:
+number_grain_core_inputs = 8
+
 prop_dict = {
     'KNSB (Nakka)': 'knsb-nakka',
     'KNSB (Gudnason)': 'knsb',
@@ -35,6 +38,10 @@ material_list = [
     {'label': '1045 steel', 'value': '1045_steel'},
     {'label': '304 stainless', 'value': '304_stainless'}
 ]
+
+# Dash core diameter callback input:
+core_input = [Input(component_id=f'D_core_{i + 1}', component_property='value')
+              for i in range(number_grain_core_inputs)]
 
 # _____________________________________________________________________________________________________________________
 # INPUT TAB
@@ -85,21 +92,32 @@ input_row_2 = dbc.Row(
                     )
                 ]
             ),
-            width=6
+            width=4
         ),
         dbc.Col(
             dbc.FormGroup(
                 [
                     dbc.Label('Grain segment count'),
-                    dbc.Input(
-                        placeholder='Set integer...',
+                    daq.NumericInput(
                         id='N',
-                        value='4',
-                        type='number'
+                        value=4,
+                        min=1,
+                        max=8
                     )
                 ]
             ),
-            width=6
+            width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    daq.BooleanSwitch(
+                        id='neutral_burn_profile',
+                        label='Neutral burn profile',
+                        on=True
+                    )
+                ]
+            ), width=4
         )
     ]
 )
@@ -111,7 +129,7 @@ input_row_3 = dbc.Row(
                 [
                     dbc.Label('Grain diameter (mm)'),
                     dbc.Input(
-                        placeholder='Insert grain diameter',
+                        placeholder='Insert grain diameter...',
                         id='D_grain',
                         value='41',
                         type='number'
@@ -136,40 +154,21 @@ input_row_3 = dbc.Row(
     ]
 )
 
-input_row_4 = html.Div([
-    dbc.Row(
-        [
-            dbc.Col(
-                dbc.FormGroup(
-                    [
-                        daq.BooleanSwitch(
-                            id='neutral_burn_profile',
-                            label='Neutral burn profile',
-                            on=True
-                        )
-                    ]
-                ), width=6
-            ),
-            dbc.Col(
-                dbc.FormGroup(
-                    [
-                        daq.BooleanSwitch(
-                            id='single_core_diameter',
-                            label='Single core diameter',
-                            on=True
-                        )
-                    ]
-                ), width=6
-            )
-        ]
-    )
-])
-
-input_row_5 = dbc.Row(
+input_row_4 = dbc.Row(
     [
         dbc.Col(
             id='core_diameter_inputs',
-            children=[]
+            children=[dbc.FormGroup(
+                children=[
+                    dbc.Label(f'Core #{i + 1} diameter (mm)'),
+                    dbc.Input(
+                        placeholder=f'Insert #{i + 1} core diameter...',
+                        id=f'D_core_{i + 1}',
+                        value='15',
+                        type='number'
+                    )
+                ]
+            ) for i in range(number_grain_core_inputs)]
         ),
         dbc.Col(
             id='segment_length_inputs',
@@ -178,7 +177,7 @@ input_row_5 = dbc.Row(
     ]
 )
 
-input_row_6 = dbc.Row(
+input_row_5 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -222,7 +221,7 @@ input_row_6 = dbc.Row(
     ]
 )
 
-input_row_7 = dbc.Row(
+input_row_6 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -267,7 +266,7 @@ input_row_7 = dbc.Row(
     ]
 )
 
-input_row_8 = dbc.Row(
+input_row_7 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -296,7 +295,7 @@ input_row_8 = dbc.Row(
     ]
 )
 
-input_row_9 = dbc.Row(
+input_row_8 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -337,7 +336,7 @@ input_row_9 = dbc.Row(
     ]
 )
 
-input_row_10 = dbc.Row(
+input_row_9 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -368,7 +367,7 @@ input_row_10 = dbc.Row(
     ]
 )
 
-input_row_11 = dbc.Row(
+input_row_10 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -405,7 +404,7 @@ input_row_11 = dbc.Row(
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS TAB
 
-ib_row_1 = dbc.Row(
+ib_rows = dbc.Row(
     [
         dbc.Col(
             html.Div(
@@ -438,16 +437,16 @@ input_tab = dbc.Tab(label='Inputs', children=[
                             input_row_3,
                             html.H3([dbc.Badge('Grain segments')]),
                             input_row_4,
-                            input_row_5,
                             html.H2([dbc.Badge('Thrust chamber')]),
-                            input_row_6,
+                            input_row_5,
                             html.H3([dbc.Badge('Combustion chamber')]),
+                            input_row_6,
                             input_row_7,
                             input_row_8,
-                            input_row_9,
                             html.H2([dbc.Badge('Vehicle data')]),
+                            input_row_9,
                             input_row_10,
-                            input_row_11,
+                            dbc.Button('Primary', color='primary', id='run_simulation')
                         ]
                     )
                 ),
@@ -469,7 +468,7 @@ input_tab = dbc.Tab(label='Inputs', children=[
 ib_tab = dbc.Tab(
     label='Internal Ballistics',
     id='ib_tab',
-    disabled=[],
+    disabled=False,
     children=[
         dbc.Row(
             [
@@ -479,7 +478,7 @@ ib_tab = dbc.Tab(
                             [
                                 html.H2([dbc.Badge('IB parameters')]),
                                 html.H3([dbc.Badge('Burn Regression')]),
-                                ib_row_1,
+                                ib_rows,
                             ]
                         )
                     ), width=6
@@ -566,7 +565,7 @@ app.layout = html.Div([
     Output(component_id='grain_radial', component_property='figure'),
     [
         Input(component_id='D_grain', component_property='value'),
-        Input(component_id='D_core', component_property='value')
+        Input(component_id='D_core_1', component_property='value')
     ]
 )
 def update_grain_radial_graph(D_grain, D_core):
@@ -600,98 +599,56 @@ def update_grain_radial_graph(D_grain, D_core):
     return figure_grain_radial
 
 
-# Update the core diameter input boxes:
-@app.callback(
-    Output(component_id='core_diameter_inputs', component_property='children'),
-    [
-        Input(component_id='single_core_diameter', component_property='on'),
-        Input(component_id='neutral_burn_profile', component_property='on'),
-        Input(component_id='N', component_property='value')
-    ]
-)
-def update_core_input_box(single_core_diameter, neutral_burn_profile, N):
-    N = int(N)
-    if single_core_diameter:
-        core_col = dbc.FormGroup(
-            children=[
-                dbc.Label('Core diameter (mm)'),
-                dbc.Input(
-                    placeholder='Insert core diameter...',
-                    id='D_core',
-                    value='15',
-                    type='number'
-                )
-            ]
-        )
-    else:
-        core_col = [dbc.FormGroup(
-            children=[
-                dbc.Label(f'Core #{i + 1} diameter (mm)'),
-                dbc.Input(
-                    placeholder=f'Insert #{i + 1} core diameter...',
-                    id=f'D_core_{i + 1}',
-                    value='15',
-                    type='number'
-                )
-            ]
-        ) for i in range(N)]
-    return core_col
-
-
 # Update the length input boxes:
 @app.callback(
     Output(component_id='segment_length_inputs', component_property='children'),
     [
-        Input(component_id='single_core_diameter', component_property='on'),
         Input(component_id='neutral_burn_profile', component_property='on'),
         Input(component_id='N', component_property='value'),
-        Input(component_id='D_core', component_property='value'),
-        Input(component_id='D_grain', component_property='value')
+        Input(component_id='D_grain', component_property='value'),
+        Input(component_id='D_core_1', component_property='value'),
+        Input(component_id='D_core_2', component_property='value'),
+        Input(component_id='D_core_3', component_property='value'),
+        Input(component_id='D_core_4', component_property='value'),
+        Input(component_id='D_core_5', component_property='value'),
+        Input(component_id='D_core_6', component_property='value'),
+        Input(component_id='D_core_7', component_property='value'),
+        Input(component_id='D_core_8', component_property='value')
     ]
 )
-def update_length_input_box(single_core_diameter, neutral_burn_profile, N, D_core, D_grain):
-    D_core = float(D_core)
+def update_length_input_box(
+        neutral_burn_profile, N, D_grain, D_core_1, D_core_2, D_core_3, D_core_4, D_core_5, D_core_6, D_core_7, D_core_8
+):
+    D_core = np.array([float(D_core_1), float(D_core_2), float(D_core_3), float(D_core_4), float(D_core_5),
+                       float(D_core_6), float(D_core_7), float(D_core_8)])
     D_grain = float(D_grain)
     N = int(N)
-    if single_core_diameter and neutral_burn_profile:
-        length_col = dbc.FormGroup(
+    if neutral_burn_profile:
+        length_col = [dbc.FormGroup(
             children=[
                 dbc.Label('Segment length (mm)'),
                 dbc.Input(
                     placeholder='Insert segment length...',
                     id='L_grain',
-                    value=f'{0.5 * (3 * D_grain + D_core)}',
+                    value=f'{0.5 * (3 * D_grain + D_core[i])}',
                     type='number',
-                    disabled=True,
-                ),
-                dbc.FormText('To edit this value, disable \"Neutral burn profile\"')
-            ]
-        )
-    elif single_core_diameter is True and neutral_burn_profile is False:
-        length_col = dbc.FormGroup(
-            children=[
-                dbc.Label('Segment length (mm)'),
-                dbc.Input(
-                    placeholder='Insert segment length...',
-                    id='L_grain',
-                    value=f'{0.5 * (3 * D_grain + D_core)}',
-                    type='number',
-                    disabled=False
+                    disabled=True
                 )
             ]
-        )
-    elif single_core_diameter is False and neutral_burn_profile is False:
+        ) for i in range(number_grain_core_inputs)]
+    else:
         length_col = [dbc.FormGroup(
             children=[
                 dbc.Label(f'Segment #{i + 1} length (mm)'),
                 dbc.Input(
                     placeholder=f'Insert #{i + 1} segment length...',
                     id=f'L_grain_{i + 1}',
-                    value='68',
-                    type='number'
+                    value='',
+                    type='number',
+                    disabled=False
                 )
             ]
-        ) for i in range(N)]
+        ) for i in range(number_grain_core_inputs)]
     return length_col
 
 
