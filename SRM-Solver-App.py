@@ -530,7 +530,7 @@ ballistic_tab = dbc.Tab(
 # _____________________________________________________________________________________________________________________
 # DASH APP EXECUTION
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
 
 app.layout = html.Div([
     dbc.Row([
@@ -650,6 +650,21 @@ def update_length_input_box(
             ]
         ) for i in range(number_grain_core_inputs)]
     return length_col
+
+
+# @app.callback(
+#     State(component_id='run_simulation', component_property='n_clicks'),
+#     [
+#         Output(),
+#         Output()
+#     ],
+#     [
+#         Input(),
+#         Input()
+#     ]
+# )
+# def burn_regression():
+#     pass
 
 
 if __name__ == '__main__':

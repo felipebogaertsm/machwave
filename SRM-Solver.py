@@ -78,7 +78,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17
+m_motor = 15
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -92,13 +92,13 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-N = 7
+N = 6
 # Grain external diameter [m]:
 D_grain = 114e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
+D_core = np.array([55, 55, 55, 55, 55, 55]) * 1e-3
 # Grains 1 to 'N' length [m]:
-L_grain = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
+L_grain = np.array([200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
@@ -114,7 +114,7 @@ D_out = 139.7e-3
 # Liner thickness [m]
 liner_thickness = 3e-3
 # Throat diameter [m]:
-D_throat = 36e-3
+D_throat = 35e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
