@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 
 
-def motorToEng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_motor, manufacturer, name):
-    """Exports an eng file to the directory 'outputs' inside the program folder."""
+def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_motor, manufacturer, name):
+    """Exports an eng file to the directory 'outputs' inside the program folder. """
 
     # Forming a new time vector that has exactly 'eng_res' points (independent on time step input):
     t_out = np.linspace(0, t[-1] + dt, eng_res)
@@ -27,7 +27,7 @@ def motorToEng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_mot
     saveFile.close()
 
 
-def pressurePlot(t, P0):
+def pressure_plot(t, P0):
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',
@@ -50,7 +50,7 @@ def pressurePlot(t, P0):
     return figure_plotly
 
 
-def thrustPlot(t, F):
+def thrust_plot(t, F):
     data = [go.Scatter(x=t,
                        y=F,
                        mode='lines',
@@ -73,7 +73,37 @@ def thrustPlot(t, F):
     return figure_plotly
 
 
-def performancePlot(F, P0, t):
+def height_plot(t, y):
+    data = [go.Scatter(x=t,
+                       y=y,
+                       mode='lines',
+                       name='lines',
+                       marker={'color': '#6a006a'}
+                       )]
+    layout = go.Layout(title='Altitude (AGL)',
+                       xaxis=dict(title='Time [s]'),
+                       yaxis=dict(title='Altitude [m]'),
+                       hovermode='closest')
+    figure_plotly = go.Figure(data=data, layout=layout)
+    return figure_plotly
+
+
+def velocity_plot(t, v):
+    data = [go.Scatter(x=t,
+                       y=v,
+                       mode='lines',
+                       name='lines',
+                       marker={'color': '#6a006a'}
+                       )]
+    layout = go.Layout(title='Velocity plot',
+                       xaxis=dict(title='Time [s]'),
+                       yaxis=dict(title='Velocity [m/s]'),
+                       hovermode='closest')
+    figure_plotly = go.Figure(data=data, layout=layout)
+    return figure_plotly
+
+
+def performance_plot(F, P0, t):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder """
     fig1, ax1 = plt.subplots()
 
@@ -96,7 +126,7 @@ def performancePlot(F, P0, t):
     fig1.savefig('output/pressure_thrust.png', dpi=300)
 
 
-def mainPlot(t, F, P0, Kn, m_prop):
+def main_plot(t, F, P0, Kn, m_prop):
     main_figure = plt.figure(3)
     main_figure.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
@@ -140,7 +170,7 @@ def mainPlot(t, F, P0, Kn, m_prop):
     return main_figure
 
 
-def massFluxPlot(t, grain_mass_flux):
+def mass_flux_plot(t, grain_mass_flux):
     """ Plots and saves figure of the mass flux for all the grain segments """
     N, index = grain_mass_flux.shape
     mass_flux_figure = plt.figure()
@@ -155,7 +185,7 @@ def massFluxPlot(t, grain_mass_flux):
     return mass_flux_figure
 
 
-def ballisticsODE(y, v, T, D, M, g):
+def ballistics_ode(y, v, T, D, M, g):
     if v < 0:
         x = -1
     else:

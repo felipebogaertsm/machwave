@@ -43,6 +43,11 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1390, 1.0426, 1608, 38.570 * 1e-3,
 
 
 def prop_data(prop: str):
+
+    """"
+    Returns propellant data based on the propellant name entered by the user as a string.
+    """
+
     if prop.lower() == 'kndx':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             kndx.ce, kndx.pp, kndx.k_mix_ch, kndx.k_2ph_ex, kndx.T0_ideal, kndx.M_ch, kndx.M_ex, kndx.Isp_frozen, \
@@ -64,11 +69,15 @@ def prop_data(prop: str):
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             knsb.ce, knsb.pp, knsb.k_mix_ch, knsb.k_2ph_ex, knsb.T0_ideal, knsb.M_ch, knsb.M_ex, knsb.Isp_frozen, \
             knsb.Isp_shifting, knsb.qsi_ch, knsb.qsi_ex
+
     return ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 
 
-def getBurnRateCoefs(prop: str, P0: float):
-    """ Sets the burn rate coefficients 'a' and 'n' according to the instantaneous chamber pressure """
+def get_burn_rate_coefs(prop: str, P0: float):
+    """
+    Sets the burn rate coefficients 'a' and 'n' according to the instantaneous chamber pressure
+    """
+
     if prop.lower() == 'kndx':
         if P0 * 1e-6 <= 0.779:
             a, n = 8.875, 0.619
@@ -113,4 +122,7 @@ def getBurnRateCoefs(prop: str, P0: float):
         a, n = 5.126, 0.224
     elif prop.lower() == 'custom':
         a, n = input('Type value of "a": '), input('Type value of "n": ')
+    else:
+        a, n = input('Type value of "a": '), input('Type value of "n": ')
+
     return a, n
