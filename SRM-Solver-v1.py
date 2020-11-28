@@ -92,13 +92,13 @@ sf = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-N = 6
+N = 7
 # Grain external diameter [m]:
 D_grain = 114e-3
 # Grains 1 to 'N' core diameter [m]:
-D_core = np.array([55, 55, 55, 55, 55, 55]) * 1e-3
+D_core = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
 # Grains 1 to 'N' length [m]:
-L_grain = np.array([200, 200, 200, 200, 200, 200]) * 1e-3
+L_grain = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
@@ -114,7 +114,7 @@ D_out = 139.7e-3
 # Liner thickness [m]
 liner_thickness = 3e-3
 # Throat diameter [m]:
-D_throat = 35e-3
+D_throat = 36e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
@@ -157,7 +157,7 @@ R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
 # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
 T0 = ce * T0_ideal
 # Nozzle throat area [m-m]:
-A_throat = getCircleArea(D_throat)
+A_throat = get_circle_area(D_throat)
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
 # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
@@ -171,7 +171,7 @@ structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clear
 # BATES GRAIN CALCULATION
 
 # Creating a web distance array, for each grain:
-web = grain.getWebArray()
+web = grain.get_web_array()
 
 # Pre-allocating the burn area and volume matrix for each grain segment. Rows are the grain segment number and columns
 # are the burn area or volume value for each web regression step.
@@ -181,15 +181,15 @@ V_propellant_segment = np.zeros((N, web_res))
 
 for j in range(N):
     for i in range(web_res):
-        A_burn_segment[j, i] = grain.getBurnArea(web[j, i], j)
-        V_propellant_segment[j, i] = grain.getPropellantVolume(web[j, i], j)
+        A_burn_segment[j, i] = grain.get_burn_area(web[j, i], j)
+        V_propellant_segment[j, i] = grain.get_propellant_volume(web[j, i], j)
 
 # In case there are different initial core diameters or grain lengths, the for loop below interpolates all the burn
 # area and Propellant volume data in respect to the largest web thickness of the motor.
 # This ensures that that all grains ignite at the same time in the simulation and also that the distance between
 # steps is equal for all grains in the matrix A_burn_segment and V_propellant_segment.
 
-D_core_min_index = grain.getMinCoreDiameterIndex()
+D_core_min_index = grain.get_min_core_diameter_index()
 for j in range(N):
     A_burn_segment[j, :] = np.interp(web[D_core_min_index, :], web[j, :],
                                      A_burn_segment[j, :], left=0, right=0)
@@ -207,25 +207,25 @@ web = web[D_core_min_index, :]
 # Core area:
 A_core = np.array([])
 for j in range(N):
-    A_core = np.append(A_core, getCircleArea(D_core[j]))
+    A_core = np.append(A_core, get_circle_area(D_core[j]))
 # Port area:
 A_port = A_core[-1]
 # Port to throat area ratio:
 initial_port_to_throat = A_port / A_throat
 
 # Getting the burn profile
-burn_profile = getBurnProfile(A_burn)
+burn_profile = get_burn_profile(A_burn)
 # Getting the optimal length for each grain segment
-optimal_grain_length = grain.getOptimalSegmentLength()
+optimal_grain_length = grain.get_optimal_segment_length()
 
 # _____________________________________________________________________________________________________________________
 # CHAMBER PRESSURE RK4 SOLVER
 
 # Calculating the free chamber volume for each web step:
-V0, V_empty = getChamberVolume(L_chamber, D_chamber, V_prop)
+V0, V_empty = get_chamber_volume(L_chamber, D_chamber, V_prop)
 
 # Critical pressure (isentropic supersonic flow):
-critical_pressure_ratio = getCriticalPressure(k_mix_ch)
+critical_pressure_ratio = get_critical_pressure(k_mix_ch)
 
 # Initial conditions:
 P0, x, t, t_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
@@ -240,7 +240,7 @@ i = 0
 while x[i] <= web[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
     # burn_rate_coefs selects value for a and n that suits the current chamber pressure of the iteration step.
-    a, n = getBurnRateCoefs(propellant, P0[i])
+    a, n = get_burn_rate_coefs(propellant, P0[i])
 
     # if 'a' and 'n' are negative, exit the program (lacking burn rate data for the current iteration of P0).
     if a < 0:
@@ -275,14 +275,14 @@ while x[i] <= web[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
 
     # The values above are then used to solve the differential equation by the Range-Kutta 4th order method.
 
-    k1 = solveCPSeidel(P0[i], P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k2 = solveCPSeidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k3 = solveCPSeidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k4 = solveCPSeidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i],
-                       V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k1 = solve_cp_seidel(P0[i], P_external, A_burn_CP[i],
+                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k2 = solve_cp_seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i],
+                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k3 = solve_cp_seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i],
+                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
+    k4 = solve_cp_seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i],
+                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
 
     P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
 
@@ -296,7 +296,7 @@ while x[i] <= web[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
     i = i + 1
 
 # Mass flux per grain:
-grain_mass_flux = grain.getMassFluxPerSegment(r, pp, x)
+grain_mass_flux = grain.get_mass_flux_per_segment(r, pp, x)
 
 # The value for 'index' is used later to iterate on other useful vectors. I_total is set to the total length of the
 # 'P0' vector in order to guarantee that future vectors will cover all the same instants that 'P0' covers.
@@ -319,41 +319,41 @@ P0_psi_avg = np.mean(P0_psi)
 # _____________________________________________________________________________________________________________________
 # EXPANSION RATIO AND EXIT PRESSURE
 
-E = getExpansionRatio(P_external, P0, k_2ph_ex, critical_pressure_ratio)
-P_exit = getExitPressure(k_2ph_ex, E, P0)
+E = get_expansion_ratio(P_external, P0, k_2ph_ex, critical_pressure_ratio)
+P_exit = get_exit_pressure(k_2ph_ex, E, P0)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR PERFORMANCE LOSSES (a015140 paper)
 
 n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
-n_kin, n_tp, n_bl = getOperationalCorrectionFactors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
-                                                    D_throat, qsi_ch, index, critical_pressure_ratio, C1,
-                                                    C2, V0, M_ch, t)
+n_kin, n_tp, n_bl = get_operational_correction_factors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
+                                                       D_throat, qsi_ch, index, critical_pressure_ratio, C1,
+                                                       C2, V0, M_ch, t)
 n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
 
 # _____________________________________________________________________________________________________________________
 # THRUST AND IMPULSE
 
-Cf = getThrustCoefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf)
+Cf = get_thrust_coefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf)
 F = Cf * A_throat * P0
-I_total, I_sp = getImpulses(np.mean(F), t, m_prop)
+I_total, I_sp = get_impulses(np.mean(F), t, m_prop)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
 
 # Casing thickness assuming thin wall [m]:
-casing_sf = structure.casingSafetyFactor(Y_chamber, P0)
+casing_sf = structure.casing_safety_factor(Y_chamber, P0)
 
 # Nozzle thickness assuming thin wall [m]:
-nozzle_conv_t, nozzle_div_t, = structure.nozzleThickness(
+nozzle_conv_t, nozzle_div_t, = structure.nozzle_thickness(
     Y_nozzle, Div_angle, Conv_angle, P0)
 
 # Bulkhead thickness [m]:
-bulkhead_t = structure.bulkheadThickness(Y_bulkhead, P0)
+bulkhead_t = structure.bulkhead_thickness(Y_bulkhead, P0)
 
 # Screw safety factors and optimal quantity (shear, tear and compression):
 optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
-    structure.optimalFasteners(max_number_of_screws, P0, Y_chamber, U_screw)
+    structure.optimal_fasteners(max_number_of_screws, P0, Y_chamber, U_screw)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
@@ -410,8 +410,8 @@ print('\n')
 # The input .csv file contains all info used in the input section.
 
 # Writing the ENG file:
-motorToEng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res,
-           pp, m_prop, m_motor, manufacturer, name)
+motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res,
+             pp, m_prop, m_motor, manufacturer, name)
 
 # Writing to output CSV file:
 motor_data = {'Time': t, 'Thrust': F, 'Prop_Mass': m_prop}
@@ -426,6 +426,6 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-performance_figure = performancePlot(F, P0, t)
-main_figure = mainPlot(t, F, P0, Kn, m_prop)
-mass_flux_figure = massFluxPlot(t, grain_mass_flux)
+performance_figure = performance_plot(F, P0, t)
+main_figure = main_plot(t, F, P0, Kn, m_prop)
+mass_flux_figure = mass_flux_plot(t, grain_mass_flux)
