@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 
 
-def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_motor, manufacturer, name):
+def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, manufacturer, name):
     """Exports an eng file to the directory 'outputs' inside the program folder. """
 
     # Forming a new time vector that has exactly 'eng_res' points (independent on time step input):
@@ -243,7 +243,7 @@ def print_results(grain, structure, propellant, ib_parameters):
     print('\n')
 
 
-def output_eng(ib_parameters, structure, propellant, eng_res, dt, manufacturer, name):
+def output_eng_csv(ib_parameters, structure, propellant, eng_res, dt, manufacturer, name):
     """
     This program exports the motor data into three separate files.
     # The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
@@ -252,8 +252,7 @@ def output_eng(ib_parameters, structure, propellant, eng_res, dt, manufacturer, 
     """
     # Writing the ENG file:
     motor_to_eng(ib_parameters.t, ib_parameters.F, dt, ib_parameters.V_prop, structure.D_out,
-                 structure.L_chamber, eng_res,
-                 propellant.pp, ib_parameters.m_prop, structure.m_motor, manufacturer, name)
+                 structure.L_chamber, eng_res, propellant.pp, structure.m_motor, manufacturer, name)
     # Writing to output CSV file:
     motor_data = {'Time': ib_parameters.t, 'Thrust': ib_parameters.F, 'Prop_Mass': ib_parameters.m_prop}
     motor_data_df = pd.DataFrame(motor_data)

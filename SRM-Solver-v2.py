@@ -5,9 +5,9 @@ import pandas as pd
 import time
 import json
 
-from functions.ib_functions import *
-from functions.propellant import *
-from functions.structural_functions import *
+from functions.InternalBallistics import *
+from functions.Propellant import *
+from functions.MotorStructure import *
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
@@ -143,7 +143,7 @@ print_results(grain, structure, propellant, ib_parameters)
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
 
-output_eng(ib_parameters, structure, propellant, 25, dt, manufacturer, name)
+output_eng_csv(ib_parameters, structure, propellant, 25, dt, manufacturer, name)
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END
