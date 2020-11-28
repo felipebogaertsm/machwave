@@ -47,7 +47,7 @@ st.write("""
 # STREAMLIT SIDEBAR INPUTS
 
 st.sidebar.header('Input section')
-propellant = st.sidebar.selectbox('Select propellant', prop_list)
+propellant = st.sidebar.selectbox('Select prop', prop_list)
 propellant = prop_dict[propellant]
 N = st.sidebar.number_input('Grain count', min_value=1, max_value=20, step=1, value=4)
 D_grain = st.sidebar.number_input('Grain external diameter [mm]',

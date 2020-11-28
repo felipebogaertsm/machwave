@@ -13,9 +13,29 @@
 # qsi_ch: Number of condensed phase moles per 100 gram (chamber) [mole]
 # qsi_ex: Number of condensed phase moles per 100 gram (exhaust) [mole]
 
+import scipy.constants
+
+
+class PropellantSelected:
+    def __init__(self, ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex):
+        self.ce = ce
+        self.pp = pp
+        self.k_mix_ch = k_mix_ch
+        self.k_2ph_ex = k_2ph_ex
+        # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
+        self.T0 = T0_ideal * ce
+        self.M_ch = M_ch
+        self.M_ex = M_ex
+        # Gas constant per molecular weight calculations:
+        self.R_ch = scipy.constants.R / M_ch
+        self.R_ex = scipy.constants.R / M_ex
+        self.Isp_frozen = Isp_frozen
+        self.Isp_shifting = Isp_shifting
+        self.qsi_ch = qsi_ch
+        self.qsi_ex = qsi_ex
+
 
 class Propellant:
-
     def __init__(self, ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex):
         self.ce = ce
         self.pp = pp
@@ -45,7 +65,7 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1390, 1.0426, 1608, 38.570 * 1e-3,
 def prop_data(prop: str):
 
     """"
-    Returns propellant data based on the propellant name entered by the user as a string.
+    Returns prop data based on the prop name entered by the user as a string.
     """
 
     if prop.lower() == 'kndx':
