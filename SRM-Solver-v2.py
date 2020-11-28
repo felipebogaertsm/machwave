@@ -49,7 +49,7 @@ grain_spacing = 10e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-propellant = 'knsb-nakka'
+prop = 'knsb-nakka'
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
@@ -95,14 +95,12 @@ max_number_of_screws = 30
 # _____________________________________________________________________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
 
-# The Propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
-# Gas constant per molecular weight calculations:
-R_ch, R_ex = scipy.constants.R / M_ch, scipy.constants.R / M_ex
-# Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
-T0 = ce * T0_ideal
-# Nozzle throat area [m-m]:
-A_throat = get_circle_area(D_throat)
+# The prop name input above triggers the function inside 'Propellant.py' to return the required data.
+ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(prop)
+# Getting PropellantSelected class based on previous input:
+propellant = PropellantSelected(
+    ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
+)
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
 # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
@@ -110,144 +108,32 @@ D_chamber = D_in - 2 * liner_thickness
 # Defining 'grain' as an instance of BATES:
 grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
-structure = MotorStructure(sf, m_motor, D_in, D_out, L_chamber, D_screw, D_clearance)
+structure = MotorStructure(
+    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
+    Div_angle
+)
 
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS
 
-# Calculating the free chamber volume for each web step:
-V0, V_empty = get_chamber_volume(L_chamber, D_chamber, V_prop)
-
-# Critical pressure (isentropic supersonic flow):
-critical_pressure_ratio = get_critical_pressure(k_mix_ch)
-
-# Initial conditions:
-P0, x, t, t_burnout = np.array([P_igniter]), np.array([0]), np.array([0]), 0
-# Declaring arrays:
-r0, re, r = np.array([]), np.array([]), np.array([])
-
-# While loop iterates until the new instant web thickness vector 'x' is larger than the web thickness (last element of
-# vector 'w') or the internal chamber pressure is smaller than critical pressure (making the nozzle exhaust subsonic).
-
-i = 0
-
-while x[i] <= web[web_res - 1] or P0[i] >= P_external / critical_pressure_ratio:
-
-    # burn_rate_coefs selects value for a and n that suits the current chamber pressure of the iteration step.
-    a, n = get_burn_rate_coefs(propellant, P0[i])
-
-    # if 'a' and 'n' are negative, exit the program (lacking burn rate data for the current iteration of P0).
-    if a < 0:
-        exit()
-
-    # The first time the while loop operates, the values for the burn rate are declared and written based on the
-    # initial igniter pressure. 'r0' stands for the non-erosive burn rate term and 'r' stands for the total burn rate.
-    # Currently, the program does not support erosive burning yet, o 'r0 = r'.
-    # 'r0' is calculated using St. Robert's Burn Rate Law.
-
-    r0 = np.append(r0, (a * (P0[i] * 1e-6) ** n) * 1e-3)
-    re = np.append(re, 0)
-    r = np.append(r, r0[i] + re[i])
-
-    # The web distance that the combustion consumes on each time step 'dt' is represented by 'dx':
-    dx = dt * r[i]
-    # The instant web distance vector is appended with latest 'dx' value:
-    x = np.append(x, x[i] + dx)
-    # The time vector 't' is also modified and the time step 'dt' is added to the last 't[i]' value:
-    t = np.append(t, t[i] + dt)
-
-    # In order for the burn area, chamber volume and Propellant volume vectors to be in function of time ('t') or in
-    # function of web distance ('x') the old vectors 'A_burn', 'V0' and 'V_prop' must be interpolated from the old
-    # set of web thickness data 'w' to the new vector 'x'.
-    # A_burn_CP is the interpolated value for A_burn, in function of x and t;
-    # V0_CP is the interpolated value for V0, in function of x and t;
-    # V_prop_CP is the interpolated value for V_prop, in function of x and t.
-
-    A_burn_CP = np.interp(x, web, A_burn, left=0, right=0)
-    V0_CP = np.interp(x, web, V0, right=V_empty)
-    V_prop_CP = np.interp(x, web, V_prop, right=0)
-
-    # The values above are then used to solve the differential equation by the Range-Kutta 4th order method.
-
-    k1 = solve_cp_seidel(P0[i], P_external, A_burn_CP[i],
-                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k2 = solve_cp_seidel(P0[i] + 0.5 * k1 * dt, P_external, A_burn_CP[i],
-                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k3 = solve_cp_seidel(P0[i] + 0.5 * k2 * dt, P_external, A_burn_CP[i],
-                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-    k4 = solve_cp_seidel(P0[i] + 0.5 * k3 * dt, P_external, A_burn_CP[i],
-                         V0_CP[i], A_throat, pp, k_mix_ch, R_ch, T0, r[i])
-
-    P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
-
-    # 't_burnout' stands for the time on which the Propellant is done burning. If the value for 't_burnout'
-    # (declared before the while loop) is 0 and the current iteration of 'AbCP' is also 0, t_burnout is set to the
-    # current time value 't[i]'.
-
-    if t_burnout == 0 and A_burn_CP[i] == 0:
-        t_burnout = t[i]
-
-    i = i + 1
-
-# Mass flux per grain:
-grain_mass_flux = grain.get_mass_flux_per_segment(r, pp, x)
-
-# The value for 'index' is used later to iterate on other useful vectors. I_total is set to the total length of the
-# 'P0' vector in order to guarantee that future vectors will cover all the same instants that 'P0' covers.
-
-index = np.size(P0)
-
-# Klemmung in respect to time:
-Kn = A_burn_CP / A_throat
-
-# Propellant mass:
-m_prop = V_prop_CP * pp
-
-# Average value for the chamber pressure from ignition to the time when 'P0 <= critical_pressure_ratio':
-P0_avg = np.mean(P0)
-
-# Conversion of 'P0' from Pa to psi inside a new vector 'P0_psi':
-P0_psi = P0 * 1.45e-4
-P0_psi_avg = np.mean(P0_psi)
-
-# _____________________________________________________________________________________________________________________
-# EXPANSION RATIO AND EXIT PRESSURE
-
-E = get_expansion_ratio(P_external, P0, k_2ph_ex, critical_pressure_ratio)
-P_exit = get_exit_pressure(k_2ph_ex, E, P0)
-
-# _____________________________________________________________________________________________________________________
-# MOTOR PERFORMANCE LOSSES (a015140 paper)
-
-n_div = 0.5 * (1 + np.cos(np.deg2rad(Div_angle)))
-n_kin, n_tp, n_bl = get_operational_correction_factors(P0, P_external, P0_psi, Isp_frozen, Isp_shifting, E,
-                                                       D_throat, qsi_ch, index, critical_pressure_ratio, C1,
-                                                       C2, V0, M_ch, t)
-n_cf = ((100 - (n_kin + n_bl + n_tp)) * n_div / 100)
-
-# _____________________________________________________________________________________________________________________
-# THRUST AND IMPULSE
-
-Cf = get_thrust_coefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf)
-F = Cf * A_throat * P0
-I_total, I_sp = get_impulses(np.mean(F), t, m_prop)
+ib_parameters = run_internal_ballistics(propellant, grain, structure, web_res, P_igniter, P_external, dt, prop)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
 
 # Casing thickness assuming thin wall [m]:
-casing_sf = structure.casing_safety_factor(Y_chamber, P0)
+casing_sf = structure.casing_safety_factor(Y_chamber, ib_parameters.P0)
 
 # Nozzle thickness assuming thin wall [m]:
 nozzle_conv_t, nozzle_div_t, = structure.nozzle_thickness(
-    Y_nozzle, Div_angle, Conv_angle, P0)
+    Y_nozzle, Div_angle, Conv_angle, ib_parameters.P0)
 
 # Bulkhead thickness [m]:
-bulkhead_t = structure.bulkhead_thickness(Y_bulkhead, P0)
+bulkhead_t = structure.bulkhead_thickness(Y_bulkhead, ib_parameters.P0)
 
 # Screw safety factors and optimal quantity (shear, tear and compression):
 optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
-    structure.optimal_fasteners(max_number_of_screws, P0, Y_chamber, U_screw)
+    structure.optimal_fasteners(max_number_of_screws, ib_parameters.P0, Y_chamber, U_screw)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
@@ -255,33 +141,34 @@ optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
 print('\nResults generated by SRM Solver program, by Felipe Bogaerts de Mattos')
 
 print('\nBURN REGRESSION')
-if m_prop[0] > 1:
-    print(f' Propellant initial mass {m_prop[0]:.3f} kg')
+if ib_parameters.m_prop[0] > 1:
+    print(f' Propellant initial mass {ib_parameters.m_prop[0]:.3f} kg')
 else:
-    print(f' Propellant initial mass {m_prop[0] * 1e3:.3f} g')
-print(' Mean Kn: %.2f' % np.mean(Kn))
-print(' Initial to final Kn ratio: %.3f' % (A_burn[0] / A_burn[-1]))
-print(f' Volumetric efficiency: {(V_prop_CP[0] * 100 / V_empty):.3f} %')
-print(f' Grain length for neutral profile vector: {optimal_grain_length}')
+    print(f' Propellant initial mass {ib_parameters.m_prop[0] * 1e3:.3f} g')
+print(' Mean Kn: %.2f' % np.mean(ib_parameters.Kn))
+print(f' Initial to final Kn ratio: {ib_parameters.initial_to_final_kn:.3f}')
+print(f' Volumetric efficiency: {(ib_parameters.V_prop[0] * 100 / ib_parameters.V_empty):.3f} %')
+print(f' Grain length for neutral profile vector: {ib_parameters.optimal_grain_length}')
 
-print(' Burn profile: ' + burn_profile)
-print(f' Initial port-to-throat (grain #{N:d}): {initial_port_to_throat:.3f}')
+print(' Burn profile: ' + ib_parameters.burn_profile)
+print(f' Initial port-to-throat (grain #{N:d}): {ib_parameters.initial_port_to_throat:.3f}')
 print(' Motor L/D ratio: %.3f' % (np.sum(L_grain) / D_grain))
-print(f' Max initial mass flux: {np.max(grain_mass_flux):.3f} kg/s-m-m or '
-      f'{np.max(grain_mass_flux) * 1.42233e-3:.3f} lb/s-in-in')
+print(f' Max initial mass flux: {np.max(ib_parameters.grain_mass_flux):.3f} kg/s-m-m or '
+      f'{np.max(ib_parameters.grain_mass_flux) * 1.42233e-3:.3f} lb/s-in-in')
 
 print('\nCHAMBER PRESSURE')
-print(f' Maximum, average chamber pressure: {(np.max(P0) * 1e-6):.3f}, {(np.mean(P0) * 1e-6):.3f} MPa')
+print(f' Maximum, average chamber pressure: {(np.max(ib_parameters.P0) * 1e-6):.3f}, '
+      f'{(np.mean(ib_parameters.P0) * 1e-6):.3f} MPa')
 
 print('\nTHRUST AND IMPULSE')
-print(f' Maximum, average thrust: {np.max(F):.3f}, {np.mean(F):.3f} N')
-print(f' Total, specific impulses: {I_total:.3f} N-s, {I_sp:.3f} s')
-print(f' Burnout time, thrust time: {t_burnout:.3f}, {t[-1]:.3f} s')
+print(f' Maximum, average thrust: {np.max(ib_parameters.F):.3f}, {np.mean(ib_parameters.F):.3f} N')
+print(f' Total, specific impulses: {ib_parameters.I_total:.3f} N-s, {ib_parameters.I_sp:.3f} s')
+print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[-1]:.3f} s')
 
 print('\nNOZZLE DESIGN')
-print(f' Average opt. exp. ratio: {np.mean(E):.3f}')
-print(f' Nozzle exit diameter: {D_throat * np.sqrt(np.mean(E)) * 1e3:.3f} mm')
-print(f' Average nozzle efficiency: {np.mean(n_cf) * 100:.3f} %')
+print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E):.3f}')
+print(f' Nozzle exit diameter: {D_throat * np.sqrt(np.mean(ib_parameters.E)) * 1e3:.3f} mm')
+print(f' Average nozzle efficiency: {np.mean(ib_parameters.n_cf) * 100:.3f} %')
 
 print('\nPRELIMINARY STRUCTURAL PROJECT')
 print(f' Casing safety factor: {casing_sf:.2f}')
@@ -300,15 +187,15 @@ print('\n')
 # OUTPUT TO ENG AND CSV FILE
 # This program exports the motor data into three separate files.
 # The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
-# The output .csv file contains thrust, time, propellant mass, Kn, chamber pressure, web thickness and burn rate data.
+# The output .csv file contains thrust, time, prop mass, Kn, chamber pressure, web thickness and burn rate data.
 # The input .csv file contains all info used in the input section.
 
 # Writing the ENG file:
-motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res,
-             pp, m_prop, m_motor, manufacturer, name)
+motor_to_eng(ib_parameters.t, ib_parameters.F, dt, ib_parameters.V_prop, D_out, L_chamber, eng_res,
+             pp, ib_parameters.m_prop, m_motor, manufacturer, name)
 
 # Writing to output CSV file:
-motor_data = {'Time': t, 'Thrust': F, 'Prop_Mass': m_prop}
+motor_data = {'Time': ib_parameters.t, 'Thrust': ib_parameters.F, 'Prop_Mass': ib_parameters.m_prop}
 motor_data_df = pd.DataFrame(motor_data)
 motor_data_df.to_csv(f'output/{name}.csv', decimal='.')
 
@@ -320,6 +207,6 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-performance_figure = performance_plot(F, P0, t)
-main_figure = main_plot(t, F, P0, Kn, m_prop)
-mass_flux_figure = mass_flux_plot(t, grain_mass_flux)
+# performance_figure = performance_plot(F, P0, t)
+# main_figure = main_plot(t, F, P0, Kn, m_prop)
+# mass_flux_figure = mass_flux_plot(t, grain_mass_flux)

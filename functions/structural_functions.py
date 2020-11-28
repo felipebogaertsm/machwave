@@ -3,14 +3,21 @@ import matplotlib.pyplot as plt
 
 
 class MotorStructure:
-    def __init__(self, sf, m_motor, D_in, D_out, L_cc, D_screw, D_clearance):
+    def __init__(self, sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, A_throat, C1, C2,
+                 Div_angle):
         self.sf = sf
         self.m_motor = m_motor
         self.D_in = D_in
         self.D_out = D_out
-        self.L_cc = L_cc
+        self.D_chamber = D_chamber
+        self.L_chamber = L_chamber
         self.D_screw = D_screw
         self.D_clearance = D_clearance
+        self.D_throat = D_throat
+        self.A_throat = A_throat
+        self.C1 = C1
+        self.C2 = C2
+        self.Div_angle = Div_angle
 
     def bulkhead_thickness(self, Y_bulkhead, P0):
         """ Returns the thickness of a plane bulkhead for a pressure vessel """
