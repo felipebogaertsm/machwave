@@ -29,6 +29,7 @@ def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, ma
 
 
 def pressure_plot(t, P0):
+    """ Returns plotly figure with pressure data. """
     data = [go.Scatter(x=t,
                        y=P0 * 1e-6,
                        mode='lines',
@@ -52,6 +53,7 @@ def pressure_plot(t, P0):
 
 
 def thrust_plot(t, F):
+    """ Returns plotly figure with pressure data. """
     data = [go.Scatter(x=t,
                        y=F,
                        mode='lines',
@@ -75,6 +77,7 @@ def thrust_plot(t, F):
 
 
 def height_plot(t, y):
+    """ Returns plotly figure with altitude data. """
     data = [go.Scatter(x=t,
                        y=y,
                        mode='lines',
@@ -90,6 +93,7 @@ def height_plot(t, y):
 
 
 def velocity_plot(t, v):
+    """ Returns plotly figure with velocity data. """
     data = [go.Scatter(x=t,
                        y=v,
                        mode='lines',
@@ -105,7 +109,7 @@ def velocity_plot(t, v):
 
 
 def performance_plot(F, P0, t):
-    """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder """
+    """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder. """
     fig1, ax1 = plt.subplots()
 
     ax1.set_xlim(0, t[-1])
@@ -128,6 +132,7 @@ def performance_plot(F, P0, t):
 
 
 def main_plot(t, F, P0, Kn, m_prop):
+    """ Returns pyplot figure and saves motor plots to 'output' folder. """
     main_figure = plt.figure(3)
     main_figure.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
@@ -187,6 +192,7 @@ def mass_flux_plot(t, grain_mass_flux):
 
 
 def ballistics_ode(y, v, T, D, M, g):
+    """ Returns dydt and dvdt. """
     if v < 0:
         x = -1
     else:
