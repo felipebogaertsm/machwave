@@ -8,9 +8,9 @@ import dash_daq as daq
 import dash_bootstrap_components as dbc
 
 from dash.dependencies import Input, Output, State
-from functions.ib_functions import *
-from functions.propellant import *
-from functions.structural_functions import *
+from functions.InternalBallistics import *
+from functions.Propellant import *
+from functions.MotorStructure import *
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
