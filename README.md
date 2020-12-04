@@ -44,13 +44,9 @@ The code was structured according to the following main sections:
 1) Time Function Start
 2) Inputs
 3) Pre Calculations
-4) BATES Grain Calculations
-5) Chamber Pressure RK4 Solver
-6) Expansion Ratio and Exit Pressure
-7) Motor Performance Losses
-8) Thrust and Impulse
-9) Motor Structure
-10) Results
-11) Output to .eng and .csv file
-12) Time function end
-13) Plots
+4) Internal Ballistics
+5) Motor Structure
+6) Results
+7) Output to .eng and .csv file
+8) Time function end
+9) Plots
