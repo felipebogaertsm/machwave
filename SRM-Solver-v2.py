@@ -110,7 +110,7 @@ grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(
     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
-    Div_angle
+    Div_angle, Conv_angle, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
 )
 
 # _____________________________________________________________________________________________________________________
@@ -121,24 +121,12 @@ ib_parameters = run_internal_ballistics(propellant, grain, structure, web_res, P
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
 
-# Casing thickness assuming thin wall [m]:
-casing_sf = structure.casing_safety_factor(Y_chamber, ib_parameters.P0)
-
-# Nozzle thickness assuming thin wall [m]:
-nozzle_conv_t, nozzle_div_t, = structure.nozzle_thickness(
-    Y_nozzle, Div_angle, Conv_angle, ib_parameters.P0)
-
-# Bulkhead thickness [m]:
-bulkhead_t = structure.bulkhead_thickness(Y_bulkhead, ib_parameters.P0)
-
-# Screw safety factors and optimal quantity (shear, tear and compression):
-optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
-    structure.optimal_fasteners(max_number_of_screws, ib_parameters.P0, Y_chamber, U_screw)
+structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
 
-print_results(grain, structure, propellant, ib_parameters)
+print_results(grain, structure, propellant, ib_parameters, structural_parameters)
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
