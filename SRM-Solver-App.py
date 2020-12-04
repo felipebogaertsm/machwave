@@ -86,7 +86,10 @@ input_row_2 = dbc.Row(
                     dbc.Select(
                         id='propellant_select',
                         options=[
-                            {'label': i, 'value': j} for i in list(prop_dict.keys()) for j in list(prop_dict.values())
+                            {'label': 'KNSB (Nakka)', 'value': 'knsb-nakka'},
+                            {'label': 'KNSB (Gudnason)', 'value': 'knsb'},
+                            {'label': 'KNER (Gudnason)', 'value': 'kner'},
+                            {'label': 'KNDX (Nakka)', 'value': 'kndx'},
                         ],
                         value='knsb-nakka'
                     )
@@ -446,7 +449,7 @@ input_tab = dbc.Tab(label='Inputs', children=[
                             html.H2([dbc.Badge('Vehicle data')]),
                             input_row_9,
                             input_row_10,
-                            dbc.Button('Primary', color='primary', id='run_simulation')
+                            dbc.Button('Run Simulation', color='primary', id='run_simulation')
                         ]
                     )
                 ),
@@ -530,7 +533,7 @@ ballistic_tab = dbc.Tab(
 # _____________________________________________________________________________________________________________________
 # DASH APP EXECUTION
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div([
     dbc.Row([

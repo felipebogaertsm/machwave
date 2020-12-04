@@ -1,8 +1,12 @@
+# Written by Felipe Bogaerts de Mattos
+# Juiz de Fora, MG, 2020
+
 import time
 
 from functions.InternalBallistics import *
 from functions.Propellant import *
 from functions.MotorStructure import *
+from functions.Ballistics import *
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
@@ -87,6 +91,30 @@ U_screw = 510e6
 # Maximum number of fasteners:
 max_number_of_screws = 30
 
+# VEHICLE DATA
+# Mass of the rocket without the motor [kg]:
+mass_wo_motor = 32
+# Rocket drag coefficient:
+Cd = 0.45
+# Frontal diameter [mm]:
+D_rocket = 170e-3
+# Initial height above sea level [m]
+h0 = 4
+# Launch rail length [m]
+rail_length = 5
+# Time after apogee for drogue parachute activation [s]
+drogue_time = 1
+# Drogue drag coefficient
+Cd_drogue = 1.75
+# Drogue effective diameter [m]
+D_drogue = 1.25
+# Main parachute drag coefficient [m]
+Cd_main = 2
+# Main parachute effective diameter [m]
+D_main = 2.66
+# Main parachute height activation [m]
+main_chute_activation_height = 500
+
 # _____________________________________________________________________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
 
@@ -118,6 +146,13 @@ ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_r
 # MOTOR STRUCTURE
 
 structural_parameters = run_structural_simulation(structure, ib_parameters)
+
+# _____________________________________________________________________________________________________________________
+# TRAJECTORY
+
+rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure, ib_parameters)
+ballistics = get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
+                            main_chute_activation_height)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
