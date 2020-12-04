@@ -11,7 +11,7 @@ def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_prop, m_m
     t_out = np.linspace(0, t[-1] + dt, eng_res)
     # Interpolating old thrust-time data into new time vector:
     F_out = np.interp(t_out, t, F, left=0, right=0)
-    # Interpolating the Propellant volume with the new time vector (to find prop. mass with t):
+    # Interpolating the Propellant volume with the new time vector (to find propellant. mass with t):
     m_prop_out = pp * np.interp(t_out, t, V_prop_CP, right=0)
 
     # Writing to the ENG file:

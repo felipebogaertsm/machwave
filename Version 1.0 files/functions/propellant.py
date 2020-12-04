@@ -45,7 +45,7 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1390, 1.0426, 1608, 38.570 * 1e-3,
 def prop_data(prop: str):
 
     """"
-    Returns prop data based on the prop name entered by the user as a string.
+    Returns propellant data based on the propellant name entered by the user as a string.
     """
 
     if prop.lower() == 'kndx':

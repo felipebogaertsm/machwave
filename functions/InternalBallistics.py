@@ -164,7 +164,7 @@ def get_thrust_coefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf):
 
 
 def get_impulses(F_avg, t, m_prop):
-    """ Returns total and specific impulse, given the average thrust, time nparray and prop mass nparray. """
+    """ Returns total and specific impulse, given the average thrust, time nparray and propellant mass nparray. """
     I_total = F_avg * t[-1]
     I_sp = I_total / (m_prop[0] * 9.81)
     return I_total, I_sp

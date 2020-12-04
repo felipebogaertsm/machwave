@@ -11,7 +11,7 @@
 # HOW TO USE:
 # Input the desired motor data inside the INPUTS section. Run the program and the main results will be displayed in the
 # Command Window. Inside the output folder created, a .eng and a .csv file will also be available with the important
-# data for a rocket ballistic simulation. Also, plots with the motor thrust, chamber pressure, Kn, prop mass and
+# data for a rocket ballistic simulation. Also, plots with the motor thrust, chamber pressure, Kn, propellant mass and
 # mass flux will be stored inside the same output folder.
 #
 # Make sure all the modules are properly installed!
@@ -406,7 +406,7 @@ print('\n')
 # OUTPUT TO ENG AND CSV FILE
 # This program exports the motor data into three separate files.
 # The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
-# The output .csv file contains thrust, time, prop mass, Kn, chamber pressure, web thickness and burn rate data.
+# The output .csv file contains thrust, time, propellant mass, Kn, chamber pressure, web thickness and burn rate data.
 # The input .csv file contains all info used in the input section.
 
 # Writing the ENG file:
