@@ -90,12 +90,10 @@ class BATES:
         for j in range(self.N):
             for i in range(np.size(r)):
                 for k in range(j + 1):
-                    # print(j, i, k)
                     total_grain_Ab[j, i] = total_grain_Ab[j,
                                                           i] + self.get_burn_area(x[i], k)
                 segment_mass_flux[j, i] = (total_grain_Ab[j, i] * pp * r[i])
-                segment_mass_flux[j, i] = (
-                                              segment_mass_flux[j, i]) / get_circle_area(self.D_core[j] + x[i])
+                segment_mass_flux[j, i] = (segment_mass_flux[j, i]) / get_circle_area(self.D_core[j] + x[i])
         return segment_mass_flux
 
 

@@ -93,7 +93,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 32
+mass_wo_motor = 28
 # Rocket drag coefficient:
 Cd = 0.45
 # Frontal diameter [mm]:
@@ -157,7 +157,7 @@ ballistics = get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_d
 # _____________________________________________________________________________________________________________________
 # RESULTS
 
-print_results(grain, structure, propellant_data, ib_parameters, structural_parameters)
+print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
