@@ -44,7 +44,7 @@ grain_spacing = 10e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-prop = 'knsb-nakka'
+propellant = 'knsb-nakka'
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
@@ -90,10 +90,10 @@ max_number_of_screws = 30
 # _____________________________________________________________________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
 
-# The prop name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(prop)
+# The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
+ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 # Getting PropellantSelected class based on previous input:
-propellant = PropellantSelected(
+propellant_data = PropellantSelected(
     ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 )
 # Combustion chamber length [m]:
@@ -111,7 +111,7 @@ structure = MotorStructure(
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS
 
-ib_parameters = run_internal_ballistics(propellant, grain, structure, web_res, P_igniter, P_external, dt, prop)
+ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_external, dt, propellant)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
@@ -121,12 +121,12 @@ structural_parameters = run_structural_simulation(structure, ib_parameters)
 # _____________________________________________________________________________________________________________________
 # RESULTS
 
-print_results(grain, structure, propellant, ib_parameters, structural_parameters)
+print_results(grain, structure, propellant_data, ib_parameters, structural_parameters)
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
 
-output_eng_csv(ib_parameters, structure, propellant, 25, dt, manufacturer, name)
+output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END

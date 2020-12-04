@@ -47,7 +47,7 @@ st.write("""
 # STREAMLIT SIDEBAR INPUTS
 
 st.sidebar.header('Input section')
-propellant = st.sidebar.selectbox('Select prop', prop_list)
+propellant = st.sidebar.selectbox('Select propellant', prop_list)
 propellant = prop_dict[propellant]
 N = st.sidebar.number_input('Grain count', min_value=1, max_value=20, step=1, value=4)
 D_grain = st.sidebar.number_input('Grain external diameter [mm]',
@@ -161,7 +161,7 @@ if steel_nozzle:
     C1 = 0.00506
     C2 = 0.0
 
-# The prop name input above triggers the function inside 'Propellant.py' to return the required data.
+# The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
 ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(prop)
 # Getting PropellantSelected class based on previous input:
 propellant = PropellantSelected(
