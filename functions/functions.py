@@ -252,9 +252,9 @@ def print_results(grain, structure, propellant, ib_parameters):
 def output_eng_csv(ib_parameters, structure, propellant, eng_res, dt, manufacturer, name):
     """
     This program exports the motor data into three separate files.
-    # The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
-    # The output .csv file contains thrust, time, prop mass, Kn, chamber pressure, web thickness and burn rate data.
-    # The input .csv file contains all info used in the input section.
+    The .eng file is compatible with most rocket ballistic simulators such as openRocket and RASAero.
+    The output .csv file contains thrust, time, prop mass, Kn, chamber pressure, web thickness and burn rate data.
+    The input .csv file contains all info used in the input section.
     """
     # Writing the ENG file:
     motor_to_eng(ib_parameters.t, ib_parameters.F, dt, ib_parameters.V_prop, structure.D_out,
