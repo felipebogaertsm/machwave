@@ -12,13 +12,14 @@ class Rocket:
 
 
 class Ballistics:
-    def __init__(self, t, y, v, a, v_rail, y_burnout):
+    def __init__(self, t, y, v, a, v_rail, y_burnout, Mach):
         self.t = t
         self.y = y
         self.v = v
         self.a = a
         self.v_rail = v_rail
         self.y_burnout = y_burnout
+        self.Mach = Mach
 
 
 def get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
@@ -99,11 +100,18 @@ def get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd
         a = np.delete(a, -1)
         t = np.delete(t, -1)
 
+    Mach = np.zeros(np.size(v))
+    for i in range(np.size(v)):
+        Mach[i] = v[i] / atm.ATMOSPHERE_1976(y[i]).v_sonic
+
+    print(np.max(Mach))
+
     v_rail = v[np.where(y >= rail_length)]
     v_rail = v_rail[0]
     y_burnout = y[np.where(v == np.max(v))]
+    y_burnout = y_burnout[0]
 
-    return Ballistics(t, y, v, a, v_rail, y_burnout)
+    return Ballistics(t, y, v, a, v_rail, y_burnout, Mach)
 
 
 def ballistics_ode(y, v, T, D, M, g):
