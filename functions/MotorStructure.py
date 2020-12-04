@@ -2,9 +2,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class StructuralParameters:
+    def __init__(self, casing_sf, nozzle_conv_t, nozzle_div_t, bulkhead_t, optimal_fasteners, max_sf_fastener,
+                 shear_sf, tear_sf, compression_sf):
+        self.casing_sf = casing_sf
+        self.nozzle_conv_t = nozzle_conv_t
+        self.nozzle_div_t = nozzle_div_t
+        self.bulkhead_t = bulkhead_t
+        self.optimal_fasteners = optimal_fasteners
+        self.max_sf_fastener = max_sf_fastener
+        self.shear_sf = shear_sf
+        self.tear_sf = tear_sf
+        self.compression_sf = compression_sf
+
+
 class MotorStructure:
     def __init__(self, sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, A_throat, C1, C2,
-                 Div_angle):
+                 Div_angle, Conv_angle, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws):
         self.sf = sf
         self.m_motor = m_motor
         self.D_in = D_in
@@ -18,6 +32,12 @@ class MotorStructure:
         self.C1 = C1
         self.C2 = C2
         self.Div_angle = Div_angle
+        self.Conv_angle = Conv_angle
+        self.Y_chamber = Y_chamber
+        self.Y_nozzle = Y_nozzle
+        self.Y_bulkhead = Y_bulkhead
+        self.U_screw = U_screw
+        self.max_number_of_screws = max_number_of_screws
 
     def bulkhead_thickness(self, Y_bulkhead, P0):
         """ Returns the thickness of a plane bulkhead for a pressure vessel """
@@ -62,3 +82,24 @@ class MotorStructure:
         max_sf_fastener = np.max(np.min(sfFastener, axis=0))
         optimal_fasteners = np.argmax(np.min(sfFastener, axis=0))
         return optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf
+
+
+def run_structural_simulation(structure, ib_parameters):
+
+    # Casing thickness assuming thin wall [m]:
+    casing_sf = structure.casing_safety_factor(structure.Y_chamber, ib_parameters.P0)
+
+    # Nozzle thickness assuming thin wall [m]:
+    nozzle_conv_t, nozzle_div_t, = structure.nozzle_thickness(
+        structure.Y_nozzle, structure.Div_angle, structure.Conv_angle, ib_parameters.P0)
+
+    # Bulkhead thickness [m]:
+    bulkhead_t = structure.bulkhead_thickness(structure.Y_bulkhead, ib_parameters.P0)
+
+    # Screw safety factors and optimal quantity (shear, tear and compression):
+    optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
+        structure.optimal_fasteners(structure.max_number_of_screws, ib_parameters.P0, structure.Y_chamber,
+                                    structure.U_screw)
+
+    return StructuralParameters(casing_sf, nozzle_conv_t, nozzle_div_t, bulkhead_t, optimal_fasteners, max_sf_fastener,
+                                shear_sf, tear_sf, compression_sf)
