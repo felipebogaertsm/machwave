@@ -111,7 +111,8 @@ structure = MotorStructure(
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS
 
-ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_external, dt, propellant)
+ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_external, dt,
+                                        propellant)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
