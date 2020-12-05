@@ -449,7 +449,7 @@ input_tab = dbc.Tab(label='Inputs', children=[
                             html.H2([dbc.Badge('Vehicle data')]),
                             input_row_9,
                             input_row_10,
-                            dbc.Button('Run Simulation', color='primary', id='run_simulation')
+                            dbc.Button('Run Simulation', color='primary', id='run_ballistics')
                         ]
                     )
                 ),
@@ -656,7 +656,7 @@ def update_length_input_box(
 
 
 # @app.callback(
-#     State(component_id='run_simulation', component_property='n_clicks'),
+#     State(component_id='run_ballistics', component_property='n_clicks'),
 #     [
 #         Output(),
 #         Output()
