@@ -7,6 +7,7 @@ from functions.InternalBallistics import *
 from functions.Propellant import *
 from functions.MotorStructure import *
 from functions.Ballistics import *
+from functions.Simulation import *
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
@@ -61,6 +62,8 @@ liner_thickness = 3e-3
 D_throat = 36e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
+# Expansion ratio:
+Exp_ratio = 8
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
@@ -133,36 +136,38 @@ grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(
     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
-    Div_angle, Conv_angle, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
+    Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
 )
 
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS
 
-ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_external, dt,
-                                        propellant)
+# ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_ext, dt,
+#                                         propellant)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
 
-structural_parameters = run_structural_simulation(structure, ib_parameters)
+# structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # _____________________________________________________________________________________________________________________
 # TRAJECTORY
 
-rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure, ib_parameters)
-ballistics = get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
-                            main_chute_activation_height)
+# rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure, ib_parameters)
+# ballistics = get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
+#                             main_chute_activation_height)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
 
-print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
+# print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
+P0 = run_simulation(propellant, propellant_data, grain, structure, dt, P_igniter, P_external)
+print(f'\n\n{np.max(P0) * 1e-6}')
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
 
-output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
+# output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END
@@ -172,6 +177,6 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-performance_figure = performance_plot(ib_parameters.F, ib_parameters.P0, ib_parameters.t)
-main_figure = main_plot(ib_parameters.t, ib_parameters.F, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop)
-mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux)
+# performance_figure = performance_plot(ib_parameters.F, ib_parameters.P0, ib_parameters.t)
+# main_figure = main_plot(ib_parameters.t, ib_parameters.F, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop)
+# mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux)

@@ -220,14 +220,14 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[-1]:.3f} s')
 
     print('\nNOZZLE DESIGN')
-    print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E):.3f}')
-    print(f' Nozzle exit diameter: {structure.D_throat * np.sqrt(np.mean(ib_parameters.E)) * 1e3:.3f} mm')
+    print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}')
+    print(f' Nozzle exit diameter: {structure.D_throat * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm')
     print(f' Average nozzle efficiency: {np.mean(ib_parameters.n_cf) * 100:.3f} %')
 
     print('\nROCKET BALLISTICS')
     print(f' Apogee: {np.max(ballistics.y):.2f} m')
     print(f' Max. velocity: {np.max(ballistics.v):.2f} m/s')
-    print(f' Max. Mach number: {np.max(ballistics.Mach)}')
+    print(f' Max. Mach number: {np.max(ballistics.Mach):.3f}')
     print(f' Max. acceleration: {np.max(ballistics.a) / 9.81:.2f} gs')
     print(f' Velocity out of the rail: {ballistics.v_rail:.2f} m/s')
     print(f' Height at motor burnout: {ballistics.y_burnout:.2f} m')

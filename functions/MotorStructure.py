@@ -17,7 +17,7 @@ class StructuralParameters:
 
 class MotorStructure:
     def __init__(self, sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, A_throat, C1, C2,
-                 Div_angle, Conv_angle, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws):
+                 Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws):
         self.sf = sf
         self.m_motor = m_motor
         self.D_in = D_in
@@ -32,6 +32,7 @@ class MotorStructure:
         self.C2 = C2
         self.Div_angle = Div_angle
         self.Conv_angle = Conv_angle
+        self.Exp_ratio = Exp_ratio
         self.Y_chamber = Y_chamber
         self.Y_nozzle = Y_nozzle
         self.Y_bulkhead = Y_bulkhead
