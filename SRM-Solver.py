@@ -31,7 +31,7 @@ web_res = 1000
 # .eng file resolution:
 eng_res = 25
 # Time step [s]:
-dt = 1e-3
+dt = 1e-2
 # Minimal safety factor:
 sf = 4
 
@@ -99,7 +99,7 @@ max_number_of_screws = 30
 mass_wo_motor = 28
 # Rocket drag coefficient:
 Cd = 0.45
-# Frontal diameter [mm]:
+# Frontal diameter [m]:
 D_rocket = 170e-3
 # Initial height above sea level [m]
 h0 = 4
@@ -138,12 +138,13 @@ structure = MotorStructure(
     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
     Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
 )
+# Defining 'rocket' as an instance of Rocket class:
+rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
 
 # _____________________________________________________________________________________________________________________
-# INTERNAL BALLISTICS
+# INTERNAL BALLISTICS AND TRAJECTORY
 
-# ib_parameters = run_internal_ballistics(propellant_data, grain, structure, web_res, P_igniter, P_ext, dt,
-#                                         propellant)
+ballistics = run_ballistics(propellant, propellant_data, grain, structure, rocket, dt, P_igniter, P_external)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
@@ -151,18 +152,9 @@ structure = MotorStructure(
 # structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # _____________________________________________________________________________________________________________________
-# TRAJECTORY
-
-# rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure, ib_parameters)
-# ballistics = get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
-#                             main_chute_activation_height)
-
-# _____________________________________________________________________________________________________________________
 # RESULTS
 
 # print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
-P0 = run_simulation(propellant, propellant_data, grain, structure, dt, P_igniter, P_external)
-print(f'\n\n{np.max(P0) * 1e-6}')
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
