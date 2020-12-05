@@ -9,6 +9,16 @@ class Rocket:
         self.D_rocket = D_rocket
 
 
+class Recovery:
+    def __init__(self, drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height):
+        self.drogue_time = drogue_time
+        self.Cd_drogue = Cd_drogue
+        self.D_drogue = D_drogue
+        self.Cd_main = Cd_main
+        self.D_main = D_main
+        self.main_chute_activation_height = main_chute_activation_height
+
+
 class Ballistics:
     def __init__(self, t, y, v, a, v_rail, y_burnout, Mach):
         self.t = t

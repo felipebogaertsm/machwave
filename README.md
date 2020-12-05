@@ -44,9 +44,8 @@ The code was structured according to the following main sections:
 1) Time Function Start
 2) Inputs
 3) Pre Calculations
-4) Internal Ballistics
-5) Motor Structure
-6) Results
-7) Output to .eng and .csv file
-8) Time function end
-9) Plots
+4) Internal Ballistics and Trajectory
+5) Results
+6) Output to .eng and .csv file
+7) Time function end
+8) Plots

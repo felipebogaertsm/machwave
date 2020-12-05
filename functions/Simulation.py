@@ -1,3 +1,6 @@
+# This file contains most of the calculations of the internal ballistic and trajectory. This includes the main loop of
+# the program, which contains the calculations of the differential equations and several other important parameters.
+
 import numpy as np
 import fluids.atmosphere as atm
 
@@ -6,7 +9,7 @@ from functions.InternalBallistics import *
 from functions.Ballistics import *
 
 
-def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_ext):
+def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, P_igniter, P_ext, rail_length):
     # Initial conditions:
     web = np.array([0])
     t = np.array([0])
@@ -14,33 +17,31 @@ def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_
     y, v = np.array([0]), np.array([0])
     Mach = np.array([0])
     h0 = 4
-    m_vehicle = np.array([])
 
+    # Allocating numpy arrays for future calculations:
+    # Total mass of the vehicle:
+    m_vehicle = np.array([])
+    # Burn rate:
     r = np.array([])
+    # Chamber empty volume:
     V0 = np.array([])
+    # Optimal expansion ratio:
     Exp_opt = np.array([])
+    # Burn area and propellant volume:
     A_burn, V_prop = np.array([]), np.array([])
+    # Propellant mass:
     m_prop = np.array([])
+    # Thrust coefficient correction factors:
     n_kin, n_bl, n_tp, n_cf = np.array([]), np.array([]), np.array([]), np.array([])
+    # Thrust coefficient and thrust:
     C_f, T = np.array([]), np.array([])
+
+    # Pre calculations:
+    # Critical pressure ratio:
     critical_pressure_ratio = (2 / (propellant.k_mix_ch + 1)) ** (propellant.k_mix_ch /
                                                                   (propellant.k_mix_ch - 1))
-
-    # Recovery data
-    # Launch rail length [m]
-    rail_length = 5
-    # Time after apogee for drogue parachute activation [s]
-    drogue_time = 1
-    # Drogue drag coefficient
-    Cd_drogue = 1.75
-    # Drogue effective diameter [m]
-    D_drogue = 1.25
-    # Main parachute drag coefficient [m]
-    Cd_main = 2
-    # Main parachute effective diameter [m]
-    D_main = 2.66
-    # Main parachute height activation [m]
-    main_chute_activation_height = 500
+    # Divergent correction factor:
+    n_div = 0.5 * (1 + np.cos(np.deg2rad(structure.Div_angle)))
 
     apogee, apogee_time, main_time = 0, - 1, 0
 
@@ -95,7 +96,6 @@ def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_
             Exp_opt = np.append(Exp_opt, (((k + 1) / 2) ** (1 / (k - 1)) * critical_pressure_ratio ** (1 / k) * (
                     (k + 1) / (k - 1) * (1 - critical_pressure_ratio ** ((k - 1) / k))) ** 0.5) ** -1)
             # P_exit = np.append(P_exit, get_exit_pressure(propellant.k_2ph_ex, structure.Exp_ratio, P0))
-            n_div = 0.5 * (1 + np.cos(np.deg2rad(structure.Div_angle)))
             n_kin_atual, n_tp_atual, n_bl_atual = get_operational_correction_factors(P0[i], P_ext, P0_psi[i],
                                                                                      propellant, structure,
                                                                                      critical_pressure_ratio, V0[0],
@@ -103,7 +103,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_
             n_kin, n_tp, n_bl = np.append(n_kin, n_kin_atual), np.append(n_tp, n_tp_atual), np.append(n_bl, n_bl_atual)
             n_cf = np.append(n_cf, ((100 - (n_kin_atual + n_bl_atual + n_tp_atual)) * n_div / 100))
 
-            C_f = np.append(C_f, get_thrust_coefficient(P0[i], P_ext, structure.Exp_ratio, propellant.k_2ph_ex, n_cf[i]))
+            C_f = np.append(C_f,
+                            get_thrust_coefficient(P0[i], P_ext, structure.Exp_ratio, propellant.k_2ph_ex, n_cf[i]))
             T = np.append(T, C_f[i] * structure.A_throat * P0[i])
 
             if P0[i] <= P_ext / critical_pressure_ratio:
@@ -125,13 +126,14 @@ def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_
         m_vehicle = np.append(m_vehicle, m_prop[i] + structure.m_motor + rocket.mass_wo_motor)
 
         # Drag properties:
-        if v[i] < 0 and y[i] <= main_chute_activation_height and m_prop[i] == 0:
+        if v[i] < 0 and y[i] <= recovery.main_chute_activation_height and m_prop[i] == 0:
             if main_time == 0:
                 main_time = t[i]
-            A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * D_drogue ** 2) * 0.25 * Cd_drogue + \
-                     (np.pi * D_main ** 2) * 0.25 * Cd_main
-        elif apogee_time >= 0 and t[i] >= apogee_time + drogue_time:
-            A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * D_drogue ** 2) * 0.25 * Cd_drogue
+            A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * recovery.D_drogue ** 2) * 0.25 * \
+                     recovery.Cd_drogue + (np.pi * recovery.D_main ** 2) * 0.25 * recovery.Cd_main
+        elif apogee_time >= 0 and t[i] >= apogee_time + recovery.drogue_time:
+            A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * recovery.D_drogue ** 2) * 0.25 * \
+                     recovery.Cd_drogue
         else:
             A_drag = (np.pi * rocket.D_rocket ** 2) * rocket.Cd * 0.25
 
@@ -168,7 +170,13 @@ def run_ballistics(prop, propellant, grain, structure, rocket, dt, P_igniter, P_
     I_total, I_sp = get_impulses(np.mean(T), t, m_prop)
 
     ballistics = Ballistics(t, y, v, a, v_rail, y_burnout, Mach)
-    # ib_parameters = InternalBallistics(t, P0, F, I_total, I_sp, t_burnout, n_cf, E_opt, V_prop_CP, A_burn_CP, Kn,
+    optimal_grain_length = grain.get_optimal_segment_length()
+    initial_port_to_throat = (grain.D_core[- 1] ** 2) / structure.A_throat
+    burn_profile = get_burn_profile(A_burn[A_burn != 0.0])
+    Kn = A_burn / structure.A_throat
+    Kn_non_zero = Kn[Kn != 0.0]
+    initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[- 1]
+    # ib_parameters = InternalBallistics(t, P0, T, I_total, I_sp, t_burnout, n_cf, E_opt, V_prop, A_burn, Kn,
     #                                    m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat,
     #                                    burn_profile, V_empty, initial_to_final_kn)
 
