@@ -39,46 +39,6 @@ class BATES:
         self.D_core = D_core
         self.L_grain = L_grain
 
-    def get_min_core_diameter_index(self):
-        """ Finds the smallest core diameter and its index 'j'. """
-        N, D_core = self.N, self.D_core
-        D_core_min = np.amin(D_core)
-        # If there is more than one one index where the initial core diameter is minimal, the for loop
-        # only returns the first index where it happens.
-        for j in range(N):
-            if D_core[j] == D_core_min:
-                D_core_min_index = j
-                break
-        return D_core_min_index
-
-    def get_burn_area(self, x: float, j: int):
-        """ Calculates the BATES burn area given the web distance and segment number. """
-        N, D_grain, D_core, L_grain = self.N, self.D_grain, self.D_core, self.L_grain
-        Ab = np.pi * (((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2 + (L_grain[j] - 2 * x) *
-                      (D_core[j] + 2 * x))
-        return Ab
-
-    def get_propellant_volume(self, x: float, j: int):
-        """ Calculates the BATES grain volume given the web distance and segment number. """
-        N, D_grain, D_core, L_grain = self.N, self.D_grain, self.D_core, self.L_grain
-        Vp = (np.pi / 4) * (((D_grain ** 2) -
-                             ((D_core[j] + 2 * x) ** 2)) * (L_grain[j] - 2 * x))
-        return Vp
-
-    def get_web_array(self):
-        """ Returns the web thickness array for each grain. """
-
-        # Finding the getWebArray thickness of each individual grain. The j index refers to the grain segment and i
-        # refers to the getWebArray step (number of steps set by 'wr').
-        wr, N, D_grain, D_core, L_grain = self.wr, self.N, self.D_grain, self.D_core, self.L_grain
-        w = np.zeros((N, wr))
-        for j in range(N):
-            if 0.5 * (D_grain - D_core[j]) > L_grain[j]:
-                w[j] = np.linspace(0, (L_grain[j] / 2), wr)
-            elif 0.5 * (D_grain - D_core[j]) <= L_grain[j]:
-                w[j] = np.linspace(0, 0.5 * (D_grain - D_core[j]), wr)
-        return w
-
     def get_optimal_segment_length(self):
         """ Returns the optimal length for each of the input grains. """
         optimal_grain_length = 1e3 * 0.5 * (3 * self.D_grain + self.D_core)
@@ -138,13 +98,6 @@ def get_circle_area(diameter: float):
     """ Returns the area of the circle based on circle diameter. """
     Area = np.pi * 0.25 * diameter ** 2
     return Area
-
-
-def get_chamber_volume(L_cc: float, D_in: float, V_prop: np.array):
-    """ Returns the instant and empty chamber volume for each getWebArray distance value. """
-    V_empty = np.pi * L_cc * (D_in ** 2) / 4
-    V0 = V_empty - V_prop
-    return V0, V_empty
 
 
 def get_thrust_coefficient(P0, P_external, E, k_2ph_ex, n_cf):

@@ -140,11 +140,14 @@ structure = MotorStructure(
 )
 # Defining 'rocket' as an instance of Rocket class:
 rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
+# Defining 'recovery' as an instance of Recovery class:
+recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height)
 
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS AND TRAJECTORY
 
-ballistics = run_ballistics(propellant, propellant_data, grain, structure, rocket, dt, P_igniter, P_external)
+ballistics = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, P_igniter, P_external,
+                            rail_length)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
