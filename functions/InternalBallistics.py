@@ -8,8 +8,9 @@ from functions.Propellant import *
 
 
 class InternalBallistics:
-    def __init__(self, t, P0, F, I_total, I_sp, t_burnout, n_cf, E, V_prop_CP, A_burn_CP, Kn, m_prop, grain_mass_flux,
-                 optimal_grain_length, initial_port_to_throat, burn_profile, V_empty, initial_to_final_kn):
+    def __init__(self, t, P0, F, I_total, I_sp, t_burnout, n_cf, E_opt, V_prop_CP, A_burn_CP, Kn, m_prop,
+                 grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
+                 initial_to_final_kn):
         self.t = t
         self.P0 = P0
         self.F = F
@@ -17,7 +18,7 @@ class InternalBallistics:
         self.I_sp = I_sp
         self.t_burnout = t_burnout
         self.n_cf = n_cf
-        self.E = E
+        self.E_opt = E_opt
         self.V_prop = V_prop_CP
         self.A_burn = A_burn_CP
         self.Kn = Kn
@@ -119,10 +120,8 @@ def solve_cp_seidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: f
 
 def get_exit_mach(k: float, E: float):
     """ Gets the exit Mach number of the nozzle flow. """
-    E = np.mean(E)
     M_exit = scipy.optimize.fsolve(
-        lambda x: (((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1)))
-                   ** ((k + 1) / (2 * (k - 1)))) / x - E,
+        lambda x: (((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1))) ** ((k + 1) / (2 * (k - 1)))) / x - E,
         [10]
     )
     return M_exit[0]
@@ -130,11 +129,8 @@ def get_exit_mach(k: float, E: float):
 
 def get_exit_pressure(k_2ph_ex, E, P0):
     """ Returns the exit pressure of the nozzle flow. """
-    P_exit = np.zeros(np.size(P0))
     Mach_exit = get_exit_mach(k_2ph_ex, E)
-    for i in range(np.size(P0)):
-        P_exit[i] = P0[i] * (1 + 0.5 * (k_2ph_ex - 1) *
-                             Mach_exit ** 2) ** (- k_2ph_ex / (k_2ph_ex - 1))
+    P_exit = P0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit ** 2) ** (- k_2ph_ex / (k_2ph_ex - 1))
     return P_exit
 
 
@@ -151,13 +147,13 @@ def get_chamber_volume(L_cc: float, D_in: float, V_prop: np.array):
     return V0, V_empty
 
 
-def get_thrust_coefficient(P0, P_external, P_exit, E, k_2ph_ex, n_cf):
+def get_thrust_coefficient(P0, P_external, E, k_2ph_ex, n_cf):
     """ Returns value for thrust coefficient based on the chamber pressure and correction factor. """
+    P_exit = P_external
     Pr = P_external / P0
-    Cf_ideal = np.sqrt(
-        ((2 * k_2ph_ex ** 2) / (k_2ph_ex - 1)) * ((2 / (k_2ph_ex + 1)) **
-                                                  ((k_2ph_ex + 1) / (k_2ph_ex - 1))) *
-        (1 - Pr ** ((k_2ph_ex - 1) / k_2ph_ex)))
+    Cf_ideal = np.sqrt(((2 * k_2ph_ex ** 2) / (k_2ph_ex - 1)) *
+                       ((2 / (k_2ph_ex + 1)) ** ((k_2ph_ex + 1) / (k_2ph_ex - 1))) * (1 - Pr **
+                                                                                      ((k_2ph_ex - 1) / k_2ph_ex)))
     Cf = (Cf_ideal - E * (P_exit - P_external) / P0) * n_cf
     return Cf
 
@@ -180,64 +176,58 @@ def get_burn_profile(A_burn: list):
     return burn_profile
 
 
-def get_operational_correction_factors(P0: list, Pe: float, P0psi: list, Isp_frozen: float, Isp_shifting: float,
-                                       E: float, Dt: float, qsi: float, index: int, critical_pressure_ratio: float,
-                                       C1: float, C2: float, V0: float, M: float, t: list):
+def get_operational_correction_factors(P0, P_external, P0_psi, propellant, structure, critical_pressure_ratio, V0, t):
     """ Returns kinetic, two-phase and boundary layer correction factors based on a015140. """
-    C7, termC2, E_cf = np.zeros(index), np.zeros(index), np.zeros(index)
-    n_cf, n_kin, n_bl, n_tp = np.zeros(index), np.zeros(
-        index), np.zeros(index), np.zeros(index)
+    C7, termC2, E_cf = 0, 0, 0
+    n_cf, n_kin, n_bl, n_tp = 0, 0, 0, 0
 
-    for i in range(index):
+    # Kinetic losses
+    if P0_psi >= 200:
+        n_kin = 33.3 * 200 * (propellant.Isp_frozen / propellant.Isp_shifting) / P0_psi
+    else:
+        n_kin = 0
 
-        # Kinetic losses
-        if P0psi[i] >= 200:
-            n_kin[i] = 33.3 * 200 * (Isp_frozen / Isp_shifting) / P0psi[i]
-        else:
-            n_kin[i] = 0
+    # Boundary layer and two phase flow losses
+    if P_external / P0 <= critical_pressure_ratio:
 
-        # Boundary layer and two phase flow losses
-        if Pe / P0[i] <= critical_pressure_ratio:
+        termC2 = 1 + 2 * np.exp(- structure.C2 * P0_psi ** 0.8 * t / ((structure.D_throat / 0.0254) ** 0.2))
+        E_cf = 1 + 0.016 * structure.Exp_ratio ** -9
+        n_bl = structure.C1 * ((P0_psi ** 0.8) / ((structure.D_throat / 0.0254) ** 0.2)) * termC2 * E_cf
 
-            termC2[i] = 1 + 2 * np.exp(-C2 * (P0psi[i])
-                                       ** 0.8 * t[i] / ((Dt / 0.0254) ** 0.2))
-            E_cf[i] = 1 + 0.016 * E ** -9
-            n_bl[i] = C1 * ((P0psi[i] ** 0.8) / ((Dt / 0.0254)
-                                                 ** 0.2)) * (termC2[i]) * E_cf[i]
-
-            C7[i] = 0.454 * (P0psi[i] ** 0.33) * (qsi ** 0.33) * (
-                    1 - np.exp(-0.004 * (V0[1] / get_circle_area(Dt)) / 0.0254) * (1 + 0.045 * Dt / 0.0254))
-            if 1 / M >= 0.9:
-                C4 = 0.5
-                if Dt / 0.0254 < 1:
-                    C3, C5, C6 = 9, 1, 1
-                elif 1 <= Dt / 0.0254 < 2:
-                    C3, C5, C6 = 9, 1, 0.8
-                elif Dt / 0.0254 >= 2:
-                    if C7[i] < 4:
-                        C3, C5, C6 = 13.4, 0.8, 0.8
-                    elif 4 <= C7[i] <= 8:
-                        C3, C5, C6 = 10.2, 0.8, 0.4
-                    elif C7[i] > 8:
-                        C3, C5, C6 = 7.58, 0.8, 0.33
-            elif 1 / M < 0.9:
-                C4 = 1
-                if Dt / 0.0245 < 1:
+        C7 = 0.454 * (P0_psi ** 0.33) * (propellant.qsi_ch ** 0.33) * (1 - np.exp(-0.004 * (V0 / get_circle_area(
+            structure.D_throat)) / 0.0254) * (1 + 0.045 * structure.D_throat / 0.0254))
+        if 1 / propellant.M_ch >= 0.9:
+            C4 = 0.5
+            if structure.D_throat / 0.0254 < 1:
+                C3, C5, C6 = 9, 1, 1
+            elif 1 <= structure.D_throat / 0.0254 < 2:
+                C3, C5, C6 = 9, 1, 0.8
+            elif structure.D_throat / 0.0254 >= 2:
+                if C7 < 4:
+                    C3, C5, C6 = 13.4, 0.8, 0.8
+                elif 4 <= C7 <= 8:
+                    C3, C5, C6 = 10.2, 0.8, 0.4
+                elif C7 > 8:
+                    C3, C5, C6 = 7.58, 0.8, 0.33
+        elif 1 / propellant.M_ch < 0.9:
+            C4 = 1
+            if structure.D_throat / 0.0245 < 1:
+                C3, C5, C6 = 44.5, 0.8, 0.8
+            elif 1 <= structure.D_throat / 0.0254 < 2:
+                C3, C5, C6 = 30.4, 0.8, 0.4
+            elif structure.D_throat / 0.0254 >= 2:
+                if C7 < 4:
                     C3, C5, C6 = 44.5, 0.8, 0.8
-                elif 1 <= Dt / 0.0254 < 2:
+                elif 4 <= C7 <= 8:
                     C3, C5, C6 = 30.4, 0.8, 0.4
-                elif Dt / 0.0254 >= 2:
-                    if C7[i] < 4:
-                        C3, C5, C6 = 44.5, 0.8, 0.8
-                    elif 4 <= C7[i] <= 8:
-                        C3, C5, C6 = 30.4, 0.8, 0.4
-                    elif C7[i] > 8:
-                        C3, C5, C6 = 25.2, 0.8, 0.33
-            n_tp[i] = C3 * ((qsi * C4 * C7[i] ** C5) / (P0psi[i] ** 0.15 * E ** 0.08 *
-                                                        (Dt / 0.0254) ** C6))
-        else:
-            n_tp[i] = 0
-            n_bl[i] = 0
+                elif C7 > 8:
+                    C3, C5, C6 = 25.2, 0.8, 0.33
+        n_tp = C3 * ((propellant.qsi_ch * C4 * C7 ** C5) / (P0_psi ** 0.15 * structure.Exp_ratio ** 0.08 *
+                                                            (structure.D_throat / 0.0254) ** C6))
+    else:
+        n_tp = 0
+        n_bl = 0
+
     return n_kin, n_tp, n_bl
 
 

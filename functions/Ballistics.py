@@ -104,8 +104,6 @@ def get_trajectory(rocket, h0, rail_length, drogue_time, Cd_drogue, D_drogue, Cd
     for i in range(np.size(v)):
         Mach[i] = v[i] / atm.ATMOSPHERE_1976(y[i]).v_sonic
 
-    print(np.max(Mach))
-
     v_rail = v[np.where(y >= rail_length)]
     v_rail = v_rail[0]
     y_burnout = y[np.where(v == np.max(v))]
