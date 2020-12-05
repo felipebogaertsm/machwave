@@ -44,7 +44,7 @@ class BATES:
         optimal_grain_length = 1e3 * 0.5 * (3 * self.D_grain + self.D_core)
         return optimal_grain_length
 
-    def get_mass_flux_per_segment(self, r: float, pp, x):
+    def get_mass_flux_per_segment(self, grain, r: float, pp, x):
         """ Returns a numpy multidimensional array with the mass flux for each grain. """
         segment_mass_flux = np.zeros((self.N, np.size(x)))
         segment_mass_flux = np.zeros((self.N, np.size(x)))
@@ -52,11 +52,24 @@ class BATES:
         for j in range(self.N):
             for i in range(np.size(r)):
                 for k in range(j + 1):
-                    total_grain_Ab[j, i] = total_grain_Ab[j,
-                                                          i] + self.get_burn_area(x[i], k)
+                    total_grain_Ab[j, i] = total_grain_Ab[j, i] + get_burn_area(grain, x[i], k)
                 segment_mass_flux[j, i] = (total_grain_Ab[j, i] * pp * r[i])
                 segment_mass_flux[j, i] = (segment_mass_flux[j, i]) / get_circle_area(self.D_core[j] + x[i])
         return segment_mass_flux
+
+
+def get_burn_area(grain, x: float, j: int):
+    """ Calculates the BATES burn area given the web distance and segment number. """
+    N, D_grain, D_core, L_grain = grain.N, grain.D_grain, grain.D_core, grain.L_grain
+    Ab = np.pi * (((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2 + (L_grain[j] - 2 * x) * (D_core[j] + 2 * x))
+    return Ab
+
+
+def get_propellant_volume(grain, x: float, j: int):
+    """ Calculates the BATES grain volume given the web distance and segment number. """
+    N, D_grain, D_core, L_grain = grain.N, grain.D_grain, grain.D_core, grain.L_grain
+    Vp = (np.pi / 4) * (((D_grain ** 2) - ((D_core[j] + 2 * x) ** 2)) * (L_grain[j] - 2 * x))
+    return Vp
 
 
 def get_critical_pressure(k_mix_ch):

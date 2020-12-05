@@ -8,12 +8,17 @@ import matplotlib.gridspec as gs
 def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, manufacturer, name):
     """Exports an eng file to the directory 'outputs' inside the program folder. """
 
+    # Making the received volume array the same length as the time vector.
+    V_prop = np.zeros(np.size(t))
+    for i, volume in enumerate(V_prop_CP):
+        V_prop[i] += volume
+
     # Forming a new time vector that has exactly 'eng_res' points (independent on time step input):
     t_out = np.linspace(0, t[-1] + dt, eng_res)
     # Interpolating old thrust-time data into new time vector:
     F_out = np.interp(t_out, t, F, left=0, right=0)
     # Interpolating the Propellant volume with the new time vector (to find propellant. mass with t):
-    m_prop_out = pp * np.interp(t_out, t, V_prop_CP, right=0)
+    m_prop_out = pp * np.interp(t_out, t, V_prop, right=0)
 
     # Writing to the ENG file:
     eng_header = f'{name} {D_out * 1e3:.4f} {L_chamber * 1e3:.4f} P ' \
@@ -28,9 +33,9 @@ def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, ma
     saveFile.close()
 
 
-def pressure_plot(t, P0):
+def pressure_plot(t, P0, t_burnout):
     """ Returns plotly figure with pressure data. """
-    data = [go.Scatter(x=t,
+    data = [go.Scatter(x=t[:t_burnout],
                        y=P0 * 1e-6,
                        mode='lines',
                        name='lines',
@@ -108,8 +113,10 @@ def velocity_plot(t, v):
     return figure_plotly
 
 
-def performance_plot(F, P0, t):
+def performance_plot(F, P0, t, t_burnout):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder. """
+
+    t = t[t <= t_burnout]
     fig1, ax1 = plt.subplots()
 
     ax1.set_xlim(0, t[-1])
@@ -131,8 +138,10 @@ def performance_plot(F, P0, t):
     fig1.savefig('output/pressure_thrust.png', dpi=300)
 
 
-def main_plot(t, F, P0, Kn, m_prop):
+def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     """ Returns pyplot figure and saves motor plots to 'output' folder. """
+
+    t = t[t <= t_burnout]
     main_figure = plt.figure(3)
     main_figure.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
@@ -176,8 +185,9 @@ def main_plot(t, F, P0, Kn, m_prop):
     return main_figure
 
 
-def mass_flux_plot(t, grain_mass_flux):
+def mass_flux_plot(t, grain_mass_flux, t_burnout):
     """ Plots and saves figure of the mass flux for all the grain segments """
+    t = t[t <= t_burnout]
     N, index = grain_mass_flux.shape
     mass_flux_figure = plt.figure()
     for i in range(N):
