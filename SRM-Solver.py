@@ -71,10 +71,10 @@ C2 = 0.00000
 # EXTERNAL CONDITIONS
 # External temperature [K]:
 T_external = 297
-# External pressure [Pa]:
-P_external = 0.101325e6
 # Igniter pressure [Pa]:
 P_igniter = 1.5e6
+# ELevation [m]:
+h0 = 4
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
@@ -146,23 +146,23 @@ recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chut
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS AND TRAJECTORY
 
-ballistics = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, P_igniter, P_external,
-                            rail_length)
+ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, h0,
+                                           P_igniter, rail_length)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
 
-# structural_parameters = run_structural_simulation(structure, ib_parameters)
+structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
 
-# print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
+print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
 
-# output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
+output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END
@@ -172,6 +172,7 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-# performance_figure = performance_plot(ib_parameters.F, ib_parameters.P0, ib_parameters.t)
-# main_figure = main_plot(ib_parameters.t, ib_parameters.F, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop)
-# mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux)
+# performance_figure = performance_plot(ib_parameters.F, ib_parameters.P0, ib_parameters.t, ib_parameters.t_burnout)
+# main_figure = main_plot(ib_parameters.t, ib_parameters.F, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop,
+#                         ib_parameters.t_burnout)
+# mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_burnout)
