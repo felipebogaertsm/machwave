@@ -8,7 +8,7 @@ from functions.Propellant import *
 
 
 class InternalBallistics:
-    def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, n_cf, E_opt, V_prop_CP, A_burn_CP, Kn, m_prop,
+    def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, nozzle_eff, E_opt, V_prop_CP, A_burn_CP, Kn, m_prop,
                  grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
                  initial_to_final_kn):
         self.t = t
@@ -18,7 +18,7 @@ class InternalBallistics:
         self.I_total = I_total
         self.I_sp = I_sp
         self.t_burnout = t_burnout
-        self.n_cf = n_cf
+        self.nozzle_eff = nozzle_eff
         self.E_opt = E_opt
         self.V_prop = V_prop_CP
         self.A_burn = A_burn_CP
@@ -92,6 +92,12 @@ def solve_cp_seidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: f
     return dP0dt
 
 
+def get_opt_expansion_ratio(k, P0, P_ext):
+    Exp_opt = ((((k + 1) / 2) ** (1 / (k - 1))) * ((P_ext / P0) ** (1 / k)) *
+               np.sqrt(((k + 1) / (k - 1)) * (1 - (P_ext / P0) ** ((k - 1) / k)))) ** - 1
+    return Exp_opt
+
+
 def get_exit_mach(k: float, E: float):
     """ Gets the exit Mach number of the nozzle flow. """
     M_exit = scipy.optimize.fsolve(
@@ -114,7 +120,7 @@ def get_circle_area(diameter: float):
     return Area
 
 
-def get_thrust_coefficient(P0, P_external, E, k_2ph_ex, n_cf):
+def get_thrust_coeff(P0, P_exit, P_external, E, k_2ph_ex, n_cf):
     """ Returns value for thrust coefficient based on the chamber pressure and correction factor. """
     P_exit = P_external
     Pr = P_external / P0
@@ -122,7 +128,7 @@ def get_thrust_coefficient(P0, P_external, E, k_2ph_ex, n_cf):
                        ((2 / (k_2ph_ex + 1)) ** ((k_2ph_ex + 1) / (k_2ph_ex - 1))) * (1 - Pr **
                                                                                       ((k_2ph_ex - 1) / k_2ph_ex)))
     Cf = (Cf_ideal - E * (P_exit - P_external) / P0) * n_cf
-    return Cf
+    return Cf, Cf_ideal
 
 
 def get_impulses(F_avg, t, t_burnout, m_prop):

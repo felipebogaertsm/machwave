@@ -289,7 +289,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print('\nNOZZLE DESIGN')
     print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}')
     print(f' Nozzle exit diameter: {structure.D_throat * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm')
-    print(f' Average nozzle efficiency: {np.mean(ib_parameters.n_cf) * 100:.3f} %')
+    print(f' Average nozzle efficiency: {np.mean(ib_parameters.nozzle_eff) * 100:.3f} %')
 
     print('\nROCKET BALLISTICS')
     print(f' Apogee: {np.max(ballistics.y):.2f} m')
