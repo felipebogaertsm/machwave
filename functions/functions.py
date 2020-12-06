@@ -282,7 +282,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
           f'{(np.mean(ib_parameters.P0) * 1e-6):.3f} MPa')
 
     print('\nTHRUST AND IMPULSE')
-    print(f' Maximum, average thrust: {np.max(ib_parameters.T):.3f}, {np.mean(ib_parameters.T):.3f} N')
+    print(f' Maximum, average thrust: {np.max(ib_parameters.T):.3f}, {ib_parameters.T_mean:.3f} N')
     print(f' Total, specific impulses: {ib_parameters.I_total:.3f} N-s, {ib_parameters.I_sp:.3f} s')
     print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[- 1]:.3f} s')
 
