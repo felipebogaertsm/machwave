@@ -34,7 +34,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     # Thrust coefficient correction factors:
     n_kin, n_bl, n_tp, n_cf = np.array([]), np.array([]), np.array([]), np.array([])
     # Thrust coefficient and thrust:
-    C_f, T = np.array([]), np.array([])
+    C_f, Cf_ideal, T = np.array([]), np.array([]), np.array([])
 
     # Pre calculations:
     # Critical pressure ratio:
@@ -100,10 +100,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
             P0 = np.append(P0, P0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * dt)
             P0_psi = np.append(P0_psi, P0[i] * 1.45e-4)
 
-            k = propellant.k_2ph_ex
-            Exp_opt = np.append(Exp_opt, (((k + 1) / 2) ** (1 / (k - 1)) * critical_pressure_ratio ** (1 / k) * (
-                    (k + 1) / (k - 1) * (1 - critical_pressure_ratio ** ((k - 1) / k))) ** 0.5) ** -1)
-            # P_exit = np.append(P_exit, get_exit_pressure(propellant.k_2ph_ex, structure.Exp_ratio, P0[i]))
+            Exp_opt = np.append(Exp_opt, get_opt_expansion_ratio(propellant.k_2ph_ex, P0[i], P_ext[i]))
+            P_exit = np.append(P_exit, get_exit_pressure(propellant.k_2ph_ex, structure.Exp_ratio, P0[i]))
             n_kin_atual, n_tp_atual, n_bl_atual = get_operational_correction_factors(P0[i], P_ext[i], P0_psi[i],
                                                                                      propellant, structure,
                                                                                      critical_pressure_ratio, V0[0],
@@ -111,8 +109,9 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
             n_kin, n_tp, n_bl = np.append(n_kin, n_kin_atual), np.append(n_tp, n_tp_atual), np.append(n_bl, n_bl_atual)
             n_cf = np.append(n_cf, ((100 - (n_kin_atual + n_bl_atual + n_tp_atual)) * n_div / 100))
 
-            C_f = np.append(C_f,
-                            get_thrust_coefficient(P0[i], P_ext, structure.Exp_ratio, propellant.k_2ph_ex, n_cf[i]))
+            Cf_atual, Cf_ideal_atual = get_thrust_coeff(P0[i], P_exit[i], P_ext[i], structure.Exp_ratio,
+                                                        propellant.k_2ph_ex, n_cf[i])
+            C_f, Cf_ideal = np.append(C_f, Cf_atual), np.append(Cf_ideal, Cf_ideal_atual)
             T = np.append(T, C_f[i] * structure.A_throat * P0[i])
 
             # This if statement changes 'end_thrust' to True if supersonic flow is not achieved anymore.
@@ -133,7 +132,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
         if i == 0:
             m_vehicle_initial = m_prop[0] + rocket.mass_wo_motor + structure.m_motor
             m_vehicle = np.append(m_vehicle, m_vehicle_initial)
-            acc = np.array([T[0] * (rocket.mass_wo_motor + structure.m_motor + m_prop[0])])
+            acc = np.array([T[0] / (rocket.mass_wo_motor + structure.m_motor + m_prop[0])])
 
         # Appending the current vehicle mass, consisting of the motor structural mass, mass without the motor and
         # propellant mass.
@@ -181,6 +180,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     y_burnout = y[np.where(v == np.max(v))]
     y_burnout = y_burnout[0]
 
+    nozzle_eff = C_f / Cf_ideal
+
     I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
 
     ballistics = Ballistics(t, y, v, acc, v_rail, y_burnout, Mach)
@@ -191,8 +192,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     Kn_non_zero = Kn[Kn != 0.0]
     initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[- 1]
     grain_mass_flux = grain.get_mass_flux_per_segment(grain, r, propellant.pp, web)
-    ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, n_cf, Exp_opt, V_prop, A_burn, Kn,
-                                       m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat,
+    ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, nozzle_eff, Exp_opt, V_prop, A_burn,
+                                       Kn, m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat,
                                        burn_profile, V_empty, initial_to_final_kn)
 
     return ballistics, ib_parameters
