@@ -20,11 +20,11 @@ class Recovery:
 
 
 class Ballistics:
-    def __init__(self, t, y, v, a, v_rail, y_burnout, Mach):
+    def __init__(self, t, y, v, acc, v_rail, y_burnout, Mach):
         self.t = t
         self.y = y
         self.v = v
-        self.a = a
+        self.acc = acc
         self.v_rail = v_rail
         self.y_burnout = y_burnout
         self.Mach = Mach

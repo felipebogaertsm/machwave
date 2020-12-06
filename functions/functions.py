@@ -14,7 +14,7 @@ def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, ma
         V_prop[i] += volume
 
     # Forming a new time vector that has exactly 'eng_res' points (independent on time step input):
-    t_out = np.linspace(0, t[-1] + dt, eng_res)
+    t_out = np.linspace(0, t[- 1] + dt, eng_res)
     # Interpolating old thrust-time data into new time vector:
     F_out = np.interp(t_out, t, F, left=0, right=0)
     # Interpolating the Propellant volume with the new time vector (to find propellant. mass with t):
@@ -33,9 +33,58 @@ def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, ma
     saveFile.close()
 
 
+def ballistics_plots(t, a, v, y, g):
+
+    fig1 = plt.figure()
+
+    plt.subplot(3, 1, 1)
+    plt.ylabel('Height (m)')
+    plt.grid(linestyle='-.')
+    plt.plot(t, y, color='b')
+    plt.subplot(3, 1, 2)
+    plt.ylabel('Velocity (m/s)')
+    plt.grid(linestyle='-.')
+    plt.plot(t, v, color='g')
+    plt.subplot(3, 1, 3)
+    plt.ylabel('Acc (m/s2)')
+    plt.xlabel('Time (s)')
+    plt.grid(linestyle='-.')
+    plt.plot(t, a, color='r')
+
+    fig1.savefig('output/Trajectory_Plots.png', dpi=300)
+
+    fig2 = plt.figure()
+
+    plt.plot(t, y, color='b')
+    plt.ylabel('Height (m)')
+    plt.xlabel('Time (s)')
+    plt.ylim(0, np.max(y) * 1.1)
+    plt.xlim(0, t[-1])
+    plt.grid()
+
+    fig2.savefig('output/Height.png', dpi=300)
+
+    fig3, ax3 = plt.subplots()
+
+    ax3.set_xlim(0, t[-1])
+    ax3.set_ylim(np.min(v * 3.6), np.max(v * 3.6) * 1.05)
+    ax3.plot(t, v * 3.6, color='#009933')
+    ax3.set_ylabel('Velocity (km/h)')
+    ax3.set_xlabel('Time (s)')
+    ax3.grid()
+
+    ax4 = ax3.twinx()
+    ax4.set_xlim(0, t[-1])
+    ax4.set_ylim(np.min(a / g), np.max(a / g) * 1.3)
+    ax4.plot(t, a / g, color='#ff6600')
+    ax4.set_ylabel('Acceleration (g)')
+
+    fig3.savefig('output/Velocity_Acc.png', dpi=300)
+
+
 def pressure_plot(t, P0, t_burnout):
     """ Returns plotly figure with pressure data. """
-    data = [go.Scatter(x=t[:t_burnout],
+    data = [go.Scatter(x=t[t <= t_burnout],
                        y=P0 * 1e-6,
                        mode='lines',
                        name='lines',
@@ -117,6 +166,8 @@ def performance_plot(F, P0, t, t_burnout):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder. """
 
     t = t[t <= t_burnout]
+    F = F[: np.size(t)]
+    P0 = P0[: np.size(t)]
     fig1, ax1 = plt.subplots()
 
     ax1.set_xlim(0, t[-1])
@@ -142,6 +193,10 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     """ Returns pyplot figure and saves motor plots to 'output' folder. """
 
     t = t[t <= t_burnout]
+    F = F[: np.size(t)]
+    P0 = P0[: np.size(t)]
+    Kn = Kn[: np.size(t)]
+    m_prop = m_prop[: np.size(t)]
     main_figure = plt.figure(3)
     main_figure.suptitle('Motor Data', size='xx-large')
     gs1 = gs.GridSpec(nrows=2, ncols=2)
@@ -188,10 +243,12 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
 def mass_flux_plot(t, grain_mass_flux, t_burnout):
     """ Plots and saves figure of the mass flux for all the grain segments """
     t = t[t <= t_burnout]
+    t = np.append(t, t[- 1])
+    grain_mass_flux = grain_mass_flux
     N, index = grain_mass_flux.shape
     mass_flux_figure = plt.figure()
     for i in range(N):
-        plt.plot(t, grain_mass_flux[i, :] * 1.42233e-3)
+        plt.plot(t, grain_mass_flux[i] * 1.42233e-3)
     plt.ylabel('Mass Flux [lb/s-in-in]')
     plt.xlabel('Time [s]')
     plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)
@@ -225,9 +282,9 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
           f'{(np.mean(ib_parameters.P0) * 1e-6):.3f} MPa')
 
     print('\nTHRUST AND IMPULSE')
-    print(f' Maximum, average thrust: {np.max(ib_parameters.F):.3f}, {np.mean(ib_parameters.F):.3f} N')
+    print(f' Maximum, average thrust: {np.max(ib_parameters.T):.3f}, {np.mean(ib_parameters.T):.3f} N')
     print(f' Total, specific impulses: {ib_parameters.I_total:.3f} N-s, {ib_parameters.I_sp:.3f} s')
-    print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[-1]:.3f} s')
+    print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[- 1]:.3f} s')
 
     print('\nNOZZLE DESIGN')
     print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}')
@@ -238,7 +295,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print(f' Apogee: {np.max(ballistics.y):.2f} m')
     print(f' Max. velocity: {np.max(ballistics.v):.2f} m/s')
     print(f' Max. Mach number: {np.max(ballistics.Mach):.3f}')
-    print(f' Max. acceleration: {np.max(ballistics.a) / 9.81:.2f} gs')
+    print(f' Max. acceleration: {np.max(ballistics.acc) / 9.81:.2f} gs')
     print(f' Velocity out of the rail: {ballistics.v_rail:.2f} m/s')
     print(f' Height at motor burnout: {ballistics.y_burnout:.2f} m')
 
@@ -266,9 +323,13 @@ def output_eng_csv(ib_parameters, structure, propellant, eng_res, dt, manufactur
     The input .csv file contains all info used in the input section.
     """
     # Writing the ENG file:
-    motor_to_eng(ib_parameters.t, ib_parameters.F, dt, ib_parameters.V_prop, structure.D_out,
-                 structure.L_chamber, eng_res, propellant.pp, structure.m_motor, manufacturer, name)
+    index = np.where(ib_parameters.t == ib_parameters.t_burnout)
+    time = ib_parameters.t[: index[0][0]]
+    thrust = ib_parameters.T[: index[0][0]]
+    prop_vol = ib_parameters.V_prop[: index[0][0]]
+    motor_to_eng(time, thrust, dt, prop_vol, structure.D_out, structure.L_chamber, eng_res, propellant.pp,
+                 structure.m_motor, manufacturer, name)
     # Writing to output CSV file:
-    motor_data = {'Time': ib_parameters.t, 'Thrust': ib_parameters.F, 'Prop_Mass': ib_parameters.m_prop}
+    motor_data = {'Time': time, 'Thrust': thrust, 'Prop_Mass': prop_vol * propellant.pp}
     motor_data_df = pd.DataFrame(motor_data)
     motor_data_df.to_csv(f'output/{name}.csv', decimal='.')
