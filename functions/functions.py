@@ -284,7 +284,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print('\nTHRUST AND IMPULSE')
     print(f' Maximum, average thrust: {np.max(ib_parameters.T):.3f}, {ib_parameters.T_mean:.3f} N')
     print(f' Total, specific impulses: {ib_parameters.I_total:.3f} N-s, {ib_parameters.I_sp:.3f} s')
-    print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t[- 1]:.3f} s')
+    print(f' Burnout time, thrust time: {ib_parameters.t_burnout:.3f}, {ib_parameters.t_thrust:.3f} s')
 
     print('\nNOZZLE DESIGN')
     print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}')
