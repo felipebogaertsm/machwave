@@ -99,7 +99,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 28
+mass_wo_motor = 32
 # Rocket drag coefficient:
 Cd = 0.45
 # Frontal diameter [m]:
