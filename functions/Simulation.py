@@ -9,7 +9,7 @@ from functions.InternalBallistics import *
 from functions.Ballistics import *
 
 
-def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, h0, P_igniter, rail_length):
+def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt, h0, P_igniter, rail_length):
     # Initial conditions:
     web = np.array([0])
     t = np.array([0])
@@ -118,6 +118,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, h0,
             # This if statement changes 'end_thrust' to True if supersonic flow is not achieved anymore.
             if P0[i] <= P_ext[i] / critical_pressure_ratio:
                 t_burnout = t[i]
+                dt = dt * ddt
+                T_mean = np.mean(T)
                 end_thrust = True
 
         # This else statement is necessary since the thrust and propellant mass arrays are still being used inside the
@@ -179,17 +181,17 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, h0,
     y_burnout = y[np.where(v == np.max(v))]
     y_burnout = y_burnout[0]
 
-    I_total, I_sp = get_impulses(np.mean(T), t, m_prop)
+    I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
 
     ballistics = Ballistics(t, y, v, acc, v_rail, y_burnout, Mach)
     optimal_grain_length = grain.get_optimal_segment_length()
-    initial_port_to_throat = (grain.D_core[- 1] ** 2) / structure.A_throat
+    initial_port_to_throat = (grain.D_core[- 1] ** 2) / (structure.D_throat ** 2)
     burn_profile = get_burn_profile(A_burn[A_burn != 0.0])
     Kn = A_burn / structure.A_throat
     Kn_non_zero = Kn[Kn != 0.0]
     initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[- 1]
     grain_mass_flux = grain.get_mass_flux_per_segment(grain, r, propellant.pp, web)
-    ib_parameters = InternalBallistics(t, P0, T, I_total, I_sp, t_burnout, n_cf, Exp_opt, V_prop, A_burn, Kn,
+    ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, n_cf, Exp_opt, V_prop, A_burn, Kn,
                                        m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat,
                                        burn_profile, V_empty, initial_to_final_kn)
 

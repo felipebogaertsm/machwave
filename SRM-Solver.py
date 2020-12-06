@@ -32,6 +32,9 @@ web_res = 1000
 eng_res = 25
 # Time step [s]:
 dt = 1e-2
+# In order to optimize the speed of the program, the time step entered above is multiplied by a factor 'ddt' after the
+# propellant is finished burning and thrust produced is 0.
+ddt = 10
 # Minimal safety factor:
 sf = 4
 
@@ -73,7 +76,7 @@ C2 = 0.00000
 T_external = 297
 # Igniter pressure [Pa]:
 P_igniter = 1.5e6
-# ELevation [m]:
+# Elevation [m]:
 h0 = 4
 
 # MECHANICAL DATA
@@ -101,8 +104,6 @@ mass_wo_motor = 28
 Cd = 0.45
 # Frontal diameter [m]:
 D_rocket = 170e-3
-# Initial height above sea level [m]
-h0 = 4
 # Launch rail length [m]
 rail_length = 5
 # Time after apogee for drogue parachute activation [s]
@@ -135,8 +136,8 @@ D_chamber = D_in - 2 * liner_thickness
 grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(
-    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
-    Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
+    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
+    C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
 )
 # Defining 'rocket' as an instance of Rocket class:
 rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
@@ -146,7 +147,7 @@ recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chut
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS AND TRAJECTORY
 
-ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, h0,
+ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt, h0,
                                            P_igniter, rail_length)
 
 # _____________________________________________________________________________________________________________________
@@ -172,7 +173,8 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 # _____________________________________________________________________________________________________________________
 # PLOTS
 
-# performance_figure = performance_plot(ib_parameters.F, ib_parameters.P0, ib_parameters.t, ib_parameters.t_burnout)
-# main_figure = main_plot(ib_parameters.t, ib_parameters.F, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop,
-#                         ib_parameters.t_burnout)
-# mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_burnout)
+performance_figure = performance_plot(ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_burnout)
+main_figure = main_plot(ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop,
+                        ib_parameters.t_burnout)
+mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_burnout)
+ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)
