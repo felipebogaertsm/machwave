@@ -176,5 +176,5 @@ print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 performance_figure = performance_plot(ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_burnout)
 main_figure = main_plot(ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop,
                         ib_parameters.t_burnout)
-mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_burnout)
+mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust)
 ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)

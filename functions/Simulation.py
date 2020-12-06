@@ -51,6 +51,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     # After the propellant is finished burning and the thrust chamber has stopped producing supersonic flow,
     # 'end_thrust' is changed to a True value and the internal ballistics section of the while loop below stops running.
     end_thrust = False
+    end_burn = False
     i = 0
     while y[i] >= 0 or m_prop[i - 1] > 0:
 
@@ -114,9 +115,13 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
             C_f, Cf_ideal = np.append(C_f, Cf_atual), np.append(Cf_ideal, Cf_ideal_atual)
             T = np.append(T, C_f[i] * structure.A_throat * P0[i])
 
+            if m_prop[i] == 0 and end_burn is False:
+                t_burnout = t[i]
+                end_burn = True
+
             # This if statement changes 'end_thrust' to True if supersonic flow is not achieved anymore.
             if P0[i] <= P_ext[i] / critical_pressure_ratio:
-                t_burnout = t[i]
+                t_thrust = t[i]
                 dt = dt * ddt
                 T_mean = np.mean(T)
                 end_thrust = True
@@ -192,9 +197,9 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     Kn_non_zero = Kn[Kn != 0.0]
     initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[- 1]
     grain_mass_flux = grain.get_mass_flux_per_segment(grain, r, propellant.pp, web)
-    ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, nozzle_eff, Exp_opt, V_prop, A_burn,
-                                       Kn, m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat,
-                                       burn_profile, V_empty, initial_to_final_kn)
+    ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, Exp_opt,
+                                       V_prop, A_burn, Kn, m_prop, grain_mass_flux, optimal_grain_length,
+                                       initial_port_to_throat, burn_profile, V_empty, initial_to_final_kn)
 
     return ballistics, ib_parameters
 

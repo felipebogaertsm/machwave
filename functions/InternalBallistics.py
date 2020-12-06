@@ -8,8 +8,8 @@ from functions.Propellant import *
 
 
 class InternalBallistics:
-    def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, nozzle_eff, E_opt, V_prop_CP, A_burn_CP, Kn, m_prop,
-                 grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
+    def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, E_opt, V_prop_CP, A_burn_CP,
+                 Kn, m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
                  initial_to_final_kn):
         self.t = t
         self.P0 = P0
@@ -18,6 +18,7 @@ class InternalBallistics:
         self.I_total = I_total
         self.I_sp = I_sp
         self.t_burnout = t_burnout
+        self.t_thrust = t_thrust
         self.nozzle_eff = nozzle_eff
         self.E_opt = E_opt
         self.V_prop = V_prop_CP
