@@ -3,6 +3,7 @@
 
 import numpy as np
 import fluids.atmosphere as atm
+import matplotlib.pyplot as plt
 
 from functions.Propellant import *
 from functions.InternalBallistics import *
@@ -34,7 +35,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     # Thrust coefficient correction factors:
     n_kin, n_bl, n_tp, n_cf = np.array([]), np.array([]), np.array([]), np.array([])
     # Thrust coefficient and thrust:
-    C_f, Cf_ideal, T = np.array([]), np.array([]), np.array([])
+    Cf, Cf_ideal, T = np.array([]), np.array([]), np.array([])
 
     # Pre calculations:
     # Critical pressure ratio:
@@ -112,8 +113,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
 
             Cf_atual, Cf_ideal_atual = get_thrust_coeff(P0[i], P_exit[i], P_ext[i], structure.Exp_ratio,
                                                         propellant.k_2ph_ex, n_cf[i])
-            C_f, Cf_ideal = np.append(C_f, Cf_atual), np.append(Cf_ideal, Cf_ideal_atual)
-            T = np.append(T, C_f[i] * structure.A_throat * P0[i])
+            Cf, Cf_ideal = np.append(Cf, Cf_atual), np.append(Cf_ideal, Cf_ideal_atual)
+            T = np.append(T, Cf[i] * structure.A_throat * P0[i])
 
             if m_prop[i] == 0 and end_burn is False:
                 t_burnout = t[i]
@@ -185,7 +186,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     y_burnout = y[np.where(v == np.max(v))]
     y_burnout = y_burnout[0]
 
-    nozzle_eff = C_f / Cf_ideal
+    nozzle_eff = Cf / Cf_ideal
 
     I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
 
