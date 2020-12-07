@@ -23,7 +23,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 15
+m_motor = 17
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
