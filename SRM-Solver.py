@@ -66,7 +66,7 @@ D_throat = 36e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
 # Expansion ratio:
-Exp_ratio = 8
+Exp_ratio = 9
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
