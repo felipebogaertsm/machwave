@@ -19,7 +19,7 @@ start = time.time()
 # INPUTS
 
 # Motor name (NO SPACES):
-name = 'SRM5K'
+name = '5KBOOSTER'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
@@ -99,9 +99,9 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 32
+mass_wo_motor = 29
 # Rocket drag coefficient:
-Cd = 0.45
+Cd = 0.5
 # Frontal diameter [m]:
 D_rocket = 170e-3
 # Launch rail length [m]
