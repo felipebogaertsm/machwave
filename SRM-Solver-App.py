@@ -17,6 +17,8 @@ from functions.functions import *
 # INITIAL DEFINITIONS
 
 web_res = 1000
+dt = 0.01
+ddt = 10
 
 # Input label column width:
 label_col_width = 1
@@ -175,7 +177,17 @@ input_row_4 = dbc.Row(
         ),
         dbc.Col(
             id='segment_length_inputs',
-            children=[]
+            children=[dbc.FormGroup(
+                children=[
+                    dbc.Label(f'Length of segment #{i + 1} (mm)'),
+                    dbc.Input(
+                        placeholder=f'Insert #{i + 1} length segment...',
+                        id=f'L_grain_{i + 1}',
+                        value='68',
+                        type='number'
+                    )
+                ]
+            ) for i in range(number_grain_core_inputs)]
         )
     ]
 )
@@ -274,7 +286,7 @@ input_row_7 = dbc.Row(
         dbc.Col(
             dbc.FormGroup(
                 [
-                    dbc.Label('Structural safety factor'),
+                    dbc.Label('Safety factor'),
                     dbc.Input(
                         placeholder='Enter safety factor...',
                         id='sf',
@@ -282,7 +294,34 @@ input_row_7 = dbc.Row(
                         value='4'
                     )
                 ]
-            ), width=6
+            ), width=3
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Screw diam. (mm)'),
+                    dbc.Input(
+                        placeholder='Enter screw diameter...',
+                        id='D_screw',
+                        type='number',
+                        value='4.2'
+                    ),
+                    dbc.FormText('Excluding threads!')
+                ]
+            ), width=3
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Screw clearance (mm)'),
+                    dbc.Input(
+                        placeholder='Enter screw clearance diameter...',
+                        id='D_clearance',
+                        type='number',
+                        value='5.0'
+                    )
+                ]
+            ), width=4
         ),
         dbc.Col(
             dbc.FormGroup(
@@ -293,7 +332,7 @@ input_row_7 = dbc.Row(
                         on=True
                     )
                 ]
-            )
+            ), width=2
         )
     ]
 )
@@ -347,7 +386,7 @@ input_row_9 = dbc.Row(
                     dbc.Label('Rocket mass w/o the motor (kg)'),
                     dbc.Input(
                         placeholder='Enter the rocket mass without the motor...',
-                        id='m_rocket',
+                        id='mass_wo_motor',
                         type='number',
                         value='2.8'
                     )
@@ -413,9 +452,8 @@ ib_rows = dbc.Row(
             html.Div(
                 [
                     dbc.Label(
-                        children=[
-                            '.'
-                        ]
+                        children=[],
+                        id='max_P0'
                     )
                 ]
             )
@@ -479,23 +517,24 @@ ib_tab = dbc.Tab(
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                html.H2([dbc.Badge('IB parameters')]),
-                                html.H3([dbc.Badge('Burn Regression')]),
-                                ib_rows,
+                                dcc.Graph(
+                                    id='burn_regression_graph',
+                                    figure={}
+                                )
                             ]
                         )
-                    ), width=6
+                    ), width=8
                 ),
                 dbc.Col(
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                dcc.Graph(
-                                    id='burn_regression_graph',
-                                )
+                                html.H2([dbc.Badge('IB parameters')]),
+                                html.H3([dbc.Badge('Burn Regression')]),
+                                ib_rows,
                             ]
                         )
-                    ), width=6
+                    ), width=4
                 )
             ]
         )
@@ -602,68 +641,92 @@ def update_grain_radial_graph(D_grain, D_core):
     return figure_grain_radial
 
 
-# Update the length input boxes:
-@app.callback(
-    Output(component_id='segment_length_inputs', component_property='children'),
-    [
-        Input(component_id='neutral_burn_profile', component_property='on'),
-        Input(component_id='N', component_property='value'),
-        Input(component_id='D_grain', component_property='value'),
-        Input(component_id='D_core_1', component_property='value'),
-        Input(component_id='D_core_2', component_property='value'),
-        Input(component_id='D_core_3', component_property='value'),
-        Input(component_id='D_core_4', component_property='value'),
-        Input(component_id='D_core_5', component_property='value'),
-        Input(component_id='D_core_6', component_property='value'),
-        Input(component_id='D_core_7', component_property='value'),
-        Input(component_id='D_core_8', component_property='value')
-    ]
-)
-def update_length_input_box(
-        neutral_burn_profile, N, D_grain, D_core_1, D_core_2, D_core_3, D_core_4, D_core_5, D_core_6, D_core_7, D_core_8
-):
-    D_core = np.array([float(D_core_1), float(D_core_2), float(D_core_3), float(D_core_4), float(D_core_5),
-                       float(D_core_6), float(D_core_7), float(D_core_8)])
-    D_grain = float(D_grain)
-    N = int(N)
-    if neutral_burn_profile:
-        length_col = [dbc.FormGroup(
-            children=[
-                dbc.Label('Segment length (mm)'),
-                dbc.Input(
-                    placeholder='Insert segment length...',
-                    id='L_grain',
-                    value=f'{0.5 * (3 * D_grain + D_core[i])}',
-                    type='number',
-                    disabled=True
-                )
-            ]
-        ) for i in range(number_grain_core_inputs)]
-    else:
-        length_col = [dbc.FormGroup(
-            children=[
-                dbc.Label(f'Segment #{i + 1} length (mm)'),
-                dbc.Input(
-                    placeholder=f'Insert #{i + 1} segment length...',
-                    id=f'L_grain_{i + 1}',
-                    value='',
-                    type='number',
-                    disabled=False
-                )
-            ]
-        ) for i in range(number_grain_core_inputs)]
-    return length_col
+# # Update the length input boxes:
+# @app.callback(
+#     Output(component_id='segment_length_inputs', component_property='children'),
+#     [
+#         Input(component_id='neutral_burn_profile', component_property='on'),
+#         Input(component_id='N', component_property='value'),
+#         Input(component_id='D_grain', component_property='value'),
+#         Input(component_id='D_core_1', component_property='value'),
+#         Input(component_id='D_core_2', component_property='value'),
+#         Input(component_id='D_core_3', component_property='value'),
+#         Input(component_id='D_core_4', component_property='value'),
+#         Input(component_id='D_core_5', component_property='value'),
+#         Input(component_id='D_core_6', component_property='value'),
+#         Input(component_id='D_core_7', component_property='value'),
+#         Input(component_id='D_core_8', component_property='value')
+#     ]
+# )
+# def update_length_input_box(
+#         neutral_burn_profile, N, D_grain, D_core_1, D_core_2, D_core_3, D_core_4, D_core_5, D_core_6, D_core_7, D_core_8
+# ):
+#     D_core = np.array([float(D_core_1), float(D_core_2), float(D_core_3), float(D_core_4), float(D_core_5),
+#                        float(D_core_6), float(D_core_7), float(D_core_8)])
+#     D_grain = float(D_grain)
+#     N = int(N)
+#     if neutral_burn_profile:
+#         length_col = [dbc.FormGroup(
+#             children=[
+#                 dbc.Label('Segment length (mm)'),
+#                 dbc.Input(
+#                     placeholder='Insert segment length...',
+#                     id='L_grain',
+#                     value=f'{0.5 * (3 * D_grain + D_core[i])}',
+#                     type='number',
+#                     disabled=True
+#                 )
+#             ]
+#         ) for i in range(number_grain_core_inputs)]
+#     else:
+#         length_col = [dbc.FormGroup(
+#             children=[
+#                 dbc.Label(f'Segment #{i + 1} length (mm)'),
+#                 dbc.Input(
+#                     placeholder=f'Insert #{i + 1} segment length...',
+#                     id=f'L_grain_{i + 1}',
+#                     value='',
+#                     type='number',
+#                     disabled=False
+#                 )
+#             ]
+#         ) for i in range(number_grain_core_inputs)]
+#     return length_col
 
 
 # @app.callback(
 #     State(component_id='run_ballistics', component_property='n_clicks'),
 #     [
-#         Output(),
-#         Output()
+#         Output(component_id='burn_regression_graph', component_property='figure'),
+#         Output(component_id='max_P0', component_property='children')
 #     ],
 #     [
-#         Input(),
-#         Input()
+#         Input(component_id='N', component_property='value'),
+#         Input(component_id='D_grain', component_property='value'),
+#         Input(component_id='D_core_1', component_property='value'),
+#         Input(component_id='D_core_2', component_property='value'),
+#         Input(component_id='D_core_3', component_property='value'),
+#         Input(component_id='D_core_4', component_property='value'),
+#         Input(component_id='D_core_5', component_property='value'),
+#         Input(component_id='D_core_6', component_property='value'),
+#         Input(component_id='D_core_7', component_property='value'),
+#         Input(component_id='D_core_8', component_property='value'),
+#         Input(component_id='L_grain_1', component_property='value'),
+#         Input(component_id='L_grain_2', component_property='value'),
+#         Input(component_id='L_grain_3', component_property='value'),
+#         Input(component_id='L_grain_4', component_property='value'),
+#         Input(component_id='L_grain_5', component_property='value'),
+#         Input(component_id='L_grain_6', component_property='value'),
+#         Input(component_id='L_grain_7', component_property='value'),
+#         Input(component_id='L_grain_8', component_property='value'),
+#         Input(component_id='sf', component_property='value'),
+#         Input(component_id='m_motor', component_property='value'),
+#         Input(component_id='mass_wo_motor', component_property='value'),
+#         Input(component_id='D_in', component_property='value'),
+#         Input(component_id='D_out', component_property='value'),
+#         Input(component_id='liner_thickness', component_property='value'),
+#         Input(component_id='grain_spacing', component_property='value'),
+#         Input(component_id='D_screw', component_property='value')
 #     ]
 # )
 # def burn_regression():
