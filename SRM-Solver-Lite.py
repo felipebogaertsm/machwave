@@ -9,6 +9,8 @@ import plotly.graph_objects as go
 import plotly.subplots
 import fluids.atmosphere as atm
 
+from functions.Simulation import *
+from functions.Ballistics import *
 from functions.InternalBallistics import *
 from functions.Propellant import *
 from functions.MotorStructure import *
@@ -154,17 +156,13 @@ plot_radial_grain.add_shape(
 st.write(' ### Propellant grain dimensions')
 st.plotly_chart(plot_radial_grain)
 
-# ______________________________________________________________________________________________________________________
+# _____________________________________________________________________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
 
-if steel_nozzle:
-    C1 = 0.00506
-    C2 = 0.0
-
 # The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(prop)
+ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 # Getting PropellantSelected class based on previous input:
-propellant = PropellantSelected(
+propellant_data = PropellantSelected(
     ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 )
 # Combustion chamber length [m]:
@@ -174,15 +172,25 @@ D_chamber = D_in - 2 * liner_thickness
 # Defining 'grain' as an instance of BATES:
 grain = BATES(web_res, N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
-structure = MotorStructure(
-    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1, C2,
-    Div_angle
-)
+# structure = MotorStructure(
+#     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
+#     C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
+# )
+# Defining 'rocket' as an instance of Rocket class:
+rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
+# Defining 'recovery' as an instance of Recovery class:
+recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height)
 
 # _____________________________________________________________________________________________________________________
-# INTERNAL BALLISTICS
+# INTERNAL BALLISTICS AND TRAJECTORY
 
-ib_parameters = run_internal_ballistics(propellant, grain, structure, web_res, P_igniter, P_external, dt, prop)
+ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt, h0,
+                                           P_igniter, rail_length)
+
+# _____________________________________________________________________________________________________________________
+# MOTOR STRUCTURE
+
+structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 with st.beta_expander('Internal Ballistics'):
     st.plotly_chart(pressure_plot(ib_parameters.t, ib_parameters.P0))
