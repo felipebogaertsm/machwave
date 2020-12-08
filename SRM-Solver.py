@@ -19,7 +19,7 @@ start = time.time()
 # INPUTS
 
 # Motor name (NO SPACES):
-name = '5KBOOSTER'
+name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
