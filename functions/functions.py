@@ -162,10 +162,10 @@ def velocity_plot(t, v):
     return figure_plotly
 
 
-def performance_plot(F, P0, t, t_burnout):
+def performance_plot(F, P0, t, t_thrust):
     """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder. """
 
-    t = t[t <= t_burnout]
+    t = t[t <= t_thrust]
     F = F[: np.size(t)]
     P0 = P0[: np.size(t)]
     fig1, ax1 = plt.subplots()
