@@ -77,7 +77,7 @@ T_external = 297
 # Igniter pressure [Pa]:
 P_igniter = 1.5e6
 # Elevation [m]:
-h0 = 4
+h0 = 600
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
