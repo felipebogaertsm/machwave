@@ -1,11 +1,8 @@
 # This file contains most of the calculations of the internal ballistic and trajectory. This includes the main loop of
 # the program, which contains the calculations of the differential equations and several other important parameters.
 
-import numpy as np
 import fluids.atmosphere as atm
-import matplotlib.pyplot as plt
 
-from functions.Propellant import *
 from functions.InternalBallistics import *
 from functions.Ballistics import *
 
