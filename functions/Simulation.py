@@ -106,7 +106,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
                                                                                      critical_pressure_ratio, V0[0],
                                                                                      t[i])
             n_kin, n_tp, n_bl = np.append(n_kin, n_kin_atual), np.append(n_tp, n_tp_atual), np.append(n_bl, n_bl_atual)
-            n_cf = np.append(n_cf, ((100 - (n_kin_atual + n_bl_atual + n_tp_atual)) * n_div / 100))
+            n_cf = np.append(n_cf, ((100 - (n_kin_atual + n_bl_atual + n_tp_atual)) * n_div / 100 * propellant.n_ce))
 
             Cf_atual, Cf_ideal_atual = get_thrust_coeff(P0[i], P_exit[i], P_ext[i], structure.Exp_ratio,
                                                         propellant.k_2ph_ex, n_cf[i])
@@ -182,12 +182,13 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     v_rail = v_rail[0]
     y_burnout = y[np.where(v == np.max(v))]
     y_burnout = y_burnout[0]
+    flight_time = t[- 1]
 
     nozzle_eff = Cf / Cf_ideal
 
     I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
 
-    ballistics = Ballistics(t, y, v, acc, v_rail, y_burnout, Mach)
+    ballistics = Ballistics(t, y, v, acc, v_rail, y_burnout, Mach, apogee_time[0], flight_time, P_ext)
     optimal_grain_length = grain.get_optimal_segment_length()
     initial_port_to_throat = (grain.D_core[- 1] ** 2) / (structure.D_throat ** 2)
     burn_profile = get_burn_profile(A_burn[A_burn != 0.0])
@@ -197,7 +198,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
     grain_mass_flux = grain.get_mass_flux_per_segment(grain, r, propellant.pp, web)
     ib_parameters = InternalBallistics(t, P0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, Exp_opt,
                                        V_prop, A_burn, Kn, m_prop, grain_mass_flux, optimal_grain_length,
-                                       initial_port_to_throat, burn_profile, V_empty, initial_to_final_kn)
+                                       initial_port_to_throat, burn_profile, V_empty, initial_to_final_kn, P_exit)
 
     return ballistics, ib_parameters
 

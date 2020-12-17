@@ -23,7 +23,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17
+m_motor = 17.588
 
 # SIMULATION PARAMETERS INPUT
 # Web regression resolution:
@@ -77,7 +77,7 @@ T_external = 297
 # Igniter pressure [Pa]:
 P_igniter = 1.5e6
 # Elevation [m]:
-h0 = 600
+h0 = 645
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
@@ -99,7 +99,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 29
+mass_wo_motor = 28.88
 # Rocket drag coefficient:
 Cd = 0.5
 # Frontal diameter [m]:
@@ -123,10 +123,10 @@ main_chute_activation_height = 500
 # PRE CALCULATIONS AND DEFINITIONS
 
 # The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
+n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
 # Getting PropellantSelected class based on previous input:
 propellant_data = PropellantSelected(
-    ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
+    n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
 )
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
