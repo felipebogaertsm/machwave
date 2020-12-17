@@ -296,8 +296,10 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print(f' Max. velocity: {np.max(ballistics.v):.2f} m/s')
     print(f' Max. Mach number: {np.max(ballistics.Mach):.3f}')
     print(f' Max. acceleration: {np.max(ballistics.acc) / 9.81:.2f} gs')
+    print(f' Time to apogee: {ballistics.apogee_time:.2f} s')
     print(f' Velocity out of the rail: {ballistics.v_rail:.2f} m/s')
     print(f' Height at motor burnout: {ballistics.y_burnout:.2f} m')
+    print(f' Flight time: {ballistics.flight_time:.2f} s')
 
     print('\nPRELIMINARY STRUCTURAL PROJECT')
     print(f' Casing safety factor: {structural_parameters.casing_sf:.2f}')

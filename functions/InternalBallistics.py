@@ -10,7 +10,7 @@ from functions.Propellant import *
 class InternalBallistics:
     def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, E_opt, V_prop_CP, A_burn_CP,
                  Kn, m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
-                 initial_to_final_kn):
+                 initial_to_final_kn, P_exit):
         self.t = t
         self.P0 = P0
         self.T = T
@@ -31,6 +31,7 @@ class InternalBallistics:
         self.burn_profile = burn_profile
         self.V_empty = V_empty
         self.initial_to_final_kn = initial_to_final_kn
+        self.P_exit = P_exit
 
 
 class BATES:
@@ -152,8 +153,6 @@ def get_burn_profile(A_burn: list):
 
 def get_operational_correction_factors(P0, P_external, P0_psi, propellant, structure, critical_pressure_ratio, V0, t):
     """ Returns kinetic, two-phase and boundary layer correction factors based on a015140. """
-    C7, termC2, E_cf = 0, 0, 0
-    n_cf, n_kin, n_bl, n_tp = 0, 0, 0, 0
 
     # Kinetic losses
     if P0_psi >= 200:
