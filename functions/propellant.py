@@ -1,7 +1,7 @@
 # Burn rate data was gathered from Nakka and Magnus Gudnason paper 's072205'.
 # Propellant data was gathered from ProPEP3.
 #
-# ce: Combustion, two phase, heat loss, friction inefficiency factor
+# n_ce: Combustion, two phase, heat loss, friction inefficiency factor
 # pp: Propellant density [kg/m^3]
 # k_mix_ch: Isentropic exponent (chamber)
 # k_2ph_ex: Isentropic exponent (exhaust)
@@ -17,13 +17,13 @@ import scipy.constants
 
 
 class PropellantSelected:
-    def __init__(self, ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex):
-        self.ce = ce
+    def __init__(self, n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex):
+        self.n_ce = n_ce
         self.pp = pp
         self.k_mix_ch = k_mix_ch
         self.k_2ph_ex = k_2ph_ex
         # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
-        self.T0 = T0_ideal * ce
+        self.T0 = T0_ideal * n_ce
         self.M_ch = M_ch
         self.M_ex = M_ex
         # Gas constant per molecular weight calculations:
