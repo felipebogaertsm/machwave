@@ -185,7 +185,6 @@ def performance_plot(F, P0, t, t_thrust):
     ax2.tick_params(axis='y', labelcolor='k')
 
     fig1.tight_layout()
-    fig1.set_size_inches(10, 7, forward=True)
     fig1.savefig('output/pressure_thrust.png', dpi=300)
 
 
