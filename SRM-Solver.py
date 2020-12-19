@@ -26,8 +26,6 @@ manufacturer = 'LCP'
 m_motor = 17.588
 
 # SIMULATION PARAMETERS INPUT
-# Web regression resolution:
-web_res = 1000
 # .eng file resolution:
 eng_res = 25
 # Time step [s]:
@@ -133,7 +131,7 @@ L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
 # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
 D_chamber = D_in - 2 * liner_thickness
 # Defining 'grain' as an instance of BATES:
-grain = BATES(web_res, N, D_grain, D_core, L_grain)
+grain = BATES(N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
 structure = MotorStructure(
     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
