@@ -440,6 +440,50 @@ input_row_10 = dbc.Row(
     ]
 )
 
+input_row_11 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Time step (s)'),
+                    dbc.Input(
+                        placeholder='Enter the time step...',
+                        id='dt',
+                        type='number',
+                        value='0.01'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Time step multiplier'),
+                    dbc.Input(
+                        placeholder='Enter value...',
+                        id='ddt',
+                        type='number',
+                        value='10'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('.eng resolution'),
+                    dbc.Input(
+                        placeholder='Enter value...',
+                        id='eng_res',
+                        type='number',
+                        value='25'
+                    )
+                ]
+            )
+        )
+    ]
+)
+
 # _____________________________________________________________________________________________________________________
 # GRAPHS
 
@@ -471,22 +515,24 @@ input_tab = dbc.Tab(label='Inputs', children=[
                 dbc.Card(
                     dbc.CardBody(
                         [
-                            html.H2([dbc.Badge('Motor data')]),
+                            html.H3('Motor data'),
                             input_row_1,
-                            html.H2([dbc.Badge('Propellant grain')]),
+                            html.H3('Propellant grain'),
                             input_row_2,
                             input_row_3,
-                            html.H3([dbc.Badge('Grain segments')]),
+                            html.H3('Grain segments'),
                             input_row_4,
-                            html.H2([dbc.Badge('Thrust chamber')]),
+                            html.H3('Thrust chamber'),
                             input_row_5,
-                            html.H3([dbc.Badge('Combustion chamber')]),
+                            html.H3('Combustion chamber'),
                             input_row_6,
                             input_row_7,
                             input_row_8,
-                            html.H2([dbc.Badge('Vehicle data')]),
+                            html.H3('Vehicle data'),
                             input_row_9,
                             input_row_10,
+                            html.H3('Simulation settings'),
+                            input_row_11,
                             dbc.Button('Run Simulation', color='primary', id='run_ballistics')
                         ]
                     )
@@ -529,8 +575,8 @@ ib_tab = dbc.Tab(
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                html.H2([dbc.Badge('IB parameters')]),
-                                html.H3([dbc.Badge('Burn Regression')]),
+                                html.H3('IB parameters'),
+                                html.H3('Burn Regression'),
                                 ib_rows,
                             ]
                         )
@@ -572,7 +618,14 @@ ballistic_tab = dbc.Tab(
 # _____________________________________________________________________________________________________________________
 # DASH APP EXECUTION
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+
+theme = {
+    'dark': False,
+    'detail': '#007439',
+    'primary': '#00EA64',
+    'secondary': '#6E6E6E'
+}
 
 app.layout = html.Div([
     dbc.Row([
@@ -581,9 +634,8 @@ app.layout = html.Div([
             html.H5('Build a BATES grain Solid Rocket Motor inside your own browser', style={'textAlign': 'center'}),
         ],
             width={'size': 12}
-        )
-    ],
-    ),
+        ),
+    ]),
     dbc.Tabs([
         input_tab,
         ib_tab,
@@ -622,7 +674,7 @@ def update_grain_radial_graph(D_grain, D_core):
             y=[R_core, 0]
         ),
         layout=go.Layout(
-            title='Grain radial perspective',
+            title='Grain #1 radial perspective',
             yaxis={'scaleanchor': 'x', 'scaleratio': 1},
         )
     )
@@ -639,59 +691,6 @@ def update_grain_radial_graph(D_grain, D_core):
         x0=- R_core, x1=R_core, y0=- R_core, y1=R_core
     )
     return figure_grain_radial
-
-
-# # Update the length input boxes:
-# @app.callback(
-#     Output(component_id='segment_length_inputs', component_property='children'),
-#     [
-#         Input(component_id='neutral_burn_profile', component_property='on'),
-#         Input(component_id='N', component_property='value'),
-#         Input(component_id='D_grain', component_property='value'),
-#         Input(component_id='D_core_1', component_property='value'),
-#         Input(component_id='D_core_2', component_property='value'),
-#         Input(component_id='D_core_3', component_property='value'),
-#         Input(component_id='D_core_4', component_property='value'),
-#         Input(component_id='D_core_5', component_property='value'),
-#         Input(component_id='D_core_6', component_property='value'),
-#         Input(component_id='D_core_7', component_property='value'),
-#         Input(component_id='D_core_8', component_property='value')
-#     ]
-# )
-# def update_length_input_box(
-#         neutral_burn_profile, N, D_grain, D_core_1, D_core_2, D_core_3, D_core_4, D_core_5, D_core_6, D_core_7, D_core_8
-# ):
-#     D_core = np.array([float(D_core_1), float(D_core_2), float(D_core_3), float(D_core_4), float(D_core_5),
-#                        float(D_core_6), float(D_core_7), float(D_core_8)])
-#     D_grain = float(D_grain)
-#     N = int(N)
-#     if neutral_burn_profile:
-#         length_col = [dbc.FormGroup(
-#             children=[
-#                 dbc.Label('Segment length (mm)'),
-#                 dbc.Input(
-#                     placeholder='Insert segment length...',
-#                     id='L_grain',
-#                     value=f'{0.5 * (3 * D_grain + D_core[i])}',
-#                     type='number',
-#                     disabled=True
-#                 )
-#             ]
-#         ) for i in range(number_grain_core_inputs)]
-#     else:
-#         length_col = [dbc.FormGroup(
-#             children=[
-#                 dbc.Label(f'Segment #{i + 1} length (mm)'),
-#                 dbc.Input(
-#                     placeholder=f'Insert #{i + 1} segment length...',
-#                     id=f'L_grain_{i + 1}',
-#                     value='',
-#                     type='number',
-#                     disabled=False
-#                 )
-#             ]
-#         ) for i in range(number_grain_core_inputs)]
-#     return length_col
 
 
 # @app.callback(
@@ -719,6 +718,7 @@ def update_grain_radial_graph(D_grain, D_core):
 #         Input(component_id='L_grain_6', component_property='value'),
 #         Input(component_id='L_grain_7', component_property='value'),
 #         Input(component_id='L_grain_8', component_property='value'),
+#         Input(component_id='propellant_select', component_property='value'),
 #         Input(component_id='sf', component_property='value'),
 #         Input(component_id='m_motor', component_property='value'),
 #         Input(component_id='mass_wo_motor', component_property='value'),

@@ -35,8 +35,7 @@ class InternalBallistics:
 
 
 class BATES:
-    def __init__(self, wr: int, N: int, D_grain: float, D_core: np.array, L_grain: np.array):
-        self.wr = wr
+    def __init__(self, N: int, D_grain: float, D_core: np.array, L_grain: np.array):
         self.N = N
         self.D_grain = D_grain
         self.D_core = D_core
