@@ -75,7 +75,7 @@ def get_propellant_volume(grain, x: float, j: int):
 
 
 def get_critical_pressure(k_mix_ch):
-    """Returns value of the critical pressure ratio. """
+    """ Returns value of the critical pressure ratio. """
     return (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
 
 
@@ -94,6 +94,10 @@ def solve_cp_seidel(P0: float, Pe: float, Ab: float, V0: float, At: float, pp: f
 
 
 def get_opt_expansion_ratio(k, P0, P_ext):
+    """
+    Returns the optimal expansion ratio based on the current chamber pressure, specific heat ratio and external
+    pressure.
+    """
     Exp_opt = ((((k + 1) / 2) ** (1 / (k - 1))) * ((P_ext / P0) ** (1 / k)) *
                np.sqrt(((k + 1) / (k - 1)) * (1 - (P_ext / P0) ** ((k - 1) / k)))) ** - 1
     return Exp_opt
