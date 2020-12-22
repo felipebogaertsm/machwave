@@ -1,16 +1,14 @@
-import plotly.graph_objects as go
-import numpy as np
-import scipy.constants
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_daq as daq
 import dash_bootstrap_components as dbc
-
+import dash_core_components as dcc
+import dash_daq as daq
+import dash_html_components as html
 from dash.dependencies import Input, Output, State
+
+from functions.Ballistics import *
 from functions.InternalBallistics import *
-from functions.Propellant import *
 from functions.MotorStructure import *
+from functions.Simulation import *
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
@@ -105,7 +103,7 @@ input_row_2 = dbc.Row(
                     dbc.Label('Grain segment count'),
                     daq.NumericInput(
                         id='N',
-                        value=4,
+                        value='4',
                         min=1,
                         max=8
                     )
@@ -205,8 +203,26 @@ input_row_5 = dbc.Row(
                         type='number'
                     )
                 ]
-            ), width=4
+            ), width=6
         ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Expansion ratio'),
+                    dbc.Input(
+                        placeholder='Insert the expansion ratio...',
+                        id='Exp_ratio',
+                        value='9',
+                        type='number'
+                    )
+                ]
+            )
+        )
+    ]
+)
+
+input_row_6 = dbc.Row(
+    [
         dbc.Col(
             dbc.FormGroup(
                 [
@@ -236,7 +252,7 @@ input_row_5 = dbc.Row(
     ]
 )
 
-input_row_6 = dbc.Row(
+input_row_7 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -281,7 +297,7 @@ input_row_6 = dbc.Row(
     ]
 )
 
-input_row_7 = dbc.Row(
+input_row_8 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -337,7 +353,7 @@ input_row_7 = dbc.Row(
     ]
 )
 
-input_row_8 = dbc.Row(
+input_row_9 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -378,7 +394,7 @@ input_row_8 = dbc.Row(
     ]
 )
 
-input_row_9 = dbc.Row(
+input_row_10 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -409,7 +425,7 @@ input_row_9 = dbc.Row(
     ]
 )
 
-input_row_10 = dbc.Row(
+input_row_11 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -440,7 +456,89 @@ input_row_10 = dbc.Row(
     ]
 )
 
-input_row_11 = dbc.Row(
+input_row_12 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Drogue activation time [s]'),
+                    dbc.Input(
+                        placeholder='Enter value...',
+                        id='drogue_time',
+                        type='number',
+                        value='1'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Drogue drag coefficient'),
+                    dbc.Input(
+                        id='Cd_drogue',
+                        type='number',
+                        value='1.75'
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Drogue diameter [m]'),
+                    dbc.Input(
+                        id='D_drogue',
+                        value='1.25'
+                    )
+                ]
+            ), width=4
+        )
+    ]
+)
+
+input_row_13 = dbc.Row(
+    [
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Main drag coefficient'),
+                    dbc.Input(
+                        id='Cd_main',
+                        type='number',
+                        value='2',
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Main diameter [m]'),
+                    dbc.Input(
+                        id='D_main',
+                        type='number',
+                        value='2.66',
+                    )
+                ]
+            ), width=4
+        ),
+        dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label('Main activation height [m]'),
+                    dbc.Input(
+                        id='main_chute_activation_height',
+                        value='500',
+                        type='number'
+                    )
+                ]
+            ), width=4
+        )
+    ]
+)
+
+input_row_14 = dbc.Row(
     [
         dbc.Col(
             dbc.FormGroup(
@@ -517,22 +615,33 @@ input_tab = dbc.Tab(label='Inputs', children=[
                         [
                             html.H3('Motor data'),
                             input_row_1,
+                            html.Br(),
                             html.H3('Propellant grain'),
                             input_row_2,
                             input_row_3,
+                            html.Br(),
                             html.H3('Grain segments'),
                             input_row_4,
+                            html.Br(),
                             html.H3('Thrust chamber'),
                             input_row_5,
-                            html.H3('Combustion chamber'),
                             input_row_6,
+                            html.Br(),
+                            html.H3('Combustion chamber'),
                             input_row_7,
                             input_row_8,
-                            html.H3('Vehicle data'),
                             input_row_9,
+                            html.Br(),
+                            html.H3('Vehicle data'),
                             input_row_10,
-                            html.H3('Simulation settings'),
                             input_row_11,
+                            html.Br(),
+                            html.H3('Recovery data'),
+                            input_row_12,
+                            input_row_13,
+                            html.H3('Simulation settings'),
+                            input_row_14,
+                            html.Hr(),
                             dbc.Button('Run Simulation', color='primary', id='run_ballistics')
                         ]
                     )
@@ -676,6 +785,7 @@ def update_grain_radial_graph(D_grain, D_core):
         layout=go.Layout(
             title='Grain #1 radial perspective',
             yaxis={'scaleanchor': 'x', 'scaleratio': 1},
+            plot_bgcolor='rgba(0,0,0,0)'
         )
     )
     figure_grain_radial.add_shape(
@@ -693,44 +803,131 @@ def update_grain_radial_graph(D_grain, D_core):
     return figure_grain_radial
 
 
-# @app.callback(
-#     State(component_id='run_ballistics', component_property='n_clicks'),
-#     [
-#         Output(component_id='burn_regression_graph', component_property='figure'),
-#         Output(component_id='max_P0', component_property='children')
-#     ],
-#     [
-#         Input(component_id='N', component_property='value'),
-#         Input(component_id='D_grain', component_property='value'),
-#         Input(component_id='D_core_1', component_property='value'),
-#         Input(component_id='D_core_2', component_property='value'),
-#         Input(component_id='D_core_3', component_property='value'),
-#         Input(component_id='D_core_4', component_property='value'),
-#         Input(component_id='D_core_5', component_property='value'),
-#         Input(component_id='D_core_6', component_property='value'),
-#         Input(component_id='D_core_7', component_property='value'),
-#         Input(component_id='D_core_8', component_property='value'),
-#         Input(component_id='L_grain_1', component_property='value'),
-#         Input(component_id='L_grain_2', component_property='value'),
-#         Input(component_id='L_grain_3', component_property='value'),
-#         Input(component_id='L_grain_4', component_property='value'),
-#         Input(component_id='L_grain_5', component_property='value'),
-#         Input(component_id='L_grain_6', component_property='value'),
-#         Input(component_id='L_grain_7', component_property='value'),
-#         Input(component_id='L_grain_8', component_property='value'),
-#         Input(component_id='propellant_select', component_property='value'),
-#         Input(component_id='sf', component_property='value'),
-#         Input(component_id='m_motor', component_property='value'),
-#         Input(component_id='mass_wo_motor', component_property='value'),
-#         Input(component_id='D_in', component_property='value'),
-#         Input(component_id='D_out', component_property='value'),
-#         Input(component_id='liner_thickness', component_property='value'),
-#         Input(component_id='grain_spacing', component_property='value'),
-#         Input(component_id='D_screw', component_property='value')
-#     ]
-# )
-# def burn_regression():
-#     pass
+@app.callback(
+    [
+        Output(component_id='burn_regression_graph', component_property='figure'),
+        Output(component_id='max_P0', component_property='children')
+    ],
+    [
+        Input(component_id='N', component_property='value'),
+        Input(component_id='D_grain', component_property='value'),
+        Input(component_id='D_core_1', component_property='value'),
+        Input(component_id='D_core_2', component_property='value'),
+        Input(component_id='D_core_3', component_property='value'),
+        Input(component_id='D_core_4', component_property='value'),
+        Input(component_id='D_core_5', component_property='value'),
+        Input(component_id='D_core_6', component_property='value'),
+        Input(component_id='D_core_7', component_property='value'),
+        Input(component_id='D_core_8', component_property='value'),
+        Input(component_id='L_grain_1', component_property='value'),
+        Input(component_id='L_grain_2', component_property='value'),
+        Input(component_id='L_grain_3', component_property='value'),
+        Input(component_id='L_grain_4', component_property='value'),
+        Input(component_id='L_grain_5', component_property='value'),
+        Input(component_id='L_grain_6', component_property='value'),
+        Input(component_id='L_grain_7', component_property='value'),
+        Input(component_id='L_grain_8', component_property='value'),
+        Input(component_id='propellant_select', component_property='value'),
+        Input(component_id='sf', component_property='value'),
+        Input(component_id='m_motor', component_property='value'),
+        Input(component_id='mass_wo_motor', component_property='value'),
+        Input(component_id='Cd', component_property='value'),
+        Input(component_id='D_rocket', component_property='value'),
+        Input(component_id='D_in', component_property='value'),
+        Input(component_id='D_out', component_property='value'),
+        Input(component_id='liner_thickness', component_property='value'),
+        Input(component_id='grain_spacing', component_property='value'),
+        Input(component_id='D_throat', component_property='value'),
+        Input(component_id='Exp_ratio', component_property='value'),
+        Input(component_id='D_screw', component_property='value'),
+        Input(component_id='D_clearance', component_property='value'),
+        Input(component_id='Div_angle', component_property='value'),
+        Input(component_id='Conv_angle', component_property='value'),
+        Input(component_id='casing_material', component_property='value'),
+        Input(component_id='nozzle_material', component_property='value'),
+        Input(component_id='bulkhead_material', component_property='value'),
+        Input(component_id='D_drogue', component_property='value'),
+        Input(component_id='Cd_drogue', component_property='value'),
+        Input(component_id='drogue_time', component_property='value'),
+        Input(component_id='D_main', component_property='value'),
+        Input(component_id='Cd_main', component_property='value'),
+        Input(component_id='main_chute_activation_height', component_property='value')
+    ],
+    State(component_id='run_ballistics', component_property='n_clicks'),
+)
+def burn_regression(
+        N, D_grain,
+        D_core_1, D_core_2, D_core_3, D_core_4, D_core_5, D_core_6, D_core_7, D_core_8,
+        L_grain_1, L_grain_2, L_grain_3, L_grain_4, L_grain_5, L_grain_6, L_grain_7, L_grain_8,
+        propellant, sf, m_motor, mass_wo_motor, Cd, D_rocket, D_in, D_out, liner_thickness, grain_spacing, D_throat,
+        Exp_ratio, D_screw, D_clearance, Div_angle, Conv_angle, casing_material, nozzle_material, bulkhead_material,
+        D_drogue, Cd_drogue, drogue_time, D_main, Cd_main, main_chute_activation_height
+):
+    N, D_grain = float(N), float(D_grain)
+
+    Y_chamber = 255e6
+    Y_nozzle = 205e6
+    Y_bulkhead = 255e6
+    U_screw = 500e6
+    max_number_of_screws = 30
+    C1 = 0.00506
+    C2 = 0.00000
+    h0 = 645
+    P_igniter = 1e6
+    rail_length = 5
+
+    D_core = np.array([float(D_core_1), float(D_core_2), float(D_core_3), float(D_core_4), float(D_core_5),
+                       float(D_core_6), float(D_core_7), float(D_core_8)])
+    L_grain = np.array([float(L_grain_1), float(L_grain_2), float(L_grain_3), float(L_grain_4), float(L_grain_5),
+                        float(L_grain_6), float(L_grain_7), float(L_grain_8)])
+
+    # Converting variables to float and SI units:
+    D_core, L_grain = D_core[: N - 1] * 1e-3, L_grain[: N - 1] * 1e-3
+    D_grain = float(D_grain) * 1e-3
+    D_rocket = float(D_rocket) * 1e-3
+    D_in, D_out = float(D_in) * 1e-3, float(D_out) * 1e-3
+    liner_thickness = float(liner_thickness) * 1e-3
+    sf = float(sf)
+    grain_spacing = float(grain_spacing) * 1e-3
+    D_throat = float(D_throat) * 1e-3
+    Exp_ratio = float(Exp_ratio)
+    D_screw = float(D_screw) * 1e-3
+    D_clearance = float(D_clearance) * 1e-3
+    D_drogue = float(D_drogue)
+    D_main = float(D_main)
+    m_motor = float(m_motor)
+    mass_wo_motor = float(mass_wo_motor)
+
+    # The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
+    n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
+    # Getting PropellantSelected class based on previous input:
+    propellant_data = PropellantSelected(
+        n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
+    )
+    # Combustion chamber length [m]:
+    L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
+    # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
+    D_chamber = D_in - 2 * liner_thickness
+    # Defining 'grain' as an instance of BATES:
+    grain = BATES(N, D_grain, D_core, L_grain)
+    # Defining 'structure' as an instance of the MotorStructure class:
+    structure = MotorStructure(
+        sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
+        C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
+    )
+    # Defining 'rocket' as an instance of Rocket class:
+    rocket = Rocket(mass_wo_motor, Cd, D_rocket)
+    # Defining 'recovery' as an instance of Recovery class:
+    recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height)
+
+    ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt,
+                                               h0, P_igniter, rail_length)
+
+    plot = pressure_plot(ib_parameters.t, ib_parameters.P0, ib_parameters.t_burnout)
+
+    print(np.max(ib_parameters.P0))
+
+    return plot, np.max(ib_parameters.P0)
 
 
 if __name__ == '__main__':

@@ -85,7 +85,6 @@ class MotorStructure:
 
 
 def run_structural_simulation(structure, ib_parameters):
-
     # Casing thickness assuming thin wall [m]:
     casing_sf = structure.casing_safety_factor(structure.Y_chamber, ib_parameters.P0)
 

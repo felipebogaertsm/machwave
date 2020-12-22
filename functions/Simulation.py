@@ -3,8 +3,8 @@
 
 import fluids.atmosphere as atm
 
-from functions.InternalBallistics import *
 from functions.Ballistics import *
+from functions.InternalBallistics import *
 
 
 def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt, h0, P_igniter, rail_length):
@@ -146,7 +146,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
             if main_time == 0:
                 main_time = t[i]
             A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * recovery.D_drogue ** 2) * 0.25 * \
-                recovery.Cd_drogue + (np.pi * recovery.D_main ** 2) * 0.25 * recovery.Cd_main
+                     recovery.Cd_drogue + (np.pi * recovery.D_main ** 2) * 0.25 * recovery.Cd_main
         elif apogee_time >= 0 and t[i] >= apogee_time + recovery.drogue_time:
             A_drag = (np.pi * (rocket.D_rocket / 2) ** 2) * rocket.Cd + (np.pi * recovery.D_drogue ** 2) * 0.25 * \
                      recovery.Cd_drogue

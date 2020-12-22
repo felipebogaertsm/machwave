@@ -1,19 +1,13 @@
 # October 2020, Felipe Bogaerts de Mattos
 # All the measurements are in SI, unless specified otherwise in the variable comment above.
 
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.constants
 import streamlit as st
-import plotly.graph_objects as go
-import plotly.subplots
-import fluids.atmosphere as atm
 
-from functions.Simulation import *
 from functions.Ballistics import *
 from functions.InternalBallistics import *
-from functions.Propellant import *
 from functions.MotorStructure import *
+from functions.Propellant import *
+from functions.Simulation import *
 from functions.functions import *
 
 # ______________________________________________________________________________________________________________________
@@ -198,7 +192,6 @@ with st.beta_expander('Internal Ballistics'):
 
 # ______________________________________________________________________________________________________________________
 # ROCKET BALLISTICS
-
 
 
 # with st.beta_expander('1D Ballistics'):

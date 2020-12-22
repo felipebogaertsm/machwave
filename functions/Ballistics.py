@@ -1,9 +1,5 @@
-import numpy as np
-import fluids.atmosphere as atm
-
-
 class Rocket:
-    def __init__(self, mass_wo_motor, Cd, D_rocket, structure):
+    def __init__(self, mass_wo_motor, Cd, D_rocket):
         self.mass_wo_motor = mass_wo_motor
         self.Cd = Cd
         self.D_rocket = D_rocket
