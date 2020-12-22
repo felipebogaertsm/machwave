@@ -50,7 +50,7 @@ def ballistics_plots(t, a, v, y, g):
     plt.grid(linestyle='-.')
     plt.plot(t, a, color='r')
 
-    fig1.savefig('output/Trajectory_Plots.png', dpi=300)
+    fig1.savefig('output/TrajectoryPlots.png', dpi=300)
 
     fig2 = plt.figure()
 
@@ -61,7 +61,7 @@ def ballistics_plots(t, a, v, y, g):
     plt.xlim(0, t[-1])
     plt.grid()
 
-    fig2.savefig('output/Height.png', dpi=300)
+    fig2.savefig('output/HeightPlot.png', dpi=300)
 
     fig3, ax3 = plt.subplots()
 
@@ -78,7 +78,7 @@ def ballistics_plots(t, a, v, y, g):
     ax4.plot(t, a / g, color='#ff6600')
     ax4.set_ylabel('Acceleration (g)')
 
-    fig3.savefig('output/Velocity_Acc.png', dpi=300)
+    fig3.savefig('output/VelocityAcc.png', dpi=300)
 
 
 def pressure_plot(t, P0, t_burnout):
@@ -184,7 +184,7 @@ def performance_plot(F, P0, t, t_thrust):
     ax2.tick_params(axis='y', labelcolor='k')
 
     fig1.tight_layout()
-    fig1.savefig('output/pressure_thrust.png', dpi=300)
+    fig1.savefig('output/PressureThrust.png', dpi=300)
 
 
 def main_plot(t, F, P0, Kn, m_prop, t_burnout):
@@ -234,7 +234,7 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     ax4.plot(t, m_prop, color='r', linewidth='1.5')
 
     main_figure.set_size_inches(12, 8, forward=True)
-    main_figure.savefig('output/motor_plots.png', dpi=300)
+    main_figure.savefig('output/MotorPlots.png', dpi=300)
     return main_figure
 
 
@@ -252,7 +252,7 @@ def mass_flux_plot(t, grain_mass_flux, t_burnout):
     plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)
     plt.xlim(0, t[-1])
     plt.grid(linestyle='-', linewidth='.4')
-    mass_flux_figure.savefig('output/grain_mass_flux.png', dpi=300)
+    mass_flux_figure.savefig('output/GrainMassFlux.png', dpi=300)
     return mass_flux_figure
 
 
