@@ -63,7 +63,6 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1390, 1.0426, 1608, 38.570 * 1e-3,
 
 
 def prop_data(prop: str):
-
     """"
     Returns propellant data based on the propellant name entered by the user as a string.
     """
@@ -90,7 +89,8 @@ def prop_data(prop: str):
             knsb.ce, knsb.pp, knsb.k_mix_ch, knsb.k_2ph_ex, knsb.T0_ideal, knsb.M_ch, knsb.M_ex, knsb.Isp_frozen, \
             knsb.Isp_shifting, knsb.qsi_ch, knsb.qsi_ex
 
-    return ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
+    return PropellantSelected(ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch,
+                              qsi_ex)
 
 
 def get_burn_rate_coefs(prop: str, P0: float):
