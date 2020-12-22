@@ -1,16 +1,13 @@
-import plotly.graph_objects as go
-import numpy as np
-import scipy.constants
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_daq as daq
 import dash_bootstrap_components as dbc
-
-from dash.dependencies import Input, Output, State
+import dash_core_components as dcc
+import dash_daq as daq
+import dash_html_components as html
+from dash.dependencies import Input, Output
 from functions.ib_functions import *
 from functions.propellant import *
 from functions.structural_functions import *
+
 from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
@@ -697,4 +694,3 @@ def update_length_input_box(single_core_diameter, neutral_burn_profile, N, D_cor
 
 if __name__ == '__main__':
     app.run_server()
-

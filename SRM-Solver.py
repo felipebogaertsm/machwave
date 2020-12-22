@@ -3,10 +3,7 @@
 
 import time
 
-from functions.InternalBallistics import *
-from functions.Propellant import *
 from functions.MotorStructure import *
-from functions.Ballistics import *
 from functions.Simulation import *
 from functions.functions import *
 
@@ -138,7 +135,7 @@ structure = MotorStructure(
     C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
 )
 # Defining 'rocket' as an instance of Rocket class:
-rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
+rocket = Rocket(mass_wo_motor, Cd, D_rocket)
 # Defining 'recovery' as an instance of Recovery class:
 recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height)
 
