@@ -8,6 +8,11 @@ from functions.InternalBallistics import *
 
 
 def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt, h0, P_igniter, rail_length):
+    """
+    Runs the main loop of the SRM Solver program, returning all the IB and ballistics parameters as instances of the
+    InternalBallistics and Ballistics classes.
+    """
+
     # Initial conditions:
     web = np.array([0])
     t = np.array([0])
@@ -201,14 +206,3 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
                                        initial_port_to_throat, burn_profile, V_empty, initial_to_final_kn, P_exit)
 
     return ballistics, ib_parameters
-
-
-def ballistics_ode(y, v, T, D, M, g):
-    """ Returns dydt and dvdt. """
-    if v < 0:
-        x = -1
-    else:
-        x = 1
-    dvdt = (T - x * D * (v ** 2)) / M - g
-    dydt = v
-    return dydt, dvdt

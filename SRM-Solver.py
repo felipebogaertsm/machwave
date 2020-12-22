@@ -1,5 +1,18 @@
 # Written by Felipe Bogaerts de Mattos
 # Juiz de Fora, MG, 2020
+# This is the main file to execute the program in script mode. The inputs must be hard coded and this file must be
+# run inside an environment where all the modules listed in 'requirements.txt' are properly installed.
+# The outputs can be seen inside the folder 'output' inside the project directory.
+# SRM-Solver.py is divided into several sections:
+# 1) Time function start;
+# 2) Inputs;
+# 3) Pre calculations and definitions;
+# 4) Internal ballistics and trajectory;
+# 5) Motor structure;
+# 6) Results;
+# 7) Output to eng and csv file;
+# 8) Time function end;
+# 9) Plots.
 
 import time
 
@@ -9,11 +22,13 @@ from functions.functions import *
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION START
+# Starts the timer.
 
 start = time.time()
 
 # _____________________________________________________________________________________________________________________
 # INPUTS
+# This section must be used to enter all the inputs for the script mode to be executed.
 
 # Motor name (NO SPACES):
 name = 'SRM5K'
@@ -116,13 +131,12 @@ main_chute_activation_height = 500
 
 # _____________________________________________________________________________________________________________________
 # PRE CALCULATIONS AND DEFINITIONS
+# This section is responsible for creating all of the instances of classes that can be obtained from the input data.
+# It includes instanced of the classes: PropellantSelected, BATES, MotorStructure, Rocket, Rocket and Recovery.
+# It also does some small calculations of the chamber length and chamber diameter.
 
 # The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
-# Getting PropellantSelected class based on previous input:
-propellant_data = PropellantSelected(
-    n_ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
-)
+propellant_data = prop_data(propellant)
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
 # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
@@ -141,32 +155,44 @@ recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chut
 
 # _____________________________________________________________________________________________________________________
 # INTERNAL BALLISTICS AND TRAJECTORY
+# This section runs the main simulation of the program, returning the results of all the internal ballistics and
+# trajectory calculations. The 'run_ballistics' function runs, in a single loop, the chamber pressure PDE as well as the
+# rocket flight mechanics ODE. The exit pressure of the motor is automatically subtracted from the external (or ambient)
+# pressure of the rocket during flight, yielding more precise motor thrust estimation.
+# 'run_ballistics' returns instances of the classes Ballistics and InternalBallistics.
 
 ballistics, ib_parameters = run_ballistics(propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt, h0,
                                            P_igniter, rail_length)
 
 # _____________________________________________________________________________________________________________________
 # MOTOR STRUCTURE
+# This section runs the structural simulation. The function 'run_structural_simulation' returns an instance of the class
+# StructuralParameters.
 
 structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # _____________________________________________________________________________________________________________________
 # RESULTS
+# This section prints the important data based on previous calculations.
 
 print_results(grain, structure, propellant_data, ib_parameters, structural_parameters, ballistics)
 
 # _____________________________________________________________________________________________________________________
 # OUTPUT TO ENG AND CSV FILE
+# This section exports the results inside a .csv and a .eng file. The .eng file is totally compatible with OpenRocket or
+# RASAero software. The .csv is exported mainly for the ease of visualization and storage.
 
 output_eng_csv(ib_parameters, structure, propellant_data, 25, dt, manufacturer, name)
 
 # _____________________________________________________________________________________________________________________
 # TIME FUNCTION END
+# Ends the time function.
 
 print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 
 # _____________________________________________________________________________________________________________________
 # PLOTS
+# Saves some of the most important plots to the 'output' folder.
 
 performance_figure = performance_plot(ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust)
 main_figure = main_plot(ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn, ib_parameters.m_prop,
