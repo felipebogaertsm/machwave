@@ -130,6 +130,10 @@ def get_thrust_coeff(P0, P_exit, P_external, E, k, n_cf):
     P_r = P_external / P0
     Cf_ideal = np.sqrt((2 * (k ** 2) / (k - 1)) * ((2 / (k + 1)) ** ((k + 1) / (k - 1))) * (1 - (P_r ** ((k - 1) / k))))
     Cf = (Cf_ideal + E * (P_exit - P_external) / P0) * n_cf
+    if Cf <= 0:
+        Cf = 0
+    if Cf_ideal <= 0:
+        Cf_ideal = 0
     return Cf, Cf_ideal
 
 
