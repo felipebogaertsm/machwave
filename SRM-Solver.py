@@ -41,7 +41,7 @@ m_motor = 17.588
 # .eng file resolution:
 eng_res = 25
 # Time step [s]:
-dt = 1e-2
+dt = 1e-3
 # In order to optimize the speed of the program, the time step entered above is multiplied by a factor 'ddt' after the
 # propellant is finished burning and thrust produced is 0.
 ddt = 10
@@ -199,4 +199,4 @@ main_figure = main_plot(ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_p
                         ib_parameters.t_thrust)
 mass_flux_figure = mass_flux_plot(ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust)
 ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)
-performance_interactive_plot(ib_parameters.t, ib_parameters.P0, ib_parameters.T, ib_parameters.t_thrust)
+performance_interactive_plot(ib_parameters).show()

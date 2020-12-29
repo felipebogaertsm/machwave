@@ -6,29 +6,46 @@ import plotly.graph_objects as go
 import plotly.subplots
 
 
-def performance_interactive_plot(t, P0, T, t_thrust):
+def performance_interactive_plot(ib_parameters):
 
-    index = np.where(t == t_thrust)[0][0]
+    index = np.where(ib_parameters.t == ib_parameters.t_thrust)[0][0]
+    pressure_color = '#008141'
+    thrust_color = '#581845'
 
     figure = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
 
-    figure.add_trace(go.Scatter(x=t[: index], y=T[: index], mode='lines', name='Thrust'), secondary_y=False)
-    figure.add_trace(go.Scatter(x=t[: index], y=P0[: index] * 1e-6, name='Pressure'), secondary_y=True)
-
-    figure.update_layout(
-        title_text='<b>Performance plot<b>'
+    figure.add_trace(
+        go.Scatter(
+            x=ib_parameters.t[: index],
+            y=ib_parameters.T[: index],
+            name='Thrust',
+            line=go.scatter.Line(color=thrust_color)
+        ),
+        secondary_y=False
+    )
+    figure.add_trace(
+        go.Scatter(
+            x=ib_parameters.t[: index],
+            y=ib_parameters.P0[: index] * 1e-6,
+            name='Pressure',
+            line=go.scatter.Line(color=pressure_color),
+            yaxis='y2'
+        ),
+        secondary_y=True
     )
 
-    # Set x-axis title
+    figure.update_layout(
+        title_text='<b>Performance plots</b>'
+    )
+
+    # Set x-axis title:
     figure.update_xaxes(title_text='Time (s)')
 
-    # Set y-axes titles
-    figure.update_yaxes(title_text="<b>Thrust</b> (N)", secondary_y=False)
-    figure.update_yaxes(title_text="<b>Pressure</b> (MPa)", secondary_y=True)
+    # Set y-axes titles:
+    figure.update_yaxes(title_text="<b>Thrust</b> (N)", secondary_y=False, color='#6a006a')
+    figure.update_yaxes(title_text="<b>Pressure</b> (MPa)", secondary_y=True, color='#008141')
 
-    figure.show()
-
-    pass
+    return figure
 
 
 def motor_to_eng(t, F, dt, V_prop_CP, D_out, L_chamber, eng_res, pp, m_motor, manufacturer, name):
