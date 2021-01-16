@@ -141,7 +141,7 @@ def pressure_plot(t, P0, t_burnout):
         type='line',
         x0=0,
         y0=np.mean(P0) * 1e-6,
-        x1=t[-1],
+        x1=t[- 1],
         y1=np.mean(P0) * 1e-6,
         line={'color': '#ff0000', }
     )
