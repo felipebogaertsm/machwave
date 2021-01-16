@@ -35,13 +35,13 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17.588
+m_motor = 18
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:
 eng_res = 25
 # Time step [s]:
-dt = 1e-3
+dt = 1e-2
 # In order to optimize the speed of the program, the time step entered above is multiplied by a factor 'ddt' after the
 # propellant is finished burning and thrust produced is 0.
 ddt = 10
@@ -52,7 +52,7 @@ sf = 4
 # Grain count:
 N = 7
 # Grain external diameter [m]:
-D_grain = 114e-3
+D_grain = 117e-3
 # Grains 1 to 'N' core diameter [m]:
 D_core = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
 # Grains 1 to 'N' length [m]:
@@ -66,13 +66,13 @@ propellant = 'knsb-nakka'
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
-D_in = 127e-3
+D_in = 128.2e-3
 # Chamber outside diameter [m]:
-D_out = 139.7e-3
+D_out = 141.3e-3
 # Liner thickness [m]
 liner_thickness = 3e-3
 # Throat diameter [m]:
-D_throat = 36e-3
+D_throat = 37e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
 # Expansion ratio:
@@ -109,7 +109,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 28.88
+mass_wo_motor = 29.700
 # Rocket drag coefficient:
 Cd = 0.5
 # Frontal diameter [m]:
