@@ -35,7 +35,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 18
+m_motor = 17.588
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:
@@ -91,7 +91,7 @@ h0 = 645
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
-Y_chamber = 240e6
+Y_chamber = 192e6
 # Bulkhead yield strength [Pa]:
 Y_bulkhead = 255e6
 # Nozzle material yield strength [Pa]:
@@ -109,7 +109,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 29.700
+mass_wo_motor = 30
 # Rocket drag coefficient:
 Cd = 0.5
 # Frontal diameter [m]:
