@@ -171,10 +171,10 @@ def get_operational_correction_factors(P0, P_external, P0_psi, propellant, struc
     if P_external / P0 <= critical_pressure_ratio:
 
         termC2 = 1 + 2 * np.exp(- structure.C2 * P0_psi ** 0.8 * t / ((structure.D_throat / 0.0254) ** 0.2))
-        E_cf = 1 + 0.016 * structure.Exp_ratio ** -9
+        E_cf = 1 + 0.016 * structure.Exp_ratio ** - 9
         n_bl = structure.C1 * ((P0_psi ** 0.8) / ((structure.D_throat / 0.0254) ** 0.2)) * termC2 * E_cf
 
-        C7 = 0.454 * (P0_psi ** 0.33) * (propellant.qsi_ch ** 0.33) * (1 - np.exp(-0.004 * (V0 / get_circle_area(
+        C7 = 0.454 * (P0_psi ** 0.33) * (propellant.qsi_ch ** 0.33) * (1 - np.exp(- 0.004 * (V0 / get_circle_area(
             structure.D_throat)) / 0.0254) * (1 + 0.045 * structure.D_throat / 0.0254))
         if 1 / propellant.M_ch >= 0.9:
             C4 = 0.5
