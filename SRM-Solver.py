@@ -35,7 +35,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 17.588
+m_motor = 19.5
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:
@@ -76,7 +76,7 @@ D_throat = 37e-3
 # Nozzle divergent and convergent angle [degrees]:
 Div_angle, Conv_angle = 12, 30
 # Expansion ratio:
-Exp_ratio = 9
+Exp_ratio = 8
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
@@ -109,7 +109,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 30
+mass_wo_motor = 30.5
 # Rocket drag coefficient:
 Cd = 0.5
 # Frontal diameter [m]:
