@@ -154,24 +154,20 @@ st.plotly_chart(plot_radial_grain)
 # PRE CALCULATIONS AND DEFINITIONS
 
 # The propellant name input above triggers the function inside 'Propellant.py' to return the required data.
-ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = prop_data(propellant)
-# Getting PropellantSelected class based on previous input:
-propellant_data = PropellantSelected(
-    ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex
-)
+propellant_data = prop_data(propellant)
 # Combustion chamber length [m]:
 L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
 # Combustion chamber inner diameter (casing inner diameter minus liner thickness) [m]:
 D_chamber = D_in - 2 * liner_thickness
 # Defining 'grain' as an instance of BATES:
-grain = BATES(web_res, N, D_grain, D_core, L_grain)
+grain = BATES(N, D_grain, D_core, L_grain)
 # Defining 'structure' as an instance of the MotorStructure class:
-# structure = MotorStructure(
-#     sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
-#     C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
-# )
+structure = MotorStructure(
+    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance, D_throat, get_circle_area(D_throat), C1,
+    C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead, U_screw, max_number_of_screws
+)
 # Defining 'rocket' as an instance of Rocket class:
-rocket = Rocket(mass_wo_motor, Cd, D_rocket, structure)
+rocket = Rocket(mass_wo_motor, Cd, D_rocket)
 # Defining 'recovery' as an instance of Recovery class:
 recovery = Recovery(drogue_time, Cd_drogue, D_drogue, Cd_main, D_main, main_chute_activation_height)
 
