@@ -115,7 +115,8 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
 
             Cf_atual, Cf_ideal_atual = get_thrust_coeff(P0[i], P_exit[i], P_ext[i], structure.Exp_ratio,
                                                         propellant.k_2ph_ex, n_cf[i])
-            Cf, Cf_ideal = np.append(Cf, Cf_atual), np.append(Cf_ideal, Cf_ideal_atual)
+            Cf = np.append(Cf, Cf_atual)
+            Cf_ideal = np.append(Cf_ideal, Cf_ideal_atual)
             T = np.append(T, Cf[i] * structure.A_throat * P0[i])
 
             if m_prop[i] == 0 and end_burn is False:
