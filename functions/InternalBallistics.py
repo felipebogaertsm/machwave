@@ -127,7 +127,7 @@ def get_circle_area(diameter: float):
 
 def get_thrust_coeff(P0, P_exit, P_external, E, k, n_cf):
     """ Returns value for thrust coefficient based on the chamber pressure and correction factor. """
-    P_r = P_external / P0
+    P_r = P_exit / P0
     Cf_ideal = np.sqrt((2 * (k ** 2) / (k - 1)) * ((2 / (k + 1)) ** ((k + 1) / (k - 1))) * (1 - (P_r ** ((k - 1) / k))))
     Cf = (Cf_ideal + E * (P_exit - P_external) / P0) * n_cf
     if Cf <= 0:
