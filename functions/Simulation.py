@@ -85,8 +85,7 @@ def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt
             # Get burn rate coefficients:
             a, n = get_burn_rate_coefs(prop, P0[i])
             # If 'a' and 'n' are negative, exit the program (lacking burn rate date for the current value of P0).
-            if a < 0:
-                exit()
+            assert a > 0, '\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n'
 
             r = np.append(r, (a * (P0[i] * 1e-6) ** n) * 1e-3)
             dx = dt * r[i]
