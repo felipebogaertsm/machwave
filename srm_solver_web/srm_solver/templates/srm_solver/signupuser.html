@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Log in</h1>
+<h1>Sign up</h1>
 
 <br>
 
@@ -12,9 +12,9 @@
 <form method="POST">
 <!--    CSRF is a security token necessary for the browser to load the page. -->
     {% csrf_token %}
-    {{ log_form.as_p }}
+    {{ sign_form.as_p }}
 <!--    Button type 'submit' means that as 'enter' is pressed, the form is automatically submitted-->
-    <button type="submit" class="btn btn-primary"> Log in </button>
+    <button type="submit" class="btn btn-primary"> Sign up </button>
 </form>
 
 {% endblock %}
