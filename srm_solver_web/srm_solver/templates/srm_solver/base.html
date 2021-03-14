@@ -36,6 +36,7 @@
                         </form></li>
                     <!--If user has not been authenticated: -->
                     {% else %}
+                        <li class="px-2"><a href="{% url 'signupuser' %}" class="btn btn-primary">Sign up</a></li>
                         <li><a href="{% url 'loginuser' %}" class="btn btn-primary"><b>Log in</b></a></li>
                     {% endif %}
                 </ul>
@@ -46,7 +47,7 @@
 
         <div class="container-lg">
             <div class="row">
-                <div class="col-md-6 m-auto">
+                <div class="col-md-8 m-auto">
                     {% block content %}{% endblock %}
                 </div>
             </div>

@@ -3,7 +3,7 @@
 # redirect function redirects the user to another URL after log in has been successful.
 from django.shortcuts import render, redirect
 # Importa o formulário de criação e autenticação de usuário:
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 # Imports the decorator for the login required views:
 from django.contrib.auth.decorators import login_required
@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 # Importing HTTP responses and File response (the last one for downloading files):
 from django.http import HttpResponse, FileResponse
+from django.db import IntegrityError
 import pathlib
 import os
 
@@ -27,6 +28,31 @@ def home(request):
 
 def about(request):
     return render(request, 'srm_solver/about.html')
+
+
+def signupuser(request):
+    """
+    Logs in the user and redirects to the automation home page.
+    :param request:
+    :return:
+    """
+    if request.method == 'GET':
+        # In case the user has just entered the page:
+        return render(request, 'srm_solver/signupuser.html', {'sign_form': UserCreationForm()})
+    else:  # in case the user has already posted the request
+        if request.POST['password1'] == request.POST['password2']:
+            # Creating a new user:
+            try:
+                user = User.objects.create_user(request.POST['username'], password=request.POST['password1'])
+                user.save()
+                login(request, user)
+                return redirect('home')
+            except IntegrityError:
+                return render(request, 'srm_solver/signupuser.html', {'sign_form': UserCreationForm(),
+                                                                      'error': 'That username has already been taken.'})
+        else:
+            return render(request, 'srm_solver/signupuser.html', {'sign_form': UserCreationForm(),
+                                                                  'error': 'Passwords did not match.'})
 
 
 def loginuser(request):
