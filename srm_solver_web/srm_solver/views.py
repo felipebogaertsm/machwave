@@ -83,3 +83,7 @@ def logoutuser(request):
         logout(request)
         # In case the user logs out, he is redirected to the home page.
         return redirect('home')
+
+
+def create_srm(request):
+    return render(request, 'srm_solver/create_srm.html')
