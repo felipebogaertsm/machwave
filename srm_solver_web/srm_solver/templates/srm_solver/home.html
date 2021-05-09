@@ -2,25 +2,29 @@
 
 {% block content %}
 
-<h1 class="">Home page</h1>
+<div class="col-sm-12 col-md-8 m-auto">
 
-<br>
+    <h1 class="">Home page</h1>
 
-<h3>Welcome!</h3>
+    <br>
 
-<br>
+    <h3>Welcome!</h3>
 
-<div class="card">
-  <div class="card-body">
-    <h5 class="card-title">SRM Solver web app</h5>
-    <h6 class="card-subtitle mb-2 text-muted">Simulate a solid rocket motor from your own web browser</h6>
-  </div>
-</div>
+    <br>
 
-<br>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">SRM Solver web app</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Simulate a solid rocket motor from your own web browser</h6>
+        </div>
+    </div>
 
-<div>
-  <a href="{% url 'create_srm' %}" class="btn btn-primary">Create SRM</a>
+    <br>
+
+    <div>
+        <a href="{% url 'create_srm' %}" class="btn btn-primary">Create SRM</a>
+    </div>
+
 </div>
 
 {% endblock %}
