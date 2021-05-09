@@ -24,6 +24,7 @@ urlpatterns = [
     path('login/', views.loginuser, name='loginuser'),
     path('logout/', views.logoutuser, name='logoutuser'),
     path('signup/', views.signupuser, name='signupuser'),
+    path('createsrm/', views.create_srm, name='create_srm'),
 
     # Pages:
     path('', views.home, name='home'),

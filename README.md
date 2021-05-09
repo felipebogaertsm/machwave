@@ -11,7 +11,7 @@ obtained from the a015140 paper.
 
 No erosive burning correction has been written (yet).
 
-### HOW TO USE:
+### HOW TO USE (as a script):
 
 Input the desired motor data inside the INPUTS section. Run the program and the main results will be displayed in the
 Command Window. Inside the output folder created, a .eng and a .csv file will also be available with the important data
