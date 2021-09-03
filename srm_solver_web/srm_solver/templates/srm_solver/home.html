@@ -4,25 +4,25 @@
 
 <div class="col-sm-12 col-md-8 m-auto">
 
-    <h1 class="">Home page</h1>
-
-    <br>
+    <h1 class="py-4">Home page</h1>
 
     <h3>Welcome!</h3>
 
-    <br>
-
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">SRM Solver web app</h5>
-            <h6 class="card-subtitle mb-2 text-muted">Simulate a solid rocket motor from your own web browser</h6>
+    <div class="py-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">SRM Solver web app</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Simulate a solid rocket motor from your own web browser</h6>
+            </div>
         </div>
     </div>
 
     <br>
 
-    <div>
-        <a href="{% url 'create_srm' %}" class="btn btn-primary">Create SRM</a>
+    <div class="container">
+        <div class="row justify-content-center">
+            <a href="{% url 'create_srm' %}" class="btn btn-primary col-2">Create a Motor</a>
+        </div>
     </div>
 
 </div>

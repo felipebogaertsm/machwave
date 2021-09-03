@@ -25,6 +25,7 @@ urlpatterns = [
     path('logout/', views.logoutuser, name='logoutuser'),
     path('signup/', views.signupuser, name='signupuser'),
     path('createsrm/', views.create_srm, name='create_srm'),
+    path('createsrm/propellant/', views.create_srm_propellant, name='create_srm_propellant'),
 
     # Pages:
     path('', views.home, name='home'),

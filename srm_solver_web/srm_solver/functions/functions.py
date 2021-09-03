@@ -308,6 +308,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     else:
         print(f' Propellant initial mass {ib_parameters.m_prop[0] * 1e3:.3f} g')
     print(' Mean Kn: %.2f' % np.mean(ib_parameters.Kn))
+    print(' Max Kn: %.2f' % np.max(ib_parameters.Kn))
     print(f' Initial to final Kn ratio: {ib_parameters.initial_to_final_kn:.3f}')
     print(f' Volumetric efficiency: {(ib_parameters.V_prop[0] * 100 / ib_parameters.V_empty):.3f} %')
     print(f' Grain length for neutral profile vector: {ib_parameters.optimal_grain_length}')

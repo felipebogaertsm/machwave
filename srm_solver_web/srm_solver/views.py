@@ -86,4 +86,8 @@ def logoutuser(request):
 
 
 def create_srm(request):
-    return render(request, 'srm_solver/create_srm.html')
+    return redirect('create_srm_propellant')
+
+
+def create_srm_propellant(request):
+    return render(request, 'srm_solver/create_srm_propellant.html')
