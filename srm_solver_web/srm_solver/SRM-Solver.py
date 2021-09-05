@@ -21,8 +21,8 @@
 
 import time
 
-from functions.MotorStructure import *
-from functions.Simulation import *
+from functions.structure import *
+from functions.simulation import *
 from functions.functions import *
 
 # ______________________________________________________________________________
@@ -41,7 +41,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 20.942
+m_motor = 21.013
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:

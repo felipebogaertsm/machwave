@@ -3,8 +3,8 @@
 
 import fluids.atmosphere as atm
 
-from functions.Ballistics import *
-from functions.InternalBallistics import *
+from functions.ballistics import *
+from functions.internal_ballistics import *
 
 
 def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt, h0, P_igniter, rail_length):
