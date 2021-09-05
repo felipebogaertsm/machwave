@@ -24,10 +24,12 @@ urlpatterns = [
     path('login/', views.loginuser, name='loginuser'),
     path('logout/', views.logoutuser, name='logoutuser'),
     path('signup/', views.signupuser, name='signupuser'),
+
+    # SRM Solver web app:
     path('createsrm/', views.create_srm, name='create_srm'),
     path('createsrm/propellant/', views.create_srm_propellant, name='create_srm_propellant'),
 
-    # Pages:
+    # Other:
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
 ]

@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.optimize
 
-from functions.Propellant import *
+from functions.propellant import *
 
 
 # Internal Ballistic related functions:
