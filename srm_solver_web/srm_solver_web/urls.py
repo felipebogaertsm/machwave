@@ -28,6 +28,10 @@ urlpatterns = [
     # SRM Solver web app:
     path('createsrm/', views.create_srm, name='create_srm'),
     path('createsrm/propellant/', views.create_srm_propellant, name='create_srm_propellant'),
+    path('createsrm/grain/', views.create_srm_grain, name='create_srm_grain'),
+    path('createsrm/structure/', views.create_srm_structure, name='create_srm_structure'),
+    path('createsrm/rocket/', views.create_srm_rocket, name='create_srm_rocket'),
+    path('createsrm/recovery/', views.create_srm_recovery, name='create_srm_recovery'),
 
     # Other:
     path('', views.home, name='home'),

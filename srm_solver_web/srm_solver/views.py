@@ -91,3 +91,19 @@ def create_srm(request):
 
 def create_srm_propellant(request):
     return render(request, 'srm_solver/create_srm_propellant.html')
+
+
+def create_srm_grain(request):
+    return render(request, 'srm_solver/create_srm_grain.html')
+
+
+def create_srm_structure(request):
+    return render(request, 'srm_solver/create_srm_structure.html')
+
+
+def create_srm_rocket(request):
+    return render(request, 'srm_solver/create_srm_rocket.html')
+
+
+def create_srm_recovery(request):
+    return render(request, 'srm_solver/create_srm_recovery.html')
