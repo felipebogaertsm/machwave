@@ -1,5 +1,5 @@
 <div class="row">
-    <nav class="col-12 col-md-3 col-lg-2 d-flex flex-column p-3 min-vh-100 bg-light h-100 sticky-top">
+    <nav class="col-12 col-md-4 col-lg-3 p-3 min-vh-100 bg-light h-100 sticky-top">
         <div class="px-2">
             <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
                 <i class="fas fa-toolbox"></i>
@@ -8,13 +8,17 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
-                <a href="#" class="nav-link link-dark active" aria-current="page">
+                {% if propellant %}
+                <a href="{% url 'create_srm_propellant' %}" class="nav-link link-dark active" aria-current="page">
+                {% else %}
+                <a href="{% url 'create_srm_propellant' %}" class="nav-link link-dark" aria-current="page">
+                {% endif %}
                     <i class="fas fa-gas-pump"></i>
                     <span class="fs-6 px-2">Propellant</span>
                 </a>
                 </li>
                 <li>
-                <a href="#" class="nav-link link-dark">
+                <a href="{% url 'create_srm_grain' %}" class="nav-link link-dark">
                     <i class="fas fa-dot-circle"></i>
                     <span class="fs-6 px-2">Grain</span>
                 </a>
