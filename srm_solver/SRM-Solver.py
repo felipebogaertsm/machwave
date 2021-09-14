@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 by Felipe Bogaerts de Mattos.
-# All rights reserved. Proprietary and confidential.
+# Author: Felipe Bogaerts de Mattos
 # Contact me at felipe.bogaerts@engenharia.ufjf.br.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
 
 # This is the main file to execute the program in script mode. The inputs must
 # be hard coded and this file must be run inside an environment where all the
@@ -53,17 +55,17 @@ dt = 1e-2
 # thrust produced is 0.
 ddt = 10
 # Minimal safety factor:
-sf = 4
+safety_factor = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-N = 7
+grain_count = 7
 # Grain external diameter [m]:
-D_grain = 117e-3
-# Grains 1 to 'N' core diameter [m]:
-D_core = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
-# Grains 1 to 'N' length [m]:
-L_grain = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
+grain_outer_diameter = 117e-3
+# Grains 1 to 'grain_count' core diameter [m]:
+grain_core_diameter = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
+# Grains 1 to 'grain_count' length [m]:
+grain_length = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
@@ -73,44 +75,42 @@ propellant = 'knsb-nakka'
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
-D_in = 128.2e-3
+casing_inner_diameter = 128.2e-3
 # Chamber outside diameter [m]:
-D_out = 141.3e-3
+casing_outer_diameter = 141.3e-3
 # Liner thickness [m]
 liner_thickness = 3e-3
 # Throat diameter [m]:
-D_throat = 37e-3
+nozzle_throat_diameter = 37e-3
 # Nozzle divergent and convergent angle [degrees]:
-Div_angle, Conv_angle = 12, 30
+divergent_angle, convergent_angle = 12, 30
 # Expansion ratio:
-Exp_ratio = 8
+expansion_ratio = 8
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
 C1 = 0.00506
 C2 = 0.00000
 
 # EXTERNAL CONDITIONS
-# External temperature [K]:
-T_external = 297
 # Igniter pressure [Pa]:
-P_igniter = 1.5e6
-# Elevation [m]:
-h0 = 645
+igniter_pressure = 1.5e6
+# Elevation above mean sea level [m]:
+initial_elevation_amsl = 645
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
-Y_chamber = 192e6
+casing_yield_strength = 192e6
 # Bulkhead yield strength [Pa]:
-Y_bulkhead = 255e6
+bulkhead_yield_strength = 255e6
 # Nozzle material yield strength [Pa]:
-Y_nozzle = 215e6
+nozzle_yield_strength = 215e6
 
 # FASTENER DATA
 # Screw diameter (excluding threads) [m]:
-D_screw = 6.75e-3
+screw_diameter = 6.75e-3
 # Screw clearance hole diameter [m]:
-D_clearance = 8.5e-3
+screw_clearance_diameter = 8.5e-3
 # Tensile strength of the screw [Pa]:
-U_screw = 510e6
+screw_ultimate_strength = 510e6
 # Maximum number of fasteners:
 max_number_of_screws = 30
 
@@ -118,21 +118,21 @@ max_number_of_screws = 30
 # Mass of the rocket without the motor [kg]:
 mass_wo_motor = 28
 # Rocket drag coefficient:
-Cd = 0.5
+drag_coeff = 0.5
 # Frontal diameter [m]:
-D_rocket = 170e-3
+rocket_outer_diameter = 170e-3
 # Launch rail length [m]
 rail_length = 5
 # Time after apogee for drogue parachute activation [s]
 drogue_time = 1
 # Drogue drag coefficient
-Cd_drogue = 1.75
+drag_coeff_drogue = 1.75
 # Drogue effective diameter [m]
-D_drogue = 1.25
+drogue_diameter = 1.25
 # Main parachute drag coefficient [m]
-Cd_main = 2
+drag_coeff_main = 2
 # Main parachute effective diameter [m]
-D_main = 2.66
+main_diameter = 2.66
 # Main parachute height activation [m]
 main_chute_activation_height = 500
 
@@ -149,28 +149,36 @@ main_chute_activation_height = 500
 # 'Propellant.py' to return the required data.
 propellant_data = prop_data(propellant)
 
-# Combustion chamber length [m]:
-L_chamber = np.sum(L_grain) + (N - 1) * grain_spacing
-# Combustion chamber inner diameter (casing ID minus liner thickness) [m]:
-D_chamber = D_in - 2 * liner_thickness
-
 # Defining 'grain' as an instance of 'BATES' class:
-grain = BATES(N, D_grain, D_core, L_grain)
+grain = BATES(grain_count, grain_outer_diameter, grain_core_diameter, grain_length)
 
 # Defining 'structure' as an instance of the 'MotorStructure' class:
 structure = MotorStructure(
-    sf, m_motor, D_in, D_out, D_chamber, L_chamber, D_screw, D_clearance,
-    D_throat, get_circle_area(D_throat), C1,
-    C2, Div_angle, Conv_angle, Exp_ratio, Y_chamber, Y_nozzle, Y_bulkhead,
-    U_screw, max_number_of_screws
+    safety_factor,
+    m_motor,
+    casing_inner_diameter,
+    casing_outer_diameter,
+    screw_diameter,
+    screw_clearance_diameter,
+    nozzle_throat_diameter,
+    C1,
+    C2,
+    divergent_angle,
+    convergent_angle,
+    expansion_ratio,
+    casing_yield_strength,
+    nozzle_yield_strength,
+    bulkhead_yield_strength,
+    screw_ultimate_strength,
+    max_number_of_screws=max_number_of_screws,
 )
 
 # Defining 'rocket' as an instance of 'Rocket' class:
-rocket = Rocket(mass_wo_motor, Cd, D_rocket)
+rocket = Rocket(mass_wo_motor, drag_coeff, rocket_outer_diameter)
 
 # Defining 'recovery' as an instance of 'Recovery' class:
 recovery = Recovery(
-    drogue_time, Cd_drogue, D_drogue, Cd_main, D_main,
+    drogue_time, drag_coeff_drogue, drogue_diameter, drag_coeff_main, main_diameter,
     main_chute_activation_height
 )
 
@@ -188,7 +196,7 @@ recovery = Recovery(
 
 ballistics, ib_parameters = run_ballistics(
     propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt,
-    h0, P_igniter, rail_length
+    initial_elevation_amsl, igniter_pressure, rail_length
 )
 
 # ______________________________________________________________________________
