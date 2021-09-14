@@ -22,18 +22,15 @@
 # 9) Plots.
 
 import time
+import numpy as np
 
-from classes.ballistics import *
-from classes.bates import *
-from classes.internal_ballistics import *
-from classes.motor_structure import *
+from classes.bates import Bates as BATES
+from classes.motor_structure import MotorStructure
 from classes.propellant import *
-from classes.recovery import *
-from classes.rocket import *
-from classes.structural_parameters import *
+from classes.recovery import Recovery
+from classes.rocket import Rocket
 
 from simulations.internal_balistics_coupled import run_ballistics
-from functions.functions import *
 
 # ______________________________________________________________________________
 # TIME FUNCTION START
@@ -163,7 +160,7 @@ propellant_data = prop_data(
 grain = BATES(
     segment_count=segment_count,
     outer_diameter=grain_outer_diameter,
-    inner_diameter=grain_core_diameter,
+    core_diameter=grain_core_diameter,
     segment_length=segment_length,
 )
 
@@ -171,6 +168,8 @@ grain = BATES(
 structure = MotorStructure(
     safety_factor=safety_factor,
     motor_structural_mass=motor_structural_mass,
+    chamber_length=np.sum(segment_length) + (segment_count - 1) * grain_spacing,
+    chamber_inner_diameter=casing_inner_diameter - 2 * liner_thickness,
     casing_inner_diameter=casing_inner_diameter,
     casing_outer_diameter=casing_outer_diameter,
     screw_diameter=screw_diameter,
@@ -190,19 +189,19 @@ structure = MotorStructure(
 
 # Defining 'rocket' as an instance of 'Rocket' class:
 rocket = Rocket(
-    mass_wo_motor,
-    drag_coeff,
-    rocket_outer_diameter
+    mass_wo_motor=mass_wo_motor,
+    drag_coeff=drag_coeff,
+    rocket_outer_diameter=rocket_outer_diameter,
 )
 
 # Defining 'recovery' as an instance of 'Recovery' class:
 recovery = Recovery(
-    drogue_time,
-    drag_coeff_drogue,
-    drogue_diameter,
-    drag_coeff_main,
-    main_diameter,
-    main_chute_activation_height,
+    drogue_time=drogue_time,
+    drag_coeff_drogue=drag_coeff_drogue,
+    drogue_diameter=drogue_diameter,
+    drag_coeff_main=drag_coeff_main,
+    main_diameter=main_diameter,
+    main_chute_activation_height=main_chute_activation_height,
 )
 
 # ______________________________________________________________________________
@@ -217,79 +216,79 @@ recovery = Recovery(
 # 'run_ballistics' returns instances of the classes Ballistics and
 # InternalBallistics.
 
-ballistics, ib_parameters = run_ballistics(
-    propellant,
-    propellant_data,
-    grain,
-    structure,
-    rocket,
-    recovery,
-    dt,
-    ddt,
-    initial_elevation_amsl,
-    igniter_pressure,
-    rail_length,
-)
-
-# ______________________________________________________________________________
-# MOTOR STRUCTURE
-# This section runs the structural simulation. The function
-# 'run_structural_simulation' returns an instance of the class
-# StructuralParameters.
-
-structural_parameters = run_structural_simulation(
-    structure,
-    ib_parameters
-)
-
-# ______________________________________________________________________________
-# RESULTS
-# This section prints the important data based on previous calculations.
-
-print_results(
-    grain,
-    structure,
-    propellant_data,
-    ib_parameters,
-    structural_parameters,
-    ballistics,
-)
-
-# ______________________________________________________________________________
-# OUTPUT TO ENG AND CSV FILE
-# This section exports the results inside a .csv and a .eng file. The .eng
-# file is totally compatible with OpenRocket or RASAero software. The .csv is
-# exported mainly for the ease of visualization and storage.
-
-output_eng_csv(
-    ib_parameters,
-    structure,
-    propellant_data,
-    25,
-    dt,
-    manufacturer,
-    name,
-)
-
-# ______________________________________________________________________________
-# TIME FUNCTION END
-# Ends the time function.
-
-print('Execution time: %.4f seconds\n\n' % (time.time() - start))
-
-# ______________________________________________________________________________
-# PLOTS
-# Saves some of the most important plots to the 'output' folder.
-
-performance_figure = performance_plot(
-    ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust
-)
-main_figure = main_plot(
-    ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn,
-    ib_parameters.m_prop, ib_parameters.t_thrust
-)
-mass_flux_figure = mass_flux_plot(
-    ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-)
-ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)
-performance_interactive_plot(ib_parameters).show()
+# ballistics, ib_parameters = run_ballistics(
+#     propellant,
+#     propellant_data,
+#     grain,
+#     structure,
+#     rocket,
+#     recovery,
+#     dt,
+#     ddt,
+#     initial_elevation_amsl,
+#     igniter_pressure,
+#     rail_length,
+# )
+#
+# # ______________________________________________________________________________
+# # MOTOR STRUCTURE
+# # This section runs the structural simulation. The function
+# # 'run_structural_simulation' returns an instance of the class
+# # StructuralParameters.
+#
+# structural_parameters = run_structural_simulation(
+#     structure,
+#     ib_parameters
+# )
+#
+# # ______________________________________________________________________________
+# # RESULTS
+# # This section prints the important data based on previous calculations.
+#
+# print_results(
+#     grain,
+#     structure,
+#     propellant_data,
+#     ib_parameters,
+#     structural_parameters,
+#     ballistics,
+# )
+#
+# # ______________________________________________________________________________
+# # OUTPUT TO ENG AND CSV FILE
+# # This section exports the results inside a .csv and a .eng file. The .eng
+# # file is totally compatible with OpenRocket or RASAero software. The .csv is
+# # exported mainly for the ease of visualization and storage.
+#
+# output_eng_csv(
+#     ib_parameters,
+#     structure,
+#     propellant_data,
+#     25,
+#     dt,
+#     manufacturer,
+#     name,
+# )
+#
+# # ______________________________________________________________________________
+# # TIME FUNCTION END
+# # Ends the time function.
+#
+# print('Execution time: %.4f seconds\n\n' % (time.time() - start))
+#
+# # ______________________________________________________________________________
+# # PLOTS
+# # Saves some of the most important plots to the 'output' folder.
+#
+# performance_figure = performance_plot(
+#     ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust
+# )
+# main_figure = main_plot(
+#     ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn,
+#     ib_parameters.m_prop, ib_parameters.t_thrust
+# )
+# mass_flux_figure = mass_flux_plot(
+#     ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
+# )
+# ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)
+# performance_interactive_plot(ib_parameters).show()
