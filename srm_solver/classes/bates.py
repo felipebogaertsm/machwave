@@ -12,7 +12,7 @@ Stores BATES class and methods.
 import numpy as np
 
 
-class BATES:
+class Bates:
     def __init__(self,
         segment_count: int,
         outer_diameter: float,

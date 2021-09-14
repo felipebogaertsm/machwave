@@ -11,11 +11,15 @@ Stores MotorStructure class and methods.
 
 import numpy as np
 
+from functions.utilities import *
+
 
 class MotorStructure:
     def __init__(self,
         safety_factor,
         motor_structural_mass,
+        chamber_length,
+        chamber_inner_diameter,
         casing_inner_diameter,
         casing_outer_diameter,
         screw_diameter,
@@ -34,10 +38,10 @@ class MotorStructure:
     ):
         self.safety_factor = safety_factor
         self.motor_structural_mass = motor_structural_mass
+        self.chamber_length = chamber_length
+        self.chamber_inner_diameter = chamber_inner_diameter
         self.casing_inner_diameter = casing_inner_diameter
         self.casing_outer_diameter = casing_outer_diameter
-        self.chamber_diameter = chamber_diameter
-        self.chamber_length = chamber_length
         self.screw_diameter = screw_diameter
         self.screw_clearance_diameter = screw_clearance_diameter
         self.nozzle_throat_diameter = nozzle_throat_diameter
@@ -52,9 +56,7 @@ class MotorStructure:
         self.screw_ultimate_strength = screw_ultimate_strength
         self.max_number_of_screws = max_number_of_screws
 
-        self.throat_area = get_circle_area(nozzle_throat_diameter)
-
-    def get_chamber_length(self, grain_length, grain_count, gain_spacing):
+    def get_chamber_length(self, grain_length, grain_count, grain_spacing):
         """
         Returns the chamber length of the SRM, given the grain parameters.
         """
@@ -62,6 +64,9 @@ class MotorStructure:
 
     def get_chamber_inner_diameter(self, liner_thickness):
         return casing_inner_diameter - 2 * liner_thickness
+
+    def get_throat_area(self):
+        return get_circle_area(self.nozzle_throat_diameter)
 
     def get_bulkhead_thickness(
         self,
@@ -90,17 +95,17 @@ class MotorStructure:
         safe_yield_strength = nozzle_yield_strength / self.safety_factor
 
         nozzle_conv_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2) /
+            np.max(chamber_pressure) * self.casing_inner_diameter / 2) / (
             (safe_yield_strength - 0.6 * max_chamber_pressure * (np.cos(
                 np.deg2rad(convergent_angle))
-            )
+            ))
         )
 
         nozzle_div_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2) /
+            np.max(chamber_pressure) * self.casing_inner_diameter / 2) / (
             (safe_yield_strength - 0.6 * max_chamber_pressure * (np.cos(
                 np.deg2rad(divergent_angle))
-            )
+            ))
         )
 
         return nozzle_conv_thickness, nozzle_div_thickness

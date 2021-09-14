@@ -3,11 +3,23 @@
 
 import fluids.atmosphere as atm
 
-from functions.ballistics import *
-from functions.internal_ballistics import *
+from classes.ballistics import *
+from classes.internal_ballistics import *
 
 
-def run_ballistics(prop, propellant, grain, structure, rocket, recovery, dt, ddt, h0, P_igniter, rail_length):
+def run_ballistics(
+    prop,
+    propellant,
+    grain,
+    structure,
+    rocket,
+    recovery,
+    dt,
+    ddt,
+    h0,
+    P_igniter,
+    rail_length
+):
     """
     Runs the main loop of the SRM Solver program, returning all the IB and ballistics parameters as instances of the
     InternalBallistics and Ballistics classes.

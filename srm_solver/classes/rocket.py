@@ -11,7 +11,7 @@ Stores Rocket class and methods.
 
 
 class Rocket:
-    def __init__(self, mass_wo_motor, Cd, D_rocket):
+    def __init__(self, mass_wo_motor, drag_coeff, rocket_outer_diameter):
         self.mass_wo_motor = mass_wo_motor
-        self.Cd = Cd
-        self.D_rocket = D_rocket
+        self.drag_coeff = drag_coeff
+        self.rocket_outer_diameter = rocket_outer_diameter

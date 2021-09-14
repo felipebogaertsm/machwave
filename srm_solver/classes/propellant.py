@@ -77,7 +77,7 @@ def prop_data(prop_name: str):
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             kndx.ce, kndx.pp, kndx.k_mix_ch, kndx.k_2ph_ex, kndx.T0_ideal, kndx.M_ch, kndx.M_ex, kndx.Isp_frozen, \
             kndx.Isp_shifting, kndx.qsi_ch, kndx.qsi_ex
-    elif prop_name.lower() == 'knsb' or prop.lower() == 'knsb-nakka':
+    elif prop_name.lower() == 'knsb' or prop_name.lower() == 'knsb-nakka':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             knsb.ce, knsb.pp, knsb.k_mix_ch, knsb.k_2ph_ex, knsb.T0_ideal, knsb.M_ch, knsb.M_ex, knsb.Isp_frozen, \
             knsb.Isp_shifting, knsb.qsi_ch, knsb.qsi_ex
