@@ -30,7 +30,10 @@ from classes.propellant import *
 from classes.recovery import Recovery
 from classes.rocket import Rocket
 
+from functions.utilities import *
+
 from simulations.internal_balistics_coupled import run_ballistics
+from simulations.structural import run_structural_simulation
 
 # /////////////////////////////////////////////////////////////////////////////
 # TIME FUNCTION START
@@ -236,46 +239,46 @@ ballistics, ib_parameters = run_ballistics(
 # 'run_structural_simulation' returns an instance of the class
 # StructuralParameters.
 
-# structural_parameters = run_structural_simulation(
-#     structure,
-#     ib_parameters
-# )
-#
-# # /////////////////////////////////////////////////////////////////////////////
-# # RESULTS
-# # This section prints the important data based on previous calculations.
-#
-# print_results(
-#     grain,
-#     structure,
-#     propellant_data,
-#     ib_parameters,
-#     structural_parameters,
-#     ballistics,
-# )
-#
-# # /////////////////////////////////////////////////////////////////////////////
-# # OUTPUT TO ENG AND CSV FILE
-# # This section exports the results inside a .csv and a .eng file. The .eng
-# # file is totally compatible with OpenRocket or RASAero software. The .csv is
-# # exported mainly for the ease of visualization and storage.
-#
-# output_eng_csv(
-#     ib_parameters,
-#     structure,
-#     propellant_data,
-#     25,
-#     dt,
-#     manufacturer,
-#     name,
-# )
-#
-# # /////////////////////////////////////////////////////////////////////////////
-# # TIME FUNCTION END
-# # Ends the time function.
-#
-# print('Execution time: %.4f seconds\n\n' % (time.time() - start))
-#
+structural_parameters = run_structural_simulation(
+    structure,
+    ib_parameters
+)
+
+# /////////////////////////////////////////////////////////////////////////////
+# RESULTS
+# This section prints the important data based on previous calculations.
+
+print_results(
+    grain,
+    structure,
+    propellant_data,
+    ib_parameters,
+    structural_parameters,
+    ballistics,
+)
+
+# /////////////////////////////////////////////////////////////////////////////
+# OUTPUT TO ENG AND CSV FILE
+# This section exports the results inside a .csv and a .eng file. The .eng
+# file is totally compatible with OpenRocket or RASAero software. The .csv is
+# exported mainly for the ease of visualization and storage.
+
+output_eng_csv(
+    ib_parameters,
+    structure,
+    propellant_data,
+    25,
+    dt,
+    manufacturer,
+    name,
+)
+
+# /////////////////////////////////////////////////////////////////////////////
+# TIME FUNCTION END
+# Ends the time function.
+
+print('Execution time: %.4f seconds\n\n' % (time.time() - start))
+
 # # /////////////////////////////////////////////////////////////////////////////
 # # PLOTS
 # # Saves some of the most important plots to the 'output' folder.

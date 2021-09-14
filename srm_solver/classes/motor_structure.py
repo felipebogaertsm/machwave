@@ -70,12 +70,12 @@ class MotorStructure:
 
     def get_bulkhead_thickness(
         self,
-        bulkhead_yield_strength,
         chamber_pressure
     ):
         """
         Returns the thickness of a plane bulkhead pressure vessel.
         """
+        bulkhead_yield_strength = self.bulkhead_yield_strength
         bulkhead_thickness = self.casing_inner_diameter * \
                              (np.sqrt((0.75 * np.max(chamber_pressure)) /
                              (bulkhead_yield_strength / self.safety_factor)))
@@ -128,9 +128,9 @@ class MotorStructure:
 
         return bursting_pressure / max_chamber_pressure  # casing safety factor
 
-    def get_optimal_fasteners(self, chamber_pressure, screw_ultimate_strength):
+    def get_optimal_fasteners(self, chamber_pressure):
         max_number_of_screws = self.max_number_of_screws
-        chamber_yield_strength = self.chamber_yield_strength
+        casing_yield_strength = self.casing_yield_strength
         screw_ultimate_strength = self.screw_ultimate_strength
 
         shear_safety_factor = np.zeros(max_number_of_screws)
@@ -173,11 +173,13 @@ class MotorStructure:
 
             tear_stress = force_on_each_fastener / tear_area
             tear_safety_factor[screw_count - 1] = (
-                Y_cc / np.sqrt(3)
+                casing_yield_strength / np.sqrt(3)
             ) / tear_stress
 
             compression_stress = force_on_each_fastener / compression_area
-            compression_safety_factor[i - 1] = Y_cc / compression_stress
+            compression_safety_factor[screw_count - 1] = (
+                casing_yield_strength / compression_stress
+            )
 
         fastener_safety_factor = np.vstack(
             (
