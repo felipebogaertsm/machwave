@@ -11,6 +11,8 @@ Stores BATES class and methods.
 
 import numpy as np
 
+from functions.utilities import *
+
 
 class Bates:
     def __init__(self,
@@ -35,7 +37,6 @@ class Bates:
 
     def get_mass_flux_per_segment(
         self,
-        grain,
         burn_rate,
         propellant_density,
         x
@@ -51,10 +52,10 @@ class Bates:
             for i in range(np.size(burn_rate)):
                 for k in range(j + 1):
                     total_grain_Ab[j, i] = (
-                        total_grain_Ab[j, i] + get_burn_area(grain, x[i], k)
+                        total_grain_Ab[j, i] + self.get_burn_area(x[i], k)
                     )
                 segment_mass_flux[j, i] = (
-                    total_grain_Ab[j, i] * propellant_density * r[i]
+                    total_grain_Ab[j, i] * propellant_density * burn_rate[i]
                 )
                 segment_mass_flux[j, i] = (
                     segment_mass_flux[j, i] / (
@@ -79,7 +80,7 @@ class Bates:
             )
         )
 
-        return Ab
+        return burn_area
 
 
     def get_propellant_volume(self, x: float, j: int):
@@ -98,7 +99,7 @@ class Bates:
 
         return volume
 
-    def get_burn_profile(A_burn: list):
+    def get_burn_profile(self, A_burn: list):
         """ Returns string with burn profile. """
         if A_burn[0] / A_burn[-1] > 1.02:
             burn_profile = 'Regressive'

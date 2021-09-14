@@ -32,13 +32,13 @@ from classes.rocket import Rocket
 
 from simulations.internal_balistics_coupled import run_ballistics
 
-# ______________________________________________________________________________
+# /////////////////////////////////////////////////////////////////////////////
 # TIME FUNCTION START
 # Starts the timer.
 
 start = time.time()
 
-# ______________________________________________________________________________
+# /////////////////////////////////////////////////////////////////////////////
 # INPUTS
 # This section must be used to enter all the inputs for the script mode to be
 # executed.
@@ -141,7 +141,7 @@ main_diameter = 2.66
 # Main parachute height activation [m]
 main_chute_activation_height = 500
 
-# ______________________________________________________________________________
+# /////////////////////////////////////////////////////////////////////////////
 # PRE CALCULATIONS AND DEFINITIONS
 # This section is responsible for creating all of the instances of classes that
 # can be obtained from the input data.
@@ -191,7 +191,7 @@ structure = MotorStructure(
 rocket = Rocket(
     mass_wo_motor=mass_wo_motor,
     drag_coeff=drag_coeff,
-    rocket_outer_diameter=rocket_outer_diameter,
+    outer_diameter=rocket_outer_diameter,
 )
 
 # Defining 'recovery' as an instance of 'Recovery' class:
@@ -204,7 +204,7 @@ recovery = Recovery(
     main_chute_activation_height=main_chute_activation_height,
 )
 
-# ______________________________________________________________________________
+# /////////////////////////////////////////////////////////////////////////////
 # INTERNAL BALLISTICS AND TRAJECTORY
 # This section runs the main simulation of the program, returning the results
 # of all the internal ballistics and trajectory calculations.
@@ -216,32 +216,32 @@ recovery = Recovery(
 # 'run_ballistics' returns instances of the classes Ballistics and
 # InternalBallistics.
 
-# ballistics, ib_parameters = run_ballistics(
-#     propellant,
-#     propellant_data,
-#     grain,
-#     structure,
-#     rocket,
-#     recovery,
-#     dt,
-#     ddt,
-#     initial_elevation_amsl,
-#     igniter_pressure,
-#     rail_length,
-# )
-#
-# # ______________________________________________________________________________
-# # MOTOR STRUCTURE
-# # This section runs the structural simulation. The function
-# # 'run_structural_simulation' returns an instance of the class
-# # StructuralParameters.
-#
+ballistics, ib_parameters = run_ballistics(
+    prop=propellant,
+    propellant=propellant_data,
+    grain=grain,
+    structure=structure,
+    rocket=rocket,
+    recovery=recovery,
+    dt=dt,
+    ddt=ddt,
+    initial_elevation_amsl=initial_elevation_amsl,
+    igniter_pressure=igniter_pressure,
+    rail_length=rail_length,
+)
+
+# /////////////////////////////////////////////////////////////////////////////
+# MOTOR STRUCTURE
+# This section runs the structural simulation. The function
+# 'run_structural_simulation' returns an instance of the class
+# StructuralParameters.
+
 # structural_parameters = run_structural_simulation(
 #     structure,
 #     ib_parameters
 # )
 #
-# # ______________________________________________________________________________
+# # /////////////////////////////////////////////////////////////////////////////
 # # RESULTS
 # # This section prints the important data based on previous calculations.
 #
@@ -254,7 +254,7 @@ recovery = Recovery(
 #     ballistics,
 # )
 #
-# # ______________________________________________________________________________
+# # /////////////////////////////////////////////////////////////////////////////
 # # OUTPUT TO ENG AND CSV FILE
 # # This section exports the results inside a .csv and a .eng file. The .eng
 # # file is totally compatible with OpenRocket or RASAero software. The .csv is
@@ -270,13 +270,13 @@ recovery = Recovery(
 #     name,
 # )
 #
-# # ______________________________________________________________________________
+# # /////////////////////////////////////////////////////////////////////////////
 # # TIME FUNCTION END
 # # Ends the time function.
 #
 # print('Execution time: %.4f seconds\n\n' % (time.time() - start))
 #
-# # ______________________________________________________________________________
+# # /////////////////////////////////////////////////////////////////////////////
 # # PLOTS
 # # Saves some of the most important plots to the 'output' folder.
 #

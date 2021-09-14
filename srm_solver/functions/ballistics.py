@@ -27,14 +27,3 @@ class Ballistics:
         self.apogee_time = apogee_time
         self.flight_time = flight_time
         self.P_ext = P_ext
-
-
-def ballistics_ode(y, v, T, D, M, g):
-    """ Returns dydt and dvdt. """
-    if v < 0:
-        x = -1
-    else:
-        x = 1
-    dvdt = (T - x * D * (v ** 2)) / M - g
-    dydt = v
-    return dydt, dvdt
