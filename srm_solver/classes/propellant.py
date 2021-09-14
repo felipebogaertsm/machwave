@@ -68,24 +68,24 @@ kner = Propellant(0.94, 1820.0 * 0.95, 1.1390, 1.0426, 1608, 38.570 * 1e-3,
                   38.779 * 1e-3, 153.8, 156.0, 0.315, 0.321)
 
 
-def prop_data(prop: str):
+def prop_data(prop_name: str):
     """"
     Returns propellant data based on the propellant name entered by the user as a string.
     """
 
-    if prop.lower() == 'kndx':
+    if prop_name.lower() == 'kndx':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             kndx.ce, kndx.pp, kndx.k_mix_ch, kndx.k_2ph_ex, kndx.T0_ideal, kndx.M_ch, kndx.M_ex, kndx.Isp_frozen, \
             kndx.Isp_shifting, kndx.qsi_ch, kndx.qsi_ex
-    elif prop.lower() == 'knsb' or prop.lower() == 'knsb-nakka':
+    elif prop_name.lower() == 'knsb' or prop.lower() == 'knsb-nakka':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             knsb.ce, knsb.pp, knsb.k_mix_ch, knsb.k_2ph_ex, knsb.T0_ideal, knsb.M_ch, knsb.M_ex, knsb.Isp_frozen, \
             knsb.Isp_shifting, knsb.qsi_ch, knsb.qsi_ex
-    elif prop.lower() == 'knsu':
+    elif prop_name.lower() == 'knsu':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             knsu.ce, knsu.pp, knsu.k_mix_ch, knsu.k_2ph_ex, knsu.T0_ideal, knsu.M_ch, knsu.M_ex, knsu.Isp_frozen, \
             knsu.Isp_shifting, knsu.qsi_ch, knsu.qsi_ex
-    elif prop.lower() == 'kner':
+    elif prop_name.lower() == 'kner':
         ce, pp, k_mix_ch, k_2ph_ex, T0_ideal, M_ch, M_ex, Isp_frozen, Isp_shifting, qsi_ch, qsi_ex = \
             kner.ce, kner.pp, kner.k_mix_ch, kner.k_2ph_ex, kner.T0_ideal, kner.M_ch, kner.M_ex, kner.Isp_frozen, \
             kner.Isp_shifting, kner.qsi_ch, kner.qsi_ex
