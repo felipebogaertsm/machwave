@@ -37,3 +37,14 @@ def solve_cp_seidel(
     dP0dt = ((R * T0 * Ab * pp * r) -
              (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
     return dP0dt
+
+
+def ballistics_ode(y, v, T, D, M, g):
+    """ Returns dydt and dvdt. """
+    if v < 0:
+        x = -1
+    else:
+        x = 1
+    dvdt = (T - x * D * (v ** 2)) / M - g
+    dydt = v
+    return dydt, dvdt
