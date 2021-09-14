@@ -23,7 +23,15 @@
 
 import time
 
-from functions.structure import *
+from classes.ballistics import *
+from classes.bates import *
+from classes.internal_ballistics import *
+from classes.motor_structure import *
+from classes.propellant import *
+from classes.recovery import *
+from classes.rocket import *
+from classes.structural_parameters import *
+
 from functions.simulation import *
 from functions.functions import *
 
@@ -59,12 +67,12 @@ safety_factor = 4
 
 # BATES PROPELLANT INPUT
 # Grain count:
-grain_count = 7
+segment_count = 7
 # Grain external diameter [m]:
 grain_outer_diameter = 117e-3
-# Grains 1 to 'grain_count' core diameter [m]:
+# Grains 1 to 'segment_count' core diameter [m]:
 grain_core_diameter = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
-# Grains 1 to 'grain_count' length [m]:
+# Grains 1 to 'segment_count' length [m]:
 grain_length = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
@@ -150,7 +158,7 @@ main_chute_activation_height = 500
 propellant_data = prop_data(propellant)
 
 # Defining 'grain' as an instance of 'BATES' class:
-grain = BATES(grain_count, grain_outer_diameter, grain_core_diameter, grain_length)
+grain = BATES(segment_count, grain_outer_diameter, grain_core_diameter, grain_length)
 
 # Defining 'structure' as an instance of the 'MotorStructure' class:
 structure = MotorStructure(
@@ -174,12 +182,20 @@ structure = MotorStructure(
 )
 
 # Defining 'rocket' as an instance of 'Rocket' class:
-rocket = Rocket(mass_wo_motor, drag_coeff, rocket_outer_diameter)
+rocket = Rocket(
+    mass_wo_motor,
+    drag_coeff,
+    rocket_outer_diameter
+)
 
 # Defining 'recovery' as an instance of 'Recovery' class:
 recovery = Recovery(
-    drogue_time, drag_coeff_drogue, drogue_diameter, drag_coeff_main, main_diameter,
-    main_chute_activation_height
+    drogue_time,
+    drag_coeff_drogue,
+    drogue_diameter,
+    drag_coeff_main,
+    main_diameter,
+    main_chute_activation_height,
 )
 
 # ______________________________________________________________________________
@@ -195,8 +211,17 @@ recovery = Recovery(
 # InternalBallistics.
 
 ballistics, ib_parameters = run_ballistics(
-    propellant, propellant_data, grain, structure, rocket, recovery, dt, ddt,
-    initial_elevation_amsl, igniter_pressure, rail_length
+    propellant,
+    propellant_data,
+    grain,
+    structure,
+    rocket,
+    recovery,
+    dt,
+    ddt,
+    initial_elevation_amsl,
+    igniter_pressure,
+    rail_length,
 )
 
 # ______________________________________________________________________________
@@ -205,15 +230,22 @@ ballistics, ib_parameters = run_ballistics(
 # 'run_structural_simulation' returns an instance of the class
 # StructuralParameters.
 
-structural_parameters = run_structural_simulation(structure, ib_parameters)
+structural_parameters = run_structural_simulation(
+    structure,
+    ib_parameters
+)
 
 # ______________________________________________________________________________
 # RESULTS
 # This section prints the important data based on previous calculations.
 
 print_results(
-    grain, structure, propellant_data, ib_parameters, structural_parameters,
-    ballistics
+    grain,
+    structure,
+    propellant_data,
+    ib_parameters,
+    structural_parameters,
+    ballistics,
 )
 
 # ______________________________________________________________________________
@@ -223,7 +255,13 @@ print_results(
 # exported mainly for the ease of visualization and storage.
 
 output_eng_csv(
-    ib_parameters, structure, propellant_data, 25, dt, manufacturer, name
+    ib_parameters,
+    structure,
+    propellant_data,
+    25,
+    dt,
+    manufacturer,
+    name,
 )
 
 # ______________________________________________________________________________

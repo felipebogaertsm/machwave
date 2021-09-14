@@ -1,6 +1,12 @@
-# Burn rate data was gathered from Nakka and Magnus Gudnason paper 's072205'.
+# -*- coding: utf-8 -*-
+# Author: Felipe Bogaerts de Mattos
+# Contact me at felipe.bogaerts@engenharia.ufjf.br.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+
 # Propellant data was gathered from ProPEP3.
-#
+
 # n_ce: Combustion, two phase, heat loss, friction inefficiency factor
 # pp: Propellant density [kg/m^3]
 # k_mix_ch: Isentropic exponent (chamber)
@@ -126,7 +132,7 @@ def get_burn_rate_coefs(prop: str, P0: float):
         else:
             print('\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n')
             a, n = -1, -1
-    elif prop.lower() == 'knsb':
+    elif prop.lower() == 'knsb':  # from Magnus Gudnason paper 's072205'
         a, n = 5.132, 0.222
     elif prop.lower() == 'knsu':
         a, n = 8.260, 0.319
