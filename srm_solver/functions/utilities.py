@@ -62,8 +62,8 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print(f' Grain length for neutral profile vector: {ib_parameters.optimal_grain_length}')
 
     print(' Burn profile: ' + ib_parameters.burn_profile)
-    print(f' Initial port-to-throat (grain #{grain.N:d}): {ib_parameters.initial_port_to_throat:.3f}')
-    print(' Motor L/D ratio: %.3f' % (np.sum(grain.L_grain) / grain.D_grain))
+    print(f' Initial port-to-throat (grain #{grain.segment_count:d}): {ib_parameters.initial_port_to_throat:.3f}')
+    print(' Motor L/D ratio: %.3f' % (np.sum(grain.segment_length) / grain.outer_diameter))
     print(f' Max initial mass flux: {np.max(ib_parameters.grain_mass_flux):.3f} kg/s-m-m or '
           f'{np.max(ib_parameters.grain_mass_flux) * 1.42233e-3:.3f} lb/s-in-in')
 
@@ -78,7 +78,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
 
     print('\nNOZZLE DESIGN')
     print(f' Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}')
-    print(f' Nozzle exit diameter: {structure.D_throat * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm')
+    print(f' Nozzle exit diameter: {structure.nozzle_throat_diameter * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm')
     print(f' Average nozzle efficiency: {np.mean(ib_parameters.nozzle_eff) * 100:.3f} %')
 
     print('\nROCKET BALLISTICS')
@@ -119,8 +119,8 @@ def output_eng_csv(ib_parameters, structure, propellant, eng_res, dt, manufactur
     time = ib_parameters.t[: index[0][0]]
     thrust = ib_parameters.T[: index[0][0]]
     prop_vol = ib_parameters.V_prop[: index[0][0]]
-    motor_to_eng(time, thrust, dt, prop_vol, structure.D_out, structure.L_chamber, eng_res, propellant.pp,
-                 structure.m_motor, manufacturer, name)
+    motor_to_eng(time, thrust, dt, prop_vol, structure.casing_outer_diameter, structure.chamber_length, eng_res, propellant.pp,
+                 structure.motor_structural_mass, manufacturer, name)
     # Writing to output CSV file:
     motor_data = {'Time': time, 'Thrust': thrust, 'Prop_Mass': prop_vol * propellant.pp}
     motor_data_df = pd.DataFrame(motor_data)
