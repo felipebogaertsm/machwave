@@ -73,7 +73,7 @@ grain_outer_diameter = 117e-3
 # Grains 1 to 'segment_count' core diameter [m]:
 grain_core_diameter = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
 # Grains 1 to 'segment_count' length [m]:
-grain_length = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
+segment_length = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
 # Grain spacing (used to determine chamber length) [m]:
 grain_spacing = 10e-3
 
@@ -155,14 +155,21 @@ main_chute_activation_height = 500
 
 # The propellant name input above triggers the prop_data function inside
 # 'Propellant.py' to return the required data.
-propellant_data = prop_data(propellant)
+propellant_data = prop_data(
+    prop_name=propellant
+)
 
 # Defining 'grain' as an instance of 'BATES' class:
-grain = BATES(segment_count, grain_outer_diameter, grain_core_diameter, grain_length)
+grain = BATES(
+    segment_count=segment_count,
+    outer_diameter=grain_outer_diameter,
+    inner_diameter=grain_core_diameter,
+    segment_length=segment_length,
+)
 
 # Defining 'structure' as an instance of the 'MotorStructure' class:
 structure = MotorStructure(
-    safety_factor,
+    safety_factor=safety_factor,
     m_motor,
     casing_inner_diameter,
     casing_outer_diameter,
