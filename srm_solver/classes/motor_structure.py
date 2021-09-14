@@ -21,7 +21,6 @@ class MotorStructure:
         screw_diameter,
         screw_clearance_diameter,
         nozzle_throat_diameter,
-        A_throat,
         C1,
         C2,
         divergent_angle,

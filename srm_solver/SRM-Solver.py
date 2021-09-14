@@ -32,7 +32,7 @@ from classes.recovery import *
 from classes.rocket import *
 from classes.structural_parameters import *
 
-from functions.simulation import *
+from simulations.internal_balistics_coupled import run_ballistics
 from functions.functions import *
 
 # ______________________________________________________________________________
@@ -51,7 +51,7 @@ name = 'SRM5K'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
-m_motor = 21.013
+motor_structural_mass = 21.013
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:
@@ -170,21 +170,21 @@ grain = BATES(
 # Defining 'structure' as an instance of the 'MotorStructure' class:
 structure = MotorStructure(
     safety_factor=safety_factor,
-    m_motor,
-    casing_inner_diameter,
-    casing_outer_diameter,
-    screw_diameter,
-    screw_clearance_diameter,
-    nozzle_throat_diameter,
-    C1,
-    C2,
-    divergent_angle,
-    convergent_angle,
-    expansion_ratio,
-    casing_yield_strength,
-    nozzle_yield_strength,
-    bulkhead_yield_strength,
-    screw_ultimate_strength,
+    motor_structural_mass=motor_structural_mass,
+    casing_inner_diameter=casing_inner_diameter,
+    casing_outer_diameter=casing_outer_diameter,
+    screw_diameter=screw_diameter,
+    screw_clearance_diameter=screw_clearance_diameter,
+    nozzle_throat_diameter=nozzle_throat_diameter,
+    C1=C1,
+    C2=C2,
+    divergent_angle=divergent_angle,
+    convergent_angle=convergent_angle,
+    expansion_ratio=expansion_ratio,
+    casing_yield_strength=casing_yield_strength,
+    nozzle_yield_strength=nozzle_yield_strength,
+    bulkhead_yield_strength=bulkhead_yield_strength,
+    screw_ultimate_strength=screw_ultimate_strength,
     max_number_of_screws=max_number_of_screws,
 )
 
