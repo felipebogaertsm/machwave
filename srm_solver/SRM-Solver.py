@@ -124,7 +124,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 28
+mass_wo_motor = 30
 # Rocket drag coefficient:
 drag_coeff = 0.5
 # Frontal diameter [m]:
@@ -255,6 +255,7 @@ print_results(
     ib_parameters,
     structural_parameters,
     ballistics,
+    rocket,
 )
 
 # /////////////////////////////////////////////////////////////////////////////
