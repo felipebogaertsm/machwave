@@ -57,11 +57,11 @@ motor_structural_mass = 21.013
 # .eng file resolution:
 eng_res = 25
 # Time step [s]:
-dt = 1e-2
+d_t = 1e-2
 # In order to optimize the speed of the program, the time step entered above is
-# multiplied by a factor 'ddt' after the propellant is finished burning and
+# multiplied by a factor 'dd_t' after the propellant is finished burning and
 # thrust produced is 0.
-ddt = 10
+dd_t = 10
 # Minimal safety factor:
 safety_factor = 4
 
@@ -226,8 +226,8 @@ ballistics, ib_parameters = run_ballistics(
     structure=structure,
     rocket=rocket,
     recovery=recovery,
-    dt=dt,
-    ddt=ddt,
+    d_t=d_t,
+    dd_t=dd_t,
     initial_elevation_amsl=initial_elevation_amsl,
     igniter_pressure=igniter_pressure,
     rail_length=rail_length,
@@ -269,7 +269,7 @@ output_eng_csv(
     structure,
     propellant_data,
     25,
-    dt,
+    d_t,
     manufacturer,
     name,
 )
