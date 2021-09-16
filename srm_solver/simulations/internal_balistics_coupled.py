@@ -1,5 +1,17 @@
-# This file contains most of the calculations of the internal ballistic and trajectory. This includes the main loop of
-# the program, which contains the calculations of the differential equations and several other important parameters.
+# -*- coding: utf-8 -*-
+# Author: Felipe Bogaerts de Mattos
+# Contact me at felipe.bogaerts@engenharia.ufjf.br.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+
+"""
+This file contains the function that simulates the internal ballistics and
+the rocket ballistics at the same time.
+
+The function uses the Runge-Kutta 4th order numerical method for solving
+the differential equations.
+"""
 
 import fluids.atmosphere as atm
 import numpy as np
@@ -145,6 +157,9 @@ def run_ballistics(
 
             Cf_atual, Cf_ideal_atual = get_thrust_coeff(P0[i], P_exit[i], P_ext[i], structure.expansion_ratio,
                                                         propellant.k_2ph_ex, n_cf[i])
+
+            # print(Cf_atual, Cf_ideal_atual)
+
             Cf = np.append(Cf, Cf_atual)
             Cf_ideal = np.append(Cf_ideal, Cf_ideal_atual)
             T = np.append(T, Cf[i] * structure.get_throat_area() * P0[i])
