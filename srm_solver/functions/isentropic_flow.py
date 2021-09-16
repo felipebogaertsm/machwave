@@ -99,16 +99,26 @@ def get_operational_correction_factors(
 
     # Kinetic losses
     if P0_psi >= 200:
-        n_kin = 33.3 * 200 * (propellant.Isp_frozen / propellant.Isp_shifting) / P0_psi
+        n_kin = 33.3 * 200 * (
+            propellant.Isp_frozen / propellant.Isp_shifting
+        ) / P0_psi
     else:
         n_kin = 0
 
     # Boundary layer and two phase flow losses
     if P_external / P0 <= critical_pressure_ratio:
 
-        termC2 = 1 + 2 * np.exp(- structure.C2 * P0_psi ** 0.8 * t / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2))
+        termC2 = 1 + 2 * np.exp(
+            - structure.C2 * P0_psi ** 0.8 * t / (
+                (structure.nozzle_throat_diameter / 0.0254) ** 0.2
+            )
+        )
         E_cf = 1 + 0.016 * structure.expansion_ratio ** - 9
-        n_bl = structure.C1 * ((P0_psi ** 0.8) / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2)) * termC2 * E_cf
+        n_bl = structure.C1 * (
+            (P0_psi ** 0.8) / (
+                (structure.nozzle_throat_diameter / 0.0254) ** 0.2
+            )
+        ) * termC2 * E_cf
 
         C7 = 0.454 * (P0_psi ** 0.33) * (propellant.qsi_ch ** 0.33) * (1 - np.exp(- 0.004 * (V0 / get_circle_area(
             structure.nozzle_throat_diameter)) / 0.0254) * (1 + 0.045 * structure.nozzle_throat_diameter / 0.0254))

@@ -89,7 +89,7 @@ def print_results(grain, structure, propellant, ib_parameters, structural_parame
     print(f' Time to apogee: {ballistics.apogee_time:.2f} s')
     print(f' Velocity out of the rail: {ballistics.v_rail:.2f} m/s')
     print(f' Height at motor burnout: {ballistics.y_burnout:.2f} m')
-    print(f' Liftoff mass: {structure.motor_structural_mass + ib_parameters.m_prop[0] + rocket.mass_wo_motor} kg')
+    print(f' Liftoff mass: {structure.motor_structural_mass + ib_parameters.m_prop[0] + rocket.mass_wo_motor:.3f} kg')
     print(f' Flight time: {ballistics.flight_time:.2f} s')
 
     print('\nPRELIMINARY STRUCTURAL PROJECT')

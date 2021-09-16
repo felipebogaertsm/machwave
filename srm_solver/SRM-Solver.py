@@ -47,7 +47,7 @@ start = time.time()
 # executed.
 
 # Motor name (NO SPACES):
-name = 'SRM5K'
+name = 'OLYMPUS-5KM'
 # Motor manufacturer (NO SPACES):
 manufacturer = 'LCP'
 # Motor structural mass [kg]:
@@ -91,7 +91,7 @@ liner_thickness = 3e-3
 # Throat diameter [m]:
 nozzle_throat_diameter = 37e-3
 # Nozzle divergent and convergent angle [degrees]:
-divergent_angle, convergent_angle = 12, 30
+divergent_angle, convergent_angle = 12, 45
 # Expansion ratio:
 expansion_ratio = 8
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
@@ -124,7 +124,7 @@ max_number_of_screws = 30
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 30
+mass_wo_motor = 29.256
 # Rocket drag coefficient:
 drag_coeff = 0.5
 # Frontal diameter [m]:
