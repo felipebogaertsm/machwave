@@ -38,7 +38,8 @@ def run_ballistics(
     rail_length
 ):
     """
-    Runs the main loop of the SRM Solver program, returning all the IB and ballistics parameters as instances of the
+    Runs the main loop of the SRM Solver program, returning all the internal
+    ballistics and ballistics parameters as instances of the
     InternalBallistics and Ballistics classes.
     """
 
