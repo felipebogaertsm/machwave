@@ -11,8 +11,18 @@ Stores StructuralParameters class and methods.
 
 
 class StructuralParameters:
-    def __init__(self, casing_sf, nozzle_conv_t, nozzle_div_t, bulkhead_t, optimal_fasteners, max_sf_fastener,
-                 shear_sf, tear_sf, compression_sf):
+    def __init__(
+        self,
+        casing_sf,
+        nozzle_conv_t,
+        nozzle_div_t,
+        bulkhead_t,
+        optimal_fasteners,
+        max_sf_fastener,
+        shear_sf,
+        tear_sf,
+        compression_sf
+    ):
         self.casing_sf = casing_sf
         self.nozzle_conv_t = nozzle_conv_t
         self.nozzle_div_t = nozzle_div_t

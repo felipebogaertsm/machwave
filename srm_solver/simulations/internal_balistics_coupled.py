@@ -280,13 +280,26 @@ def run_ballistics(
 
         # Entering first value for the vehicle mass and acceleration:
         if i == 0:
-            m_vehicle_initial = m_prop[0] + rocket.mass_wo_motor + structure.motor_structural_mass
+            m_vehicle_initial = (
+                m_prop[0] +
+                rocket.mass_wo_motor +
+                structure.motor_structural_mass
+            )
             m_vehicle = np.append(m_vehicle, m_vehicle_initial)
-            acc = np.array([T[0] / (rocket.mass_wo_motor + structure.motor_structural_mass + m_prop[0])])
+            acc = np.array(
+                [T[0] / (
+                    rocket.mass_wo_motor +
+                    structure.motor_structural_mass +
+                    m_prop[0]
+                )]
+            )
 
-        # Appending the current vehicle mass, consisting of the motor structural mass, mass without the motor and
-        # propellant mass.
-        m_vehicle = np.append(m_vehicle, m_prop[i] + structure.motor_structural_mass + rocket.mass_wo_motor)
+        # Appending the current vehicle mass, consisting of the motor
+        # structural mass, mass without the motor and propellant mass.
+        m_vehicle = np.append(
+            m_vehicle,
+            m_prop[i] + structure.motor_structural_mass + rocket.mass_wo_motor
+        )
 
         # Drag properties:
         if v[i] < 0 and y[i] <= recovery.main_chute_activation_height and m_prop[i] == 0:
@@ -375,18 +388,41 @@ def run_ballistics(
         flight_time,
         P_ext
     )
+
     optimal_grain_length = grain.get_optimal_segment_length()
     initial_port_to_throat = (
         (grain.core_diameter[- 1] ** 2) /
         (structure.nozzle_throat_diameter ** 2)
     )
+    
     burn_profile = grain.get_burn_profile(A_burn[A_burn != 0.0])
     Kn = A_burn / structure.get_throat_area()
     Kn_non_zero = Kn[Kn != 0.0]
     initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[- 1]
     grain_mass_flux = grain.get_mass_flux_per_segment(r, propellant.pp, web)
-    ib_parameters = InternalBallistics(t, P_0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, optimal_expansion_ratio,
-                                       V_prop, A_burn, Kn, m_prop, grain_mass_flux, optimal_grain_length,
-                                       initial_port_to_throat, burn_profile, empty_chamber_volume, initial_to_final_kn, P_exit)
+
+    ib_parameters = InternalBallistics(
+        t,
+        P_0,
+        T,
+        T_mean,
+        I_total,
+        I_sp,
+        t_burnout,
+        t_thrust,
+        nozzle_eff,
+        optimal_expansion_ratio,
+        V_prop,
+        A_burn,
+        Kn,
+        m_prop,
+        grain_mass_flux,
+        optimal_grain_length,
+        initial_port_to_throat,
+        burn_profile,
+        empty_chamber_volume,
+        initial_to_final_kn,
+        P_exit
+    )
 
     return ballistics, ib_parameters
