@@ -5,21 +5,23 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-# This is the main file to execute the program in script mode. The inputs must
-# be hard coded and this file must be run inside an environment where all the
-# modules listed in 'requirements.txt' are properly installed. The outputs can
-# be seen inside the folder 'output'.
+"""
+This is the main file to execute the program in script mode. The inputs must
+be hard coded and this file must be run inside an environment where all the
+modules listed in 'requirements.txt' are properly installed. The outputs can
+be seen inside the folder 'output'.
 
-# SRM-Solver.py is divided into 9 sections:
-# 1) Time function start;
-# 2) Inputs;
-# 3) Pre calculations and definitions;
-# 4) Internal ballistics and trajectory;
-# 5) Motor structure;
-# 6) Results;
-# 7) Output to eng and csv file;
-# 8) Time function end;
-# 9) Plots.
+SRM-Solver.py is divided into 9 sections:
+1) Time function start;
+2) Inputs;
+3) Pre calculations and definitions;
+4) Internal ballistics and trajectory;
+5) Motor structure;
+6) Results;
+7) Output to eng and csv file;
+8) Time function end;
+9) Plots.
+"""
 
 import time
 import numpy as np
