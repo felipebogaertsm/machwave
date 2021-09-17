@@ -11,7 +11,18 @@ Stores Ballistics class and methods.
 
 
 class Ballistics:
-    def __init__(self, t, y, v, acc, v_rail, y_burnout, Mach, apogee_time, flight_time, P_ext):
+    def __init__(
+        self,
+        t,
+        y,
+        v, acc,
+        v_rail,
+        y_burnout,
+        Mach,
+        apogee_time,
+        flight_time,
+        P_ext
+    ):
         self.t = t
         self.y = y
         self.v = v

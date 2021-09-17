@@ -17,7 +17,6 @@ import plotly.subplots
 
 
 def performance_interactive_plot(ib_parameters):
-
     index = np.where(ib_parameters.t == ib_parameters.t_thrust)[0][0]
     pressure_color = '#008141'
     thrust_color = '#581845'
@@ -52,8 +51,16 @@ def performance_interactive_plot(ib_parameters):
     figure.update_xaxes(title_text='Time (s)')
 
     # Set y-axes titles:
-    figure.update_yaxes(title_text="<b>Thrust</b> (N)", secondary_y=False, color='#6a006a')
-    figure.update_yaxes(title_text="<b>Pressure</b> (MPa)", secondary_y=True, color='#008141')
+    figure.update_yaxes(
+        title_text="<b>Thrust</b> (N)",
+        secondary_y=False,
+        color='#6a006a'
+    )
+    figure.update_yaxes(
+        title_text="<b>Pressure</b> (MPa)",
+        secondary_y=True,
+        color='#008141'
+    )
 
     return figure
 
@@ -107,7 +114,9 @@ def ballistics_plots(t, a, v, y, g):
 
 
 def pressure_plot(t, P0, t_burnout):
-    """ Returns plotly figure with pressure data. """
+    """
+    Returns plotly figure with pressure data.
+    """
     data = [go.Scatter(x=t[t <= t_burnout],
                        y=P0 * 1e-6,
                        mode='lines',
@@ -118,6 +127,7 @@ def pressure_plot(t, P0, t_burnout):
                        xaxis=dict(title='Time [s]'),
                        yaxis=dict(title='Pressure [MPa]'),
                        hovermode='closest')
+
     figure_plotly = go.Figure(data=data, layout=layout)
     figure_plotly.add_shape(
         type='line',
@@ -127,11 +137,14 @@ def pressure_plot(t, P0, t_burnout):
         y1=np.mean(P0) * 1e-6,
         line={'color': '#ff0000', }
     )
+
     return figure_plotly
 
 
 def thrust_plot(t, F):
-    """ Returns plotly figure with pressure data. """
+    """
+    Returns plotly figure with pressure data.
+    """
     data = [go.Scatter(x=t,
                        y=F,
                        mode='lines',
@@ -155,7 +168,9 @@ def thrust_plot(t, F):
 
 
 def height_plot(t, y):
-    """ Returns plotly figure with altitude data. """
+    """
+    Returns plotly figure with altitude data.
+    """
     data = [go.Scatter(x=t,
                        y=y,
                        mode='lines',
@@ -171,7 +186,9 @@ def height_plot(t, y):
 
 
 def velocity_plot(t, v):
-    """ Returns plotly figure with velocity data. """
+    """
+    Returns plotly figure with velocity data.
+    """
     data = [go.Scatter(x=t,
                        y=v,
                        mode='lines',
@@ -187,7 +204,10 @@ def velocity_plot(t, v):
 
 
 def performance_plot(F, P0, t, t_thrust):
-    """ Plots the chamber pressure and thrust in the same figure, saves to 'output' folder. """
+    """
+    Plots the chamber pressure and thrust in the same figure,
+    saves to 'output' folder.
+    """
 
     t = t[t <= t_thrust]
     F = F[: np.size(t)]
@@ -213,7 +233,9 @@ def performance_plot(F, P0, t, t_thrust):
 
 
 def main_plot(t, F, P0, Kn, m_prop, t_burnout):
-    """ Returns pyplot figure and saves motor plots to 'output' folder. """
+    """
+    Returns pyplot figure and saves motor plots to 'output' folder.
+    """
 
     t = t[t <= t_burnout]
     F = F[: np.size(t)]
