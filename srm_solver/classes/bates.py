@@ -12,6 +12,7 @@ Stores BATES class and methods.
 import numpy as np
 
 from functions.utilities import *
+from functions.geometric import *
 
 
 class Bates:

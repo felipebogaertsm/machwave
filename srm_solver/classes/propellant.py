@@ -118,8 +118,10 @@ def get_burn_rate_coefs(prop: str, P0: float):
         elif 8.502 < P0 * 1e-6 <= 11.20:
             a, n = 4.775, 0.442
         else:
-            print('\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n')
-            a, n = -1, -1
+            raise Exception(
+                'CHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle'
+                ' throat diameter.'
+            )
     elif prop.lower() == 'knsb-nakka':
         if P0 * 1e-6 <= 0.807:
             a, n = 10.708, 0.625
@@ -132,8 +134,10 @@ def get_burn_rate_coefs(prop: str, P0: float):
         elif 7.033 < P0 * 1e-6 <= 10.67:
             a, n = 9.653, 0.064
         else:
-            print('\nCHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle throat diameter.\n')
-            a, n = -1, -1
+            raise Exception(
+                'CHAMBER PRESSURE OUT OF BOUNDS, change Propellant or nozzle'
+                ' throat diameter.'
+            )
     elif prop.lower() == 'knsb':  # from Magnus Gudnason paper 's072205'
         a, n = 5.132, 0.222
     elif prop.lower() == 'knsu':
