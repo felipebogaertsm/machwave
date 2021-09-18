@@ -13,12 +13,6 @@ import numpy as np
 import pandas as pd
 
 
-def get_circle_area(diameter):
-    """ Returns the area of the circle based on circle diameter. """
-    area = np.pi * 0.25 * diameter ** 2
-    return area
-
-
 def motor_to_eng(
     t,
     F,

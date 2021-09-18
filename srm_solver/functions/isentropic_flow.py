@@ -12,10 +12,10 @@ Stores the functions that solve isentropic flow equations.
 import numpy as np
 import scipy.optimize
 
-from functions.utilities import *
+from functions.geometric import *
 
 
-def get_critical_pressure(k_mix_ch):
+def get_critical_pressure_ratio(k_mix_ch):
     """
     Returns value of the critical pressure ratio.
     """
@@ -194,6 +194,10 @@ def get_operational_correction_factors(
         n_bl = 0
 
     return n_kin, n_tp, n_bl
+
+
+def get_divergent_correction_factor(divergent_angle):
+    return 0.5 * (1 + np.cos(np.deg2rad(divergent_angle)))
 
 
 def get_expansion_ratio(
