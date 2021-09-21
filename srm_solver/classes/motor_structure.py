@@ -16,7 +16,8 @@ from functions.geometric import *
 
 
 class MotorStructure:
-    def __init__(self,
+    def __init__(
+        self,
         safety_factor,
         motor_structural_mass,
         chamber_length,
@@ -69,24 +70,24 @@ class MotorStructure:
     def get_throat_area(self):
         return get_circle_area(self.nozzle_throat_diameter)
 
-    def get_bulkhead_thickness(
-        self,
-        chamber_pressure
-    ):
+    def get_bulkhead_thickness(self, chamber_pressure):
         """
         Returns the thickness of a plane bulkhead pressure vessel.
         """
         bulkhead_yield_strength = self.bulkhead_yield_strength
-        bulkhead_thickness = self.casing_inner_diameter * \
-                             (np.sqrt((0.75 * np.max(chamber_pressure)) /
-                             (bulkhead_yield_strength / self.safety_factor)))
+        bulkhead_thickness = self.casing_inner_diameter * (
+            np.sqrt(
+                (0.75 * np.max(chamber_pressure))
+                / (bulkhead_yield_strength / self.safety_factor)
+            )
+        )
         return bulkhead_thickness
 
     def get_nozzle_thickness(
         self,
         chamber_pressure,
     ):
-        """ Returns nozzle convergent and divergent thickness """
+        """Returns nozzle convergent and divergent thickness"""
         max_chamber_pressure = np.max(chamber_pressure)
         convergent_angle = self.convergent_angle
         divergent_angle = self.divergent_angle
@@ -96,17 +97,25 @@ class MotorStructure:
         safe_yield_strength = nozzle_yield_strength / self.safety_factor
 
         nozzle_conv_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2) / (
-            (safe_yield_strength - 0.6 * max_chamber_pressure * (np.cos(
-                np.deg2rad(convergent_angle))
-            ))
+            np.max(chamber_pressure) * self.casing_inner_diameter / 2
+        ) / (
+            (
+                safe_yield_strength
+                - 0.6
+                * max_chamber_pressure
+                * (np.cos(np.deg2rad(convergent_angle)))
+            )
         )
 
         nozzle_div_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2) / (
-            (safe_yield_strength - 0.6 * max_chamber_pressure * (np.cos(
-                np.deg2rad(divergent_angle))
-            ))
+            np.max(chamber_pressure) * self.casing_inner_diameter / 2
+        ) / (
+            (
+                safe_yield_strength
+                - 0.6
+                * max_chamber_pressure
+                * (np.cos(np.deg2rad(divergent_angle)))
+            )
         )
 
         return nozzle_conv_thickness, nozzle_div_thickness
@@ -122,9 +131,8 @@ class MotorStructure:
         ) / 2
         max_chamber_pressure = np.max(chamber_pressure)
 
-        bursting_pressure = (
-            (casing_yield_strength * thickness) /
-            (self.casing_inner_diameter * 0.5 + 0.6 * thickness)
+        bursting_pressure = (casing_yield_strength * thickness) / (
+            self.casing_inner_diameter * 0.5 + 0.6 * thickness
         )
 
         return bursting_pressure / max_chamber_pressure  # casing safety factor
@@ -143,28 +151,33 @@ class MotorStructure:
 
             tear_area = (
                 (
-                    (np.pi * 0.25 * (
-                        (self.casing_outer_diameter ** 2) - \
-                        (self.casing_inner_diameter ** 2)
+                    np.pi
+                    * 0.25
+                    * (
+                        (self.casing_outer_diameter ** 2)
+                        - (self.casing_inner_diameter ** 2)
                     )
-                ) / screw_count) - \
-                (np.arcsin(
-                    (self.screw_clearance_diameter / 2) / \
-                    (self.casing_inner_diameter / 2))
-                ) * 0.25 * \
-                (
-                    (self.casing_outer_diameter ** 2) - \
-                    (self.casing_inner_diameter ** 2)
                 )
+                / screw_count
+            ) - (
+                np.arcsin(
+                    (self.screw_clearance_diameter / 2)
+                    / (self.casing_inner_diameter / 2)
+                )
+            ) * 0.25 * (
+                (self.casing_outer_diameter ** 2)
+                - (self.casing_inner_diameter ** 2)
             )
 
             compression_area = (
-                (self.casing_outer_diameter - self.casing_inner_diameter)
-            ) * self.screw_clearance_diameter / 2
+                ((self.casing_outer_diameter - self.casing_inner_diameter))
+                * self.screw_clearance_diameter
+                / 2
+            )
 
             force_on_each_fastener = (
-                np.max(chamber_pressure) * \
-                (np.pi * (self.casing_inner_diameter / 2) ** 2)
+                np.max(chamber_pressure)
+                * (np.pi * (self.casing_inner_diameter / 2) ** 2)
             ) / screw_count
 
             shear_stress = force_on_each_fastener / shear_area
@@ -199,5 +212,5 @@ class MotorStructure:
             max_safety_factor_fastener,
             shear_safety_factor,
             tear_safety_factor,
-            compression_safety_factor
+            compression_safety_factor,
         )

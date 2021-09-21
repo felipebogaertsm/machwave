@@ -49,9 +49,9 @@ start = time.time()
 # executed.
 
 # Motor name (NO SPACES):
-name = 'OLYMPUS-5KM'
+name = "OLYMPUS-5KM"
 # Motor manufacturer (NO SPACES):
-manufacturer = 'LCP'
+manufacturer = "LCP"
 # Motor structural mass [kg]:
 motor_structural_mass = 21.013
 
@@ -81,7 +81,7 @@ grain_spacing = 10e-3
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-propellant = 'knsb-nakka'
+propellant = "knsb-nakka"
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
@@ -157,9 +157,7 @@ main_chute_activation_height = 500
 
 # The propellant name input above triggers the prop_data function inside
 # 'Propellant.py' to return the required data.
-propellant_data = prop_data(
-    prop_name=propellant
-)
+propellant_data = prop_data(prop_name=propellant)
 
 # Defining 'grain' as an instance of 'BATES' class:
 grain = BATES(
@@ -173,7 +171,8 @@ grain = BATES(
 structure = MotorStructure(
     safety_factor=safety_factor,
     motor_structural_mass=motor_structural_mass,
-    chamber_length=np.sum(segment_length) + (segment_count - 1) * grain_spacing,
+    chamber_length=np.sum(segment_length)
+    + (segment_count - 1) * grain_spacing,
     chamber_inner_diameter=casing_inner_diameter - 2 * liner_thickness,
     casing_inner_diameter=casing_inner_diameter,
     casing_outer_diameter=casing_outer_diameter,
@@ -241,10 +240,7 @@ ballistics, ib_parameters = run_ballistics(
 # 'run_structural_simulation' returns an instance of the class
 # StructuralParameters.
 
-structural_parameters = run_structural_simulation(
-    structure,
-    ib_parameters
-)
+structural_parameters = run_structural_simulation(structure, ib_parameters)
 
 # /////////////////////////////////////////////////////////////////////////////
 # RESULTS
@@ -280,7 +276,7 @@ output_eng_csv(
 # TIME FUNCTION END
 # Ends the time function.
 
-print('Execution time: %.4f seconds\n\n' % (time.time() - start))
+print("Execution time: %.4f seconds\n\n" % (time.time() - start))
 
 # # /////////////////////////////////////////////////////////////////////////////
 # # PLOTS

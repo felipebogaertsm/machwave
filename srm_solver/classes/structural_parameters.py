@@ -21,7 +21,7 @@ class StructuralParameters:
         max_sf_fastener,
         shear_sf,
         tear_sf,
-        compression_sf
+        compression_sf,
     ):
         self.casing_sf = casing_sf
         self.nozzle_conv_t = nozzle_conv_t

@@ -23,7 +23,7 @@ def solve_cp_seidel(
     R: float,
     T0: float,
     r: float,
-    ):
+):
     """
     Calculates the chamber pressure by solving Hans Seidel's differential
     equation.
@@ -49,10 +49,12 @@ def solve_cp_seidel(
     if Pe / P0 <= critical_pressure_ratio:
         H = ((k / (k + 1)) ** 0.5) * ((2 / (k + 1)) ** (1 / (k - 1)))
     else:
-        H = ((Pe / P0) ** (1 / k)) * \
-            (((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5)
-    dP0_dt = ((R * T0 * Ab * pp * r) -
-             (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
+        H = ((Pe / P0) ** (1 / k)) * (
+            ((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5
+        )
+    dP0_dt = (
+        (R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))
+    ) / V0
     return dP0_dt
 
 
