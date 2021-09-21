@@ -13,7 +13,7 @@ import numpy as np
 
 
 def get_circle_area(diameter):
-    """ Returns the area of the circle based on circle diameter. """
+    """Returns the area of the circle based on circle diameter."""
     return np.pi * 0.25 * diameter ** 2
 
 

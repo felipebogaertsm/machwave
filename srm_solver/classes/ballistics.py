@@ -22,7 +22,7 @@ class Ballistics:
         Mach,
         apogee_time,
         flight_time,
-        P_ext
+        P_ext,
     ):
         self.t = t
         self.y = y

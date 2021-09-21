@@ -11,9 +11,30 @@ Stores Internal Ballistics class and methods
 
 
 class InternalBallistics:
-    def __init__(self, t, P0, T, T_mean, I_total, I_sp, t_burnout, t_thrust, nozzle_eff, E_opt, V_prop_CP, A_burn_CP,
-                 Kn, m_prop, grain_mass_flux, optimal_grain_length, initial_port_to_throat, burn_profile, V_empty,
-                 initial_to_final_kn, P_exit):
+    def __init__(
+        self,
+        t,
+        P0,
+        T,
+        T_mean,
+        I_total,
+        I_sp,
+        t_burnout,
+        t_thrust,
+        nozzle_eff,
+        E_opt,
+        V_prop_CP,
+        A_burn_CP,
+        Kn,
+        m_prop,
+        grain_mass_flux,
+        optimal_grain_length,
+        initial_port_to_throat,
+        burn_profile,
+        V_empty,
+        initial_to_final_kn,
+        P_exit,
+    ):
         self.t = t
         self.P0 = P0
         self.T = T

@@ -28,12 +28,10 @@ def get_opt_expansion_ratio(k, P_0, P_ext):
     specific heat ratio and external pressure.
     """
     exp_opt = (
-        (((k + 1) / 2) ** (1 / (k - 1))) *
-        ((P_ext / P_0) ** (1 / k)) *
-        np.sqrt(
-            ((k + 1) / (k - 1)) * (1 - (P_ext / P_0) ** ((k - 1) / k))
-        )
-    ) ** - 1
+        (((k + 1) / 2) ** (1 / (k - 1)))
+        * ((P_ext / P_0) ** (1 / k))
+        * np.sqrt(((k + 1) / (k - 1)) * (1 - (P_ext / P_0) ** ((k - 1) / k)))
+    ) ** -1
 
     return exp_opt
 
@@ -44,13 +42,12 @@ def get_exit_mach(k: float, E: float):
     """
     exit_mach_no = scipy.optimize.fsolve(
         lambda x: (
-            (
-                (1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1))
-            ) ** (
-                (k + 1) / (2 * (k - 1))
-            )
-        ) / x - E,
-        [10]
+            ((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1)))
+            ** ((k + 1) / (2 * (k - 1)))
+        )
+        / x
+        - E,
+        [10],
     )
     return exit_mach_no[0]
 
@@ -61,7 +58,7 @@ def get_exit_pressure(k_2ph_ex, E, P_0):
     """
     Mach_exit = get_exit_mach(k_2ph_ex, E)
     P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit ** 2) ** (
-        - k_2ph_ex / (k_2ph_ex - 1)
+        -k_2ph_ex / (k_2ph_ex - 1)
     )
     return P_exit
 
@@ -73,8 +70,9 @@ def get_thrust_coeff(P_0, P_exit, P_external, E, k, n_cf):
     """
     P_r = P_exit / P_0
     Cf_ideal = np.sqrt(
-        (2 * (k ** 2) / (k - 1)) *
-        ((2 / (k + 1)) ** ((k + 1) / (k - 1))) * (1 - (P_r ** ((k - 1) / k)))
+        (2 * (k ** 2) / (k - 1))
+        * ((2 / (k + 1)) ** ((k + 1) / (k - 1)))
+        * (1 - (P_r ** ((k - 1) / k)))
     )
     Cf = (Cf_ideal + E * (P_exit - P_external) / P_0) * n_cf
 
@@ -110,7 +108,7 @@ def get_operational_correction_factors(
     structure,
     critical_pressure_ratio,
     V0,
-    t
+    t,
 ):
     """
     Returns kinetic, two-phase and boundary layer correction factors based
@@ -128,9 +126,12 @@ def get_operational_correction_factors(
 
     # Kinetic losses
     if P_0_psi >= 200:
-        n_kin = 33.3 * 200 * (
-            propellant.Isp_frozen / propellant.Isp_shifting
-        ) / P_0_psi
+        n_kin = (
+            33.3
+            * 200
+            * (propellant.Isp_frozen / propellant.Isp_shifting)
+            / P_0_psi
+        )
     else:
         n_kin = 0
 
@@ -138,23 +139,35 @@ def get_operational_correction_factors(
     if P_external / P_0 <= critical_pressure_ratio:
 
         termC2 = 1 + 2 * np.exp(
-            - structure.C2 * P_0_psi ** 0.8 * t / (
-                (structure.nozzle_throat_diameter / 0.0254) ** 0.2
-            )
+            -structure.C2
+            * P_0_psi ** 0.8
+            * t
+            / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2)
         )
-        E_cf = 1 + 0.016 * structure.expansion_ratio ** - 9
-        n_bl = structure.C1 * (
-            (P_0_psi ** 0.8) / (
-                (structure.nozzle_throat_diameter / 0.0254) ** 0.2
+        E_cf = 1 + 0.016 * structure.expansion_ratio ** -9
+        n_bl = (
+            structure.C1
+            * (
+                (P_0_psi ** 0.8)
+                / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2)
             )
-        ) * termC2 * E_cf
+            * termC2
+            * E_cf
+        )
 
-        C7 = 0.454 * (P_0_psi ** 0.33) * (propellant.qsi_ch ** 0.33) * (
-            1 - np.exp(
-                - 0.004 * (V0 / get_circle_area(
-                    structure.nozzle_throat_diameter
-                )) / 0.0254
-            ) * (1 + 0.045 * structure.nozzle_throat_diameter / 0.0254)
+        C7 = (
+            0.454
+            * (P_0_psi ** 0.33)
+            * (propellant.qsi_ch ** 0.33)
+            * (
+                1
+                - np.exp(
+                    -0.004
+                    * (V0 / get_circle_area(structure.nozzle_throat_diameter))
+                    / 0.0254
+                )
+                * (1 + 0.045 * structure.nozzle_throat_diameter / 0.0254)
+            )
         )
         if 1 / propellant.M_ch >= 0.9:
             C4 = 0.5
@@ -183,11 +196,12 @@ def get_operational_correction_factors(
                 elif C7 > 8:
                     C3, C5, C6 = 25.2, 0.8, 0.33
         n_tp = C3 * (
-            (propellant.qsi_ch * C4 * C7 ** C5) / (
-                P_0_psi ** 0.15 * structure.expansion_ratio ** 0.08 * (
-                    structure.nozzle_throat_diameter / 0.0254
-                    ) ** C6
-                )
+            (propellant.qsi_ch * C4 * C7 ** C5)
+            / (
+                P_0_psi ** 0.15
+                * structure.expansion_ratio ** 0.08
+                * (structure.nozzle_throat_diameter / 0.0254) ** C6
+            )
         )
     else:
         n_tp = 0
@@ -201,10 +215,7 @@ def get_divergent_correction_factor(divergent_angle):
 
 
 def get_expansion_ratio(
-    P_e: list,
-    P_0: list,
-    k: float,
-    critical_pressure_ratio: float
+    P_e: list, P_0: list, k: float, critical_pressure_ratio: float
 ):
     """
     Returns array of the optimal expansion ratio for each pressure ratio.
@@ -220,11 +231,11 @@ def get_expansion_ratio(
         if P_e / P_0[i] <= critical_pressure_ratio:
             pressure_ratio = P_e / P_0[i]
             E[i] = (
-                ((k + 1) / 2) ** (1 / (k - 1)) * pressure_ratio ** (1 / k) * (
-                    (k + 1) / (k - 1) * (
-                        1 - pressure_ratio ** ((k - 1) / k))
-                    ) ** 0.5
-                ) ** - 1
+                ((k + 1) / 2) ** (1 / (k - 1))
+                * pressure_ratio ** (1 / k)
+                * ((k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k)))
+                ** 0.5
+            ) ** -1
         else:
             E[i] = 1
     return np.mean(E)

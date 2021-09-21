@@ -27,17 +27,21 @@ def run_structural_simulation(structure, ib_parameters):
     )
 
     # Bulkhead thickness [m]:
-    bulkhead_t = structure.get_bulkhead_thickness(
-        ib_parameters.P0
-    )
+    bulkhead_t = structure.get_bulkhead_thickness(ib_parameters.P0)
 
     # Screw safety factors and optimal quantity (shear, tear and compression):
-    optimal_fasteners, max_sf_fastener, shear_sf, tear_sf, compression_sf = \
-        structure.get_optimal_fasteners(
-            ib_parameters.P0,
-            )
+    (
+        optimal_fasteners,
+        max_sf_fastener,
+        shear_sf,
+        tear_sf,
+        compression_sf,
+    ) = structure.get_optimal_fasteners(
+        ib_parameters.P0,
+    )
 
-    return StructuralParameters(casing_sf,
+    return StructuralParameters(
+        casing_sf,
         nozzle_conv_t,
         nozzle_div_t,
         bulkhead_t,
@@ -45,5 +49,5 @@ def run_structural_simulation(structure, ib_parameters):
         max_sf_fastener,
         shear_sf,
         tear_sf,
-        compression_sf
+        compression_sf,
     )
