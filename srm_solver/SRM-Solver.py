@@ -108,7 +108,7 @@ initial_elevation_amsl = 645
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
-casing_yield_strength = 192e6
+casing_yield_strength = 172e6
 # Bulkhead yield strength [Pa]:
 bulkhead_yield_strength = 255e6
 # Nozzle material yield strength [Pa]:
