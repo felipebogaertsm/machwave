@@ -3,76 +3,71 @@
         "name": "knsb-nakka"
     },
     "grain": {
-        "count": "7",
-        "outerDiameter": [
-            "0.117",
-            "0.117",
-            "0.117",
-            "0.117",
-            "0.117",
-            "0.117",
-            "0.117"
-        ],
-        "innerDiameter": [
-            "0.045",
-            "0.045",
-            "0.045",
-            "0.045",
-            "0.060",
-            "0.060",
-            "0.060"
+        "count": 7,
+        "outerDiameter": 0.117,
+        "coreDiameter": [
+            0.045,
+            0.045,
+            0.045,
+            0.045,
+            0.060,
+            0.060,
+            0.060
         ],
         "length": [
-            "0.200",
-            "0.200",
-            "0.200",
-            "0.200",
-            "0.200",
-            "0.200",
-            "0.200"
+            0.200,
+            0.200,
+            0.200,
+            0.200,
+            0.200,
+            0.200,
+            0.200
         ],
-        "grain_spacing": "0.01"
+        "spacing": 0.01
     },
     "structure": {
-        "safetyFactor": "4",
-        "mass": "21.013",
-        "casingInnerDiameter": "0.1283",
-        "casingOuterDiameter": "0.1412",
-        "linerThickness": "0.003",
-        "nozzleThroatDiameter": "0.037",
-        "nozzleDivergentAngle": "12",
-        "nozzleConvergentAngle": "45",
-        "expansionRatio": "8",
-        "casingYieldStrength": "172000000",
-        "bulkheadYieldStrength": "255000000",
-        "nozzleYieldStrength": "251000000",
-        "screwDiameter": "0.00675",
-        "screwClearanceDiameter": "0.0085",
-        "maxScrewCount": "30"
+        "safetyFactor": 4,
+        "mass": 21.013,
+        "casingInnerDiameter": 0.1282,
+        "casingOuterDiameter": 0.1413,
+        "linerThickness": 0.003,
+        "nozzleThroatDiameter": 0.037,
+        "nozzleDivergentAngle": 12,
+        "nozzleConvergentAngle": 45,
+        "expansionRatio": 8,
+        "casingYieldStrength": 172000000,
+        "bulkheadYieldStrength": 255000000,
+        "nozzleYieldStrength": 251000000,
+        "screwDiameter": 0.00675,
+        "screwClearanceDiameter": 0.0085,
+        "screwUltimateStrength": 510000000,
+        "maxScrewCount": 30,
+        "casingC1": 0.00506,
+        "casingC2": 0.00000
     },
     "recovery": {
-        "drogueTime": "1",
-        "drogueDragCoeff": "1.75",
-        "drogueDiameter": "1.25",
-        "mainDragCoeff": "2",
-        "mainDiameter": "2.66",
-        "mainActivationHeight": "500"
+        "drogueTime": 1,
+        "drogueDragCoeff": 1.75,
+        "drogueDiameter": 1.25,
+        "mainDragCoeff": 2,
+        "mainDiameter": 2.66,
+        "mainActivationHeight": 500
     },
     "rocket": {
-        "massWithoutMotor": "29.256",
-        "dragCoeff": "0.5",
-        "outerDiameter": "0.170"
+        "massWithoutMotor": 29.256,
+        "dragCoeff": 0.5,
+        "outerDiameter": 0.170
     },
     "motor": {
         "name": "OLYMPUS-5KM",
         "manufacturer": "LCP"
     },
     "simulationSettings": {
-        "igniterPressure": "1500000",
-        "initialAmslElevation": "645",
-        "dt": "0.01",
-        "ddt": "10",
-        "engResolution": "25",
-        "railLength": "5"
+        "igniterPressure": 1500000,
+        "initialAmslElevation": 645,
+        "dt": 0.01,
+        "ddt": 10,
+        "engResolution": 25,
+        "railLength": 5
     }
 }

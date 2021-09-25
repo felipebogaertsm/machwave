@@ -25,6 +25,8 @@ SRM-Solver.py is divided into 9 sections:
 
 import time
 import numpy as np
+import json
+from pathlib import Path
 
 from classes.bates import Bates as BATES
 from classes.motor_structure import MotorStructure
@@ -33,6 +35,7 @@ from classes.recovery import Recovery
 from classes.rocket import Rocket
 
 from functions.utilities import *
+from functions.plots import *
 
 from simulations.internal_balistics_coupled import run_ballistics
 from simulations.structural import run_structural_simulation
@@ -48,103 +51,107 @@ start = time.time()
 # This section must be used to enter all the inputs for the script mode to be
 # executed.
 
+with open(Path("motor_input.json")) as motor_input:
+    data = json.load(motor_input)
+
 # Motor name (NO SPACES):
-name = "OLYMPUS-5KM"
+name = data["motor"]["name"]
 # Motor manufacturer (NO SPACES):
-manufacturer = "LCP"
+manufacturer = data["motor"]["manufacturer"]
 # Motor structural mass [kg]:
-motor_structural_mass = 21.013
+motor_structural_mass = data["structure"]["mass"]
 
 # SIMULATION PARAMETERS INPUT
 # .eng file resolution:
-eng_res = 25
+eng_res = data["simulationSettings"]["engResolution"]
 # Time step [s]:
-d_t = 1e-2
+d_t = data["simulationSettings"]["dt"]
 # In order to optimize the speed of the program, the time step entered above is
 # multiplied by a factor 'dd_t' after the propellant is finished burning and
 # thrust produced is 0.
-dd_t = 10
+dd_t = data["simulationSettings"]["ddt"]
 # Minimal safety factor:
-safety_factor = 4
+safety_factor = data["structure"]["safetyFactor"]
 
 # BATES PROPELLANT INPUT
 # Grain count:
-segment_count = 7
+segment_count = data["grain"]["count"]
 # Grain external diameter [m]:
-grain_outer_diameter = 117e-3
+grain_outer_diameter = data["grain"]["outerDiameter"]
 # Grains 1 to 'segment_count' core diameter [m]:
-grain_core_diameter = np.array([45, 45, 45, 45, 60, 60, 60]) * 1e-3
+grain_core_diameter = np.array(data["grain"]["coreDiameter"])
 # Grains 1 to 'segment_count' length [m]:
-segment_length = np.array([200, 200, 200, 200, 200, 200, 200]) * 1e-3
+segment_length = np.array(data["grain"]["length"])
 # Grain spacing (used to determine chamber length) [m]:
-grain_spacing = 10e-3
+grain_spacing = data["grain"]["spacing"]
 
 # PROPELLANT CHARACTERISTICS INPUT
 # Propellant name:
-propellant = "knsb-nakka"
+propellant = data["propellant"]["name"]
 
 # THRUST CHAMBER
 # Casing inside diameter [m]:
-casing_inner_diameter = 128.2e-3
+casing_inner_diameter = data["structure"]["casingInnerDiameter"]
 # Chamber outside diameter [m]:
-casing_outer_diameter = 141.3e-3
+casing_outer_diameter = data["structure"]["casingOuterDiameter"]
 # Liner thickness [m]
-liner_thickness = 3e-3
+liner_thickness = data["structure"]["linerThickness"]
 # Throat diameter [m]:
-nozzle_throat_diameter = 37e-3
+nozzle_throat_diameter = data["structure"]["nozzleThroatDiameter"]
 # Nozzle divergent and convergent angle [degrees]:
-divergent_angle, convergent_angle = 12, 45
+divergent_angle = data["structure"]["nozzleDivergentAngle"]
+convergent_angle = data["structure"]["nozzleConvergentAngle"]
 # Expansion ratio:
-expansion_ratio = 8
+expansion_ratio = data["structure"]["expansionRatio"]
 # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
-C1 = 0.00506
-C2 = 0.00000
+C1 = data["structure"]["casingC1"]
+C2 = data["structure"]["casingC2"]
 
 # EXTERNAL CONDITIONS
 # Igniter pressure [Pa]:
-igniter_pressure = 1.5e6
+igniter_pressure = data["simulationSettings"]["igniterPressure"]
 # Elevation above mean sea level [m]:
-initial_elevation_amsl = 645
+initial_elevation_amsl = data["simulationSettings"]["initialAmslElevation"]
 
 # MECHANICAL DATA
 # Chamber yield strength [Pa]:
-casing_yield_strength = 172e6
+casing_yield_strength = data["structure"]["casingYieldStrength"]
 # Bulkhead yield strength [Pa]:
-bulkhead_yield_strength = 255e6
+bulkhead_yield_strength = data["structure"]["bulkheadYieldStrength"]
 # Nozzle material yield strength [Pa]:
-nozzle_yield_strength = 215e6
+nozzle_yield_strength = data["structure"]["nozzleYieldStrength"]
 
 # FASTENER DATA
 # Screw diameter (excluding threads) [m]:
-screw_diameter = 6.75e-3
+screw_diameter = data["structure"]["screwDiameter"]
 # Screw clearance hole diameter [m]:
-screw_clearance_diameter = 8.5e-3
+screw_clearance_diameter = data["structure"]["screwClearanceDiameter"]
 # Tensile strength of the screw [Pa]:
-screw_ultimate_strength = 510e6
+screw_ultimate_strength = data["structure"]["screwUltimateStrength"]
 # Maximum number of fasteners:
-max_number_of_screws = 30
+max_number_of_screws = data["structure"]["maxScrewCount"]
 
 # VEHICLE DATA
 # Mass of the rocket without the motor [kg]:
-mass_wo_motor = 29.256
+mass_wo_motor = data["rocket"]["massWithoutMotor"]
 # Rocket drag coefficient:
-drag_coeff = 0.5
+drag_coeff = data["rocket"]["dragCoeff"]
 # Frontal diameter [m]:
-rocket_outer_diameter = 170e-3
+rocket_outer_diameter = data["rocket"]["outerDiameter"]
 # Launch rail length [m]
-rail_length = 5
+rail_length = data["simulationSettings"]["railLength"]
 # Time after apogee for drogue parachute activation [s]
-drogue_time = 1
+drogue_time = data["recovery"]["drogueTime"]
 # Drogue drag coefficient
-drag_coeff_drogue = 1.75
+drag_coeff_drogue = data["recovery"]["drogueDragCoeff"]
 # Drogue effective diameter [m]
-drogue_diameter = 1.25
+drogue_diameter = data["recovery"]["drogueDiameter"]
 # Main parachute drag coefficient [m]
-drag_coeff_main = 2
+drag_coeff_main = data["recovery"]["mainDragCoeff"]
 # Main parachute effective diameter [m]
-main_diameter = 2.66
+main_diameter = data["recovery"]["mainDiameter"]
 # Main parachute height activation [m]
-main_chute_activation_height = 500
+main_chute_activation_height = data["recovery"]["mainActivationHeight"]
 
 # /////////////////////////////////////////////////////////////////////////////
 # PRE CALCULATIONS AND DEFINITIONS
@@ -282,15 +289,21 @@ print("Execution time: %.4f seconds\n\n" % (time.time() - start))
 # # PLOTS
 # # Saves some of the most important plots to the 'output' folder.
 #
-# performance_figure = performance_plot(
-#     ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust
-# )
-# main_figure = main_plot(
-#     ib_parameters.t, ib_parameters.T, ib_parameters.P0, ib_parameters.Kn,
-#     ib_parameters.m_prop, ib_parameters.t_thrust
-# )
-# mass_flux_figure = mass_flux_plot(
-#     ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-# )
-# ballistics_plots(ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81)
-# performance_interactive_plot(ib_parameters).show()
+performance_figure = performance_plot(
+    ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust
+)
+main_figure = main_plot(
+    ib_parameters.t,
+    ib_parameters.T,
+    ib_parameters.P0,
+    ib_parameters.Kn,
+    ib_parameters.m_prop,
+    ib_parameters.t_thrust,
+)
+mass_flux_figure = mass_flux_plot(
+    ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
+)
+ballistics_plots(
+    ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
+)
+performance_interactive_plot(ib_parameters).show()
