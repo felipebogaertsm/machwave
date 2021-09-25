@@ -9,14 +9,14 @@
 *.pyc
 __pycache__/
 local_settings.py
-db.sqlite3
+*/db.sqlite3
 db.sqlite3-journal
 media
 
 # Excluding output folder for motor files:
-*/output/*
+srm_solver/output/
 # exception to the rule
-!*/output/.gitkeep 
+!srm_solver/output/.gitkeep 
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
