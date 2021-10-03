@@ -27,17 +27,19 @@ class PropellantWeb(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
     class Meta:
-        verbose_name = 'Propellant'
-        verbose_name_plural = 'Propellants'
+        verbose_name = "Propellant"
+        verbose_name_plural = "Propellants"
 
     def __str__(self):
-        return f'{self._id:.0f}_{self.name}'
+        return f"{self._id:.0f}_{self.name}"
 
 
 class BatesWeb(models.Model):
     _id = models.AutoField(primary_key=True)
 
-    n = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
+    n = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
     od_grain = models.FloatField()
     id_grain = models.FloatField()
     l_grain = models.FloatField()
@@ -47,7 +49,7 @@ class BatesWeb(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
     def __str__(self):
-        return f'{self._id}'
+        return f"{self._id}"
 
 
 class StructureWeb(models.Model):
@@ -114,23 +116,37 @@ class MotorWeb(models.Model):
     is_simulated = models.BooleanField(default=False, blank=True)
 
     # Foreign keys:
-    propellant = models.ForeignKey(PropellantWeb, on_delete=models.SET_NULL, blank=True, null=True)
-    grain = models.ForeignKey(BatesWeb, on_delete=models.SET_NULL, blank=True, null=True)
-    structure = models.ForeignKey(StructureWeb, on_delete=models.SET_NULL, blank=True, null=True)
-    rocket = models.ForeignKey(RocketWeb, on_delete=models.SET_NULL, blank=True, null=True)
-    recovery = models.ForeignKey(RecoveryWeb, on_delete=models.SET_NULL, blank=True, null=True)
+    propellant = models.ForeignKey(
+        PropellantWeb, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    grain = models.ForeignKey(
+        BatesWeb, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    structure = models.ForeignKey(
+        StructureWeb, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    rocket = models.ForeignKey(
+        RocketWeb, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    recovery = models.ForeignKey(
+        RecoveryWeb, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     # Automatic fields:
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
     def __str__(self):
-        return f'{self._id:.0f}_{self.name}_{self.user.username}'
+        return f"{self._id:.0f}_{self.name}_{self.user.username}"
 
 
 class SimulationSettings(models.Model):
-    eng_res = models.IntegerField(validators=[MinValueValidator(5), MaxValueValidator(1000)])
-    dt = models.FloatField(validators=[MinValueValidator(0.0001), MaxValueValidator(1)])
+    eng_res = models.IntegerField(
+        validators=[MinValueValidator(5), MaxValueValidator(1000)]
+    )
+    dt = models.FloatField(
+        validators=[MinValueValidator(0.0001), MaxValueValidator(1)]
+    )
     ddt = models.FloatField(default=10.0, blank=True)
 
     # Automatic fields:
@@ -142,7 +158,9 @@ class OperationSettings(models.Model):
     h_0 = models.FloatField(default=0.0, blank=True)
     igniter_pressure = models.FloatField(default=1.5, blank=True)
     rail_length = models.FloatField(default=5, blank=True)
-    safety_factor = models.FloatField(validators=[MinValueValidator(1), MaxValueValidator(10)])
+    safety_factor = models.FloatField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
 
     # Automatic fields:
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
@@ -151,8 +169,12 @@ class OperationSettings(models.Model):
 
 class Simulation(models.Model):
     motor = models.ForeignKey(MotorWeb, on_delete=models.CASCADE, blank=True)
-    sim_settings = models.ForeignKey(SimulationSettings, on_delete=models.CASCADE, blank=True)
-    op_settings = models.ForeignKey(OperationSettings, on_delete=models.CASCADE, blank=True)
+    sim_settings = models.ForeignKey(
+        SimulationSettings, on_delete=models.CASCADE, blank=True
+    )
+    op_settings = models.ForeignKey(
+        OperationSettings, on_delete=models.CASCADE, blank=True
+    )
 
     # Automatic fields:
     created_at = models.DateTimeField(auto_now_add=True, blank=True)

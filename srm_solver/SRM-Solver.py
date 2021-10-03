@@ -285,10 +285,10 @@ output_eng_csv(
 
 print("Execution time: %.4f seconds\n\n" % (time.time() - start))
 
-# # /////////////////////////////////////////////////////////////////////////////
-# # PLOTS
-# # Saves some of the most important plots to the 'output' folder.
-#
+# /////////////////////////////////////////////////////////////////////////////
+# PLOTS
+# Saves some of the most important plots to the 'output' folder.
+
 performance_figure = performance_plot(
     ib_parameters.T, ib_parameters.P0, ib_parameters.t, ib_parameters.t_thrust
 )
