@@ -9,5 +9,8 @@ from django.shortcuts import render
 
 
 def home(request):
-    print("hello world")
     return render(request, "home/home.html")
+
+
+def about(request):
+    return render(request, "home/about.html")

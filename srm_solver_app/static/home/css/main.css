@@ -1,0 +1,44 @@
+/* # -*- coding: utf-8 -*-
+# Copyright 2021 by RVNA Technologies LLC.
+# All rights reserved. Proprietary and confidential.
+# Author: Felipe Bogaerts de Mattos
+# email: felipe.bogaerts@engenharia.ufjf.br */
+
+/* ------------------------------------------------------------------------ */
+/* ROOT */
+
+body {
+    font-family: "Open Sans" !important;
+    font-size: 11pt;
+    color: #404040;
+    background-color: rgb(245, 249, 255);
+}
+
+main {
+    margin-left: 5rem;
+    padding: 1rem;
+    padding-left: 2rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #404040;
+    font-weight: 900;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* FOOTER */
+
+footer {
+    font-size: 0.8rem;
+    background-color: #242424;
+    color: #dadada;
+    border-top: #dadada solid 3px;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    padding: 0.5rem;
+}
