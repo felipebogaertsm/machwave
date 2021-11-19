@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 # Create your models here.
 
 
-class PropellantWeb(models.Model):
+class Propellant(models.Model):
     _id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
@@ -34,7 +34,7 @@ class PropellantWeb(models.Model):
         return f"{self._id:.0f}_{self.name}"
 
 
-class BatesWeb(models.Model):
+class Bates(models.Model):
     _id = models.AutoField(primary_key=True)
 
     n = models.IntegerField(
@@ -52,7 +52,7 @@ class BatesWeb(models.Model):
         return f"{self._id}"
 
 
-class StructureWeb(models.Model):
+class Structure(models.Model):
     _id = models.AutoField(primary_key=True)
 
     grain_spacing = models.FloatField(default=0.010)
@@ -80,7 +80,7 @@ class StructureWeb(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
 
-class RocketWeb(models.Model):
+class Rocket(models.Model):
     _id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
@@ -93,7 +93,7 @@ class RocketWeb(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
 
-class RecoveryWeb(models.Model):
+class Recovery(models.Model):
     _id = models.AutoField(primary_key=True)
 
     drogue_time = models.FloatField()
@@ -109,7 +109,7 @@ class RecoveryWeb(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
 
-class MotorWeb(models.Model):
+class Motor(models.Model):
     _id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=50)
@@ -117,19 +117,19 @@ class MotorWeb(models.Model):
 
     # Foreign keys:
     propellant = models.ForeignKey(
-        PropellantWeb, on_delete=models.SET_NULL, blank=True, null=True
+        Propellant, on_delete=models.SET_NULL, blank=True, null=True
     )
     grain = models.ForeignKey(
-        BatesWeb, on_delete=models.SET_NULL, blank=True, null=True
+        Bates, on_delete=models.SET_NULL, blank=True, null=True
     )
     structure = models.ForeignKey(
-        StructureWeb, on_delete=models.SET_NULL, blank=True, null=True
+        Structure, on_delete=models.SET_NULL, blank=True, null=True
     )
     rocket = models.ForeignKey(
-        RocketWeb, on_delete=models.SET_NULL, blank=True, null=True
+        Rocket, on_delete=models.SET_NULL, blank=True, null=True
     )
     recovery = models.ForeignKey(
-        RecoveryWeb, on_delete=models.SET_NULL, blank=True, null=True
+        Recovery, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     # Automatic fields:
@@ -168,7 +168,7 @@ class OperationSettings(models.Model):
 
 
 class Simulation(models.Model):
-    motor = models.ForeignKey(MotorWeb, on_delete=models.CASCADE, blank=True)
+    motor = models.ForeignKey(Motor, on_delete=models.CASCADE, blank=True)
     sim_settings = models.ForeignKey(
         SimulationSettings, on_delete=models.CASCADE, blank=True
     )
