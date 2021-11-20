@@ -30,4 +30,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # apps included
     path("home/", include("apps.home.urls")),
+    path("accounts/", include("apps.accounts.urls")),
+    path("modeler/", include("apps.modeler.urls")),
 ]

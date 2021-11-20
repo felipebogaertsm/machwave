@@ -49,9 +49,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # internal apps
-    "apps.accounts",
-    "apps.home",
-    "apps.modeler",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.home.apps.HomeConfig",
+    "apps.modeler.apps.ModelerConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"  # changing the built in user model

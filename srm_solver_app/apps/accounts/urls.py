@@ -5,5 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.urls import path
+
+import apps.accounts.views as views
+
+urlpatterns = [
+    path("login/", views.login_view, name="login_user"),
+    path("logout/", views.logout_view, name="logout_user"),
+    path("register/", views.register_view, name="register_user"),
+]

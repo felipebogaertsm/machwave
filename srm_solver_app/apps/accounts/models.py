@@ -5,14 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.template.loader import render_to_string
 
 from django_countries.fields import CountryField
-
-from utils.emails import send_email
 
 
 class UserManager(BaseUserManager):
@@ -37,11 +33,6 @@ class UserManager(BaseUserManager):
         user.is_admin = is_admin
 
         user.save(using=self._db)
-
-        try:
-            user.send_signin_email()  # sending activation email
-        except:  # if email does not get sent
-            user.delete()
 
         return user
 
@@ -89,16 +80,3 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
-
-    def send_signin_email(self):
-        domain = settings.DOMAIN_URL
-        mail_subject = "SRM Solver - Start designing your motors!"
-        mail_body = render_to_string(
-            "accounts/signin_email.html",
-            {
-                "user": self,
-                "domain": domain,
-            },
-        )
-
-        send_email(user=self, subject=mail_subject, body_template=mail_body)
