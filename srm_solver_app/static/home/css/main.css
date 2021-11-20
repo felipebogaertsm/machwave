@@ -7,11 +7,14 @@
 /* ------------------------------------------------------------------------ */
 /* ROOT */
 
-body {
+:root {
     font-family: "Open Sans" !important;
-    font-size: 11pt;
-    color: #404040;
-    background-color: rgb(245, 249, 255);
+    font-size: 16px;
+}
+
+body {
+    color: #dadada;
+    background-color: #242424;
 }
 
 main {
@@ -20,9 +23,12 @@ main {
     padding-left: 2rem;
 }
 
+/* ------------------------------------------------------------------------ */
+/* TITLES AND TEXT */
+
 h1, h2, h3, h4, h5, h6 {
     color: #404040;
-    font-weight: 900;
+    font-weight: 700;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -32,13 +38,223 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ------------------------------------------------------------------------ */
+/* NAVBAR */
+
+#navbar {
+    height: 4rem;
+    width: 100%;
+    position: fixed;
+    border-bottom:rgba(255, 255, 255, 0.5) solid 3px;
+    background: rgb(115,15,15);
+    background: linear-gradient(90deg, rgba(115,15,15,1) 0%, rgba(92,11,37,1) 100%); 
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    z-index: 10000;
+}
+
+.navbar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+}
+
+.navbar-separator {
+    background-color: #ffffff80;
+    width: 0.2rem;
+    border-radius: 1rem;
+    height: 100%;
+    margin-left: 1rem;
+}
+  
+.nav-item {
+    height: 100%;
+}
+
+.nav-logo {
+    margin-top: 0.4rem;
+}
+
+.nav-logo a {
+    all: none;
+    margin: 2rem;
+    color: #dadada80;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.5rem;
+    transition: 200ms;
+}
+
+.nav-logo a:hover {
+    color: white;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    width: 4rem;
+    height: 3rem;
+    color: white;
+    text-decoration: none;
+    filter: grayscale(100%) opacity(0.4);
+    transition: 300ms; 
+}
+
+.nav-link:hover {
+    filter: grayscale(0%) opacity(0.9);
+    color: white;
+    scale: 1.1;
+}
+
+.nav-item .active {
+    filter: grayscale(0%) opacity(0.9);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.link-text {
+    display: inline-block;
+    position: absolute;
+    background-color: #242424;
+    border: rgba(255, 255, 255, 0.2) solid 2px;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-top: 1rem;
+    top: 4.0rem;
+    opacity: 0;
+    visibility: hidden;
+    font-size: 0.8rem;
+    letter-spacing: .5px;
+    box-shadow: rgba(115, 15, 15, 0.3) 0px 5px 27px -5px, rgba(0, 0, 0, 0.4) 0px 8px 16px -8px;
+    transform: translateY(-1rem);
+    transition: 200ms;
+}
+
+.nav-item:hover .link-text {
+    visibility: visible;
+    transform: translateY(0rem);
+    opacity: 1;
+}
+
+.nav-link img {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0 1.75rem;
+    filter: invert();
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    visibility: hidden;
+    display:inline;
+    background: #dadada;
+    color: #242424;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    bottom: 0px;
+    top: 4rem;
+    position: absolute;
+    min-width: 160px;
+    box-shadow: rgba(115, 15, 15, 0.3) 0px 5px 27px -5px, rgba(0, 0, 0, 0.4) 0px 8px 16px -8px;
+    z-index: 1;
+    opacity: 0;
+    transition: 200ms;
+}
+
+.dropdown-content a {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown:hover .dropdown-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+.dropdown-item {
+    padding: 1rem;
+    transition: 200ms;
+    color: white;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* CARD */
+
+.card {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;;
+    border: 0px solid transparent;
+}
+
+.card-header {
+    background-color: white;
+}
+
+/* ------------------------------------------------------------------------ */
+/* BUTTONS AND LINKS */
+
+.btn {
+    font-size: 1rem;
+}
+
+.btn-login {
+    color: black;
+    border-radius: 10px;
+    border-color: #b0b0b0;
+}
+
+.btn-login:hover {
+    color: black;
+    background-color: #f0f0f0;
+    border-color: #b0b0b0;
+}
+
+a, a:hover, a:focus, a:active {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ------------------------------------------------------------------------ */
 /* FOOTER */
 
 footer {
     font-size: 0.8rem;
     background-color: #242424;
     color: #dadada;
-    border-top: #dadada solid 3px;
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    border-top: #dadada transparent 3px;
     padding: 0.5rem;
+}
+
+/* ------------------------------------------------------------------------ */
+/* MISC */
+
+hr {
+    border: 1px solid #242424;
+}
+
+/* ------------------------------------------------------------------------ */
+/* CSS TRICKS */
+
+/* Does not displays the main div until page is fully loaded. */
+#main-div {
+    display: block !important;
 }
