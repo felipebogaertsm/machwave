@@ -2,29 +2,28 @@
 
 {% block content %}
 
-<div class="col-sm-12 col-md-8 m-auto">
+{% load static %}
 
-    <h1 class="py-4">Home page</h1>
+<main>
 
-    <h3>Welcome!</h3>
+    <div class="col-sm-12 col-md-8 m-auto">
 
-    <div class="py-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">SRM Solver web app</h5>
-                <h6 class="card-subtitle mb-2 text-muted">Simulate a solid rocket motor from your own web browser</h6>
+        <h1 class="py-4">Home page</h1>
+
+        <h3>Welcome!</h3>
+        
+        <h5>Design a solid rocket motor right from your own web browser.</h6>
+
+        <br class="my-5">
+
+        <div class="container">
+            <div class="row justify-content-center">
+                <a href="{% url "register_user" %}" class="btn btn-primary col-4 p-4 fs-5">Start by creating an account</a>
             </div>
         </div>
+
     </div>
 
-    <br>
-
-    <div class="container">
-        <div class="row justify-content-center">
-            <a href="#" class="btn btn-primary col-2">Create a Motor</a>
-        </div>
-    </div>
-
-</div>
+</main>
 
 {% endblock %}

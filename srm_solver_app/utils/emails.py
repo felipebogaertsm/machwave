@@ -8,12 +8,12 @@
 from django.core.mail import EmailMessage
 
 
-def send_email(user, subject, body_template):
+def send_email_to_user(user, subject, body_html):
     """
     Sends email to a user, given a subject and an HTML body template.
     """
     mail_to = user.email
 
-    email = EmailMessage(subject, body_template, to=[mail_to])
+    email = EmailMessage(subject, body_html, to=[mail_to])
     email.content_subtype = "html"
     email.send()

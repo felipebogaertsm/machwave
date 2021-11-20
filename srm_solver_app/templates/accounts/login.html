@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+<main>
+
+    <div class="col-sm-12 col-md-8 m-auto">
+
+        <h1 class="py-4">Log in</h1>
+
+        <form class='p-2 col-sm-12 col-md-8 m-auto' method="POST" action=".">
+
+                {% csrf_token %}
+
+                {% if error %}
+
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+
+                <hr class="m-2">
+
+                {% endif %}
+
+                <div class="mb-3 m-2">
+                    <label for="username" class="form-label">Email</label>
+                    <input type="email" name="username" class="form-control" id="username">
+                </div>
+
+                <div class="mb-3 m-2">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" id="password" class="form-control">
+                </div>
+
+                <div class="p-2 d-flex justify-content-center">
+                    <button class="btn btn-primary w-100 p-3">Log in</button>
+                </div>
+
+            </form>
+
+    </div>
+
+</main>
+
+{% endblock %}

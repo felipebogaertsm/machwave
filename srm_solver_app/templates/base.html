@@ -5,124 +5,41 @@
 <head>
     <meta charset="UTF-8">
     <title>SRM Solver</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+        integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'finlogic/images/favicon.ico' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link type="text/css" rel="stylesheet" href="{% static 'finlogic/css/main.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js" 
         integrity="sha256-7lWo7cjrrponRJcS6bc8isfsPDwSKoaYfGIHgSheQkk=" crossorigin="anonymous">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-    <script src={% static 'main.js' %} defer></script>
     <link type="text/css" rel="stylesheet" href="{% static 'home/css/main.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
 </head>
 
 <body>
-    <div>
-        <nav class="navbar" id="navbar">
-            <ul class="navbar-nav">
-                <li class="nav-item nav-logo">
-                    <a href="{% url 'home' %}">SRM Solver</a>
-                </li>
-
-                <div class="navbar-separator"></div>
-
-                <li class="nav-item">
-
-                    <a class="nav-link">
-                        <img src="{% static 'home/images/rocket.svg' %}"></img>
-                    </a>
-                    <span class="link-text">Rocket</span>
-
-                </li>
-
-                <li class="nav-item">
-
-                    <a href="" class="nav-link">
-                        <img src="{% static 'home/images/propellant.svg' %}"></img>
-                    </a>
-                    <span class="link-text">Internal Ballistics</span>
-
-                </li>
-
-                <li class="nav-item">
-
-                    <a href="" class="nav-link">
-                        <img src="{% static 'home/images/structure.svg' %}"></img>
-                    </a>
-                    <span class="link-text">Structure</span>
-
-                </li>
-
-                <li class="nav-item">
-
-                    <a href="" class="nav-link">
-                        <img src="{% static 'home/images/parachute.svg' %}"></img>
-                    </a>
-                    <span class="link-text">Recovery</span>
-
-                </li>
-
-                <div class="navbar-separator"></div>
-
-                <li class="nav-item">
-
-                    <a href="" class="nav-link">
-                        <img src="{% static 'home/images/cube.svg' %}"></img>
-                    </a>
-                    <span class="link-text">Simulations</span>
-
-                </li>
-
-                <div class="navbar-separator"></div>         
-
-                <li class="nav-item dropdown">
-
-                    <a class="nav-link dropdown-btn">
-                        <img src="{% static 'home/images/user.svg' %}"></img>
-                    </a>
-
-                    <div class="dropdown-content" style="background-color: white;">
-                        {% if request.user.is_admin %}
-                            <a class="dropdown-item" href="">Admin</a>
-                        {% endif %}
-                        {% if request.user.is_authenticated %}
-                            <a class="dropdown-item" href="">My user</a>
-                            <a class="dropdown-item" href="">My motors</a>
-                            <form action="" method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item">Log out</button>
-                            </form>
-                        {% else %}
-                            <a class="dropdown-item" href="">Login</a>
-                        {% endif %}
-                    </div>
-
-                </li>
-            </ul>
-        </nav>
-
-        <div>
-            {% block "content" %}{% endblock %}
+    <div class="m-auto" style="display: none;" id="main-div">
+        <div class="row">
+            {% include 'navbar.html' %}
         </div>
 
-        <footer class="text-center d-flex justify-content-between fixed-bottom">
-            <div class="container">
-                <div>
-                    Licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL v3.0</a> | Felipe Bogaerts
-                    de Mattos and Andres Benoit | <span><a href="#">About us</a></span>
-                </div>
-            </div>
-        </footer>
+        <div>
+            {% block content %}{% endblock %}
+        </div>
 
-        <script>
-            {% block "javascript" %}{% endblock %}
-        </script>
-
+        <div class="row">
+            {% include "footer.html" %}
+        </div>
     </div>
+
+    <script>
+        {% block javascript %}{% endblock %}
+    </script>
 
 </body>
 
