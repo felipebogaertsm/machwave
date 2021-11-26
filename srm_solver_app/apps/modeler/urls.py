@@ -7,4 +7,8 @@
 
 from django.urls import path
 
-urlpatterns = []
+import apps.modeler.views as views
+
+urlpatterns = [
+    path("rocket/", views.rocket_modeler, name="rocket_modeler"),
+]
