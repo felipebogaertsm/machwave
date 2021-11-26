@@ -113,7 +113,6 @@ h1, h2, h3, h4, h5, h6 {
 .nav-link:hover {
     filter: grayscale(0%) opacity(0.9);
     color: white;
-    scale: 1.1;
 }
 
 .nav-item .active {
