@@ -28,14 +28,14 @@ import numpy as np
 import json
 from pathlib import Path
 
-from classes.bates import Bates as BATES
-from classes.motor_structure import MotorStructure
-from classes.propellant import *
-from classes.recovery import Recovery
-from classes.rocket import Rocket
+from models.bates import Bates as BATES
+from models.motor_structure import MotorStructure
+from models.propellant import *
+from models.recovery import Recovery
+from models.rocket import Rocket
 
-from functions.utilities import *
-from functions.plots import *
+from utils.utilities import *
+from utils.plots import *
 
 from simulations.internal_balistics_coupled import run_ballistics
 from simulations.structural import run_structural_simulation

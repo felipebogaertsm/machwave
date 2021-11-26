@@ -9,9 +9,7 @@
 Stores structural simulation function.
 """
 
-import numpy as np
-
-from classes.structural_parameters import StructuralParameters
+from models.structural_parameters import StructuralParameters
 
 
 def run_structural_simulation(structure, ib_parameters):

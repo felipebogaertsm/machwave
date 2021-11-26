@@ -12,7 +12,7 @@ Stores the functions that solve isentropic flow equations.
 import numpy as np
 import scipy.optimize
 
-from functions.geometric import *
+from utils.geometric import *
 
 
 def get_critical_pressure_ratio(k_mix_ch):
