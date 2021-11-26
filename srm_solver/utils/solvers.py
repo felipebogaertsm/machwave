@@ -9,8 +9,6 @@
 Stores solvers called inside the simulations.
 """
 
-import numpy as np
-
 
 def solve_cp_seidel(
     P0: float,

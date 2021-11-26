@@ -11,8 +11,8 @@ Stores MotorStructure class and methods.
 
 import numpy as np
 
-from functions.utilities import *
-from functions.geometric import *
+from utils.utilities import *
+from utils.geometric import *
 
 
 class MotorStructure:

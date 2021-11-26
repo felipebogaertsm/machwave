@@ -9,7 +9,6 @@
 Stores functions that return atmospheric data.
 """
 
-import numpy as np
 import fluids.atmosphere as atm
 
 

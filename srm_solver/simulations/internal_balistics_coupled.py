@@ -13,15 +13,15 @@ the rocket ballistics at the same time.
 import fluids.atmosphere as atm
 import numpy as np
 
-from classes.ballistics import Ballistics
-from classes.internal_ballistics import InternalBallistics
-from classes.propellant import *
+from models.ballistics import Ballistics
+from models.internal_ballistics import InternalBallistics
+from models.propellant import *
 
-from functions.isentropic_flow import *
-from functions.solvers import solve_cp_seidel, ballistics_ode
-from functions.units import *
-from functions.geometric import *
-from functions.atmospheric import *
+from utils.isentropic_flow import *
+from utils.solvers import solve_cp_seidel, ballistics_ode
+from utils.units import *
+from utils.geometric import *
+from utils.atmospheric import *
 
 
 def run_ballistics(
