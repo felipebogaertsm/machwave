@@ -21,7 +21,7 @@ class Propellant(models.Model):
     )
 
     # Propellant name:
-    name = models.CharField(choices=choices)
+    name = models.CharField(max_length=100, choices=choices)
 
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     created_by = models.ForeignKey(
