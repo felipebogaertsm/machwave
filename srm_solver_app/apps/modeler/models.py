@@ -106,7 +106,9 @@ class Structure(models.Model):
 
 
 class Rocket(models.Model):
-    name = models.CharField(max_length=50)
+    _id = models.AutoField(primary_key=True)
+
+    name = models.CharField(max_length=50, default=f"Rocket {_id}")
 
     mass_wo_motor = models.FloatField()
     drag_coefficient = models.FloatField()

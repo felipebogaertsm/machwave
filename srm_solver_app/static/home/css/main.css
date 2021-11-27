@@ -14,7 +14,9 @@
 body {
     font-family: "Roboto";
     color: #dadada;
-    background-color: #242424;
+    background-color: #121212;
+    margin: 0;
+    padding: 0;
 }
 
 main {
@@ -45,7 +47,6 @@ h1, h2, h3, h4, h5, h6 {
     height: 100%;
     width: 15rem;
     position: fixed;
-    border-right: rgba(255, 255, 255, 0.5) solid 2px;
     background: #323232;
     box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
     -webkit-touch-callout: none;
@@ -68,7 +69,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-separator {
-    background-color: #ffffff80;
+    background-color: #ffffff20;
     height: 0.2rem;
     border-radius: 1rem;
     width: 90%;
@@ -79,6 +80,7 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar-item {
     display: block;
     width: 100%;
+    height: 100%;
 }
 
 .sidebar-link {
@@ -133,9 +135,8 @@ h1, h2, h3, h4, h5, h6 {
     height: 4rem;
     width: 100%;
     position: fixed;
-    border-bottom: rgba(255, 255, 255, 0.5) solid 3px;
-    background: rgb(115,15,15);
-    background: linear-gradient(90deg, rgba(115,15,15,1) 0%, rgba(92,11,37,1) 100%); 
+    top: 0;
+    background-color: #242424; 
     box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -160,7 +161,7 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #ffffff80;
     width: 0.2rem;
     border-radius: 1rem;
-    height: 100%;
+    height: 60%;
     margin-left: 1rem;
 }
   
@@ -170,13 +171,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-logo {
-    margin-top: 0.4rem;
+    margin-top: 2rem;
 }
 
 .nav-logo a {
-    all: none;
     margin: 2rem;
-    color: #dadada80;
+    color: #e84f4f;
     font-weight: 900;
     font-size: 1.5rem;
     transition: 200ms;
@@ -190,7 +190,7 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     width: 4rem;
-    height: 3rem;
+    height: 100%;
     color: white;
     text-decoration: none;
     filter: grayscale(100%) opacity(0.4);
@@ -210,7 +210,7 @@ h1, h2, h3, h4, h5, h6 {
 .link-text {
     display: inline-block;
     position: absolute;
-    background-color: #242424;
+    background-color: #121212;
     border: rgba(255, 255, 255, 0.2) solid 2px;
     color: white;
     padding: 10px 20px;
@@ -240,7 +240,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-item:last-child {
-    float: right;
+    /* float: right; */
+    position: absolute;
+    right: 2rem;
 }
 
 .dropdown {
@@ -251,11 +253,11 @@ h1, h2, h3, h4, h5, h6 {
 .dropdown-content {
     visibility: hidden;
     display: block;
-    bottom: 0px;
-    top: 3.5rem;
+    top: 4rem;
+    left: -6rem;
+    text-align: right;
     position: absolute;
-    background-color: red;
-    min-width: 160px;
+    width: 10rem;
     box-shadow: rgba(115, 15, 15, 0.3) 0px 5px 27px -5px, rgba(0, 0, 0, 0.4) 0px 8px 16px -8px;
     z-index: 1000;
     opacity: 0;
@@ -317,19 +319,24 @@ h1, h2, h3, h4, h5, h6 {
 /* BUTTONS AND LINKS */
 
 .btn {
+    padding: 1rem;
+    border-radius: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    align-items: center;
     font-size: 1rem;
+    color: #121212;
+    font-weight: 600;
+    transition: all 200ms ease-in-out;
 }
 
-.btn-login {
-    color: black;
-    border-radius: 10px;
-    border-color: #b0b0b0;
+.btn:hover {
+    filter: brightness(1.2);
+    color: #121212;
 }
 
-.btn-login:hover {
-    color: black;
-    background-color: #f0f0f0;
-    border-color: #b0b0b0;
+.btn-primary {
+    background-color: rgb(71, 174, 211);
 }
 
 a, a:hover, a:focus, a:active {
@@ -341,8 +348,12 @@ a, a:hover, a:focus, a:active {
 /* FOOTER */
 
 footer {
+    position: fixed;
+    text-align: center;
+    bottom: 0;
     font-size: 0.8rem;
-    background-color: #242424;
+    width: 100%;
+    background-color: #121212;
     color: #dadada;
     border-top: #dadada transparent 3px;
     padding: 0.5rem;
@@ -352,7 +363,7 @@ footer {
 /* MISC */
 
 hr {
-    border: 1px solid #242424;
+    border: 1px solid #121212;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -361,4 +372,158 @@ hr {
 /* Does not displays the main div until page is fully loaded. */
 #main-div {
     display: block !important;
+}
+
+.reset-style {
+    animation : none;
+    animation-delay : 0;
+    animation-direction : normal;
+    animation-duration : 0;
+    animation-fill-mode : none;
+    animation-iteration-count : 1;
+    animation-name : none;
+    animation-play-state : running;
+    animation-timing-function : ease;
+    backface-visibility : visible;
+    background : 0;
+    background-attachment : scroll;
+    background-clip : border-box;
+    background-color : transparent;
+    background-image : none;
+    background-origin : padding-box;
+    background-position : 0 0;
+    background-position-x : 0;
+    background-position-y : 0;
+    background-repeat : repeat;
+    background-size : auto auto;
+    border : 0;
+    border-style : none;
+    border-width : medium;
+    border-color : inherit;
+    border-bottom : 0;
+    border-bottom-color : inherit;
+    border-bottom-left-radius : 0;
+    border-bottom-right-radius : 0;
+    border-bottom-style : none;
+    border-bottom-width : medium;
+    border-collapse : separate;
+    border-image : none;
+    border-left : 0;
+    border-left-color : inherit;
+    border-left-style : none;
+    border-left-width : medium;
+    border-radius : 0;
+    border-right : 0;
+    border-right-color : inherit;
+    border-right-style : none;
+    border-right-width : medium;
+    border-spacing : 0;
+    border-top : 0;
+    border-top-color : inherit;
+    border-top-left-radius : 0;
+    border-top-right-radius : 0;
+    border-top-style : none;
+    border-top-width : medium;
+    bottom : auto;
+    box-shadow : none;
+    box-sizing : content-box;
+    caption-side : top;
+    clear : none;
+    clip : auto;
+    color : inherit;
+    columns : auto;
+    column-count : auto;
+    column-fill : balance;
+    column-gap : normal;
+    column-rule : medium none currentColor;
+    column-rule-color : currentColor;
+    column-rule-style : none;
+    column-rule-width : none;
+    column-span : 1;
+    column-width : auto;
+    content : normal;
+    counter-increment : none;
+    counter-reset : none;
+    cursor : auto;
+    direction : ltr;
+    display : inline;
+    empty-cells : show;
+    float : none;
+    font : normal;
+    font-family : inherit;
+    font-size : medium;
+    font-style : normal;
+    font-variant : normal;
+    font-weight : normal;
+    height : auto;
+    hyphens : none;
+    left : auto;
+    letter-spacing : normal;
+    line-height : normal;
+    list-style : none;
+    list-style-image : none;
+    list-style-position : outside;
+    list-style-type : disc;
+    margin : 0;
+    margin-bottom : 0;
+    margin-left : 0;
+    margin-right : 0;
+    margin-top : 0;
+    max-height : none;
+    max-width : none;
+    min-height : 0;
+    min-width : 0;
+    opacity : 1;
+    orphans : 0;
+    outline : 0;
+    outline-color : invert;
+    outline-style : none;
+    outline-width : medium;
+    overflow : visible;
+    overflow-x : visible;
+    overflow-y : visible;
+    padding : 0;
+    padding-bottom : 0;
+    padding-left : 0;
+    padding-right : 0;
+    padding-top : 0;
+    page-break-after : auto;
+    page-break-before : auto;
+    page-break-inside : auto;
+    perspective : none;
+    perspective-origin : 50% 50%;
+    position : static;
+    /* May need to alter quotes for different locales (e.g fr) */
+    quotes : '\201C' '\201D' '\2018' '\2019';
+    right : auto;
+    tab-size : 8;
+    table-layout : auto;
+    text-align : inherit;
+    text-align-last : auto;
+    text-decoration : none;
+    text-decoration-color : inherit;
+    text-decoration-line : none;
+    text-decoration-style : solid;
+    text-indent : 0;
+    text-shadow : none;
+    text-transform : none;
+    top : auto;
+    transform : none;
+    transform-style : flat;
+    transition : none;
+    transition-delay : 0s;
+    transition-duration : 0s;
+    transition-property : none;
+    transition-timing-function : ease;
+    unicode-bidi : normal;
+    vertical-align : baseline;
+    visibility : visible;
+    white-space : normal;
+    widows : 0;
+    width : auto;
+    word-spacing : normal;
+    z-index : auto;
+    /* basic modern patch */
+    all: initial;
+    all: unset;
 }
