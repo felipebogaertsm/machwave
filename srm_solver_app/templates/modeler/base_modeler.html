@@ -4,10 +4,57 @@
 
 {% load static %}
 
-<main>
+<nav id="sidebar">
 
-    Hello world
-    
+    <ul class="sidebar-nav">
+        <li class="sidebar-item sidebar-logo">
+            <a href="{% url 'rocket_modeler' %}">Modeler</a>
+        </li>
+
+        <div class="sidebar-separator"></div>
+
+        <li class="sidebar-item">
+
+            <a class="sidebar-link" href="{% url 'rocket_modeler' %}">
+                <img src=" {% static 'home/images/rocket.svg' %}"></img>
+                <span>Rocket</span>
+            </a>
+
+        </li>
+
+        <li class="sidebar-item">
+
+            <a href="" class="sidebar-link" href="{% url 'rocket_modeler' %}">
+                <img src=" {% static 'home/images/propellant.svg' %}"></img>
+                <span>Internal Ballistics</span>
+            </a>
+
+        </li>
+
+        <li class="sidebar-item">
+
+            <a href="" class="sidebar-link" href="{% url 'rocket_modeler' %}">
+                <img src=" {% static 'home/images/structure.svg' %}"></img>
+                <span>Structure</span>
+            </a>
+
+        </li>
+
+        <li class="sidebar-item">
+
+            <a href="" class="sidebar-link" href="{% url 'rocket_modeler' %}">
+                <img src=" {% static 'home/images/parachute.svg' %}"></img>
+                <span>Recovery</span>
+            </a>
+
+        </li>
+
+    </ul>
+
+</nav>
+
+<main style="padding-left: 16rem">
+
     {% block modeler_content %}{% endblock %}
 
 </main>

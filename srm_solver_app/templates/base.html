@@ -15,11 +15,11 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'finlogic/images/favicon.ico' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
     <link type="text/css" rel="stylesheet" href="{% static 'finlogic/css/main.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js" 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js"
         integrity="sha256-7lWo7cjrrponRJcS6bc8isfsPDwSKoaYfGIHgSheQkk=" crossorigin="anonymous">
-    </script>
+        </script>
     <link type="text/css" rel="stylesheet" href="{% static 'home/css/main.css' %}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 </head>
 
 <body>
@@ -32,14 +32,12 @@
             {% block content %}{% endblock %}
         </div>
 
-        <div class="row">
+        <div>
             {% include "footer.html" %}
         </div>
     </div>
 
-    <script>
-        {% block javascript %}{% endblock %}
-    </script>
+    {% block javascript %}{% endblock %}
 
 </body>
 

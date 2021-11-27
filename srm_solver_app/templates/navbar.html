@@ -6,45 +6,14 @@
             <a href="{% url 'home' %}">SRM Solver</a>
         </li>
 
-        <div class="navbar-separator"></div>
-
         <li class="nav-item">
 
-            <a class="nav-link">
-                <img src="{% static 'home/images/rocket.svg' %}"></img>
+            <a class="nav-link" href="{% url 'rocket_modeler' %}">
+                <img src=" {% static 'home/images/gear.svg' %}"></img>
             </a>
-            <span class="link-text">Rocket</span>
+            <span class="link-text">Modeler</span>
 
         </li>
-
-        <li class="nav-item">
-
-            <a href="" class="nav-link">
-                <img src="{% static 'home/images/propellant.svg' %}"></img>
-            </a>
-            <span class="link-text">Internal Ballistics</span>
-
-        </li>
-
-        <li class="nav-item">
-
-            <a href="" class="nav-link">
-                <img src="{% static 'home/images/structure.svg' %}"></img>
-            </a>
-            <span class="link-text">Structure</span>
-
-        </li>
-
-        <li class="nav-item">
-
-            <a href="" class="nav-link">
-                <img src="{% static 'home/images/parachute.svg' %}"></img>
-            </a>
-            <span class="link-text">Recovery</span>
-
-        </li>
-
-        <div class="navbar-separator"></div>
 
         <li class="nav-item">
 
@@ -55,7 +24,7 @@
 
         </li>
 
-        <div class="navbar-separator"></div>         
+        <div class="navbar-separator"></div>
 
         <li class="nav-item dropdown">
 
@@ -65,22 +34,22 @@
 
             <div class="dropdown-content">
                 {% if request.user.is_admin %}
-                    <a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a>
+                <a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a>
                 {% endif %}
                 {% if request.user.is_authenticated %}
-                    <a class="dropdown-item" href="">My user</a>
-                    <a class="dropdown-item" href="">My motors</a>
-                    <form action="{% url "logout_user" %}" method="POST">
-                        {% csrf_token %}
-                        <button type="submit" class="dropdown-item">Log out</button>
-                    </form>
+                <a class="dropdown-item" href="">My user</a>
+                <a class="dropdown-item" href="">My motors</a>
+                <form action="{% url 'logout_user' %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">Log out</button>
+                </form>
                 {% else %}
-                    <a class="dropdown-item" href="{% url "login_user" %}">Log in</a>
-                    <a class="dropdown-item" href="{% url "register_user" %}">Sign up</a>
+                <a class="dropdown-item" href="{% url 'login_user' %}">Log in</a>
+                <a class="dropdown-item" href="{% url 'register_user' %}">Sign up</a>
                 {% endif %}
             </div>
 
         </li>
-        
+
     </ul>
 </nav>
