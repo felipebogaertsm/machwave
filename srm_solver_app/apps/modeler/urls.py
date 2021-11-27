@@ -11,4 +11,7 @@ import apps.modeler.views as views
 
 urlpatterns = [
     path("rocket/", views.rocket_modeler, name="rocket_modeler"),
+    path("ib/", views.ib_modeler, name="ib_modeler"),
+    path("structure/", views.structure_modeler, name="structure_modeler"),
+    path("recovery/", views.recovery_modeler, name="recovery_modeler"),
 ]
