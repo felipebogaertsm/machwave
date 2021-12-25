@@ -1,47 +1,61 @@
-{% extends 'base.html' %}
-
-{% block content %}
-
-{% load static %}
+{% extends 'base.html' %} {% block content %} {% load static %}
 
 <main>
+  <div class="col-sm-12 col-md-8 m-auto">
+    <h1 class="py-4">Log in</h1>
 
-    <div class="col-sm-12 col-md-8 m-auto">
+    <form class="p-2 col-sm-12 col-md-8 m-auto" method="POST" action=".">
+      {% csrf_token %} {% if error %}
 
-        <h1 class="py-4">Log in</h1>
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
 
-        <form class='p-2 col-sm-12 col-md-8 m-auto' method="POST" action=".">
+      <hr class="m-2" />
 
-                {% csrf_token %}
+      {% endif %}
 
-                {% if error %}
+      <div class="mb-3 m-2">
+        <label for="username" class="form-label">Email</label>
+        <input
+          type="email"
+          name="username"
+          class="form-control"
+          id="username"
+        />
+      </div>
 
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
+      <div class="mb-3 m-2">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          name="password"
+          id="password"
+          class="form-control"
+        />
+      </div>
 
-                <hr class="m-2">
+      <div class="p-2 d-flex justify-content-center">
+        <button class="btn btn-primary w-100 p-3">Log in</button>
+      </div>
 
-                {% endif %}
-
-                <div class="mb-3 m-2">
-                    <label for="username" class="form-label">Email</label>
-                    <input type="email" name="username" class="form-control" id="username">
-                </div>
-
-                <div class="mb-3 m-2">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" name="password" id="password" class="form-control">
-                </div>
-
-                <div class="p-2 d-flex justify-content-center">
-                    <button class="btn btn-primary w-100 p-3">Log in</button>
-                </div>
-
-            </form>
-
-    </div>
-
+      <div class="form">
+        <div class="input-container ic1">
+          <input id="firstname" class="input" type="text" placeholder=" " />
+          <label for="firstname" class="placeholder">First name</label>
+        </div>
+        <div class="input-container ic2">
+          <input id="lastname" class="input" type="text" placeholder=" " />
+          <div class="cut"></div>
+          <label for="lastname" class="placeholder">Last name</label>
+        </div>
+        <div class="input-container ic2">
+          <input id="email" class="input" type="text" placeholder=" " />
+          <div class="cut cut-short"></div>
+          <label for="email" class="placeholder">Email</label>
+        </div>
+        <button type="text" class="submit">submit</button>
+      </div>
+    </form>
+  </div>
 </main>
 
 {% endblock %}
