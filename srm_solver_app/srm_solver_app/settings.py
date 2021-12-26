@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.home.apps.HomeConfig",
     "apps.modeler.apps.ModelerConfig",
+    "apps.simulations.apps.SimulationsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"  # changing the built in user model
