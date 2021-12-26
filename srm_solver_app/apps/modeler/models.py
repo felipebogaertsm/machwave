@@ -139,7 +139,6 @@ class Recovery(models.Model):
 class Motor(models.Model):
     name = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=50)
-    is_simulated = models.BooleanField(default=False, blank=True)
 
     # Foreign keys:
     propellant = models.ForeignKey(
