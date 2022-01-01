@@ -7,10 +7,16 @@
 
 from rest_framework import serializers
 
-from apps.modeler.models import Motor
+from apps.modeler.models import Motor, Rocket
 
 
 class MotorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Motor
+        fields = "__all__"
+
+
+class RocketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rocket
         fields = "__all__"
