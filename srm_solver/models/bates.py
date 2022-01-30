@@ -11,8 +11,7 @@ Stores BATES class and methods.
 
 import numpy as np
 
-from utils.utilities import *
-from utils.geometric import *
+from utils.geometric import get_circle_area
 
 
 class Bates:
@@ -94,7 +93,9 @@ class Bates:
         return volume
 
     def get_burn_profile(self, A_burn: list):
-        """Returns string with burn profile."""
+        """
+        Returns string with burn profile.
+        """
         if A_burn[0] / A_burn[-1] > 1.02:
             burn_profile = "Regressive"
         elif A_burn[0] / A_burn[-1] < 0.98:

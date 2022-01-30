@@ -11,8 +11,7 @@ Stores MotorStructure class and methods.
 
 import numpy as np
 
-from utils.utilities import *
-from utils.geometric import *
+from utils.geometric import get_circle_area
 
 
 class MotorStructure:
@@ -64,7 +63,11 @@ class MotorStructure:
         """
         return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
-    def get_chamber_inner_diameter(self, liner_thickness):
+    def get_chamber_inner_diameter(
+        self,
+        casing_inner_diameter,
+        liner_thickness,
+    ):
         return casing_inner_diameter - 2 * liner_thickness
 
     def get_throat_area(self):

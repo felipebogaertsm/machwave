@@ -30,12 +30,18 @@ from pathlib import Path
 
 from models.bates import Bates as BATES
 from models.motor_structure import MotorStructure
-from models.propellant import *
+from models.propellant import prop_data
 from models.recovery import Recovery
 from models.rocket import Rocket
 
-from utils.utilities import *
-from utils.plots import *
+from utils.utilities import output_eng_csv, print_results
+from utils.plots import (
+    performance_interactive_plot,
+    performance_plot,
+    main_plot,
+    mass_flux_plot,
+    ballistics_plots,
+)
 
 from simulations.internal_balistics_coupled import run_ballistics
 from simulations.structural import run_structural_simulation
@@ -256,7 +262,6 @@ structural_parameters = run_structural_simulation(structure, ib_parameters)
 print_results(
     grain,
     structure,
-    propellant_data,
     ib_parameters,
     structural_parameters,
     ballistics,

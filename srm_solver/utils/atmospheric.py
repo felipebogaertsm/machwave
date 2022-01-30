@@ -9,25 +9,25 @@
 Stores functions that return atmospheric data.
 """
 
-import fluids.atmosphere as atm
+from fluids.atmosphere import ATMOSPHERE_1976
 
 
 def get_air_density_by_altitude(y_amsl):
     """
     Gets the air density using the AMSL elevation and the fluids library.
     """
-    return atm.ATMOSPHERE_1976(y_amsl).rho
+    return ATMOSPHERE_1976(y_amsl).rho
 
 
 def get_gravity_by_altitude(y_amsl):
     """
     Gets the gravity using the AMSL elevation and the fluids library.
     """
-    return atm.ATMOSPHERE_1976.gravity(y_amsl)
+    return ATMOSPHERE_1976.gravity(y_amsl)
 
 
 def get_air_pressure_by_altitude(y_amsl):
     """
     Gets the air density using the AMSL elevation and the fluids library.
     """
-    return atm.ATMOSPHERE_1976(y_amsl).P
+    return ATMOSPHERE_1976(y_amsl).P
