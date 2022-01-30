@@ -52,7 +52,6 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = []
 
     email = models.EmailField(max_length=200, unique=True)
-    full_name = models.CharField(max_length=200, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
