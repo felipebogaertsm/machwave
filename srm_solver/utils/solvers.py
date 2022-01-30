@@ -59,6 +59,15 @@ def solve_cp_seidel(
 def ballistics_ode(y, v, T, D, M, g):
     """
     Returns dy_dt and dv_dt.
+
+    :param y: instant elevation
+    :param v: instant velocity
+    :param T: instant thrust
+    :param D: instant drag constant (Cd * A * rho / 2)
+    :param M: instant total mass
+    :param g: instant acceleration of gravity
+    :return: dy_dt, dv_dt
+    :rtype: float, float
     """
     if v < 0:
         x = -1

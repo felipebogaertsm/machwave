@@ -15,13 +15,26 @@ import numpy as np
 
 from models.ballistics import Ballistics
 from models.internal_ballistics import InternalBallistics
-from models.propellant import *
 
-from utils.isentropic_flow import *
+from models.propellant import get_burn_rate_coefs
+
+from utils.isentropic_flow import (
+    get_critical_pressure_ratio,
+    get_divergent_correction_factor,
+    get_opt_expansion_ratio,
+    get_exit_pressure,
+    get_operational_correction_factors,
+    get_thrust_coeff,
+    get_impulses,
+)
 from utils.solvers import solve_cp_seidel, ballistics_ode
-from utils.units import *
-from utils.geometric import *
-from utils.atmospheric import *
+from utils.units import get_pa_to_psi
+from utils.geometric import get_cylinder_volume
+from utils.atmospheric import (
+    get_air_density_by_altitude,
+    get_air_pressure_by_altitude,
+    get_gravity_by_altitude,
+)
 
 
 def run_ballistics(

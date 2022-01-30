@@ -53,7 +53,6 @@ class User(AbstractBaseUser):
 
     email = models.EmailField(max_length=200, unique=True)
     full_name = models.CharField(max_length=200, blank=True, null=True)
-    country = CountryField()
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

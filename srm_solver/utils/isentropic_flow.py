@@ -12,7 +12,7 @@ Stores the functions that solve isentropic flow equations.
 import numpy as np
 import scipy.optimize
 
-from utils.geometric import *
+from utils.geometric import get_circle_area
 
 
 def get_critical_pressure_ratio(k_mix_ch):
@@ -211,6 +211,9 @@ def get_operational_correction_factors(
 
 
 def get_divergent_correction_factor(divergent_angle):
+    """
+    Returns the divergent nozzle correction factor given the half angle.
+    """
     return 0.5 * (1 + np.cos(np.deg2rad(divergent_angle)))
 
 

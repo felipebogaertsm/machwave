@@ -6,7 +6,8 @@
 # the Free Software Foundation, version 3.
 
 """
-Stores the functions used in various locations throughtout the program.
+Stores utility functions, used in various locations throughtout the 
+application.
 """
 
 import numpy as np
@@ -64,7 +65,6 @@ def motor_to_eng(
 def print_results(
     grain,
     structure,
-    propellant,
     ib_parameters,
     structural_parameters,
     ballistics,
