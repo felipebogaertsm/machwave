@@ -20,8 +20,6 @@ class UserCreationForm(UserCreationForm):
     """
 
     email = forms.EmailField(max_length=100)
-    full_name = forms.CharField(max_length=100, required=False)
-    country = CountryField(blank=True).formfield()
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(
         label="Confirm Password", widget=forms.PasswordInput
@@ -29,4 +27,4 @@ class UserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ("email", "full_name", "country", "password1", "password2")
+        fields = ("email", "password1", "password2")
