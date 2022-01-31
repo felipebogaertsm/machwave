@@ -5,66 +5,71 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.contrib import auth
-from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
+from django.db import IntegrityError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
 
-from apps.accounts.decorators import unauthenticated_user
-from apps.accounts.forms import UserCreationForm
-
-
-@unauthenticated_user
-def register_view(request):
-    form = UserCreationForm()
-
-    if request.method == "GET":
-        return render(request, "accounts/register.html", {"form": form})
-    elif request.method == "POST":
-        form = UserCreationForm(request.POST)
-
-        if form.is_valid():
-            form.save()
-            user = authenticate(
-                username=form.cleaned_data["email"],
-                password=form.cleaned_data["password1"],
-            )
-            login(request, user)
-            return redirect("home")
-        else:
-            return render(
-                request,
-                "accounts/register.html",
-                {"form": form, "error": "Could not authenticate"},
-            )
+from .models import User
+from .serializers import UserSerializerWithToken, UserSerializer
 
 
-@unauthenticated_user
-def login_view(request):
-    form = AuthenticationForm()
+class MyUserAPI(APIView):
+    permission_classes = [IsAuthenticated]
 
-    if request.method == "GET":
-        return render(request, "accounts/login.html", {"form": form})
-    elif request.method == "POST":
-        user = authenticate(
-            request,
-            username=request.POST["username"],
-            password=request.POST["password"],
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializerWithToken(user, many=False)
+        return Response(serializer.data)
+
+    def put(self, request):
+        user = request.user
+        data = request.data
+
+        email = data["email"]
+
+        user.email = email
+        user.save()
+
+        return Response(
+            "User saved successfully",
+            status=status.HTTP_200_OK,
         )
 
-        if user is None:
-            return render(
-                request,
-                "accounts/login.html",
-                {"form": form, "error": "User not authenticated."},
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(
+            "User deleted successfully",
+            status=status.HTTP_200_OK,
+        )
+
+
+class UserAPI(APIView):
+    def get(self, request, pk):
+        user = User.objects.get(id=pk)
+        serializer = UserSerializer(user, many=False)
+        return Response(serializer.data)
+
+    def post(self, request):
+        data = request.data
+
+        try:
+            user = User.objects.create_user(
+                email=data["email"],
+                password=data["password"],
             )
-        else:
-            login(request, user)
-            return redirect("home")
+        except IntegrityError:
+            return Response(
+                "Email not available",
+                status=status.HTTP_409_CONFLICT,
+            )
+        except:
+            return Response(
+                "There was an error crrating the user",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-
-def logout_view(request):
-    if request.method == "POST":
-        logout(request)
-        return redirect("home")
+        serializer = UserSerializer(user, many=False)
+        return Response(serializer.data)
