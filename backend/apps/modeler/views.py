@@ -86,23 +86,3 @@ class RecoveryAPI(APIView):
 
 class StructureAPI(APIView):
     permission_classes = [IsAuthenticated]
-
-
-@login_required(login_url="login_user")
-def rocket_modeler(request):
-    return render(request, "modeler/rocket.html")
-
-
-@login_required(login_url="login_user")
-def ib_modeler(request):
-    return render(request, "modeler/ib.html")
-
-
-@login_required(login_url="login_user")
-def structure_modeler(request):
-    return render(request, "modeler/structure.html")
-
-
-@login_required(login_url="login_user")
-def recovery_modeler(request):
-    return render(request, "modeler/recovery.html")

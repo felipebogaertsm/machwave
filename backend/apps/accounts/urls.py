@@ -10,7 +10,6 @@ from django.urls import path
 import apps.accounts.views as views
 
 urlpatterns = [
-    path("login/", views.login_view, name="login_user"),
-    path("logout/", views.logout_view, name="logout_user"),
-    path("register/", views.register_view, name="register_user"),
+    path("/user/me/", views.MyUserAPI, name="my_user_api"),
+    path("/user/<str:pk>/", views.UserAPI, name="user_api"),
 ]

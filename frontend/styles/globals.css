@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+
+    :root {
+        font-size: 16px;
+        @apply bg-zinc-50;
+    }
+
+    
+
+}

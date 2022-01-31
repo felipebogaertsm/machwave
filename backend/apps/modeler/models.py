@@ -5,9 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+import uuid
+
 from django.db import models
 from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 USER_MODEL = settings.AUTH_USER_MODEL
 
@@ -19,6 +20,8 @@ class Propellant(models.Model):
         ("KNDX", "KNDX"),
         ("KNER", "KNER"),
     )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # Propellant name:
     name = models.CharField(max_length=100, choices=choices)
@@ -35,6 +38,8 @@ class BatesGrain(models.Model):
     derived from "BatesGrainSegment".
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     # Grain spacing [m]:
     grain_spacing = models.FloatField(default=0.010)
 
@@ -49,6 +54,8 @@ class BatesGrainSegment(models.Model):
     BATES grain segment model. This model is linked by a ForeignKey to
     "BatesGrain" model.
     """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # Segment outer diameter [m]:
     segment_od = models.FloatField()
@@ -67,6 +74,8 @@ class BatesGrainSegment(models.Model):
 
 
 class Nozzle(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     throat_diameter = models.FloatField()
     divergent_angle = models.FloatField()
     convergent_angle = models.FloatField()
@@ -80,6 +89,7 @@ class Nozzle(models.Model):
 
 
 class Structure(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # Casing internal diameter [m]:
     casing_id = models.FloatField()
@@ -106,7 +116,7 @@ class Structure(models.Model):
 
 
 class Rocket(models.Model):
-    _id = models.AutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     name = models.CharField(max_length=50, default=f"Rocket {_id}")
 
@@ -121,6 +131,7 @@ class Rocket(models.Model):
 
 
 class Recovery(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     drogue_time = models.FloatField()
     drogue_drag_coeff = models.FloatField()
@@ -137,6 +148,7 @@ class Recovery(models.Model):
 
 
 class Motor(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=50)
 
@@ -155,50 +167,6 @@ class Motor(models.Model):
     )
     recovery = models.ForeignKey(
         Recovery, on_delete=models.SET_NULL, blank=True, null=True
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    created_by = models.ForeignKey(
-        USER_MODEL, on_delete=models.CASCADE, blank=True
-    )
-
-
-class SimulationSettings(models.Model):
-    eng_res = models.IntegerField(
-        validators=[MinValueValidator(5), MaxValueValidator(1000)]
-    )
-    dt = models.FloatField(
-        validators=[MinValueValidator(0.0001), MaxValueValidator(1)]
-    )
-    ddt = models.FloatField(default=10.0, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    created_by = models.ForeignKey(
-        USER_MODEL, on_delete=models.CASCADE, blank=True
-    )
-
-
-class OperationSettings(models.Model):
-    h_0 = models.FloatField(default=0.0, blank=True)
-    igniter_pressure = models.FloatField(default=1.5, blank=True)
-    rail_length = models.FloatField(default=5, blank=True)
-    safety_factor = models.FloatField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    created_by = models.ForeignKey(
-        USER_MODEL, on_delete=models.CASCADE, blank=True
-    )
-
-
-class Simulation(models.Model):
-    motor = models.ForeignKey(Motor, on_delete=models.CASCADE, blank=True)
-    sim_settings = models.ForeignKey(
-        SimulationSettings, on_delete=models.CASCADE, blank=True
-    )
-    op_settings = models.ForeignKey(
-        OperationSettings, on_delete=models.CASCADE, blank=True
     )
 
     created_at = models.DateTimeField(auto_now_add=True, blank=True)

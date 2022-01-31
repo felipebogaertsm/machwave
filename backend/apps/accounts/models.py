@@ -5,51 +5,19 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+import uuid
+
+from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 
-from django_countries.fields import CountryField
-
-
-class UserManager(BaseUserManager):
-    def create_user(
-        self,
-        email,
-        password=None,
-        is_active=True,
-        is_staff=False,
-        is_admin=False,
-    ):
-        if not email:
-            raise ValueError("Users must have an email address.")
-        if not password:
-            raise ValueError("Users must have a valid password.")
-
-        user = self.model(email=self.normalize_email(email))
-        user.set_password(password)
-
-        user.is_active = is_active
-        user.is_staff = is_staff
-        user.is_admin = is_admin
-
-        user.save(using=self._db)
-
-        return user
-
-    def create_staffuser(self, email, password=None):
-        user = self.create_user(email, password=password, is_staff=True)
-        return user
-
-    def create_superuser(self, email, password=None):
-        user = self.create_user(
-            email=email, password=password, is_staff=True, is_admin=True
-        )
-        return user
+from .managers import UserManager
 
 
 class User(AbstractBaseUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     email = models.EmailField(max_length=200, unique=True)
 
