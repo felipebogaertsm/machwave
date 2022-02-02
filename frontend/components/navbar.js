@@ -6,13 +6,14 @@
 // the Free Software Foundation, version 3.
 
 // Components:
-import NavbarItem from "./navbarItem"
-import NavbarLogo from "./navbarLogo"
+import NavbarItem from "./NavbarItem"
+import NavbarLogo from "./NavbarLogo"
 
 export default function Navbar() {
     return (
         <div className='
                 top-0 h-16 bg-slate-900 text-white w-full px-10 py-3
+                select-none
             '
         >
             <div className='

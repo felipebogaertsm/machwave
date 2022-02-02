@@ -23,13 +23,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="home/")),
-    path("admin/", admin.site.urls),
+    path("api/admin/", admin.site.urls),
     # apps included
-    path("home/", include("apps.home.urls")),
-    path("accounts/", include("apps.accounts.urls")),
-    path("modeler/", include("apps.modeler.urls")),
+    path("api/accounts/", include("apps.accounts.urls")),
+    path("api/modeler/", include("apps.modeler.urls")),
 ]

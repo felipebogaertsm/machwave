@@ -11,7 +11,7 @@ export default function NavbarItem({ children }) {
             className='
                 px-4 bg-slate-500 h-full my-auto bg-opacity-0
                 hover:bg-opacity-50 rounded-md font-bold
-                transition-all duration-100
+                transition-all duration-200
             '
         >
             {children}

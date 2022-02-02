@@ -1,25 +1,27 @@
-import { useRouter } from 'next/router'
-
 // Components:
 import Card from '../components/Card'
+import FormControl from '../components/FormControl'
 import Button from '../components/Button'
 import Subheading from '../components/Subheading'
 import NavbarPage from '../components/NavbarPage'
 
-export default function Home() {
-    const router = useRouter()
-
+export default function Login() {
     return (
         <NavbarPage>
             <div className='mt-10'>
                 <div className='w-[90%] h-full mx-auto lg:w-[60%] xl:w-[60%] grid place-content-center'>
-                    <Card>
-                        <Subheading className='my-2'>Welcome</Subheading>
+                    <Card className='min-w-[40vw]'>
+                        <Subheading className='my-2'>Login</Subheading>
 
-                        <h5>Design a solid rocket motor right from your own web browser.</h5>
+                        <div className='mb-2'>
+                            <FormControl title='Email' />
+                        </div>
+                        <div>
+                            <FormControl title='Password' />
+                        </div>
 
                         <div className='flex justify-center mt-4'>
-                            <Button onClick={(e) => router.push('/login')}>Log in</Button>
+                            <Button type='submit'>Submit</Button>
                         </div>
                     </Card>
                 </div>
