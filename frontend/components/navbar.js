@@ -17,7 +17,7 @@ export default function Navbar() {
     return (
         <div className='
                 top-0 h-16 bg-slate-900 text-white w-full px-10 py-3
-                select-none
+                select-none border-b-2 border-white shadow-lg
             '
         >
             <div className='
@@ -26,7 +26,7 @@ export default function Navbar() {
             >
                 <NavbarLogo onClick={(e) => router.push('/')}>SRM Solver</NavbarLogo >
                 <div className='grow'></div>
-                <NavbarItem>Modeler</NavbarItem>
+                <NavbarItem>Builder</NavbarItem>
                 <NavbarItem>Simulations</NavbarItem>
                 <NavbarItem>Code</NavbarItem>
             </div>

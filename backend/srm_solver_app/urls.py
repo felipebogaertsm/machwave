@@ -28,5 +28,5 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     # apps included
     path("api/accounts/", include("apps.accounts.urls")),
-    path("api/modeler/", include("apps.modeler.urls")),
+    path("api/builder/", include("apps.builder.urls")),
 ]

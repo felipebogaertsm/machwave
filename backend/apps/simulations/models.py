@@ -11,7 +11,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from apps.modeler.models import Motor, Rocket
+from apps.builder.models import Motor, Rocket
 
 USER_MODEL = settings.AUTH_USER_MODEL
 

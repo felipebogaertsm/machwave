@@ -10,6 +10,8 @@ import uuid
 from django.db import models
 from django.conf import settings
 
+from .choices import RECOVERY_TRIGGER_TYPE_CHOICES
+
 USER_MODEL = settings.AUTH_USER_MODEL
 
 
@@ -133,13 +135,12 @@ class Rocket(models.Model):
 class Recovery(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    drogue_time = models.FloatField()
-    drogue_drag_coeff = models.FloatField()
-    drogue_diameter = models.FloatField()
+    trigger_type = models.CharField(
+        max_length=100,
+        choices=RECOVERY_TRIGGER_TYPE_CHOICES,
+    )
 
-    main_activation_height = models.FloatField()
-    main_drag_coeff = models.FloatField()
-    main_diameter = models.FloatField()
+    parameters = models.JSONField(null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     created_by = models.ForeignKey(
@@ -149,8 +150,12 @@ class Recovery(models.Model):
 
 class Motor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     name = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=50)
+
+    # Defines view permission for the motor:
+    is_public = models.BooleanField(default=False)
 
     # Foreign keys:
     propellant = models.ForeignKey(

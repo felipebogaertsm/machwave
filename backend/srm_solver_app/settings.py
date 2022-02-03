@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # internal apps
     "apps.accounts.apps.AccountsConfig",
-    "apps.modeler.apps.ModelerConfig",
+    "apps.builder.apps.BuilderConfig",
     "apps.simulations.apps.SimulationsConfig",
 ]
 

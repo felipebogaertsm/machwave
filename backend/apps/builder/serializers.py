@@ -7,7 +7,7 @@
 
 from rest_framework import serializers
 
-from apps.modeler.models import Motor, Rocket
+from apps.builder.models import Motor, Rocket
 
 
 class MotorSerializer(serializers.ModelSerializer):
