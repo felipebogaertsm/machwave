@@ -1,3 +1,10 @@
+// -* - coding: utf - 8 -* -
+// Author: Felipe Bogaerts de Mattos
+// Contact me at felipe.bogaerts@engenharia.ufjf.br.
+// This program is free software: you can redistribute it and / or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3.
+
 // Components:
 import Card from '../components/Card'
 import FormControl from '../components/FormControl'
@@ -17,7 +24,7 @@ export default function Login() {
                             <FormControl title='Email' />
                         </div>
                         <div>
-                            <FormControl title='Password' />
+                            <FormControl title='Password' type='password' />
                         </div>
 
                         <div className='flex justify-center mt-4'>

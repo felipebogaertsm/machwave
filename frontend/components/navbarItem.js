@@ -5,7 +5,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, version 3.
 
-export default function NavbarItem({ children }) {
+export default function NavbarItem(props) {
     return (
         <button
             className='
@@ -13,8 +13,9 @@ export default function NavbarItem({ children }) {
                 hover:bg-opacity-50 rounded-md font-bold
                 transition-all duration-200
             '
+            {...props}
         >
-            {children}
+            {props.children}
         </button>
     )
 }

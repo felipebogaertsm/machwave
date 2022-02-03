@@ -5,7 +5,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, version 3.
 
-export default function NavbarLogo({ children }) {
+export default function NavbarLogo(props) {
     return (
         <button
             className='
@@ -13,8 +13,9 @@ export default function NavbarLogo({ children }) {
                 opacity-70 hover:opacity-100
                 transition-all duration-200
             '
+            {...props}
         >
-            {children}
+            {props.children}
         </button>
     )
 }
