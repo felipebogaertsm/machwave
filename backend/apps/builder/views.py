@@ -10,14 +10,14 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.modeler.models import (
+from apps.builder.models import (
     Motor,
     Rocket,
     BatesGrainSegment,
     BatesGrain,
     Recovery,
 )
-from apps.modeler.serializers import MotorSerializer, RocketSerializer
+from apps.builder.serializers import MotorSerializer, RocketSerializer
 
 
 class RocketAPI(APIView):

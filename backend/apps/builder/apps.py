@@ -5,6 +5,9 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.test import TestCase
+from django.apps import AppConfig
 
-# Create your tests here.
+
+class BuilderConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.builder"

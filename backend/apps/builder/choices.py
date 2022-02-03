@@ -5,9 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from django.apps import AppConfig
-
-
-class ModelerConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.modeler"
+RECOVERY_TRIGGER_TYPE_CHOICES = (
+    ("time", "Time-based"),
+    ("height", "Height-based"),
+)
