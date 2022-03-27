@@ -9,50 +9,30 @@
 Stores Internal Ballistics class and methods
 """
 
+from dataclasses import dataclass
+import numpy as np
 
+
+@dataclass()
 class InternalBallistics:
-    def __init__(
-        self,
-        t,
-        P0,
-        T,
-        T_mean,
-        I_total,
-        I_sp,
-        t_burnout,
-        t_thrust,
-        nozzle_eff,
-        E_opt,
-        V_prop_CP,
-        A_burn_CP,
-        Kn,
-        m_prop,
-        grain_mass_flux,
-        optimal_grain_length,
-        initial_port_to_throat,
-        burn_profile,
-        V_empty,
-        initial_to_final_kn,
-        P_exit,
-    ):
-        self.t = t
-        self.P0 = P0
-        self.T = T
-        self.T_mean = T_mean
-        self.I_total = I_total
-        self.I_sp = I_sp
-        self.t_burnout = t_burnout
-        self.t_thrust = t_thrust
-        self.nozzle_eff = nozzle_eff
-        self.E_opt = E_opt
-        self.V_prop = V_prop_CP
-        self.A_burn = A_burn_CP
-        self.Kn = Kn
-        self.m_prop = m_prop
-        self.grain_mass_flux = grain_mass_flux
-        self.optimal_grain_length = optimal_grain_length
-        self.initial_port_to_throat = initial_port_to_throat
-        self.burn_profile = burn_profile
-        self.V_empty = V_empty
-        self.initial_to_final_kn = initial_to_final_kn
-        self.P_exit = P_exit
+    t: np.array
+    P0: np.array
+    T: np.array
+    T_mean: float
+    I_total: float
+    I_sp: float
+    t_burnout: float
+    t_thrust: float
+    nozzle_eff: np.array
+    E_opt: float
+    V_prop: np.array
+    A_burn: np.array
+    Kn: np.array
+    m_prop: np.array
+    grain_mass_flux: np.array
+    optimal_grain_length: np.array
+    initial_port_to_throat: float
+    burn_profile: str
+    V_empty: float
+    initial_to_final_kn: float
+    P_exit: np.array

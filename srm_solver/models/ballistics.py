@@ -9,28 +9,19 @@
 Stores Ballistics class and methods.
 """
 
+from dataclasses import dataclass
+import numpy as np
 
+
+@dataclass()
 class Ballistics:
-    def __init__(
-        self,
-        t,
-        y,
-        v,
-        acc,
-        v_rail,
-        y_burnout,
-        Mach,
-        apogee_time,
-        flight_time,
-        P_ext,
-    ):
-        self.t = t
-        self.y = y
-        self.v = v
-        self.acc = acc
-        self.v_rail = v_rail
-        self.y_burnout = y_burnout
-        self.Mach = Mach
-        self.apogee_time = apogee_time
-        self.flight_time = flight_time
-        self.P_ext = P_ext
+    t: np.array
+    y: np.array
+    v: np.array
+    acc: np.array
+    v_rail: float
+    y_burnout: float
+    Mach: np.array
+    apogee_time: float
+    flight_time: float
+    P_ext: np.array
