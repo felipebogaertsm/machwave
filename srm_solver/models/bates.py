@@ -97,9 +97,9 @@ class Bates:
         Returns string with burn profile.
         """
         if A_burn[0] / A_burn[-1] > 1.02:
-            burn_profile = "Regressive"
+            burn_profile = "regressive"
         elif A_burn[0] / A_burn[-1] < 0.98:
-            burn_profile = "Progressive"
+            burn_profile = "progressive"
         else:
-            burn_profile = "Neutral"
+            burn_profile = "neutral"
         return burn_profile

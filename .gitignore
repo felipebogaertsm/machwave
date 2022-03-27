@@ -25,7 +25,7 @@ workspace.code-workspace
 
 # Database and env files:
 .env
-srm_solver_app/db.sqlite3
+db.sqlite3
 
 # Temps
 *.log
