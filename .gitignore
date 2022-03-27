@@ -21,6 +21,9 @@ Temporary Items
 .idea/
 workspace.code-workspace
 
+# Temporary files:
+input.json
+
 ### DJANGO ###
 
 # Database and env files:
