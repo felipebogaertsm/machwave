@@ -6,18 +6,18 @@
 # the Free Software Foundation, version 3.
 
 """
-WSGI config for srm_solver_app project.
+ASGI config for srm_solver_app project.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+It exposes the ASGI callable as a module-level variable named ``application``.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/3.2/howto/deployment/wsgi/
+https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 """
 
 import os
 
-from django.core.wsgi import get_wsgi_application
+from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "srm_solver_app.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
-application = get_wsgi_application()
+application = get_asgi_application()
