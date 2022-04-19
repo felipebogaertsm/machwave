@@ -11,80 +11,28 @@ Stores MotorStructure class and methods.
 
 import numpy as np
 
+from models.materials import Material
+from models.motor.thermals import ThermalLiner
 from utils.geometric import get_circle_area
 
 
-class MotorStructure:
+class Nozzle:
     def __init__(
         self,
-        safety_factor,
-        motor_structural_mass,
-        chamber_length,
-        chamber_inner_diameter,
-        casing_inner_diameter,
-        casing_outer_diameter,
-        screw_diameter,
-        screw_clearance_diameter,
-        nozzle_throat_diameter,
-        C1,
-        C2,
+        throat_diameter,
         divergent_angle,
         convergent_angle,
         expansion_ratio,
-        casing_yield_strength,
-        nozzle_yield_strength,
-        bulkhead_yield_strength,
-        screw_ultimate_strength,
-        max_number_of_screws=20,
-    ):
-        self.safety_factor = safety_factor
-        self.motor_structural_mass = motor_structural_mass
-        self.chamber_length = chamber_length
-        self.chamber_inner_diameter = chamber_inner_diameter
-        self.casing_inner_diameter = casing_inner_diameter
-        self.casing_outer_diameter = casing_outer_diameter
-        self.screw_diameter = screw_diameter
-        self.screw_clearance_diameter = screw_clearance_diameter
-        self.nozzle_throat_diameter = nozzle_throat_diameter
-        self.C1 = C1
-        self.C2 = C2
+        material=None,
+    ) -> None:
+        self.throat_diameter = throat_diameter
         self.divergent_angle = divergent_angle
         self.convergent_angle = convergent_angle
         self.expansion_ratio = expansion_ratio
-        self.casing_yield_strength = casing_yield_strength
-        self.nozzle_yield_strength = nozzle_yield_strength
-        self.bulkhead_yield_strength = bulkhead_yield_strength
-        self.screw_ultimate_strength = screw_ultimate_strength
-        self.max_number_of_screws = max_number_of_screws
-
-    def get_chamber_length(self, grain_length, grain_count, grain_spacing):
-        """
-        Returns the chamber length of the SRM, given the grain parameters.
-        """
-        return np.sum(grain_length) + (grain_count - 1) * grain_spacing
-
-    def get_chamber_inner_diameter(
-        self,
-        casing_inner_diameter,
-        liner_thickness,
-    ):
-        return casing_inner_diameter - 2 * liner_thickness
+        self.material = material
 
     def get_throat_area(self):
         return get_circle_area(self.nozzle_throat_diameter)
-
-    def get_bulkhead_thickness(self, chamber_pressure):
-        """
-        Returns the thickness of a plane bulkhead pressure vessel.
-        """
-        bulkhead_yield_strength = self.bulkhead_yield_strength
-        bulkhead_thickness = self.casing_inner_diameter * (
-            np.sqrt(
-                (0.75 * np.max(chamber_pressure))
-                / (bulkhead_yield_strength / self.safety_factor)
-            )
-        )
-        return bulkhead_thickness
 
     def get_nozzle_thickness(
         self,
@@ -94,7 +42,7 @@ class MotorStructure:
         max_chamber_pressure = np.max(chamber_pressure)
         convergent_angle = self.convergent_angle
         divergent_angle = self.divergent_angle
-        nozzle_yield_strength = self.nozzle_yield_strength
+        nozzle_yield_strength = self.material.yield_strength
 
         # Yield strength corrected by the safety factor:
         safe_yield_strength = nozzle_yield_strength / self.safety_factor
@@ -123,7 +71,46 @@ class MotorStructure:
 
         return nozzle_conv_thickness, nozzle_div_thickness
 
-    def get_casing_safety_factor(self, Y_cc, chamber_pressure):
+
+class CombustionChamber:
+    def __init__(
+        self,
+        inner_diameter: float,
+        outer_diameter: float,
+        liner: ThermalLiner,
+        length: float,
+        C1: float,
+        C2: float,
+        casing_material: Material,
+        bulkhead_material: Material,
+    ) -> None:
+        self.inner_diameter = inner_diameter
+        self.outer_diameter = outer_diameter
+        self.liner = liner
+        self.length = length
+        self.C1 = C1
+        self.C2 = C2
+        self.casing_material = casing_material
+        self.bulkhead_material = bulkhead_material
+
+    def get_bulkhead_thickness(self, chamber_pressure):
+        """
+        Returns the thickness of a plane bulkhead pressure vessel.
+        """
+        return self.inner_diameter * (
+            np.sqrt(
+                (0.75 * np.max(chamber_pressure))
+                / (self.bulkhead_material.yield_strength / self.safety_factor)
+            )
+        )
+
+    def get_chamber_length(self, grain_length, grain_count, grain_spacing):
+        """
+        Returns the chamber length of the SRM, given the grain parameters.
+        """
+        return np.sum(grain_length) + (grain_count - 1) * grain_spacing
+
+    def get_casing_safety_factor(self, chamber_pressure):
         """
         Returns the thickness for a cylindrical pressure vessel.
         """
@@ -139,6 +126,45 @@ class MotorStructure:
         )
 
         return bursting_pressure / max_chamber_pressure  # casing safety factor
+
+
+class BoltedCombustionChamber(CombustionChamber):
+    def __init__(
+        self,
+        inner_diameter: float,
+        outer_diameter: float,
+        liner: ThermalLiner,
+        length: float,
+        C1: float,
+        C2: float,
+        casing_material: Material,
+        bulkhead_material: Material,
+        screw_material: Material,
+        max_screw_count: int,
+        screw_clearance_diameter: float,
+        screw_diameter: float,
+    ) -> None:
+        super().__init__(
+            inner_diameter,
+            outer_diameter,
+            liner,
+            length,
+            C1,
+            C2,
+            casing_material,
+            bulkhead_material,
+        )
+        self.screw_material = screw_material
+        self.max_screw_count = max_screw_count
+        self.screw_clearance_diameter = screw_clearance_diameter
+        self.screw_diameter = screw_diameter
+
+    def get_chamber_inner_diameter(
+        self,
+        casing_inner_diameter,
+        liner_thickness,
+    ):
+        return casing_inner_diameter - 2 * liner_thickness
 
     def get_optimal_fasteners(self, chamber_pressure):
         max_number_of_screws = self.max_number_of_screws
@@ -217,3 +243,15 @@ class MotorStructure:
             tear_safety_factor,
             compression_safety_factor,
         )
+
+
+class MotorStructure:
+    def __init__(
+        self,
+        safety_factor,
+        dry_mass,
+        chamber: CombustionChamber,
+    ):
+        self.safety_factor = safety_factor
+        self.dry_mass = dry_mass
+        self.chamber = chamber
