@@ -5,15 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-"""
-Stores Rocket class and methods.
-"""
 
-from .fuselage import Fuselage
-from .structure import RocketStructure
-
-
-class Rocket:
-    def __init__(self, fuselage: Fuselage, structure: RocketStructure):
-        self.fuselage = fuselage
-        self.structure = structure
+class RocketStructure:
+    def __init__(self, mass_without_motor) -> None:
+        self.mass_without_motor = mass_without_motor

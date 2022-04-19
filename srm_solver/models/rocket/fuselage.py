@@ -10,6 +10,10 @@ from utils.geometric import get_circle_area
 
 
 class Fuselage:
+    """
+    Deals primarily with aerodynamic parameters.
+    """
+
     def __init__(
         self,
         length: float,
@@ -20,10 +24,10 @@ class Fuselage:
         self.length = length
         self.drag_coefficient = drag_coefficient
         self.outer_diameter = outer_diameter
-        self.frontal_area = frontal_area
+        self.frontal_area = self.get_frontal_area(frontal_area)
 
-    def get_frontal_area(self):
-        if self.frontal_area is not None:
-            return self.frontal_area
+    def get_frontal_area(self, frontal_area):
+        if frontal_area is not None:
+            return frontal_area
         else:
             return get_circle_area(self.outer_diameter)
