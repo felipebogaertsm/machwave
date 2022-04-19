@@ -27,7 +27,7 @@ from utils.plots import (
 )
 
 from simulations.internal_balistics_coupled import InternalBallisticsCoupled
-from simulations.structural import run_structural_simulation
+from simulations.structural import StructuralSimulation
 
 
 def main(from_json="input.json"):
@@ -237,7 +237,9 @@ def main(from_json="input.json"):
     # 'run_structural_simulation' returns an instance of the class
     # StructuralParameters.
 
-    structural_parameters = run_structural_simulation(structure, ib_parameters)
+    structural_parameters = StructuralSimulation(
+        structure, ib_parameters.P0
+    ).run()
 
     # /////////////////////////////////////////////////////////////////////////
     # RESULTS

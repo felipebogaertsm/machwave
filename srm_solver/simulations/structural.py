@@ -9,43 +9,57 @@
 Stores structural simulation function.
 """
 
+import numpy as np
+
+from models.motor.structure import MotorStructure
 from simulations.dataclasses.structural_parameters import StructuralParameters
 
 
-def run_structural_simulation(structure, ib_parameters):
-    # Casing thickness assuming thin wall [m]:
-    casing_sf = structure.get_casing_safety_factor(
-        structure.casing_yield_strength,
-        ib_parameters.P0,
-    )
+class StructuralSimulation:
+    def __init__(
+        self,
+        structure: MotorStructure,
+        chamber_pressure: np.array,
+    ) -> None:
+        self.structure = structure
+        self.chamber_pressure = chamber_pressure
 
-    # Nozzle thickness assuming thin wall [m]:
-    nozzle_conv_t, nozzle_div_t, = structure.get_nozzle_thickness(
-        ib_parameters.P0,
-    )
+    def run(self):
+        # Casing thickness assuming thin wall [m]:
+        casing_sf = self.structure.get_casing_safety_factor(
+            self.structure.casing_yield_strength,
+            self.chamber_pressure,
+        )
 
-    # Bulkhead thickness [m]:
-    bulkhead_t = structure.get_bulkhead_thickness(ib_parameters.P0)
+        # Nozzle thickness assuming thin wall [m]:
+        nozzle_conv_t, nozzle_div_t, = self.structure.get_nozzle_thickness(
+            self.chamber_pressure,
+        )
 
-    # Screw safety factors and optimal quantity (shear, tear and compression):
-    (
-        optimal_fasteners,
-        max_sf_fastener,
-        shear_sf,
-        tear_sf,
-        compression_sf,
-    ) = structure.get_optimal_fasteners(
-        ib_parameters.P0,
-    )
+        # Bulkhead thickness [m]:
+        bulkhead_t = self.structure.get_bulkhead_thickness(
+            self.chamber_pressure
+        )
 
-    return StructuralParameters(
-        casing_sf,
-        nozzle_conv_t,
-        nozzle_div_t,
-        bulkhead_t,
-        optimal_fasteners,
-        max_sf_fastener,
-        shear_sf,
-        tear_sf,
-        compression_sf,
-    )
+        # Screw safety factors and optimal quantity (shear, tear and compression):
+        (
+            optimal_fasteners,
+            max_sf_fastener,
+            shear_sf,
+            tear_sf,
+            compression_sf,
+        ) = self.structure.get_optimal_fasteners(
+            self.chamber_pressure,
+        )
+
+        return StructuralParameters(
+            casing_sf,
+            nozzle_conv_t,
+            nozzle_div_t,
+            bulkhead_t,
+            optimal_fasteners,
+            max_sf_fastener,
+            shear_sf,
+            tear_sf,
+            compression_sf,
+        )
