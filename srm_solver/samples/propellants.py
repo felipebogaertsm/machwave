@@ -9,7 +9,7 @@
 Propellant data was gathered from ProPEP3.
 """
 
-from models.propellant import Propellant
+from models.motor.propellant import Propellant
 
 KNDX = Propellant(
     [
