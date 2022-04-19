@@ -13,7 +13,7 @@ from pathlib import Path
 
 from models.bates import Bates as BATES
 from models.motor_structure import MotorStructure
-from samples.propellants import prop_data
+from samples.propellants import get_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
 
@@ -153,9 +153,9 @@ def main(from_json="input.json"):
     # It also does some small calculations of the chamber length and chamber
     # diameter.
 
-    # The propellant name input above triggers the prop_data function inside
+    # The propellant name input above triggers the get_propellant_from_name function inside
     # 'Propellant.py' to return the required data.
-    propellant_data = prop_data(prop_name=propellant)
+    propellant_data = get_propellant_from_name(prop_name=propellant)
 
     # Defining 'grain' as an instance of 'BATES' class:
     grain = BATES(
