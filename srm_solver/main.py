@@ -11,8 +11,8 @@ import numpy as np
 import json
 from pathlib import Path
 
-from models.bates import Bates as BATES
-from models.motor_structure import MotorStructure
+from models.motor.bates import Bates as BATES
+from models.motor.structure import MotorStructure
 from samples.propellants import get_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
