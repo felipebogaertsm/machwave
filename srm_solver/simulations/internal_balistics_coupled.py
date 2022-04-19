@@ -16,8 +16,6 @@ import numpy as np
 from models.ballistics import Ballistics
 from models.internal_ballistics import InternalBallistics
 
-from models.propellant import get_burn_rate_coefs
-
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
     get_divergent_correction_factor,
@@ -164,9 +162,8 @@ def run_ballistics(
             m_prop = np.append(m_prop, V_prop[i] * propellant.pp)
 
             # Get burn rate coefficients:
-            a, n = get_burn_rate_coefs(prop, P_0[i])
+            r = np.append(r, propellant.get_burn_rate(P_0[i]))
 
-            r = np.append(r, (a * (P_0[i] * 1e-6) ** n) * 1e-3)
             d_x = d_t * r[i]
             web = np.append(web, web[i] + d_x)
 

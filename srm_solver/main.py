@@ -13,7 +13,7 @@ from pathlib import Path
 
 from models.bates import Bates as BATES
 from models.motor_structure import MotorStructure
-from models.propellant import prop_data
+from samples.propellants import prop_data
 from models.recovery import Recovery
 from models.rocket import Rocket
 
