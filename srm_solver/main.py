@@ -26,7 +26,7 @@ from utils.plots import (
     ballistics_plots,
 )
 
-from simulations.internal_balistics_coupled import run_ballistics
+from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 from simulations.structural import run_structural_simulation
 
 
@@ -218,8 +218,7 @@ def main(from_json="input.json"):
     # 'run_ballistics' returns instances of the classes Ballistics and
     # InternalBallistics.
 
-    ballistics, ib_parameters = run_ballistics(
-        prop=propellant,
+    ballistics, ib_parameters = InternalBallisticsCoupled(
         propellant=propellant_data,
         grain=grain,
         structure=structure,
@@ -230,7 +229,7 @@ def main(from_json="input.json"):
         initial_elevation_amsl=initial_elevation_amsl,
         igniter_pressure=igniter_pressure,
         rail_length=rail_length,
-    )
+    ).run()
 
     # /////////////////////////////////////////////////////////////////////////
     # MOTOR STRUCTURE
