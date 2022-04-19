@@ -9,6 +9,8 @@
 Stores Recovery class and methods.
 """
 
+from .events import RecoveryEvent
+
 
 class Recovery:
     def __init__(
@@ -19,10 +21,15 @@ class Recovery:
         drag_coeff_main,
         main_diameter,
         main_chute_activation_height,
-    ):
+    ) -> None:
         self.drogue_time = drogue_time
         self.drag_coeff_drogue = drag_coeff_drogue
         self.drogue_diameter = drogue_diameter
         self.drag_coeff_main = drag_coeff_main
         self.main_diameter = main_diameter
         self.main_chute_activation_height = main_chute_activation_height
+
+        self.events = []
+
+    def add_event(self, recovery_event: RecoveryEvent) -> None:
+        self.events.append(recovery_event)
