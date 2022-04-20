@@ -24,7 +24,7 @@ class StructuralSimulation:
         self.structure = structure
         self.chamber_pressure = chamber_pressure
 
-    def run(self):
+    def run(self) -> StructuralParameters:
         # Casing thickness assuming thin wall [m]:
         casing_sf = self.structure.get_casing_safety_factor(
             self.structure.casing_yield_strength,

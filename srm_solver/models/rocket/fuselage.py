@@ -26,7 +26,7 @@ class Fuselage:
         self.outer_diameter = outer_diameter
         self.frontal_area = self.get_frontal_area(frontal_area)
 
-    def get_frontal_area(self, frontal_area):
+    def get_frontal_area(self, frontal_area: float) -> float:
         if frontal_area is not None:
             return frontal_area
         else:

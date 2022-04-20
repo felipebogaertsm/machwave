@@ -105,7 +105,7 @@ KNER = Propellant(
 )
 
 
-def get_propellant_from_name(prop_name: str):
+def get_propellant_from_name(prop_name: str) -> Propellant:
     """ "
     Returns propellant data based on the propellant name entered by the user as a string.
     """

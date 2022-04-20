@@ -13,9 +13,13 @@ the rocket ballistics at the same time.
 import fluids.atmosphere as atm
 import numpy as np
 
+from models.motor.bates import Bates
+from models.motor.propellant import Propellant
+from models.recovery import Recovery
+from models.rocket import Rocket
+from models.motor.structure import MotorStructure
 from simulations.dataclasses.ballistics import Ballistics
 from simulations.dataclasses.internal_ballistics import InternalBallistics
-
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
     get_divergent_correction_factor,
@@ -38,16 +42,16 @@ from utils.atmospheric import (
 class InternalBallisticsCoupled:
     def __init__(
         self,
-        propellant,
-        grain,
-        structure,
-        rocket,
-        recovery,
-        d_t,
-        dd_t,
-        initial_elevation_amsl,
-        igniter_pressure,
-        rail_length,
+        propellant: Propellant,
+        grain: Bates,
+        structure: MotorStructure,
+        rocket: Rocket,
+        recovery: Recovery,
+        d_t: float,
+        dd_t: float,
+        initial_elevation_amsl: float,
+        igniter_pressure: float,
+        rail_length: float,
     ) -> None:
         self.propellant = propellant
         self.grain = grain
