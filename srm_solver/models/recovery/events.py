@@ -11,7 +11,7 @@ from models.recovery.parachutes import Parachute
 
 
 class RecoveryEvent:
-    def __init__(self, trigger_value, parachute: Parachute) -> None:
+    def __init__(self, trigger_value: float, parachute: Parachute) -> None:
         self.trigger_value = trigger_value
         self.parachute = parachute
 
