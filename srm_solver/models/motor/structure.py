@@ -36,7 +36,7 @@ class Nozzle:
 
     def get_nozzle_thickness(
         self,
-        chamber_pressure,
+        chamber_pressure: np.array,
     ):
         """Returns nozzle convergent and divergent thickness"""
         max_chamber_pressure = np.max(chamber_pressure)
@@ -93,7 +93,7 @@ class CombustionChamber:
         self.casing_material = casing_material
         self.bulkhead_material = bulkhead_material
 
-    def get_bulkhead_thickness(self, chamber_pressure):
+    def get_bulkhead_thickness(self, chamber_pressure: np.array):
         """
         Returns the thickness of a plane bulkhead pressure vessel.
         """
@@ -104,13 +104,18 @@ class CombustionChamber:
             )
         )
 
-    def get_chamber_length(self, grain_length, grain_count, grain_spacing):
+    def get_chamber_length(
+        self,
+        grain_length: float,
+        grain_count: int,
+        grain_spacing: float,
+    ) -> float:
         """
         Returns the chamber length of the SRM, given the grain parameters.
         """
         return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
-    def get_casing_safety_factor(self, chamber_pressure):
+    def get_casing_safety_factor(self, chamber_pressure: np.array) -> float:
         """
         Returns the thickness for a cylindrical pressure vessel.
         """
@@ -161,12 +166,12 @@ class BoltedCombustionChamber(CombustionChamber):
 
     def get_chamber_inner_diameter(
         self,
-        casing_inner_diameter,
-        liner_thickness,
-    ):
+        casing_inner_diameter: float,
+        liner_thickness: float,
+    ) -> float:
         return casing_inner_diameter - 2 * liner_thickness
 
-    def get_optimal_fasteners(self, chamber_pressure):
+    def get_optimal_fasteners(self, chamber_pressure: np.array):
         max_number_of_screws = self.max_number_of_screws
         casing_yield_strength = self.casing_yield_strength
         screw_ultimate_strength = self.screw_ultimate_strength

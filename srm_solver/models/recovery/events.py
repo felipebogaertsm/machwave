@@ -15,7 +15,7 @@ class RecoveryEvent:
         self.trigger_value = trigger_value
         self.parachute = parachute
 
-    def is_active(self):
+    def is_active(self) -> bool:
         pass
 
 
@@ -34,7 +34,7 @@ class ApogeeBasedEvent(RecoveryEvent):
         time: np.array,
         propellant_mass: float,
         time_after_apogee: float,
-    ):
+    ) -> bool:
         max_height_index = np.argmax(height)
         apogee_time = time[max_height_index]
 

@@ -25,19 +25,19 @@ import scipy.constants
 class Propellant:
     def __init__(
         self,
-        burn_rate,
-        n_ce,
-        pp,
-        k_mix_ch,
-        k_2ph_ex,
-        T0_ideal,
-        M_ch,
-        M_ex,
-        Isp_frozen,
-        Isp_shifting,
-        qsi_ch,
-        qsi_ex,
-    ):
+        burn_rate: list,
+        n_ce: float,
+        pp: float,
+        k_mix_ch: float,
+        k_2ph_ex: float,
+        T0_ideal: float,
+        M_ch: float,
+        M_ex: float,
+        Isp_frozen: float,
+        Isp_shifting: float,
+        qsi_ch: float,
+        qsi_ex: float,
+    ) -> None:
         self.burn_rate = burn_rate
         self.n_ce = n_ce
         self.pp = pp
@@ -55,7 +55,7 @@ class Propellant:
         self.qsi_ch = qsi_ch
         self.qsi_ex = qsi_ex
 
-    def get_burn_rate(self, chamber_pressure):
+    def get_burn_rate(self, chamber_pressure: float) -> float:
         """
         chamber_pressure must be in Pascals.
         """

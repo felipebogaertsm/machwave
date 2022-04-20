@@ -6,6 +6,6 @@
 # the Free Software Foundation, version 3.
 
 
-class RocketStructure:
-    def __init__(self, mass_without_motor: float) -> None:
-        self.mass_without_motor = mass_without_motor
+class Atmosphere:
+    def __init__(self) -> None:
+        pass

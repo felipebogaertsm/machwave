@@ -28,9 +28,9 @@ class HemisphericalParachute(Parachute):
         self.diameter = diameter
 
     @property
-    def drag_coefficient(self):
+    def drag_coefficient(self) -> float:
         return 0.71
 
     @property
-    def area(self):
+    def area(self) -> float:
         return get_circle_area(self.diameter)
