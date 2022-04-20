@@ -18,14 +18,23 @@ class Bates:
     def __init__(
         self,
         segment_count: int,
+        segment_spacing: float,
         outer_diameter: float,
         core_diameter: np.array,
         segment_length: np.array,
     ):
         self.segment_count = segment_count
+        self.segment_spacing = segment_spacing
         self.outer_diameter = outer_diameter
         self.core_diameter = core_diameter
         self.segment_length = segment_length
+
+    @property
+    def total_length(self):
+        return (
+            np.sum(self.segment_length)
+            + (self.segment_count - 1) * self.segment_spacing
+        )
 
     def get_optimal_segment_length(self):
         """
