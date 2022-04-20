@@ -12,19 +12,19 @@ class Atmosphere1976:
     def __init__(self) -> None:
         pass
 
-    def get_air_density_by_altitude(y_amsl):
+    def density(self, y_amsl):
         """
         Gets the air density using the AMSL elevation and the fluids library.
         """
         return ATMOSPHERE_1976(y_amsl).rho
 
-    def get_gravity_by_altitude(y_amsl):
+    def gravity(self, y_amsl):
         """
         Gets the gravity using the AMSL elevation and the fluids library.
         """
         return ATMOSPHERE_1976.gravity(y_amsl)
 
-    def get_air_pressure_by_altitude(y_amsl):
+    def pressure(self, y_amsl):
         """
         Gets the air density using the AMSL elevation and the fluids library.
         """
