@@ -30,7 +30,7 @@ from utils.isentropic_flow import (
     get_impulses,
 )
 from utils.solvers import solve_cp_seidel, ballistics_ode
-from utils.units import get_pa_to_psi
+from utils.units import convert_pa_to_psi
 from utils.geometric import get_cylinder_volume
 from utils.atmospheric import (
     get_air_density_by_altitude,
@@ -86,7 +86,7 @@ class InternalBallisticsCoupled:
         rho_air = np.array([])
         g = np.array([])
         P_0 = np.array([self.igniter_pressure])
-        P_0_psi = np.array([get_pa_to_psi(self.igniter_pressure)])
+        P_0_psi = np.array([convert_pa_to_psi(self.igniter_pressure)])
         P_exit = np.array([])
         y = (np.array([0]),)
         v = np.array([0])
@@ -249,7 +249,7 @@ class InternalBallisticsCoupled:
                     P_0,
                     P_0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * self.d_t,
                 )
-                P_0_psi = np.append(P_0_psi, get_pa_to_psi(P_0[i]))
+                P_0_psi = np.append(P_0_psi, convert_pa_to_psi(P_0[i]))
 
                 optimal_expansion_ratio = np.append(
                     optimal_expansion_ratio,
