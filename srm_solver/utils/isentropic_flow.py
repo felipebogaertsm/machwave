@@ -63,7 +63,7 @@ def get_exit_pressure(k_2ph_ex, E, P_0):
     return P_exit
 
 
-def get_thrust_coeff(P_0, P_exit, P_external, E, k, n_cf):
+def get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf):
     """
     Returns value for thrust coefficient based on the chamber pressure and
     correction factor.
@@ -82,6 +82,19 @@ def get_thrust_coeff(P_0, P_exit, P_external, E, k, n_cf):
         Cf_ideal = 0
 
     return Cf, Cf_ideal
+
+
+def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> float:
+    """
+    :param C_f: instantaneous thrust coefficient, non ideal
+    :param P_0: instantaneous chamber stagnation pressure, in Pascals
+    :param nozzle_throat_area: nozzle throat area, in sq. meters
+    :return: thrust in Newtons
+    """
+    return C_f * P_0 * nozzle_throat_area
+
+def is_flow_choked(chamber_pressure: float, external_pressure: float, critical_pressure_ratio: float)-> bool:
+    return chamber_pressure <= external_pressure / critical_pressure_ratio
 
 
 def get_impulses(F_avg, t, t_burnout, m_prop):

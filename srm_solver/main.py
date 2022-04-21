@@ -272,71 +272,70 @@ def main(from_json="input.json"):
     # 'run_structural_simulation' returns an instance of the class
     # StructuralParameters.
 
+    structural_parameters = StructuralSimulation(
+        structure, ib_parameters.P0, safety_factor
+    ).run()
 
-#     structural_parameters = StructuralSimulation(
-#         structure, ib_parameters.P0
-#     ).run()
+    # /////////////////////////////////////////////////////////////////////////
+    # RESULTS
+    # This section prints the important data based on previous calculations.
 
-#     # /////////////////////////////////////////////////////////////////////////
-#     # RESULTS
-#     # This section prints the important data based on previous calculations.
+    print_results(
+        grain,
+        structure,
+        ib_parameters,
+        structural_parameters,
+        ballistics,
+        rocket,
+    )
 
-#     print_results(
-#         grain,
-#         structure,
-#         ib_parameters,
-#         structural_parameters,
-#         ballistics,
-#         rocket,
-#     )
+    # /////////////////////////////////////////////////////////////////////////
+    # OUTPUT TO ENG AND CSV FILE
+    # This section exports the results inside a .csv and a .eng file. The .eng
+    # file is totally compatible with OpenRocket or RASAero software. The .csv is
+    # exported mainly for the ease of visualization and storage.
 
-#     # /////////////////////////////////////////////////////////////////////////
-#     # OUTPUT TO ENG AND CSV FILE
-#     # This section exports the results inside a .csv and a .eng file. The .eng
-#     # file is totally compatible with OpenRocket or RASAero software. The .csv is
-#     # exported mainly for the ease of visualization and storage.
+    output_eng_csv(
+        ib_parameters,
+        structure,
+        propellant_data,
+        25,
+        d_t,
+        manufacturer,
+        name,
+    )
 
-#     output_eng_csv(
-#         ib_parameters,
-#         structure,
-#         propellant_data,
-#         25,
-#         d_t,
-#         manufacturer,
-#         name,
-#     )
+    # /////////////////////////////////////////////////////////////////////////
+    # TIME FUNCTION END
+    # Ends the time function.
 
-#     # /////////////////////////////////////////////////////////////////////////
-#     # TIME FUNCTION END
-#     # Ends the time function.
+    print("Execution time: %.4f seconds\n\n" % (time.time() - start))
 
-#     print("Execution time: %.4f seconds\n\n" % (time.time() - start))
+    # /////////////////////////////////////////////////////////////////////////
+    # PLOTS
+    # Saves some of the most important plots to the 'output' folder.
 
-#     # /////////////////////////////////////////////////////////////////////////
-#     # PLOTS
-#     # Saves some of the most important plots to the 'output' folder.
-
-#     performance_figure = performance_plot(
-#         ib_parameters.T,
-#         ib_parameters.P0,
-#         ib_parameters.t,
-#         ib_parameters.t_thrust,
-#     )
-#     main_figure = main_plot(
-#         ib_parameters.t,
-#         ib_parameters.T,
-#         ib_parameters.P0,
-#         ib_parameters.Kn,
-#         ib_parameters.m_prop,
-#         ib_parameters.t_thrust,
-#     )
-#     mass_flux_figure = mass_flux_plot(
-#         ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-#     )
-#     ballistics_plots(
-#         ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
-#     )
-#     performance_interactive_plot(ib_parameters).show()
+    performance_figure = performance_plot(
+        ib_parameters.T,
+        ib_parameters.P0,
+        ib_parameters.t,
+        ib_parameters.t_thrust,
+    )
+    main_figure = main_plot(
+        ib_parameters.t,
+        ib_parameters.T,
+        ib_parameters.P0,
+        ib_parameters.Kn,
+        ib_parameters.m_prop,
+        ib_parameters.t_thrust,
+    )
+    mass_flux_figure = mass_flux_plot(
+        ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
+    )
+    ballistics_plots(
+        ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
+    )
+    performance_interactive_plot(ib_parameters).show()
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ class Bates:
                 for k in range(j + 1):
                     total_grain_Ab[j, i] = total_grain_Ab[
                         j, i
-                    ] + self.get_burn_area(x[i], k)
+                    ] + self.get_burn_area_per_segment(k, x[i])
                 segment_mass_flux[j, i] = (
                     total_grain_Ab[j, i] * propellant_density * burn_rate[i]
                 )

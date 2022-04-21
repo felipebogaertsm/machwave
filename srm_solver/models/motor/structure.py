@@ -13,63 +13,7 @@ import numpy as np
 
 from models.materials import Material
 from models.motor.thermals import ThermalLiner
-from utils.geometric import get_circle_area
-
-
-class Nozzle:
-    def __init__(
-        self,
-        throat_diameter,
-        divergent_angle,
-        convergent_angle,
-        expansion_ratio,
-        material=None,
-    ) -> None:
-        self.throat_diameter = throat_diameter
-        self.divergent_angle = divergent_angle
-        self.convergent_angle = convergent_angle
-        self.expansion_ratio = expansion_ratio
-        self.material = material
-
-    def get_throat_area(self):
-        return get_circle_area(self.throat_diameter)
-
-    def get_nozzle_thickness(
-        self,
-        chamber_pressure: np.array,
-    ):
-        """Returns nozzle convergent and divergent thickness"""
-        max_chamber_pressure = np.max(chamber_pressure)
-        convergent_angle = self.convergent_angle
-        divergent_angle = self.divergent_angle
-        nozzle_yield_strength = self.material.yield_strength
-
-        # Yield strength corrected by the safety factor:
-        safe_yield_strength = nozzle_yield_strength / self.safety_factor
-
-        nozzle_conv_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2
-        ) / (
-            (
-                safe_yield_strength
-                - 0.6
-                * max_chamber_pressure
-                * (np.cos(np.deg2rad(convergent_angle)))
-            )
-        )
-
-        nozzle_div_thickness = (
-            np.max(chamber_pressure) * self.casing_inner_diameter / 2
-        ) / (
-            (
-                safe_yield_strength
-                - 0.6
-                * max_chamber_pressure
-                * (np.cos(np.deg2rad(divergent_angle)))
-            )
-        )
-
-        return nozzle_conv_thickness, nozzle_div_thickness
+from utils.geometric import get_circle_area, get_cylinder_volume
 
 
 class CombustionChamber:
@@ -93,14 +37,16 @@ class CombustionChamber:
         self.casing_material = casing_material
         self.bulkhead_material = bulkhead_material
 
-    def get_bulkhead_thickness(self, chamber_pressure: np.array):
+    def get_bulkhead_thickness(
+        self, chamber_pressure: np.array, safety_factor: float
+    ):
         """
         Returns the thickness of a plane bulkhead pressure vessel.
         """
         return self.inner_diameter * (
             np.sqrt(
                 (0.75 * np.max(chamber_pressure))
-                / (self.bulkhead_material.yield_strength / self.safety_factor)
+                / (self.bulkhead_material.yield_strength / safety_factor)
             )
         )
 
@@ -119,18 +65,19 @@ class CombustionChamber:
         """
         Returns the thickness for a cylindrical pressure vessel.
         """
-        casing_yield_strength = self.casing_yield_strength
+        casing_yield_strength = self.casing_material.yield_strength
 
-        thickness = (
-            self.casing_outer_diameter - self.casing_inner_diameter
-        ) / 2
+        thickness = (self.outer_diameter - self.inner_diameter) / 2
         max_chamber_pressure = np.max(chamber_pressure)
 
         bursting_pressure = (casing_yield_strength * thickness) / (
-            self.casing_inner_diameter * 0.5 + 0.6 * thickness
+            self.inner_diameter * 0.5 + 0.6 * thickness
         )
 
         return bursting_pressure / max_chamber_pressure  # casing safety factor
+
+    def get_empty_volume(self) -> None:
+        return get_cylinder_volume(self.inner_diameter, self.length)
 
 
 class BoltedCombustionChamber(CombustionChamber):
@@ -166,52 +113,48 @@ class BoltedCombustionChamber(CombustionChamber):
 
     def get_chamber_inner_diameter(
         self,
-        casing_inner_diameter: float,
+        inner_diameter: float,
         liner_thickness: float,
     ) -> float:
-        return casing_inner_diameter - 2 * liner_thickness
+        return inner_diameter - 2 * liner_thickness
 
     def get_optimal_fasteners(self, chamber_pressure: np.array):
-        max_number_of_screws = self.max_number_of_screws
-        casing_yield_strength = self.casing_yield_strength
-        screw_ultimate_strength = self.screw_ultimate_strength
+        max_screw_count = self.max_screw_count
+        casing_yield_strength = self.casing_material.yield_strength
+        screw_ultimate_strength = self.screw_material.ultimate_strength
 
-        shear_safety_factor = np.zeros(max_number_of_screws)
-        tear_safety_factor = np.zeros(max_number_of_screws)
-        compression_safety_factor = np.zeros(max_number_of_screws)
+        shear_safety_factor = np.zeros(max_screw_count)
+        tear_safety_factor = np.zeros(max_screw_count)
+        compression_safety_factor = np.zeros(max_screw_count)
 
-        for screw_count in range(1, max_number_of_screws + 1):
+        for screw_count in range(1, max_screw_count + 1):
             shear_area = (self.screw_diameter ** 2) * np.pi * 0.25
 
             tear_area = (
                 (
                     np.pi
                     * 0.25
-                    * (
-                        (self.casing_outer_diameter ** 2)
-                        - (self.casing_inner_diameter ** 2)
-                    )
+                    * ((self.outer_diameter ** 2) - (self.inner_diameter ** 2))
                 )
                 / screw_count
             ) - (
                 np.arcsin(
                     (self.screw_clearance_diameter / 2)
-                    / (self.casing_inner_diameter / 2)
+                    / (self.inner_diameter / 2)
                 )
             ) * 0.25 * (
-                (self.casing_outer_diameter ** 2)
-                - (self.casing_inner_diameter ** 2)
+                (self.outer_diameter ** 2) - (self.inner_diameter ** 2)
             )
 
             compression_area = (
-                ((self.casing_outer_diameter - self.casing_inner_diameter))
+                ((self.outer_diameter - self.inner_diameter))
                 * self.screw_clearance_diameter
                 / 2
             )
 
             force_on_each_fastener = (
                 np.max(chamber_pressure)
-                * (np.pi * (self.casing_inner_diameter / 2) ** 2)
+                * (np.pi * (self.inner_diameter / 2) ** 2)
             ) / screw_count
 
             shear_stress = force_on_each_fastener / shear_area
@@ -248,6 +191,64 @@ class BoltedCombustionChamber(CombustionChamber):
             tear_safety_factor,
             compression_safety_factor,
         )
+
+
+class Nozzle:
+    def __init__(
+        self,
+        throat_diameter,
+        divergent_angle,
+        convergent_angle,
+        expansion_ratio,
+        material=None,
+    ) -> None:
+        self.throat_diameter = throat_diameter
+        self.divergent_angle = divergent_angle
+        self.convergent_angle = convergent_angle
+        self.expansion_ratio = expansion_ratio
+        self.material = material
+
+    def get_throat_area(self):
+        return get_circle_area(self.throat_diameter)
+
+    def get_nozzle_thickness(
+        self,
+        chamber_pressure: np.array,
+        safety_factor: float,
+        chamber: CombustionChamber,
+    ):
+        """Returns nozzle convergent and divergent thickness"""
+        max_chamber_pressure = np.max(chamber_pressure)
+        convergent_angle = self.convergent_angle
+        divergent_angle = self.divergent_angle
+        nozzle_yield_strength = self.material.yield_strength
+
+        # Yield strength corrected by the safety factor:
+        safe_yield_strength = nozzle_yield_strength / safety_factor
+
+        nozzle_conv_thickness = (
+            np.max(chamber_pressure) * chamber.inner_diameter / 2
+        ) / (
+            (
+                safe_yield_strength
+                - 0.6
+                * max_chamber_pressure
+                * (np.cos(np.deg2rad(convergent_angle)))
+            )
+        )
+
+        nozzle_div_thickness = (
+            np.max(chamber_pressure) * chamber.inner_diameter / 2
+        ) / (
+            (
+                safe_yield_strength
+                - 0.6
+                * max_chamber_pressure
+                * (np.cos(np.deg2rad(divergent_angle)))
+            )
+        )
+
+        return nozzle_conv_thickness, nozzle_div_thickness
 
 
 class MotorStructure:
