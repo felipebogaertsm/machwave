@@ -32,7 +32,7 @@ class Nozzle:
         self.material = material
 
     def get_throat_area(self):
-        return get_circle_area(self.nozzle_throat_diameter)
+        return get_circle_area(self.throat_diameter)
 
     def get_nozzle_thickness(
         self,

@@ -17,19 +17,20 @@ from models.motor.structure import (
     MotorStructure,
     Nozzle,
 )
-from samples.propellants import get_propellant_from_name
+from models.propellants import get_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
 from models.materials.metals import Steel
-from srm_solver.models.materials.elastics import EPDM
-from srm_solver.models.motor.thermals import ThermalLiner
-from srm_solver.models.recovery.events import (
+from models.materials.elastics import EPDM
+from models.motor.thermals import ThermalLiner
+from models.recovery.events import (
     AltitudeBasedEvent,
     ApogeeBasedEvent,
 )
-from srm_solver.models.recovery.parachutes import HemisphericalParachute
-from srm_solver.models.rocket.fuselage import Fuselage
-from srm_solver.models.rocket.structure import RocketStructure
+from models.recovery.parachutes import HemisphericalParachute
+from models.rocket.fuselage import Fuselage
+from models.rocket.structure import RocketStructure
+from models.atmosphere import Atmosphere1976
 
 from utils.utilities import output_eng_csv, print_results
 from utils.plots import (
@@ -257,6 +258,7 @@ def main(from_json="input.json"):
         structure=structure,
         rocket=rocket,
         recovery=recovery,
+        atmosphere=Atmosphere1976(),
         d_t=d_t,
         dd_t=dd_t,
         initial_elevation_amsl=initial_elevation_amsl,
@@ -270,70 +272,71 @@ def main(from_json="input.json"):
     # 'run_structural_simulation' returns an instance of the class
     # StructuralParameters.
 
-    structural_parameters = StructuralSimulation(
-        structure, ib_parameters.P0
-    ).run()
 
-    # /////////////////////////////////////////////////////////////////////////
-    # RESULTS
-    # This section prints the important data based on previous calculations.
+#     structural_parameters = StructuralSimulation(
+#         structure, ib_parameters.P0
+#     ).run()
 
-    print_results(
-        grain,
-        structure,
-        ib_parameters,
-        structural_parameters,
-        ballistics,
-        rocket,
-    )
+#     # /////////////////////////////////////////////////////////////////////////
+#     # RESULTS
+#     # This section prints the important data based on previous calculations.
 
-    # /////////////////////////////////////////////////////////////////////////
-    # OUTPUT TO ENG AND CSV FILE
-    # This section exports the results inside a .csv and a .eng file. The .eng
-    # file is totally compatible with OpenRocket or RASAero software. The .csv is
-    # exported mainly for the ease of visualization and storage.
+#     print_results(
+#         grain,
+#         structure,
+#         ib_parameters,
+#         structural_parameters,
+#         ballistics,
+#         rocket,
+#     )
 
-    output_eng_csv(
-        ib_parameters,
-        structure,
-        propellant_data,
-        25,
-        d_t,
-        manufacturer,
-        name,
-    )
+#     # /////////////////////////////////////////////////////////////////////////
+#     # OUTPUT TO ENG AND CSV FILE
+#     # This section exports the results inside a .csv and a .eng file. The .eng
+#     # file is totally compatible with OpenRocket or RASAero software. The .csv is
+#     # exported mainly for the ease of visualization and storage.
 
-    # /////////////////////////////////////////////////////////////////////////
-    # TIME FUNCTION END
-    # Ends the time function.
+#     output_eng_csv(
+#         ib_parameters,
+#         structure,
+#         propellant_data,
+#         25,
+#         d_t,
+#         manufacturer,
+#         name,
+#     )
 
-    print("Execution time: %.4f seconds\n\n" % (time.time() - start))
+#     # /////////////////////////////////////////////////////////////////////////
+#     # TIME FUNCTION END
+#     # Ends the time function.
 
-    # /////////////////////////////////////////////////////////////////////////
-    # PLOTS
-    # Saves some of the most important plots to the 'output' folder.
+#     print("Execution time: %.4f seconds\n\n" % (time.time() - start))
 
-    performance_figure = performance_plot(
-        ib_parameters.T,
-        ib_parameters.P0,
-        ib_parameters.t,
-        ib_parameters.t_thrust,
-    )
-    main_figure = main_plot(
-        ib_parameters.t,
-        ib_parameters.T,
-        ib_parameters.P0,
-        ib_parameters.Kn,
-        ib_parameters.m_prop,
-        ib_parameters.t_thrust,
-    )
-    mass_flux_figure = mass_flux_plot(
-        ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-    )
-    ballistics_plots(
-        ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
-    )
-    performance_interactive_plot(ib_parameters).show()
+#     # /////////////////////////////////////////////////////////////////////////
+#     # PLOTS
+#     # Saves some of the most important plots to the 'output' folder.
+
+#     performance_figure = performance_plot(
+#         ib_parameters.T,
+#         ib_parameters.P0,
+#         ib_parameters.t,
+#         ib_parameters.t_thrust,
+#     )
+#     main_figure = main_plot(
+#         ib_parameters.t,
+#         ib_parameters.T,
+#         ib_parameters.P0,
+#         ib_parameters.Kn,
+#         ib_parameters.m_prop,
+#         ib_parameters.t_thrust,
+#     )
+#     mass_flux_figure = mass_flux_plot(
+#         ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
+#     )
+#     ballistics_plots(
+#         ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
+#     )
+#     performance_interactive_plot(ib_parameters).show()
 
 
 if __name__ == "__main__":

@@ -67,39 +67,66 @@ class Bates:
                 )
         return segment_mass_flux
 
-    def get_burn_area(self, x: float, j: int):
-        """
-        Calculates the BATES burn area given the web distance and segment
-        number.
-        """
-        pi = np.pi
+    def get_burn_area_per_segment(
+        self, segment_index: int, web_thickness: float
+    ):
         D_grain = self.outer_diameter
         D_core = self.core_diameter
         L_grain = self.segment_length
 
-        burn_area = np.pi * (
-            ((D_grain ** 2) - (D_core[j] + 2 * x) ** 2) / 2
-            + ((L_grain[j] - 2 * x) * (D_core[j] + 2 * x))
-        )
+        if 0.5 * (D_grain - D_core[segment_index]) >= web_thickness:
+            return np.pi * (
+                (
+                    (D_grain ** 2)
+                    - (D_core[segment_index] + 2 * web_thickness) ** 2
+                )
+                / 2
+                + (
+                    (L_grain[segment_index] - 2 * web_thickness)
+                    * (D_core[segment_index] + 2 * web_thickness)
+                )
+            )
+        else:
+            return 0
 
-        return burn_area
+    def get_burn_area(self, x: float):
+        """
+        Calculates the BATES burn area given the web distance.
+        """
+        burn_areas = np.array([])
 
-    def get_propellant_volume(self, x: float, j: int):
-        """
-        Calculates the BATES grain volume given the web distance and segment
-        number.
-        """
+        for i in range(self.segment_count):
+            burn_areas = np.append(
+                burn_areas, self.get_burn_area_per_segment(i, x)
+            )
+
+        return np.sum(burn_areas)
+
+    def get_propellant_volume_per_segment(self, x: float, j: int):
         D_grain = self.outer_diameter
         D_core = self.core_diameter
         L_grain = self.segment_length
-        N = self.segment_count
 
-        volume = (np.pi / 4) * (
-            ((D_grain ** 2) - ((D_core[j] + 2 * x) ** 2))
-            * (L_grain[j] - 2 * x)
-        )
+        if 0.5 * (D_grain - D_core[j]) >= x:
+            return (np.pi / 4) * (
+                ((D_grain ** 2) - ((D_core[j] + 2 * x) ** 2))
+                * (L_grain[j] - 2 * x)
+            )
+        else:
+            return 0
 
-        return volume
+    def get_propellant_volume(self, x: float):
+        """
+        Calculates the BATES grain volume given the web distance.
+        """
+        prop_volume = np.array([])
+
+        for i in range(self.segment_count):
+            prop_volume = np.append(
+                prop_volume, self.get_propellant_volume_per_segment(x, i)
+            )
+
+        return np.sum(prop_volume)
 
     def get_burn_profile(self, A_burn: list):
         """
