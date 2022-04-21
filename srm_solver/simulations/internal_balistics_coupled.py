@@ -27,8 +27,10 @@ from utils.isentropic_flow import (
     get_opt_expansion_ratio,
     get_exit_pressure,
     get_operational_correction_factors,
-    get_thrust_coeff,
+    get_thrust_coefficients,
     get_impulses,
+    get_thrust_from_cf,
+    is_flow_choked,
 )
 from utils.solvers import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
@@ -91,8 +93,8 @@ class InternalBallisticsCoupled:
         mach_no = np.array([0])
 
         # ALLOCATING NUMPY ARRAYS FOR FUTURE CALCULATIONS
-        m_vehicle = np.array([])  # total mass of the vehicle
-        r = np.array([])  # burn rate
+        vehicle_mass = np.array([])  # total mass of the vehicle
+        burn_rate = np.array([])  # burn rate
         V_0 = np.array([])  # empty chamber volume
         optimal_expansion_ratio = np.array([])  # opt. expansion ratio
         A_burn = np.array([])  # burn area
@@ -122,10 +124,7 @@ class InternalBallisticsCoupled:
         # Variables storing the apogee, apogee time and main chute ejection time:
         apogee, apogee_time, main_time = 0, -1, 0
         # Calculation of empty chamber volume (constant throughout the operation):
-        empty_chamber_volume = get_cylinder_volume(
-            self.structure.chamber.inner_diameter,
-            self.structure.chamber.length,
-        )
+        empty_chamber_volume = self.structure.chamber.get_empty_volume()
 
         # If the propellant mass is non zero, 'end_thrust' must be False,
         # since there is still thrust being produced.
@@ -164,7 +163,7 @@ class InternalBallisticsCoupled:
                 ),
             )
 
-            if end_thrust is False:
+            if end_thrust is False:  # while motor is producing thrust
                 A_burn, V_prop = (
                     np.append(A_burn, self.grain.get_burn_area(web[i])),
                     np.append(
@@ -178,9 +177,11 @@ class InternalBallisticsCoupled:
                 m_prop = np.append(m_prop, V_prop[i] * self.propellant.density)
 
                 # Get burn rate coefficients:
-                r = np.append(r, self.propellant.get_burn_rate(P_0[i]))
+                burn_rate = np.append(
+                    burn_rate, self.propellant.get_burn_rate(P_0[i])
+                )
 
-                d_x = self.d_t * r[i]
+                d_x = self.d_t * burn_rate[i]
                 web = np.append(web, web[i] + d_x)
 
                 k1 = solve_cp_seidel(
@@ -193,7 +194,7 @@ class InternalBallisticsCoupled:
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
-                    r[i],
+                    burn_rate[i],
                 )
                 k2 = solve_cp_seidel(
                     P_0[i] + 0.5 * k1 * self.d_t,
@@ -205,7 +206,7 @@ class InternalBallisticsCoupled:
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
-                    r[i],
+                    burn_rate[i],
                 )
                 k3 = solve_cp_seidel(
                     P_0[i] + 0.5 * k2 * self.d_t,
@@ -217,7 +218,7 @@ class InternalBallisticsCoupled:
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
-                    r[i],
+                    burn_rate[i],
                 )
                 k4 = solve_cp_seidel(
                     P_0[i] + 0.5 * k3 * self.d_t,
@@ -229,7 +230,7 @@ class InternalBallisticsCoupled:
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
-                    r[i],
+                    burn_rate[i],
                 )
 
                 P_0 = np.append(
@@ -283,7 +284,7 @@ class InternalBallisticsCoupled:
                     ),
                 )
 
-                C_f_atual, C_f_ideal_atual = get_thrust_coeff(
+                C_f_atual, C_f_ideal_atual = get_thrust_coefficients(
                     P_0[i],
                     P_exit[i],
                     P_ext[i],
@@ -296,8 +297,10 @@ class InternalBallisticsCoupled:
                 C_f_ideal = np.append(C_f_ideal, C_f_ideal_atual)
                 T = np.append(
                     T,
-                    C_f[i] * self.structure.nozzle.get_throat_area() * P_0[i],
-                )
+                    get_thrust_from_cf(
+                        C_f[i], self.structure.nozzle.get_throat_area(), P_0[i]
+                    ),
+                )  # thrust calculation
 
                 if m_prop[i] == 0 and end_burn is False:
                     t_burnout = t[i]
@@ -305,7 +308,7 @@ class InternalBallisticsCoupled:
 
                 # This if statement changes 'end_thrust' to True if supersonic
                 # flow is not achieved anymore.
-                if P_0[i] <= P_ext[i] / critical_pressure_ratio:
+                if is_flow_choked(P_0[i], P_ext[i], critical_pressure_ratio):
                     t_thrust = t[i]
                     self.d_t = self.d_t * self.dd_t
                     T_mean = np.mean(T)
@@ -313,7 +316,6 @@ class InternalBallisticsCoupled:
 
             # This else statement is necessary since the thrust and propellant
             # mass arrays are still being used inside the main while loop.
-
             # Therefore, it is necessary to append 0 to these arrays for the
             # ballistic part of the while loop to work correctly.
             else:
@@ -322,12 +324,12 @@ class InternalBallisticsCoupled:
 
             # Entering first value for the vehicle mass and acceleration:
             if i == 0:
-                m_vehicle_initial = (
+                vehicle_mass_initial = (
                     m_prop[0]
                     + self.rocket.structure.mass_without_motor
                     + self.structure.dry_mass
                 )
-                m_vehicle = np.append(m_vehicle, m_vehicle_initial)
+                vehicle_mass = np.append(vehicle_mass, vehicle_mass_initial)
                 acc = np.array(
                     [
                         T[0]
@@ -341,56 +343,39 @@ class InternalBallisticsCoupled:
 
             # Appending the current vehicle mass, consisting of the motor
             # structural mass, mass without the motor and propellant mass.
-            m_vehicle = np.append(
-                m_vehicle,
+            vehicle_mass = np.append(
+                vehicle_mass,
                 m_prop[i]
                 + self.structure.dry_mass
                 + self.rocket.structure.mass_without_motor,
             )
 
             # Drag properties:
-            if (
-                v[i] < 0
-                and y[i] <= self.recovery.main_chute_activation_height
-                and m_prop[i] == 0
-            ):
-                if main_time == 0:
-                    main_time = t[i]
-                A_drag = (
-                    (np.pi * (self.rocket.fuselage.outer_diameter / 2) ** 2)
-                    * self.rocket.drag_coeff
-                    + (np.pi * self.recovery.drogue_diameter ** 2)
-                    * 0.25
-                    * self.recovery.drag_coeff_drogue
-                    + (np.pi * self.recovery.drag_coeff_main ** 2)
-                    * 0.25
-                    * self.recovery.drag_coeff_main
-                )
-            elif (
-                apogee_time >= 0
-                and t[i] >= apogee_time + self.recovery.drogue_time
-            ):
-                A_drag = (
-                    np.pi * (self.rocket.outer_diameter / 2) ** 2
-                ) * self.rocket.drag_coeff + (
-                    np.pi * self.recovery.drogue_diameter ** 2
-                ) * 0.25 * self.recovery.drag_coeff_drogue
-            else:
-                A_drag = (
-                    (np.pi * self.rocket.outer_diameter ** 2)
-                    * self.rocket.drag_coeff
-                    * 0.25
-                )
+            fuselage_area = self.rocket.fuselage.frontal_area
+            fuselage_drag_coeff = self.rocket.fuselage.drag_coefficient
+            (
+                recovery_drag_coeff,
+                recovery_area,
+            ) = self.recovery.get_drag_coefficient_and_area(
+                height=y, time=t, velocity=v, propellant_mass=m_prop
+            )
 
-            D = (A_drag * rho_air[i]) * 0.5
+            D = (
+                (
+                    fuselage_area * fuselage_drag_coeff
+                    + recovery_area * recovery_drag_coeff
+                )
+                * rho_air[i]
+                * 0.5
+            )
 
-            p1, l1 = ballistics_ode(y[i], v[i], T[i], D, m_vehicle[i], g[i])
+            p1, l1 = ballistics_ode(y[i], v[i], T[i], D, vehicle_mass[i], g[i])
             p2, l2 = ballistics_ode(
                 y[i] + 0.5 * p1 * self.d_t,
                 v[i] + 0.5 * l1 * self.d_t,
                 T[i],
                 D,
-                m_vehicle[i],
+                vehicle_mass[i],
                 g[i],
             )
             p3, l3 = ballistics_ode(
@@ -398,7 +383,7 @@ class InternalBallisticsCoupled:
                 v[i] + 0.5 * l2 * self.d_t,
                 T[i],
                 D,
-                m_vehicle[i],
+                vehicle_mass[i],
                 g[i],
             )
             p4, l4 = ballistics_ode(
@@ -406,7 +391,7 @@ class InternalBallisticsCoupled:
                 v[i] + 0.5 * l3 * self.d_t,
                 T[i],
                 D,
-                m_vehicle[i],
+                vehicle_mass[i],
                 g[i],
             )
 
@@ -467,7 +452,7 @@ class InternalBallisticsCoupled:
         Kn_non_zero = Kn[Kn != 0.0]
         initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[-1]
         grain_mass_flux = self.grain.get_mass_flux_per_segment(
-            r, self.propellant.pp, web
+            burn_rate, self.propellant.density, web
         )
 
         ib_parameters = InternalBallistics(
