@@ -13,6 +13,7 @@ the rocket ballistics at the same time.
 import fluids.atmosphere as atm
 import numpy as np
 
+from models.atmosphere import Atmosphere1976
 from models.motor.bates import Bates
 from models.motor.propellant import Propellant
 from models.recovery import Recovery
@@ -32,11 +33,6 @@ from utils.isentropic_flow import (
 from utils.solvers import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
 from utils.geometric import get_cylinder_volume
-from utils.atmospheric import (
-    get_air_density_by_altitude,
-    get_air_pressure_by_altitude,
-    get_gravity_by_altitude,
-)
 
 
 class InternalBallisticsCoupled:
@@ -47,6 +43,7 @@ class InternalBallisticsCoupled:
         structure: MotorStructure,
         rocket: Rocket,
         recovery: Recovery,
+        atmosphere: Atmosphere1976,
         d_t: float,
         dd_t: float,
         initial_elevation_amsl: float,
@@ -58,6 +55,7 @@ class InternalBallisticsCoupled:
         self.structure = structure
         self.rocket = rocket
         self.recovery = recovery
+        self.atmosphere = atmosphere
         self.d_t = d_t
         self.dd_t = dd_t
         self.initial_elevation_amsl = initial_elevation_amsl
@@ -88,7 +86,7 @@ class InternalBallisticsCoupled:
         P_0 = np.array([self.igniter_pressure])
         P_0_psi = np.array([convert_pa_to_psi(self.igniter_pressure)])
         P_exit = np.array([])
-        y = (np.array([0]),)
+        y = np.array([0])
         v = np.array([0])
         mach_no = np.array([0])
 
@@ -118,13 +116,15 @@ class InternalBallisticsCoupled:
             self.propellant.k_mix_ch
         )
         # Divergent correction factor:
-        n_div = get_divergent_correction_factor(self.structure.divergent_angle)
+        n_div = get_divergent_correction_factor(
+            self.structure.nozzle.divergent_angle
+        )
         # Variables storing the apogee, apogee time and main chute ejection time:
         apogee, apogee_time, main_time = 0, -1, 0
         # Calculation of empty chamber volume (constant throughout the operation):
         empty_chamber_volume = get_cylinder_volume(
-            self.structure.chamber_inner_diameter,
-            self.structure.chamber_length,
+            self.structure.chamber.inner_diameter,
+            self.structure.chamber.length,
         )
 
         # If the propellant mass is non zero, 'end_thrust' must be False,
@@ -147,48 +147,35 @@ class InternalBallisticsCoupled:
             # gravity and ext. pressure in function of the current altitude.
             rho_air = np.append(
                 rho_air,
-                get_air_density_by_altitude(
-                    y[i] + self.initial_elevation_amsl
+                self.atmosphere.get_density(
+                    y_amsl=(y[i] + self.initial_elevation_amsl)
                 ),
             )
             g = np.append(
                 g,
-                get_gravity_by_altitude(self.initial_elevation_amsl + y[i]),
+                self.atmosphere.get_gravity(
+                    self.initial_elevation_amsl + y[i]
+                ),
             )
             P_ext = np.append(
                 P_ext,
-                get_air_pressure_by_altitude(
+                self.atmosphere.get_pressure(
                     self.initial_elevation_amsl + y[i]
                 ),
             )
 
             if end_thrust is False:
-                # Calculating the burn area and propellant volume:
-                A_burn_sum, V_prop_sum = 0, 0
-                for j in range(self.grain.segment_count):
-                    if (
-                        0.5
-                        * (
-                            self.grain.outer_diameter
-                            - self.grain.core_diameter[j]
-                        )
-                    ) >= web[i]:
-                        A_burn_sum += self.grain.get_burn_area(web[i], j)
-                        V_prop_sum += self.grain.get_propellant_volume(
-                            web[i], j
-                        )
-                    else:
-                        A_burn_sum += 0
-                        V_prop_sum += 0
                 A_burn, V_prop = (
-                    np.append(A_burn, A_burn_sum),
-                    np.append(V_prop, V_prop_sum),
+                    np.append(A_burn, self.grain.get_burn_area(web[i])),
+                    np.append(
+                        V_prop, self.grain.get_propellant_volume(web[i])
+                    ),
                 )
 
                 # Calculating the free chamber volume:
                 V_0 = np.append(V_0, empty_chamber_volume - V_prop[i])
                 # Calculating propellant mass:
-                m_prop = np.append(m_prop, V_prop[i] * self.propellant.pp)
+                m_prop = np.append(m_prop, V_prop[i] * self.propellant.density)
 
                 # Get burn rate coefficients:
                 r = np.append(r, self.propellant.get_burn_rate(P_0[i]))
@@ -201,8 +188,8 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.get_throat_area(),
-                    self.propellant.pp,
+                    self.structure.nozzle.get_throat_area(),
+                    self.propellant.density,
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
@@ -213,8 +200,8 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.get_throat_area(),
-                    self.propellant.pp,
+                    self.structure.nozzle.get_throat_area(),
+                    self.propellant.density,
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
@@ -225,8 +212,8 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.get_throat_area(),
-                    self.propellant.pp,
+                    self.structure.nozzle.get_throat_area(),
+                    self.propellant.density,
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
@@ -237,8 +224,8 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.get_throat_area(),
-                    self.propellant.pp,
+                    self.structure.nozzle.get_throat_area(),
+                    self.propellant.density,
                     self.propellant.k_mix_ch,
                     self.propellant.R_ch,
                     self.propellant.T0,
@@ -262,7 +249,7 @@ class InternalBallisticsCoupled:
                     P_exit,
                     get_exit_pressure(
                         self.propellant.k_2ph_ex,
-                        self.structure.expansion_ratio,
+                        self.structure.nozzle.expansion_ratio,
                         P_0[i],
                     ),
                 )
@@ -292,7 +279,7 @@ class InternalBallisticsCoupled:
                         (100 - (n_kin_atual + n_bl_atual + n_tp_atual))
                         * n_div
                         / 100
-                        * self.propellant.n_ce
+                        * self.propellant.combustion_efficiency
                     ),
                 )
 
@@ -300,7 +287,7 @@ class InternalBallisticsCoupled:
                     P_0[i],
                     P_exit[i],
                     P_ext[i],
-                    self.structure.expansion_ratio,
+                    self.structure.nozzle.expansion_ratio,
                     self.propellant.k_2ph_ex,
                     n_cf[i],
                 )
@@ -308,7 +295,8 @@ class InternalBallisticsCoupled:
                 C_f = np.append(C_f, C_f_atual)
                 C_f_ideal = np.append(C_f_ideal, C_f_ideal_atual)
                 T = np.append(
-                    T, C_f[i] * self.structure.get_throat_area() * P_0[i]
+                    T,
+                    C_f[i] * self.structure.nozzle.get_throat_area() * P_0[i],
                 )
 
                 if m_prop[i] == 0 and end_burn is False:
@@ -336,16 +324,16 @@ class InternalBallisticsCoupled:
             if i == 0:
                 m_vehicle_initial = (
                     m_prop[0]
-                    + self.rocket.mass_wo_motor
-                    + self.structure.motor_structural_mass
+                    + self.rocket.structure.mass_without_motor
+                    + self.structure.dry_mass
                 )
                 m_vehicle = np.append(m_vehicle, m_vehicle_initial)
                 acc = np.array(
                     [
                         T[0]
                         / (
-                            self.rocket.mass_wo_motor
-                            + self.structure.motor_structural_mass
+                            self.rocket.structure.mass_without_motor
+                            + self.structure.dry_mass
                             + m_prop[0]
                         )
                     ]
@@ -356,8 +344,8 @@ class InternalBallisticsCoupled:
             m_vehicle = np.append(
                 m_vehicle,
                 m_prop[i]
-                + self.structure.motor_structural_mass
-                + self.rocket.mass_wo_motor,
+                + self.structure.dry_mass
+                + self.rocket.structure.mass_without_motor,
             )
 
             # Drag properties:
@@ -369,7 +357,7 @@ class InternalBallisticsCoupled:
                 if main_time == 0:
                     main_time = t[i]
                 A_drag = (
-                    (np.pi * (self.rocket.outer_diameter / 2) ** 2)
+                    (np.pi * (self.rocket.fuselage.outer_diameter / 2) ** 2)
                     * self.rocket.drag_coeff
                     + (np.pi * self.recovery.drogue_diameter ** 2)
                     * 0.25
@@ -471,11 +459,11 @@ class InternalBallisticsCoupled:
 
         optimal_grain_length = self.grain.get_optimal_segment_length()
         initial_port_to_throat = (self.grain.core_diameter[-1] ** 2) / (
-            self.structure.nozzle_throat_diameter ** 2
+            self.structure.nozzle.throat_diameter ** 2
         )
 
         burn_profile = self.grain.get_burn_profile(A_burn[A_burn != 0.0])
-        Kn = A_burn / self.structure.get_throat_area()
+        Kn = A_burn / self.structure.nozzle.get_throat_area()
         Kn_non_zero = Kn[Kn != 0.0]
         initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[-1]
         grain_mass_flux = self.grain.get_mass_flux_per_segment(

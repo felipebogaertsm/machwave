@@ -7,7 +7,7 @@
 
 """
 combustion_efficiency: Combustion, two phase, heat loss, friction inefficiency factor
-propellant_density: Propellant density [kg/m^3]
+density: Propellant density [kg/m^3]
 k_mix_ch: Isentropic exponent (chamber)
 k_2ph_ex: Isentropic exponent (exhaust)
 T0_ideal: Ideal combustion temperature [K]
@@ -27,7 +27,7 @@ class Propellant:
         self,
         burn_rate: list,
         combustion_efficiency: float,
-        propellant_density: float,
+        density: float,
         k_mix_ch: float,
         k_2ph_ex: float,
         T0_ideal: float,
@@ -40,7 +40,7 @@ class Propellant:
     ) -> None:
         self.burn_rate = burn_rate
         self.combustion_efficiency = combustion_efficiency
-        self.propellant_density = propellant_density
+        self.density = density
         self.k_mix_ch = k_mix_ch
         self.k_2ph_ex = k_2ph_ex
         # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
