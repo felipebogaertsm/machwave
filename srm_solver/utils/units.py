@@ -10,7 +10,7 @@ Unit conversion functions.
 """
 
 
-def get_pa_to_psi(pressure_pa):
+def convert_pa_to_psi(pressure_pa):
     """
     Converts Pascal pressure to PSI.
     """
