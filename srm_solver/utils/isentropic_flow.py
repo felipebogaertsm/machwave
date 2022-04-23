@@ -84,7 +84,9 @@ def get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf):
     return Cf, Cf_ideal
 
 
-def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> float:
+def get_thrust_from_cf(
+    C_f: float, P_0: float, nozzle_throat_area: float
+) -> float:
     """
     :param C_f: instantaneous thrust coefficient, non ideal
     :param P_0: instantaneous chamber stagnation pressure, in Pascals
@@ -93,7 +95,12 @@ def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> flo
     """
     return C_f * P_0 * nozzle_throat_area
 
-def is_flow_choked(chamber_pressure: float, external_pressure: float, critical_pressure_ratio: float)-> bool:
+
+def is_flow_choked(
+    chamber_pressure: float,
+    external_pressure: float,
+    critical_pressure_ratio: float,
+) -> bool:
     return chamber_pressure <= external_pressure / critical_pressure_ratio
 
 
@@ -149,8 +156,7 @@ def get_operational_correction_factors(
         n_kin = 0
 
     # Boundary layer and two phase flow losses
-    if P_external / P_0 <= critical_pressure_ratio:
-
+    if not is_flow_choked(P_0, P_external, critical_pressure_ratio):
         termC2 = 1 + 2 * np.exp(
             -structure.chamber.C2
             * P_0_psi ** 0.8
@@ -182,6 +188,7 @@ def get_operational_correction_factors(
                 * (1 + 0.045 * structure.nozzle.throat_diameter / 0.0254)
             )
         )
+
         if 1 / propellant.M_ch >= 0.9:
             C4 = 0.5
             if structure.nozzle.throat_diameter / 0.0254 < 1:
