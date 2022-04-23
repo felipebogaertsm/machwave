@@ -6,12 +6,12 @@
 # the Free Software Foundation, version 3.
 
 """
-Unit conversion functions.
+Stores Rocket class and methods.
 """
 
 
-def get_pa_to_psi(pressure_pa):
-    """
-    Converts Pascal pressure to PSI.
-    """
-    return pressure_pa * 1.45e-4
+class Rocket:
+    def __init__(self, mass_wo_motor, drag_coeff, outer_diameter):
+        self.mass_wo_motor = mass_wo_motor
+        self.drag_coeff = drag_coeff
+        self.outer_diameter = outer_diameter

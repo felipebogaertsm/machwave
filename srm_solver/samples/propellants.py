@@ -75,7 +75,7 @@ KNSB_NAKKA = Propellant(
 )
 
 KNSU = Propellant(
-    [{"min": 0, "max": 100, "a": 8.260, "n": 0.319}],
+    [{"min": 0, "max": 20, "a": 8.260, "n": 0.319}],
     0.95,
     1899.5 * 0.95,
     1.1330,
@@ -90,7 +90,7 @@ KNSU = Propellant(
 )
 
 KNER = Propellant(
-    [{"min": 0, "max": 100, "a": 2.903, "n": 0.395}],
+    [{"min": 0, "max": 20, "a": 2.903, "n": 0.395}],
     0.94,
     1820.0 * 0.95,
     1.1390,
@@ -105,7 +105,7 @@ KNER = Propellant(
 )
 
 
-def get_propellant_from_name(prop_name: str) -> Propellant:
+def get_propellant_from_name(prop_name: str):
     """ "
     Returns propellant data based on the propellant name entered by the user as a string.
     """
