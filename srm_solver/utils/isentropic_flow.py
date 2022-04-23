@@ -63,7 +63,7 @@ def get_exit_pressure(k_2ph_ex, E, P_0):
     return P_exit
 
 
-def get_thrust_coeff(P_0, P_exit, P_external, E, k, n_cf):
+def get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf):
     """
     Returns value for thrust coefficient based on the chamber pressure and
     correction factor.
@@ -82,6 +82,19 @@ def get_thrust_coeff(P_0, P_exit, P_external, E, k, n_cf):
         Cf_ideal = 0
 
     return Cf, Cf_ideal
+
+
+def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> float:
+    """
+    :param C_f: instantaneous thrust coefficient, non ideal
+    :param P_0: instantaneous chamber stagnation pressure, in Pascals
+    :param nozzle_throat_area: nozzle throat area, in sq. meters
+    :return: thrust in Newtons
+    """
+    return C_f * P_0 * nozzle_throat_area
+
+def is_flow_choked(chamber_pressure: float, external_pressure: float, critical_pressure_ratio: float)-> bool:
+    return chamber_pressure <= external_pressure / critical_pressure_ratio
 
 
 def get_impulses(F_avg, t, t_burnout, m_prop):
@@ -139,17 +152,17 @@ def get_operational_correction_factors(
     if P_external / P_0 <= critical_pressure_ratio:
 
         termC2 = 1 + 2 * np.exp(
-            -structure.C2
+            -structure.chamber.C2
             * P_0_psi ** 0.8
             * t
-            / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2)
+            / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
         )
-        E_cf = 1 + 0.016 * structure.expansion_ratio ** -9
+        E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio ** -9
         n_bl = (
-            structure.C1
+            structure.chamber.C1
             * (
                 (P_0_psi ** 0.8)
-                / ((structure.nozzle_throat_diameter / 0.0254) ** 0.2)
+                / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
             )
             * termC2
             * E_cf
@@ -163,19 +176,19 @@ def get_operational_correction_factors(
                 1
                 - np.exp(
                     -0.004
-                    * (V0 / get_circle_area(structure.nozzle_throat_diameter))
+                    * (V0 / get_circle_area(structure.nozzle.throat_diameter))
                     / 0.0254
                 )
-                * (1 + 0.045 * structure.nozzle_throat_diameter / 0.0254)
+                * (1 + 0.045 * structure.nozzle.throat_diameter / 0.0254)
             )
         )
         if 1 / propellant.M_ch >= 0.9:
             C4 = 0.5
-            if structure.nozzle_throat_diameter / 0.0254 < 1:
+            if structure.nozzle.throat_diameter / 0.0254 < 1:
                 C3, C5, C6 = 9, 1, 1
-            elif 1 <= structure.nozzle_throat_diameter / 0.0254 < 2:
+            elif 1 <= structure.nozzle.throat_diameter / 0.0254 < 2:
                 C3, C5, C6 = 9, 1, 0.8
-            elif structure.nozzle_throat_diameter / 0.0254 >= 2:
+            elif structure.nozzle.throat_diameter / 0.0254 >= 2:
                 if C7 < 4:
                     C3, C5, C6 = 13.4, 0.8, 0.8
                 elif 4 <= C7 <= 8:
@@ -184,11 +197,11 @@ def get_operational_correction_factors(
                     C3, C5, C6 = 7.58, 0.8, 0.33
         elif 1 / propellant.M_ch < 0.9:
             C4 = 1
-            if structure.nozzle_throat_diameter / 0.0245 < 1:
+            if structure.nozzle.throat_diameter / 0.0245 < 1:
                 C3, C5, C6 = 44.5, 0.8, 0.8
-            elif 1 <= structure.nozzle_throat_diameter / 0.0254 < 2:
+            elif 1 <= structure.nozzle.throat_diameter / 0.0254 < 2:
                 C3, C5, C6 = 30.4, 0.8, 0.4
-            elif structure.nozzle_throat_diameter / 0.0254 >= 2:
+            elif structure.nozzle.throat_diameter / 0.0254 >= 2:
                 if C7 < 4:
                     C3, C5, C6 = 44.5, 0.8, 0.8
                 elif 4 <= C7 <= 8:
@@ -199,8 +212,8 @@ def get_operational_correction_factors(
             (propellant.qsi_ch * C4 * C7 ** C5)
             / (
                 P_0_psi ** 0.15
-                * structure.expansion_ratio ** 0.08
-                * (structure.nozzle_throat_diameter / 0.0254) ** C6
+                * structure.nozzle.expansion_ratio ** 0.08
+                * (structure.nozzle.throat_diameter / 0.0254) ** C6
             )
         )
     else:
