@@ -11,26 +11,11 @@ import numpy as np
 import json
 from pathlib import Path
 
-from models.motor.bates import Bates
-from models.motor.structure import (
-    BoltedCombustionChamber,
-    MotorStructure,
-    Nozzle,
-)
-from models.propellants import get_propellant_from_name
+from models.motor.bates import Bates as BATES
+from models.motor.structure import MotorStructure
+from samples.propellants import get_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
-from models.materials.metals import Steel
-from models.materials.elastics import EPDM
-from models.motor.thermals import ThermalLiner
-from models.recovery.events import (
-    AltitudeBasedEvent,
-    ApogeeBasedEvent,
-)
-from models.recovery.parachutes import HemisphericalParachute
-from models.rocket.fuselage import Fuselage
-from models.rocket.structure import RocketStructure
-from models.atmosphere import Atmosphere1976
 
 from utils.utilities import output_eng_csv, print_results
 from utils.plots import (
@@ -168,76 +153,57 @@ def main(from_json="input.json"):
     # It also does some small calculations of the chamber length and chamber
     # diameter.
 
-    # Motor:
+    # The propellant name input above triggers the get_propellant_from_name function inside
+    # 'Propellant.py' to return the required data.
     propellant_data = get_propellant_from_name(prop_name=propellant)
 
-    grain = Bates(
+    # Defining 'grain' as an instance of 'BATES' class:
+    grain = BATES(
         segment_count=segment_count,
-        segment_spacing=10e-3,
         outer_diameter=grain_outer_diameter,
         core_diameter=grain_core_diameter,
         segment_length=segment_length,
     )
 
-    nozzle = Nozzle(
-        throat_diameter=nozzle_throat_diameter,
+    # Defining 'structure' as an instance of the 'MotorStructure' class:
+    structure = MotorStructure(
+        safety_factor=safety_factor,
+        motor_structural_mass=motor_structural_mass,
+        chamber_length=np.sum(segment_length)
+        + (segment_count - 1) * grain_spacing,
+        chamber_inner_diameter=casing_inner_diameter - 2 * liner_thickness,
+        casing_inner_diameter=casing_inner_diameter,
+        casing_outer_diameter=casing_outer_diameter,
+        screw_diameter=screw_diameter,
+        screw_clearance_diameter=screw_clearance_diameter,
+        nozzle_throat_diameter=nozzle_throat_diameter,
+        C1=C1,
+        C2=C2,
         divergent_angle=divergent_angle,
         convergent_angle=convergent_angle,
         expansion_ratio=expansion_ratio,
-        material=Steel(),
+        casing_yield_strength=casing_yield_strength,
+        nozzle_yield_strength=nozzle_yield_strength,
+        bulkhead_yield_strength=bulkhead_yield_strength,
+        screw_ultimate_strength=screw_ultimate_strength,
+        max_number_of_screws=max_number_of_screws,
     )
 
-    liner = ThermalLiner(thickness=2e-3, material=EPDM())
-
-    chamber = BoltedCombustionChamber(
-        inner_diameter=casing_inner_diameter - 2 * liner_thickness,
-        outer_diameter=casing_outer_diameter,
-        liner=liner,
-        length=grain.total_length,
-        C1=0,
-        C2=0,
-        casing_material=Steel(),
-        bulkhead_material=Steel(),
-        screw_material=Steel(),
-        max_screw_count=max_number_of_screws,
-        screw_clearance_diameter=screw_clearance_diameter,
-        screw_diameter=screw_diameter,
-    )
-
-    structure = MotorStructure(
-        safety_factor=safety_factor,
-        dry_mass=motor_structural_mass,
-        nozzle=nozzle,
-        chamber=chamber,
-    )
-
-    # Recovery:
-    recovery = Recovery()
-    recovery.add_event(
-        ApogeeBasedEvent(
-            trigger_value=1,
-            parachute=HemisphericalParachute(diameter=drogue_diameter),
-        )
-    )
-    recovery.add_event(
-        AltitudeBasedEvent(
-            trigger_value=450,
-            parachute=HemisphericalParachute(diameter=main_diameter),
-        )
-    )
-
-    # Rocket:
-    fuselage = Fuselage(
-        length=4e3,
-        drag_coefficient=drag_coeff,
+    # Defining 'rocket' as an instance of 'Rocket' class:
+    rocket = Rocket(
+        mass_wo_motor=mass_wo_motor,
+        drag_coeff=drag_coeff,
         outer_diameter=rocket_outer_diameter,
     )
 
-    rocket_structure = RocketStructure(mass_without_motor=mass_wo_motor)
-
-    rocket = Rocket(
-        fuselage=fuselage,
-        structure=rocket_structure,
+    # Defining 'recovery' as an instance of 'Recovery' class:
+    recovery = Recovery(
+        drogue_time=drogue_time,
+        drag_coeff_drogue=drag_coeff_drogue,
+        drogue_diameter=drogue_diameter,
+        drag_coeff_main=drag_coeff_main,
+        main_diameter=main_diameter,
+        main_chute_activation_height=main_chute_activation_height,
     )
 
     # /////////////////////////////////////////////////////////////////////////
@@ -258,7 +224,6 @@ def main(from_json="input.json"):
         structure=structure,
         rocket=rocket,
         recovery=recovery,
-        atmosphere=Atmosphere1976(),
         d_t=d_t,
         dd_t=dd_t,
         initial_elevation_amsl=initial_elevation_amsl,
@@ -273,7 +238,7 @@ def main(from_json="input.json"):
     # StructuralParameters.
 
     structural_parameters = StructuralSimulation(
-        structure, ib_parameters.P0, safety_factor
+        structure, ib_parameters.P0
     ).run()
 
     # /////////////////////////////////////////////////////////////////////////

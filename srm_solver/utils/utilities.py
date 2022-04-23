@@ -126,7 +126,7 @@ def print_results(
     print("\nNOZZLE DESIGN")
     print(f" Average opt. exp. ratio: {np.mean(ib_parameters.E_opt):.3f}")
     print(
-        f" Nozzle exit diameter: {structure.nozzle.throat_diameter * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm"
+        f" Nozzle exit diameter: {structure.nozzle_throat_diameter * np.sqrt(np.mean(ib_parameters.E_opt)) * 1e3:.3f} mm"
     )
     print(
         f" Average nozzle efficiency: {np.mean(ib_parameters.nozzle_eff) * 100:.3f} %"
@@ -141,7 +141,7 @@ def print_results(
     print(f" Velocity out of the rail: {ballistics.v_rail:.2f} m/s")
     print(f" Height at motor burnout: {ballistics.y_burnout:.2f} m")
     print(
-        f" Liftoff mass: {structure.dry_mass + ib_parameters.m_prop[0] + rocket.structure.mass_without_motor:.3f} kg"
+        f" Liftoff mass: {structure.motor_structural_mass + ib_parameters.m_prop[0] + rocket.mass_wo_motor:.3f} kg"
     )
     print(f" Flight time: {ballistics.flight_time:.2f} s")
 
@@ -190,11 +190,11 @@ def output_eng_csv(
         thrust,
         dt,
         prop_vol,
-        structure.chamber.outer_diameter,
-        structure.chamber.length,
+        structure.casing_outer_diameter,
+        structure.chamber_length,
         eng_res,
-        propellant.density,
-        structure.dry_mass,
+        propellant.pp,
+        structure.motor_structural_mass,
         manufacturer,
         name,
     )
@@ -202,7 +202,7 @@ def output_eng_csv(
     motor_data = {
         "Time": time,
         "Thrust": thrust,
-        "Prop_Mass": prop_vol * propellant.density,
+        "Prop_Mass": prop_vol * propellant.pp,
     }
     motor_data_df = pd.DataFrame(motor_data)
     motor_data_df.to_csv(f"output/{name}.csv", decimal=".")

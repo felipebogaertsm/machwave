@@ -6,8 +6,8 @@
 # the Free Software Foundation, version 3.
 
 """
-combustion_efficiency: Combustion, two phase, heat loss, friction inefficiency factor
-density: Propellant density [kg/m^3]
+n_ce: Combustion, two phase, heat loss, friction inefficiency factor
+pp: Propellant density [kg/m^3]
 k_mix_ch: Isentropic exponent (chamber)
 k_2ph_ex: Isentropic exponent (exhaust)
 T0_ideal: Ideal combustion temperature [K]
@@ -25,26 +25,26 @@ import scipy.constants
 class Propellant:
     def __init__(
         self,
-        burn_rate: list,
-        combustion_efficiency: float,
-        density: float,
-        k_mix_ch: float,
-        k_2ph_ex: float,
-        T0_ideal: float,
-        M_ch: float,
-        M_ex: float,
-        Isp_frozen: float,
-        Isp_shifting: float,
-        qsi_ch: float,
-        qsi_ex: float,
-    ) -> None:
+        burn_rate,
+        n_ce,
+        pp,
+        k_mix_ch,
+        k_2ph_ex,
+        T0_ideal,
+        M_ch,
+        M_ex,
+        Isp_frozen,
+        Isp_shifting,
+        qsi_ch,
+        qsi_ex,
+    ):
         self.burn_rate = burn_rate
-        self.combustion_efficiency = combustion_efficiency
-        self.density = density
+        self.n_ce = n_ce
+        self.pp = pp
         self.k_mix_ch = k_mix_ch
         self.k_2ph_ex = k_2ph_ex
         # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
-        self.T0 = T0_ideal * combustion_efficiency
+        self.T0 = T0_ideal * n_ce
         self.M_ch = M_ch
         self.M_ex = M_ex
         # Gas constant per molecular weight calculations:
@@ -55,7 +55,7 @@ class Propellant:
         self.qsi_ch = qsi_ch
         self.qsi_ex = qsi_ex
 
-    def get_burn_rate(self, chamber_pressure: float) -> float:
+    def get_burn_rate(self, chamber_pressure):
         """
         chamber_pressure must be in Pascals.
         """

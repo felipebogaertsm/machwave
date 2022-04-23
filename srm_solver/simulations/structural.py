@@ -20,29 +20,25 @@ class StructuralSimulation:
         self,
         structure: MotorStructure,
         chamber_pressure: np.array,
-        safety_factor: float,
     ) -> None:
         self.structure = structure
         self.chamber_pressure = chamber_pressure
-        self.safety_factor = safety_factor
 
-    def run(self) -> StructuralParameters:
+    def run(self):
         # Casing thickness assuming thin wall [m]:
-        casing_sf = self.structure.chamber.get_casing_safety_factor(
-            self.chamber_pressure
+        casing_sf = self.structure.get_casing_safety_factor(
+            self.structure.casing_yield_strength,
+            self.chamber_pressure,
         )
 
         # Nozzle thickness assuming thin wall [m]:
-        (
-            nozzle_conv_t,
-            nozzle_div_t,
-        ) = self.structure.nozzle.get_nozzle_thickness(
-            self.chamber_pressure, self.safety_factor, self.structure.chamber
+        nozzle_conv_t, nozzle_div_t, = self.structure.get_nozzle_thickness(
+            self.chamber_pressure,
         )
 
         # Bulkhead thickness [m]:
-        bulkhead_t = self.structure.chamber.get_bulkhead_thickness(
-            self.chamber_pressure, self.safety_factor
+        bulkhead_t = self.structure.get_bulkhead_thickness(
+            self.chamber_pressure
         )
 
         # Screw safety factors and optimal quantity (shear, tear and compression):
@@ -52,7 +48,7 @@ class StructuralSimulation:
             shear_sf,
             tear_sf,
             compression_sf,
-        ) = self.structure.chamber.get_optimal_fasteners(
+        ) = self.structure.get_optimal_fasteners(
             self.chamber_pressure,
         )
 
