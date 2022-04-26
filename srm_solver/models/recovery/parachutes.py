@@ -5,6 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+"""
+Parachutes are implemented using Strategy design pattern. The Parachute base 
+class can be implemented in different ways by inheriting from it and then 
+changing its methods depending on the particular parachute geometry. 
+"""
+
 
 from utils.geometric import get_circle_area
 
