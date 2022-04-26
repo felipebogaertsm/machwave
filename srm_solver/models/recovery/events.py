@@ -5,6 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+"""
+Recovery events are implemented using Strategy design pattern.
+"""
+
 import numpy as np
 
 from models.recovery.parachutes import Parachute
