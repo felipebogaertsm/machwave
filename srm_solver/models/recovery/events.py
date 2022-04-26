@@ -9,16 +9,18 @@
 Recovery events are implemented using Strategy design pattern.
 """
 
+from abc import ABC, abstractmethod
 import numpy as np
 
 from models.recovery.parachutes import Parachute
 
 
-class RecoveryEvent:
+class RecoveryEvent(ABC):
     def __init__(self, trigger_value: float, parachute: Parachute) -> None:
         self.trigger_value = trigger_value
         self.parachute = parachute
 
+    @abstractmethod
     def is_active(
         self,
         height: np.array,
