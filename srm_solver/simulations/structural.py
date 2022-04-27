@@ -6,7 +6,7 @@
 # the Free Software Foundation, version 3.
 
 """
-Stores structural simulation function.
+Stores structural simulation.
 """
 
 import numpy as np

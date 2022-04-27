@@ -6,8 +6,13 @@
 # the Free Software Foundation, version 3.
 
 """
-This file contains the function that simulates the internal ballistics and
-the rocket ballistics at the same time.
+The coupled internal ballistics simulation calculates both internal and 
+external ballistics parameters simulatneously. 
+
+The main advantage of this strategy is that, while some environmental 
+attributes change during flight, they also serve as inputs for the internal 
+ballistic of the motor. The main attribute that changes during flight is the 
+ambient pressure, which impacts the propellant burn rate inside the motor.
 """
 
 import fluids.atmosphere as atm
@@ -34,7 +39,6 @@ from utils.isentropic_flow import (
 )
 from utils.solvers import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
-from utils.geometric import get_cylinder_volume
 
 
 class InternalBallisticsCoupled:
@@ -66,12 +70,12 @@ class InternalBallisticsCoupled:
 
     def run(self):
         """
-        Runs the main loop of the SRM Solver program, returning all the internal
-        ballistics and ballistics parameters as instances of the
-        InternalBallistics and Ballistics classes.
+        Runs the main loop of the simulation, returning all the internal and
+        external ballistics parameters as instances of the InternalBallistics
+        and Ballistics classes.
 
-        The function uses the Runge-Kutta 4th order numerical method for solving
-        the differential equations.
+        The function uses the Runge-Kutta 4th order numerical method for
+        solving the differential equations.
 
         The variable names correspond to what they are commonly reffered to in
         books and papers related to Solid Rocket Propulsion.
