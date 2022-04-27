@@ -11,7 +11,7 @@ class can be implemented in different ways by inheriting from it and then
 changing its methods depending on the particular parachute geometry. 
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractproperty
 
 from utils.geometric import get_circle_area
 
@@ -20,13 +20,11 @@ class Parachute(ABC):
     def __init__(self) -> None:
         pass
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def drag_coefficient(self):
         pass
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def area(self):
         pass
 
