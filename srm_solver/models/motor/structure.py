@@ -39,7 +39,7 @@ class CombustionChamber:
 
     def get_bulkhead_thickness(
         self, chamber_pressure: np.array, safety_factor: float
-    ):
+    ) -> float:
         """
         Returns the thickness of a plane bulkhead pressure vessel.
         """
