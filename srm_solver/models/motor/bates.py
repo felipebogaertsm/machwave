@@ -22,7 +22,7 @@ class Bates:
         outer_diameter: float,
         core_diameter: np.array,
         segment_length: np.array,
-    ):
+    ) -> None:
         self.segment_count = segment_count
         self.segment_spacing = segment_spacing
         self.outer_diameter = outer_diameter
@@ -30,13 +30,13 @@ class Bates:
         self.segment_length = segment_length
 
     @property
-    def total_length(self):
+    def total_length(self) -> float:
         return (
             np.sum(self.segment_length)
             + (self.segment_count - 1) * self.segment_spacing
         )
 
-    def get_optimal_segment_length(self):
+    def get_optimal_segment_length(self) -> np.array:
         """
         Returns the optimal length for each of the input grains.
         """
@@ -45,31 +45,42 @@ class Bates:
         )
         return optimal_grain_length
 
-    def get_mass_flux_per_segment(self, burn_rate, propellant_density, x):
+    def get_mass_flux_per_segment(
+        self,
+        burn_rate: np.array,
+        propellant_density: np.array,
+        web_thickness: np.array,
+    ) -> np.array:
         """
         Returns a numpy multidimensional array with the mass flux for each
         grain.
         """
-        segment_mass_flux = np.zeros((self.segment_count, np.size(x)))
-        segment_mass_flux = np.zeros((self.segment_count, np.size(x)))
-        total_grain_Ab = np.zeros((self.segment_count, np.size(x)))
+        segment_mass_flux = np.zeros(
+            (self.segment_count, np.size(web_thickness))
+        )
+        segment_mass_flux = np.zeros(
+            (self.segment_count, np.size(web_thickness))
+        )
+        total_grain_Ab = np.zeros((self.segment_count, np.size(web_thickness)))
+
         for j in range(self.segment_count):
             for i in range(np.size(burn_rate)):
                 for k in range(j + 1):
                     total_grain_Ab[j, i] = total_grain_Ab[
                         j, i
-                    ] + self.get_burn_area_per_segment(k, x[i])
+                    ] + self.get_burn_area_per_segment(k, web_thickness[i])
                 segment_mass_flux[j, i] = (
                     total_grain_Ab[j, i] * propellant_density * burn_rate[i]
                 )
                 segment_mass_flux[j, i] = segment_mass_flux[j, i] / (
-                    get_circle_area(self.core_diameter[j] + x[i])
+                    get_circle_area(self.core_diameter[j] + web_thickness[i])
                 )
+
         return segment_mass_flux
 
     def get_burn_area_per_segment(
         self, segment_index: int, web_thickness: float
-    ):
+    ) -> float:
         D_grain = self.outer_diameter
         D_core = self.core_diameter
         L_grain = self.segment_length
@@ -89,53 +100,59 @@ class Bates:
         else:
             return 0
 
-    def get_burn_area(self, x: float):
+    def get_burn_area(self, web_thickness: float) -> float:
         """
         Calculates the BATES burn area given the web distance.
         """
-        burn_areas = np.array([])
-
-        for i in range(self.segment_count):
-            burn_areas = np.append(
-                burn_areas, self.get_burn_area_per_segment(i, x)
+        return np.sum(
+            np.array(
+                [
+                    self.get_burn_area_per_segment(i, web_thickness)
+                    for i in range(self.segment_count)
+                ]
             )
+        )
 
-        return np.sum(burn_areas)
-
-    def get_propellant_volume_per_segment(self, x: float, j: int):
+    def get_propellant_volume_per_segment(
+        self,
+        segment_index: int,
+        web_thickness: float,
+    ) -> float:
         D_grain = self.outer_diameter
         D_core = self.core_diameter
         L_grain = self.segment_length
 
-        if 0.5 * (D_grain - D_core[j]) >= x:
+        if 0.5 * (D_grain - D_core[segment_index]) >= web_thickness:
             return (np.pi / 4) * (
-                ((D_grain ** 2) - ((D_core[j] + 2 * x) ** 2))
-                * (L_grain[j] - 2 * x)
+                (
+                    (D_grain ** 2)
+                    - ((D_core[segment_index] + 2 * web_thickness) ** 2)
+                )
+                * (L_grain[segment_index] - 2 * web_thickness)
             )
         else:
             return 0
 
-    def get_propellant_volume(self, x: float):
+    def get_propellant_volume(self, web_thickness: float) -> float:
         """
         Calculates the BATES grain volume given the web distance.
         """
-        prop_volume = np.array([])
-
-        for i in range(self.segment_count):
-            prop_volume = np.append(
-                prop_volume, self.get_propellant_volume_per_segment(x, i)
+        return np.sum(
+            np.array(
+                [
+                    self.get_propellant_volume_per_segment(i, web_thickness)
+                    for i in range(self.segment_count)
+                ]
             )
+        )
 
-        return np.sum(prop_volume)
-
-    def get_burn_profile(self, A_burn: list):
+    def get_burn_profile(self, burn_area: np.array) -> str:
         """
         Returns string with burn profile.
         """
-        if A_burn[0] / A_burn[-1] > 1.02:
-            burn_profile = "regressive"
-        elif A_burn[0] / A_burn[-1] < 0.98:
-            burn_profile = "progressive"
+        if burn_area[0] / burn_area[-1] > 1.02:
+            return "regressive"
+        elif burn_area[0] / burn_area[-1] < 0.98:
+            return "progressive"
         else:
-            burn_profile = "neutral"
-        return burn_profile
+            return "neutral"
