@@ -11,5 +11,5 @@ from abc import ABC, abstractmethod
 
 class Solver(ABC):
     @abstractmethod
-    def execute(self):
+    def solve(self):
         pass

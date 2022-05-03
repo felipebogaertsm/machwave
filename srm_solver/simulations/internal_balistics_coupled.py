@@ -25,6 +25,10 @@ from models.rocket import Rocket
 from simulations import Simulation
 from simulations.dataclasses.ballistics import Ballistics
 from simulations.dataclasses.internal_ballistics import InternalBallistics
+from solvers.srm_internal_ballistics import (
+    SRMInternalBallisticsSolver,
+)
+from solvers.ballistics_1d import Ballistics1D
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
     get_divergent_correction_factor,
@@ -185,58 +189,23 @@ class InternalBallisticsCoupled(Simulation):
                 d_x = self.d_t * burn_rate[i]
                 web = np.append(web, web[i] + d_x)
 
-                k1 = solve_cp_seidel(
-                    P_0[i],
-                    P_ext[i],
-                    A_burn[i],
-                    V_0[i],
-                    self.motor.structure.nozzle.get_throat_area(),
-                    self.motor.propellant.density,
-                    self.motor.propellant.k_mix_ch,
-                    self.motor.propellant.R_ch,
-                    self.motor.propellant.T0,
-                    burn_rate[i],
-                )
-                k2 = solve_cp_seidel(
-                    P_0[i] + 0.5 * k1 * self.d_t,
-                    P_ext[i],
-                    A_burn[i],
-                    V_0[i],
-                    self.motor.structure.nozzle.get_throat_area(),
-                    self.motor.propellant.density,
-                    self.motor.propellant.k_mix_ch,
-                    self.motor.propellant.R_ch,
-                    self.motor.propellant.T0,
-                    burn_rate[i],
-                )
-                k3 = solve_cp_seidel(
-                    P_0[i] + 0.5 * k2 * self.d_t,
-                    P_ext[i],
-                    A_burn[i],
-                    V_0[i],
-                    self.motor.structure.nozzle.get_throat_area(),
-                    self.motor.propellant.density,
-                    self.motor.propellant.k_mix_ch,
-                    self.motor.propellant.R_ch,
-                    self.motor.propellant.T0,
-                    burn_rate[i],
-                )
-                k4 = solve_cp_seidel(
-                    P_0[i] + 0.5 * k3 * self.d_t,
-                    P_ext[i],
-                    A_burn[i],
-                    V_0[i],
-                    self.motor.structure.nozzle.get_throat_area(),
-                    self.motor.propellant.density,
-                    self.motor.propellant.k_mix_ch,
-                    self.motor.propellant.R_ch,
-                    self.motor.propellant.T0,
-                    burn_rate[i],
-                )
+                ib_solver = SRMInternalBallisticsSolver()
 
                 P_0 = np.append(
                     P_0,
-                    P_0[i] + (1 / 6) * (k1 + 2 * (k2 + k3) + k4) * self.d_t,
+                    ib_solver.solve(
+                        P_0[i],
+                        P_ext[i],
+                        A_burn[i],
+                        V_0[i],
+                        self.motor.structure.nozzle.get_throat_area(),
+                        self.motor.propellant.density,
+                        self.motor.propellant.k_mix_ch,
+                        self.motor.propellant.R_ch,
+                        self.motor.propellant.T0,
+                        burn_rate[i],
+                        self.d_t,
+                    ),
                 )
                 P_0_psi = np.append(P_0_psi, convert_pa_to_psi(P_0[i]))
 
@@ -372,39 +341,20 @@ class InternalBallisticsCoupled(Simulation):
                 * 0.5
             )
 
-            p1, l1 = ballistics_ode(y[i], v[i], T[i], D, vehicle_mass[i], g[i])
-            p2, l2 = ballistics_ode(
-                y[i] + 0.5 * p1 * self.d_t,
-                v[i] + 0.5 * l1 * self.d_t,
+            ballistics_solver = Ballistics1D()
+            ballistics_results = ballistics_solver.solve(
+                y[i],
+                v[i],
                 T[i],
                 D,
                 vehicle_mass[i],
                 g[i],
-            )
-            p3, l3 = ballistics_ode(
-                y[i] + 0.5 * p2 * self.d_t,
-                v[i] + 0.5 * l2 * self.d_t,
-                T[i],
-                D,
-                vehicle_mass[i],
-                g[i],
-            )
-            p4, l4 = ballistics_ode(
-                y[i] + 0.5 * p3 * self.d_t,
-                v[i] + 0.5 * l3 * self.d_t,
-                T[i],
-                D,
-                vehicle_mass[i],
-                g[i],
+                self.d_t,
             )
 
-            y = np.append(
-                y, y[i] + (1 / 6) * (p1 + 2 * (p2 + p3) + p4) * self.d_t
-            )
-            v = np.append(
-                v, v[i] + (1 / 6) * (l1 + 2 * (l2 + l3) + l4) * self.d_t
-            )
-            acc = np.append(acc, (1 / 6) * (l1 + 2 * (l2 + l3) + l4))
+            y = np.append(y, ballistics_results[0])
+            v = np.append(v, ballistics_results[1])
+            acc = np.append(acc, ballistics_results[2])
 
             mach_no = np.append(
                 mach_no, v[i] / atm.ATMOSPHERE_1976(y[i]).v_sonic
