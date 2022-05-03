@@ -12,10 +12,11 @@ Stores structural simulation.
 import numpy as np
 
 from models.motor.structure import MotorStructure
+from simulations import Simulation
 from simulations.dataclasses.structural_parameters import StructuralParameters
 
 
-class StructuralSimulation:
+class StructuralSimulation(Simulation):
     def __init__(
         self,
         structure: MotorStructure,
