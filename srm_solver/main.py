@@ -31,6 +31,7 @@ from models.recovery.parachutes import HemisphericalParachute
 from models.rocket.fuselage import Fuselage
 from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
+from models.motor import Motor
 
 from utils.utilities import output_eng_csv, print_results
 from utils.plots import (
@@ -211,6 +212,8 @@ def main(from_json="input.json"):
         chamber=chamber,
     )
 
+    motor = Motor(grain=grain, propellant=propellant_data, structure=structure)
+
     # Recovery:
     recovery = Recovery()
     recovery.add_event(
@@ -253,9 +256,7 @@ def main(from_json="input.json"):
     # InternalBallistics.
 
     ballistics, ib_parameters = InternalBallisticsCoupled(
-        propellant=propellant_data,
-        grain=grain,
-        structure=structure,
+        motor=motor,
         rocket=rocket,
         recovery=recovery,
         atmosphere=Atmosphere1976(),
