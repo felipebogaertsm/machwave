@@ -18,13 +18,11 @@ ambient pressure, which impacts the propellant burn rate inside the motor.
 import fluids.atmosphere as atm
 import numpy as np
 
-from models.atmosphere import Atmosphere1976
+from models.atmosphere import Atmosphere
 from models.motor import Motor
-from models.motor.bates import Bates
-from models.motor.propellant import Propellant
 from models.recovery import Recovery
 from models.rocket import Rocket
-from models.motor.structure import MotorStructure
+from simulations import Simulation
 from simulations.dataclasses.ballistics import Ballistics
 from simulations.dataclasses.internal_ballistics import InternalBallistics
 from utils.isentropic_flow import (
@@ -42,13 +40,13 @@ from utils.solvers import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
 
 
-class InternalBallisticsCoupled:
+class InternalBallisticsCoupled(Simulation):
     def __init__(
         self,
         motor: Motor,
         rocket: Rocket,
         recovery: Recovery,
-        atmosphere: Atmosphere1976,
+        atmosphere: Atmosphere,
         d_t: float,
         dd_t: float,
         initial_elevation_amsl: float,
