@@ -36,7 +36,7 @@ from utils.isentropic_flow import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from utils.solvers import solve_cp_seidel, ballistics_ode
+from utils.odes import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
 
 
