@@ -19,6 +19,7 @@ import fluids.atmosphere as atm
 import numpy as np
 
 from models.atmosphere import Atmosphere1976
+from models.motor import Motor
 from models.motor.bates import Bates
 from models.motor.propellant import Propellant
 from models.recovery import Recovery
@@ -44,9 +45,7 @@ from utils.units import convert_pa_to_psi
 class InternalBallisticsCoupled:
     def __init__(
         self,
-        propellant: Propellant,
-        grain: Bates,
-        structure: MotorStructure,
+        motor: Motor,
         rocket: Rocket,
         recovery: Recovery,
         atmosphere: Atmosphere1976,
@@ -56,9 +55,7 @@ class InternalBallisticsCoupled:
         igniter_pressure: float,
         rail_length: float,
     ) -> None:
-        self.propellant = propellant
-        self.grain = grain
-        self.structure = structure
+        self.motor = motor
         self.rocket = rocket
         self.recovery = recovery
         self.atmosphere = atmosphere
@@ -119,16 +116,16 @@ class InternalBallisticsCoupled:
         # PRE CALCULATIONS
         # Critical pressure ratio:
         critical_pressure_ratio = get_critical_pressure_ratio(
-            self.propellant.k_mix_ch
+            self.motor.propellant.k_mix_ch
         )
         # Divergent correction factor:
         n_div = get_divergent_correction_factor(
-            self.structure.nozzle.divergent_angle
+            self.motor.structure.nozzle.divergent_angle
         )
         # Variables storing the apogee, apogee time and main chute ejection time:
         apogee, apogee_time, main_time = 0, -1, 0
         # Calculation of empty chamber volume (constant throughout the operation):
-        empty_chamber_volume = self.structure.chamber.get_empty_volume()
+        empty_chamber_volume = self.motor.structure.chamber.get_empty_volume()
 
         # If the propellant mass is non zero, 'end_thrust' must be False,
         # since there is still thrust being produced.
@@ -169,20 +166,22 @@ class InternalBallisticsCoupled:
 
             if end_thrust is False:  # while motor is producing thrust
                 A_burn, V_prop = (
-                    np.append(A_burn, self.grain.get_burn_area(web[i])),
+                    np.append(A_burn, self.motor.grain.get_burn_area(web[i])),
                     np.append(
-                        V_prop, self.grain.get_propellant_volume(web[i])
+                        V_prop, self.motor.grain.get_propellant_volume(web[i])
                     ),
                 )
 
                 # Calculating the free chamber volume:
                 V_0 = np.append(V_0, empty_chamber_volume - V_prop[i])
                 # Calculating propellant mass:
-                m_prop = np.append(m_prop, V_prop[i] * self.propellant.density)
+                m_prop = np.append(
+                    m_prop, V_prop[i] * self.motor.propellant.density
+                )
 
                 # Get burn rate coefficients:
                 burn_rate = np.append(
-                    burn_rate, self.propellant.get_burn_rate(P_0[i])
+                    burn_rate, self.motor.propellant.get_burn_rate(P_0[i])
                 )
 
                 d_x = self.d_t * burn_rate[i]
@@ -193,11 +192,11 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.nozzle.get_throat_area(),
-                    self.propellant.density,
-                    self.propellant.k_mix_ch,
-                    self.propellant.R_ch,
-                    self.propellant.T0,
+                    self.motor.structure.nozzle.get_throat_area(),
+                    self.motor.propellant.density,
+                    self.motor.propellant.k_mix_ch,
+                    self.motor.propellant.R_ch,
+                    self.motor.propellant.T0,
                     burn_rate[i],
                 )
                 k2 = solve_cp_seidel(
@@ -205,11 +204,11 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.nozzle.get_throat_area(),
-                    self.propellant.density,
-                    self.propellant.k_mix_ch,
-                    self.propellant.R_ch,
-                    self.propellant.T0,
+                    self.motor.structure.nozzle.get_throat_area(),
+                    self.motor.propellant.density,
+                    self.motor.propellant.k_mix_ch,
+                    self.motor.propellant.R_ch,
+                    self.motor.propellant.T0,
                     burn_rate[i],
                 )
                 k3 = solve_cp_seidel(
@@ -217,11 +216,11 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.nozzle.get_throat_area(),
-                    self.propellant.density,
-                    self.propellant.k_mix_ch,
-                    self.propellant.R_ch,
-                    self.propellant.T0,
+                    self.motor.structure.nozzle.get_throat_area(),
+                    self.motor.propellant.density,
+                    self.motor.propellant.k_mix_ch,
+                    self.motor.propellant.R_ch,
+                    self.motor.propellant.T0,
                     burn_rate[i],
                 )
                 k4 = solve_cp_seidel(
@@ -229,11 +228,11 @@ class InternalBallisticsCoupled:
                     P_ext[i],
                     A_burn[i],
                     V_0[i],
-                    self.structure.nozzle.get_throat_area(),
-                    self.propellant.density,
-                    self.propellant.k_mix_ch,
-                    self.propellant.R_ch,
-                    self.propellant.T0,
+                    self.motor.structure.nozzle.get_throat_area(),
+                    self.motor.propellant.density,
+                    self.motor.propellant.k_mix_ch,
+                    self.motor.propellant.R_ch,
+                    self.motor.propellant.T0,
                     burn_rate[i],
                 )
 
@@ -246,15 +245,15 @@ class InternalBallisticsCoupled:
                 optimal_expansion_ratio = np.append(
                     optimal_expansion_ratio,
                     get_opt_expansion_ratio(
-                        self.propellant.k_2ph_ex, P_0[i], P_ext[i]
+                        self.motor.propellant.k_2ph_ex, P_0[i], P_ext[i]
                     ),
                 )
 
                 P_exit = np.append(
                     P_exit,
                     get_exit_pressure(
-                        self.propellant.k_2ph_ex,
-                        self.structure.nozzle.expansion_ratio,
+                        self.motor.propellant.k_2ph_ex,
+                        self.motor.structure.nozzle.expansion_ratio,
                         P_0[i],
                     ),
                 )
@@ -267,8 +266,8 @@ class InternalBallisticsCoupled:
                     P_0[i],
                     P_ext[i],
                     P_0_psi[i],
-                    self.propellant,
-                    self.structure,
+                    self.motor.propellant,
+                    self.motor.structure,
                     critical_pressure_ratio,
                     V_0[0],
                     t[i],
@@ -284,7 +283,7 @@ class InternalBallisticsCoupled:
                         (100 - (n_kin_atual + n_bl_atual + n_tp_atual))
                         * n_div
                         / 100
-                        * self.propellant.combustion_efficiency
+                        * self.motor.propellant.combustion_efficiency
                     ),
                 )
 
@@ -292,8 +291,8 @@ class InternalBallisticsCoupled:
                     P_0[i],
                     P_exit[i],
                     P_ext[i],
-                    self.structure.nozzle.expansion_ratio,
-                    self.propellant.k_2ph_ex,
+                    self.motor.structure.nozzle.expansion_ratio,
+                    self.motor.propellant.k_2ph_ex,
                     n_cf[i],
                 )
 
@@ -302,7 +301,9 @@ class InternalBallisticsCoupled:
                 T = np.append(
                     T,
                     get_thrust_from_cf(
-                        C_f[i], self.structure.nozzle.get_throat_area(), P_0[i]
+                        C_f[i],
+                        self.motor.structure.nozzle.get_throat_area(),
+                        P_0[i],
                     ),
                 )  # thrust calculation
 
@@ -331,7 +332,7 @@ class InternalBallisticsCoupled:
                 vehicle_mass_initial = (
                     m_prop[0]
                     + self.rocket.structure.mass_without_motor
-                    + self.structure.dry_mass
+                    + self.motor.structure.dry_mass
                 )
                 vehicle_mass = np.append(vehicle_mass, vehicle_mass_initial)
                 acc = np.array(
@@ -339,7 +340,7 @@ class InternalBallisticsCoupled:
                         T[0]
                         / (
                             self.rocket.structure.mass_without_motor
-                            + self.structure.dry_mass
+                            + self.motor.structure.dry_mass
                             + m_prop[0]
                         )
                     ]
@@ -350,7 +351,7 @@ class InternalBallisticsCoupled:
             vehicle_mass = np.append(
                 vehicle_mass,
                 m_prop[i]
-                + self.structure.dry_mass
+                + self.motor.structure.dry_mass
                 + self.rocket.structure.mass_without_motor,
             )
 
@@ -446,17 +447,17 @@ class InternalBallisticsCoupled:
             P_ext,
         )
 
-        optimal_grain_length = self.grain.get_optimal_segment_length()
-        initial_port_to_throat = (self.grain.core_diameter[-1] ** 2) / (
-            self.structure.nozzle.throat_diameter ** 2
+        optimal_grain_length = self.motor.grain.get_optimal_segment_length()
+        initial_port_to_throat = (self.motor.grain.core_diameter[-1] ** 2) / (
+            self.motor.structure.nozzle.throat_diameter ** 2
         )
 
-        burn_profile = self.grain.get_burn_profile(A_burn[A_burn != 0.0])
-        Kn = A_burn / self.structure.nozzle.get_throat_area()
+        burn_profile = self.motor.grain.get_burn_profile(A_burn[A_burn != 0.0])
+        Kn = A_burn / self.motor.structure.nozzle.get_throat_area()
         Kn_non_zero = Kn[Kn != 0.0]
         initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[-1]
-        grain_mass_flux = self.grain.get_mass_flux_per_segment(
-            burn_rate, self.propellant.density, web
+        grain_mass_flux = self.motor.grain.get_mass_flux_per_segment(
+            burn_rate, self.motor.propellant.density, web
         )
 
         ib_parameters = InternalBallistics(

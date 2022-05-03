@@ -17,10 +17,10 @@ from models.motor.structure import MotorStructure
 class Motor:
     def __init__(
         self,
-        bates: Bates,
+        grain: Bates,
         propellant: Propellant,
         structure: MotorStructure,
     ) -> None:
-        self.bates = bates
+        self.grain = grain
         self.propellant = propellant
         self.structure = structure
