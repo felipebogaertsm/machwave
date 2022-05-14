@@ -5,10 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from . import Material
+from . import NozzleMaterial
 
 
-class Steel(Material):
+class Steel(NozzleMaterial):
     """
     Data obtained from:
     https://www.thyssenkrupp-materials.co.uk/stainless-steel-304-14301.html
@@ -19,4 +19,6 @@ class Steel(Material):
             density=8000,
             yield_strength=210e6,
             ultimate_strength=520e6,
+            C1=0.00506,
+            C2=0.0,
         )
