@@ -11,6 +11,10 @@ from fluids.atmosphere import ATMOSPHERE_1976
 
 
 class Atmosphere(ABC):
+    """
+    Abstract class that represents an atmospheric model.
+    """
+
     @abstractmethod
     def get_density(self, y_amsl: float) -> float:
         pass
