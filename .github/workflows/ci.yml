@@ -3,7 +3,7 @@ name: SRM Solver CI/CD pipeline
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   test:
