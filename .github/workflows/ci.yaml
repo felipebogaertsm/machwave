@@ -1,0 +1,16 @@
+name: SRM Solver CI/CD pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test SRM Solver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Testing
+        run: |
+          docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-auto-solar

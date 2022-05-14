@@ -1,0 +1,7 @@
+version: "3.9"
+
+services:
+  test-srm-solver:
+    build: srm_solver/
+    container_name: test_srm_solver
+    entrypoint: python3 -m pytest
