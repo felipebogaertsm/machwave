@@ -60,7 +60,7 @@ class Propellant:
         chamber_pressure must be in Pascals.
         """
         for item in self.burn_rate:
-            if item["min"] < chamber_pressure < item["max"]:
+            if item["min"] <= chamber_pressure < item["max"]:
                 a = item["a"]
                 n = item["n"]
                 return (a * (chamber_pressure * 1e-6) ** n) * 1e-3  # in m/s
