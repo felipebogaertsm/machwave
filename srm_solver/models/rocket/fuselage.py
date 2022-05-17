@@ -26,18 +26,17 @@ class Fuselage:
     length: float | int
     drag_coefficient: list[list[float, float]] | float | int
     outer_diameter: float | int
-    frontal_area: float | None = field(default=None)
+    frontal_area: float | None = field(
+        default_factory=get_circle_area(outer_diameter)
+    )
 
     def __post_init__(self):
         if self.frontal_area is None:
             self.frontal_area = self.get_diameter_frontal_area()
 
-    def get_diameter_frontal_area(self) -> float:
-        return get_circle_area(self.outer_diameter)
-
     def get_drag_coefficient(self, velocity: float = None):
         if isinstance(self.drag_coefficient, list[list[float, float]]):
-            pass  # implement drag coefficient in function of velocity
+            pass  # still need to implement drag coefficient in function of velocity
         elif isinstance(self.drag_coefficient, float | int):
             return self.drag_coefficient
         else:
