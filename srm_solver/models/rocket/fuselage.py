@@ -17,30 +17,37 @@ class DragCoefficientTypeError(Exception):
         super().__init__(message)
 
 
-@dataclass
 class Fuselage:
     """
     Deals primarily with aerodynamic parameters.
     """
 
-    length: float | int
-    drag_coefficient: list[list[float, float]] | float | int
-    outer_diameter: float | int
-    frontal_area: float | None = field(
-        default_factory=get_circle_area(outer_diameter)
-    )
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        drag_coefficient: list[list[float, float]] | float | int,
+        frontal_area: float | None = None,
+    ) -> None:
+        self.length = length
+        self.outer_diameter = outer_diameter
+        self._drag_coefficient = drag_coefficient
+        self._frontal_area = frontal_area or get_circle_area(outer_diameter)
 
-    def __post_init__(self):
-        if self.frontal_area is None:
-            self.frontal_area = self.get_diameter_frontal_area()
+    @property
+    def frontal_area(self) -> float:
+        if self._frontal_area is None:
+            return get_circle_area(self.outer_diameter)
+        else:
+            return self._frontal_area
 
-    def get_drag_coefficient(self, velocity: float = None):
-        if isinstance(self.drag_coefficient, list[list[float, float]]):
+    def get_drag_coefficient(self, velocity: float = None) -> float:
+        if isinstance(self._drag_coefficient, list[list[float, float]]):
             pass  # still need to implement drag coefficient in function of velocity
-        elif isinstance(self.drag_coefficient, float | int):
-            return self.drag_coefficient
+        elif isinstance(self._drag_coefficient, float | int):
+            return self._drag_coefficient
         else:
             raise DragCoefficientTypeError(
-                self.drag_coefficient,
+                self._drag_coefficient,
                 "Type not recognized in 'drag_coefficient'",
             )

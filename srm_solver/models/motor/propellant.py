@@ -22,10 +22,20 @@ qsi_ex: Number of condensed phase moles per 100 gram (exhaust) [mole]
 import scipy.constants
 
 
+class BurnRateOutOfBoundsError(Exception):
+    def __init__(self, value: float) -> None:
+        self.value = value
+        self.message = (
+            f"Chamber pressure out of bounds: {value * 1e-6:.2f} MPa"
+        )
+
+        super().__init__(self.message)
+
+
 class Propellant:
     def __init__(
         self,
-        burn_rate: list,
+        burn_rate: list[dict[str, float | int]],
         combustion_efficiency: float,
         density: float,
         k_mix_ch: float,
@@ -38,7 +48,7 @@ class Propellant:
         qsi_ch: float,
         qsi_ex: float,
     ) -> None:
-        self.burn_rate = burn_rate
+        self._burn_rate = burn_rate
         self.combustion_efficiency = combustion_efficiency
         self.density = density
         self.k_mix_ch = k_mix_ch
@@ -59,10 +69,10 @@ class Propellant:
         """
         chamber_pressure must be in Pascals.
         """
-        for item in self.burn_rate:
-            if item["min"] <= chamber_pressure < item["max"]:
+        for item in self._burn_rate:
+            if item["min"] <= chamber_pressure <= item["max"]:
                 a = item["a"]
                 n = item["n"]
                 return (a * (chamber_pressure * 1e-6) ** n) * 1e-3  # in m/s
 
-        raise Exception("Chamber pressure out of bounds for burn rate")
+        raise BurnRateOutOfBoundsError(chamber_pressure)
