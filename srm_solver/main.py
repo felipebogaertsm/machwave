@@ -20,7 +20,7 @@ from models.motor.structure import (
 from models.propellants import get_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
-from models.materials.metals import Steel
+from models.materials.metals import Steel, Al6063T5
 from models.materials.elastics import EPDM
 from models.motor.thermals import ThermalLiner
 from models.recovery.events import (
@@ -192,13 +192,14 @@ def main(from_json="input.json"):
 
     chamber = BoltedCombustionChamber(
         inner_diameter=casing_inner_diameter - 2 * liner_thickness,
+        casing_inner_diameter=casing_inner_diameter,
         outer_diameter=casing_outer_diameter,
         liner=liner,
         length=grain.total_length,
         C1=C1,
         C2=C2,
-        casing_material=Steel(),
-        bulkhead_material=Steel(),
+        casing_material=Al6063T5(),
+        bulkhead_material=Al6063T5(),
         screw_material=Steel(),
         max_screw_count=max_number_of_screws,
         screw_clearance_diameter=screw_clearance_diameter,
