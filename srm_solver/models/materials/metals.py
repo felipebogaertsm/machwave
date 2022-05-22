@@ -5,7 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from . import NozzleMaterial
+from . import Material, NozzleMaterial
 
 
 class Steel(NozzleMaterial):
@@ -19,6 +19,22 @@ class Steel(NozzleMaterial):
             density=8000,
             yield_strength=210e6,
             ultimate_strength=520e6,
+            C1=0.00506,
+            C2=0.0,
+        )
+
+
+class Al6063T5(NozzleMaterial):
+    """
+    Data obtained from:
+    https://www.makeitfrom.com/material-properties/6063-T5-Aluminum
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            density=2700,
+            yield_strength=170e6,
+            ultimate_strength=180e6,
             C1=0.00506,
             C2=0.0,
         )
