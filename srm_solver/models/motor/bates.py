@@ -29,6 +29,12 @@ class Bates:
         self.core_diameter = core_diameter
         self.segment_length = segment_length
 
+        self.validate_inputs()
+
+    def validate_inputs(self) -> float:
+        assert len(self.core_diameter) == self.segment_count
+        assert len(self.segment_length) == self.segment_count
+
     @property
     def total_length(self) -> float:
         return (
