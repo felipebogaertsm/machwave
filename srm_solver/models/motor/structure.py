@@ -165,6 +165,42 @@ class BoltedCombustionChamber(CombustionChamber):
     ) -> float:
         return inner_diameter - 2 * liner_thickness
 
+    def get_shear_area(self) -> float:
+        return (self.screw_diameter ** 2) * np.pi * 0.25
+
+    def get_tear_area(self, screw_count: int) -> float:
+        """
+        Calculates tear area for screw section.
+        """
+        return (
+            (
+                np.pi
+                * 0.25
+                * ((self.outer_diameter ** 2) - (self.inner_diameter ** 2))
+            )
+            / screw_count
+        ) - (
+            np.arcsin(
+                (self.screw_clearance_diameter / 2) / (self.inner_diameter / 2)
+            )
+        ) * 0.25 * (
+            (self.outer_diameter ** 2) - (self.inner_diameter ** 2)
+        )
+
+    def get_compression_area(self) -> float:
+        return (
+            ((self.outer_diameter - self.inner_diameter))
+            * self.screw_clearance_diameter
+            / 2
+        )
+
+    def get_force_on_each_fastener(
+        self, screw_count: int, chamber_pressure: float
+    ) -> float:
+        return (
+            np.max(chamber_pressure) * (np.pi * (self.inner_diameter / 2) ** 2)
+        ) / screw_count
+
     def get_optimal_fasteners(self, chamber_pressure: np.array):
         max_screw_count = self.max_screw_count
         casing_yield_strength = self.casing_material.yield_strength
@@ -175,34 +211,13 @@ class BoltedCombustionChamber(CombustionChamber):
         compression_safety_factor = np.zeros(max_screw_count)
 
         for screw_count in range(1, max_screw_count + 1):
-            shear_area = (self.screw_diameter ** 2) * np.pi * 0.25
+            shear_area = self.get_shear_area()
+            tear_area = self.get_tear_area(screw_count)
+            compression_area = self.get_compression_area()
 
-            tear_area = (
-                (
-                    np.pi
-                    * 0.25
-                    * ((self.outer_diameter ** 2) - (self.inner_diameter ** 2))
-                )
-                / screw_count
-            ) - (
-                np.arcsin(
-                    (self.screw_clearance_diameter / 2)
-                    / (self.inner_diameter / 2)
-                )
-            ) * 0.25 * (
-                (self.outer_diameter ** 2) - (self.inner_diameter ** 2)
+            force_on_each_fastener = self.get_force_on_each_fastener(
+                screw_count=screw_count, chamber_pressure=chamber_pressure
             )
-
-            compression_area = (
-                ((self.outer_diameter - self.inner_diameter))
-                * self.screw_clearance_diameter
-                / 2
-            )
-
-            force_on_each_fastener = (
-                np.max(chamber_pressure)
-                * (np.pi * (self.inner_diameter / 2) ** 2)
-            ) / screw_count
 
             shear_stress = force_on_each_fastener / shear_area
             shear_safety_factor[screw_count - 1] = (
