@@ -20,6 +20,7 @@ class CombustionChamber:
     def __init__(
         self,
         inner_diameter: float,
+        casing_inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
@@ -29,6 +30,7 @@ class CombustionChamber:
         bulkhead_material: Material,
     ) -> None:
         self.inner_diameter = inner_diameter
+        self.casing_inner_diameter = casing_inner_diameter
         self.outer_diameter = outer_diameter
         self.liner = liner
         self.length = length
@@ -36,6 +38,18 @@ class CombustionChamber:
         self.C2 = C2
         self.casing_material = casing_material
         self.bulkhead_material = bulkhead_material
+
+    @property
+    def inner_radius(self):
+        return self.inner_diameter / 2
+
+    @property
+    def outer_radius(self):
+        return self.outer_diameter / 2
+
+    @property
+    def casing_inner_radius(self):
+        return self.casing_inner_diameter / 2
 
     def get_bulkhead_thickness(
         self, chamber_pressure: np.array, safety_factor: float
@@ -61,20 +75,51 @@ class CombustionChamber:
         """
         return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
-    def get_casing_safety_factor(self, chamber_pressure: np.array) -> float:
-        """
-        Returns the thickness for a cylindrical pressure vessel.
-        """
-        casing_yield_strength = self.casing_material.yield_strength
-
-        thickness = (self.outer_diameter - self.inner_diameter) / 2
-        max_chamber_pressure = np.max(chamber_pressure)
-
-        bursting_pressure = (casing_yield_strength * thickness) / (
-            self.inner_diameter * 0.5 + 0.6 * thickness
+    def get_casing_stress_theta(self, chamber_pressure: float) -> float:
+        return (
+            (chamber_pressure * self.casing_inner_radius ** 2)
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+            * (
+                1
+                + ((self.outer_radius ** 2) / (self.casing_inner_radius ** 2))
+            )
         )
 
-        return bursting_pressure / max_chamber_pressure  # casing safety factor
+    def get_casing_stress_radius(self, chamber_pressure: float) -> float:
+        return (
+            (chamber_pressure * self.casing_inner_radius ** 2)
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+            * (1 - ((self.outer_radius) / (self.casing_inner_radius)) ** 2)
+        )
+
+    def get_casing_stress_z(self, chamber_pressure: float) -> float:
+        return (
+            2
+            * chamber_pressure
+            * self.casing_inner_radius ** 2
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+        )
+
+    def get_casing_safety_factor(self, chamber_pressure: np.array) -> float:
+        """
+        Returns the thickness for a cylindrical pressure vessel, using
+        Von Misses criteria.
+        """
+        casing_yield_strength = self.casing_material.yield_strength
+        max_chamber_pressure = np.max(chamber_pressure)
+
+        gama_z = self.get_casing_stress_z(max_chamber_pressure)
+        gama_r = self.get_casing_stress_radius(max_chamber_pressure)
+        gama_theta = self.get_casing_stress_theta(max_chamber_pressure)
+
+        return casing_yield_strength / np.sqrt(
+            (
+                (gama_z - gama_r) ** 2
+                + (gama_r - gama_theta) ** 2
+                + (gama_theta - gama_z) ** 2
+            )
+            / 2
+        )
 
     def get_empty_volume(self) -> None:
         return get_cylinder_volume(self.inner_diameter, self.length)
@@ -84,6 +129,7 @@ class BoltedCombustionChamber(CombustionChamber):
     def __init__(
         self,
         inner_diameter: float,
+        casing_inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
@@ -98,6 +144,7 @@ class BoltedCombustionChamber(CombustionChamber):
     ) -> None:
         super().__init__(
             inner_diameter,
+            casing_inner_diameter,
             outer_diameter,
             liner,
             length,

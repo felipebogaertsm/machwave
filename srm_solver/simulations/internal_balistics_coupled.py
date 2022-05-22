@@ -324,7 +324,7 @@ class InternalBallisticsCoupled(Simulation):
 
             # Drag properties:
             fuselage_area = self.rocket.fuselage.frontal_area
-            fuselage_drag_coeff = self.rocket.fuselage.drag_coefficient
+            fuselage_drag_coeff = self.rocket.fuselage.get_drag_coefficient()
             (
                 recovery_drag_coeff,
                 recovery_area,

@@ -42,9 +42,9 @@ class Fuselage:
             return self._frontal_area
 
     def get_drag_coefficient(self, velocity: float = None) -> float:
-        if isinstance(self._drag_coefficient, list[list[float, float]]):
+        if isinstance(self._drag_coefficient, list):
             pass  # still need to implement drag coefficient in function of velocity
-        elif isinstance(self._drag_coefficient, float | int):
+        elif isinstance(self._drag_coefficient, (float, int)):
             return self._drag_coefficient
         else:
             raise DragCoefficientTypeError(
