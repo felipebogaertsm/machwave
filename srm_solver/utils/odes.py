@@ -73,6 +73,6 @@ def ballistics_ode(y, v, T, D, M, g):
         x = -1
     else:
         x = 1
-    dv_dt = (T - x * D * (v ** 2)) / M - g
+    dv_dt = (T - x * D * (v**2)) / M - g
     dy_dt = v
     return dy_dt, dv_dt

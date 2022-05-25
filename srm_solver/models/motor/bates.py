@@ -94,7 +94,7 @@ class Bates:
         if 0.5 * (D_grain - D_core[segment_index]) >= web_thickness:
             return np.pi * (
                 (
-                    (D_grain ** 2)
+                    (D_grain**2)
                     - (D_core[segment_index] + 2 * web_thickness) ** 2
                 )
                 / 2
@@ -131,7 +131,7 @@ class Bates:
         if 0.5 * (D_grain - D_core[segment_index]) >= web_thickness:
             return (np.pi / 4) * (
                 (
-                    (D_grain ** 2)
+                    (D_grain**2)
                     - ((D_core[segment_index] + 2 * web_thickness) ** 2)
                 )
                 * (L_grain[segment_index] - 2 * web_thickness)

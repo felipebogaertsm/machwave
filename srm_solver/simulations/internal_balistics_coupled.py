@@ -397,7 +397,7 @@ class InternalBallisticsCoupled(Simulation):
 
         optimal_grain_length = self.motor.grain.get_optimal_segment_length()
         initial_port_to_throat = (self.motor.grain.core_diameter[-1] ** 2) / (
-            self.motor.structure.nozzle.throat_diameter ** 2
+            self.motor.structure.nozzle.throat_diameter**2
         )
 
         burn_profile = self.motor.grain.get_burn_profile(A_burn[A_burn != 0.0])

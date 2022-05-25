@@ -16,8 +16,8 @@ def get_circle_area(diameter):
     """
     Returns the area of the circle based on circle diameter.
     """
-    return np.pi * 0.25 * diameter ** 2
+    return np.pi * 0.25 * diameter**2
 
 
 def get_cylinder_volume(diameter, length):
-    return np.pi * length * (diameter ** 2) / 4
+    return np.pi * length * (diameter**2) / 4
