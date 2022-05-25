@@ -7,6 +7,7 @@
 
 import pytest
 
+from models.atmosphere import Atmosphere1976
 from models.propellants import KNDX, KNER, KNSB, KNSB_NAKKA, KNSU
 
 
@@ -33,3 +34,8 @@ def propellant_KNSB_NAKKA():
 @pytest.fixture
 def propellant_KNSU():
     return KNSU
+
+
+@pytest.fixture
+def atmosphere_1976():
+    return Atmosphere1976()
