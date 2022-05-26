@@ -5,10 +5,6 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-"""
-Stores BATES class and methods.
-"""
-
 import numpy as np
 
 from utils.geometric import get_circle_area
