@@ -16,21 +16,22 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_propellant_volume(self, web_distance: float) -> float:
-        pass
-
-    @abstractmethod
-    def get_mass_flux(self) -> np.array:
+    def get_volume(self, web_distance: float) -> float:
         pass
 
 
-class Grain(ABC):
+class Grain:
     def __init__(self) -> None:
         self.segments: list[GrainSegment] = []
 
-    @abstractmethod
     def add_segment(self, new_segment: GrainSegment) -> None:
         if isinstance(new_segment, GrainSegment):
             self.segments.append(new_segment)
         else:
             raise Exception("Argument is not a GrainSegment class instance")
+
+    def get_mass_flux(self) -> np.array:
+        """
+        Calculates the mass flex for all the grain segments in the motor.
+        """
+        pass
