@@ -11,7 +11,7 @@ import numpy as np
 import json
 from pathlib import Path
 
-from models.motor.bates import Bates
+from models.motor.grain.bates import Bates
 from models.motor.structure import (
     BoltedCombustionChamber,
     MotorStructure,
