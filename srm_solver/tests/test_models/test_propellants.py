@@ -11,7 +11,7 @@ from models.motor.propellant import Propellant
 
 
 def _test_propellant_burn_rate(propellant: Propellant):
-    burn_rate_map = propellant._burn_rate
+    burn_rate_map = propellant.burn_rate
 
     # Getting pressure range covered by burn rate map:
     min_pressure = np.min(list(map(lambda item: item["min"], burn_rate_map)))
