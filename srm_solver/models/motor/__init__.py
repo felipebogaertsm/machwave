@@ -9,7 +9,7 @@
 Stores Motor class and methods.
 """
 
-from models.motor.grain.bates import Bates
+from models.motor.grain import Grain
 from models.motor.propellant import Propellant
 from models.motor.structure import MotorStructure
 
@@ -17,7 +17,7 @@ from models.motor.structure import MotorStructure
 class Motor:
     def __init__(
         self,
-        grain: Bates,
+        grain: Grain,
         propellant: Propellant,
         structure: MotorStructure,
     ) -> None:
