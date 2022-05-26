@@ -9,7 +9,7 @@
 Stores Motor class and methods.
 """
 
-from models.motor.bates import Bates
+from models.motor.grain.bates import Bates
 from models.motor.propellant import Propellant
 from models.motor.structure import MotorStructure
 

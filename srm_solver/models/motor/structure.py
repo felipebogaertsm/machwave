@@ -40,15 +40,15 @@ class CombustionChamber:
         self.bulkhead_material = bulkhead_material
 
     @property
-    def inner_radius(self):
+    def inner_radius(self) -> float:
         return self.inner_diameter / 2
 
     @property
-    def outer_radius(self):
+    def outer_radius(self) -> float:
         return self.outer_diameter / 2
 
     @property
-    def casing_inner_radius(self):
+    def casing_inner_radius(self) -> float:
         return self.casing_inner_diameter / 2
 
     def get_bulkhead_thickness(
