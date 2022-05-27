@@ -39,7 +39,7 @@ def test_bates_grains_with_different_outer_diameters():
     grain.add_segment(segment_2)
 
 
-def test_grain_total_length_property(bates_grain_olympus):
+def test_olympus_grain_total_length_property(bates_grain_olympus):
     grain = bates_grain_olympus
     total_length = 0
 
@@ -47,3 +47,11 @@ def test_grain_total_length_property(bates_grain_olympus):
         total_length += segment.length + segment.spacing
 
     assert grain.total_length == total_length
+    assert grain.total_length == 1470e-3
+
+
+def test_olympus_grain_segment_count(bates_grain_olympus):
+    assert bates_grain_olympus.segment_count == 7
+    assert bates_grain_olympus.segment_count == len(
+        bates_grain_olympus.segments
+    )

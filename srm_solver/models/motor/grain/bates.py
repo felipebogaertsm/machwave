@@ -32,6 +32,10 @@ class BatesSegment(GrainSegment):
         assert self.length > 0
         assert self.spacing >= 0
 
+    @property
+    def total_web_thickness(self) -> float:
+        return 0.5 * (self.outer_diameter - self.core_diameter)
+
     def get_optimal_length(self) -> float:
         """
         Returns the optimal length for BATES segment.
@@ -47,7 +51,7 @@ class BatesSegment(GrainSegment):
         D_core = self.core_diameter
         L_grain = self.segment_length
 
-        if 0.5 * (D_grain - D_core) >= web_thickness:
+        if self.total_web_thickness >= web_thickness:
             return np.pi * (
                 ((D_grain**2) - (D_core + 2 * web_thickness) ** 2) / 2
                 + (
@@ -64,7 +68,7 @@ class BatesSegment(GrainSegment):
         D_core = self.core_diameter
         L_grain = self.segment_length
 
-        if 0.5 * (D_grain - D_core) >= web_thickness:
+        if self.total_web_thickness >= web_thickness:
             return (np.pi / 4) * (
                 ((D_grain**2) - ((D_core + 2 * web_thickness) ** 2))
                 * (L_grain - 2 * web_thickness)
