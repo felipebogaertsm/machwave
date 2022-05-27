@@ -37,3 +37,13 @@ def test_bates_grains_with_different_outer_diameters():
     # Changing ODs and checking if it works:
     segment_2.outer_diameter = segment_1.outer_diameter
     grain.add_segment(segment_2)
+
+
+def test_grain_total_length_property(bates_grain_olympus):
+    grain = bates_grain_olympus
+    total_length = 0
+
+    for segment in grain.segments:
+        total_length += segment.length + segment.spacing
+
+    assert grain.total_length == total_length

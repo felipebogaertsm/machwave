@@ -32,16 +32,16 @@ def bates_segment_olympus_60():
 
 
 @pytest.fixture
-def bates_grain_olympus():
+def bates_grain_olympus(bates_segment_olympus_45, bates_segment_olympus_60):
     grain = Grain()
 
     # Adding 4 45 mm segments and 3 60mm segments:
-    grain.add_segment(bates_segment_olympus_45())
-    grain.add_segment(bates_segment_olympus_45())
-    grain.add_segment(bates_segment_olympus_45())
-    grain.add_segment(bates_segment_olympus_45())
-    grain.add_segment(bates_segment_olympus_60())
-    grain.add_segment(bates_segment_olympus_60())
-    grain.add_segment(bates_segment_olympus_60())
+    grain.add_segment(bates_segment_olympus_45)
+    grain.add_segment(bates_segment_olympus_45)
+    grain.add_segment(bates_segment_olympus_45)
+    grain.add_segment(bates_segment_olympus_45)
+    grain.add_segment(bates_segment_olympus_60)
+    grain.add_segment(bates_segment_olympus_60)
+    grain.add_segment(bates_segment_olympus_60)
 
     return grain

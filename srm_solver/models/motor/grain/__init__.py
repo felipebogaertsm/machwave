@@ -55,13 +55,15 @@ class Grain:
 
     def get_mass_flux(self) -> np.array:
         """
-        Calculates the mass flex for all the grain segments in the motor.
+        Calculates the mass flux for all grain segments in the motor.
         """
         pass
 
     @property
     def total_length(self) -> float:
-        return np.sum([grain.length for grain in self.segments])
+        return np.sum(
+            [grain.length + grain.spacing for grain in self.segments]
+        )
 
     @property
     def segment_count(self) -> int:
