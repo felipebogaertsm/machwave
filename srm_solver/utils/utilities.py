@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_burn_profile(self, burn_area: np.array) -> str:
+def get_burn_profile(burn_area: np.array) -> str:
     """
     Returns string with burn profile.
     """
@@ -111,7 +111,7 @@ def print_results(
     )
     print(
         " Motor L/D ratio: %.3f"
-        % (np.sum(grain.segment_length) / grain.outer_diameter)
+        % (np.sum(grain.total_length) / grain.segments[0].outer_diameter)
     )
     print(
         f" Max initial mass flux: {np.max(ib_parameters.grain_mass_flux):.3f} kg/s-m-m or "

@@ -5,13 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-import fire
 import time
-import numpy as np
-import json
-from pathlib import Path
 
-from models.motor.grain.bates import Bates
+from models.motor.grain import Grain
+from models.motor.grain.bates import BatesSegment
 from models.motor.structure import (
     BoltedCombustionChamber,
     MotorStructure,
@@ -31,7 +28,7 @@ from models.recovery.parachutes import HemisphericalParachute
 from models.rocket.fuselage import Fuselage
 from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
-from models.motor import Motor
+from models.motor import SolidMotor
 
 from utils.utilities import output_eng_csv, print_results
 from utils.plots import (
@@ -46,119 +43,12 @@ from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 from simulations.structural import StructuralSimulation
 
 
-def main(from_json="input.json"):
+def main():
     # /////////////////////////////////////////////////////////////////////////
     # TIME FUNCTION START
     # Starts the timer.
 
     start = time.time()
-
-    # /////////////////////////////////////////////////////////////////////////
-    # INPUTS
-    # This section must be used to enter all the inputs for the script mode to be
-    # executed.
-
-    with open(Path(from_json)) as motor_input:
-        data = json.load(motor_input)
-
-    # Motor name (NO SPACES):
-    name = data["motor"]["name"]
-    # Motor manufacturer (NO SPACES):
-    manufacturer = data["motor"]["manufacturer"]
-    # Motor structural mass [kg]:
-    motor_structural_mass = data["structure"]["mass"]
-
-    # SIMULATION PARAMETERS INPUT
-    # .eng file resolution:
-    eng_res = data["simulationSettings"]["engResolution"]
-    # Time step [s]:
-    d_t = data["simulationSettings"]["dt"]
-    # In order to optimize the speed of the program, the time step entered above is
-    # multiplied by a factor 'dd_t' after the propellant is finished burning and
-    # thrust produced is 0.
-    dd_t = data["simulationSettings"]["ddt"]
-    # Minimal safety factor:
-    safety_factor = data["structure"]["safetyFactor"]
-
-    # BATES PROPELLANT INPUT
-    # Grain count:
-    segment_count = data["grain"]["count"]
-    # Grain external diameter [m]:
-    grain_outer_diameter = data["grain"]["outerDiameter"]
-    # Grains 1 to 'segment_count' core diameter [m]:
-    grain_core_diameter = np.array(data["grain"]["coreDiameter"])
-    # Grains 1 to 'segment_count' length [m]:
-    segment_length = np.array(data["grain"]["length"])
-    # Grain spacing (used to determine chamber length) [m]:
-    grain_spacing = data["grain"]["spacing"]
-
-    # PROPELLANT CHARACTERISTICS INPUT
-    # Propellant name:
-    propellant = data["propellant"]["name"]
-
-    # THRUST CHAMBER
-    # Casing inside diameter [m]:
-    casing_inner_diameter = data["structure"]["casingInnerDiameter"]
-    # Chamber outside diameter [m]:
-    casing_outer_diameter = data["structure"]["casingOuterDiameter"]
-    # Liner thickness [m]
-    liner_thickness = data["structure"]["linerThickness"]
-    # Throat diameter [m]:
-    nozzle_throat_diameter = data["structure"]["nozzleThroatDiameter"]
-    # Nozzle divergent and convergent angle [degrees]:
-    divergent_angle = data["structure"]["nozzleDivergentAngle"]
-    convergent_angle = data["structure"]["nozzleConvergentAngle"]
-    # Expansion ratio:
-    expansion_ratio = data["structure"]["expansionRatio"]
-    # Nozzle materials heat properties 1 and 2 (page 87 of a015140):
-    C1 = data["structure"]["casingC1"]
-    C2 = data["structure"]["casingC2"]
-
-    # EXTERNAL CONDITIONS
-    # Igniter pressure [Pa]:
-    igniter_pressure = data["simulationSettings"]["igniterPressure"]
-    # Elevation above mean sea level [m]:
-    initial_elevation_amsl = data["simulationSettings"]["initialAmslElevation"]
-
-    # MECHANICAL DATA
-    # Chamber yield strength [Pa]:
-    casing_yield_strength = data["structure"]["casingYieldStrength"]
-    # Bulkhead yield strength [Pa]:
-    bulkhead_yield_strength = data["structure"]["bulkheadYieldStrength"]
-    # Nozzle material yield strength [Pa]:
-    nozzle_yield_strength = data["structure"]["nozzleYieldStrength"]
-
-    # FASTENER DATA
-    # Screw diameter (excluding threads) [m]:
-    screw_diameter = data["structure"]["screwDiameter"]
-    # Screw clearance hole diameter [m]:
-    screw_clearance_diameter = data["structure"]["screwClearanceDiameter"]
-    # Tensile strength of the screw [Pa]:
-    screw_ultimate_strength = data["structure"]["screwUltimateStrength"]
-    # Maximum number of fasteners:
-    max_number_of_screws = data["structure"]["maxScrewCount"]
-
-    # VEHICLE DATA
-    # Mass of the rocket without the motor [kg]:
-    mass_wo_motor = data["rocket"]["massWithoutMotor"]
-    # Rocket drag coefficient:
-    drag_coeff = data["rocket"]["dragCoeff"]
-    # Frontal diameter [m]:
-    rocket_outer_diameter = data["rocket"]["outerDiameter"]
-    # Launch rail length [m]
-    rail_length = data["simulationSettings"]["railLength"]
-    # Time after apogee for drogue parachute activation [s]
-    drogue_time = data["recovery"]["drogueTime"]
-    # Drogue drag coefficient
-    drag_coeff_drogue = data["recovery"]["drogueDragCoeff"]
-    # Drogue effective diameter [m]
-    drogue_diameter = data["recovery"]["drogueDiameter"]
-    # Main parachute drag coefficient [m]
-    drag_coeff_main = data["recovery"]["mainDragCoeff"]
-    # Main parachute effective diameter [m]
-    main_diameter = data["recovery"]["mainDiameter"]
-    # Main parachute height activation [m]
-    main_chute_activation_height = data["recovery"]["mainActivationHeight"]
 
     # /////////////////////////////////////////////////////////////////////////
     # PRE CALCULATIONS AND DEFINITIONS
@@ -170,74 +60,86 @@ def main(from_json="input.json"):
     # diameter.
 
     # Motor:
-    propellant_data = get_propellant_from_name(prop_name=propellant)
+    propellant = get_propellant_from_name(prop_name="KNSB-NAKKA")
 
-    grain = Bates(
-        segment_count=segment_count,
-        segment_spacing=10e-3,
-        outer_diameter=grain_outer_diameter,
-        core_diameter=grain_core_diameter,
-        segment_length=segment_length,
+    grain = Grain()
+
+    bates_segment_45 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=45e-3,
+        length=200e-3,
+        spacing=10e-3,
+    )
+    bates_segment_60 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=60e-3,
+        length=200e-3,
+        spacing=10e-3,
     )
 
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
+
     nozzle = Nozzle(
-        throat_diameter=nozzle_throat_diameter,
-        divergent_angle=divergent_angle,
-        convergent_angle=convergent_angle,
-        expansion_ratio=expansion_ratio,
+        throat_diameter=37e-3,
+        divergent_angle=12,
+        convergent_angle=45,
+        expansion_ratio=8,
         material=Steel(),
     )
 
     liner = ThermalLiner(thickness=2e-3, material=EPDM())
 
     chamber = BoltedCombustionChamber(
-        inner_diameter=casing_inner_diameter - 2 * liner_thickness,
-        casing_inner_diameter=casing_inner_diameter,
-        outer_diameter=casing_outer_diameter,
+        casing_inner_diameter=128.2e-3,
+        outer_diameter=141.3e-3,
         liner=liner,
-        length=grain.total_length,
-        C1=C1,
-        C2=C2,
+        length=grain.total_length + 10e-3,
         casing_material=Al6063T5(),
         bulkhead_material=Al6063T5(),
         screw_material=Steel(),
-        max_screw_count=max_number_of_screws,
-        screw_clearance_diameter=screw_clearance_diameter,
-        screw_diameter=screw_diameter,
+        max_screw_count=30,
+        screw_clearance_diameter=9e-3,
+        screw_diameter=6.75e-3,
     )
 
     structure = MotorStructure(
-        safety_factor=safety_factor,
-        dry_mass=motor_structural_mass,
+        safety_factor=4,
+        dry_mass=21.013,
         nozzle=nozzle,
         chamber=chamber,
     )
 
-    motor = Motor(grain=grain, propellant=propellant_data, structure=structure)
+    motor = SolidMotor(grain=grain, propellant=propellant, structure=structure)
 
     # Recovery:
     recovery = Recovery()
     recovery.add_event(
         ApogeeBasedEvent(
             trigger_value=1,
-            parachute=HemisphericalParachute(diameter=drogue_diameter),
+            parachute=HemisphericalParachute(diameter=1.25),
         )
     )
     recovery.add_event(
         AltitudeBasedEvent(
             trigger_value=450,
-            parachute=HemisphericalParachute(diameter=main_diameter),
+            parachute=HemisphericalParachute(diameter=2.66),
         )
     )
 
     # Rocket:
     fuselage = Fuselage(
         length=4e3,
-        drag_coefficient=drag_coeff,
-        outer_diameter=rocket_outer_diameter,
+        drag_coefficient=0.5,
+        outer_diameter=0.17,
     )
 
-    rocket_structure = RocketStructure(mass_without_motor=mass_wo_motor)
+    rocket_structure = RocketStructure(mass_without_motor=25)
 
     rocket = Rocket(
         fuselage=fuselage,
@@ -261,11 +163,11 @@ def main(from_json="input.json"):
         rocket=rocket,
         recovery=recovery,
         atmosphere=Atmosphere1976(),
-        d_t=d_t,
-        dd_t=dd_t,
-        initial_elevation_amsl=initial_elevation_amsl,
-        igniter_pressure=igniter_pressure,
-        rail_length=rail_length,
+        d_t=0.01,
+        dd_t=10,
+        initial_elevation_amsl=600,
+        igniter_pressure=1.5e6,
+        rail_length=5,
     ).run()
 
     # /////////////////////////////////////////////////////////////////////////
@@ -275,7 +177,7 @@ def main(from_json="input.json"):
     # StructuralParameters.
 
     structural_parameters = StructuralSimulation(
-        structure, ib_parameters.P0, safety_factor
+        structure, ib_parameters.P0, 4
     ).run()
 
     # /////////////////////////////////////////////////////////////////////////
@@ -300,11 +202,11 @@ def main(from_json="input.json"):
     output_eng_csv(
         ib_parameters,
         structure,
-        propellant_data,
+        propellant,
         25,
-        d_t,
-        manufacturer,
-        name,
+        0.1,
+        manufacturer="LCP 2022",
+        name="OLYMPUS",
     )
 
     # /////////////////////////////////////////////////////////////////////////
@@ -317,13 +219,13 @@ def main(from_json="input.json"):
     # PLOTS
     # Saves some of the most important plots to the 'output' folder.
 
-    performance_figure = performance_plot(
+    performance_plot(
         ib_parameters.T,
         ib_parameters.P0,
         ib_parameters.t,
         ib_parameters.t_thrust,
     )
-    main_figure = main_plot(
+    main_plot(
         ib_parameters.t,
         ib_parameters.T,
         ib_parameters.P0,
@@ -331,7 +233,7 @@ def main(from_json="input.json"):
         ib_parameters.m_prop,
         ib_parameters.t_thrust,
     )
-    mass_flux_figure = mass_flux_plot(
+    mass_flux_plot(
         ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
     )
     ballistics_plots(
@@ -341,4 +243,4 @@ def main(from_json="input.json"):
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    main()

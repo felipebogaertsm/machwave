@@ -10,6 +10,7 @@ Stores Ballistics class and methods.
 """
 
 from dataclasses import dataclass
+
 import numpy as np
 
 
