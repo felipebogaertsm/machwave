@@ -19,6 +19,10 @@ class BurnRateOutOfBoundsError(Exception):
 
 
 class Propellant:
+    pass
+
+
+class SolidPropellant(Propellant):
     def __init__(
         self,
         burn_rate: list[dict[str, float | int]],

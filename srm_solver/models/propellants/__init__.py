@@ -9,9 +9,9 @@
 Propellant data was gathered from ProPEP3.
 """
 
-from models.motor.propellant import Propellant
+from models.motor.propellant import SolidPropellant
 
-KNDX = Propellant(
+KNDX = SolidPropellant(
     [
         {"min": 0, "max": 0.779e6, "a": 8.875, "n": 0.619},
         {"min": 0.779e6, "max": 0.779e6, "a": 7.553, "n": -0.009},
@@ -32,7 +32,7 @@ KNDX = Propellant(
     0.321,
 )
 
-KNSB = Propellant(
+KNSB = SolidPropellant(
     [
         {"min": 0, "max": 0.779e6, "a": 8.875, "n": 0.619},
         {"min": 0.779e6, "max": 2.572e6, "a": 7.553, "n": -0.009},
@@ -53,7 +53,7 @@ KNSB = Propellant(
     0.321,
 )
 
-KNSB_NAKKA = Propellant(
+KNSB_NAKKA = SolidPropellant(
     [
         {"min": 0, "max": 0.807e6, "a": 10.708, "n": 0.625},
         {"min": 0.807e6, "max": 1.503e6, "a": 8.763, "n": -0.314},
@@ -74,7 +74,7 @@ KNSB_NAKKA = Propellant(
     0.321,
 )
 
-KNSU = Propellant(
+KNSU = SolidPropellant(
     [{"min": 0, "max": 100e6, "a": 8.260, "n": 0.319}],
     0.95,
     1899.5 * 0.95,
@@ -89,7 +89,7 @@ KNSU = Propellant(
     0.321,
 )
 
-KNER = Propellant(
+KNER = SolidPropellant(
     [{"min": 0, "max": 100e6, "a": 2.903, "n": 0.395}],
     0.94,
     1820.0 * 0.95,
@@ -105,7 +105,7 @@ KNER = Propellant(
 )
 
 
-def get_propellant_from_name(prop_name: str) -> Propellant:
+def get_propellant_from_name(prop_name: str) -> SolidPropellant:
     """ "
     Returns propellant data based on the propellant name entered by the user as a string.
     """

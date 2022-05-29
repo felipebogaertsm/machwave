@@ -92,12 +92,16 @@ class Grain:
                 for k in range(j + 1):
                     total_grain_Ab[j, i] = total_grain_Ab[
                         j, i
-                    ] + self.get_burn_area_per_segment(k, web_thickness[i])
+                    ] + self.segments[j].get_burn_area(web_thickness[i])
+
                 segment_mass_flux[j, i] = (
                     total_grain_Ab[j, i] * propellant_density * burn_rate[i]
                 )
+
                 segment_mass_flux[j, i] = segment_mass_flux[j, i] / (
-                    get_circle_area(self.core_diameter[j] + web_thickness[i])
+                    get_circle_area(
+                        self.segments[j].core_diameter + web_thickness[i]
+                    )
                 )
 
         return segment_mass_flux

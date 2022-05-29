@@ -15,11 +15,10 @@ ballistic of the motor. The main attribute that changes during flight is the
 ambient pressure, which impacts the propellant burn rate inside the motor.
 """
 
-import fluids.atmosphere as atm
 import numpy as np
 
 from models.atmosphere import Atmosphere
-from models.motor import Motor
+from models.motor import Motor, SolidMotor
 from models.recovery import Recovery
 from models.rocket import Rocket
 from simulations import Simulation
@@ -31,7 +30,6 @@ from solvers.srm_internal_ballistics import (
 from solvers.ballistics_1d import Ballistics1D
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
-    get_divergent_correction_factor,
     get_opt_expansion_ratio,
     get_exit_pressure,
     get_operational_correction_factors,
@@ -40,8 +38,8 @@ from utils.isentropic_flow import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from utils.odes import solve_cp_seidel, ballistics_ode
 from utils.units import convert_pa_to_psi
+from utils.utilities import get_burn_profile
 
 
 class InternalBallisticsCoupled(Simulation):
@@ -116,25 +114,26 @@ class InternalBallisticsCoupled(Simulation):
         )  # thrust coefficient and thrust
 
         # PRE CALCULATIONS
-        # Critical pressure ratio:
         critical_pressure_ratio = get_critical_pressure_ratio(
             self.motor.propellant.k_mix_ch
         )
-        # Divergent correction factor:
-        n_div = get_divergent_correction_factor(
-            self.motor.structure.nozzle.divergent_angle
-        )
-        # Variables storing the apogee, apogee time and main chute ejection time:
-        apogee, apogee_time, main_time = 0, -1, 0
+        n_div = self.motor.structure.nozzle.get_divergent_correction_factor()
+        # Variables storing the apogee, apogee time:
+        apogee, apogee_time = 0, -1
         # Calculation of empty chamber volume (constant throughout the operation):
         empty_chamber_volume = self.motor.structure.chamber.get_empty_volume()
+
+        # INSTANTIATING SOLVERS
+        if isinstance(self.motor, SolidMotor):
+            ib_solver = SRMInternalBallisticsSolver()
+        ballistics_solver = Ballistics1D()
 
         # If the propellant mass is non zero, 'end_thrust' must be False,
         # since there is still thrust being produced.
 
         # After the propellant has finished burning and the thrust chamber has
-        # stopped producing supersonic flow, 'end_thrust' is changed to a
-        # True value and the internal ballistics section of the while loop below
+        # stopped producing supersonic flow, 'end_thrust' is changed to True
+        # value and the internal ballistics section of the while loop below
         # stops running.
 
         end_thrust = False
@@ -167,11 +166,11 @@ class InternalBallisticsCoupled(Simulation):
             )
 
             if end_thrust is False:  # while motor is producing thrust
-                A_burn, V_prop = (
-                    np.append(A_burn, self.motor.grain.get_burn_area(web[i])),
-                    np.append(
-                        V_prop, self.motor.grain.get_propellant_volume(web[i])
-                    ),
+                A_burn = np.append(
+                    A_burn, self.motor.grain.get_burn_area(web[i])
+                )
+                V_prop = np.append(
+                    V_prop, self.motor.grain.get_propellant_volume(web[i])
                 )
 
                 # Calculating the free chamber volume:
@@ -188,8 +187,6 @@ class InternalBallisticsCoupled(Simulation):
 
                 d_x = self.d_t * burn_rate[i]
                 web = np.append(web, web[i] + d_x)
-
-                ib_solver = SRMInternalBallisticsSolver()
 
                 P_0 = np.append(
                     P_0,
@@ -269,8 +266,8 @@ class InternalBallisticsCoupled(Simulation):
                     T,
                     get_thrust_from_cf(
                         C_f[i],
-                        self.motor.structure.nozzle.get_throat_area(),
                         P_0[i],
+                        self.motor.structure.nozzle.get_throat_area(),
                     ),
                 )  # thrust calculation
 
@@ -341,7 +338,6 @@ class InternalBallisticsCoupled(Simulation):
                 * 0.5
             )
 
-            ballistics_solver = Ballistics1D()
             ballistics_results = ballistics_solver.solve(
                 y[i],
                 v[i],
@@ -357,7 +353,7 @@ class InternalBallisticsCoupled(Simulation):
             acc = np.append(acc, ballistics_results[2])
 
             mach_no = np.append(
-                mach_no, v[i] / atm.ATMOSPHERE_1976(y[i]).v_sonic
+                mach_no, v[i] / self.atmosphere.get_sonic_velocity(y[i])
             )
 
             if y[i + 1] <= y[i] and m_prop[i] == 0 and apogee == 0:
@@ -382,25 +378,15 @@ class InternalBallisticsCoupled(Simulation):
 
         I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
 
-        ballistics = Ballistics(
-            t,
-            y,
-            v,
-            acc,
-            v_rail,
-            y_burnout,
-            mach_no,
-            apogee_time[0],
-            flight_time,
-            P_ext,
-        )
+        optimal_grain_length = [
+            segment.get_optimal_length()
+            for segment in self.motor.grain.segments
+        ]
+        initial_port_to_throat = (
+            self.motor.grain.segments[-1].core_diameter ** 2
+        ) / (self.motor.structure.nozzle.throat_diameter**2)
 
-        optimal_grain_length = self.motor.grain.get_optimal_segment_length()
-        initial_port_to_throat = (self.motor.grain.core_diameter[-1] ** 2) / (
-            self.motor.structure.nozzle.throat_diameter**2
-        )
-
-        burn_profile = self.motor.grain.get_burn_profile(A_burn[A_burn != 0.0])
+        burn_profile = get_burn_profile(burn_area=A_burn[A_burn != 0.0])
         Kn = A_burn / self.motor.structure.nozzle.get_throat_area()
         Kn_non_zero = Kn[Kn != 0.0]
         initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[-1]
@@ -408,28 +394,40 @@ class InternalBallisticsCoupled(Simulation):
             burn_rate, self.motor.propellant.density, web
         )
 
-        ib_parameters = InternalBallistics(
-            t,
-            P_0,
-            T,
-            T_mean,
-            I_total,
-            I_sp,
-            t_burnout,
-            t_thrust,
-            nozzle_eff,
-            optimal_expansion_ratio,
-            V_prop,
-            A_burn,
-            Kn,
-            m_prop,
-            grain_mass_flux,
-            optimal_grain_length,
-            initial_port_to_throat,
-            burn_profile,
-            empty_chamber_volume,
-            initial_to_final_kn,
-            P_exit,
+        return (
+            Ballistics(
+                t,
+                y,
+                v,
+                acc,
+                v_rail,
+                y_burnout,
+                mach_no,
+                apogee_time[0],
+                flight_time,
+                P_ext,
+            ),
+            InternalBallistics(
+                t,
+                P_0,
+                T,
+                T_mean,
+                I_total,
+                I_sp,
+                t_burnout,
+                t_thrust,
+                nozzle_eff,
+                optimal_expansion_ratio,
+                V_prop,
+                A_burn,
+                Kn,
+                m_prop,
+                grain_mass_flux,
+                optimal_grain_length,
+                initial_port_to_throat,
+                burn_profile,
+                empty_chamber_volume,
+                initial_to_final_kn,
+                P_exit,
+            ),
         )
-
-        return ballistics, ib_parameters

@@ -14,30 +14,29 @@ import numpy as np
 from models.materials import Material
 from models.motor.thermals import ThermalLiner
 from utils.geometric import get_circle_area, get_cylinder_volume
+from utils.isentropic_flow import get_divergent_correction_factor
 
 
 class CombustionChamber:
     def __init__(
         self,
-        inner_diameter: float,
         casing_inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
-        C1: float,
-        C2: float,
         casing_material: Material,
         bulkhead_material: Material,
     ) -> None:
-        self.inner_diameter = inner_diameter
         self.casing_inner_diameter = casing_inner_diameter
         self.outer_diameter = outer_diameter
         self.liner = liner
         self.length = length
-        self.C1 = C1
-        self.C2 = C2
         self.casing_material = casing_material
         self.bulkhead_material = bulkhead_material
+
+    @property
+    def inner_diameter(self) -> float:
+        return self.casing_inner_diameter - 2 * self.liner.thickness
 
     @property
     def inner_radius(self) -> float:
@@ -128,13 +127,10 @@ class CombustionChamber:
 class BoltedCombustionChamber(CombustionChamber):
     def __init__(
         self,
-        inner_diameter: float,
         casing_inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
-        C1: float,
-        C2: float,
         casing_material: Material,
         bulkhead_material: Material,
         screw_material: Material,
@@ -143,13 +139,10 @@ class BoltedCombustionChamber(CombustionChamber):
         screw_diameter: float,
     ) -> None:
         super().__init__(
-            inner_diameter,
             casing_inner_diameter,
             outer_diameter,
             liner,
             length,
-            C1,
-            C2,
             casing_material,
             bulkhead_material,
         )
@@ -157,13 +150,6 @@ class BoltedCombustionChamber(CombustionChamber):
         self.max_screw_count = max_screw_count
         self.screw_clearance_diameter = screw_clearance_diameter
         self.screw_diameter = screw_diameter
-
-    def get_chamber_inner_diameter(
-        self,
-        inner_diameter: float,
-        liner_thickness: float,
-    ) -> float:
-        return inner_diameter - 2 * liner_thickness
 
     def get_shear_area(self) -> float:
         return (self.screw_diameter**2) * np.pi * 0.25
@@ -272,6 +258,9 @@ class Nozzle:
 
     def get_throat_area(self):
         return get_circle_area(self.throat_diameter)
+
+    def get_divergent_correction_factor(self):
+        return get_divergent_correction_factor(self.divergent_angle)
 
     def get_nozzle_thickness(
         self,

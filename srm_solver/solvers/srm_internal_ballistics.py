@@ -5,13 +5,25 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from typing import List
+from abc import abstractmethod
 
 from solvers import Solver
 from utils.odes import solve_cp_seidel
 
 
-class SRMInternalBallisticsSolver(Solver):
+class InternalBallisticsSolver(Solver):
+    @abstractmethod
+    def solve(self) -> float:
+        """
+        Solves the chamber pressure in function of input parameters.
+
+        The input parameters will depend on the motor category: SRM, HRE
+        or LRE.
+        """
+        pass
+
+
+class SRMInternalBallisticsSolver(InternalBallisticsSolver):
     def solve(
         self,
         chamber_pressure: float,
@@ -25,7 +37,7 @@ class SRMInternalBallisticsSolver(Solver):
         T_O: float,
         burn_rate: float,
         d_t: float,
-    ) -> List[float]:
+    ) -> float:
         k_1 = solve_cp_seidel(
             chamber_pressure,
             external_pressure,

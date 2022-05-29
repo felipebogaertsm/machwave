@@ -158,14 +158,14 @@ def get_operational_correction_factors(
     # Boundary layer and two phase flow losses
     if not is_flow_choked(P_0, P_external, critical_pressure_ratio):
         termC2 = 1 + 2 * np.exp(
-            -structure.chamber.C2
+            -structure.nozzle.material.C2
             * P_0_psi**0.8
             * t
             / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
         )
         E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio**-9
         n_bl = (
-            structure.chamber.C1
+            structure.nozzle.material.C1
             * (
                 (P_0_psi**0.8)
                 / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)

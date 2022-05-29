@@ -5,7 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from . import Material, NozzleMaterial
+from . import NozzleMaterial
 
 
 class Steel(NozzleMaterial):

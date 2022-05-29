@@ -8,7 +8,6 @@
 import numpy as np
 
 from . import GrainSegment
-from utils.geometric import get_circle_area
 
 
 class BatesSegment(GrainSegment):
@@ -49,7 +48,7 @@ class BatesSegment(GrainSegment):
         # Variables with same notation as in Nakka's website
         D_grain = self.outer_diameter
         D_core = self.core_diameter
-        L_grain = self.segment_length
+        L_grain = self.length
 
         if self.total_web_thickness >= web_thickness:
             return np.pi * (
@@ -66,7 +65,7 @@ class BatesSegment(GrainSegment):
         # Variables with same notation as in Nakka's website
         D_grain = self.outer_diameter
         D_core = self.core_diameter
-        L_grain = self.segment_length
+        L_grain = self.length
 
         if self.total_web_thickness >= web_thickness:
             return (np.pi / 4) * (
