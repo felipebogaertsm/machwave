@@ -7,7 +7,7 @@
 
 import numpy as np
 
-from models.motor.propellant import Propellant
+from models.propulsion.propellant import Propellant
 
 
 def _test_propellant_burn_rate(propellant: Propellant):

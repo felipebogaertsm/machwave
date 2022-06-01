@@ -7,9 +7,9 @@
 
 import time
 
-from models.motor.grain import Grain
-from models.motor.grain.bates import BatesSegment
-from models.motor.structure import (
+from models.propulsion.grain import Grain
+from models.propulsion.grain.bates import BatesSegment
+from models.propulsion.structure import (
     BoltedCombustionChamber,
     MotorStructure,
     Nozzle,
@@ -19,7 +19,7 @@ from models.recovery import Recovery
 from models.rocket import Rocket
 from models.materials.metals import Steel, Al6063T5
 from models.materials.elastics import EPDM
-from models.motor.thermals import ThermalLiner
+from models.propulsion.thermals import ThermalLiner
 from models.recovery.events import (
     AltitudeBasedEvent,
     ApogeeBasedEvent,
@@ -28,7 +28,7 @@ from models.recovery.parachutes import HemisphericalParachute
 from models.rocket.fuselage import Fuselage
 from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
-from models.motor import SolidMotor
+from models.propulsion import SolidMotor
 
 from utils.utilities import output_eng_csv, print_results
 from utils.plots import (

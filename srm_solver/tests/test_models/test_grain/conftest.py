@@ -7,8 +7,8 @@
 
 import pytest
 
-from models.motor.grain import Grain
-from models.motor.grain.bates import BatesSegment
+from models.propulsion.grain import Grain
+from models.propulsion.grain.bates import BatesSegment
 
 """
 Olympus fixtures are based on the 2022 version of the motor.

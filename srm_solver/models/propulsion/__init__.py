@@ -11,15 +11,19 @@ Stores Motor class and methods.
 
 from abc import ABC, abstractmethod
 
-from models.motor.grain import Grain
-from models.motor.propellant import Propellant
-from models.motor.structure import MotorStructure
+from models.propulsion.grain import Grain
+from models.propulsion.propellant import Propellant
+from models.propulsion.structure import MotorStructure
 from utils.isentropic_flow import get_thrust_coefficients, get_thrust_from_cf
 
 
 class Motor(ABC):
     @abstractmethod
     def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_thrust_coefficient_correction_factor(self) -> float:
         pass
 
     @abstractmethod

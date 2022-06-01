@@ -12,7 +12,7 @@ Stores MotorStructure class and methods.
 import numpy as np
 
 from models.materials import Material
-from models.motor.thermals import ThermalLiner
+from models.propulsion.thermals import ThermalLiner
 from utils.geometric import get_circle_area, get_cylinder_volume
 from utils.isentropic_flow import get_divergent_correction_factor
 
@@ -76,18 +76,18 @@ class CombustionChamber:
 
     def get_casing_stress_theta(self, chamber_pressure: float) -> float:
         return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
+            (chamber_pressure * self.casing_inner_radius ** 2)
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
             * (
                 1
-                + ((self.outer_radius**2) / (self.casing_inner_radius**2))
+                + ((self.outer_radius ** 2) / (self.casing_inner_radius ** 2))
             )
         )
 
     def get_casing_stress_radius(self, chamber_pressure: float) -> float:
         return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
+            (chamber_pressure * self.casing_inner_radius ** 2)
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
             * (1 - ((self.outer_radius) / (self.casing_inner_radius)) ** 2)
         )
 
@@ -95,8 +95,8 @@ class CombustionChamber:
         return (
             2
             * chamber_pressure
-            * self.casing_inner_radius**2
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
+            * self.casing_inner_radius ** 2
+            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
         )
 
     def get_casing_safety_factor(self, chamber_pressure: np.array) -> float:
@@ -152,7 +152,7 @@ class BoltedCombustionChamber(CombustionChamber):
         self.screw_diameter = screw_diameter
 
     def get_shear_area(self) -> float:
-        return (self.screw_diameter**2) * np.pi * 0.25
+        return (self.screw_diameter ** 2) * np.pi * 0.25
 
     def get_tear_area(self, screw_count: int) -> float:
         """
@@ -162,7 +162,7 @@ class BoltedCombustionChamber(CombustionChamber):
             (
                 np.pi
                 * 0.25
-                * ((self.outer_diameter**2) - (self.inner_diameter**2))
+                * ((self.outer_diameter ** 2) - (self.inner_diameter ** 2))
             )
             / screw_count
         ) - (
@@ -170,7 +170,7 @@ class BoltedCombustionChamber(CombustionChamber):
                 (self.screw_clearance_diameter / 2) / (self.inner_diameter / 2)
             )
         ) * 0.25 * (
-            (self.outer_diameter**2) - (self.inner_diameter**2)
+            (self.outer_diameter ** 2) - (self.inner_diameter ** 2)
         )
 
     def get_compression_area(self) -> float:
