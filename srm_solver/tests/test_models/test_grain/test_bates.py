@@ -8,8 +8,8 @@
 
 import pytest
 
-from models.motor.grain.bates import BatesSegment
-from models.motor.grain import GrainGeometryError, Grain
+from models.propulsion.grain.bates import BatesSegment
+from models.propulsion.grain import GrainGeometryError, Grain
 
 
 def test_bates_grains_with_different_outer_diameters():

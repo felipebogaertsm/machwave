@@ -18,12 +18,12 @@ ambient pressure, which impacts the propellant burn rate inside the motor.
 import numpy as np
 
 from models.atmosphere import Atmosphere
-from models.motor import Motor, SolidMotor
+from models.propulsion import Motor, SolidMotor
 from models.recovery import Recovery
 from models.rocket import Rocket
 from simulations import Simulation
 from simulations.dataclasses.ballistics import Ballistics
-from simulations.dataclasses.internal_ballistics import InternalBallistics
+from simulations.dataclasses.internal_ballistics import SRMInternalBallistics
 from solvers.srm_internal_ballistics import (
     SRMInternalBallisticsSolver,
 )
@@ -384,7 +384,7 @@ class InternalBallisticsCoupled(Simulation):
         ]
         initial_port_to_throat = (
             self.motor.grain.segments[-1].core_diameter ** 2
-        ) / (self.motor.structure.nozzle.throat_diameter**2)
+        ) / (self.motor.structure.nozzle.throat_diameter ** 2)
 
         burn_profile = get_burn_profile(burn_area=A_burn[A_burn != 0.0])
         Kn = A_burn / self.motor.structure.nozzle.get_throat_area()
@@ -407,7 +407,7 @@ class InternalBallisticsCoupled(Simulation):
                 flight_time,
                 P_ext,
             ),
-            InternalBallistics(
+            SRMInternalBallistics(
                 t,
                 P_0,
                 T,

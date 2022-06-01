@@ -11,7 +11,7 @@ Stores structural simulation.
 
 import numpy as np
 
-from models.motor.structure import MotorStructure
+from models.propulsion.structure import MotorStructure
 from simulations import Simulation
 from simulations.dataclasses.structural_parameters import StructuralParameters
 

@@ -14,7 +14,7 @@ import numpy as np
 
 
 @dataclass()
-class InternalBallistics:
+class SRMInternalBallistics:
     t: np.array
     P0: np.array
     T: np.array
