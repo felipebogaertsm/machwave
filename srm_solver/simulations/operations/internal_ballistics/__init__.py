@@ -12,7 +12,6 @@ import numpy as np
 
 from solvers.srm_internal_ballistics import SRMInternalBallisticsSolver
 from models.propulsion import SolidMotor
-from srm_solver.utils.units import convert_pa_to_mpa
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
     get_opt_expansion_ratio,
@@ -22,7 +21,11 @@ from utils.isentropic_flow import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from utils.units import convert_pa_to_psi, convert_mass_flux_metric_to_imperial
+from utils.units import (
+    convert_pa_to_psi,
+    convert_mass_flux_metric_to_imperial,
+    convert_pa_to_mpa,
+)
 
 
 class MotorOperation(ABC):
@@ -294,9 +297,7 @@ class SRMOperation(MotorOperation):
         )
 
         print("\nNOZZLE DESIGN")
-        print(
-            f" Average nozzle efficiency: {np.mean(self.n_cf):.3%} %"
-        )
+        print(f" Average nozzle efficiency: {np.mean(self.n_cf):.3%} %")
 
     @property
     def klemmung(self) -> np.array:
