@@ -24,6 +24,7 @@ from models.rocket import Rocket
 from simulations import Simulation
 from simulations.dataclasses.ballistics import Ballistics
 from simulations.dataclasses.internal_ballistics import SRMInternalBallistics
+from simulations.operations.internal_ballistics import SRMOperation
 from solvers.srm_internal_ballistics import (
     SRMInternalBallisticsSolver,
 )
@@ -126,6 +127,7 @@ class InternalBallisticsCoupled(Simulation):
         # INSTANTIATING SOLVERS
         if isinstance(self.motor, SolidMotor):
             ib_solver = SRMInternalBallisticsSolver()
+            operational_params = SRMOperation()
         ballistics_solver = Ballistics1D()
 
         # If the propellant mass is non zero, 'end_thrust' must be False,

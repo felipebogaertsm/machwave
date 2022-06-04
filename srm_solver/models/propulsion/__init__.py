@@ -18,21 +18,49 @@ from utils.isentropic_flow import get_thrust_coefficients, get_thrust_from_cf
 
 
 class Motor(ABC):
-    @abstractmethod
-    def __init__(self) -> None:
-        pass
+    """
+    Abstract rocket motor/engine class. Can be used to model any chemical
+    rocket propulsion system, such as Solid, Hybrid and Liquid.
+    """
+
+    def __init__(
+        self,
+        propellant: Propellant,
+        structure: MotorStructure,
+    ) -> None:
+        """
+        Instantiates object attributes common to any motor/engine (Solid,
+        Hybrid or Liquid).
+        """
+        self.propellant = propellant
+        self.structure = structure
 
     @abstractmethod
     def get_thrust_coefficient_correction_factor(self) -> float:
+        """
+        Calculates the thrust coefficient correction factor.
+        """
         pass
 
     @abstractmethod
     def get_thrust_coefficient(self) -> float:
+        """
+        Calculates the thrust coefficient for a particular instant.
+        """
         pass
 
-    @abstractmethod
-    def get_thrust(self) -> float:
-        pass
+    def get_thrust(self, cf: float, chamber_pressure: float) -> float:
+        """
+        Calculates the thrust based on instantaneous thrust coefficient and
+        chamber pressure.
+
+        Utilized nozzle throat area from the structure and nozzle classes.
+        """
+        return get_thrust_from_cf(
+            cf,
+            chamber_pressure,
+            self.structure.nozzle.get_throat_area(),
+        )
 
 
 class SolidMotor(Motor):
@@ -43,11 +71,10 @@ class SolidMotor(Motor):
         structure: MotorStructure,
     ) -> None:
         self.grain = grain
-        self.propellant = propellant
-        self.structure = structure
+        super().__init__(propellant, structure)
 
-        self.cf_ideal = None
-        self.cf_real = None
+        self.cf_ideal = None  # ideal thrust coefficient
+        self.cf_real = None  # real thrust coefficient
 
     def get_thrust_coefficient_correction_factor(
         self, n_kin: float, n_bl: float, n_tp: float
@@ -77,10 +104,3 @@ class SolidMotor(Motor):
             n_cf,
         )
         return self.cf_real
-
-    def get_thrust(self, cf: float, chamber_pressure: float) -> float:
-        return get_thrust_from_cf(
-            cf,
-            chamber_pressure,
-            self.structure.nozzle.get_throat_area(),
-        )
