@@ -14,18 +14,6 @@ import numpy as np
 import pandas as pd
 
 
-def get_burn_profile(burn_area: np.array) -> str:
-    """
-    Returns string with burn profile.
-    """
-    if burn_area[0] / burn_area[-1] > 1.02:
-        return "regressive"
-    elif burn_area[0] / burn_area[-1] < 0.98:
-        return "progressive"
-    else:
-        return "neutral"
-
-
 def motor_to_eng(
     t,
     F,

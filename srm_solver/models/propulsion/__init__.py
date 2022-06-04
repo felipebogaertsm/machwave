@@ -76,6 +76,9 @@ class SolidMotor(Motor):
         self.cf_ideal = None  # ideal thrust coefficient
         self.cf_real = None  # real thrust coefficient
 
+    def get_free_chamber_volume(self, propellant_volume: float) -> float:
+        return self.structure.chamber.get_empty_volume() - propellant_volume
+
     def get_thrust_coefficient_correction_factor(
         self, n_kin: float, n_bl: float, n_tp: float
     ) -> float:
