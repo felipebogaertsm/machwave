@@ -22,7 +22,7 @@ from models.propulsion import Motor, SolidMotor
 from models.recovery import Recovery
 from models.rocket import Rocket
 from operations.ballistics import Ballistic1DOperation
-from operations.internal_ballistics import SRMOperation
+from operations.internal_ballistics import MotorOperation, SRMOperation
 from simulations import Simulation
 
 
@@ -51,21 +51,24 @@ class InternalBallisticsCoupled(Simulation):
 
         self.t = np.array([0])
 
+    def get_motor_operation(self) -> MotorOperation:
+        """
+        Will depend on the type of the motor (SR, HRE or LRE).
+        """
+        if isinstance(self.motor, SolidMotor):
+            motor_operation_class = SRMOperation
+
+        return motor_operation_class(
+            motor=self.motor,
+            initial_pressure=self.igniter_pressure,
+        )
+
     def run(self):
         """
         Runs the main loop of the simulation, returning all the internal and
         external ballistics parameters.
         """
-
-        # Defining operations and solvers for the simulation:
-        if isinstance(self.motor, SolidMotor):
-            motor_operation_class = SRMOperation
-
-        motor_operation = motor_operation_class(
-            motor=self.motor,
-            initial_pressure=self.igniter_pressure,
-        )
-
+        motor_operation = self.get_motor_operation()
         ballistic_operation = Ballistic1DOperation(
             self.rocket,
             self.recovery,
@@ -77,31 +80,27 @@ class InternalBallisticsCoupled(Simulation):
 
         i = 0
 
-        while (
-            ballistic_operation.y[i] >= 0 or motor_operation.m_prop[i - 1] > 0
-        ):
-            print(f"\n\nITERATION #{i}\n\n")
+        while ballistic_operation.y[i] >= 0 or motor_operation.m_prop[-1] > 0:
+            print(f"ITERATION NO #{i}")
 
-            self.t = np.append(
-                self.t, self.t[i] + self.d_t
-            )  # append new time value
+            self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
 
-            motor_operation.iterate(
-                self.d_t,
-                ballistic_operation.P_ext[i],
-            )
+            if motor_operation.end_thrust is False:
+                motor_operation.iterate(
+                    self.d_t,
+                    ballistic_operation.P_ext[i],
+                )
 
-            if motor_operation.end_thrust:
-                d_t = self.d_t * self.dd_t
-            else:
+                propellant_mass = motor_operation.m_prop[i]
+                thrust = motor_operation.thrust[i]
                 d_t = self.d_t
+            else:
+                propellant_mass = 0
+                thrust = 0
+                d_t = self.d_t * self.dd_t
 
-            ballistic_operation.iterate(
-                motor_operation.m_prop[i],
-                motor_operation.thrust[i],
-                d_t,
-            )
+            ballistic_operation.iterate(propellant_mass, thrust, d_t)
 
             i += 1
 
-        return [self.t, motor_operation, ballistic_operation]
+        return (self.t, motor_operation, ballistic_operation)

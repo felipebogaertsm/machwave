@@ -216,7 +216,7 @@ def main():
     # TIME FUNCTION END
     # Ends the time function.
 
-    print("Execution time: %.4f seconds\n\n" % (time.time() - start))
+    print("\n\nExecution time: %.4f seconds\n\n" % (time.time() - start))
 
     # /////////////////////////////////////////////////////////////////////////
     # PLOTS

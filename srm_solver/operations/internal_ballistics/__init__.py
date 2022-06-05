@@ -83,14 +83,6 @@ class MotorOperation(ABC):
         """
         pass
 
-    @property
-    def burn_time(self) -> float:
-        return self.t[np.argmin(self.m_prop)]
-
-    @property
-    def thrust_time(self) -> float:
-        return self.t[len(self.thrust)]
-
 
 class SRMOperation(MotorOperation):
     """
@@ -139,10 +131,11 @@ class SRMOperation(MotorOperation):
         The function uses the Runge-Kutta 4th order numerical method for
         solving the differential equations.
         """
+        if self.end_thrust is False:
+            self.t = np.append(
+                self.t, self.t[-1] + d_t
+            )  # append new time value
 
-        self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
-
-        if self.end_thrust is False:  # while motor is producing thrust
             self.burn_area = np.append(
                 self.burn_area, self.motor.grain.get_burn_area(self.web[-1])
             )
@@ -254,6 +247,7 @@ class SRMOperation(MotorOperation):
             )  # thrust calculation
 
             if self.m_prop[-1] == 0 and self.end_burn is False:
+                self.burn_time = self.t[-1]
                 self.end_burn = True
 
             # This if statement changes 'end_thrust' to True if supersonic
@@ -263,14 +257,8 @@ class SRMOperation(MotorOperation):
                 P_ext,
                 get_critical_pressure_ratio(self.motor.propellant.k_mix_ch),
             ):
-                t_thrust = self.t[-1]
+                self.thrust_time = self.t[-1]
                 self.end_thrust = True
-
-        # Appending propellant mass and thrust while the simulation time is
-        # still going on and there is no more thrust or propellant:
-        else:
-            self.m_prop = np.append(self.m_prop, 0)
-            self.thrust = np.append(self.thrust, 0)
 
     def print_results(self) -> None:
         print("\nBURN REGRESSION")
