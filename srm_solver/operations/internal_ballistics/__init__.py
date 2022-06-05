@@ -85,7 +85,7 @@ class MotorOperation(ABC):
 
     @property
     def burn_time(self) -> float:
-        return self.t[np.argmin(self.m_prop)[0]]
+        return self.t[np.argmin(self.m_prop)]
 
     @property
     def thrust_time(self) -> float:
@@ -253,9 +253,8 @@ class SRMOperation(MotorOperation):
                 ),
             )  # thrust calculation
 
-            if self.m_prop[-1] == 0 and end_burn is False:
-                t_burnout = self.t[-1]
-                end_burn = True
+            if self.m_prop[-1] == 0 and self.end_burn is False:
+                self.end_burn = True
 
             # This if statement changes 'end_thrust' to True if supersonic
             # flow is not achieved anymore.
@@ -342,6 +341,14 @@ class SRMOperation(MotorOperation):
     @property
     def max_mass_flux(self) -> float:
         return np.max(self.grain_mass_flux)
+
+    @property
+    def grain_mass_flux(self) -> np.array:
+        return self.motor.grain.get_mass_flux_per_segment(
+            self.burn_rate,
+            self.motor.propellant.density,
+            self.web,
+        )
 
     @property
     def max_chamber_pressure(self) -> float:
