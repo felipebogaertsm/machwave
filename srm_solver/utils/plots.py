@@ -17,7 +17,7 @@ import plotly.subplots
 
 
 def performance_interactive_plot(ib_parameters):
-    index = np.where(ib_parameters.t == ib_parameters.t_thrust)[0][0]
+    index = np.where(ib_parameters.t == ib_parameters.thrust_time)[0][0]
     pressure_color = "#008141"
     thrust_color = "#581845"
 
@@ -26,7 +26,7 @@ def performance_interactive_plot(ib_parameters):
     figure.add_trace(
         go.Scatter(
             x=ib_parameters.t[:index],
-            y=ib_parameters.T[:index],
+            y=ib_parameters.thrust[:index],
             name="Thrust",
             line=go.scatter.Line(color=thrust_color),
         ),
@@ -35,7 +35,7 @@ def performance_interactive_plot(ib_parameters):
     figure.add_trace(
         go.Scatter(
             x=ib_parameters.t[:index],
-            y=ib_parameters.P0[:index] * 1e-6,
+            y=ib_parameters.P_0[:index] * 1e-6,
             name="Pressure",
             line=go.scatter.Line(color=pressure_color),
             yaxis="y2",
@@ -74,13 +74,13 @@ def ballistics_plots(t, a, v, y, g):
     plt.ylabel("Acc (m/s2)")
     plt.xlabel("Time (s)")
     plt.grid(linestyle="-.")
-    plt.plot(t, a, color="r")
+    plt.plot(t[: len(a)], a, color="r")
 
     fig1.savefig("output/TrajectoryPlots.png", dpi=300)
 
     fig2 = plt.figure()
 
-    plt.plot(t, y, color="b")
+    plt.plot(t[: len(y)], y, color="b")
     plt.ylabel("Height (m)")
     plt.xlabel("Time (s)")
     plt.ylim(0, np.max(y) * 1.1)
@@ -93,7 +93,7 @@ def ballistics_plots(t, a, v, y, g):
 
     ax3.set_xlim(0, t[-1])
     ax3.set_ylim(np.min(v * 3.6), np.max(v * 3.6) * 1.05)
-    ax3.plot(t, v * 3.6, color="#009933")
+    ax3.plot(t[: len(v)], v * 3.6, color="#009933")
     ax3.set_ylabel("Velocity (km/h)")
     ax3.set_xlabel("Time (s)")
     ax3.grid()
@@ -101,7 +101,7 @@ def ballistics_plots(t, a, v, y, g):
     ax4 = ax3.twinx()
     ax4.set_xlim(0, t[-1])
     ax4.set_ylim(np.min(a / g), np.max(a / g) * 1.3)
-    ax4.plot(t, a / g, color="#ff6600")
+    ax4.plot(t[: len(a)], a / g, color="#ff6600")
     ax4.set_ylabel("Acceleration (g)")
 
     fig3.savefig("output/VelocityAcc.png", dpi=300)
@@ -275,7 +275,7 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     ax3.set_ylim(0, np.max(Kn) * 1.05)
     ax3.set_xlim(0, t[-1])
     ax3.grid(linestyle="-", linewidth=".4")
-    ax3.plot(t, Kn, color="b", linewidth="1.5")
+    ax3.plot(t[: len(Kn)], Kn, color="b", linewidth="1.5")
 
     ax4 = plt.subplot(gs1[1, 1])
     ax4.set_ylabel("Propellant Mass [kg]")
@@ -284,7 +284,7 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     ax4.set_ylim(0, np.max(m_prop) * 1.05)
     ax4.set_xlim(0, t[-1])
     ax4.grid(linestyle="-", linewidth=".4")
-    ax4.plot(t, m_prop, color="r", linewidth="1.5")
+    ax4.plot(t[: len(m_prop)], m_prop, color="r", linewidth="1.5")
 
     main_figure.set_size_inches(12, 8, forward=True)
     main_figure.savefig("output/MotorPlots.png", dpi=300)
@@ -299,7 +299,7 @@ def mass_flux_plot(t, grain_mass_flux, t_burnout):
     N, index = grain_mass_flux.shape
     mass_flux_figure = plt.figure()
     for i in range(N):
-        plt.plot(t, grain_mass_flux[i] * 1.42233e-3)
+        plt.plot(t[: len(grain_mass_flux[i])], grain_mass_flux[i] * 1.42233e-3)
     plt.ylabel("Mass Flux [lb/s-in-in]")
     plt.xlabel("Time [s]")
     plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)

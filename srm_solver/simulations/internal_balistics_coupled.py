@@ -21,25 +21,9 @@ from models.atmosphere import Atmosphere
 from models.propulsion import Motor, SolidMotor
 from models.recovery import Recovery
 from models.rocket import Rocket
+from operations.ballistics import Ballistic1DOperation
+from operations.internal_ballistics import MotorOperation, SRMOperation
 from simulations import Simulation
-from simulations.dataclasses.ballistics import Ballistics
-from simulations.dataclasses.internal_ballistics import SRMInternalBallistics
-from solvers.srm_internal_ballistics import (
-    SRMInternalBallisticsSolver,
-)
-from solvers.ballistics_1d import Ballistics1D
-from utils.isentropic_flow import (
-    get_critical_pressure_ratio,
-    get_opt_expansion_ratio,
-    get_exit_pressure,
-    get_operational_correction_factors,
-    get_thrust_coefficients,
-    get_impulses,
-    get_thrust_from_cf,
-    is_flow_choked,
-)
-from utils.units import convert_pa_to_psi
-from utils.utilities import get_burn_profile
 
 
 class InternalBallisticsCoupled(Simulation):
@@ -65,369 +49,57 @@ class InternalBallisticsCoupled(Simulation):
         self.igniter_pressure = igniter_pressure
         self.rail_length = rail_length
 
+        self.t = np.array([0])
+
+    def get_motor_operation(self) -> MotorOperation:
+        """
+        Will depend on the type of the motor (SR, HRE or LRE).
+        """
+        if isinstance(self.motor, SolidMotor):
+            motor_operation_class = SRMOperation
+
+        return motor_operation_class(
+            motor=self.motor,
+            initial_pressure=self.igniter_pressure,
+        )
+
     def run(self):
         """
         Runs the main loop of the simulation, returning all the internal and
-        external ballistics parameters as instances of the InternalBallistics
-        and Ballistics classes.
-
-        The function uses the Runge-Kutta 4th order numerical method for
-        solving the differential equations.
-
-        The variable names correspond to what they are commonly reffered to in
-        books and papers related to Solid Rocket Propulsion.
-
-        Therefore, PEP8's snake_case will not be followed rigorously.
+        external ballistics parameters.
         """
-
-        # INITIAL CONDITIONS
-        web = np.array([0])
-        t = np.array([0])
-        P_ext = np.array([])
-        rho_air = np.array([])
-        g = np.array([])
-        P_0 = np.array([self.igniter_pressure])
-        P_0_psi = np.array([convert_pa_to_psi(self.igniter_pressure)])
-        P_exit = np.array([])
-        y = np.array([0])
-        v = np.array([0])
-        mach_no = np.array([0])
-
-        # ALLOCATING NUMPY ARRAYS FOR FUTURE CALCULATIONS
-        vehicle_mass = np.array([])  # total mass of the vehicle
-        burn_rate = np.array([])  # burn rate
-        V_0 = np.array([])  # empty chamber volume
-        optimal_expansion_ratio = np.array([])  # opt. expansion ratio
-        A_burn = np.array([])  # burn area
-        V_prop = np.array([])  # propellant volume
-        m_prop = np.array([])  # propellant mass
-        n_kin, n_bl, n_tp, n_cf = (
-            np.array([]),
-            np.array([]),
-            np.array([]),
-            np.array([]),
-        )  # thrust coefficient correction factors
-        C_f, C_f_ideal, T = (
-            np.array([]),
-            np.array([]),
-            np.array([]),
-        )  # thrust coefficient and thrust
-
-        # PRE CALCULATIONS
-        critical_pressure_ratio = get_critical_pressure_ratio(
-            self.motor.propellant.k_mix_ch
+        motor_operation = self.get_motor_operation()
+        ballistic_operation = Ballistic1DOperation(
+            self.rocket,
+            self.recovery,
+            self.atmosphere,
+            rail_length=self.rail_length,
+            motor_dry_mass=self.motor.structure.dry_mass,
+            initial_vehicle_mass=self.rocket.structure.mass_without_motor,
+            initial_elevation_amsl=self.initial_elevation_amsl,
         )
-        n_div = self.motor.structure.nozzle.get_divergent_correction_factor()
-        # Variables storing the apogee, apogee time:
-        apogee, apogee_time = 0, -1
-        # Calculation of empty chamber volume (constant throughout the operation):
-        empty_chamber_volume = self.motor.structure.chamber.get_empty_volume()
-
-        # INSTANTIATING SOLVERS
-        if isinstance(self.motor, SolidMotor):
-            ib_solver = SRMInternalBallisticsSolver()
-        ballistics_solver = Ballistics1D()
-
-        # If the propellant mass is non zero, 'end_thrust' must be False,
-        # since there is still thrust being produced.
-
-        # After the propellant has finished burning and the thrust chamber has
-        # stopped producing supersonic flow, 'end_thrust' is changed to True
-        # value and the internal ballistics section of the while loop below
-        # stops running.
-
-        end_thrust = False
-        end_burn = False
 
         i = 0
 
-        while y[i] >= 0 or m_prop[i - 1] > 0:
-            t = np.append(t, t[i] + self.d_t)  # append new time value
+        while ballistic_operation.y[i] >= 0 or motor_operation.m_prop[-1] > 0:
+            self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
 
-            # Obtaining the value for the air density, the acceleration of
-            # gravity and ext. pressure in function of the current altitude.
-            rho_air = np.append(
-                rho_air,
-                self.atmosphere.get_density(
-                    y_amsl=(y[i] + self.initial_elevation_amsl)
-                ),
-            )
-            g = np.append(
-                g,
-                self.atmosphere.get_gravity(
-                    self.initial_elevation_amsl + y[i]
-                ),
-            )
-            P_ext = np.append(
-                P_ext,
-                self.atmosphere.get_pressure(
-                    self.initial_elevation_amsl + y[i]
-                ),
-            )
-
-            if end_thrust is False:  # while motor is producing thrust
-                A_burn = np.append(
-                    A_burn, self.motor.grain.get_burn_area(web[i])
-                )
-                V_prop = np.append(
-                    V_prop, self.motor.grain.get_propellant_volume(web[i])
+            if motor_operation.end_thrust is False:
+                motor_operation.iterate(
+                    self.d_t,
+                    ballistic_operation.P_ext[i],
                 )
 
-                # Calculating the free chamber volume:
-                V_0 = np.append(V_0, empty_chamber_volume - V_prop[i])
-                # Calculating propellant mass:
-                m_prop = np.append(
-                    m_prop, V_prop[i] * self.motor.propellant.density
-                )
-
-                # Get burn rate coefficients:
-                burn_rate = np.append(
-                    burn_rate, self.motor.propellant.get_burn_rate(P_0[i])
-                )
-
-                d_x = self.d_t * burn_rate[i]
-                web = np.append(web, web[i] + d_x)
-
-                P_0 = np.append(
-                    P_0,
-                    ib_solver.solve(
-                        P_0[i],
-                        P_ext[i],
-                        A_burn[i],
-                        V_0[i],
-                        self.motor.structure.nozzle.get_throat_area(),
-                        self.motor.propellant.density,
-                        self.motor.propellant.k_mix_ch,
-                        self.motor.propellant.R_ch,
-                        self.motor.propellant.T0,
-                        burn_rate[i],
-                        self.d_t,
-                    ),
-                )
-                P_0_psi = np.append(P_0_psi, convert_pa_to_psi(P_0[i]))
-
-                optimal_expansion_ratio = np.append(
-                    optimal_expansion_ratio,
-                    get_opt_expansion_ratio(
-                        self.motor.propellant.k_2ph_ex, P_0[i], P_ext[i]
-                    ),
-                )
-
-                P_exit = np.append(
-                    P_exit,
-                    get_exit_pressure(
-                        self.motor.propellant.k_2ph_ex,
-                        self.motor.structure.nozzle.expansion_ratio,
-                        P_0[i],
-                    ),
-                )
-
-                (
-                    n_kin_atual,
-                    n_tp_atual,
-                    n_bl_atual,
-                ) = get_operational_correction_factors(
-                    P_0[i],
-                    P_ext[i],
-                    P_0_psi[i],
-                    self.motor.propellant,
-                    self.motor.structure,
-                    critical_pressure_ratio,
-                    V_0[0],
-                    t[i],
-                )
-
-                n_kin = np.append(n_kin, n_kin_atual)
-                n_tp = np.append(n_tp, n_tp_atual)
-                n_bl = np.append(n_bl, n_bl_atual)
-
-                n_cf = np.append(
-                    n_cf,
-                    (
-                        (100 - (n_kin_atual + n_bl_atual + n_tp_atual))
-                        * n_div
-                        / 100
-                        * self.motor.propellant.combustion_efficiency
-                    ),
-                )
-
-                C_f_atual, C_f_ideal_atual = get_thrust_coefficients(
-                    P_0[i],
-                    P_exit[i],
-                    P_ext[i],
-                    self.motor.structure.nozzle.expansion_ratio,
-                    self.motor.propellant.k_2ph_ex,
-                    n_cf[i],
-                )
-
-                C_f = np.append(C_f, C_f_atual)
-                C_f_ideal = np.append(C_f_ideal, C_f_ideal_atual)
-                T = np.append(
-                    T,
-                    get_thrust_from_cf(
-                        C_f[i],
-                        P_0[i],
-                        self.motor.structure.nozzle.get_throat_area(),
-                    ),
-                )  # thrust calculation
-
-                if m_prop[i] == 0 and end_burn is False:
-                    t_burnout = t[i]
-                    end_burn = True
-
-                # This if statement changes 'end_thrust' to True if supersonic
-                # flow is not achieved anymore.
-                if is_flow_choked(P_0[i], P_ext[i], critical_pressure_ratio):
-                    t_thrust = t[i]
-                    self.d_t = self.d_t * self.dd_t
-                    T_mean = np.mean(T)
-                    end_thrust = True
-
-            # This else statement is necessary since the thrust and propellant
-            # mass arrays are still being used inside the main while loop.
-            # Therefore, it is necessary to append 0 to these arrays for the
-            # ballistic part of the while loop to work correctly.
+                propellant_mass = motor_operation.m_prop[i]
+                thrust = motor_operation.thrust[i]
+                d_t = self.d_t
             else:
-                m_prop = np.append(m_prop, 0)
-                T = np.append(T, 0)
+                propellant_mass = 0
+                thrust = 0
+                d_t = self.d_t * self.dd_t
 
-            # Entering first value for the vehicle mass and acceleration:
-            if i == 0:
-                vehicle_mass_initial = (
-                    m_prop[0]
-                    + self.rocket.structure.mass_without_motor
-                    + self.motor.structure.dry_mass
-                )
-                vehicle_mass = np.append(vehicle_mass, vehicle_mass_initial)
-                acc = np.array(
-                    [
-                        T[0]
-                        / (
-                            self.rocket.structure.mass_without_motor
-                            + self.motor.structure.dry_mass
-                            + m_prop[0]
-                        )
-                    ]
-                )
-
-            # Appending the current vehicle mass, consisting of the motor
-            # structural mass, mass without the motor and propellant mass.
-            vehicle_mass = np.append(
-                vehicle_mass,
-                m_prop[i]
-                + self.motor.structure.dry_mass
-                + self.rocket.structure.mass_without_motor,
-            )
-
-            # Drag properties:
-            fuselage_area = self.rocket.fuselage.frontal_area
-            fuselage_drag_coeff = self.rocket.fuselage.get_drag_coefficient()
-            (
-                recovery_drag_coeff,
-                recovery_area,
-            ) = self.recovery.get_drag_coefficient_and_area(
-                height=y, time=t, velocity=v, propellant_mass=m_prop
-            )
-
-            D = (
-                (
-                    fuselage_area * fuselage_drag_coeff
-                    + recovery_area * recovery_drag_coeff
-                )
-                * rho_air[i]
-                * 0.5
-            )
-
-            ballistics_results = ballistics_solver.solve(
-                y[i],
-                v[i],
-                T[i],
-                D,
-                vehicle_mass[i],
-                g[i],
-                self.d_t,
-            )
-
-            y = np.append(y, ballistics_results[0])
-            v = np.append(v, ballistics_results[1])
-            acc = np.append(acc, ballistics_results[2])
-
-            mach_no = np.append(
-                mach_no, v[i] / self.atmosphere.get_sonic_velocity(y[i])
-            )
-
-            if y[i + 1] <= y[i] and m_prop[i] == 0 and apogee == 0:
-                apogee = y[i]
-                apogee_time = t[np.where(y == apogee)]
+            ballistic_operation.iterate(propellant_mass, thrust, d_t)
 
             i += 1
 
-        if y[-1] < 0:
-            y = np.delete(y, -1)
-            v = np.delete(v, -1)
-            acc = np.delete(acc, -1)
-            t = np.delete(t, -1)
-
-        v_rail = v[np.where(y >= self.rail_length)]
-        v_rail = v_rail[0]
-        y_burnout = y[np.where(v == np.max(v))]
-        y_burnout = y_burnout[0]
-        flight_time = t[-1]
-
-        nozzle_eff = C_f / C_f_ideal  # nozzle efficiency
-
-        I_total, I_sp = get_impulses(T_mean, t, t_burnout, m_prop)
-
-        optimal_grain_length = [
-            segment.get_optimal_length()
-            for segment in self.motor.grain.segments
-        ]
-        initial_port_to_throat = (
-            self.motor.grain.segments[-1].core_diameter ** 2
-        ) / (self.motor.structure.nozzle.throat_diameter ** 2)
-
-        burn_profile = get_burn_profile(burn_area=A_burn[A_burn != 0.0])
-        Kn = A_burn / self.motor.structure.nozzle.get_throat_area()
-        Kn_non_zero = Kn[Kn != 0.0]
-        initial_to_final_kn = Kn_non_zero[0] / Kn_non_zero[-1]
-        grain_mass_flux = self.motor.grain.get_mass_flux_per_segment(
-            burn_rate, self.motor.propellant.density, web
-        )
-
-        return (
-            Ballistics(
-                t,
-                y,
-                v,
-                acc,
-                v_rail,
-                y_burnout,
-                mach_no,
-                apogee_time[0],
-                flight_time,
-                P_ext,
-            ),
-            SRMInternalBallistics(
-                t,
-                P_0,
-                T,
-                T_mean,
-                I_total,
-                I_sp,
-                t_burnout,
-                t_thrust,
-                nozzle_eff,
-                optimal_expansion_ratio,
-                V_prop,
-                A_burn,
-                Kn,
-                m_prop,
-                grain_mass_flux,
-                optimal_grain_length,
-                initial_port_to_throat,
-                burn_profile,
-                empty_chamber_volume,
-                initial_to_final_kn,
-                P_exit,
-            ),
-        )
+        return (self.t, motor_operation, ballistic_operation)
