@@ -72,7 +72,7 @@ class Grain:
     def get_mass_flux_per_segment(
         self,
         burn_rate: np.array,
-        propellant_density: np.array,
+        propellant_density: float,
         web_thickness: np.array,
     ) -> np.array:
         """

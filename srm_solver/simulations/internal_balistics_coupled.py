@@ -91,10 +91,15 @@ class InternalBallisticsCoupled(Simulation):
                 ballistic_operation.P_ext[i],
             )
 
+            if motor_operation.end_thrust:
+                d_t = self.d_t * self.dd_t
+            else:
+                d_t = self.d_t
+
             ballistic_operation.iterate(
                 motor_operation.m_prop[i],
                 motor_operation.thrust[i],
-                self.d_t,
+                d_t,
             )
 
             i += 1

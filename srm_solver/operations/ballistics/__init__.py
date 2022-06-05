@@ -158,12 +158,6 @@ class Ballistic1DOperation:
             self.P_ext, self.atmosphere.get_pressure(self.y[-1])
         )
 
-        if self.y[-1] < 0:
-            self.y = np.delete(self.y, -1)
-            self.v = np.delete(self.v, -1)
-            self.acc = np.delete(self.acc, -1)
-            self.t = np.delete(self.t, -1)
-
     def print_results(self) -> None:
         """
         Prints the results of the operation.

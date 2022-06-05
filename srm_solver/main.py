@@ -158,7 +158,7 @@ def main():
     # 'run_ballistics' returns instances of the classes Ballistics and
     # InternalBallistics.
 
-    ballistics, ib_parameters = InternalBallisticsCoupled(
+    t, ballistics, ib_parameters = InternalBallisticsCoupled(
         motor=motor,
         rocket=rocket,
         recovery=recovery,
@@ -170,28 +170,31 @@ def main():
         rail_length=5,
     ).run()
 
+    ballistics.print_results()
+    ib_parameters.print_results()
+
     # /////////////////////////////////////////////////////////////////////////
     # MOTOR STRUCTURE
     # This section runs the structural simulation. The function
     # 'run_structural_simulation' returns an instance of the class
     # StructuralParameters.
 
-    structural_parameters = StructuralSimulation(
-        structure, ib_parameters.P0, 4
-    ).run()
+    # structural_parameters = StructuralSimulation(
+    #     structure, ib_parameters.P0, 4
+    # ).run()
 
     # /////////////////////////////////////////////////////////////////////////
     # RESULTS
     # This section prints the important data based on previous calculations.
 
-    print_results(
-        grain,
-        structure,
-        ib_parameters,
-        structural_parameters,
-        ballistics,
-        rocket,
-    )
+    # print_results(
+    #     grain,
+    #     structure,
+    #     ib_parameters,
+    #     structural_parameters,
+    #     ballistics,
+    #     rocket,
+    # )
 
     # /////////////////////////////////////////////////////////////////////////
     # OUTPUT TO ENG AND CSV FILE
@@ -199,15 +202,15 @@ def main():
     # file is totally compatible with OpenRocket or RASAero software. The .csv is
     # exported mainly for the ease of visualization and storage.
 
-    output_eng_csv(
-        ib_parameters,
-        structure,
-        propellant,
-        25,
-        0.1,
-        manufacturer="LCP 2022",
-        name="OLYMPUS",
-    )
+    # output_eng_csv(
+    #     ib_parameters,
+    #     structure,
+    #     propellant,
+    #     25,
+    #     0.1,
+    #     manufacturer="LCP 2022",
+    #     name="OLYMPUS",
+    # )
 
     # /////////////////////////////////////////////////////////////////////////
     # TIME FUNCTION END
@@ -219,27 +222,27 @@ def main():
     # PLOTS
     # Saves some of the most important plots to the 'output' folder.
 
-    performance_plot(
-        ib_parameters.T,
-        ib_parameters.P0,
-        ib_parameters.t,
-        ib_parameters.t_thrust,
-    )
-    main_plot(
-        ib_parameters.t,
-        ib_parameters.T,
-        ib_parameters.P0,
-        ib_parameters.Kn,
-        ib_parameters.m_prop,
-        ib_parameters.t_thrust,
-    )
-    mass_flux_plot(
-        ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-    )
-    ballistics_plots(
-        ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
-    )
-    performance_interactive_plot(ib_parameters).show()
+    # performance_plot(
+    #     ib_parameters.T,
+    #     ib_parameters.P0,
+    #     ib_parameters.t,
+    #     ib_parameters.t_thrust,
+    # )
+    # main_plot(
+    #     ib_parameters.t,
+    #     ib_parameters.T,
+    #     ib_parameters.P0,
+    #     ib_parameters.Kn,
+    #     ib_parameters.m_prop,
+    #     ib_parameters.t_thrust,
+    # )
+    # mass_flux_plot(
+    #     ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
+    # )
+    # ballistics_plots(
+    #     ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
+    # )
+    # performance_interactive_plot(ib_parameters).show()
 
 
 if __name__ == "__main__":
