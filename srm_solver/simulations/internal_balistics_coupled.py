@@ -21,13 +21,9 @@ from models.atmosphere import Atmosphere
 from models.propulsion import Motor, SolidMotor
 from models.recovery import Recovery
 from models.rocket import Rocket
+from operations.ballistics import Ballistic1DOperation
+from operations.internal_ballistics import SRMOperation
 from simulations import Simulation
-from simulations.operations.ballistics import Ballistics1DOperation
-from simulations.operations.internal_ballistics import SRMOperation
-from solvers.srm_internal_ballistics import (
-    SRMInternalBallisticsSolver,
-)
-from solvers.ballistics_1d import Ballistics1D
 
 
 class InternalBallisticsCoupled(Simulation):
@@ -53,68 +49,50 @@ class InternalBallisticsCoupled(Simulation):
         self.igniter_pressure = igniter_pressure
         self.rail_length = rail_length
 
+        self.t = np.array([0])
+
     def run(self):
         """
         Runs the main loop of the simulation, returning all the internal and
-        external ballistics parameters as instances of the InternalBallistics
-        and Ballistics classes.
-
-        The function uses the Runge-Kutta 4th order numerical method for
-        solving the differential equations.
-
-        The variable names correspond to what they are commonly reffered to in
-        books and papers related to Solid Rocket Propulsion.
-
-        Therefore, PEP8's snake_case will not be followed rigorously.
+        external ballistics parameters.
         """
 
         # Defining operations and solvers for the simulation:
         if isinstance(self.motor, SolidMotor):
-            motor_operation = SRMOperation()
+            motor_operation_class = SRMOperation
 
-        ballistic_operation = Ballistics1DOperation()
+        motor_operation = motor_operation_class(
+            motor=self.motor,
+            initial_pressure=self.igniter_pressure,
+        )
 
-        # PRE CALCULATIONS
-        # Variables storing the apogee, apogee time:
-        apogee, apogee_time = 0, -1
+        ballistic_operation = Ballistic1DOperation(
+            self.rocket,
+            self.atmosphere,
+            initial_vehicle_mass=self.rocket.structure.mass_without_motor,
+            initial_elevation_amsl=self.initial_elevation_amsl,
+        )
 
         i = 0
 
-        while y[i] >= 0 or motor_operation.m_prop[i - 1] > 0:
-            t = np.append(t, t[i] + self.d_t)  # append new time value
+        while (
+            ballistic_operation.y[i] >= 0 or motor_operation.m_prop[i - 1] > 0
+        ):
+            self.t = np.append(
+                self.t, self.t[i] + self.d_t
+            )  # append new time value
 
-            # Obtaining the value for the air density, the acceleration of
-            # gravity and ext. pressure in function of the current altitude.
-            rho_air = np.append(
-                rho_air,
-                self.atmosphere.get_density(
-                    y_amsl=(y[i] + self.initial_elevation_amsl)
-                ),
-            )
-            g = np.append(
-                g,
-                self.atmosphere.get_gravity(
-                    self.initial_elevation_amsl + y[i]
-                ),
-            )
-            P_ext = np.append(
-                P_ext,
-                self.atmosphere.get_pressure(
-                    self.initial_elevation_amsl + y[i]
-                ),
+            motor_operation.iterate(
+                self.d_t,
+                ballistic_operation.P_ext[i],
             )
 
-            motor_operation.iterate(self.d_t, P_ext)
-            ballistic_operation.iterate(motor_operation.m_prop[i])
-
-            if (
-                y[i + 1] <= y[i]
-                and motor_operation.m_prop[i] == 0
-                and apogee == 0
-            ):
-                apogee = y[i]
-                apogee_time = t[np.where(y == apogee)]
+            ballistic_operation.iterate(
+                motor_operation.m_prop[i],
+                motor_operation.thrust[i],
+                self.d_t,
+            )
 
             i += 1
 
-        return [motor_operation, ballistic_operation]
+        return [self.t, motor_operation, ballistic_operation]
