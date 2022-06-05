@@ -20,6 +20,7 @@ class Ballistic1DOperation:
         rocket,
         recovery,
         atmosphere,
+        rail_length,
         motor_dry_mass,
         initial_vehicle_mass,
         initial_elevation_amsl=0,
@@ -30,6 +31,7 @@ class Ballistic1DOperation:
         self.rocket = rocket
         self.recovery = recovery
         self.atmosphere = atmosphere
+        self.rail_length = rail_length
         self.initial_elevation_amsl = initial_elevation_amsl
         self.motor_dry_mass = motor_dry_mass
         self.ballistics_solver = Ballistics1D()
@@ -54,6 +56,8 @@ class Ballistic1DOperation:
         self.v = np.array([0])  # velocity
         self.acceleration = np.array([])  # acceleration
         self.mach_no = np.array([0])  # mach number
+
+        self.velocity_out_of_rail = None
 
     @property
     def apogee(self) -> float:
@@ -158,6 +162,9 @@ class Ballistic1DOperation:
             self.P_ext, self.atmosphere.get_pressure(self.y[-1])
         )
 
+        if self.velocity_out_of_rail is None and self.y[-1] > self.rail_length:
+            self.velocity_out_of_rail = self.v[-2]
+
     def print_results(self) -> None:
         """
         Prints the results of the operation.
@@ -181,10 +188,3 @@ class Ballistic1DOperation:
         Returns the time of the apogee.
         """
         return self.t[np.argmax(self.y)]
-
-    @property
-    def velocity_out_of_rail(self) -> float:
-        """
-        Returns the velocity out of the rail.
-        """
-        return self.v[np.argmax(self.y)]

@@ -73,6 +73,7 @@ class InternalBallisticsCoupled(Simulation):
             self.rocket,
             self.recovery,
             self.atmosphere,
+            rail_length=self.rail_length,
             motor_dry_mass=self.motor.structure.dry_mass,
             initial_vehicle_mass=self.rocket.structure.mass_without_motor,
             initial_elevation_amsl=self.initial_elevation_amsl,
@@ -81,8 +82,6 @@ class InternalBallisticsCoupled(Simulation):
         i = 0
 
         while ballistic_operation.y[i] >= 0 or motor_operation.m_prop[-1] > 0:
-            print(f"ITERATION NO #{i}")
-
             self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
 
             if motor_operation.end_thrust is False:

@@ -271,7 +271,7 @@ class SRMOperation(MotorOperation):
         print(
             f" Initial to final Kn ratio: {self.initial_to_final_klemmung_ratio:.3f}"
         )
-        print(f" Volumetric efficiency: {self.volumetric_efficiency:.3%} %")
+        print(f" Volumetric efficiency: {self.volumetric_efficiency:.3%}")
         print(" Burn profile: " + self.burn_profile)
         print(
             f" Max initial mass flux: {self.max_mass_flux:.3f} kg/s-m-m or "
@@ -281,8 +281,8 @@ class SRMOperation(MotorOperation):
 
         print("\nCHAMBER PRESSURE")
         print(
-            f" Maximum, average chamber pressure: {convert_pa_to_mpa(self.max_chamber_pressure):.3f}, "
-            f"{convert_pa_to_psi(self.mean_chamber_pressure):.3f} MPa"
+            f" Maximum, average chamber pressure: {np.max(self.P_0) * 1e-6:.3f}, "
+            f"{np.mean(self.P_0) * 1e-6:.3f} MPa"
         )
 
         print("\nTHRUST AND IMPULSE")
@@ -301,7 +301,10 @@ class SRMOperation(MotorOperation):
 
     @property
     def klemmung(self) -> np.array:
-        return self.burn_area / self.motor.structure.nozzle.get_throat_area()
+        return (
+            self.burn_area[self.burn_area > 0]
+            / self.motor.structure.nozzle.get_throat_area()
+        )
 
     @property
     def initial_to_final_klemmung_ratio(self) -> float:
@@ -319,9 +322,11 @@ class SRMOperation(MotorOperation):
         """
         Returns string with burn profile.
         """
-        if self.burn_area[0] / self.burn_area[-1] > 1 + deviancy:
+        burn_area = self.burn_area[self.burn_area > 0]
+
+        if burn_area[0] / burn_area[-1] > 1 + deviancy:
             return "regressive"
-        elif self.burn_area[0] / self.burn_area[-1] < 1 - deviancy:
+        elif burn_area[0] / burn_area[-1] < 1 - deviancy:
             return "progressive"
         else:
             return "neutral"
@@ -339,17 +344,9 @@ class SRMOperation(MotorOperation):
         )
 
     @property
-    def max_chamber_pressure(self) -> float:
-        return np.max(self.P_0)
-
-    @property
-    def mean_chamber_pressure(self) -> float:
-        return np.mean(self.P_0)
-
-    @property
     def total_impulse(self) -> float:
         return np.mean(self.thrust) * self.t[-1]
 
     @property
     def specific_impulse(self) -> float:
-        return self.total_impulse / self.m_prop[-1]
+        return self.total_impulse / self.m_prop[0] / 9.81
