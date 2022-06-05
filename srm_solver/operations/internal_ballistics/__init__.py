@@ -191,7 +191,7 @@ class SRMOperation(MotorOperation):
             self.optimal_expansion_ratio = np.append(
                 self.optimal_expansion_ratio,
                 get_opt_expansion_ratio(
-                    self.motor.propellant.k_2ph_ex, self.P_0[-1], P_ext[-1]
+                    self.motor.propellant.k_2ph_ex, self.P_0[-1], P_ext
                 ),
             )
 
