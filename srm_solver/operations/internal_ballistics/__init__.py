@@ -48,9 +48,9 @@ class MotorOperation(ABC):
         self.P_exit = np.array([])  # exit pressure
 
         # Thrust coefficients and thrust:
-        self.C_f = np.array([])  # thrust coefficient
-        self.C_f_ideal = np.array([])  # ideal thrust coefficient
-        self.thrust = np.array([])  # thrust force (N)
+        self.C_f = np.array([0])  # thrust coefficient
+        self.C_f_ideal = np.array([0])  # ideal thrust coefficient
+        self.thrust = np.array([0])  # thrust force (N)
 
         # If the propellant mass is non zero, 'end_thrust' must be False,
         # since there is still thrust being produced.

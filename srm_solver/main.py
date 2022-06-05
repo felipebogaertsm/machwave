@@ -214,27 +214,37 @@ def main():
     # PLOTS
     # Saves some of the most important plots to the 'output' folder.
 
-    # performance_plot(
-    #     ib_parameters.T,
-    #     ib_parameters.P0,
-    #     ib_parameters.t,
-    #     ib_parameters.t_thrust,
-    # )
-    # main_plot(
-    #     ib_parameters.t,
-    #     ib_parameters.T,
-    #     ib_parameters.P0,
-    #     ib_parameters.Kn,
-    #     ib_parameters.m_prop,
-    #     ib_parameters.t_thrust,
-    # )
-    # mass_flux_plot(
-    #     ib_parameters.t, ib_parameters.grain_mass_flux, ib_parameters.t_thrust
-    # )
-    # ballistics_plots(
-    #     ballistics.t, ballistics.acc, ballistics.v, ballistics.y, 9.81
-    # )
-    # performance_interactive_plot(ib_parameters).show()
+    performance_plot(
+        ib_operation.thrust,
+        ib_operation.P_0,
+        ib_operation.t,
+        ib_operation.thrust_time,
+    )
+
+    main_plot(
+        ib_operation.t,
+        ib_operation.thrust,
+        ib_operation.P_0,
+        ib_operation.klemmung,
+        ib_operation.m_prop,
+        ib_operation.thrust_time,
+    )
+
+    mass_flux_plot(
+        t,
+        ib_operation.grain_mass_flux,
+        ib_operation.thrust_time,
+    )
+
+    ballistics_plots(
+        t,
+        ballistic_operation.acceleration,
+        ballistic_operation.v,
+        ballistic_operation.y,
+        9.81,
+    )
+
+    performance_interactive_plot(ib_operation).show()
 
 
 if __name__ == "__main__":
