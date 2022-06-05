@@ -18,7 +18,9 @@ class Ballistic1DOperation:
     def __init__(
         self,
         rocket,
+        recovery,
         atmosphere,
+        motor_dry_mass,
         initial_vehicle_mass,
         initial_elevation_amsl=0,
     ) -> None:
@@ -26,7 +28,10 @@ class Ballistic1DOperation:
         Initializes attributes for the operation.
         """
         self.rocket = rocket
+        self.recovery = recovery
         self.atmosphere = atmosphere
+        self.initial_elevation_amsl = initial_elevation_amsl
+        self.motor_dry_mass = motor_dry_mass
         self.ballistics_solver = Ballistics1D()
 
         self.t = np.array([0])  # time vector
@@ -101,10 +106,10 @@ class Ballistic1DOperation:
 
         # Appending the current vehicle mass, consisting of the motor
         # structural mass, mass without the motor and propellant mass.
-        vehicle_mass = np.append(
-            vehicle_mass,
+        self.vehicle_mass = np.append(
+            self.vehicle_mass,
             propellant_mass
-            + self.motor.structure.dry_mass
+            + self.motor_dry_mass
             + self.rocket.structure.mass_without_motor,
         )
 
@@ -137,7 +142,7 @@ class Ballistic1DOperation:
             D,
             self.vehicle_mass[-1],
             self.g[-1],
-            self.d_t,
+            d_t,
         )
 
         self.y = np.append(self.y, ballistics_results[0])
@@ -147,6 +152,10 @@ class Ballistic1DOperation:
         self.mach_no = np.append(
             self.mach_no,
             self.v[-1] / self.atmosphere.get_sonic_velocity(self.y[-1]),
+        )
+
+        self.P_ext = np.append(
+            self.P_ext, self.atmosphere.get_pressure(self.y[-1])
         )
 
         if self.y[-1] < 0:

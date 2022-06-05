@@ -68,7 +68,9 @@ class InternalBallisticsCoupled(Simulation):
 
         ballistic_operation = Ballistic1DOperation(
             self.rocket,
+            self.recovery,
             self.atmosphere,
+            motor_dry_mass=self.motor.structure.dry_mass,
             initial_vehicle_mass=self.rocket.structure.mass_without_motor,
             initial_elevation_amsl=self.initial_elevation_amsl,
         )
@@ -78,6 +80,8 @@ class InternalBallisticsCoupled(Simulation):
         while (
             ballistic_operation.y[i] >= 0 or motor_operation.m_prop[i - 1] > 0
         ):
+            print(f"\n\nITERATION #{i}\n\n")
+
             self.t = np.append(
                 self.t, self.t[i] + self.d_t
             )  # append new time value
