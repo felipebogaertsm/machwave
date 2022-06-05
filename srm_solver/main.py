@@ -30,7 +30,7 @@ from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
 from models.propulsion import SolidMotor
 
-from utils.utilities import output_eng_csv, print_results
+from utils.utilities import output_eng_csv
 from utils.plots import (
     performance_interactive_plot,
     performance_plot,
@@ -158,7 +158,7 @@ def main():
     # 'run_ballistics' returns instances of the classes Ballistics and
     # InternalBallistics.
 
-    t, ballistics, ib_parameters = InternalBallisticsCoupled(
+    t, ib_operation, ballistic_operation = InternalBallisticsCoupled(
         motor=motor,
         rocket=rocket,
         recovery=recovery,
@@ -170,8 +170,8 @@ def main():
         rail_length=5,
     ).run()
 
-    ballistics.print_results()
-    ib_parameters.print_results()
+    ballistic_operation.print_results()
+    ib_operation.print_results()
 
     # /////////////////////////////////////////////////////////////////////////
     # MOTOR STRUCTURE
@@ -184,33 +184,25 @@ def main():
     # ).run()
 
     # /////////////////////////////////////////////////////////////////////////
-    # RESULTS
-    # This section prints the important data based on previous calculations.
-
-    # print_results(
-    #     grain,
-    #     structure,
-    #     ib_parameters,
-    #     structural_parameters,
-    #     ballistics,
-    #     rocket,
-    # )
-
-    # /////////////////////////////////////////////////////////////////////////
     # OUTPUT TO ENG AND CSV FILE
     # This section exports the results inside a .csv and a .eng file. The .eng
     # file is totally compatible with OpenRocket or RASAero software. The .csv is
     # exported mainly for the ease of visualization and storage.
 
-    # output_eng_csv(
-    #     ib_parameters,
-    #     structure,
-    #     propellant,
-    #     25,
-    #     0.1,
-    #     manufacturer="LCP 2022",
-    #     name="OLYMPUS",
-    # )
+    output_eng_csv(
+        time=t,
+        burn_time=ib_operation.burn_time,
+        thrust=ib_operation.thrust,
+        propellant_volume=ib_operation.propellant_volume,
+        dt=0.1,
+        chamber_od=motor.structure.chamber.outer_diameter,
+        chamber_length=motor.structure.chamber.length,
+        eng_resolution=25,
+        propellant_density=motor.propellant.density,
+        motor_dry_mass=motor.structure.dry_mass,
+        manufacturer="LCP 2022",
+        name="OLYMPUS",
+    )
 
     # /////////////////////////////////////////////////////////////////////////
     # TIME FUNCTION END
