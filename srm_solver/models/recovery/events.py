@@ -60,13 +60,13 @@ class ApogeeBasedEvent(RecoveryEvent):
         height: np.array,
         time: np.array,
         velocity: np.array,
-        propellant_mass: np.array,
+        propellant_mass: float,
     ) -> bool:
         max_height_index = np.argmax(height)
         apogee_time = time[max_height_index]
 
         if (
-            propellant_mass[-1] == 0
+            propellant_mass == 0
             and velocity[-1] < 0
             and time[-1] >= self.trigger_value + apogee_time
         ):
