@@ -95,11 +95,17 @@ class MotorOperation(ABC):
 class SRMOperation(MotorOperation):
     """
     Operation for a Solid Rocket Motor.
+
+    The variable names correspond to what they are commonly reffered to in
+    books and papers related to Solid Rocket Propulsion.
+
+    Therefore, PEP8's snake_case will not be followed rigorously.
     """
 
     def __init__(
         self,
         motor: SolidMotor,
+        initial_pressure: float,
         ib_solver: Optional[
             SRMInternalBallisticsSolver
         ] = SRMInternalBallisticsSolver(),
@@ -110,7 +116,7 @@ class SRMOperation(MotorOperation):
         self.motor = motor
         self.ib_solver = ib_solver
 
-        super().__init__()
+        super().__init__(initial_pressure=initial_pressure)
 
         # Grain and propellant parameters:
         self.burn_area = np.array([])
@@ -129,6 +135,13 @@ class SRMOperation(MotorOperation):
         d_t: float,
         P_ext: float,
     ) -> None:
+        """
+        The function uses the Runge-Kutta 4th order numerical method for
+        solving the differential equations.
+        """
+
+        self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
+
         if self.end_thrust is False:  # while motor is producing thrust
             self.burn_area = np.append(
                 self.burn_area, self.motor.grain.get_burn_area(self.web[-1])

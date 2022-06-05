@@ -15,18 +15,31 @@ class Ballistic1DOperation:
     Stores and processes a ballistics operation (aka flight).
     """
 
-    def __init__(self, rocket, initial_vehicle_mass) -> None:
+    def __init__(
+        self,
+        rocket,
+        atmosphere,
+        initial_vehicle_mass,
+        initial_elevation_amsl=0,
+    ) -> None:
         """
         Initializes attributes for the operation.
         """
         self.rocket = rocket
+        self.atmosphere = atmosphere
         self.ballistics_solver = Ballistics1D()
 
         self.t = np.array([0])  # time vector
 
-        self.P_ext = np.array([])  # external pressure
-        self.rho_air = np.array([])  # air density
-        self.g = np.array([])  # acceleration of gravity
+        self.P_ext = np.array(
+            [self.atmosphere.get_pressure(initial_elevation_amsl)]
+        )  # external pressure
+        self.rho_air = np.array(
+            [self.atmosphere.get_density(initial_elevation_amsl)]
+        )  # air density
+        self.g = np.array(
+            [self.atmosphere.get_gravity(initial_elevation_amsl)]
+        )  # acceleration of gravity
         self.vehicle_mass = np.array(
             [initial_vehicle_mass]
         )  # total mass of the vehicle
@@ -69,8 +82,23 @@ class Ballistic1DOperation:
         self,
         propellant_mass: float,
         thrust: float,
-        rho_air: float,
+        d_t: float,
     ) -> None:
+        self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
+
+        self.rho_air = np.append(
+            self.rho_air,
+            self.atmosphere.get_density(
+                y_amsl=(self.y[-1] + self.initial_elevation_amsl)
+            ),
+        )
+        self.g = np.append(
+            self.g,
+            self.atmosphere.get_gravity(
+                self.initial_elevation_amsl + self.y[-1]
+            ),
+        )
+
         # Appending the current vehicle mass, consisting of the motor
         # structural mass, mass without the motor and propellant mass.
         vehicle_mass = np.append(
@@ -87,7 +115,10 @@ class Ballistic1DOperation:
             recovery_drag_coeff,
             recovery_area,
         ) = self.recovery.get_drag_coefficient_and_area(
-            height=y, time=t, velocity=v, propellant_mass=propellant_mass
+            height=self.y,
+            time=self.t,
+            velocity=self.v,
+            propellant_mass=propellant_mass,
         )
 
         D = (
@@ -95,7 +126,7 @@ class Ballistic1DOperation:
                 fuselage_area * fuselage_drag_coeff
                 + recovery_area * recovery_drag_coeff
             )
-            * rho_air[-1]
+            * self.rho_air[-1]
             * 0.5
         )
 
