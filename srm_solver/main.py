@@ -7,6 +7,8 @@
 
 import time
 
+import numpy as np
+
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
 from models.propulsion.structure import (
@@ -184,9 +186,13 @@ def main():
     # 'run_structural_simulation' returns an instance of the class
     # StructuralParameters.
 
-    # structural_parameters = StructuralSimulation(
-    #     structure, ib_parameters.P0, 4
-    # ).run()
+    structural_simulation = StructuralSimulation(
+        motor.structure, np.max(ib_operation.P_0), 4
+    )
+
+    structural_parameters = structural_simulation.run()
+
+    structural_simulation.print_results()
 
     # /////////////////////////////////////////////////////////////////////////
     # OUTPUT TO ENG AND CSV FILE
