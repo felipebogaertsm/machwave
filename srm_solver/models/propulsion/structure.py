@@ -58,7 +58,7 @@ class CombustionChamber:
         """
         return self.inner_diameter * (
             np.sqrt(
-                (0.75 * np.max(chamber_pressure))
+                (0.75 * chamber_pressure)
                 / (self.bulkhead_material.yield_strength / safety_factor)
             )
         )
@@ -105,7 +105,7 @@ class CombustionChamber:
         Von Misses criteria.
         """
         casing_yield_strength = self.casing_material.yield_strength
-        max_chamber_pressure = np.max(chamber_pressure)
+        max_chamber_pressure = chamber_pressure
 
         gama_z = self.get_casing_stress_z(max_chamber_pressure)
         gama_r = self.get_casing_stress_radius(max_chamber_pressure)
@@ -184,7 +184,7 @@ class BoltedCombustionChamber(CombustionChamber):
         self, screw_count: int, chamber_pressure: float
     ) -> float:
         return (
-            np.max(chamber_pressure) * (np.pi * (self.inner_diameter / 2) ** 2)
+            chamber_pressure * (np.pi * (self.inner_diameter / 2) ** 2)
         ) / screw_count
 
     def get_optimal_fasteners(self, chamber_pressure: np.array):
@@ -269,7 +269,7 @@ class Nozzle:
         chamber: CombustionChamber,
     ):
         """Returns nozzle convergent and divergent thickness"""
-        max_chamber_pressure = np.max(chamber_pressure)
+        max_chamber_pressure = chamber_pressure
         convergent_angle = self.convergent_angle
         divergent_angle = self.divergent_angle
         nozzle_yield_strength = self.material.yield_strength
@@ -278,7 +278,7 @@ class Nozzle:
         safe_yield_strength = nozzle_yield_strength / safety_factor
 
         nozzle_conv_thickness = (
-            np.max(chamber_pressure) * chamber.inner_diameter / 2
+            chamber_pressure * chamber.inner_diameter / 2
         ) / (
             (
                 safe_yield_strength
@@ -289,7 +289,7 @@ class Nozzle:
         )
 
         nozzle_div_thickness = (
-            np.max(chamber_pressure) * chamber.inner_diameter / 2
+            chamber_pressure * chamber.inner_diameter / 2
         ) / (
             (
                 safe_yield_strength
