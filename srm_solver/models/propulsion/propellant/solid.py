@@ -7,6 +7,8 @@
 
 import scipy.constants
 
+from . import Propellant
+
 
 class BurnRateOutOfBoundsError(Exception):
     def __init__(self, value: float) -> None:
@@ -16,10 +18,6 @@ class BurnRateOutOfBoundsError(Exception):
         )
 
         super().__init__(self.message)
-
-
-class Propellant:
-    pass
 
 
 class SolidPropellant(Propellant):
