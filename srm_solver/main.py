@@ -14,7 +14,7 @@ from models.propulsion.structure import (
     MotorStructure,
     Nozzle,
 )
-from models.propellants import get_propellant_from_name
+from models.propellants.solid import get_solid_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
 from models.materials.metals import Steel, Al6063T5
@@ -60,7 +60,7 @@ def main():
     # diameter.
 
     # Motor:
-    propellant = get_propellant_from_name(prop_name="KNSB-NAKKA")
+    propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
 
     grain = Grain()
 

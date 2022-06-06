@@ -53,12 +53,6 @@ class Grain:
         # Checking if grain segments conform to desired geometry:
         self.validate_segment_geometries()
 
-    def get_mass_flux(self) -> np.array:
-        """
-        Calculates the mass flux for all grain segments in the motor.
-        """
-        pass
-
     @property
     def total_length(self) -> float:
         return np.sum(
