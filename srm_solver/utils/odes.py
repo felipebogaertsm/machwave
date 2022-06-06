@@ -9,6 +9,8 @@
 Stores solvers called inside the simulations.
 """
 
+from utils.isentropic_flow import get_critical_pressure_ratio
+
 
 def solve_cp_seidel(
     P0: float,
@@ -43,16 +45,19 @@ def solve_cp_seidel(
     :return: dP0 / dt
     :rtype: float
     """
-    critical_pressure_ratio = (2 / (k + 1)) ** (k / (k - 1))
+    critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch=k)
+
     if Pe / P0 <= critical_pressure_ratio:
         H = ((k / (k + 1)) ** 0.5) * ((2 / (k + 1)) ** (1 / (k - 1)))
     else:
         H = ((Pe / P0) ** (1 / k)) * (
             ((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5
         )
+
     dP0_dt = (
         (R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))
     ) / V0
+
     return dP0_dt
 
 
@@ -73,6 +78,8 @@ def ballistics_ode(y, v, T, D, M, g):
         x = -1
     else:
         x = 1
-    dv_dt = (T - x * D * (v**2)) / M - g
+
+    dv_dt = (T - x * D * (v ** 2)) / M - g
     dy_dt = v
+
     return dy_dt, dv_dt
