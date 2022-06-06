@@ -10,7 +10,7 @@ import pytest
 from models.atmosphere import Atmosphere1976
 from models.materials.elastics import EPDM
 from models.materials.metals import Al6063T5, Steel
-from models.propellants import KNDX, KNER, KNSB, KNSB_NAKKA, KNSU
+from models.propellants.solid import get_solid_propellant_from_name
 from models.propulsion.structure import (
     BoltedCombustionChamber,
     CombustionChamber,
@@ -20,27 +20,27 @@ from models.propulsion.thermals import ThermalLiner
 
 @pytest.fixture
 def propellant_KNDX():
-    return KNDX
+    return get_solid_propellant_from_name("kndx")
 
 
 @pytest.fixture
 def propellant_KNER():
-    return KNER
+    return get_solid_propellant_from_name("kner")
 
 
 @pytest.fixture
 def propellant_KNSB():
-    return KNSB
+    return get_solid_propellant_from_name("knsb")
 
 
 @pytest.fixture
 def propellant_KNSB_NAKKA():
-    return KNSB_NAKKA
+    return get_solid_propellant_from_name("knsb-nakka")
 
 
 @pytest.fixture
 def propellant_KNSU():
-    return KNSU
+    return get_solid_propellant_from_name("knsu")
 
 
 @pytest.fixture
