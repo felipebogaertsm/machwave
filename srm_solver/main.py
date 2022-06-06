@@ -158,7 +158,7 @@ def main():
     # 'run_ballistics' returns instances of the classes Ballistics and
     # InternalBallistics.
 
-    t, ib_operation, ballistic_operation = InternalBallisticsCoupled(
+    internal_ballistics_coupled_simulation = InternalBallisticsCoupled(
         motor=motor,
         rocket=rocket,
         recovery=recovery,
@@ -168,10 +168,15 @@ def main():
         initial_elevation_amsl=600,
         igniter_pressure=1.5e6,
         rail_length=5,
-    ).run()
+    )
 
-    ballistic_operation.print_results()
-    ib_operation.print_results()
+    (
+        t,
+        ib_operation,
+        ballistic_operation,
+    ) = internal_ballistics_coupled_simulation.run()
+
+    internal_ballistics_coupled_simulation.print_results()
 
     # /////////////////////////////////////////////////////////////////////////
     # MOTOR STRUCTURE

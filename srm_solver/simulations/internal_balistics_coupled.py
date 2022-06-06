@@ -68,8 +68,8 @@ class InternalBallisticsCoupled(Simulation):
         Runs the main loop of the simulation, returning all the internal and
         external ballistics parameters.
         """
-        motor_operation = self.get_motor_operation()
-        ballistic_operation = Ballistic1DOperation(
+        self.motor_operation = self.get_motor_operation()
+        self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
             self.recovery,
             self.atmosphere,
@@ -81,25 +81,36 @@ class InternalBallisticsCoupled(Simulation):
 
         i = 0
 
-        while ballistic_operation.y[i] >= 0 or motor_operation.m_prop[-1] > 0:
+        while (
+            self.ballistic_operation.y[i] >= 0
+            or self.motor_operation.m_prop[-1] > 0
+        ):
             self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
 
-            if motor_operation.end_thrust is False:
-                motor_operation.iterate(
+            if self.motor_operation.end_thrust is False:
+                self.motor_operation.iterate(
                     self.d_t,
-                    ballistic_operation.P_ext[i],
+                    self.ballistic_operation.P_ext[i],
                 )
 
-                propellant_mass = motor_operation.m_prop[i]
-                thrust = motor_operation.thrust[i]
+                propellant_mass = self.motor_operation.m_prop[i]
+                thrust = self.motor_operation.thrust[i]
                 d_t = self.d_t
             else:
                 propellant_mass = 0
                 thrust = 0
                 d_t = self.d_t * self.dd_t
 
-            ballistic_operation.iterate(propellant_mass, thrust, d_t)
+            self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
 
             i += 1
 
-        return (self.t, motor_operation, ballistic_operation)
+        return (self.t, self.motor_operation, self.ballistic_operation)
+
+    def print_results(self):
+        """
+        Prints the results of the simulation.
+        """
+        print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
+        self.motor_operation.print_results()
+        self.ballistic_operation.print_results()

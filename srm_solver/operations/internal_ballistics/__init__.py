@@ -297,7 +297,7 @@ class SRMOperation(MotorOperation):
         )
 
         print("\nNOZZLE DESIGN")
-        print(f" Average nozzle efficiency: {np.mean(self.n_cf):.3%} %")
+        print(f" Average nozzle efficiency: {np.mean(self.n_cf):.3%}")
 
     @property
     def klemmung(self) -> np.array:
