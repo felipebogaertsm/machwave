@@ -82,6 +82,11 @@ class MonteCarloSimulation:
         self.scenarios: list[list[float | int]] = []
 
     def generate_scenario(self) -> list[float | int]:
+        """
+        Still need to implement recursive search of MonteCarloParameter
+        instances.
+        """
+
         new_scenario = []
 
         for parameter in self.parameters:
@@ -90,12 +95,12 @@ class MonteCarloSimulation:
             else:
                 try:
                     for _, sub_param in vars(parameter).items():
-                        print(sub_param)
                         if isinstance(sub_param, MonteCarloParameter):
-                            print("hey")
-                            sub_param = sub_param.get_random_value()
-                            print("Sub param:", sub_param)
-                            parameter[sub_param] = sub_param
+                            setattr(
+                                parameter,
+                                sub_param,
+                                sub_param.get_random_value(),
+                            )
                 except TypeError:
                     pass
 
