@@ -170,11 +170,11 @@ def main():
             Atmosphere1976(),
             0.01,
             10,
-            600,
+            MonteCarloParameter(value=600, tolerance=100),
             1.5e6,
             5,
         ],
-        1,
+        3,
         InternalBallisticsCoupled,
     )
 
