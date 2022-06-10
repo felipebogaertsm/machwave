@@ -94,13 +94,31 @@ class MonteCarloSimulation:
                 parameter = parameter.get_random_value()
             else:
                 try:
-                    for _, sub_param in vars(parameter).items():
-                        if isinstance(sub_param, MonteCarloParameter):
-                            setattr(
-                                parameter,
-                                sub_param,
-                                sub_param.get_random_value(),
-                            )
+                    param = parameter
+                    sub_params = vars(param)
+
+                    i = 0
+
+                    while True:
+                        print(f"ITERATION NO #{i}")
+                        new_sub_params = {}
+
+                        if len(sub_params) == 0:
+                            break
+
+                        for name, attr in sub_params.items():
+                            if isinstance(attr, MonteCarloParameter):
+                                setattr(
+                                    attr,
+                                    name,
+                                    attr.get_random_value(),
+                                )
+                            else:
+                                new_sub_params += vars(attr)
+
+                        sub_params = new_sub_params
+                        i += 1
+
                 except TypeError:
                     pass
 

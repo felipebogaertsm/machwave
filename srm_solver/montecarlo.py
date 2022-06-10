@@ -170,7 +170,7 @@ def main():
             Atmosphere1976(),
             0.01,
             10,
-            MonteCarloParameter(value=600, tolerance=100),
+            600,
             1.5e6,
             5,
         ],
