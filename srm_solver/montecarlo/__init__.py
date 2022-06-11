@@ -5,12 +5,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Optional
 
 import numpy as np
 
 from simulations import Simulation
+from utils.utilities import obtain_attributes_from_object
 
 
 @dataclass
@@ -88,39 +90,52 @@ class MonteCarloSimulation:
         """
 
         new_scenario = []
+        parameters = deepcopy(self.parameters)
 
-        for parameter in self.parameters:
+        for parameter in parameters:
             if isinstance(parameter, MonteCarloParameter):
                 parameter = parameter.get_random_value()
             else:
-                try:
-                    param = parameter
-                    sub_params = vars(param)
+                search_tree = {
+                    parameter: obtain_attributes_from_object(parameter)
+                }
+                i = 0
 
-                    i = 0
+                while True:
+                    new_search_tree = {}  # search tree for the next iteration
 
-                    while True:
-                        print(f"ITERATION NO #{i}")
-                        new_sub_params = {}
+                    if len(search_tree) == 0:
+                        break  # skip iteration if there are no sub params
 
-                        if len(sub_params) == 0:
-                            break
-
+                    for param, sub_params in search_tree.items():
                         for name, attr in sub_params.items():
                             if isinstance(attr, MonteCarloParameter):
-                                setattr(
-                                    attr,
-                                    name,
-                                    attr.get_random_value(),
-                                )
+                                setattr(param, name, attr.get_random_value())
+                            elif isinstance(attr, list):
+                                for item in attr:
+                                    if isinstance(item, dict):
+                                        continue
+
+                                    new_search_tree = {
+                                        **new_search_tree,
+                                        **{
+                                            item: obtain_attributes_from_object(
+                                                item
+                                            )
+                                        },
+                                    }
                             else:
-                                new_sub_params += vars(attr)
+                                new_search_tree = {
+                                    **new_search_tree,
+                                    **{
+                                        attr: obtain_attributes_from_object(
+                                            attr
+                                        )
+                                    },
+                                }
 
-                        sub_params = new_sub_params
-                        i += 1
-
-                except TypeError:
-                    pass
+                    search_tree = new_search_tree
+                    i += 1
 
             new_scenario.append(parameter)
 
