@@ -7,8 +7,6 @@
 
 import time
 
-import numpy as np
-
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
 from models.propulsion.structure import (
@@ -34,17 +32,7 @@ from models.propulsion import SolidMotor
 
 from montecarlo import MonteCarloParameter, MonteCarloSimulation
 
-from utils.utilities import output_eng_csv
-from utils.plots import (
-    performance_interactive_plot,
-    performance_plot,
-    main_plot,
-    mass_flux_plot,
-    ballistics_plots,
-)
-
 from simulations.internal_balistics_coupled import InternalBallisticsCoupled
-from simulations.structural import StructuralSimulation
 
 
 def main():
@@ -174,7 +162,7 @@ def main():
             1.5e6,
             5,
         ],
-        3,
+        10,
         InternalBallisticsCoupled,
     )
 
