@@ -7,6 +7,9 @@
 
 import time
 
+import numpy as np
+import plotly.express as px
+
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
 from models.propulsion.structure import (
@@ -162,11 +165,16 @@ def main():
             1.5e6,
             5,
         ],
-        10,
+        100,
         InternalBallisticsCoupled,
     )
 
-    montecarlo_sim.run()
+    results = montecarlo_sim.run()
+
+    apogees = np.array([result[2].apogee for result in results])
+
+    fig = px.scatter(y=apogees)
+    fig.show()
 
 
 if __name__ == "__main__":

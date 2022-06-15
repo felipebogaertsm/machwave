@@ -57,7 +57,7 @@ class MonteCarloParameter:
             return self.value - other
 
     def __pow__(self, other: Any) -> float:
-        return self.value ** other
+        return self.value**other
 
     def __truediv__(self, other: Any) -> float:
         return self.value / other
@@ -143,11 +143,11 @@ class MonteCarloSimulation:
         return new_scenario
 
     def run(self) -> None:
-        results = []
+        self.results = []
 
         for _ in range(self.number_of_scenarios):
             scenario = self.generate_scenario()
-            results.append(self.simulation(*scenario).run())
-            print("Apogee:", np.max(results[-1][2].y))
+            self.results.append(self.simulation(*scenario).run())
+            print("Apogee:", np.max(self.results[-1][2].y))
 
-        return results
+        return self.results
