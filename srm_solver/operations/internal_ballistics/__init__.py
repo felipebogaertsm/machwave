@@ -24,7 +24,6 @@ from utils.isentropic_flow import (
 from utils.units import (
     convert_pa_to_psi,
     convert_mass_flux_metric_to_imperial,
-    convert_pa_to_mpa,
 )
 
 

@@ -57,7 +57,7 @@ class MonteCarloParameter:
             return self.value - other
 
     def __pow__(self, other: Any) -> float:
-        return self.value**other
+        return self.value ** other
 
     def __truediv__(self, other: Any) -> float:
         return self.value / other
@@ -85,8 +85,7 @@ class MonteCarloSimulation:
 
     def generate_scenario(self) -> list[float | int]:
         """
-        Still need to implement recursive search of MonteCarloParameter
-        instances.
+        Generates a monte carlo scenario in the form of a list of parameters
         """
 
         new_scenario = []
