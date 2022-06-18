@@ -90,6 +90,11 @@ class SRMInternalBallisticsSolver(InternalBallisticsSolver):
             burn_rate,
         )
 
-        return (
-            chamber_pressure + (1 / 6) * (k_1 + 2 * (k_2 + k_3) + k_4) * d_t,
+        new_chamber_pressure = (
+            chamber_pressure + (1 / 6) * (k_1 + 2 * (k_2 + k_3) + k_4) * d_t
         )
+
+        # In order to avoid RK4 blow up with a large d_t:
+        assert new_chamber_pressure >= 0, "Chamber pressure is negative"
+
+        return new_chamber_pressure
