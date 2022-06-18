@@ -46,20 +46,7 @@ from simulations.structural import StructuralSimulation
 
 
 def main():
-    # /////////////////////////////////////////////////////////////////////////
-    # TIME FUNCTION START
-    # Starts the timer.
-
-    start = time.time()
-
-    # /////////////////////////////////////////////////////////////////////////
-    # PRE CALCULATIONS AND DEFINITIONS
-    # This section is responsible for creating all of the instances of classes that
-    # can be obtained from the input data.
-    # It includes instanced of the classes: PropellantSelected, BATES,
-    # MotorStructure, Rocket, Rocket and Recovery.
-    # It also does some small calculations of the chamber length and chamber
-    # diameter.
+    start = time.time()  # starting timer
 
     # Motor:
     propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
@@ -148,18 +135,7 @@ def main():
         structure=rocket_structure,
     )
 
-    # /////////////////////////////////////////////////////////////////////////
-    # INTERNAL BALLISTICS AND TRAJECTORY
-    # This section runs the main simulation of the program, returning the results
-    # of all the internal ballistics and trajectory calculations.
-    # The 'run_ballistics' function runs, in a single loop, the chamber pressure
-    # PDE as well as the rocket flight mechanics ODE.
-    # The exit pressure of the motor is automatically subtracted from the external
-    # (or ambient) pressure of the rocket during flight, yielding more precise
-    # motor thrust estimation.
-    # 'run_ballistics' returns instances of the classes Ballistics and
-    # InternalBallistics.
-
+    # IB coupled simulation:
     internal_ballistics_coupled_simulation = InternalBallisticsCoupled(
         motor=motor,
         rocket=rocket,
@@ -180,12 +156,7 @@ def main():
 
     internal_ballistics_coupled_simulation.print_results()
 
-    # /////////////////////////////////////////////////////////////////////////
-    # MOTOR STRUCTURE
-    # This section runs the structural simulation. The function
-    # 'run_structural_simulation' returns an instance of the class
-    # StructuralParameters.
-
+    # Structural simulation:
     structural_simulation = StructuralSimulation(
         motor.structure, np.max(ib_operation.P_0), 4
     )
@@ -194,12 +165,7 @@ def main():
 
     structural_simulation.print_results()
 
-    # /////////////////////////////////////////////////////////////////////////
-    # OUTPUT TO ENG AND CSV FILE
-    # This section exports the results inside a .csv and a .eng file. The .eng
-    # file is totally compatible with OpenRocket or RASAero software. The .csv is
-    # exported mainly for the ease of visualization and storage.
-
+    # Outputs:
     output_eng_csv(
         time=t,
         burn_time=ib_operation.burn_time,
@@ -215,16 +181,9 @@ def main():
         name="OLYMPUS",
     )
 
-    # /////////////////////////////////////////////////////////////////////////
-    # TIME FUNCTION END
-    # Ends the time function.
-
     print("\n\nExecution time: %.4f seconds\n\n" % (time.time() - start))
 
-    # /////////////////////////////////////////////////////////////////////////
-    # PLOTS
-    # Saves some of the most important plots to the 'output' folder.
-
+    # Plots:
     performance_plot(
         ib_operation.thrust,
         ib_operation.P_0,
