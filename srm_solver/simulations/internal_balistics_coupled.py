@@ -99,7 +99,10 @@ class InternalBallisticsCoupled(Simulation):
             else:
                 propellant_mass = 0
                 thrust = 0
+
+                # Adding new delta time value for ballistic simulation:
                 d_t = self.d_t * self.dd_t
+                self.t[-1] = self.t[-2] + self.dd_t * self.d_t
 
             self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
 
