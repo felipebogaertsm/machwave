@@ -75,7 +75,9 @@ class InternalBallisticsCoupled(Simulation):
             self.atmosphere,
             rail_length=self.rail_length,
             motor_dry_mass=self.motor.structure.dry_mass,
-            initial_vehicle_mass=self.rocket.structure.mass_without_motor,
+            initial_vehicle_mass=self.rocket.structure.mass_without_motor
+            + self.motor.structure.dry_mass
+            + self.motor.initial_propellant_mass,
             initial_elevation_amsl=self.initial_elevation_amsl,
         )
 
