@@ -39,10 +39,7 @@ class BatesSegment(GrainSegment):
         """
         Returns the optimal length for BATES segment.
         """
-        optimal_grain_length = (
-            1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
-        )
-        return optimal_grain_length
+        return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
 
     def get_burn_area(self, web_thickness: float) -> float:
         # Variables with same notation as in Nakka's website
@@ -52,7 +49,7 @@ class BatesSegment(GrainSegment):
 
         if self.total_web_thickness >= web_thickness:
             return np.pi * (
-                ((D_grain**2) - (D_core + 2 * web_thickness) ** 2) / 2
+                ((D_grain ** 2) - (D_core + 2 * web_thickness) ** 2) / 2
                 + (
                     (L_grain - 2 * web_thickness)
                     * (D_core + 2 * web_thickness)
@@ -69,7 +66,7 @@ class BatesSegment(GrainSegment):
 
         if self.total_web_thickness >= web_thickness:
             return (np.pi / 4) * (
-                ((D_grain**2) - ((D_core + 2 * web_thickness) ** 2))
+                ((D_grain ** 2) - ((D_core + 2 * web_thickness) ** 2))
                 * (L_grain - 2 * web_thickness)
             )
         else:
