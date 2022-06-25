@@ -34,6 +34,14 @@ class Grain:
         self.segments: list[GrainSegment] = []
 
     def validate_segment_geometries(self) -> None:
+        """
+        Validations for each segment's geometry. They include:
+
+        - Outer diameter must be the same for all segments in the grain
+
+        :rtype: None
+        :raises GrainGeometryError: If the geometry is not valid
+        """
         od = self.segments[0].outer_diameter
 
         for segment in self.segments[1:]:
@@ -45,6 +53,13 @@ class Grain:
                 )
 
     def add_segment(self, new_segment: GrainSegment) -> None:
+        """
+        Adds a new segment to the grain.
+
+        :param GrainSegment new_segment: The new segment to be added
+        :rtype: None
+        :raises Exceptiom: If the new_segment is not valid
+        """
         if isinstance(new_segment, GrainSegment):
             self.segments.append(new_segment)
         else:
@@ -55,13 +70,47 @@ class Grain:
 
     @property
     def total_length(self) -> float:
+        """
+        Calculates total length of the grain.
+
+        :rtype: float
+        """
         return np.sum(
             [grain.length + grain.spacing for grain in self.segments]
         )
 
     @property
     def segment_count(self) -> int:
+        """
+        Returns the number of segments in the grain.
+
+        :rtype: int
+        """
         return len(self.segments)
+
+    def get_burn_area(self, web_thickness: float) -> float:
+        """
+        Calculates the BATES burn area given the web distance.
+
+        :param float web_thickness: Instant web thickness value
+        :return float: Instant burn area, in m^2 and in function of web
+        :rtype: float
+        """
+        return np.sum(
+            [segment.get_burn_area(web_thickness) for segment in self.segments]
+        )
+
+    def get_propellant_volume(self, web_thickness: float) -> float:
+        """
+        Calculates the BATES grain volume given the web distance.
+
+        :param float web_thickness: Instant web thickness value
+        :return: Instant propellant volume, in m^3 and in function of web
+        :rtype: float
+        """
+        return np.sum(
+            [segment.get_volume(web_thickness) for segment in self.segments]
+        )
 
     def get_mass_flux_per_segment(
         self,
@@ -79,17 +128,19 @@ class Grain:
         segment_mass_flux = np.zeros(
             (self.segment_count, np.size(web_thickness))
         )
-        total_grain_Ab = np.zeros((self.segment_count, np.size(web_thickness)))
+        total_burn_area = np.zeros(
+            (self.segment_count, np.size(web_thickness))
+        )
 
-        for j in range(self.segment_count):
+        for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):
-                for k in range(j + 1):
-                    total_grain_Ab[j, i] = total_grain_Ab[
+                for _ in range(j + 1):
+                    total_burn_area[j, i] = total_burn_area[
                         j, i
                     ] + self.segments[j].get_burn_area(web_thickness[i])
 
                 segment_mass_flux[j, i] = (
-                    total_grain_Ab[j, i] * propellant_density * burn_rate[i]
+                    total_burn_area[j, i] * propellant_density * burn_rate[i]
                 )
 
                 segment_mass_flux[j, i] = segment_mass_flux[j, i] / (
@@ -99,19 +150,3 @@ class Grain:
                 )
 
         return segment_mass_flux
-
-    def get_burn_area(self, web_thickness: float) -> float:
-        """
-        Calculates the BATES burn area given the web distance.
-        """
-        return np.sum(
-            [segment.get_burn_area(web_thickness) for segment in self.segments]
-        )
-
-    def get_propellant_volume(self, web_thickness: float) -> float:
-        """
-        Calculates the BATES grain volume given the web distance.
-        """
-        return np.sum(
-            [segment.get_volume(web_thickness) for segment in self.segments]
-        )
