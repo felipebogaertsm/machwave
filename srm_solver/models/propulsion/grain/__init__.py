@@ -141,9 +141,7 @@ class Grain:
 
                 segment_mass_flux[j, i] = (
                     total_burn_area[j, i] * propellant_density * burn_rate[i]
-                )
-
-                segment_mass_flux[j, i] = segment_mass_flux[j, i] / (
+                ) / (
                     get_circle_area(
                         self.segments[j].core_diameter + web_thickness[i]
                     )
