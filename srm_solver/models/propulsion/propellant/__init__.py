@@ -6,5 +6,12 @@
 # the Free Software Foundation, version 3.
 
 
-class Propellant:
+from abc import ABC
+
+
+class Propellant(ABC):
+    """
+    Base class for any propellant.
+    """
+
     pass
