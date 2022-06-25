@@ -23,9 +23,19 @@ class BatesSegment(GrainSegment):
         self.length = length
         self.spacing = spacing
 
-        self.validate_inputs()
+        self.validate()
 
-    def validate_inputs(self) -> float:
+    def validate(self) -> None:
+        """
+        Validates segment's geometry. They include:
+
+        - Outer diameter shall be larger than core diameter
+        - Core diameter shall be larger than 0
+        - Length shall be larger than 0
+        - Spacing shall be larger than 0
+
+        :rtype: None
+        """
         assert self.outer_diameter > self.core_diameter
         assert self.core_diameter > 0
         assert self.length > 0
@@ -33,41 +43,65 @@ class BatesSegment(GrainSegment):
 
     @property
     def total_web_thickness(self) -> float:
+        """
+        Calculates the total web thickness of the segment.
+        More details on the web thickness of BATES grains can be found in:
+        https://www.nakka-rocketry.net/design1.html
+
+        :return: The total web thickness of the segment
+        :rtype: float
+        """
         return 0.5 * (self.outer_diameter - self.core_diameter)
 
     def get_optimal_length(self) -> float:
         """
         Returns the optimal length for BATES segment.
+        More details on the calculation:
+        https://www.nakka-rocketry.net/th_grain.html
+
+        :return: Optimal length for neutral burn of BATES segment
+        :rtype: float
         """
         return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
 
     def get_burn_area(self, web_thickness: float) -> float:
-        # Variables with same notation as in Nakka's website
-        D_grain = self.outer_diameter
-        D_core = self.core_diameter
-        L_grain = self.length
+        """
+        Calculates burn area in function of the instant web thickness.
 
+        :param float web_thickness: Instant web thickness
+        :return: Burn area in function of the instant web thickness
+        :rtype: float
+        """
         if self.total_web_thickness >= web_thickness:
             return np.pi * (
-                ((D_grain ** 2) - (D_core + 2 * web_thickness) ** 2) / 2
+                (
+                    (self.outer_diameter ** 2)
+                    - (self.core_diameter + 2 * web_thickness) ** 2
+                )
+                / 2
                 + (
-                    (L_grain - 2 * web_thickness)
-                    * (D_core + 2 * web_thickness)
+                    (self.length - 2 * web_thickness)
+                    * (self.core_diameter + 2 * web_thickness)
                 )
             )
         else:
             return 0
 
     def get_volume(self, web_thickness: float) -> float:
-        # Variables with same notation as in Nakka's website
-        D_grain = self.outer_diameter
-        D_core = self.core_diameter
-        L_grain = self.length
+        """
+        Calculates volume in function of the instant web thickness.
 
+        :param float web_thickness: Instant web thickness
+        :return: Segment volume in function of the instant web thickness
+        :rtype: float
+        """
         if self.total_web_thickness >= web_thickness:
             return (np.pi / 4) * (
-                ((D_grain ** 2) - ((D_core + 2 * web_thickness) ** 2))
-                * (L_grain - 2 * web_thickness)
+                (
+                    (self.outer_diameter ** 2)
+                    - ((self.core_diameter + 2 * web_thickness) ** 2)
+                )
+                * (self.length - 2 * web_thickness)
             )
         else:
             return 0
