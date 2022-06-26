@@ -31,6 +31,10 @@ class Motor(ABC):
         """
         Instantiates object attributes common to any motor/engine (Solid,
         Hybrid or Liquid).
+
+        :param Propellant propellant: Object representing the propellant used in the motor
+        :param MotorStructure structure: Object representing the structure of the motor
+        :rtype: None
         """
         self.propellant = propellant
         self.structure = structure
@@ -38,14 +42,22 @@ class Motor(ABC):
     @abstractmethod
     def get_thrust_coefficient_correction_factor(self) -> float:
         """
-        Calculates the thrust coefficient correction factor.
+        Calculates the thrust coefficient correction factor. This factor is
+        adimensional and should be applied to the ideal thrust coefficient to
+        get the real thrust coefficient.
+
+        :return: Thrust coefficient correction factor
+        :rtype: float
         """
         pass
 
     @abstractmethod
     def get_thrust_coefficient(self) -> float:
         """
-        Calculates the thrust coefficient for a particular instant.
+        Calculates the thrust coefficient at a particular instant.
+
+        :return: Thrust coefficient
+        :rtype: float
         """
         pass
 
@@ -55,6 +67,11 @@ class Motor(ABC):
         chamber pressure.
 
         Utilized nozzle throat area from the structure and nozzle classes.
+
+        :param float cf: Instantaneous thrust coefficient, adimensional
+        :param float chamber_pressure: Instantaneous chamber pressure, in Pa
+        :return: Instantaneous thrust, in Newtons
+        :rtype: float
         """
         return get_thrust_from_cf(
             cf,
@@ -77,10 +94,21 @@ class SolidMotor(Motor):
         self.cf_real = None  # real thrust coefficient
 
     def get_free_chamber_volume(self, propellant_volume: float) -> float:
+        """
+        Calculates the chamber volume without any propellant.
+
+        :param float propellant_volume: Propellant volume, in m^3
+        :return: Free chamber volume, in m^3
+        :rtype: float
+        """
         return self.structure.chamber.get_empty_volume() - propellant_volume
 
     @property
     def initial_propellant_mass(self) -> float:
+        """
+        :return: Initial propellant mass, in kg
+        :rtype: float
+        """
         return (
             self.grain.get_propellant_volume(web_thickness=0)
             * self.propellant.density
@@ -89,6 +117,13 @@ class SolidMotor(Motor):
     def get_thrust_coefficient_correction_factor(
         self, n_kin: float, n_bl: float, n_tp: float
     ) -> float:
+        """
+        :param float n_kin: Kinematic correction factor, adimensional
+        :param float n_bl: Boundary layer correction factor, adimensional
+        :param float n_tp: Two-phase correction factor, adimensional
+        :return: Thrust coefficient correction factor, adimensional
+        :rtype: float
+        """
         return (
             (100 - (n_kin + n_bl + n_tp))
             * self.structure.nozzle.get_divergent_correction_factor()
@@ -105,6 +140,16 @@ class SolidMotor(Motor):
         k_2ph_ex: float,
         n_cf: float,
     ) -> float:
+        """
+        :param float chamber_pressure: Chamber pressure, in Pa
+        :param float exit_pressure: Exit pressure, in Pa
+        :param float external_pressure: External pressure, in Pa
+        :param float expansion_ratio: Expansion ratio, adimensional
+        :param float k_2ph_ex: Two-phase isentropic coefficient, adimensional
+        :param float n_cf: Thrust coefficient correction factor, adimensional
+        :return: Instanteneous thrust coefficient, adimensional
+        :rtype: float
+        """
         self.cf_ideal, self.cf_real = get_thrust_coefficients(
             chamber_pressure,
             exit_pressure,
