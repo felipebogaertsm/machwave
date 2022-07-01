@@ -147,6 +147,5 @@ class MonteCarloSimulation:
         for _ in range(self.number_of_scenarios):
             scenario = self.generate_scenario()
             self.results.append(self.simulation(*scenario).run())
-            print("Apogee:", np.max(self.results[-1][2].y))
 
         return self.results

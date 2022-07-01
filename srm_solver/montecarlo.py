@@ -5,10 +5,8 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-import time
-
 import numpy as np
-import plotly.express as px
+import plotly.graph_objects as go
 
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
@@ -39,21 +37,6 @@ from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 
 
 def main():
-    # /////////////////////////////////////////////////////////////////////////
-    # TIME FUNCTION START
-    # Starts the timer.
-
-    start = time.time()
-
-    # /////////////////////////////////////////////////////////////////////////
-    # PRE CALCULATIONS AND DEFINITIONS
-    # This section is responsible for creating all of the instances of classes that
-    # can be obtained from the input data.
-    # It includes instanced of the classes: PropellantSelected, BATES,
-    # MotorStructure, Rocket, Rocket and Recovery.
-    # It also does some small calculations of the chamber length and chamber
-    # diameter.
-
     # Motor:
     propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
 
@@ -141,17 +124,7 @@ def main():
         structure=rocket_structure,
     )
 
-    # /////////////////////////////////////////////////////////////////////////
-    # INTERNAL BALLISTICS AND TRAJECTORY
-    # This section runs the main simulation of the program, returning the results
-    # of all the internal ballistics and trajectory calculations.
-    # The 'run_ballistics' function runs, in a single loop, the chamber pressure
-    # PDE as well as the rocket flight mechanics ODE.
-    # The exit pressure of the motor is automatically subtracted from the external
-    # (or ambient) pressure of the rocket during flight, yielding more precise
-    # motor thrust estimation.
-    # 'run_ballistics' returns instances of the classes Ballistics and
-    # InternalBallistics.
+    # Simulation:
 
     montecarlo_sim = MonteCarloSimulation(
         [
@@ -165,15 +138,19 @@ def main():
             1.5e6,
             5,
         ],
-        100,
+        1000,
         InternalBallisticsCoupled,
     )
 
     results = montecarlo_sim.run()
+    apogee_results = np.array([result[2].apogee for result in results])
 
-    apogees = np.array([result[2].apogee for result in results])
+    # Presentation:
 
-    fig = px.scatter(y=apogees)
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=apogee_results))
+    fig.update_xaxes(title_text="Apogee (m)")
+
     fig.show()
 
 
