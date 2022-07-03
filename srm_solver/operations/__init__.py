@@ -14,5 +14,5 @@ class Operation(ABC):
         pass
 
     @abstractmethod
-    def print_results(self, *args, **kwargs);
+    def print_results(self, *args, **kwargs):
         pass
