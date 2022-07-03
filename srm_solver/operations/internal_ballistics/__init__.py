@@ -5,11 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Optional
 
 import numpy as np
 
+from operations import Operation
 from solvers.srm_internal_ballistics import SRMInternalBallisticsSolver
 from models.propulsion import SolidMotor
 from utils.isentropic_flow import (
@@ -27,7 +28,7 @@ from utils.units import (
 )
 
 
-class MotorOperation(ABC):
+class MotorOperation(Operation):
     """
     Defines a particular motor operation. Stores and processes all attributes
     obtained from the simulation.
