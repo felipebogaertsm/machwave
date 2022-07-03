@@ -7,10 +7,11 @@
 
 import numpy as np
 
+from operations import Operation
 from solvers.ballistics_1d import Ballistics1D
 
 
-class Ballistic1DOperation:
+class Ballistic1DOperation(Operation):
     """
     Stores and processes a ballistics operation (aka flight).
     """
