@@ -149,9 +149,18 @@ class Ballistic1DOperation:
             d_t,
         )
 
-        self.y = np.append(self.y, ballistics_results[0])
-        self.v = np.append(self.v, ballistics_results[1])
-        self.acceleration = np.append(self.acceleration, ballistics_results[2])
+        height = ballistics_results[0]
+        velocity = ballistics_results[1]
+        acceleration = ballistics_results[2]
+
+        if height < 0 and len(self.y[self.y > 0]) == 0:
+            height = 0
+            velocity = 0
+            acceleration = 0
+
+        self.y = np.append(self.y, height)
+        self.v = np.append(self.v, velocity)
+        self.acceleration = np.append(self.acceleration, acceleration)
 
         self.mach_no = np.append(
             self.mach_no,

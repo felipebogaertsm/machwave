@@ -49,6 +49,12 @@ media/
 # C extensions
 *.so
 
+# Examples
+srm_solver/examples/
+example_*
+data/
+examples/
+
 # Distribution / packaging
 .Python
 env/
