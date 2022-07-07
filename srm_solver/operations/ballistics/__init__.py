@@ -54,7 +54,7 @@ class Ballistic1DOperation:
         # Spacial params:
         self.y = np.array([0])  # altitude, AGL
         self.v = np.array([0])  # velocity
-        self.acceleration = np.array([])  # acceleration
+        self.acceleration = np.array([0])  # acceleration
         self.mach_no = np.array([0])  # mach number
 
         self.velocity_out_of_rail = None
