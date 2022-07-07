@@ -51,7 +51,7 @@ class CombustionChamber:
         return self.casing_inner_diameter / 2
 
     def get_bulkhead_thickness(
-        self, chamber_pressure: np.array, safety_factor: float
+        self, chamber_pressure: np.ndarray, safety_factor: float
     ) -> float:
         """
         Returns the thickness of a plane bulkhead pressure vessel.
@@ -99,7 +99,7 @@ class CombustionChamber:
             / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
         )
 
-    def get_casing_safety_factor(self, chamber_pressure: np.array) -> float:
+    def get_casing_safety_factor(self, chamber_pressure: np.ndarray) -> float:
         """
         Returns the thickness for a cylindrical pressure vessel, using
         Von Misses criteria.
@@ -187,7 +187,7 @@ class BoltedCombustionChamber(CombustionChamber):
             chamber_pressure * (np.pi * (self.inner_diameter / 2) ** 2)
         ) / screw_count
 
-    def get_optimal_fasteners(self, chamber_pressure: np.array):
+    def get_optimal_fasteners(self, chamber_pressure: np.ndarray):
         max_screw_count = self.max_screw_count
         casing_yield_strength = self.casing_material.yield_strength
         screw_ultimate_strength = self.screw_material.ultimate_strength
@@ -264,7 +264,7 @@ class Nozzle:
 
     def get_nozzle_thickness(
         self,
-        chamber_pressure: np.array,
+        chamber_pressure: np.ndarray,
         safety_factor: float,
         chamber: CombustionChamber,
     ):

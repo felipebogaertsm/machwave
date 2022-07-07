@@ -63,10 +63,10 @@ def motor_to_eng(
 
 
 def output_eng_csv(
-    time: np.array,
+    time: np.ndarray,
     burn_time: float,
-    thrust: np.array,
-    propellant_volume: np.array,
+    thrust: np.ndarray,
+    propellant_volume: np.ndarray,
     dt: float,
     chamber_od: float,
     chamber_length: float,

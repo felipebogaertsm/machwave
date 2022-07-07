@@ -141,9 +141,9 @@ def main():
         rocket=rocket,
         recovery=recovery,
         atmosphere=Atmosphere1976(),
-        d_t=0.01,
+        d_t=0.001,
         dd_t=10,
-        initial_elevation_amsl=600,
+        initial_elevation_amsl=636,
         igniter_pressure=1.5e6,
         rail_length=5,
     )

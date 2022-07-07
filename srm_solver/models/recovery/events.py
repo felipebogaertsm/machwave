@@ -23,10 +23,10 @@ class RecoveryEvent(ABC):
     @abstractmethod
     def is_active(
         self,
-        height: np.array,
-        time: np.array,
-        velocity: np.array,
-        propellant_mass: np.array,
+        height: np.ndarray,
+        time: np.ndarray,
+        velocity: np.ndarray,
+        propellant_mass: np.ndarray,
     ) -> bool:
         return False
 
@@ -34,10 +34,10 @@ class RecoveryEvent(ABC):
 class AltitudeBasedEvent(RecoveryEvent):
     def is_active(
         self,
-        height: np.array,
-        time: np.array,
-        velocity: np.array,
-        propellant_mass: np.array,
+        height: np.ndarray,
+        time: np.ndarray,
+        velocity: np.ndarray,
+        propellant_mass: np.ndarray,
     ) -> bool:
         if velocity[-1] < 0 and height[-1] < self.trigger_value:
             return True
@@ -57,9 +57,9 @@ class ApogeeBasedEvent(RecoveryEvent):
 
     def is_active(
         self,
-        height: np.array,
-        time: np.array,
-        velocity: np.array,
+        height: np.ndarray,
+        time: np.ndarray,
+        velocity: np.ndarray,
         propellant_mass: float,
     ) -> bool:
         max_height_index = np.argmax(height)

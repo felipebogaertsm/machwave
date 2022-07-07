@@ -23,10 +23,10 @@ class Recovery:
 
     def get_drag_coefficient_and_area(
         self,
-        height: np.array,
-        time: np.array,
-        velocity: np.array,
-        propellant_mass: np.array,
+        height: np.ndarray,
+        time: np.ndarray,
+        velocity: np.ndarray,
+        propellant_mass: np.ndarray,
     ) -> float:
         drag_coefficient = 0
         area = 0

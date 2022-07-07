@@ -19,10 +19,10 @@ from simulations import Simulation
 class BallisticSimulation(Simulation):
     def __init__(
         self,
-        thrust: np.array,
+        thrust: np.ndarray,
         motor_dry_mass: float,
         initial_propellant_mass: float,
-        time: np.array,
+        time: np.ndarray,
         rocket: Rocket,
         recovery: Recovery,
         atmosphere: Atmosphere,
