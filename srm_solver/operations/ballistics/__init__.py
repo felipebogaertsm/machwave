@@ -55,7 +55,7 @@ class Ballistic1DOperation(Operation):
         # Spacial params:
         self.y = np.array([0])  # altitude, AGL
         self.v = np.array([0])  # velocity
-        self.acceleration = np.array([])  # acceleration
+        self.acceleration = np.array([0])  # acceleration
         self.mach_no = np.array([0])  # mach number
 
         self.velocity_out_of_rail = None
@@ -150,9 +150,18 @@ class Ballistic1DOperation(Operation):
             d_t,
         )
 
-        self.y = np.append(self.y, ballistics_results[0])
-        self.v = np.append(self.v, ballistics_results[1])
-        self.acceleration = np.append(self.acceleration, ballistics_results[2])
+        height = ballistics_results[0]
+        velocity = ballistics_results[1]
+        acceleration = ballistics_results[2]
+
+        if height < 0 and len(self.y[self.y > 0]) == 0:
+            height = 0
+            velocity = 0
+            acceleration = 0
+
+        self.y = np.append(self.y, height)
+        self.v = np.append(self.v, velocity)
+        self.acceleration = np.append(self.acceleration, acceleration)
 
         self.mach_no = np.append(
             self.mach_no,

@@ -12,7 +12,7 @@ import numpy as np
 
 from operations import Operation
 from solvers.srm_internal_ballistics import SRMInternalBallisticsSolver
-from models.propulsion import SolidMotor
+from models.propulsion import Motor, SolidMotor
 from utils.isentropic_flow import (
     get_critical_pressure_ratio,
     get_opt_expansion_ratio,
@@ -34,18 +34,29 @@ class MotorOperation(Operation):
     obtained from the simulation.
     """
 
-    def __init__(self, initial_pressure: float) -> None:
+    def __init__(
+        self,
+        motor: Motor,
+        initial_pressure: float,
+        initial_atmospheric_pressure: float,
+    ) -> None:
         """
         Initializes attributes for the motor operation.
         Each motor category will contain a particular set of attributes.
         """
+        self.motor = motor
+
         self.t = np.array([0])  # time vector
 
-        self.V_0 = np.array([])  # empty chamber volume
-        self.optimal_expansion_ratio = np.array([])  # optimal expansion ratio
-        self.m_prop = np.array([])  # propellant mass
+        self.V_0 = np.array(
+            [motor.structure.chamber.get_empty_volume()]
+        )  # empty chamber volume
+        self.optimal_expansion_ratio = np.array([1])  # optimal expansion ratio
+        self.m_prop = np.array(
+            [motor.initial_propellant_mass]
+        )  # propellant mass
         self.P_0 = np.array([initial_pressure])  # chamber stagnation pressure
-        self.P_exit = np.array([])  # exit pressure
+        self.P_exit = np.array([initial_atmospheric_pressure])  # exit pressure
 
         # Thrust coefficients and thrust:
         self.C_f = np.array([0])  # thrust coefficient
@@ -98,6 +109,7 @@ class SRMOperation(MotorOperation):
         self,
         motor: SolidMotor,
         initial_pressure: float,
+        initial_atmospheric_pressure: float,
         ib_solver: Optional[
             SRMInternalBallisticsSolver
         ] = SRMInternalBallisticsSolver(),
@@ -105,22 +117,29 @@ class SRMOperation(MotorOperation):
         """
         Initial parameters for a SRM operation.
         """
-        self.motor = motor
         self.ib_solver = ib_solver
 
-        super().__init__(initial_pressure=initial_pressure)
+        super().__init__(
+            motor=motor,
+            initial_pressure=initial_pressure,
+            initial_atmospheric_pressure=initial_atmospheric_pressure,
+        )
 
         # Grain and propellant parameters:
-        self.burn_area = np.array([])
-        self.propellant_volume = np.array([])
         self.web = np.array([0])  # instant web thickness
-        self.burn_rate = np.array([])  # burn rate
+        self.burn_area = np.array(
+            [self.motor.grain.get_burn_area(self.web[0])]
+        )
+        self.propellant_volume = np.array(
+            [self.motor.grain.get_burn_area(self.web[0])]
+        )
+        self.burn_rate = np.array([0])  # burn rate
 
         # Correction factors:
-        self.n_kin = np.array([])  # kinetics correction factor
-        self.n_bl = np.array([])  # boundary layer correction factor
-        self.n_tp = np.array([])  # two-phase flow correction factor
-        self.n_cf = np.array([])  # thrust coefficient correction factor
+        self.n_kin = np.array([0])  # kinetics correction factor
+        self.n_bl = np.array([0])  # boundary layer correction factor
+        self.n_tp = np.array([0])  # two-phase flow correction factor
+        self.n_cf = np.array([0])  # thrust coefficient correction factor
 
     def iterate(
         self,

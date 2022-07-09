@@ -61,6 +61,9 @@ class InternalBallisticsCoupled(Simulation):
         return motor_operation_class(
             motor=self.motor,
             initial_pressure=self.igniter_pressure,
+            initial_atmospheric_pressure=self.atmosphere.get_pressure(
+                self.initial_elevation_amsl
+            ),
         )
 
     def run(self):
