@@ -94,6 +94,13 @@ class MotorOperation(Operation):
         """
         pass
 
+    @property
+    def initial_propellant_mass(self) -> float:
+        """
+        :return: Initial propellant mass.
+        """
+        return self.motor.initial_propellant_mass
+
 
 class SRMOperation(MotorOperation):
     """
@@ -319,7 +326,7 @@ class SRMOperation(MotorOperation):
         print(f" Average nozzle efficiency: {np.mean(self.n_cf):.3%}")
 
     @property
-    def klemmung(self) -> np.array:
+    def klemmung(self) -> np.ndarray:
         return (
             self.burn_area[self.burn_area > 0]
             / self.motor.structure.nozzle.get_throat_area()
@@ -355,7 +362,7 @@ class SRMOperation(MotorOperation):
         return np.max(self.grain_mass_flux)
 
     @property
-    def grain_mass_flux(self) -> np.array:
+    def grain_mass_flux(self) -> np.ndarray:
         return self.motor.grain.get_mass_flux_per_segment(
             self.burn_rate,
             self.motor.propellant.density,

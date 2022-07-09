@@ -42,7 +42,7 @@ def get_exit_mach(k: float, E: float):
     """
     exit_mach_no = scipy.optimize.fsolve(
         lambda x: (
-            ((1 + 0.5 * (k - 1) * x**2) / (1 + 0.5 * (k - 1)))
+            ((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1)))
             ** ((k + 1) / (2 * (k - 1)))
         )
         / x
@@ -57,7 +57,7 @@ def get_exit_pressure(k_2ph_ex, E, P_0):
     Returns the exit pressure of the nozzle flow.
     """
     Mach_exit = get_exit_mach(k_2ph_ex, E)
-    P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit**2) ** (
+    P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit ** 2) ** (
         -k_2ph_ex / (k_2ph_ex - 1)
     )
     return P_exit
@@ -70,7 +70,7 @@ def get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf):
     """
     P_r = P_exit / P_0
     Cf_ideal = np.sqrt(
-        (2 * (k**2) / (k - 1))
+        (2 * (k ** 2) / (k - 1))
         * ((2 / (k + 1)) ** ((k + 1) / (k - 1)))
         * (1 - (P_r ** ((k - 1) / k)))
     )
@@ -120,6 +120,20 @@ def get_impulses(F_avg, t, t_burnout, m_prop):
     return I_total, I_sp
 
 
+def get_total_impulse(average_thrust: float, thrust_time: float):
+    """
+    Returns the total impulse of the operation.
+    """
+    return average_thrust * thrust_time
+
+
+def get_specific_impulse(total_impulse: float, initial_propellant_mass: float):
+    """
+    Returns the specific impulse of the operation.
+    """
+    return total_impulse / initial_propellant_mass / 9.81
+
+
 def get_operational_correction_factors(
     P_0,
     P_external,
@@ -159,15 +173,15 @@ def get_operational_correction_factors(
     if not is_flow_choked(P_0, P_external, critical_pressure_ratio):
         termC2 = 1 + 2 * np.exp(
             -structure.nozzle.material.C2
-            * P_0_psi**0.8
+            * P_0_psi ** 0.8
             * t
             / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
         )
-        E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio**-9
+        E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio ** -9
         n_bl = (
             structure.nozzle.material.C1
             * (
-                (P_0_psi**0.8)
+                (P_0_psi ** 0.8)
                 / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
             )
             * termC2
@@ -176,8 +190,8 @@ def get_operational_correction_factors(
 
         C7 = (
             0.454
-            * (P_0_psi**0.33)
-            * (propellant.qsi_ch**0.33)
+            * (P_0_psi ** 0.33)
+            * (propellant.qsi_ch ** 0.33)
             * (
                 1
                 - np.exp(
@@ -216,10 +230,10 @@ def get_operational_correction_factors(
                 elif C7 > 8:
                     C3, C5, C6 = 25.2, 0.8, 0.33
         n_tp = C3 * (
-            (propellant.qsi_ch * C4 * C7**C5)
+            (propellant.qsi_ch * C4 * C7 ** C5)
             / (
-                P_0_psi**0.15
-                * structure.nozzle.expansion_ratio**0.08
+                P_0_psi ** 0.15
+                * structure.nozzle.expansion_ratio ** 0.08
                 * (structure.nozzle.throat_diameter / 0.0254) ** C6
             )
         )
