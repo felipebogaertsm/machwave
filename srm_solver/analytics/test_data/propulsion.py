@@ -5,25 +5,26 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from dataclasses import dataclass
+
 import numpy as np
 import scipy
-from srm_solver.utils.isentropic_flow import get_specific_impulse
-
-from utils.isentropic_flow import get_total_impulse
 
 from . import TestData
+from utils.isentropic_flow import get_total_impulse, get_specific_impulse
 
 
+@dataclass
 class SRMTestData(TestData):
     initial_propellant_mass: float
 
-    def get_thrust(self, col_name="Thrust") -> np.ndarray:
+    def get_thrust(self, col_name="Force (N)") -> np.ndarray:
         return self.get_from_df(col_name)
 
-    def get_time(self, col_name="Time") -> np.ndarray:
+    def get_time(self, col_name="Time (s)") -> np.ndarray:
         return self.get_from_df(col_name)
 
-    def get_pressure(self, col_name="Pressure") -> np.ndarray:
+    def get_pressure(self, col_name="Pressure (Pa)") -> np.ndarray:
         return self.get_from_df(col_name)
 
     def get_temperatures(
@@ -60,18 +61,22 @@ class SRMTestData(TestData):
 
     def get_instantaneous_propellant_mass(self, t: float) -> float:
         """
+        IMPORTANT NOTE: this method is only an estimation of the propellant
+        mass during the operation of the motor. It assumes a constant nozzle
+        efficiency throughout the operation and perfect correlation between
+        thrust and pressure data.
+
         :param float t: The time at which the propellant mass is desired
         :return: The propellant mass at time t
         :rtype: np.ndarray
         """
-        time = self.get_time()
-        thrust = self.get_thrust()
+        t_index = np.where(self.get_time() == t)[0][0]
 
-        t_index = np.where(time == t)[0]
+        time = self.get_time()[t_index:-1]
+        thrust = self.get_thrust()[t_index:-1]
 
         return (
-            scipy.integrate.simpson(y=thrust[0:t_index], x=time[0:t_index])
-            / self.get_total_impulse()
+            np.trapz(y=thrust, x=time) / self.get_total_impulse()
         ) * self.initial_propellant_mass
 
     def get_propellant_mass(self) -> np.ndarray:
@@ -83,8 +88,9 @@ class SRMTestData(TestData):
         """
         return np.array(
             list(
-                self.get_time().map(
-                    lambda time: self.get_instantaneous_propellant_mass(time)
+                map(
+                    lambda time: self.get_instantaneous_propellant_mass(time),
+                    self.get_time(),
                 )
             )
         )

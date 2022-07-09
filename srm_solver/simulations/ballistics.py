@@ -76,7 +76,6 @@ class BallisticSimulation(Simulation):
         )
 
         propellant_mass = self.get_propellant_mass()
-        print(propellant_mass)
 
         i = 0
 
@@ -90,15 +89,6 @@ class BallisticSimulation(Simulation):
                 left=0,
                 right=0,
             )  # interpolating thrust with new time value
-            # print(
-            #     np.interp(
-            #         self.t[-1],
-            #         self.time,
-            #         propellant_mass,
-            #         left=0,
-            #         right=0,
-            #     ),  # interpolating propellant mass with new time value
-            # )
 
             self.ballistic_operation.iterate(
                 np.interp(
