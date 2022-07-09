@@ -117,7 +117,7 @@ class Grain:
         burn_rate: np.ndarray,
         propellant_density: float,
         web_thickness: np.ndarray,
-    ) -> np.array:
+    ) -> np.ndarray:
         """
         Returns a numpy multidimensional array with the mass flux for each
         grain.

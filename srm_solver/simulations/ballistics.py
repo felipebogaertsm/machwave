@@ -45,7 +45,7 @@ class BallisticSimulation(Simulation):
 
         self.t = np.array([0])
 
-    def get_propellant_mass(self) -> np.array:
+    def get_propellant_mass(self) -> np.ndarray:
         prop_mass = np.array([])
 
         for time in self.time:
