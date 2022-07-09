@@ -114,9 +114,9 @@ class Grain:
 
     def get_mass_flux_per_segment(
         self,
-        burn_rate: np.array,
+        burn_rate: np.ndarray,
         propellant_density: float,
-        web_thickness: np.array,
+        web_thickness: np.ndarray,
     ) -> np.array:
         """
         Returns a numpy multidimensional array with the mass flux for each

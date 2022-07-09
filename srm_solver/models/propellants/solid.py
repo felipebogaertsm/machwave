@@ -33,13 +33,11 @@ KNDX = SolidPropellant(
     0.321,
 )
 
+# Obtained from (Magnus version):
+# https://www.nakka-rocketry.net/sorb.html
 KNSB = SolidPropellant(
     [
-        {"min": 0, "max": 0.779e6, "a": 8.875, "n": 0.619},
-        {"min": 0.779e6, "max": 2.572e6, "a": 7.553, "n": -0.009},
-        {"min": 2.572e6, "max": 5.930e6, "a": 3.841, "n": 0.688},
-        {"min": 5.930e6, "max": 8.502e6, "a": 17.20, "n": -0.148},
-        {"min": 8.502e6, "max": 11.20e6, "a": 4.775, "n": 0.442},
+        {"min": 0, "max": 11e6, "a": 5.13, "n": 0.222},
     ],
     0.95,
     1837.3 * 0.95,
@@ -54,6 +52,8 @@ KNSB = SolidPropellant(
     0.321,
 )
 
+# Obtained from:
+# https://www.nakka-rocketry.net/sorb.html
 KNSB_NAKKA = SolidPropellant(
     [
         {"min": 0, "max": 0.807e6, "a": 10.708, "n": 0.625},
