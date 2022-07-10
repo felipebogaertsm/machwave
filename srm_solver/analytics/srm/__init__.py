@@ -8,7 +8,8 @@
 from dataclasses import dataclass
 
 import numpy as np
-
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from .. import Analyze
 from models.atmosphere import Atmosphere
@@ -130,3 +131,50 @@ class AnalyzeSRMOperation(Analyze):
         ) = self.ballistic_simulation.run()
 
         return (t, ballistic_operation)
+
+    def plot_thrust_propellant_mass(
+        self,
+        title: str = "SRM Hot-Fire Analysis",
+        thrust_color: str = "#d62728",
+        propellant_mass_color: str = "#1f77b4",
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=self.get_thrust(),
+                name="Thrust (N)",
+                yaxis="y",
+                line=dict(color=thrust_color),
+            ),
+        )
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=self.get_propellant_mass(),
+                name="Est. propellant mass (kg)",
+                yaxis="y2",
+                line=dict(color=propellant_mass_color),
+            ),
+        )
+
+        figure.update_xaxes(title_text="Time (s)")
+        figure.update_layout(
+            title_text=title,
+            yaxis=dict(
+                title="<b>Thrust</b> (N)",
+                titlefont=dict(color=thrust_color),
+                tickfont=dict(color=thrust_color),
+            ),
+            yaxis2=dict(
+                title="<b>Propellant mass</b> (kg)",
+                titlefont=dict(color=propellant_mass_color),
+                tickfont=dict(color=propellant_mass_color),
+                side="right",
+                overlaying="y",
+            ),
+        )
+
+        return figure
