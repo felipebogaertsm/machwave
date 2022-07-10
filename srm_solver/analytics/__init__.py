@@ -6,23 +6,22 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC
+from dataclasses import dataclass
 
-from .test_data import TestData
-from operations import Operation
-from simulations import Simulation
+import pandas as pd
+import numpy as np
 
 
+@dataclass
 class Analyze(ABC):
-    def __init__(
-        self,
-        operation: Operation,
-        simulation: Simulation,
-        test_data: TestData,
-    ) -> None:
-        self.operation = operation
-        self.simulation = simulation
-        self.test_data = test_data
+    """
+    :param pd.DataFrame data: Dataframe with the experimental data obtained
+        from the test. Its columns will depend on the type of operation being
+        analyzed.
+    :rtype: None
+    """
 
+    data: pd.DataFrame
 
-class AnalyzeSRMOperation(Analyze):
-    pass
+    def get_from_df(self, column_name: str) -> np.ndarray:
+        return self.data[column_name].to_numpy()
