@@ -155,18 +155,8 @@ def main():
         rocket=rocket, recovery=recovery, atmosphere=Atmosphere1976()
     )
 
-    figure = make_subplots(specs=[[{"secondary_y": True}]])
-
-    figure.add_trace(
-        go.Scatter(x=analyze.get_time(), y=analyze.get_propellant_mass()),
-        secondary_y=False,
-    )
-    figure.add_trace(
-        go.Scatter(x=analyze.get_time(), y=analyze.get_thrust()),
-        secondary_y=True,
-    )
-
-    figure.show()
+    figure_1 = analyze.plot_thrust_propellant_mass()
+    figure_1.show()
 
 
 if __name__ == "__main__":
