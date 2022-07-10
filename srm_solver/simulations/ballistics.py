@@ -28,7 +28,6 @@ class BallisticSimulation(Simulation):
         atmosphere: Atmosphere,
         d_t: float,
         initial_elevation_amsl: float,
-        igniter_pressure: float,
         rail_length: float,
     ) -> None:
         self.thrust = thrust
@@ -40,7 +39,6 @@ class BallisticSimulation(Simulation):
         self.atmosphere = atmosphere
         self.d_t = d_t
         self.initial_elevation_amsl = initial_elevation_amsl
-        self.igniter_pressure = igniter_pressure
         self.rail_length = rail_length
 
         self.t = np.array([0])

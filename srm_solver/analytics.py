@@ -9,8 +9,19 @@ import pandas as pd
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
-from analytics import AnalyzeSRMOperation
-from analytics.test_data.propulsion import SRMTestData
+from analytics.srm import AnalyzeSRMOperation
+from models.materials.elastics import EPDM
+from models.materials.metals import Steel, Al6063T5
+from models.propellants.solid import get_solid_propellant_from_name
+from models.propulsion import SolidMotor
+from models.propulsion.grain import Grain
+from models.propulsion.grain.bates import BatesSegment
+from models.propulsion.structure import (
+    BoltedCombustionChamber,
+    MotorStructure,
+    Nozzle,
+)
+from models.propulsion.thermals import ThermalLiner
 from models.recovery import Recovery
 from models.rocket import Rocket
 from models.recovery.events import (
@@ -23,10 +34,69 @@ from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
 from operations.internal_ballistics import SRMOperation
 from simulations.ballistics import BallisticSimulation
+from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 
 
 def main():
-    # Recovery:
+    # Motor configuration:
+    propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
+
+    grain = Grain()
+
+    bates_segment_45 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=45e-3,
+        length=200e-3,
+        spacing=10e-3,
+    )
+    bates_segment_60 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=60e-3,
+        length=200e-3,
+        spacing=10e-3,
+    )
+
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
+
+    nozzle = Nozzle(
+        throat_diameter=37e-3,
+        divergent_angle=12,
+        convergent_angle=45,
+        expansion_ratio=8,
+        material=Steel(),
+    )
+
+    liner = ThermalLiner(thickness=2e-3, material=EPDM())
+
+    chamber = BoltedCombustionChamber(
+        casing_inner_diameter=128.2e-3,
+        outer_diameter=141.3e-3,
+        liner=liner,
+        length=grain.total_length + 10e-3,
+        casing_material=Al6063T5(),
+        bulkhead_material=Al6063T5(),
+        screw_material=Steel(),
+        max_screw_count=30,
+        screw_clearance_diameter=9e-3,
+        screw_diameter=6.75e-3,
+    )
+
+    structure = MotorStructure(
+        safety_factor=4,
+        dry_mass=21.013,
+        nozzle=nozzle,
+        chamber=chamber,
+    )
+
+    motor = SolidMotor(grain=grain, propellant=propellant, structure=structure)
+
+    # Recovery system:
     recovery = Recovery()
     recovery.add_event(
         ApogeeBasedEvent(
@@ -41,7 +111,7 @@ def main():
         )
     )
 
-    # Rocket:
+    # Rocket configuration:
     fuselage = Fuselage(
         length=4e3,
         drag_coefficient=0.5,
@@ -55,50 +125,44 @@ def main():
         structure=rocket_structure,
     )
 
-    # Read from CSV:
-    df = pd.read_csv("example_data/hot_fire_olympus_1/test_data.csv")
-    thrust = df["Force (N)"].to_numpy()
-    time = df["Time (s)"].to_numpy()
-    time = time - time[0]
-
     # IB coupled simulation:
-    simulation = BallisticSimulation(
-        thrust=thrust,
-        initial_propellant_mass=19.84,
-        motor_dry_mass=20.0,
-        time=time,
+    internal_ballistics_coupled_simulation = InternalBallisticsCoupled(
+        motor=motor,
         rocket=rocket,
         recovery=recovery,
         atmosphere=Atmosphere1976(),
-        d_t=0.1,
-        initial_elevation_amsl=600,
+        d_t=0.001,
+        dd_t=10,
+        initial_elevation_amsl=636,
         igniter_pressure=1.5e6,
         rail_length=5,
     )
 
     (
         t,
+        ib_operation,
         ballistic_operation,
-    ) = simulation.run()
+    ) = internal_ballistics_coupled_simulation.run()
 
-    simulation.print_results()
+    # Read experimental data from CSV:
+    df = pd.read_csv("example_data/hot_fire_olympus_1/test_data.csv")
 
     # Analyze:
-    test_data = SRMTestData(data=df, initial_propellant_mass=19.84)
     analyze = AnalyzeSRMOperation(
-        operation=SRMOperation,
-        simulation=simulation,
-        test_data=test_data,
+        data=df, initial_propellant_mass=19.84, theoretical_motor=motor
+    )
+    analyze.run_ballistic_simulation(
+        rocket=rocket, recovery=recovery, atmosphere=Atmosphere1976()
     )
 
     figure = make_subplots(specs=[[{"secondary_y": True}]])
 
     figure.add_trace(
-        go.Line(x=test_data.get_time(), y=test_data.get_propellant_mass()),
+        go.Scatter(x=analyze.get_time(), y=analyze.get_propellant_mass()),
         secondary_y=False,
     )
     figure.add_trace(
-        go.Line(x=test_data.get_time(), y=test_data.get_thrust()),
+        go.Scatter(x=analyze.get_time(), y=analyze.get_thrust()),
         secondary_y=True,
     )
 

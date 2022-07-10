@@ -8,15 +8,22 @@
 from dataclasses import dataclass
 
 import numpy as np
-import scipy
 
-from . import TestData
+
+from .. import Analyze
+from models.atmosphere import Atmosphere
+from models.propulsion import SolidMotor
+from models.recovery import Recovery
+from models.rocket import Rocket
+from operations.ballistics import Ballistic1DOperation
+from simulations.ballistics import BallisticSimulation
 from utils.isentropic_flow import get_total_impulse, get_specific_impulse
 
 
 @dataclass
-class SRMTestData(TestData):
+class AnalyzeSRMOperation(Analyze):
     initial_propellant_mass: float
+    theoretical_motor: SolidMotor
 
     def get_thrust(self, col_name="Force (N)") -> np.ndarray:
         return self.get_from_df(col_name)
@@ -94,3 +101,32 @@ class SRMTestData(TestData):
                 )
             )
         )
+
+    def run_ballistic_simulation(
+        self,
+        rocket: Rocket,
+        recovery: Recovery,
+        atmosphere: Atmosphere,
+        d_t: float = 0.1,
+        initial_elevation: float = 0.0,
+        rail_length: float = 5.0,
+    ) -> tuple[np.ndarray, Ballistic1DOperation]:
+        self.ballistic_simulation = BallisticSimulation(
+            thrust=self.get_thrust(),
+            initial_propellant_mass=self.initial_propellant_mass,
+            motor_dry_mass=self.theoretical_motor.structure.dry_mass,
+            time=self.get_time(),
+            rocket=rocket,
+            recovery=recovery,
+            atmosphere=atmosphere,
+            d_t=d_t,
+            initial_elevation_amsl=initial_elevation,
+            rail_length=rail_length,
+        )
+
+        (
+            t,
+            ballistic_operation,
+        ) = self.ballistic_simulation.run()
+
+        return (t, ballistic_operation)
