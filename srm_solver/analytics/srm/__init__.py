@@ -6,10 +6,10 @@
 # the Free Software Foundation, version 3.
 
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from .. import Analyze
 from models.atmosphere import Atmosphere
@@ -18,22 +18,46 @@ from models.recovery import Recovery
 from models.rocket import Rocket
 from operations.ballistics import Ballistic1DOperation
 from simulations.ballistics import BallisticSimulation
+from simulations.internal_ballistics import InternalBallistics
 from utils.isentropic_flow import get_total_impulse, get_specific_impulse
+from utils.units import convert_mpa_to_pa, convert_pa_to_mpa
 
 
 @dataclass
 class AnalyzeSRMOperation(Analyze):
     initial_propellant_mass: float
     theoretical_motor: SolidMotor
+    external_pressure: float
 
-    def get_thrust(self, col_name="Force (N)") -> np.ndarray:
-        return self.get_from_df(col_name)
+    thrust_header_name: Optional[str] = "Force (N)"
+    time_header_name: Optional[str] = "Time (s)"
+    pressure_header_name: Optional[str] = "Pressure (MPa)"
 
-    def get_time(self, col_name="Time (s)") -> np.ndarray:
-        return self.get_from_df(col_name)
+    igniter_pressure: Optional[float] = 1.5e6  # in Pa
+    external_pressure: Optional[float] = 1e5  # in Pa
+    simulation_resolution: Optional[float] = 0.01
 
-    def get_pressure(self, col_name="Pressure (Pa)") -> np.ndarray:
-        return self.get_from_df(col_name)
+    def __post_init__(self):
+        self.ib_simulation = InternalBallistics(
+            motor=self.theoretical_motor,
+            d_t=self.simulation_resolution,
+            igniter_pressure=self.igniter_pressure,
+            external_pressure=self.external_pressure,
+        )
+
+        (
+            self.theoretical_motor_time,
+            self.theoretical_motor_operation,
+        ) = self.ib_simulation.run()
+
+    def get_thrust(self) -> np.ndarray:
+        return self.get_from_df(self.thrust_header_name)
+
+    def get_time(self) -> np.ndarray:
+        return self.get_from_df(self.time_header_name)
+
+    def get_pressure(self) -> np.ndarray:
+        return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
 
     def get_temperatures(
         self, col_name_startswith="Temperature"
@@ -175,6 +199,40 @@ class AnalyzeSRMOperation(Analyze):
                 side="right",
                 overlaying="y",
             ),
+        )
+
+        return figure
+
+    def plot_pressure(
+        self,
+        title: str = "SRM Hot-Fire Analysis - Chamber Pressure",
+        test_pressure_color: str = "#d62728",
+        theoretical_pressure_color: str = "#1f77b4",
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=convert_pa_to_mpa(self.get_pressure()),
+                name="Experimental data",
+                line=dict(color=test_pressure_color),
+            ),
+        )
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.theoretical_motor_time,
+                y=convert_pa_to_mpa(self.theoretical_motor_operation.P_0),
+                name="Theoretical data",
+                line=dict(color=theoretical_pressure_color),
+            ),
+        )
+
+        figure.update_xaxes(title_text="Time (s)")
+        figure.update_layout(
+            title_text=title,
+            yaxis=dict(title="<b>Chamber pressure</b> (MPa)"),
         )
 
         return figure

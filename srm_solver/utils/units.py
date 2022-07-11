@@ -24,6 +24,13 @@ def convert_pa_to_mpa(pressure_pa):
     return pressure_pa * 1e-6
 
 
+def convert_mpa_to_pa(pressure_mpa):
+    """
+    Converts MPa pressure to Pascal.
+    """
+    return pressure_mpa / 1e-6
+
+
 def convert_mass_flux_metric_to_imperial(mass_flux_metric):
     """
     Converts a mass flux in kg/s-m-m to lb/s-in-in.
