@@ -18,12 +18,13 @@ ambient pressure, which impacts the propellant burn rate inside the motor.
 import numpy as np
 
 from models.atmosphere import Atmosphere
-from models.propulsion import Motor, SolidMotor
+from models.propulsion import Motor
 from models.recovery import Recovery
 from models.rocket import Rocket
 from operations.ballistics import Ballistic1DOperation
-from operations.internal_ballistics import MotorOperation, SRMOperation
+from operations.internal_ballistics import MotorOperation
 from simulations import Simulation
+from utils.classes import get_motor_operation_class
 
 
 class InternalBallisticsCoupled(Simulation):
@@ -55,8 +56,7 @@ class InternalBallisticsCoupled(Simulation):
         """
         Will depend on the type of the motor (SR, HRE or LRE).
         """
-        if isinstance(self.motor, SolidMotor):
-            motor_operation_class = SRMOperation
+        motor_operation_class = get_motor_operation_class(self.motor)
 
         return motor_operation_class(
             motor=self.motor,

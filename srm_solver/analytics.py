@@ -125,31 +125,15 @@ def main():
         structure=rocket_structure,
     )
 
-    # IB coupled simulation:
-    internal_ballistics_coupled_simulation = InternalBallisticsCoupled(
-        motor=motor,
-        rocket=rocket,
-        recovery=recovery,
-        atmosphere=Atmosphere1976(),
-        d_t=0.001,
-        dd_t=10,
-        initial_elevation_amsl=636,
-        igniter_pressure=1.5e6,
-        rail_length=5,
-    )
-
-    (
-        t,
-        ib_operation,
-        ballistic_operation,
-    ) = internal_ballistics_coupled_simulation.run()
-
     # Read experimental data from CSV:
     df = pd.read_csv("example_data/hot_fire_olympus_1/test_data.csv")
 
     # Analyze:
     analyze = AnalyzeSRMOperation(
-        data=df, initial_propellant_mass=19.84, theoretical_motor=motor
+        data=df,
+        initial_propellant_mass=19.84,
+        theoretical_motor=motor,
+        pressure_header_name="Pressure (Mpa)",
     )
     analyze.run_ballistic_simulation(
         rocket=rocket, recovery=recovery, atmosphere=Atmosphere1976()
@@ -157,6 +141,9 @@ def main():
 
     figure_1 = analyze.plot_thrust_propellant_mass()
     figure_1.show()
+
+    figure_2 = analyze.plot_pressure()
+    figure_2.show()
 
 
 if __name__ == "__main__":
