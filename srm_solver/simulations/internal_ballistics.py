@@ -49,10 +49,7 @@ class InternalBallistics(Simulation):
 
         i = 0
 
-        while (
-            self.motor_operation.m_prop[-1] > 0
-            or self.motor_operation.end_thrust
-        ):
+        while not self.motor_operation.end_thrust:
             self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
 
             self.motor_operation.iterate(
