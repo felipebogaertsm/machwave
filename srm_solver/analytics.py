@@ -145,6 +145,9 @@ def main():
     figure_2 = analyze.plot_pressure()
     figure_2.show()
 
+    figure_3 = analyze.plot_pressure_thrust()
+    figure_3.show()
+
 
 if __name__ == "__main__":
     main()

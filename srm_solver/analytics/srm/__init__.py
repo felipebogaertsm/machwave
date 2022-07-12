@@ -236,3 +236,50 @@ class AnalyzeSRMOperation(Analyze):
         )
 
         return figure
+
+    def plot_pressure_thrust(
+        self,
+        title: str = "SRM Hot-Fire Analysis - Chamber Pressure and Thrust",
+        thrust_color: str = "#d62728",
+        pressure_color: str = "#1f77b4",
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=self.get_thrust(),
+                name="Thrust (N)",
+                yaxis="y",
+                line=dict(color=thrust_color),
+            ),
+        )
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=self.get_pressure(),
+                name="Pressure (MPa)",
+                yaxis="y2",
+                line=dict(color=pressure_color),
+            ),
+        )
+
+        figure.update_xaxes(title_text="Time (s)")
+        figure.update_layout(
+            title_text=title,
+            yaxis=dict(
+                title="<b>Thrust</b> (N)",
+                titlefont=dict(color=thrust_color),
+                tickfont=dict(color=thrust_color),
+            ),
+            yaxis2=dict(
+                title="<b>Pressure</b> (Pa)",
+                titlefont=dict(color=pressure_color),
+                tickfont=dict(color=pressure_color),
+                side="right",
+                overlaying="y",
+            ),
+        )
+
+        return figure
