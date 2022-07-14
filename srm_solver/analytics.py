@@ -148,6 +148,9 @@ def main():
     figure_3 = analyze.plot_pressure_thrust()
     figure_3.show()
 
+    figure_4 = analyze.plot_tabular_comparison()
+    figure_4.show()
+
 
 if __name__ == "__main__":
     main()

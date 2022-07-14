@@ -156,6 +156,88 @@ class AnalyzeSRMOperation(Analyze):
 
         return (t, ballistic_operation)
 
+    def get_tabular_comparison_body(self) -> list[list[str | float]]:
+        parameters = [
+            "Average thrust",
+            "Average pressure",
+            "Total impulse",
+            "Specific impulse",
+        ]
+        expected_values = np.array(
+            [
+                np.average(self.theoretical_motor_operation.thrust),
+                np.average(self.theoretical_motor_operation.P_0) / 1e6,
+                np.average(self.theoretical_motor_operation.total_impulse),
+                np.average(self.theoretical_motor_operation.specific_impulse),
+            ]
+        )
+        obtained_values = np.array(
+            [
+                np.average(self.get_thrust()),
+                np.average(self.get_pressure()) / 1e6,
+                np.average(self.get_total_impulse()),
+                np.average(self.get_specific_impulse()),
+            ]
+        )
+        units = [
+            "N",
+            "MPa",
+            "N-s",
+            "s",
+        ]
+
+        percentage_error = expected_values / obtained_values
+
+        return [
+            parameters,
+            expected_values,
+            obtained_values,
+            units,
+            percentage_error,
+        ]
+
+    def plot_tabular_comparison(self) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Table(
+                header=dict(
+                    values=[
+                        "Parameter",
+                        "Expected value",
+                        "Obtained value",
+                        "Unit",
+                        "Percentage error",
+                    ],
+                    align="center",
+                ),
+                cells=dict(
+                    values=self.get_tabular_comparison_body(),
+                    align="center",
+                    format=["", ".2f", ".2f", "", ".2%"],
+                ),
+            )
+        )
+
+        fig = go.Figure(
+            data=[
+                go.Table(
+                    header=dict(values=["perc", "number", "text"]),
+                    cells=dict(
+                        values=[
+                            ["0.111111", "0.2333", "0.92"],
+                            ["123", "456", "789"],
+                            ["1234text", "1234", "text"],
+                        ],
+                        align="center",
+                        format=[".2%", "g", ""],
+                    ),
+                )
+            ]
+        )
+
+        return figure
+
     def plot_thrust_propellant_mass(
         self,
         title: str = "SRM Hot-Fire Analysis",
