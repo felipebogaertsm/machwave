@@ -60,6 +60,10 @@ class AnalyzeSRMOperation(Analyze):
     def get_pressure(self) -> np.ndarray:
         return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
 
+    @property
+    def thrust_time(self) -> float:
+        return self.get_time()[-1] - self.get_time()[0]
+
     def get_temperatures(
         self, col_name_startswith="Temperature"
     ) -> np.ndarray:
@@ -161,6 +165,7 @@ class AnalyzeSRMOperation(Analyze):
         parameters = [
             "Average thrust",
             "Average pressure",
+            "Thrust time",
             "Total impulse",
             "Specific impulse",
         ]
@@ -168,6 +173,7 @@ class AnalyzeSRMOperation(Analyze):
             [
                 np.average(self.theoretical_motor_operation.thrust),
                 np.average(self.theoretical_motor_operation.P_0) / 1e6,
+                np.average(self.theoretical_motor_operation.thrust_time),
                 np.average(self.theoretical_motor_operation.total_impulse),
                 np.average(self.theoretical_motor_operation.specific_impulse),
             ]
@@ -176,6 +182,7 @@ class AnalyzeSRMOperation(Analyze):
             [
                 np.average(self.get_thrust()),
                 np.average(self.get_pressure()) / 1e6,
+                np.average(self.thrust_time),
                 np.average(self.get_total_impulse()),
                 np.average(self.get_specific_impulse()),
             ]
@@ -183,6 +190,7 @@ class AnalyzeSRMOperation(Analyze):
         units = [
             "N",
             "MPa",
+            "s",
             "N-s",
             "s",
         ]
