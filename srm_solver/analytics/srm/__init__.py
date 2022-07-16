@@ -20,6 +20,7 @@ from operations.ballistics import Ballistic1DOperation
 from simulations.ballistics import BallisticSimulation
 from simulations.internal_ballistics import InternalBallistics
 from utils.isentropic_flow import get_total_impulse, get_specific_impulse
+from utils.math import get_percentage_error
 from utils.units import convert_mpa_to_pa, convert_pa_to_mpa
 
 
@@ -186,7 +187,9 @@ class AnalyzeSRMOperation(Analyze):
             "s",
         ]
 
-        percentage_error = expected_values / obtained_values
+        percentage_error = get_percentage_error(
+            expected_values, obtained_values
+        )
 
         return [
             parameters,
@@ -214,7 +217,7 @@ class AnalyzeSRMOperation(Analyze):
                 cells=dict(
                     values=self.get_tabular_comparison_body(),
                     align="center",
-                    format=["", ".2f", ".2f", "", ".2%"],
+                    format=["", ".2f", ".2f", "", ".2f"],
                 ),
             )
         )
