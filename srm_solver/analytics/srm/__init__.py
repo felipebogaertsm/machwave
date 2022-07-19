@@ -238,23 +238,6 @@ class AnalyzeSRMOperation(Analyze):
             )
         )
 
-        fig = go.Figure(
-            data=[
-                go.Table(
-                    header=dict(values=["perc", "number", "text"]),
-                    cells=dict(
-                        values=[
-                            ["0.111111", "0.2333", "0.92"],
-                            ["123", "456", "789"],
-                            ["1234text", "1234", "text"],
-                        ],
-                        align="center",
-                        format=[".2%", "g", ""],
-                    ),
-                )
-            ]
-        )
-
         return figure
 
     def plot_thrust_propellant_mass(
