@@ -33,25 +33,6 @@ class Grain:
     def __init__(self) -> None:
         self.segments: list[GrainSegment] = []
 
-    def validate_segment_geometries(self) -> None:
-        """
-        Validations for each segment's geometry. They include:
-
-        - Outer diameter must be the same for all segments in the grain
-
-        :rtype: None
-        :raises GrainGeometryError: If the geometry is not valid
-        """
-        od = self.segments[0].outer_diameter
-
-        for segment in self.segments[1:]:
-            try:
-                assert segment.outer_diameter == od
-            except AssertionError:
-                raise GrainGeometryError(
-                    "Segments have different outer diameters"
-                )
-
     def add_segment(self, new_segment: GrainSegment) -> None:
         """
         Adds a new segment to the grain.
@@ -64,9 +45,6 @@ class Grain:
             self.segments.append(new_segment)
         else:
             raise Exception("Argument is not a GrainSegment class instance")
-
-        # Checking if grain segments conform to desired geometry:
-        self.validate_segment_geometries()
 
     @property
     def total_length(self) -> float:
