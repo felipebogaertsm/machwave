@@ -40,29 +40,73 @@ from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 def main():
     # Motor configuration:
     propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
+    # Measured, average density of the segments:
+    propellant.density = 1656.01
 
     grain = Grain()
 
-    bates_segment_45 = BatesSegment(
-        outer_diameter=115e-3,
-        core_diameter=45e-3,
-        length=200e-3,
-        spacing=10e-3,
-    )
-    bates_segment_60 = BatesSegment(
-        outer_diameter=115e-3,
-        core_diameter=60e-3,
-        length=200e-3,
-        spacing=10e-3,
-    )
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.27e-3,
+            core_diameter=46.44e-3,
+            length=201.03e-3,
+            spacing=10.18e-3,
+        )
+    )  # grain no 2
 
-    grain.add_segment(bates_segment_45)
-    grain.add_segment(bates_segment_45)
-    grain.add_segment(bates_segment_45)
-    grain.add_segment(bates_segment_45)
-    grain.add_segment(bates_segment_60)
-    grain.add_segment(bates_segment_60)
-    grain.add_segment(bates_segment_60)
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.56e-3,
+            core_diameter=45.15e-3,
+            length=194.05e-3,
+            spacing=18.24e-3,
+        )
+    )  # grain no 1
+
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.70e-3,
+            core_diameter=45.58e-3,
+            length=202.78e-3,
+            spacing=11.68e-3,
+        )
+    )  # grain no 6
+
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.72e-3,
+            core_diameter=45.34e-3,
+            length=194.36e-3,
+            spacing=11.55e-3,
+        )
+    )  # grain no 4
+
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.49e-3,
+            core_diameter=60.60e-3,
+            length=204.18e-3,
+            spacing=11.53e-3,
+        )
+    )  # grain no 7
+
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.77e-3,
+            core_diameter=60.49e-3,
+            length=198.72e-3,
+            spacing=10.43e-3,
+        )
+    )  # grain no 5
+
+    grain.add_segment(
+        BatesSegment(
+            outer_diameter=114.74e-3,
+            core_diameter=60.64e-3,
+            length=193.32e-3,
+            spacing=9.92e-3,
+        )
+    )  # grain no 3
 
     nozzle = Nozzle(
         throat_diameter=37e-3,
