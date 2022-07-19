@@ -19,9 +19,14 @@ from models.rocket import Rocket
 from operations.ballistics import Ballistic1DOperation
 from simulations.ballistics import BallisticSimulation
 from simulations.internal_ballistics import InternalBallistics
-from utils.isentropic_flow import get_total_impulse, get_specific_impulse
+from utils.isentropic_flow import (
+    get_total_impulse,
+    get_specific_impulse,
+    get_thrust_coefficient,
+)
 from utils.math import get_percentage_error
 from utils.units import convert_mpa_to_pa, convert_pa_to_mpa
+from utils.geometric import get_circle_area
 
 
 @dataclass
@@ -59,6 +64,16 @@ class AnalyzeSRMOperation(Analyze):
 
     def get_pressure(self) -> np.ndarray:
         return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
+
+    def get_thrust_coefficient(self) -> np.ndarray:
+        throat_area = get_circle_area(
+            self.theoretical_motor.structure.nozzle.throat_diameter
+        )
+        return get_thrust_coefficient(
+            P_0=self.get_pressure(),
+            thrust=self.get_thrust(),
+            nozzle_throat_area=throat_area,
+        )
 
     @property
     def thrust_time(self) -> float:
@@ -365,5 +380,24 @@ class AnalyzeSRMOperation(Analyze):
                 overlaying="y",
             ),
         )
+
+        return figure
+
+    def plot_thrust_coefficient(
+        self, title: str = "SRM Hot-Fire Analysis - Thrust Coefficient"
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatter(
+                x=self.get_time(),
+                y=self.get_thrust_coefficient(),
+                name="Thrust coefficient",
+            ),
+        )
+
+        figure.update_yaxes(title_text="<b>Thrust coefficient</b> (N)")
+        figure.update_xaxes(title_text="Time (s)")
+        figure.update_layout(title_text=title)
 
         return figure

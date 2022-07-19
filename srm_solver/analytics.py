@@ -191,6 +191,9 @@ def main():
     figure_4 = analyze.plot_tabular_comparison()
     figure_4.show()
 
+    figure_5 = analyze.plot_thrust_coefficient()
+    figure_5.show()
+
 
 if __name__ == "__main__":
     main()
