@@ -177,6 +177,7 @@ def main():
     analyze.run_ballistic_simulation(
         rocket=rocket, recovery=recovery, atmosphere=Atmosphere1976()
     )
+    analyze.ballistic_simulation.print_results()
 
     figure_1 = analyze.plot_thrust_propellant_mass()
     figure_1.show()
