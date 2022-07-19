@@ -96,6 +96,18 @@ def get_thrust_from_cf(
     return C_f * P_0 * nozzle_throat_area
 
 
+def get_thrust_coefficient(
+    P_0: float, thrust: float, nozzle_throat_area: float
+):
+    """
+    :param P_0: instantaneous chamber stagnation pressure, in Pascals
+    :param thrust: instantaneous thrust
+    :param nozzle_throat_area: nozzle throat area, in sq. meters
+    :return: thrust coefficient
+    """
+    return thrust / (P_0 * nozzle_throat_area)
+
+
 def is_flow_choked(
     chamber_pressure: float,
     external_pressure: float,
