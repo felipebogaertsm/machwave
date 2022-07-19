@@ -163,6 +163,8 @@ class AnalyzeSRMOperation(Analyze):
 
     def get_tabular_comparison_body(self) -> list[list[str | float]]:
         parameters = [
+            "Maximum thrust",
+            "Maximum pressure",
             "Average thrust",
             "Average pressure",
             "Thrust time",
@@ -171,6 +173,8 @@ class AnalyzeSRMOperation(Analyze):
         ]
         expected_values = np.array(
             [
+                np.max(self.theoretical_motor_operation.thrust),
+                np.max(self.theoretical_motor_operation.P_0) / 1e6,
                 np.average(self.theoretical_motor_operation.thrust),
                 np.average(self.theoretical_motor_operation.P_0) / 1e6,
                 np.average(self.theoretical_motor_operation.thrust_time),
@@ -180,6 +184,8 @@ class AnalyzeSRMOperation(Analyze):
         )
         obtained_values = np.array(
             [
+                np.max(self.get_thrust()),
+                np.max(self.get_pressure()) / 1e6,
                 np.average(self.get_thrust()),
                 np.average(self.get_pressure()) / 1e6,
                 np.average(self.thrust_time),
@@ -188,6 +194,8 @@ class AnalyzeSRMOperation(Analyze):
             ]
         )
         units = [
+            "N",
+            "MPa",
             "N",
             "MPa",
             "s",

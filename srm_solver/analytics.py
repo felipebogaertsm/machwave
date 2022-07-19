@@ -6,8 +6,6 @@
 # the Free Software Foundation, version 3.
 
 import pandas as pd
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
 
 from analytics.srm import AnalyzeSRMOperation
 from models.materials.elastics import EPDM
@@ -32,9 +30,6 @@ from models.recovery.parachutes import HemisphericalParachute
 from models.rocket.fuselage import Fuselage
 from models.rocket.structure import RocketStructure
 from models.atmosphere import Atmosphere1976
-from operations.internal_ballistics import SRMOperation
-from simulations.ballistics import BallisticSimulation
-from simulations.internal_balistics_coupled import InternalBallisticsCoupled
 
 
 def main():
