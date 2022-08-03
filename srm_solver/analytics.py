@@ -194,6 +194,10 @@ def main():
     figure_5 = analyze.plot_thrust_coefficient()
     figure_5.show()
 
+    analyze.generate_eng_file(
+        name="Olympus-Hot-Fire_02-07-2022", manufacturer="LCP 2022"
+    )
+
 
 if __name__ == "__main__":
     main()
