@@ -27,6 +27,7 @@ from utils.isentropic_flow import (
 from utils.math import get_percentage_error
 from utils.units import convert_mpa_to_pa, convert_pa_to_mpa
 from utils.geometric import get_circle_area
+from utils.utilities import generate_eng
 
 
 @dataclass
@@ -55,6 +56,18 @@ class AnalyzeSRMOperation(Analyze):
             self.theoretical_motor_time,
             self.theoretical_motor_operation,
         ) = self.ib_simulation.run()
+
+    def generate_eng_file(self, name: str, manufacturer: str) -> None:
+        generate_eng(
+            time=self.get_time(),
+            thrust=self.get_thrust(),
+            propellant_mass=self.get_propellant_mass(),
+            name=name,
+            manufacturer=manufacturer,
+            chamber_length=1670,
+            outer_diameter=141.3,
+            motor_mass=17,
+        )
 
     def get_thrust(self) -> np.ndarray:
         return self.get_from_df(self.thrust_header_name)
