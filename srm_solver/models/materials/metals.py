@@ -38,3 +38,19 @@ class Al6063T5(NozzleMaterial):
             C1=0.00506,
             C2=0.0,
         )
+
+
+class Al6061T6(NozzleMaterial):
+    """
+    Data obtained from:
+    https://matweb.com/search/DataSheet.aspx?MatGUID=b8d536e0b9b54bd7b69e4124d8f1d20a&ckck=1
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            density=2700,
+            yield_strength=262e6,
+            ultimate_strength=290e6,
+            C1=0.00506,
+            C2=0.0,
+        )
