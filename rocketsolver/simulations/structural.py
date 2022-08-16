@@ -11,10 +11,7 @@ Stores structural simulation.
 
 from dataclasses import dataclass
 
-import numpy as np
-
 from models.propulsion.structure import MotorStructure
-from operations.internal_ballistics import SRMOperation
 from simulations import Simulation
 
 

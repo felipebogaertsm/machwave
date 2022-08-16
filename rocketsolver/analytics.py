@@ -14,11 +14,9 @@ from models.propellants.solid import get_solid_propellant_from_name
 from models.propulsion import SolidMotor
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
-from models.propulsion.structure import (
-    BoltedCombustionChamber,
-    MotorStructure,
-    Nozzle,
-)
+from models.propulsion.structure import MotorStructure
+from models.propulsion.structure.nozzle import Nozzle
+from models.propulsion.structure.chamber import BoltedCombustionChamber
 from models.propulsion.thermals import ThermalLiner
 from models.recovery import Recovery
 from models.rocket import Rocket
