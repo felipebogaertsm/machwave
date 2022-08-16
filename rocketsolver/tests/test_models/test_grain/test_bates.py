@@ -5,38 +5,56 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-
 import pytest
 
 from models.propulsion.grain.bates import BatesSegment
-from models.propulsion.grain import GrainGeometryError, Grain
+from models.propulsion.grain import GrainGeometryError
 
 
-def test_bates_grains_with_different_outer_diameters():
-    segment_1 = BatesSegment(
+def test_bates_segment_geometry_validation():
+    # Control group:
+    _ = BatesSegment(
         outer_diameter=100e-3,
         core_diameter=30e-3,
         length=120e-3,
         spacing=10e-3,
     )
 
-    segment_2 = BatesSegment(
-        outer_diameter=101e-3,
-        core_diameter=30e-3,
-        length=120e-3,
-        spacing=10e-3,
-    )
-
-    grain = Grain()
-
-    # Trying to add segments with diffetent ODs:
-    grain.add_segment(segment_1)
+    # Larger core diameter than outer diameter:
     with pytest.raises(GrainGeometryError):
-        grain.add_segment(segment_2)
+        _ = BatesSegment(
+            outer_diameter=100e-3,
+            core_diameter=300e-3,
+            length=120e-3,
+            spacing=10e-3,
+        )
 
-    # Changing ODs and checking if it works:
-    segment_2.outer_diameter = segment_1.outer_diameter
-    grain.add_segment(segment_2)
+    # Negative core diameter:
+    with pytest.raises(GrainGeometryError):
+        _ = BatesSegment(
+            outer_diameter=100e-3,
+            core_diameter=-30e-3,
+            length=120e-3,
+            spacing=10e-3,
+        )
+
+    # Negative length:
+    with pytest.raises(GrainGeometryError):
+        _ = BatesSegment(
+            outer_diameter=100e-3,
+            core_diameter=30e-3,
+            length=-120e-3,
+            spacing=10e-3,
+        )
+
+    # Negative spacing:
+    with pytest.raises(GrainGeometryError):
+        _ = BatesSegment(
+            outer_diameter=100e-3,
+            core_diameter=30e-3,
+            length=120e-3,
+            spacing=-10e-3,
+        )
 
 
 def test_olympus_grain_total_length_property(bates_grain_olympus):

@@ -7,7 +7,7 @@
 
 import numpy as np
 
-from . import GrainSegment
+from . import GrainSegment, GrainGeometryError
 
 
 class BatesSegment(GrainSegment):
@@ -36,10 +36,13 @@ class BatesSegment(GrainSegment):
 
         :rtype: None
         """
-        assert self.outer_diameter > self.core_diameter
-        assert self.core_diameter > 0
-        assert self.length > 0
-        assert self.spacing >= 0
+        try:
+            assert self.outer_diameter > self.core_diameter
+            assert self.core_diameter > 0
+            assert self.length > 0
+            assert self.spacing >= 0
+        except AssertionError:
+            raise GrainGeometryError("Invalid segment geometry")
 
     @property
     def total_web_thickness(self) -> float:
@@ -75,7 +78,7 @@ class BatesSegment(GrainSegment):
         if self.total_web_thickness >= web_thickness:
             return np.pi * (
                 (
-                    (self.outer_diameter ** 2)
+                    (self.outer_diameter**2)
                     - (self.core_diameter + 2 * web_thickness) ** 2
                 )
                 / 2
@@ -98,7 +101,7 @@ class BatesSegment(GrainSegment):
         if self.total_web_thickness >= web_thickness:
             return (np.pi / 4) * (
                 (
-                    (self.outer_diameter ** 2)
+                    (self.outer_diameter**2)
                     - ((self.core_diameter + 2 * web_thickness) ** 2)
                 )
                 * (self.length - 2 * web_thickness)
