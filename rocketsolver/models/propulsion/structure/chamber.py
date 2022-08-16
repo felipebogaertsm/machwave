@@ -13,8 +13,7 @@ import numpy as np
 
 from models.materials import Material
 from models.propulsion.thermals import ThermalLiner
-from utils.geometric import get_circle_area, get_cylinder_volume
-from utils.isentropic_flow import get_divergent_correction_factor
+from utils.geometric import get_cylinder_volume
 
 
 class CombustionChamber:
@@ -54,7 +53,7 @@ class CombustionChamber:
         self, chamber_pressure: np.ndarray, safety_factor: float
     ) -> float:
         """
-        Returns the thickness of a plane bulkhead pressure vessel.
+        Returns the thickness of a planar bulkhead pressure vessel.
         """
         return self.inner_diameter * (
             np.sqrt(
@@ -76,18 +75,18 @@ class CombustionChamber:
 
     def get_casing_stress_theta(self, chamber_pressure: float) -> float:
         return (
-            (chamber_pressure * self.casing_inner_radius ** 2)
-            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+            (chamber_pressure * self.casing_inner_radius**2)
+            / (self.outer_radius**2 - self.casing_inner_radius**2)
             * (
                 1
-                + ((self.outer_radius ** 2) / (self.casing_inner_radius ** 2))
+                + ((self.outer_radius**2) / (self.casing_inner_radius**2))
             )
         )
 
     def get_casing_stress_radius(self, chamber_pressure: float) -> float:
         return (
-            (chamber_pressure * self.casing_inner_radius ** 2)
-            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+            (chamber_pressure * self.casing_inner_radius**2)
+            / (self.outer_radius**2 - self.casing_inner_radius**2)
             * (1 - ((self.outer_radius) / (self.casing_inner_radius)) ** 2)
         )
 
@@ -95,8 +94,8 @@ class CombustionChamber:
         return (
             2
             * chamber_pressure
-            * self.casing_inner_radius ** 2
-            / (self.outer_radius ** 2 - self.casing_inner_radius ** 2)
+            * self.casing_inner_radius**2
+            / (self.outer_radius**2 - self.casing_inner_radius**2)
         )
 
     def get_casing_safety_factor(self, chamber_pressure: np.ndarray) -> float:
@@ -152,7 +151,7 @@ class BoltedCombustionChamber(CombustionChamber):
         self.screw_diameter = screw_diameter
 
     def get_shear_area(self) -> float:
-        return (self.screw_diameter ** 2) * np.pi * 0.25
+        return (self.screw_diameter**2) * np.pi * 0.25
 
     def get_tear_area(self, screw_count: int) -> float:
         """
@@ -162,7 +161,7 @@ class BoltedCombustionChamber(CombustionChamber):
             (
                 np.pi
                 * 0.25
-                * ((self.outer_diameter ** 2) - (self.inner_diameter ** 2))
+                * ((self.outer_diameter**2) - (self.inner_diameter**2))
             )
             / screw_count
         ) - (
@@ -170,7 +169,7 @@ class BoltedCombustionChamber(CombustionChamber):
                 (self.screw_clearance_diameter / 2) / (self.inner_diameter / 2)
             )
         ) * 0.25 * (
-            (self.outer_diameter ** 2) - (self.inner_diameter ** 2)
+            (self.outer_diameter**2) - (self.inner_diameter**2)
         )
 
     def get_compression_area(self) -> float:
@@ -239,78 +238,3 @@ class BoltedCombustionChamber(CombustionChamber):
             tear_safety_factor,
             compression_safety_factor,
         )
-
-
-class Nozzle:
-    def __init__(
-        self,
-        throat_diameter,
-        divergent_angle,
-        convergent_angle,
-        expansion_ratio,
-        material=None,
-    ) -> None:
-        self.throat_diameter = throat_diameter
-        self.divergent_angle = divergent_angle
-        self.convergent_angle = convergent_angle
-        self.expansion_ratio = expansion_ratio
-        self.material = material
-
-    def get_throat_area(self):
-        return get_circle_area(self.throat_diameter)
-
-    def get_divergent_correction_factor(self):
-        return get_divergent_correction_factor(self.divergent_angle)
-
-    def get_nozzle_thickness(
-        self,
-        chamber_pressure: np.ndarray,
-        safety_factor: float,
-        chamber: CombustionChamber,
-    ):
-        """Returns nozzle convergent and divergent thickness"""
-        max_chamber_pressure = chamber_pressure
-        convergent_angle = self.convergent_angle
-        divergent_angle = self.divergent_angle
-        nozzle_yield_strength = self.material.yield_strength
-
-        # Yield strength corrected by the safety factor:
-        safe_yield_strength = nozzle_yield_strength / safety_factor
-
-        nozzle_conv_thickness = (
-            chamber_pressure * chamber.inner_diameter / 2
-        ) / (
-            (
-                safe_yield_strength
-                - 0.6
-                * max_chamber_pressure
-                * (np.cos(np.deg2rad(convergent_angle)))
-            )
-        )
-
-        nozzle_div_thickness = (
-            chamber_pressure * chamber.inner_diameter / 2
-        ) / (
-            (
-                safe_yield_strength
-                - 0.6
-                * max_chamber_pressure
-                * (np.cos(np.deg2rad(divergent_angle)))
-            )
-        )
-
-        return nozzle_conv_thickness, nozzle_div_thickness
-
-
-class MotorStructure:
-    def __init__(
-        self,
-        safety_factor,
-        dry_mass,
-        nozzle: Nozzle,
-        chamber: CombustionChamber,
-    ):
-        self.safety_factor = safety_factor
-        self.dry_mass = dry_mass
-        self.nozzle = nozzle
-        self.chamber = chamber
