@@ -2,8 +2,8 @@ version: "3.9"
 
 services:
   test-srm-solver:
-    build: srm_solver/
-    container_name: test_srm_solver
+    build: rocketsolver/
+    container_name: test_rocketsolver
     entrypoint: python3 -m pytest
     volumes:
-      - ./srm_solver/:/usr/app/
+      - ./rocketsolver/:/usr/app/
