@@ -1,2 +1,48 @@
 [tool.black]
 line-length = 79
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rocketsolver"
+version = "0.1.0"
+description = "Rocket simulator"
+readme = "README.md"
+authors = [{ name = "Felipe Bogaerts de Mattos", email = "me@felipebm.com" }]
+license = { file = "license.txt" }
+classifiers = [
+    "License :: OSI Approved :: GPL v3",
+    "Programming Language :: Python :: 3",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+]
+keywords = ["python", "rocket", "srm", "engine", "propulsion"]
+dependencies = [
+    "numpy",
+    "pandas",
+    "fluids",
+    "matplotlib",
+    "plotly",
+    "scipy",
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["black", "pytest", "bumpver"]
+
+[project.urls]
+Homepage = "https://github.com/felipebogaertsm/rocket-solver"
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message  = "Initial beta version"
+commit          = true
+tag             = true
+push            = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
