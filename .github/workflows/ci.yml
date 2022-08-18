@@ -34,4 +34,4 @@ jobs:
           twine check dist/*
       - name: Publishing
         run: |
-          twine upload dist/*
+          twine upload dist/* --username ${TWINE_USERNAME} --password ${TWINE_PASSWORD}
