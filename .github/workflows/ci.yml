@@ -14,3 +14,24 @@ jobs:
       - name: Testing
         run: |
           docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-srm-solver
+  publish_package:
+    name: Publish RocketSolver to PyPi
+    runs-on: ubuntu-latest
+    needs:
+      - test
+    environment: publish
+    steps:
+      - uses: actions/checkout@v3
+      - name: Installing dependencies
+        uses: docker://python:3.10-bullseye
+        run: |
+          python3 -m pip install build twine
+      - name: Building
+        run: |
+          python3 -m build
+      - name: Verification
+        run: |
+          twine check dist/*
+      - name: Publishing
+        run: |
+          twine upload dist/*
