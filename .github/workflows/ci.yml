@@ -22,8 +22,8 @@ jobs:
     environment: publish
     steps:
       - uses: actions/checkout@v3
+      - uses: docker://python:3.10-bullseye
       - name: Installing dependencies
-        uses: docker://python:3.10-bullseye
         run: |
           python3 -m pip install build twine
       - name: Building
