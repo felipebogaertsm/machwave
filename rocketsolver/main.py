@@ -11,13 +11,15 @@ import numpy as np
 
 from models.propulsion.grain import Grain
 from models.propulsion.grain.bates import BatesSegment
-from models.propulsion.structure import MotorStructure
-from models.propulsion.structure.nozzle import Nozzle
+from models.propulsion.structure import (
+    MotorStructure,
+    Nozzle,
+)
 from models.propulsion.structure.chamber import BoltedCombustionChamber
 from models.propellants.solid import get_solid_propellant_from_name
 from models.recovery import Recovery
 from models.rocket import Rocket
-from models.materials.metals import Steel, Al6061T6
+from models.materials.metals import Steel, Al6063T5
 from models.materials.elastics import EPDM
 from models.propulsion.thermals import ThermalLiner
 from models.recovery.events import (
@@ -39,7 +41,9 @@ from utils.plots import (
     ballistics_plots,
 )
 
-from simulations.internal_balistics_coupled import InternalBallisticsCoupled
+from simulations.internal_balistics_coupled import (
+    InternalBallisticsCoupled,
+)
 from simulations.structural import StructuralSimulation
 
 
@@ -47,26 +51,33 @@ def main():
     start = time.time()  # starting timer
 
     # Motor:
-    propellant = get_solid_propellant_from_name(prop_name="KNER")
+    propellant = get_solid_propellant_from_name(prop_name="KNSB-NAKKA")
 
     grain = Grain()
 
-    bates_segment_1 = BatesSegment(
-        outer_diameter=87e-3,
-        core_diameter=30e-3,
-        length=145.5e-3,
+    bates_segment_45 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=45e-3,
+        length=200e-3,
+        spacing=10e-3,
+    )
+    bates_segment_60 = BatesSegment(
+        outer_diameter=115e-3,
+        core_diameter=60e-3,
+        length=200e-3,
         spacing=10e-3,
     )
 
-    grain.add_segment(bates_segment_1)
-    grain.add_segment(bates_segment_1)
-    grain.add_segment(bates_segment_1)
-    grain.add_segment(bates_segment_1)
-    grain.add_segment(bates_segment_1)
-    grain.add_segment(bates_segment_1)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_45)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
+    grain.add_segment(bates_segment_60)
 
     nozzle = Nozzle(
-        throat_diameter=19e-3,
+        throat_diameter=37e-3,
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
@@ -76,12 +87,12 @@ def main():
     liner = ThermalLiner(thickness=2e-3, material=EPDM())
 
     chamber = BoltedCombustionChamber(
-        casing_inner_diameter=95.25e-3,
-        outer_diameter=101.6e-3,
+        casing_inner_diameter=128.2e-3,
+        outer_diameter=141.3e-3,
         liner=liner,
         length=grain.total_length + 10e-3,
-        casing_material=Al6061T6(),
-        bulkhead_material=Al6061T6(),
+        casing_material=Al6063T5(),
+        bulkhead_material=Al6063T5(),
         screw_material=Steel(),
         max_screw_count=30,
         screw_clearance_diameter=9e-3,
@@ -90,7 +101,7 @@ def main():
 
     structure = MotorStructure(
         safety_factor=4,
-        dry_mass=6,
+        dry_mass=21.013,
         nozzle=nozzle,
         chamber=chamber,
     )
@@ -114,12 +125,12 @@ def main():
 
     # Rocket:
     fuselage = Fuselage(
-        length=3e3,
-        drag_coefficient=0.6,
-        outer_diameter=0.1584,
+        length=4e3,
+        drag_coefficient=0.5,
+        outer_diameter=0.17,
     )
 
-    rocket_structure = RocketStructure(mass_without_motor=10)
+    rocket_structure = RocketStructure(mass_without_motor=25)
 
     rocket = Rocket(
         fuselage=fuselage,
@@ -168,8 +179,8 @@ def main():
         eng_resolution=25,
         propellant_density=motor.propellant.density,
         motor_dry_mass=motor.structure.dry_mass,
-        manufacturer="FBM",
-        name="NERO",
+        manufacturer="LCP 2022",
+        name="OLYMPUS",
     )
 
     print("\n\nExecution time: %.4f seconds\n\n" % (time.time() - start))
