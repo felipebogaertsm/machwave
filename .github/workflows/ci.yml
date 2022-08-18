@@ -33,5 +33,8 @@ jobs:
         run: |
           twine check dist/*
       - name: Publishing
+        env:
+          TWINE_USERNAME: ${{ env.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ env.TWINE_PASSWORD }}
         run: |
-          twine upload dist/* --username ${TWINE_USERNAME} --password ${TWINE_PASSWORD}
+          twine upload dist/*
