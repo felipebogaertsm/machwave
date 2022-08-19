@@ -5,9 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from dataclasses import dataclass, field
-
-from utils.geometric import get_circle_area
+from rocketsolver.utils.geometric import get_circle_area
 
 
 class DragCoefficientTypeError(Exception):

@@ -12,7 +12,7 @@ Recovery events are implemented using Strategy design pattern.
 from abc import ABC, abstractmethod
 import numpy as np
 
-from models.recovery.parachutes import Parachute
+from rocketsolver.models.recovery.parachutes import Parachute
 
 
 class RecoveryEvent(ABC):
