@@ -6,7 +6,7 @@
 # the Free Software Foundation, version 3.
 
 
-from models.materials import Material
+from rocketsolver.models.materials import Material
 
 
 class ThermalLiner:

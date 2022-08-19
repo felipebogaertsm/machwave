@@ -7,8 +7,8 @@
 
 from abc import abstractmethod
 
-from solvers import Solver
-from utils.odes import solve_cp_seidel
+from rocketsolver.solvers import Solver
+from rocketsolver.utils.odes import solve_cp_seidel
 
 
 class InternalBallisticsSolver(Solver):

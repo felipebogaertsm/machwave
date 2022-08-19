@@ -7,10 +7,10 @@
 
 import numpy as np
 
-from models.propulsion import Motor
-from operations.internal_ballistics import MotorOperation
-from simulations import Simulation
-from utils.classes import get_motor_operation_class
+from rocketsolver.models.propulsion import Motor
+from rocketsolver.operations.internal_ballistics import MotorOperation
+from rocketsolver.simulations import Simulation
+from rocketsolver.utils.classes import get_motor_operation_class
 
 
 class InternalBallistics(Simulation):

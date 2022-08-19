@@ -7,8 +7,8 @@
 
 import numpy as np
 
-from operations import Operation
-from solvers.ballistics_1d import Ballistics1D
+from rocketsolver.operations import Operation
+from rocketsolver.solvers.ballistics_1d import Ballistics1D
 
 
 class Ballistic1DOperation(Operation):

@@ -7,13 +7,11 @@
 
 import numpy as np
 
-from models.atmosphere import Atmosphere
-from models.propulsion import Motor, SolidMotor
-from models.recovery import Recovery
-from models.rocket import Rocket
-from operations.ballistics import Ballistic1DOperation
-from operations.internal_ballistics import MotorOperation, SRMOperation
-from simulations import Simulation
+from rocketsolver.models.atmosphere import Atmosphere
+from rocketsolver.models.recovery import Recovery
+from rocketsolver.models.rocket import Rocket
+from rocketsolver.operations.ballistics import Ballistic1DOperation
+from rocketsolver.simulations import Simulation
 
 
 class BallisticSimulation(Simulation):

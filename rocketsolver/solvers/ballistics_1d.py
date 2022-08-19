@@ -7,8 +7,8 @@
 
 from typing import Tuple
 
-from solvers import Solver
-from utils.odes import ballistics_ode
+from rocketsolver.solvers import Solver
+from rocketsolver.utils.odes import ballistics_ode
 
 
 class Ballistics1D(Solver):

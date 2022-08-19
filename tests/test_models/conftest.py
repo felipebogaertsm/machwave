@@ -7,15 +7,17 @@
 
 import pytest
 
-from models.atmosphere import Atmosphere1976
-from models.materials.elastics import EPDM
-from models.materials.metals import Al6063T5, Steel
-from models.propellants.solid import get_solid_propellant_from_name
-from models.propulsion.structure.chamber import (
+from rocketsolver.models.atmosphere import Atmosphere1976
+from rocketsolver.models.materials.elastics import EPDM
+from rocketsolver.models.materials.metals import Al6063T5, Steel
+from rocketsolver.models.propellants.solid import (
+    get_solid_propellant_from_name,
+)
+from rocketsolver.models.propulsion.structure.chamber import (
     CombustionChamber,
     BoltedCombustionChamber,
 )
-from models.propulsion.thermals import ThermalLiner
+from rocketsolver.models.propulsion.thermals import ThermalLiner
 
 
 @pytest.fixture

@@ -11,9 +11,9 @@ Stores MotorStructure class and methods.
 
 import numpy as np
 
-from models.materials import Material
-from models.propulsion.thermals import ThermalLiner
-from utils.geometric import get_cylinder_volume
+from rocketsolver.models.materials import Material
+from rocketsolver.models.propulsion.thermals import ThermalLiner
+from rocketsolver.utils.geometric import get_cylinder_volume
 
 
 class CombustionChamber:
