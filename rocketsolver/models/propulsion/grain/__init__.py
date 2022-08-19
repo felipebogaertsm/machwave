@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from utils.geometric import get_circle_area
+from rocketsolver.utils.geometric import get_circle_area
 
 
 class GrainGeometryError(Exception):

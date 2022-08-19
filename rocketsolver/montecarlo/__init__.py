@@ -11,8 +11,8 @@ from typing import Any, Optional
 
 import numpy as np
 
-from simulations import Simulation
-from utils.utilities import obtain_attributes_from_object
+from rocketsolver.simulations import Simulation
+from rocketsolver.utils.utilities import obtain_attributes_from_object
 
 
 @dataclass
@@ -57,7 +57,7 @@ class MonteCarloParameter:
             return self.value - other
 
     def __pow__(self, other: Any) -> float:
-        return self.value ** other
+        return self.value**other
 
     def __truediv__(self, other: Any) -> float:
         return self.value / other

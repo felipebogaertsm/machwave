@@ -11,8 +11,8 @@ Stores structural simulation.
 
 from dataclasses import dataclass
 
-from models.propulsion.structure import MotorStructure
-from simulations import Simulation
+from rocketsolver.models.propulsion.structure import MotorStructure
+from rocketsolver.simulations import Simulation
 
 
 @dataclass

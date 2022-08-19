@@ -11,10 +11,13 @@ Stores Motor class and methods.
 
 from abc import ABC, abstractmethod
 
-from models.propulsion.grain import Grain
-from models.propulsion.propellant import Propellant
-from models.propulsion.structure import MotorStructure
-from utils.isentropic_flow import get_thrust_coefficients, get_thrust_from_cf
+from rocketsolver.models.propulsion.grain import Grain
+from rocketsolver.models.propulsion.propellant import Propellant
+from rocketsolver.models.propulsion.structure import MotorStructure
+from rocketsolver.utils.isentropic_flow import (
+    get_thrust_coefficients,
+    get_thrust_from_cf,
+)
 
 
 class Motor(ABC):

@@ -12,22 +12,22 @@ import numpy as np
 import plotly.graph_objects as go
 
 from .. import Analyze
-from models.atmosphere import Atmosphere
-from models.propulsion import SolidMotor
-from models.recovery import Recovery
-from models.rocket import Rocket
-from operations.ballistics import Ballistic1DOperation
-from simulations.ballistics import BallisticSimulation
-from simulations.internal_ballistics import InternalBallistics
-from utils.isentropic_flow import (
+from rocketsolver.models.atmosphere import Atmosphere
+from rocketsolver.models.propulsion import SolidMotor
+from rocketsolver.models.recovery import Recovery
+from rocketsolver.models.rocket import Rocket
+from rocketsolver.operations.ballistics import Ballistic1DOperation
+from rocketsolver.simulations.ballistics import BallisticSimulation
+from rocketsolver.simulations.internal_ballistics import InternalBallistics
+from rocketsolver.utils.isentropic_flow import (
     get_total_impulse,
     get_specific_impulse,
     get_thrust_coefficient,
 )
-from utils.math import get_percentage_error
-from utils.units import convert_mpa_to_pa, convert_pa_to_mpa
-from utils.geometric import get_circle_area
-from utils.utilities import generate_eng
+from rocketsolver.utils.math import get_percentage_error
+from rocketsolver.utils.units import convert_mpa_to_pa, convert_pa_to_mpa
+from rocketsolver.utils.geometric import get_circle_area
+from rocketsolver.utils.utilities import generate_eng
 
 
 @dataclass

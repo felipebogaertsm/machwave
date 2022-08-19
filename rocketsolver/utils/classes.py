@@ -5,8 +5,11 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from models.propulsion import Motor, SolidMotor
-from operations.internal_ballistics import MotorOperation, SRMOperation
+from rocketsolver.models.propulsion import Motor, SolidMotor
+from rocketsolver.operations.internal_ballistics import (
+    MotorOperation,
+    SRMOperation,
+)
 
 
 def get_motor_operation_class(motor: Motor) -> MotorOperation:

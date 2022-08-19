@@ -10,7 +10,7 @@ Propellant data was gathered from ProPEP3. Burn rate was sourced from Richard
 Nakka's website.
 """
 
-from models.propulsion.propellant.solid import SolidPropellant
+from rocketsolver.models.propulsion.propellant.solid import SolidPropellant
 
 KNDX = SolidPropellant(
     [

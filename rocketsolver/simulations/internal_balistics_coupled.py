@@ -17,14 +17,14 @@ ambient pressure, which impacts the propellant burn rate inside the motor.
 
 import numpy as np
 
-from models.atmosphere import Atmosphere
-from models.propulsion import Motor
-from models.recovery import Recovery
-from models.rocket import Rocket
-from operations.ballistics import Ballistic1DOperation
-from operations.internal_ballistics import MotorOperation
-from simulations import Simulation
-from utils.classes import get_motor_operation_class
+from rocketsolver.models.atmosphere import Atmosphere
+from rocketsolver.models.propulsion import Motor
+from rocketsolver.models.recovery import Recovery
+from rocketsolver.models.rocket import Rocket
+from rocketsolver.operations.ballistics import Ballistic1DOperation
+from rocketsolver.operations.internal_ballistics import MotorOperation
+from rocketsolver.simulations import Simulation
+from rocketsolver.utils.classes import get_motor_operation_class
 
 
 class InternalBallisticsCoupled(Simulation):

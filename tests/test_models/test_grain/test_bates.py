@@ -7,8 +7,8 @@
 
 import pytest
 
-from models.propulsion.grain.bates import BatesSegment
-from models.propulsion.grain import GrainGeometryError
+from rocketsolver.models.propulsion.grain.bates import BatesSegment
+from rocketsolver.models.propulsion.grain import GrainGeometryError
 
 
 def test_bates_segment_geometry_validation():
