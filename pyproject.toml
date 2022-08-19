@@ -38,7 +38,7 @@ Homepage = "https://github.com/felipebogaertsm/rocket-solver"
 [tool.bumpver]
 current_version = "0.2.1"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "Initial beta version"
+commit_message  = "Fixed import issues"
 commit          = true
 tag             = true
 push            = false
