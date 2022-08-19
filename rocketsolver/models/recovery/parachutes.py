@@ -13,7 +13,7 @@ changing its methods depending on the particular parachute geometry.
 
 from abc import ABC, abstractproperty
 
-from utils.geometric import get_circle_area
+from rocketsolver.utils.geometric import get_circle_area
 
 
 class Parachute(ABC):
