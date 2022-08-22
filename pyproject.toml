@@ -36,9 +36,9 @@ dev = ["black", "pytest", "bumpver"]
 Homepage = "https://github.com/felipebogaertsm/rocket-solver"
 
 [tool.bumpver]
-current_version = "0.2.3"
+current_version = "0.2.4"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "Fixed import issues"
+commit_message  = "Improving CI/CD"
 commit          = true
 tag             = true
 push            = false
