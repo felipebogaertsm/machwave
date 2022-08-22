@@ -1,9 +1,6 @@
-name: SRM Solver CI/CD pipeline
+name: RocketSolver CI/CD
 
-on:
-  push:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
   test:
@@ -16,6 +13,7 @@ jobs:
           docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-srm-solver
   publish_package:
     name: Publish RocketSolver to PyPi
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.ref_type == 'tag'
     runs-on: ubuntu-latest
     needs:
       - test
@@ -32,9 +30,9 @@ jobs:
       - name: Verification
         run: |
           twine check dist/*
-      - name: Publishing
-        env:
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: |
-          twine upload dist/*
+      # - name: Publishing
+      #   env:
+      #     TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+      #     TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      #   run: |
+      #     twine upload dist/*
