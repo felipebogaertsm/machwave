@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rocketsolver"
-version = "0.2.3"
+version = "0.2.5"
 description = "Rocket simulator"
 readme = "README.md"
 authors = [{ name = "Felipe Bogaerts de Mattos", email = "me@felipebm.com" }]
@@ -36,7 +36,7 @@ dev = ["black", "pytest", "bumpver"]
 Homepage = "https://github.com/felipebogaertsm/rocket-solver"
 
 [tool.bumpver]
-current_version = "0.2.4"
+current_version = "0.2.5"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "Improving CI/CD"
 commit          = true
