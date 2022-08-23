@@ -27,6 +27,8 @@ class Ballistic6DOFSimulation(Simulation):
         d_t: float,
         initial_elevation_amsl: float,
         rail_length: float,
+        launch_angle: float,
+        heading_angle: float,
     ) -> None:
         self.thrust = thrust
         self.initial_propellant_mass = initial_propellant_mass
@@ -38,6 +40,8 @@ class Ballistic6DOFSimulation(Simulation):
         self.d_t = d_t
         self.initial_elevation_amsl = initial_elevation_amsl
         self.rail_length = rail_length
+        self.launch_angle = launch_angle
+        self.heading_angle = heading_angle
 
         self.t = np.array([0])
 

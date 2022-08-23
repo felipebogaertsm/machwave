@@ -34,3 +34,7 @@ class BallisticOperation(Operation):
     @abstractmethod
     def apogee_time(self) -> float:
         pass
+
+    @abstractmethod
+    def iterate(self) -> None:
+        pass
