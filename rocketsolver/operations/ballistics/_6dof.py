@@ -41,6 +41,7 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         self.t = np.array([0])  # time vector
 
+        # Atmospheric properties:
         self.P_ext = np.array(
             [self.atmosphere.get_pressure(initial_elevation_amsl)]
         )  # external pressure
@@ -50,9 +51,19 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.g = np.array(
             [self.atmosphere.get_gravity(initial_elevation_amsl)]
         )  # acceleration of gravity
+        self.wind_velocity = np.array(
+            [
+                *self.atmosphere.get_wind_velocity(initial_elevation_amsl)
+            ].reverse()
+        )  # eastward, northward
+
+        # Vehicle params:
         self.vehicle_mass = np.array(
             [initial_vehicle_mass]
         )  # total mass of the vehicle
+        self.vehicle_wind_velocity = np.array(
+            [*self.get_vehicle_wind_velocity(self.wind_velocity[0])]
+        )  # normal, lateral
 
         # Spacial params - x (East), y (North), z (altitude):
         self.position = np.array([[0, 0, 0]])  # position
@@ -60,8 +71,8 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.angular_velocity = np.array([[0, 0, 0]])  # angular velocity
         self.acceleration = np.array([[0, 0, 0]])  # acceleration
         self.mach_no = np.array([[0, 0, 0]])  # mach number
-        self.psi = np.array([-np.deg2rad(self.heading_angle)])
-        self.theta = np.array([get_nutation_angle(self.launch_angle)])
+        self.psi = np.array([-np.deg2rad(self.heading_angle)])  # yaw
+        self.theta = np.array([get_nutation_angle(self.launch_angle)])  # pitch
         self.e_0 = np.array(
             [np.cos(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
         )
@@ -76,6 +87,23 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
         self.velocity_out_of_rail = None
+
+    def get_vehicle_wind_velocity(
+        self, wind_velocity: tuple[float, float]
+    ) -> tuple[float, float]:
+        """
+        :param tuple wind_velocity: (eastward, northward)
+        :return: (normal, lateral) wind velocities
+        :rtype: tuple[float, float]
+        """
+        heading_angle_rad = np.deg2rad(self.heading_angle)
+
+        return (
+            wind_velocity[0] * np.sin(heading_angle_rad)
+            + wind_velocity[1] * np.cos(heading_angle_rad),
+            -wind_velocity[0] * np.cos(heading_angle_rad)
+            + wind_velocity[1] * np.sin(heading_angle_rad),
+        )
 
     @property
     def apogee(self) -> float:
