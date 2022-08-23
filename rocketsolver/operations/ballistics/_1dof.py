@@ -7,11 +7,11 @@
 
 import numpy as np
 
-from rocketsolver.operations import Operation
+from . import BallisticOperation
 from rocketsolver.solvers.ballistics_1d import Ballistics1D
 
 
-class Ballistic1DOperation(Operation):
+class Ballistic1DOperation(BallisticOperation):
     """
     Stores and processes a ballistics operation (aka flight).
     """
