@@ -9,7 +9,7 @@ import numpy as np
 
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
-from rocketsolver.models.rocket import Rocket
+from rocketsolver.models.rocket import Rocket3D
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
 from rocketsolver.simulations import Simulation
 
@@ -21,7 +21,7 @@ class Ballistic6DOFSimulation(Simulation):
         motor_dry_mass: float,
         initial_propellant_mass: float,
         time: np.ndarray,
-        rocket: Rocket,
+        rocket: Rocket3D,
         recovery: Recovery,
         atmosphere: Atmosphere,
         d_t: float,
