@@ -21,7 +21,7 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.propulsion import Motor
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
-from rocketsolver.operations.ballistics import Ballistic1DOperation
+from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
 from rocketsolver.operations.internal_ballistics import MotorOperation
 from rocketsolver.simulations import Simulation
 from rocketsolver.utils.classes import get_motor_operation_class

@@ -10,7 +10,7 @@ import numpy as np
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
-from rocketsolver.operations.ballistics import Ballistic1DOperation
+from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
 from rocketsolver.simulations import Simulation
 
 
