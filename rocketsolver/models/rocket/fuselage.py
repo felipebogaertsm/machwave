@@ -49,3 +49,35 @@ class Fuselage:
                 self._drag_coefficient,
                 "Type not recognized in 'drag_coefficient'",
             )
+
+
+class Fuselage3D(Fuselage):
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        drag_coefficient: list[list[float, float]] | float | int,
+        I_x: float,
+        I_y: float,
+        I_z: float,
+        I_xy: float,
+        I_xz: float,
+        I_yz: float,
+        I_yx: float,
+        I_zx: float,
+        I_zy: float,
+        frontal_area: float | None = None,
+    ) -> None:
+        super().__init__(
+            length, outer_diameter, drag_coefficient, frontal_area
+        )
+        # Moment of inertia for each axis:
+        self.I_x = I_x
+        self.I_y = I_y
+        self.I_z = I_z
+        self.I_xy = I_xy
+        self.I_xz = I_xz
+        self.I_yz = I_yz
+        self.I_yx = I_yx
+        self.I_zx = I_zx
+        self.I_zy = I_zy

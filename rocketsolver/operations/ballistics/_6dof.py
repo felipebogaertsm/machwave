@@ -7,24 +7,26 @@
 
 import numpy as np
 
-from rocketsolver.utils.spatial import get_nutation_angle
-
 from . import BallisticOperation
+from rocketsolver.models.atmosphere import Atmosphere
+from rocketsolver.models.recovery import Recovery
+from rocketsolver.models.rocket import Rocket3D
 from rocketsolver.solvers.ballistics_6d import Ballistics6D
+from rocketsolver.utils.spatial import get_nutation_angle
 
 
 class Ballistic6DOFOperation(BallisticOperation):
     def __init__(
         self,
-        rocket,
-        recovery,
-        atmosphere,
-        rail_length,
-        motor_dry_mass,
-        initial_vehicle_mass,
-        launch_angle=90,
-        heading_angle=90,
-        initial_elevation_amsl=0,
+        rocket: Rocket3D,
+        recovery: Recovery,
+        atmosphere: Atmosphere,
+        rail_length: float,
+        motor_dry_mass: float,
+        initial_vehicle_mass: float,
+        launch_angle: float = 90,
+        heading_angle: float = 90,
+        initial_elevation_amsl: float = 0,
     ) -> None:
         """
         Initializes attributes for the operation.
@@ -66,13 +68,19 @@ class Ballistic6DOFOperation(BallisticOperation):
         )  # normal, lateral
 
         # Spacial params - x (East), y (North), z (altitude):
-        self.position = np.array([[0, 0, 0]])  # position
-        self.velocity = np.array([[0, 0, 0]])  # velocity
-        self.angular_velocity = np.array([[0, 0, 0]])  # angular velocity
-        self.acceleration = np.array([[0, 0, 0]])  # acceleration
+        self.position = np.array([[0, 0, 0]])  # position (m)
+        self.velocity = np.array([[0, 0, 0]])  # velocity (m/s)
+        self.angular_velocity = np.array(
+            [[0, 0, 0]]
+        )  # angular velocity (rad/s)
+        self.acceleration = np.array([[0, 0, 0]])  # acceleration (m/s-s)
+        self.forces = np.array([[0, 0, 0]])  # forces (N)
+        self.torque = np.array([[0, 0, 0]])  # torque (N-m)
         self.mach_no = np.array([[0, 0, 0]])  # mach number
-        self.psi = np.array([-np.deg2rad(self.heading_angle)])  # yaw
-        self.theta = np.array([get_nutation_angle(self.launch_angle)])  # pitch
+        self.psi = np.array([-np.deg2rad(self.heading_angle)])  # yaw (rad)
+        self.theta = np.array(
+            [np.deg2rad(self.launch_angle - 90)]
+        )  # pitch (rad)
         self.e_0 = np.array(
             [np.cos(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
         )
