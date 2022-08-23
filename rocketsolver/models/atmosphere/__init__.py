@@ -7,7 +7,7 @@
 
 from abc import ABC, abstractmethod
 
-from fluids.atmosphere import ATMOSPHERE_1976
+from fluids.atmosphere import ATMOSPHERE_1976, hwm93
 
 
 class Atmosphere(ABC):
@@ -29,6 +29,10 @@ class Atmosphere(ABC):
 
     @abstractmethod
     def get_sonic_velocity(self, y_amsl: float) -> float:
+        pass
+
+    @abstractmethod
+    def get_wind_velocity(self, y_amsl: float) -> tuple[float, float]:
         pass
 
 
@@ -53,3 +57,6 @@ class Atmosphere1976(Atmosphere):
 
     def get_sonic_velocity(self, y_amsl: float) -> float:
         return ATMOSPHERE_1976(y_amsl).v_sonic
+
+    def get_wind_velocity(self, y_amsl: float, *args, **kwargs) -> float:
+        return hwm93(y_amsl, *args, **kwargs)
