@@ -9,8 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Testing
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
         run: |
-          echo "$GITHUB_CONTEXT"
           docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-srm-solver
