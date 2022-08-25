@@ -13,7 +13,7 @@ jobs:
           docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-srm-solver
   publish_package:
     name: Publish RocketSolver to PyPi
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs:
       - test
