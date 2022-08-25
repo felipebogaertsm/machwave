@@ -38,7 +38,7 @@ Homepage = "https://github.com/felipebogaertsm/rocket-solver"
 [tool.bumpver]
 current_version = "0.2.7"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "Improving CI/CD"
+commit_message  = "Testing CI"
 commit          = true
 tag             = true
 push            = false
