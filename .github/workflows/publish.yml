@@ -1,0 +1,31 @@
+name: RocketSolver CI
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  publish_package:
+    name: Publishing to PyPi
+    runs-on: ubuntu-latest
+    environment: publish
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker://python:3.10-bullseye
+      - name: Installing dependencies
+        run: |
+          python3 -m pip install build twine
+      - name: Building
+        run: |
+          python3 -m build
+      - name: Verification
+        run: |
+          twine check dist/*
+      - name: Publishing
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        run: |
+          twine upload dist/*
