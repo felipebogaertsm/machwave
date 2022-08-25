@@ -11,7 +11,10 @@ jobs:
       - uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true  # ignore the failure of a step and avoid terminating the job
       - name: Testing
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
         run: |
+          echo "$GITHUB_CONTEXT"
           docker-compose -f docker-compose-test.yaml up --build --exit-code-from test-srm-solver
   publish_package:
     name: Publishing to PyPi
