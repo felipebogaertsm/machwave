@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rocketsolver"
-version = "0.2.7"
+version = "0.2.18"
 description = "Rocket simulator"
 readme = "README.md"
 authors = [{ name = "Felipe Bogaerts de Mattos", email = "me@felipebm.com" }]
@@ -36,12 +36,12 @@ dev = ["black", "pytest", "bumpver"]
 Homepage = "https://github.com/felipebogaertsm/rocket-solver"
 
 [tool.bumpver]
-current_version = "0.2.7"
+current_version = "0.2.18"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "Improving CI/CD"
+commit_message  = "Testing CI"
 commit          = true
 tag             = true
-push            = false
+push            = true
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
