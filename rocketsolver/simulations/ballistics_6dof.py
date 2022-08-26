@@ -10,7 +10,7 @@ import numpy as np
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket3D
-from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
+from rocketsolver.operations.ballistics._6dof import Ballistic6DOFOperation
 from rocketsolver.simulations import Simulation
 
 
@@ -58,7 +58,7 @@ class Ballistic6DOFSimulation(Simulation):
 
         return prop_mass
 
-    def run(self) -> tuple[np.array, Ballistic1DOperation]:
+    def run(self) -> tuple[np.array, Ballistic6DOFOperation]:
         pass
 
     def print_results(self):

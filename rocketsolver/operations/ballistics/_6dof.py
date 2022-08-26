@@ -12,7 +12,6 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket3D
 from rocketsolver.solvers.ballistics_6d import Ballistics6D
-from rocketsolver.utils.spatial import get_nutation_angle
 
 
 class Ballistic6DOFOperation(BallisticOperation):
@@ -63,6 +62,9 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.vehicle_mass = np.array(
             [initial_vehicle_mass]
         )  # total mass of the vehicle
+        self.moment_of_inertia_matrix = (
+            rocket.fuselage.moment_of_inertia_matrix
+        )
         self.vehicle_wind_velocity = np.array(
             [*self.get_vehicle_wind_velocity(self.wind_velocity[0])]
         )  # normal, lateral
@@ -77,10 +79,14 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.forces = np.array([[0, 0, 0]])  # forces (N)
         self.torque = np.array([[0, 0, 0]])  # torque (N-m)
         self.mach_no = np.array([[0, 0, 0]])  # mach number
+
+        # Angles (rad):
         self.psi = np.array([-np.deg2rad(self.heading_angle)])  # yaw (rad)
         self.theta = np.array(
             [np.deg2rad(self.launch_angle - 90)]
         )  # pitch (rad)
+
+        # Euler parameters:
         self.e_0 = np.array(
             [np.cos(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
         )
@@ -92,6 +98,19 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
         self.e_3 = np.array(
             [np.sin(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
+        )
+        self.euler_params = np.array([self.e_0, self.e_1, self.e_2, self.e_3])
+
+        # State space:
+        self.state_space_matrix = np.array(
+            [
+                [
+                    *self.position[0],
+                    *self.velocity[0],
+                    *self.euler_params[0],
+                    *self.angular_velocity[0],
+                ],
+            ]
         )
 
         self.velocity_out_of_rail = None
@@ -112,6 +131,20 @@ class Ballistic6DOFOperation(BallisticOperation):
             -wind_velocity[0] * np.cos(heading_angle_rad)
             + wind_velocity[1] * np.sin(heading_angle_rad),
         )
+
+    def get_slip_angle(self) -> float:
+        """
+        :return: slip angle (rad)
+        :rtype: float
+        """
+        return np.arcsin(self.velocity[2] / np.linalg.norm(self.velocity))
+
+    def get_attack_angle(self) -> float:
+        """
+        :return: attack angle (rad)
+        :rtype: float
+        """
+        return np.arctan(self.velocity[1] / self.velocity[0])
 
     @property
     def apogee(self) -> float:
