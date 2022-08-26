@@ -81,37 +81,11 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.mach_no = np.array([[0, 0, 0]])  # mach number
 
         # Angles (rad):
-        self.psi = np.array([-np.deg2rad(self.heading_angle)])  # yaw (rad)
-        self.theta = np.array(
-            [np.deg2rad(self.launch_angle - 90)]
-        )  # pitch (rad)
-
-        # Euler parameters:
-        self.e_0 = np.array(
-            [np.cos(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
-        )
-        self.e_1 = np.array(
-            [np.cos(self.psi[0] / 2) * np.sin(self.theta[0] / 2)]
-        )
-        self.e_2 = np.array(
-            [np.sin(self.psi[0] / 2) * np.sin(self.theta[0] / 2)]
-        )
-        self.e_3 = np.array(
-            [np.sin(self.psi[0] / 2) * np.cos(self.theta[0] / 2)]
-        )
-        self.euler_params = np.array([self.e_0, self.e_1, self.e_2, self.e_3])
-
-        # State space:
-        self.state_space_matrix = np.array(
-            [
-                [
-                    *self.position[0],
-                    *self.velocity[0],
-                    *self.euler_params[0],
-                    *self.angular_velocity[0],
-                ],
-            ]
-        )
+        self.phi_x = np.array([0])  # roll
+        self.phi_y = np.array([np.deg2rad(self.launch_angle - 90)])  # pitch
+        self.phi_z = np.array([-np.deg2rad(self.heading_angle)])  # yaw
+        self.attack_angle = self.get_attack_angle(self.velocity[0])
+        self.slip_angle = self.get_slip_angle(self.velocity[0])
 
         self.velocity_out_of_rail = None
 
@@ -132,19 +106,127 @@ class Ballistic6DOFOperation(BallisticOperation):
             + wind_velocity[1] * np.sin(heading_angle_rad),
         )
 
-    def get_slip_angle(self) -> float:
+    @staticmethod
+    def get_slip_angle(velocity: np.ndarray[float]) -> float:
         """
         :return: slip angle (rad)
         :rtype: float
         """
-        return np.arcsin(self.velocity[2] / np.linalg.norm(self.velocity))
+        return np.arcsin(velocity[2] / np.linalg.norm(velocity))
 
-    def get_attack_angle(self) -> float:
+    @staticmethod
+    def get_attack_angle(velocity: np.ndarray[float]) -> float:
         """
         :return: attack angle (rad)
         :rtype: float
         """
-        return np.arctan(self.velocity[1] / self.velocity[0])
+        return np.arctan(velocity[1] / velocity[0])
+
+    @staticmethod
+    def get_momentum_matrix(
+        vehicle_mass, moment_of_inertia_matrix
+    ) -> np.ndarray:
+        return np.array(
+            [
+                [vehicle_mass, 0, 0, 0, 0, 0],
+                [0, vehicle_mass, 0, 0, 0, 0],
+                [0, 0, vehicle_mass, 0, 0, 0],
+                [0, 0, 0, *moment_of_inertia_matrix[0]],
+                [0, 0, 0, *moment_of_inertia_matrix[1]],
+                [0, 0, 0, *moment_of_inertia_matrix[2]],
+            ]
+        )
+
+    @staticmethod
+    def get_gravitational_matrix(
+        vehicle_mass, acc_of_gravity, phi_x, phi_y, phi_z
+    ) -> np.ndarray:
+        return (
+            -vehicle_mass
+            * acc_of_gravity
+            * np.array(
+                [
+                    [-np.sin(phi_y)],
+                    [np.cos(phi_y) * np.sin(phi_x)],
+                    [np.cos(phi_y) * np.cos(phi_x)],
+                    [0],
+                    [0],
+                    [0],
+                ]
+            )
+        )
+
+    @staticmethod
+    def get_aerodynamic_matrix():
+        """
+        % Matriz de forças aerodinâmicas
+        D = 0.5 * rho * Corpo.AreaFoguete * [ Cd0*Va   (Cdi-Clalpha)*vy          (Cdi-Clalpha)*vz          0  0  0
+                                              Cd0*vy   Clalpha*Va+(Cdi*vy^2/Va)  Cdi*vz*vy/Va              0  0  0
+                                              Cd0*vz   Cdi*vy*vz/Va              Clalpha*Va+(Cdi*vz^2/Va)  0  0  0
+                                              0        0                         0                         0  0  0
+                                              0        0                        -Cmalpha*cref*Va           0  0  0
+                                              0        Cmalpha*cref*Va           0                         0  0  0 ];
+        """
+        pass
+
+    @staticmethod
+    def get_J_matrix(phi_x, phi_y, phi_z) -> np.ndarray[float]:
+        return np.array(
+            [
+                [
+                    np.cos(phi_z) * np.cos(phi_y),
+                    -np.sin(phi_z) * np.cos(phi_x)
+                    + np.cos(phi_z) * np.sin(phi_y) * np.sin(phi_x),
+                    np.sin(phi_z) * np.sin(phi_x)
+                    + np.cos(phi_z) * np.cos(phi_x) * np.sin(phi_y),
+                    0,
+                    0,
+                    0,
+                ],
+                [
+                    np.sin(phi_z) * np.cos(phi_y),
+                    np.cos(phi_z) * np.cos(phi_x)
+                    + np.sin(phi_x) * np.sin(phi_y) * np.sin(phi_z),
+                    -np.cos(phi_z) * np.sin(phi_x)
+                    + np.sin(phi_y) * np.sin(phi_z) * np.cos(phi_x),
+                    0,
+                    0,
+                    0,
+                ],
+                [
+                    -np.sin(phi_y),
+                    np.cos(phi_y) * np.sin(phi_x),
+                    np.cos(phi_y) * np.cos(phi_x),
+                    0,
+                    0,
+                    0,
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    1,
+                    np.sin(phi_x) * np.tan(phi_y),
+                    np.cos(phi_x) * np.tan(phi_y),
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    np.cos(phi_x),
+                    -np.sin(phi_x),
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    np.sin(phi_x) / np.cos(phi_y),
+                    np.cos(phi_x) / np.cos(phi_y),
+                ],
+            ]
+        )
 
     @property
     def apogee(self) -> float:
