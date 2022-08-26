@@ -9,6 +9,8 @@
 Stores Rocket class and methods.
 """
 
+import numpy as np
+
 from .fuselage import Fuselage, Fuselage3D
 from .structure import RocketStructure
 
@@ -20,5 +22,13 @@ class Rocket:
 
 
 class Rocket3D(Rocket):
-    def __init__(self, fuselage: Fuselage3D, structure: RocketStructure):
+    def __init__(
+        self,
+        fuselage: Fuselage3D,
+        structure: RocketStructure,
+    ):
+        """
+        :param Fuselage3D fuselage: Fuselage3D object.
+        :param RocketStructure structure: RocketStructure object.
+        """
         super().__init__(fuselage, structure)
