@@ -19,5 +19,9 @@ def get_circle_area(diameter):
     return np.pi * 0.25 * diameter**2
 
 
+def get_trapezoidal_area(base_length, tip_length, height):
+    return (base_length + tip_length) * height / 2
+
+
 def get_cylinder_volume(diameter, length):
     return np.pi * length * (diameter**2) / 4
