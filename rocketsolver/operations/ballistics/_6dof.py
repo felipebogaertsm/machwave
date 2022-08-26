@@ -5,6 +5,8 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from typing import Optional
+
 import numpy as np
 
 from . import BallisticOperation
@@ -76,14 +78,16 @@ class Ballistic6DOFOperation(BallisticOperation):
             [[0, 0, 0]]
         )  # angular velocity (rad/s)
         self.acceleration = np.array([[0, 0, 0]])  # acceleration (m/s-s)
-        self.forces = np.array([[0, 0, 0]])  # forces (N)
+        self.force = np.array([[0, 0, 0]])  # force (N)
         self.torque = np.array([[0, 0, 0]])  # torque (N-m)
         self.mach_no = np.array([[0, 0, 0]])  # mach number
 
         # Angles (rad):
-        self.phi_x = np.array([0])  # roll
-        self.phi_y = np.array([np.deg2rad(self.launch_angle - 90)])  # pitch
-        self.phi_z = np.array([-np.deg2rad(self.heading_angle)])  # yaw
+        self.phi = np.array(
+            [0],  # roll
+            [np.deg2rad(self.launch_angle - 90)],  # pitch
+            [-np.deg2rad(self.heading_angle)],  # yaw
+        )
         self.attack_angle = self.get_attack_angle(self.velocity[0])
         self.slip_angle = self.get_slip_angle(self.velocity[0])
 
@@ -123,7 +127,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         return np.arctan(velocity[1] / velocity[0])
 
     @staticmethod
-    def get_momentum_matrix(
+    def get_moment_matrix(
         vehicle_mass, moment_of_inertia_matrix
     ) -> np.ndarray:
         return np.array(
@@ -139,7 +143,7 @@ class Ballistic6DOFOperation(BallisticOperation):
 
     @staticmethod
     def get_gravitational_matrix(
-        vehicle_mass, acc_of_gravity, phi_x, phi_y, phi_z
+        vehicle_mass, acc_of_gravity, phi_x, phi_y
     ) -> np.ndarray:
         return (
             -vehicle_mass
@@ -227,6 +231,15 @@ class Ballistic6DOFOperation(BallisticOperation):
                 ],
             ]
         )
+
+    def get_velocity_matrix(self, index: Optional[int] = -1):
+        return np.array([*self.velocity[index], *self.angular_velocity[index]])
+
+    def get_force_matrix(self, index: Optional[int] = -1):
+        return np.array([*self.force[index], *self.torque[index]])
+
+    def get_inertial_ref_position_matrix(self, index: Optional[int] = -1):
+        return np.array([*self.position[index], *self.phi[index]])
 
     @property
     def apogee(self) -> float:
