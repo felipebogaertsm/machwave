@@ -35,6 +35,10 @@ class Atmosphere(ABC):
     def get_wind_velocity(self, y_amsl: float) -> tuple[float, float]:
         pass
 
+    @abstractmethod
+    def get_viscosity(self, y_amsl: float) -> float:
+        pass
+
 
 class Atmosphere1976(Atmosphere):
     def get_density(self, y_amsl: float) -> float:
@@ -60,3 +64,6 @@ class Atmosphere1976(Atmosphere):
 
     def get_wind_velocity(self, y_amsl: float, *args, **kwargs) -> float:
         return hwm93(y_amsl, *args, **kwargs)
+
+    def get_viscosity(self, y_amsl: float) -> float:
+        return ATMOSPHERE_1976(y_amsl).mu  # Pa-s
