@@ -5,6 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+import numpy as np
+
+from .components.body import BodySegment
+from .components.nosecones import NoseCone
 from rocketsolver.utils.geometric import get_circle_area
 
 
@@ -51,12 +55,11 @@ class Fuselage:
             )
 
 
-class Fuselage3D(Fuselage):
+class Fuselage3D:
     def __init__(
         self,
-        length: float,
-        outer_diameter: float,
-        drag_coefficient: list[list[float, float]] | float | int,
+        nose_cone: NoseCone,
+        mass_without_motor: float,
         I_x: float,
         I_y: float,
         I_z: float,
@@ -66,11 +69,7 @@ class Fuselage3D(Fuselage):
         I_yx: float,
         I_zx: float,
         I_zy: float,
-        frontal_area: float | None = None,
     ) -> None:
-        super().__init__(
-            length, outer_diameter, drag_coefficient, frontal_area
-        )
         # Moment of inertia for each axis:
         self.I_x = I_x
         self.I_y = I_y
@@ -87,3 +86,20 @@ class Fuselage3D(Fuselage):
             [-I_yx, I_y, -I_yz],
             [-I_zx, -I_zy, I_z],
         ]
+
+        self.nose_cone = nose_cone
+        self.mass_without_motor = mass_without_motor
+        self.body_segments: list[BodySegment] = []
+
+    def get_drag_coefficient(
+        self, velocity: float = None, mach_no: float = None
+    ) -> float:
+        return self.nose_cone.get_drag_coefficient() + np.sum(
+            [
+                body_segment.get_drag_coefficient()
+                for body_segment in self.body_segments
+            ]
+        )
+
+    def add_body_segment(self, body_segment: BodySegment) -> None:
+        self.body_segments.append(body_segment)
