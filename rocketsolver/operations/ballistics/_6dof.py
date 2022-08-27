@@ -101,6 +101,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         """
         heading_angle_rad = np.deg2rad(self.heading_angle)
 
+        return np.array(
             [
                 wind_velocity[0] * np.sin(heading_angle_rad)
                 + wind_velocity[1] * np.cos(heading_angle_rad),
@@ -113,44 +114,44 @@ class Ballistic6DOFOperation(BallisticOperation):
             ]
         )
 
-    @staticmethod
-    def get_slip_angle(velocity: np.ndarray[float]) -> float:
+    def get_slip_angle(self, index: Optional[int] = -1) -> float:
         """
         :return: slip angle (rad)
         :rtype: float
         """
-        return np.arcsin(velocity[2] / np.linalg.norm(velocity))
+        velocity_z = self.velocity[index][2]
+        return np.arcsin(velocity_z / np.linalg.norm(self.velocity[index]))
 
-    @staticmethod
-    def get_attack_angle(velocity: np.ndarray[float]) -> float:
+    def get_attack_angle(self, index: Optional[int]) -> float:
         """
         :return: attack angle (rad)
         :rtype: float
         """
-        return np.arctan(velocity[1] / velocity[0])
+        velocity_x = self.velocity[index][0]
+        velocity_y = self.velocity[index][1]
+        return np.arctan(velocity_y / velocity_x)
 
-    @staticmethod
-    def get_moment_matrix(
-        vehicle_mass, moment_of_inertia_matrix
-    ) -> np.ndarray:
+    def get_moment_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         return np.array(
             [
-                [vehicle_mass, 0, 0, 0, 0, 0],
-                [0, vehicle_mass, 0, 0, 0, 0],
-                [0, 0, vehicle_mass, 0, 0, 0],
-                [0, 0, 0, *moment_of_inertia_matrix[0]],
-                [0, 0, 0, *moment_of_inertia_matrix[1]],
-                [0, 0, 0, *moment_of_inertia_matrix[2]],
+                [self.vehicle_mass[index], 0, 0, 0, 0, 0],
+                [0, self.vehicle_mass[index], 0, 0, 0, 0],
+                [0, 0, self.vehicle_mass[index], 0, 0, 0],
+                [0, 0, 0, *self.moment_of_inertia_matrix[0]],
+                [0, 0, 0, *self.moment_of_inertia_matrix[1]],
+                [0, 0, 0, *self.moment_of_inertia_matrix[2]],
             ]
         )
 
-    @staticmethod
     def get_gravitational_matrix(
-        vehicle_mass, acc_of_gravity, phi_x, phi_y
+        self, index: Optional[int] = -1
     ) -> np.ndarray:
+        phi_x = self.phi[0]
+        phi_y = self.phi[1]
+
         return (
-            -vehicle_mass
-            * acc_of_gravity
+            -self.vehicle_mass[index]
+            * self.g[index]
             * np.array(
                 [
                     [-np.sin(phi_y)],
@@ -250,8 +251,11 @@ class Ballistic6DOFOperation(BallisticOperation):
             )
         )
 
-    @staticmethod
-    def get_J_matrix(phi_x, phi_y, phi_z) -> np.ndarray[float]:
+    def get_J_matrix(self, index: Optional[int] = -1) -> np.ndarray[float]:
+        phi_x = self.phi[index][0]
+        phi_y = self.phi[index][1]
+        phi_z = self.phi[index][2]
+
         return np.array(
             [
                 [
@@ -345,3 +349,16 @@ class Ballistic6DOFOperation(BallisticOperation):
         d_t: float,
     ) -> None:
         self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
+
+        self.rho_air = np.append(
+            self.rho_air,
+            self.atmosphere.get_density(
+                y_amsl=(self.position[-1][2] + self.initial_elevation_amsl)
+            ),
+        )
+        self.g = np.append(
+            self.g,
+            self.atmosphere.get_gravity(
+                self.initial_elevation_amsl + self.position[-1][2]
+            ),
+        )

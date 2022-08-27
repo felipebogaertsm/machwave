@@ -9,6 +9,8 @@
 Stores solvers called inside the simulations.
 """
 
+import numpy as np
+
 from rocketsolver.utils.isentropic_flow import get_critical_pressure_ratio
 
 
@@ -72,7 +74,7 @@ def ballistics_ode(y, v, T, D, M, g):
     :param M: instant total mass
     :param g: instant acceleration of gravity
     :return: dy_dt, dv_dt
-    :rtype: float, float
+    :rtype: tuple[float, float]
     """
     if v < 0:
         x = -1
@@ -81,5 +83,33 @@ def ballistics_ode(y, v, T, D, M, g):
 
     dv_dt = (T - x * D * (v**2)) / M - g
     dy_dt = v
+
+    return dy_dt, dv_dt
+
+
+def ballistics_6dof_ode(
+    M: np.ndarray,
+    C: np.ndarray,
+    V: np.ndarray,
+    D: np.ndarray,
+    G: np.ndarray,
+    tau: np.ndarray,
+):
+    """
+    :param y: instant elevation
+    :param v: instant velocity
+    :param T: instant thrust
+    :param D: instant drag constant (Cd * A * rho / 2)
+    :param M: instant total mass
+    :param g: instant acceleration of gravity
+    :return: dy_dt, dv_dt
+    :rtype: tuple[float, float]
+    """
+    if v < 0:
+        x = -1
+    else:
+        x = 1
+
+    F_xy = -(M / C) * V - (M / D) * V - (M / G) + (M / tau)
 
     return dy_dt, dv_dt
