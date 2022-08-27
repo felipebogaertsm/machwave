@@ -101,11 +101,16 @@ class Ballistic6DOFOperation(BallisticOperation):
         """
         heading_angle_rad = np.deg2rad(self.heading_angle)
 
-        return (
-            wind_velocity[0] * np.sin(heading_angle_rad)
-            + wind_velocity[1] * np.cos(heading_angle_rad),
-            -wind_velocity[0] * np.cos(heading_angle_rad)
-            + wind_velocity[1] * np.sin(heading_angle_rad),
+            [
+                wind_velocity[0] * np.sin(heading_angle_rad)
+                + wind_velocity[1] * np.cos(heading_angle_rad),
+                -wind_velocity[0] * np.cos(heading_angle_rad)
+                + wind_velocity[1] * np.sin(heading_angle_rad),
+                0,
+                0,
+                0,
+                0,
+            ]
         )
 
     @staticmethod
@@ -158,8 +163,7 @@ class Ballistic6DOFOperation(BallisticOperation):
             )
         )
 
-    @staticmethod
-    def get_aerodynamic_matrix():
+    def get_aerodynamic_forces_matrix(self, index: Optional[int] = -1):
         """
         % Matriz de forças aerodinâmicas
         D = 0.5 * rho * Corpo.AreaFoguete * [ Cd0*Va   (Cdi-Clalpha)*vy          (Cdi-Clalpha)*vz          0  0  0
@@ -169,7 +173,82 @@ class Ballistic6DOFOperation(BallisticOperation):
                                               0        0                        -Cmalpha*cref*Va           0  0  0
                                               0        Cmalpha*cref*Va           0                         0  0  0 ];
         """
-        pass
+        C_l_alpha = 0.3
+        C_d_0 = 0.4
+        C_d_i = 0.3
+        C_m_alpha = 0.5
+
+        velocity_modulus = np.linalg.norm(self.velocity[index])
+
+        return (
+            0.5
+            * self.rho_air[index]
+            * self.fuselage.body_segments[0].frontal_area
+            * np.array(
+                [
+                    [
+                        C_d_0 * velocity_modulus,
+                        (C_d_i - C_l_alpha) * self.velocity[1],
+                        (C_d_i - C_l_alpha) * self.velocity[2],
+                        0,
+                        0,
+                        0,
+                    ],
+                    [
+                        C_d_0 * self.velocity[1],
+                        C_l_alpha * velocity_modulus
+                        + (C_d_i * self.velocity[1] ** 2 / velocity_modulus),
+                        C_d_i
+                        * self.velocity[2]
+                        * self.velocity[1]
+                        / velocity_modulus,
+                        0,
+                        0,
+                        0,
+                    ],
+                    [
+                        C_d_0 * self.velocity[2],
+                        C_d_i
+                        * self.velocity[2]
+                        * self.velocity[1]
+                        / velocity_modulus,
+                        C_l_alpha * velocity_modulus
+                        + (C_d_i * self.velocity[2] ** 2 / velocity_modulus),
+                        0,
+                        0,
+                        0,
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    ],
+                    [
+                        0,
+                        0,
+                        -C_m_alpha
+                        * self.fuselage.body_segments[0].fins.base_length
+                        * velocity_modulus,
+                        0,
+                        0,
+                        0,
+                    ],
+                    [
+                        0,
+                        C_m_alpha
+                        * self.fuselage.body_segments[0].fins.base_length
+                        * velocity_modulus,
+                        0,
+                        0,
+                        0,
+                        0,
+                    ],
+                ]
+            )
+        )
 
     @staticmethod
     def get_J_matrix(phi_x, phi_y, phi_z) -> np.ndarray[float]:
