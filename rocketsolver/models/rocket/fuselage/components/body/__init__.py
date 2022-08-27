@@ -5,13 +5,20 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from typing import Optional
+
 import numpy as np
 
+from ..fins import Fins
 from rocketsolver.models.materials import Material
 from rocketsolver.models.rocket.fuselage.components import FuselageComponent
 
 
-class CylindricalBody(FuselageComponent):
+class BodySegment(FuselageComponent):
+    pass
+
+
+class CylindricalBody(BodySegment):
     def __init__(
         self,
         material: Material,
@@ -19,6 +26,7 @@ class CylindricalBody(FuselageComponent):
         outer_diameter: float,
         rugosity: float,
         constant_K: float,
+        fins: Optional[Fins] = None,
     ) -> None:
         super().__init__(material)
 
@@ -26,6 +34,7 @@ class CylindricalBody(FuselageComponent):
         self.outer_diameter = outer_diameter
         self.rugosity = rugosity
         self.constant_K = constant_K
+        self.fins = fins
 
     @property
     def frontal_area(self) -> float:
