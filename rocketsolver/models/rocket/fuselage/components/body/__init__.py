@@ -35,6 +35,25 @@ class CylindricalBody(FuselageComponent):
     def outer_surface_area(self) -> float:
         return self.length * np.pi * (self.outer_diameter)
 
+    def get_cd_body(
+        self, total_vehicle_length: float, nose_cone_length: float
+    ) -> float:
+        return (
+            1
+            + 60 / ((total_vehicle_length / self.outer_diameter) ** 3)
+            + 0.0025
+            * (self.length / self.outer_diameter)
+            * (
+                2.7 * (nose_cone_length / self.outer_diameter)
+                + 4 * (self.length / self.outer_diameter)
+            )
+        )
+
+    def get_cd_base(self) -> float:
+        return 0.029 / np.sqrt(
+            self.get_cd_body(total_vehicle_length=0, nose_cone_length=0)
+        )
+
     def get_drag_coefficient(self) -> float:
         pass
 
