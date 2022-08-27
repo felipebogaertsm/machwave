@@ -7,26 +7,31 @@
 
 import numpy as np
 
-from . import Fin
+from . import Fins
 from rocketsolver.models.materials import Material
 from rocketsolver.utils.geometric import get_trapezoidal_area
 
 
-class TrapezoidalFins(Fin):
+class TrapezoidalFins(Fins):
     def __init__(
         self,
         material: Material,
         thickness: float,
+        count: int,
         rugosity: float,
         base_length: float,
         tip_length: float,
+        average_span: float,
         height: float,
+        body_diameter: float,
     ) -> None:
-        super().__init__(material, thickness, rugosity)
+        super().__init__(material, thickness, count, rugosity)
 
         self.base_length = base_length
         self.tip_length = tip_length
+        self.average_span = average_span
         self.height = height
+        self.body_diameter = body_diameter
 
     def get_area(self):
         return get_trapezoidal_area(
@@ -39,11 +44,21 @@ class TrapezoidalFins(Fin):
     def get_A_1_4(self) -> float:
         return np.deg2rad(45)
 
+    def get_K_f(self) -> float:
+        return 1 + (
+            (self.body_diameter / 2) / (self.height + (self.body_diameter / 2))
+        )
+
     def get_lift_coefficient(self, *args, **kwargs) -> float:
-        return (2 * np.pi * self.get_AR()) / (
-            2
-            + np.cos(self.get_A_1_4())
-            * np.sqrt(
-                4 + ((self.get_AR() ** 2) / (np.cos(self.get_A_1_4()) ** 4))
+        return self.get_K_f * (
+            (4 * self.count * (self.height / self.body_diameter) ** 2)
+            / (
+                1
+                + np.sqrt(
+                    1
+                    + 2
+                    * self.average_span
+                    / (self.base_length + self.tip_length)
+                )
             )
         )

@@ -56,3 +56,9 @@ class HaackSeriesNoseCone(NoseCone):
             area += 2 * np.pi * y * self.length / iterations
 
         return area
+
+    def get_drag_coefficient(self) -> float:
+        pass
+
+    def get_lift_coefficient(self) -> float:
+        return 2

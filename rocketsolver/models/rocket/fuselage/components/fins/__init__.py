@@ -9,11 +9,12 @@ from rocketsolver.models.materials import Material
 from rocketsolver.models.rocket.fuselage.components import FuselageComponent
 
 
-class Fin(FuselageComponent):
+class Fins(FuselageComponent):
     def __init__(
-        self, material: Material, thickness: float, rugosity: float
+        self, material: Material, thickness: float, count: int, rugosity: float
     ) -> None:
         self.super().__init__(material)
 
         self.thickness = thickness
+        self.count = count
         self.rugosity = rugosity
