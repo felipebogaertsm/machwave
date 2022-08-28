@@ -96,20 +96,14 @@ def ballistics_6dof_ode(
     tau: np.ndarray,
 ):
     """
-    :param y: instant elevation
-    :param v: instant velocity
-    :param T: instant thrust
-    :param D: instant drag constant (Cd * A * rho / 2)
-    :param M: instant total mass
-    :param g: instant acceleration of gravity
-    :return: dy_dt, dv_dt
-    :rtype: tuple[float, float]
+    :param M: moment matrix
+    :param C: coriolis matrix
+    :param V: velocity matrix
+    :param D: aerodynamical force matrix
+    :param G: grativational force matrix
+    :param tau: vehicle force matrix
+    :return: F_xy
+    :rtype: float
     """
-    if v < 0:
-        x = -1
-    else:
-        x = 1
 
-    F_xy = -(M / C) * V - (M / D) * V - (M / G) + (M / tau)
-
-    return dy_dt, dv_dt
+    return -(M / C) * V - (M / D) * V - (M / G) + (M / tau)

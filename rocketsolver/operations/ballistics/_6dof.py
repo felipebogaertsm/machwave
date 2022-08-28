@@ -165,15 +165,6 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
     def get_aerodynamic_forces_matrix(self, index: Optional[int] = -1):
-        """
-        % Matriz de forças aerodinâmicas
-        D = 0.5 * rho * Corpo.AreaFoguete * [ Cd0*Va   (Cdi-Clalpha)*vy          (Cdi-Clalpha)*vz          0  0  0
-                                              Cd0*vy   Clalpha*Va+(Cdi*vy^2/Va)  Cdi*vz*vy/Va              0  0  0
-                                              Cd0*vz   Cdi*vy*vz/Va              Clalpha*Va+(Cdi*vz^2/Va)  0  0  0
-                                              0        0                         0                         0  0  0
-                                              0        0                        -Cmalpha*cref*Va           0  0  0
-                                              0        Cmalpha*cref*Va           0                         0  0  0 ];
-        """
         C_l_alpha = 0.3
         C_d_0 = 0.4
         C_d_i = 0.3
@@ -310,6 +301,38 @@ class Ballistic6DOFOperation(BallisticOperation):
                     np.sin(phi_x) / np.cos(phi_y),
                     np.cos(phi_x) / np.cos(phi_y),
                 ],
+            ]
+        )
+
+    def get_coriolis_matrix(self, index: Optional[int] = -1):
+        """
+        C = [ 0            0            0                    0               Geral.mtotal*vz     -Geral.mtotal*vy
+          0            0            0             -Geral.mtotal*vz             0              Geral.mtotal*vx
+          0            0            0              Geral.mtotal*vy      -Geral.mtotal*vx            0
+          0            0            0                    0                     0                    0
+          0            0            0                 -Iy*wz                   0                  Ix*wx
+          0            0            0                  Iy*wy                -Ix*wx                  0          ];
+        """
+        v_x = self.velocity[index][0]
+        v_y = self.velocity[index][1]
+        v_z = self.velocity[index][2]
+        w_x = self.angular_velocity[index][0]
+        w_y = self.angular_velocity[index][1]
+        w_z = self.angular_velocity[index][2]
+
+        vehicle_mass = self.vehicle_mass[index]
+
+        I_x = self.fuselage.moment_of_inertia_matrix[0][0]
+        I_y = self.fuselage.moment_of_inertia_matrix[1][1]
+
+        return np.array(
+            [
+                [0, 0, 0, 0, vehicle_mass * v_z, -vehicle_mass * v_y],
+                [0, 0, 0, -vehicle_mass * v_z, 0, vehicle_mass * v_x],
+                [0, 0, 0, vehicle_mass * v_y, -vehicle_mass * v_x, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, -I_y * w_z, 0, I_x * w_x],
+                [0, 0, 0, I_y * w_y, -I_x * w_x, 0],
             ]
         )
 
