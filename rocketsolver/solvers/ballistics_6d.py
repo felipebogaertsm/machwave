@@ -7,44 +7,26 @@
 
 from typing import Tuple
 
+import numpy as np
+
 from rocketsolver.solvers import Solver
-from rocketsolver.utils.odes import ballistics_ode
+from rocketsolver.utils.odes import ballistics_6dof_ode
 
 
 class Ballistics6D(Solver):
     def solve(
-        self, height, velocity, thrust, D, vehicle_mass, gravity, d_t
+        self,
+        M: np.ndarray,
+        C: np.ndarray,
+        V: np.ndarray,
+        D: np.ndarray,
+        G: np.ndarray,
+        tau: np.ndarray,
+        d_t: np.ndarray,
     ) -> Tuple[float]:
-        p_1, l_1 = ballistics_ode(
-            height, velocity, thrust, D, vehicle_mass, gravity
-        )
-        p_2, l_2 = ballistics_ode(
-            height + 0.5 * p_1 * d_t,
-            velocity + 0.5 * l_1 * d_t,
-            thrust,
-            D,
-            vehicle_mass,
-            gravity,
-        )
-        p_3, l_3 = ballistics_ode(
-            height + 0.5 * p_2 * d_t,
-            velocity + 0.5 * l_2 * d_t,
-            thrust,
-            D,
-            vehicle_mass,
-            gravity,
-        )
-        p_4, l_4 = ballistics_ode(
-            height + 0.5 * p_3 * d_t,
-            velocity + 0.5 * l_3 * d_t,
-            thrust,
-            D,
-            vehicle_mass,
-            gravity,
-        )
+        k_1 = ballistics_6dof_ode(M, C, V, D, G, tau)
+        k_2 = ballistics_6dof_ode(M, C, V + 0.5 * k_1 * d_t, D, G, tau)
+        k_3 = ballistics_6dof_ode(M, C, V + 0.5 * k_2 * d_t, D, G, tau)
+        k_4 = ballistics_6dof_ode(M, C, V + 0.5 * k_3 * d_t, D, G, tau)
 
-        height = height + (1 / 6) * (p_1 + 2 * (p_2 + p_3) + p_4) * d_t
-        velocity = velocity + (1 / 6) * (l_1 + 2 * (l_2 + l_3) + l_4) * d_t
-        acceleration = (1 / 6) * (l_1 + 2 * (l_2 + l_3) + l_4)
-
-        return (height, velocity, acceleration)
+        return V + (1 / 6) * (k_1 + 2 * (k_2 + k_3) + k_4) * d_t

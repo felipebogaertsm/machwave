@@ -106,4 +106,9 @@ def ballistics_6dof_ode(
     :rtype: float
     """
 
-    return -(M / C) * V - (M / D) * V - (M / G) + (M / tau)
+    return (
+        -np.matmul(np.matmul(M, np.linalg.inv(C)), V)
+        - np.matmul(np.matmul(M, np.linalg.inv(D)), V)
+        - np.matmul(M, np.linalg.inv(G))
+        + np.matmul(M, np.linalg.inv(tau))
+    )
