@@ -11,45 +11,51 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
-from rocketsolver.simulations import Simulation
+from rocketsolver.simulations import Simulation, SimulationParameters
 
 
-class BallisticSimulation(Simulation):
+class BallisticSimulationParameters(SimulationParameters):
     def __init__(
         self,
         thrust: np.ndarray,
         motor_dry_mass: float,
         initial_propellant_mass: float,
         time: np.ndarray,
-        rocket: Rocket,
-        recovery: Recovery,
-        atmosphere: Atmosphere,
         d_t: float,
         initial_elevation_amsl: float,
         rail_length: float,
-    ) -> None:
+    ):
         self.thrust = thrust
-        self.initial_propellant_mass = initial_propellant_mass
         self.motor_dry_mass = motor_dry_mass
+        self.initial_propellant_mass = initial_propellant_mass
         self.time = time
-        self.rocket = rocket
-        self.recovery = recovery
-        self.atmosphere = atmosphere
         self.d_t = d_t
         self.initial_elevation_amsl = initial_elevation_amsl
         self.rail_length = rail_length
 
+
+class BallisticSimulation(Simulation):
+    def __init__(
+        self,
+        rocket: Rocket,
+        atmosphere: Atmosphere,
+        params: BallisticSimulationParameters,
+    ) -> None:
+        super().__init__(params=params)
+
+        self.rocket = rocket
+        self.atmosphere = atmosphere
+
         self.t = np.array([0])
 
     def get_propellant_mass(self) -> np.ndarray:
+        initial_propellant_mass = self.params.initial_propellant_mass
         prop_mass = np.array([])
+        time = self.params.time
 
-        for time in self.time:
+        for t in self.time:
             prop_mass = np.append(
-                prop_mass,
-                self.initial_propellant_mass
-                * (self.time[-1] - time)
-                / self.time[-1],
+                prop_mass, initial_propellant_mass * (time[-1] - t) / time[-1]
             )
 
         return prop_mass
@@ -61,14 +67,13 @@ class BallisticSimulation(Simulation):
         """
         self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
-            self.recovery,
             self.atmosphere,
             rail_length=self.rail_length,
-            motor_dry_mass=self.motor_dry_mass,
+            motor_dry_mass=self.params.motor_dry_mass,
             initial_vehicle_mass=self.rocket.structure.mass_without_motor
-            + self.motor_dry_mass
-            + self.initial_propellant_mass,
-            initial_elevation_amsl=self.initial_elevation_amsl,
+            + self.params.motor_dry_mass
+            + self.params.initial_propellant_mass,
+            initial_elevation_amsl=self.params.initial_elevation_amsl,
         )
 
         propellant_mass = self.get_propellant_mass()

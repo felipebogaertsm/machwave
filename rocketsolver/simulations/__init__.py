@@ -8,7 +8,14 @@
 from abc import ABC, abstractmethod
 
 
+class SimulationParameters(ABC):
+    pass
+
+
 class Simulation(ABC):
+    def __init__(self, params: SimulationParameters) -> None:
+        self.params = params
+
     @abstractmethod
     def run(self):
         pass
