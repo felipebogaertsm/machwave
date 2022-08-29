@@ -18,8 +18,6 @@ ambient pressure, which impacts the propellant burn rate inside the motor.
 import numpy as np
 
 from rocketsolver.models.atmosphere import Atmosphere
-from rocketsolver.models.propulsion import Motor
-from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
 from rocketsolver.operations.internal_ballistics import MotorOperation
@@ -30,9 +28,7 @@ from rocketsolver.utils.classes import get_motor_operation_class
 class InternalBallisticsCoupled(Simulation):
     def __init__(
         self,
-        motor: Motor,
         rocket: Rocket,
-        recovery: Recovery,
         atmosphere: Atmosphere,
         d_t: float,
         dd_t: float,
@@ -40,9 +36,7 @@ class InternalBallisticsCoupled(Simulation):
         igniter_pressure: float,
         rail_length: float,
     ) -> None:
-        self.motor = motor
         self.rocket = rocket
-        self.recovery = recovery
         self.atmosphere = atmosphere
         self.d_t = d_t
         self.dd_t = dd_t
@@ -56,10 +50,12 @@ class InternalBallisticsCoupled(Simulation):
         """
         Will depend on the type of the motor (SR, HRE or LRE).
         """
-        motor_operation_class = get_motor_operation_class(self.motor)
+        motor_operation_class = get_motor_operation_class(
+            self.rocket.propulsion.motor
+        )
 
         return motor_operation_class(
-            motor=self.motor,
+            motor=self.rocket.propulsion,
             initial_pressure=self.igniter_pressure,
             initial_atmospheric_pressure=self.atmosphere.get_pressure(
                 self.initial_elevation_amsl
@@ -74,13 +70,10 @@ class InternalBallisticsCoupled(Simulation):
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
-            self.recovery,
             self.atmosphere,
             rail_length=self.rail_length,
-            motor_dry_mass=self.motor.structure.dry_mass,
-            initial_vehicle_mass=self.rocket.structure.mass_without_motor
-            + self.motor.structure.dry_mass
-            + self.motor.initial_propellant_mass,
+            motor_dry_mass=self.rocket.propulsion.get_dry_mass(),
+            initial_vehicle_mass=self.rocket.get_launch_mass(),
             initial_elevation_amsl=self.initial_elevation_amsl,
         )
 
