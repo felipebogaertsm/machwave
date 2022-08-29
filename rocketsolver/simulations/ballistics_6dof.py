@@ -9,7 +9,7 @@ import numpy as np
 
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
-from rocketsolver.models.rocket.fuselage import Fuselage3D
+from rocketsolver.models.fuselage import Fuselage3D
 from rocketsolver.operations.internal_ballistics import MotorOperation
 from rocketsolver.operations.ballistics._6dof import Ballistic6DOFOperation
 from rocketsolver.simulations import Simulation

@@ -119,8 +119,8 @@ class Ballistic1DOperation(BallisticOperation):
         )
 
         # Drag properties:
-        fuselage_area = self.rocket.fuselage.frontal_area
-        fuselage_drag_coeff = self.rocket.fuselage.get_drag_coefficient()
+        fuselage_area = self.fuselage.frontal_area
+        fuselage_drag_coeff = self.fuselage.get_drag_coefficient()
         (
             recovery_drag_coeff,
             recovery_area,
