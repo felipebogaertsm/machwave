@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 
 from .. import Analyze
 from rocketsolver.models.atmosphere import Atmosphere
-from rocketsolver.models.propulsion import SolidMotor
+from rocketsolver.models.propulsion import MotorFromDataframe, SolidMotor
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
@@ -32,7 +32,7 @@ from rocketsolver.utils.utilities import generate_eng
 
 @dataclass
 class AnalyzeSRMOperation(Analyze):
-    initial_propellant_mass: float
+    empirical_motor: MotorFromDataframe
     theoretical_motor: SolidMotor
     external_pressure: float
 
@@ -56,109 +56,6 @@ class AnalyzeSRMOperation(Analyze):
             self.theoretical_motor_time,
             self.theoretical_motor_operation,
         ) = self.ib_simulation.run()
-
-    def generate_eng_file(self, name: str, manufacturer: str) -> None:
-        generate_eng(
-            time=self.get_time(),
-            thrust=self.get_thrust(),
-            propellant_mass=self.get_propellant_mass(),
-            name=name,
-            manufacturer=manufacturer,
-            chamber_length=1670,
-            outer_diameter=141.3,
-            motor_mass=17,
-        )
-
-    def get_thrust(self) -> np.ndarray:
-        return self.get_from_df(self.thrust_header_name)
-
-    def get_time(self) -> np.ndarray:
-        return self.get_from_df(self.time_header_name)
-
-    def get_pressure(self) -> np.ndarray:
-        return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
-
-    def get_thrust_coefficient(self) -> np.ndarray:
-        throat_area = get_circle_area(
-            self.theoretical_motor.structure.nozzle.throat_diameter
-        )
-        return get_thrust_coefficient(
-            P_0=self.get_pressure(),
-            thrust=self.get_thrust(),
-            nozzle_throat_area=throat_area,
-        )
-
-    @property
-    def thrust_time(self) -> float:
-        return self.get_time()[-1] - self.get_time()[0]
-
-    def get_temperatures(
-        self, col_name_startswith="Temperature"
-    ) -> np.ndarray:
-        """
-        :param str col_name_startswith: The name that the column starts with
-        :return: An array of temperatures captured by each thermopar.
-        :rtype: np.ndarray
-        """
-        col_names = self.data.columns.values().tolist()
-        temperature_col_names = [
-            col_name
-            for col_name in col_names
-            if col_name.startswith(col_name_startswith)
-        ]
-
-        temperatures = np.array([])
-
-        for name in temperature_col_names:
-            temperatures = np.append(temperatures, self.get_from_df(name))
-
-        return temperatures
-
-    def get_total_impulse(self) -> float:
-        return get_total_impulse(
-            np.average(self.get_thrust()), self.get_time()[-1]
-        )
-
-    def get_specific_impulse(self) -> float:
-        return get_specific_impulse(
-            self.get_total_impulse(), self.initial_propellant_mass
-        )
-
-    def get_instantaneous_propellant_mass(self, t: float) -> float:
-        """
-        IMPORTANT NOTE: this method is only an estimation of the propellant
-        mass during the operation of the motor. It assumes a constant nozzle
-        efficiency throughout the operation and perfect correlation between
-        thrust and pressure data.
-
-        :param float t: The time at which the propellant mass is desired
-        :return: The propellant mass at time t
-        :rtype: np.ndarray
-        """
-        t_index = np.where(self.get_time() == t)[0][0]
-
-        time = self.get_time()[t_index:-1]
-        thrust = self.get_thrust()[t_index:-1]
-
-        return (
-            np.trapz(y=thrust, x=time) / self.get_total_impulse()
-        ) * self.initial_propellant_mass
-
-    def get_propellant_mass(self) -> np.ndarray:
-        """
-        Calculates propellant mass for each instant and appends in an array.
-
-        :return: The propellant mass at each time step
-        :rtype: np.ndarray
-        """
-        return np.array(
-            list(
-                map(
-                    lambda time: self.get_instantaneous_propellant_mass(time),
-                    self.get_time(),
-                )
-            )
-        )
 
     def run_ballistic_simulation(
         self,

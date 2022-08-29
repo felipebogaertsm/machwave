@@ -5,9 +5,13 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from typing import Optional
+
 import numpy as np
 
 from . import BallisticOperation
+from rocketsolver.models.atmosphere import Atmosphere
+from rocketsolver.models.rocket import Rocket
 from rocketsolver.solvers.ballistics_1d import Ballistics1D
 
 
@@ -18,12 +22,12 @@ class Ballistic1DOperation(BallisticOperation):
 
     def __init__(
         self,
-        rocket,
-        atmosphere,
-        rail_length,
-        motor_dry_mass,
-        initial_vehicle_mass,
-        initial_elevation_amsl=0,
+        rocket: Rocket,
+        atmosphere: Atmosphere,
+        rail_length: float,
+        motor_dry_mass: float,
+        initial_vehicle_mass: float,
+        initial_elevation_amsl: Optional[float] = 0,
     ) -> None:
         """
         Initializes attributes for the operation.
@@ -31,8 +35,9 @@ class Ballistic1DOperation(BallisticOperation):
         self.rocket = rocket
         self.atmosphere = atmosphere
         self.rail_length = rail_length
-        self.initial_elevation_amsl = initial_elevation_amsl
         self.motor_dry_mass = motor_dry_mass
+        self.initial_elevation_amsl = initial_elevation_amsl
+
         self.ballistics_solver = Ballistics1D()
 
         self.t = np.array([0])  # time vector

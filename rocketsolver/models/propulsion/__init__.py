@@ -11,13 +11,21 @@ Stores Motor class and methods.
 
 from abc import ABC, abstractmethod
 
+import pandas as pd
+import numpy as np
+
 from rocketsolver.models.propulsion.grain import Grain
 from rocketsolver.models.propulsion.propellant import Propellant
-from rocketsolver.models.propulsion.structure import MotorStructure
+from rocketsolver.models.propulsion.structure import MotorStructure, Nozzle
 from rocketsolver.utils.isentropic_flow import (
     get_thrust_coefficients,
     get_thrust_from_cf,
+    get_thrust_coefficient,
+    get_total_impulse,
+    get_specific_impulse,
 )
+from rocketsolver.utils.units import convert_mpa_to_pa
+from rocketsolver.utils.utilities import generate_eng
 
 
 class Motor(ABC):
@@ -188,3 +196,132 @@ class SolidMotor(Motor):
 
     def get_dry_mass(self) -> float:
         return self.structure.dry_mass
+
+
+class MotorFromDataframe(Motor):
+    def __init__(
+        self,
+        dataframe: pd.DataFrame,
+        nozzle: Nozzle,
+        propellant: Propellant,
+        initial_propellant_mass: float,
+        dry_mass: float,
+    ) -> None:
+        self.dataframe = dataframe
+        self.nozzle = nozzle
+        self.propellant = propellant
+        self.initial_propellant_mass = initial_propellant_mass
+        self.dry_mass = dry_mass
+
+    def get_from_df(self, column_name: str) -> np.ndarray:
+        return self.dataframe[column_name].to_numpy()
+
+    def get_launch_mass(self) -> float:
+        return self.initial_propellant_mass + self.dry_mass
+
+    def get_dry_mass(self) -> float:
+        return self.dry_mass
+
+    def get_thrust(self) -> np.ndarray:
+        return self.get_from_df(self.thrust_header_name)
+
+    def get_time(self) -> np.ndarray:
+        return self.get_from_df(self.time_header_name)
+
+    def get_pressure(self) -> np.ndarray:
+        return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
+
+    def get_thrust_coefficient(self) -> np.ndarray:
+        return get_thrust_coefficient(
+            P_0=self.get_pressure(),
+            thrust=self.get_thrust(),
+            nozzle_throat_area=self.nozzle.get_throat_area(),
+        )
+
+    def generate_eng_file(self, name: str, manufacturer: str) -> None:
+        generate_eng(
+            time=self.get_time(),
+            thrust=self.get_thrust(),
+            propellant_mass=self.get_propellant_mass(),
+            name=name,
+            manufacturer=manufacturer,
+            chamber_length=1670,
+            outer_diameter=141.3,
+            motor_mass=17,
+        )
+
+    @property
+    def thrust_time(self) -> float:
+        return self.get_time()[-1] - self.get_time()[0]
+
+    @property
+    def thrust_time(self) -> float:
+        return self.get_time()[-1] - self.get_time()[0]
+
+    def get_temperatures(
+        self, col_name_startswith="Temperature"
+    ) -> np.ndarray:
+        """
+        :param str col_name_startswith: The name that the column starts with
+        :return: An array of temperatures captured by each thermopar.
+        :rtype: np.ndarray
+        """
+        col_names = self.data.columns.values().tolist()
+        temperature_col_names = [
+            col_name
+            for col_name in col_names
+            if col_name.startswith(col_name_startswith)
+        ]
+
+        temperatures = np.array([])
+
+        for name in temperature_col_names:
+            temperatures = np.append(temperatures, self.get_from_df(name))
+
+        return temperatures
+
+    def get_total_impulse(self) -> float:
+        return get_total_impulse(
+            np.average(self.get_thrust()), self.get_time()[-1]
+        )
+
+    def get_specific_impulse(self) -> float:
+        return get_specific_impulse(
+            self.get_total_impulse(), self.initial_propellant_mass
+        )
+
+    def get_instantaneous_propellant_mass(self, t: float) -> float:
+        """
+        IMPORTANT NOTE: this method is only an estimation of the propellant
+        mass during the operation of the motor. It assumes a constant nozzle
+        efficiency throughout the operation and perfect correlation between
+        thrust and pressure data.
+
+        :param float t: The time at which the propellant mass is desired
+        :return: The propellant mass at time t
+        :rtype: np.ndarray
+        """
+        t_index = np.where(self.get_time() == t)[0][0]
+
+        time = self.get_time()[t_index:-1]
+        thrust = self.get_thrust()[t_index:-1]
+
+        return (
+            np.trapz(y=thrust, x=time) / self.get_total_impulse()
+        ) * self.initial_propellant_mass
+
+    def get_propellant_mass(self) -> np.ndarray:
+        """
+        Calculates propellant mass for each instant and appends in an array.
+
+        :return: The propellant mass at each time step
+        :rtype: np.ndarray
+        """
+        return np.array(
+            list(
+                map(
+                    lambda time: self.get_instantaneous_propellant_mass(time),
+                    self.get_time(),
+                )
+            )
+        )
