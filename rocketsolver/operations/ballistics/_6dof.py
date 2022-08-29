@@ -55,9 +55,7 @@ class Ballistic6DOFOperation(BallisticOperation):
             [self.atmosphere.get_gravity(initial_elevation_amsl)]
         )  # acceleration of gravity
         self.wind_velocity = np.array(
-            [
-                *self.atmosphere.get_wind_velocity(initial_elevation_amsl)
-            ].reverse()
+            [self.atmosphere.get_wind_velocity(initial_elevation_amsl)]
         )  # eastward, northward
 
         # Vehicle params:
@@ -66,7 +64,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         )  # total mass of the vehicle
         self.moment_of_inertia_matrix = fuselage.moment_of_inertia_matrix
         self.vehicle_wind_velocity = np.array(
-            [*self.get_vehicle_wind_velocity(self.wind_velocity[0])]
+            [self.get_vehicle_wind_velocity(self.wind_velocity[0])]
         )  # normal, lateral
 
         # Spacial params - x (East), y (North), z (altitude):
@@ -82,9 +80,13 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         # Angles (rad):
         self.phi = np.array(
-            [0],  # roll
-            [np.deg2rad(self.launch_angle - 90)],  # pitch
-            [-np.deg2rad(self.heading_angle)],  # yaw
+            [
+                [
+                    0,  # roll
+                    np.deg2rad(self.launch_angle - 90),  # pitch
+                    -np.deg2rad(self.heading_angle),  # yaw
+                ],
+            ]
         )
         self.attack_angle = self.get_attack_angle(self.velocity[0])
         self.slip_angle = self.get_slip_angle(self.velocity[0])
@@ -242,7 +244,7 @@ class Ballistic6DOFOperation(BallisticOperation):
             )
         )
 
-    def get_J_matrix(self, index: Optional[int] = -1) -> np.ndarray[float]:
+    def get_J_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         phi_x = self.phi[index][0]
         phi_y = self.phi[index][1]
         phi_z = self.phi[index][2]
@@ -305,14 +307,6 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
     def get_coriolis_matrix(self, index: Optional[int] = -1):
-        """
-        C = [ 0            0            0                    0               Geral.mtotal*vz     -Geral.mtotal*vy
-          0            0            0             -Geral.mtotal*vz             0              Geral.mtotal*vx
-          0            0            0              Geral.mtotal*vy      -Geral.mtotal*vx            0
-          0            0            0                    0                     0                    0
-          0            0            0                 -Iy*wz                   0                  Ix*wx
-          0            0            0                  Iy*wy                -Ix*wx                  0          ];
-        """
         v_x = self.velocity[index][0]
         v_y = self.velocity[index][1]
         v_z = self.velocity[index][2]
@@ -385,3 +379,6 @@ class Ballistic6DOFOperation(BallisticOperation):
                 self.initial_elevation_amsl + self.position[-1][2]
             ),
         )
+
+    def print_results(self) -> None:
+        print("No results yet")
