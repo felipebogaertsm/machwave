@@ -21,14 +21,13 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
 from rocketsolver.operations.internal_ballistics import MotorOperation
-from rocketsolver.simulations import Simulation
+from rocketsolver.simulations import Simulation, SimulationParameters
 from rocketsolver.utils.classes import get_motor_operation_class
 
 
-class InternalBallisticsCoupled(Simulation):
+class InternalBallisticsCoupledParams(SimulationParameters):
     def __init__(
         self,
-        rocket: Rocket,
         atmosphere: Atmosphere,
         d_t: float,
         dd_t: float,
@@ -36,13 +35,25 @@ class InternalBallisticsCoupled(Simulation):
         igniter_pressure: float,
         rail_length: float,
     ) -> None:
-        self.rocket = rocket
+        super().__init__()
+
         self.atmosphere = atmosphere
         self.d_t = d_t
         self.dd_t = dd_t
         self.initial_elevation_amsl = initial_elevation_amsl
         self.igniter_pressure = igniter_pressure
         self.rail_length = rail_length
+
+
+class InternalBallisticsCoupled(Simulation):
+    def __init__(
+        self,
+        rocket: Rocket,
+        params: InternalBallisticsCoupledParams,
+    ) -> None:
+        super().__init__(params=params)
+
+        self.rocket = rocket
 
         self.t = np.array([0])
 
@@ -56,13 +67,13 @@ class InternalBallisticsCoupled(Simulation):
 
         return motor_operation_class(
             motor=self.rocket.propulsion,
-            initial_pressure=self.igniter_pressure,
-            initial_atmospheric_pressure=self.atmosphere.get_pressure(
-                self.initial_elevation_amsl
+            initial_pressure=self.params.igniter_pressure,
+            initial_atmospheric_pressure=self.params.atmosphere.get_pressure(
+                self.params.initial_elevation_amsl
             ),
         )
 
-    def run(self):
+    def run(self) -> tuple[MotorOperation, Ballistic1DOperation]:
         """
         Runs the main loop of the simulation, returning all the internal and
         external ballistics parameters.
@@ -70,11 +81,11 @@ class InternalBallisticsCoupled(Simulation):
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
-            self.atmosphere,
-            rail_length=self.rail_length,
+            self.params.atmosphere,
+            rail_length=self.params.rail_length,
             motor_dry_mass=self.rocket.propulsion.get_dry_mass(),
             initial_vehicle_mass=self.rocket.get_launch_mass(),
-            initial_elevation_amsl=self.initial_elevation_amsl,
+            initial_elevation_amsl=self.params.initial_elevation_amsl,
         )
 
         i = 0
@@ -83,30 +94,32 @@ class InternalBallisticsCoupled(Simulation):
             self.ballistic_operation.y[i] >= 0
             or self.motor_operation.m_prop[-1] > 0
         ):
-            self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
+            self.t = np.append(
+                self.t, self.t[i] + self.params.d_t
+            )  # new time value
 
             if self.motor_operation.end_thrust is False:
                 self.motor_operation.iterate(
-                    self.d_t,
+                    self.params.d_t,
                     self.ballistic_operation.P_ext[i],
                 )
 
                 propellant_mass = self.motor_operation.m_prop[i]
                 thrust = self.motor_operation.thrust[i]
-                d_t = self.d_t
+                d_t = self.params.d_t
             else:
                 propellant_mass = 0
                 thrust = 0
 
                 # Adding new delta time value for ballistic simulation:
-                d_t = self.d_t * self.dd_t
-                self.t[-1] = self.t[-2] + self.dd_t * self.d_t
+                d_t = self.params.d_t * self.params.dd_t
+                self.t[-1] = self.t[-2] + self.params.dd_t * self.params.d_t
 
             self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
 
             i += 1
 
-        return (self.t, self.motor_operation, self.ballistic_operation)
+        return (self.motor_operation, self.ballistic_operation)
 
     def print_results(self):
         """
