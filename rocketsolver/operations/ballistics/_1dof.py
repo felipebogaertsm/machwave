@@ -19,7 +19,6 @@ class Ballistic1DOperation(BallisticOperation):
     def __init__(
         self,
         rocket,
-        recovery,
         atmosphere,
         rail_length,
         motor_dry_mass,
@@ -30,7 +29,6 @@ class Ballistic1DOperation(BallisticOperation):
         Initializes attributes for the operation.
         """
         self.rocket = rocket
-        self.recovery = recovery
         self.atmosphere = atmosphere
         self.rail_length = rail_length
         self.initial_elevation_amsl = initial_elevation_amsl
@@ -112,19 +110,16 @@ class Ballistic1DOperation(BallisticOperation):
         # Appending the current vehicle mass, consisting of the motor
         # structural mass, mass without the motor and propellant mass.
         self.vehicle_mass = np.append(
-            self.vehicle_mass,
-            propellant_mass
-            + self.motor_dry_mass
-            + self.rocket.structure.mass_without_motor,
+            self.vehicle_mass, propellant_mass + self.rocket.get_dry_mass()
         )
 
         # Drag properties:
-        fuselage_area = self.fuselage.frontal_area
-        fuselage_drag_coeff = self.fuselage.get_drag_coefficient()
+        fuselage_area = self.rocket.fuselage.frontal_area
+        fuselage_drag_coeff = self.rocket.fuselage.get_drag_coefficient()
         (
             recovery_drag_coeff,
             recovery_area,
-        ) = self.recovery.get_drag_coefficient_and_area(
+        ) = self.rocket.recovery.get_drag_coefficient_and_area(
             height=self.y,
             time=self.t,
             velocity=self.v,
