@@ -51,7 +51,7 @@ class InternalBallisticsCoupled(Simulation):
         Will depend on the type of the motor (SR, HRE or LRE).
         """
         motor_operation_class = get_motor_operation_class(
-            self.rocket.propulsion.motor
+            self.rocket.propulsion
         )
 
         return motor_operation_class(
