@@ -9,22 +9,33 @@ import numpy as np
 
 from rocketsolver.models.propulsion import Motor
 from rocketsolver.operations.internal_ballistics import MotorOperation
-from rocketsolver.simulations import Simulation
+from rocketsolver.simulations import Simulation, SimulationParameters
 from rocketsolver.utils.classes import get_motor_operation_class
+
+
+class InternalBallisticsParams(SimulationParameters):
+    def __init__(
+        self,
+        d_t: float,
+        igniter_pressure: float,
+        external_pressure: float,
+    ) -> None:
+        super().__init__()
+
+        self.d_t = d_t
+        self.igniter_pressure = igniter_pressure
+        self.external_pressure = external_pressure
 
 
 class InternalBallistics(Simulation):
     def __init__(
         self,
         motor: Motor,
-        d_t: float,
-        igniter_pressure: float,
-        external_pressure: float,
+        params: InternalBallisticsParams,
     ) -> None:
+        super().__init__(params=params)
+
         self.motor = motor
-        self.d_t = d_t
-        self.igniter_pressure = igniter_pressure
-        self.external_pressure = external_pressure
 
         self.t = np.array([0])
 
@@ -36,8 +47,8 @@ class InternalBallistics(Simulation):
 
         return motor_operation_class(
             motor=self.motor,
-            initial_pressure=self.igniter_pressure,
-            initial_atmospheric_pressure=self.external_pressure,
+            initial_pressure=self.params.igniter_pressure,
+            initial_atmospheric_pressure=self.params.external_pressure,
         )
 
     def run(self):
@@ -50,11 +61,13 @@ class InternalBallistics(Simulation):
         i = 0
 
         while not self.motor_operation.end_thrust:
-            self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
+            self.t = np.append(
+                self.t, self.t[i] + self.params.d_t
+            )  # new time value
 
             self.motor_operation.iterate(
-                self.d_t,
-                self.external_pressure,
+                self.params.d_t,
+                self.params.external_pressure,
             )
 
             i += 1
