@@ -67,10 +67,10 @@ class AnalyzeSRMOperation(Analyze):
         rail_length: float = 5.0,
     ) -> tuple[np.ndarray, Ballistic1DOperation]:
         self.ballistic_simulation = BallisticSimulation(
-            thrust=self.get_thrust(),
-            initial_propellant_mass=self.initial_propellant_mass,
+            thrust=self.empirical_motor.get_thrust(),
+            initial_propellant_mass=self.empirical_motor.initial_propellant_mass,
             motor_dry_mass=self.theoretical_motor.structure.dry_mass,
-            time=self.get_time(),
+            time=self.empirical_motor.get_time(),
             rocket=rocket,
             recovery=recovery,
             atmosphere=atmosphere,
@@ -109,13 +109,13 @@ class AnalyzeSRMOperation(Analyze):
         )
         obtained_values = np.array(
             [
-                np.max(self.get_thrust()),
-                np.max(self.get_pressure()) / 1e6,
-                np.average(self.get_thrust()),
-                np.average(self.get_pressure()) / 1e6,
-                np.average(self.thrust_time),
-                np.average(self.get_total_impulse()),
-                np.average(self.get_specific_impulse()),
+                np.max(self.empirical_motor.get_thrust()),
+                np.max(self.empirical_motor.get_pressure()) / 1e6,
+                np.average(self.empirical_motor.get_thrust()),
+                np.average(self.empirical_motor.get_pressure()) / 1e6,
+                np.average(self.empirical_motor.thrust_time),
+                np.average(self.empirical_motor.get_total_impulse()),
+                np.average(self.empirical_motor.get_specific_impulse()),
             ]
         )
         units = [
@@ -175,8 +175,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=self.get_thrust(),
+                x=self.empirical_motor.get_time(),
+                y=self.empirical_motor.get_thrust(),
                 name="Thrust (N)",
                 yaxis="y",
                 line=dict(color=thrust_color),
@@ -185,8 +185,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=self.get_propellant_mass(),
+                x=self.empirical_motor.get_time(),
+                y=self.empirical_motor.get_propellant_mass(),
                 name="Est. propellant mass (kg)",
                 yaxis="y2",
                 line=dict(color=propellant_mass_color),
@@ -222,8 +222,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=convert_pa_to_mpa(self.get_pressure()),
+                x=self.empirical_motor.get_time(),
+                y=convert_pa_to_mpa(self.empirical_motor.get_pressure()),
                 name="Experimental data",
                 line=dict(color=test_pressure_color),
             ),
@@ -256,8 +256,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=self.get_thrust(),
+                x=self.empirical_motor.get_time(),
+                y=self.empirical_motor.get_thrust(),
                 name="Thrust (N)",
                 yaxis="y",
                 line=dict(color=thrust_color),
@@ -266,8 +266,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=self.get_pressure(),
+                x=self.empirical_motor.get_time(),
+                y=self.empirical_motor.get_pressure(),
                 name="Pressure (MPa)",
                 yaxis="y2",
                 line=dict(color=pressure_color),
@@ -300,8 +300,8 @@ class AnalyzeSRMOperation(Analyze):
 
         figure.add_trace(
             go.Scatter(
-                x=self.get_time(),
-                y=self.get_thrust_coefficient(),
+                x=self.empirical_motor.get_time(),
+                y=self.empirical_motor.get_thrust_coefficient(),
                 name="Thrust coefficient",
             ),
         )

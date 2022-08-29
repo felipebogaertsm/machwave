@@ -13,23 +13,23 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.rocket import Rocket3D
 from rocketsolver.operations.internal_ballistics import MotorOperation
 from rocketsolver.operations.ballistics._6dof import Ballistic6DOFOperation
-from rocketsolver.simulations import Simulation
+from rocketsolver.simulations import Simulation, SimulationParameters
 from rocketsolver.utils.classes import get_motor_operation_class
 
 
-class Ballistic6DOFSimulation(Simulation):
+class Ballistic6DOFSimulationParams(SimulationParameters):
     def __init__(
         self,
-        rocket: Rocket3D,
         atmosphere: Atmosphere,
         d_t: float,
         initial_elevation_amsl: float,
         rail_length: float,
         launch_angle: float,
         heading_angle: float,
-        igniter_pressure: Optional[float] = 1.5e6,
+        igniter_pressure: float,
     ) -> None:
-        self.rocket = rocket
+        super().__init__()
+
         self.atmosphere = atmosphere
         self.d_t = d_t
         self.initial_elevation_amsl = initial_elevation_amsl
@@ -37,6 +37,17 @@ class Ballistic6DOFSimulation(Simulation):
         self.launch_angle = launch_angle
         self.heading_angle = heading_angle
         self.igniter_pressure = igniter_pressure
+
+
+class Ballistic6DOFSimulation(Simulation):
+    def __init__(
+        self,
+        rocket: Rocket3D,
+        params: Ballistic6DOFSimulationParams,
+    ) -> None:
+        super().__init__(params)
+
+        self.rocket = rocket
 
         self.t = np.array([0])
 
@@ -56,7 +67,7 @@ class Ballistic6DOFSimulation(Simulation):
             ),
         )
 
-    def run(self) -> tuple[np.array, Ballistic6DOFOperation]:
+    def run(self) -> tuple[MotorOperation, Ballistic6DOFOperation]:
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic6DOFOperation(
             fuselage=self.rocket.fuselage,
@@ -64,7 +75,7 @@ class Ballistic6DOFSimulation(Simulation):
             atmosphere=self.atmosphere,
             rail_length=self.rail_length,
             motor_dry_mass=self.rocket.propulsion.get_dry_mass(),
-            initial_vehicle_mass=60,
+            initial_vehicle_mass=self.rocket.get_launch_mass(),
         )
 
         i = 0
@@ -96,11 +107,12 @@ class Ballistic6DOFSimulation(Simulation):
 
             i += 1
 
-        return (self.t, self.motor_operation, self.ballistic_operation)
+        return (self.motor_operation, self.ballistic_operation)
 
     def print_results(self):
         """
         Prints the results of the simulation.
         """
-        print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
+        print("\n6DOF SIMULATION RESULTS")
+        self.motor_operation.print_results()
         self.ballistic_operation.print_results()
