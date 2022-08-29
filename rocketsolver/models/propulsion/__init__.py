@@ -43,6 +43,26 @@ class Motor(ABC):
         self.structure = structure
 
     @abstractmethod
+    def get_launch_mass(self) -> float:
+        """
+        Calculates the total mass of the rocket before launch.
+
+        :return: Total mass of the rocket before launch, in kg
+        :rtype: float
+        """
+        pass
+
+    @abstractmethod
+    def get_dry_mass(self) -> float:
+        """
+        Calculates the dry mass of the rocket at any time.
+
+        :return: Dry mass of the rocket, in kg
+        :rtype: float
+        """
+        pass
+
+    @abstractmethod
     def get_thrust_coefficient_correction_factor(self) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
@@ -162,3 +182,9 @@ class SolidMotor(Motor):
             n_cf,
         )
         return self.cf_real
+
+    def get_launch_mass(self) -> float:
+        return self.structure.dry_mass + self.initial_propellant_mass
+
+    def get_dry_mass(self) -> float:
+        return self.structure.dry_mass

@@ -16,6 +16,8 @@ class TrapezoidalFins(Fins):
     def __init__(
         self,
         material: Material,
+        center_of_gravity: float,
+        mass: float,
         thickness: float,
         count: int,
         rugosity: float,
@@ -25,7 +27,14 @@ class TrapezoidalFins(Fins):
         height: float,
         body_diameter: float,
     ) -> None:
-        super().__init__(material, thickness, count, rugosity)
+        super().__init__(
+            material=material,
+            center_of_gravity=center_of_gravity,
+            mass=mass,
+            thickness=thickness,
+            count=count,
+            rugosity=rugosity,
+        )
 
         self.base_length = base_length
         self.tip_length = tip_length

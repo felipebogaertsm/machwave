@@ -11,7 +11,7 @@ import numpy as np
 
 from ..fins import Fins
 from rocketsolver.models.materials import Material
-from rocketsolver.models.rocket.fuselage.components import FuselageComponent
+from rocketsolver.models.fuselage.components import FuselageComponent
 
 
 class BodySegment(FuselageComponent):
@@ -22,13 +22,17 @@ class CylindricalBody(BodySegment):
     def __init__(
         self,
         material: Material,
+        center_of_gravity: float,
+        mass: float,
         length: float,
         outer_diameter: float,
         rugosity: float,
         constant_K: float,
         fins: Optional[Fins] = None,
     ) -> None:
-        super().__init__(material)
+        super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )
 
         self.length = length
         self.outer_diameter = outer_diameter

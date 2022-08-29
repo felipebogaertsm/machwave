@@ -6,18 +6,22 @@
 # the Free Software Foundation, version 3.
 
 from rocketsolver.models.materials import Material
-from rocketsolver.models.rocket.fuselage.components import FuselageComponent
+from rocketsolver.models.fuselage.components import FuselageComponent
 
 
 class NoseCone(FuselageComponent):
     def __init__(
         self,
         material: Material,
+        center_of_gravity: float,
+        mass: float,
         length: float,
         base_diameter: float,
         surface_area: float,
     ) -> None:
-        super().__init__(material)
+        super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )
 
         self.length = length
         self.base_diameter = base_diameter

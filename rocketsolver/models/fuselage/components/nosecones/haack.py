@@ -19,15 +19,19 @@ class HaackSeriesNoseCone(NoseCone):
     def __init__(
         self,
         material: Material,
+        center_of_gravity: float,
+        mass: float,
         length: float,
         base_diameter: float,
         C: float,
     ) -> None:
         super().__init__(
-            material,
-            length,
-            base_diameter,
-            None,
+            material=material,
+            center_of_gravity=center_of_gravity,
+            mass=mass,
+            length=length,
+            base_diameter=base_diameter,
+            surface_area=None,
         )
 
         self.C = C

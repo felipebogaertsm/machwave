@@ -14,8 +14,12 @@ class FuselageComponent(ABC):
     def __init__(
         self,
         material: Material,
+        center_of_gravity: float,
+        mass: float,
     ) -> None:
         self.material = material
+        self.center_of_gravity = center_of_gravity
+        self.mass = mass
 
     @abstractmethod
     def get_drag_coefficient(self) -> float:

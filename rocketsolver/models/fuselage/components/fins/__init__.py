@@ -6,14 +6,22 @@
 # the Free Software Foundation, version 3.
 
 from rocketsolver.models.materials import Material
-from rocketsolver.models.rocket.fuselage.components import FuselageComponent
+from rocketsolver.models.fuselage.components import FuselageComponent
 
 
 class Fins(FuselageComponent):
     def __init__(
-        self, material: Material, thickness: float, count: int, rugosity: float
+        self,
+        material: Material,
+        center_of_gravity: float,
+        mass: float,
+        thickness: float,
+        count: int,
+        rugosity: float,
     ) -> None:
-        self.super().__init__(material)
+        self.super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )
 
         self.thickness = thickness
         self.count = count
