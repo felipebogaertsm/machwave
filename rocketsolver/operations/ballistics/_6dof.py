@@ -174,83 +174,95 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         velocity_modulus = np.linalg.norm(self.velocity[index])
 
-        return (
-            0.5
-            * self.rho_air[index]
-            * self.fuselage.body_segments[0].frontal_area
-            * np.array(
+        if velocity_modulus == 0:
+            return np.array(
                 [
-                    [
-                        C_d_0 * velocity_modulus,
-                        (C_d_i - C_l_alpha) * self.velocity[index][1],
-                        (C_d_i - C_l_alpha) * self.velocity[index][2],
-                        0,
-                        0,
-                        0,
-                    ],
-                    [
-                        C_d_0 * self.velocity[index][1],
-                        C_l_alpha * velocity_modulus
-                        + (
-                            C_d_i
-                            * self.velocity[index][1] ** 2
-                            * velocity_modulus
-                        ),
-                        C_d_i
-                        * self.velocity[index][2]
-                        * self.velocity[index][1]
-                        * velocity_modulus,
-                        0,
-                        0,
-                        0,
-                    ],
-                    [
-                        C_d_0 * self.velocity[index][2],
-                        C_d_i
-                        * self.velocity[index][2]
-                        * self.velocity[index][1]
-                        * velocity_modulus,
-                        C_l_alpha * velocity_modulus
-                        + (
-                            C_d_i
-                            * self.velocity[index][2] ** 2
-                            * velocity_modulus
-                        ),
-                        0,
-                        0,
-                        0,
-                    ],
-                    [
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                    ],
-                    [
-                        0,
-                        0,
-                        -C_m_alpha
-                        * self.fuselage.body_segments[0].fins.base_length
-                        * velocity_modulus,
-                        0,
-                        0,
-                        0,
-                    ],
-                    [
-                        0,
-                        C_m_alpha
-                        * self.fuselage.body_segments[0].fins.base_length
-                        * velocity_modulus,
-                        0,
-                        0,
-                        0,
-                        0,
-                    ],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
                 ]
             )
-        )
+        else:
+            return (
+                0.5
+                * self.rho_air[index]
+                * self.fuselage.body_segments[0].frontal_area
+                * np.array(
+                    [
+                        [
+                            C_d_0 * velocity_modulus,
+                            (C_d_i - C_l_alpha) * self.velocity[index][1],
+                            (C_d_i - C_l_alpha) * self.velocity[index][2],
+                            0,
+                            0,
+                            0,
+                        ],
+                        [
+                            C_d_0 * self.velocity[index][1],
+                            C_l_alpha * velocity_modulus
+                            + (
+                                C_d_i
+                                * self.velocity[index][1] ** 2
+                                / velocity_modulus
+                            ),
+                            C_d_i
+                            * self.velocity[index][2]
+                            * self.velocity[index][1]
+                            / velocity_modulus,
+                            0,
+                            0,
+                            0,
+                        ],
+                        [
+                            C_d_0 * self.velocity[index][2],
+                            C_d_i
+                            * self.velocity[index][2]
+                            * self.velocity[index][1]
+                            / velocity_modulus,
+                            C_l_alpha * velocity_modulus
+                            + (
+                                C_d_i
+                                * self.velocity[index][2] ** 2
+                                / velocity_modulus
+                            ),
+                            0,
+                            0,
+                            0,
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                        ],
+                        [
+                            0,
+                            0,
+                            -C_m_alpha
+                            * self.fuselage.body_segments[0].fins.base_length
+                            * velocity_modulus,
+                            0,
+                            0,
+                            0,
+                        ],
+                        [
+                            0,
+                            C_m_alpha
+                            * self.fuselage.body_segments[0].fins.base_length
+                            * velocity_modulus,
+                            0,
+                            0,
+                            0,
+                            0,
+                        ],
+                    ]
+                )
+            )
 
     def get_J_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         phi_x = self.phi[index][0]
