@@ -24,6 +24,8 @@ class Ballistics6D(Solver):
         tau: np.ndarray,
         d_t: np.ndarray,
     ) -> Tuple[float]:
+        print(D, G, tau, d_t)
+
         k_1 = ballistics_6dof_ode(M, C, V, D, G, tau)
         k_2 = ballistics_6dof_ode(M, C, V + 0.5 * k_1 * d_t, D, G, tau)
         k_3 = ballistics_6dof_ode(M, C, V + 0.5 * k_2 * d_t, D, G, tau)

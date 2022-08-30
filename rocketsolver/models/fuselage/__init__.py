@@ -103,3 +103,6 @@ class Fuselage3D:
 
     def add_body_segment(self, body_segment: BodySegment) -> None:
         self.body_segments.append(body_segment)
+
+    def get_mass(self):
+        return self.mass_without_motor
