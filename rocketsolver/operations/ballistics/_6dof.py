@@ -148,8 +148,8 @@ class Ballistic6DOFOperation(BallisticOperation):
     def get_gravitational_matrix(
         self, index: Optional[int] = -1
     ) -> np.ndarray:
-        phi_x = self.phi[0]
-        phi_y = self.phi[1]
+        phi_x = self.phi[index][0]
+        phi_y = self.phi[index][1]
 
         return (
             -self.vehicle_mass[index]
@@ -182,32 +182,40 @@ class Ballistic6DOFOperation(BallisticOperation):
                 [
                     [
                         C_d_0 * velocity_modulus,
-                        (C_d_i - C_l_alpha) * self.velocity[1],
-                        (C_d_i - C_l_alpha) * self.velocity[2],
+                        (C_d_i - C_l_alpha) * self.velocity[index][1],
+                        (C_d_i - C_l_alpha) * self.velocity[index][2],
                         0,
                         0,
                         0,
                     ],
                     [
-                        C_d_0 * self.velocity[1],
+                        C_d_0 * self.velocity[index][1],
                         C_l_alpha * velocity_modulus
-                        + (C_d_i * self.velocity[1] ** 2 / velocity_modulus),
+                        + (
+                            C_d_i
+                            * self.velocity[index][1] ** 2
+                            * velocity_modulus
+                        ),
                         C_d_i
-                        * self.velocity[2]
-                        * self.velocity[1]
-                        / velocity_modulus,
+                        * self.velocity[index][2]
+                        * self.velocity[index][1]
+                        * velocity_modulus,
                         0,
                         0,
                         0,
                     ],
                     [
-                        C_d_0 * self.velocity[2],
+                        C_d_0 * self.velocity[index][2],
                         C_d_i
-                        * self.velocity[2]
-                        * self.velocity[1]
-                        / velocity_modulus,
+                        * self.velocity[index][2]
+                        * self.velocity[index][1]
+                        * velocity_modulus,
                         C_l_alpha * velocity_modulus
-                        + (C_d_i * self.velocity[2] ** 2 / velocity_modulus),
+                        + (
+                            C_d_i
+                            * self.velocity[index][2] ** 2
+                            * velocity_modulus
+                        ),
                         0,
                         0,
                         0,
@@ -331,10 +339,12 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
     def get_velocity_matrix(self, index: Optional[int] = -1):
-        return np.array([*self.velocity[index], *self.angular_velocity[index]])
+        return np.array(
+            [[*self.velocity[index], *self.angular_velocity[index]]]
+        )
 
     def get_force_matrix(self, index: Optional[int] = -1):
-        return np.array([*self.force[index], *self.torque[index]])
+        return np.array([[*self.force[index], *self.torque[index]]])
 
     def get_inertial_ref_position_matrix(self, index: Optional[int] = -1):
         return np.array([*self.position[index], *self.phi[index]])
@@ -379,6 +389,21 @@ class Ballistic6DOFOperation(BallisticOperation):
                 self.initial_elevation_amsl + self.position[-1][2]
             ),
         )
+
+        self.velocity = np.append(
+            self.velocity,
+            self.ballistics_solver.solve(
+                M=self.get_moment_matrix(),
+                C=self.get_coriolis_matrix(),
+                V=self.get_velocity_matrix(),
+                D=self.get_aerodynamic_forces_matrix(),
+                G=self.get_gravitational_matrix(),
+                tau=self.get_force_matrix(),
+                d_t=d_t,
+            ),
+        )
+
+        exit()
 
     def print_results(self) -> None:
         print("No results yet")
