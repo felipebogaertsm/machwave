@@ -68,8 +68,8 @@ class Ballistic6DOFOperation(BallisticOperation):
         )  # normal, lateral
 
         # Spacial params - x (East), y (North), z (altitude):
-        self.position = np.array([[0, 0, 0]])  # position (m)
-        self.velocity = np.array([[0, 0, 0]])  # velocity (m/s)
+        self.position = np.array([[0, 0, 0]])  # position (m) - x, y, z
+        self.velocity = np.array([[1, 0, 0]])  # velocity (m/s)
         self.angular_velocity = np.array(
             [[0, 0, 0]]
         )  # angular velocity (rad/s)
@@ -83,13 +83,13 @@ class Ballistic6DOFOperation(BallisticOperation):
             [
                 [
                     0,  # roll
-                    np.deg2rad(self.launch_angle - 90),  # pitch
+                    np.deg2rad(self.launch_angle),  # pitch
                     -np.deg2rad(self.heading_angle),  # yaw
                 ],
             ]
         )
-        self.attack_angle = self.get_attack_angle(self.velocity[0])
-        self.slip_angle = self.get_slip_angle(self.velocity[0])
+        self.attack_angle = self.get_attack_angle()
+        self.slip_angle = self.get_slip_angle()
 
         self.velocity_out_of_rail = None
 
@@ -124,7 +124,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         velocity_z = self.velocity[index][2]
         return np.arcsin(velocity_z / np.linalg.norm(self.velocity[index]))
 
-    def get_attack_angle(self, index: Optional[int]) -> float:
+    def get_attack_angle(self, index: Optional[int] = -1) -> float:
         """
         :return: attack angle (rad)
         :rtype: float
@@ -414,6 +414,8 @@ class Ballistic6DOFOperation(BallisticOperation):
                 d_t=d_t,
             ),
         )
+
+        print(self.velocity)
 
         exit()
 
