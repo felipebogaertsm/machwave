@@ -5,8 +5,6 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from typing import Tuple
-
 import numpy as np
 
 from rocketsolver.solvers import Solver
@@ -22,8 +20,8 @@ class Ballistics6D(Solver):
         D: np.ndarray,
         G: np.ndarray,
         tau: np.ndarray,
-        d_t: np.ndarray,
-    ) -> Tuple[float]:
+        d_t: float,
+    ) -> float:
 
         k_1 = ballistics_6dof_ode(M, C, V, D, G, tau)
         k_2 = ballistics_6dof_ode(M, C, V + 0.5 * k_1 * d_t, D, G, tau)
