@@ -12,6 +12,7 @@ Stores solvers called inside the simulations.
 import numpy as np
 
 from rocketsolver.utils.isentropic_flow import get_critical_pressure_ratio
+from rocketsolver.utils.math import divide_matrix, multiply_matrix
 
 
 def solve_cp_seidel(
@@ -105,10 +106,34 @@ def ballistics_6dof_ode(
     :return: F_xy
     :rtype: float
     """
+    print(
+        divide_matrix(
+            np.array(
+                [
+                    [3.689, 0, 0, 0, 0, 0],
+                    [0, 3.689, 0, 0, 0, 0],
+                    [0, 0, 3.689, 0, 0, 0],
+                    [0, 0, 0, 0.688, -0.007, -0.0493],
+                    [0, 0, 0, -0.007, 0.8122, -0.0002],
+                    [0, 0, 0, -0.0493, -0.0002, 0.1266],
+                ]
+            ),
+            np.array(
+                [
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 3.689],
+                    [0, 0, 0, 0, -3.689, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                ]
+            ),
+        )
+    )
 
     return (
-        -np.matmul(np.matmul(M, np.linalg.inv(C)), V)
-        - np.matmul(np.matmul(M, np.linalg.inv(D)), V)
-        - np.matmul(M, np.linalg.inv(G))
-        + np.matmul(M, np.linalg.inv(tau))
+        -multiply_matrix(divide_matrix(M, C), V)
+        - multiply_matrix(divide_matrix(M, D), V)
+        - divide_matrix(M, G)
+        + divide_matrix(M, tau)
     )

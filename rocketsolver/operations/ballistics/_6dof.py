@@ -151,7 +151,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         phi_x = self.phi[index][0]
         phi_y = self.phi[index][1]
 
-        return (
+        return np.array(
             -self.vehicle_mass[index]
             * self.g[index]
             * np.array(
@@ -166,7 +166,9 @@ class Ballistic6DOFOperation(BallisticOperation):
             )
         )
 
-    def get_aerodynamic_forces_matrix(self, index: Optional[int] = -1):
+    def get_aerodynamic_forces_matrix(
+        self, index: Optional[int] = -1
+    ) -> np.ndarray:
         C_l_alpha = 0.3
         C_d_0 = 0.4
         C_d_i = 0.3
@@ -186,7 +188,7 @@ class Ballistic6DOFOperation(BallisticOperation):
                 ]
             )
         else:
-            return (
+            return np.array(
                 0.5
                 * self.rho_air[index]
                 * self.fuselage.body_segments[0].frontal_area
@@ -326,7 +328,7 @@ class Ballistic6DOFOperation(BallisticOperation):
             ]
         )
 
-    def get_coriolis_matrix(self, index: Optional[int] = -1):
+    def get_coriolis_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         v_x = self.velocity[index][0]
         v_y = self.velocity[index][1]
         v_z = self.velocity[index][2]
@@ -350,15 +352,17 @@ class Ballistic6DOFOperation(BallisticOperation):
             ]
         )
 
-    def get_velocity_matrix(self, index: Optional[int] = -1):
+    def get_velocity_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         return np.array(
             [[*self.velocity[index], *self.angular_velocity[index]]]
         )
 
-    def get_force_matrix(self, index: Optional[int] = -1):
+    def get_force_matrix(self, index: Optional[int] = -1) -> np.ndarray:
         return np.array([[*self.force[index], *self.torque[index]]])
 
-    def get_inertial_ref_position_matrix(self, index: Optional[int] = -1):
+    def get_inertial_ref_position_matrix(
+        self, index: Optional[int] = -1
+    ) -> np.ndarray:
         return np.array([*self.position[index], *self.phi[index]])
 
     @property
@@ -414,8 +418,6 @@ class Ballistic6DOFOperation(BallisticOperation):
                 d_t=d_t,
             ),
         )
-
-        print(self.velocity)
 
         exit()
 
