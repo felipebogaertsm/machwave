@@ -71,6 +71,19 @@ class Motor(ABC):
         pass
 
     @abstractmethod
+    def get_center_of_gravity(self) -> np.ndarray:
+        """
+        Calculates center of gravity of the propulsion system.
+
+        Coordinate system is originated in the point defined by the nozzle's
+        exit area surface and the combustion chamber axis.
+
+        :return: Center of gravity position, in m, [x, y, z]
+        :rtype: np.ndarray
+        """
+        pass
+
+    @abstractmethod
     def get_thrust_coefficient_correction_factor(self) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
@@ -197,6 +210,12 @@ class SolidMotor(Motor):
     def get_dry_mass(self) -> float:
         return self.structure.dry_mass
 
+    def get_center_of_gravity(self) -> np.ndarray:
+        """
+        Constant CG throughout the operation. Half the chamber length.
+        """
+        return np.array([self.structure.chamber.length / 2, 0, 0])
+
 
 class MotorFromDataframe(Motor):
     def __init__(
@@ -206,12 +225,14 @@ class MotorFromDataframe(Motor):
         propellant: Propellant,
         initial_propellant_mass: float,
         dry_mass: float,
+        length: float,
     ) -> None:
         self.dataframe = dataframe
         self.nozzle = nozzle
         self.propellant = propellant
         self.initial_propellant_mass = initial_propellant_mass
         self.dry_mass = dry_mass
+        self.length = length
 
     def get_from_df(self, column_name: str) -> np.ndarray:
         return self.dataframe[column_name].to_numpy()
@@ -325,3 +346,6 @@ class MotorFromDataframe(Motor):
                 )
             )
         )
+
+    def get_center_of_gravity(self) -> np.ndarray:
+        return np.array([self.length / 2, 0, 0])
