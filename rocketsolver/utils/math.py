@@ -24,4 +24,4 @@ def divide_matrix(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     try:
         return np.linalg.solve(B.conj().T, A.conj().T).conj().T
     except np.linalg.LinAlgError:
-        return scipy.linalg.lstsq(A, B)[0]
+        return scipy.linalg.lstsq(A, B)
