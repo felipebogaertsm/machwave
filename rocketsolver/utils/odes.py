@@ -10,6 +10,7 @@ Stores solvers called inside the simulations.
 """
 
 import numpy as np
+import scipy
 
 from rocketsolver.utils.isentropic_flow import get_critical_pressure_ratio
 from rocketsolver.utils.math import divide_matrix, multiply_matrix
@@ -106,29 +107,6 @@ def ballistics_6dof_ode(
     :return: F_xy
     :rtype: float
     """
-    for result in divide_matrix(
-        np.array(
-            [
-                [3.689, 0, 0, 0, 0, 0],
-                [0, 3.689, 0, 0, 0, 0],
-                [0, 0, 3.689, 0, 0, 0],
-                [0, 0, 0, 0.688, -0.007, -0.0493],
-                [0, 0, 0, -0.007, 0.8122, -0.0002],
-                [0, 0, 0, -0.0493, -0.0002, 0.1266],
-            ]
-        ),
-        np.array(
-            [
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 3.689],
-                [0, 0, 0, 0, -3.689, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-            ]
-        ),
-    ):
-        print(result)
 
     return (
         -multiply_matrix(divide_matrix(M, C), V)
