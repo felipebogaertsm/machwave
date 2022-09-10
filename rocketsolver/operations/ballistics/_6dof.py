@@ -419,6 +419,11 @@ class Ballistic6DOFOperation(BallisticOperation):
             ),
         )
 
+        self.position = np.append(
+            self.position,
+            self.get_inertial_ref_position_matrix() * self.velocity[-1],
+        )
+
         exit()
 
     def print_results(self) -> None:
