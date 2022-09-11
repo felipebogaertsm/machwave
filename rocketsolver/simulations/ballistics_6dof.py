@@ -81,7 +81,7 @@ class Ballistic6DOFSimulation(Simulation):
         i = 0
 
         while (
-            self.ballistic_operation.position[i][2] >= 0  # altitude >= 0
+            self.ballistic_operation.altitude >= 0  # altitude >= 0
             or self.motor_operation.m_prop[-1] > 0
         ):
             self.t = np.append(
