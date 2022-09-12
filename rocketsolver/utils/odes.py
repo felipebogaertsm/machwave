@@ -110,6 +110,6 @@ def ballistics_6dof_ode(
     return (
         -multiply_matrix(divide_matrix(M, C), V)
         - multiply_matrix(divide_matrix(M, D), V)
-        - divide_matrix(M, np.transpose(G))
+        - divide_matrix(M, G)
         + divide_matrix(M, tau)
     )

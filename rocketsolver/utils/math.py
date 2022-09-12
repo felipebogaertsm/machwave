@@ -17,7 +17,10 @@ def get_percentage_error(numerator: float, denominator: float) -> float:
 
 
 def multiply_matrix(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    return np.matmul(A, B)
+    try:
+        return np.matmul(A, B)
+    except ValueError:
+        return np.matmul(A, np.transpose(B))
 
 
 def divide_matrix(A: np.ndarray, B: np.ndarray) -> np.ndarray:

@@ -15,6 +15,7 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.fuselage import Fuselage3D
 from rocketsolver.solvers.ballistics_6d import Ballistics6D
+from rocketsolver.utils.math import multiply_matrix
 
 
 class Ballistic6DOFOperation(BallisticOperation):
@@ -72,40 +73,43 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.eta_inertial = np.array(  # position, inertial frame
             [
                 [
-                    0,  # x (m)
-                    0,  # y (m)
-                    0,  # z (m)
-                    0,  # roll (rad)
-                    np.deg2rad(self.launch_angle),  # pitch (rad)
-                    -np.deg2rad(self.heading_angle),  # yaw (rad)
+                    [0],  # x (m)
+                    [0],  # y (m)
+                    [0],  # z (m)
+                    [0],  # roll (rad)
+                    [np.deg2rad(self.launch_angle)],  # pitch (rad)
+                    [-np.deg2rad(self.heading_angle)],  # yaw (rad)
                 ]
             ]
         )
         self.velocity_body = np.array(  # velocity, body frame
             [
                 [
-                    0,  # x (m/s)
-                    0,  # y (m/s)
-                    0,  # z (m/s)
-                    0,  # roll (rad/s)
-                    0,  # pitch (rad/s)
-                    0,  # yaw (rad/s)
+                    [0],  # x (m/s)
+                    [0],  # y (m/s)
+                    [0],  # z (m/s)
+                    [0],  # roll (rad/s)
+                    [0],  # pitch (rad/s)
+                    [0],  # yaw (rad/s)
                 ]
             ]
         )
-        self.velocity_inertial = np.array(  # velocity, inertial frame
-            self.velocity_body * self.get_J_matrix()
+
+        self.velocity_inertial = np.array(
+            multiply_matrix(  # velocity, inertial frame
+                self.get_J_matrix(), self.velocity_body
+            )
         )
 
         self.tau = np.array(  # forces and moments
             [
                 [
-                    0,  # x (kg-m/s-s)
-                    0,  # y (kg-m/s-s)
-                    0,  # z (kg-m/s-s)
-                    0,  # roll (kg-rad/s-s)
-                    0,  # pitch (kg-rad/s-s)
-                    0,  # yaw (kg-rad/s-s)
+                    [0],  # x (kg-m/s-s)
+                    [0],  # y (kg-m/s-s)
+                    [0],  # z (kg-m/s-s)
+                    [0],  # roll (kg-rad/s-s)
+                    [0],  # pitch (kg-rad/s-s)
+                    [0],  # yaw (kg-rad/s-s)
                 ]
             ]
         )
@@ -131,14 +135,18 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         return np.array(
             [
-                wind_velocity[0] * np.sin(heading_angle_rad)
-                + wind_velocity[1] * np.cos(heading_angle_rad),
-                -wind_velocity[0] * np.cos(heading_angle_rad)
-                + wind_velocity[1] * np.sin(heading_angle_rad),
-                0,
-                0,
-                0,
-                0,
+                [
+                    wind_velocity[0] * np.sin(heading_angle_rad)
+                    + wind_velocity[1] * np.cos(heading_angle_rad)
+                ],
+                [
+                    -wind_velocity[0] * np.cos(heading_angle_rad)
+                    + wind_velocity[1] * np.sin(heading_angle_rad)
+                ],
+                [0],
+                [0],
+                [0],
+                [0],
             ]
         )
 
@@ -170,14 +178,14 @@ class Ballistic6DOFOperation(BallisticOperation):
                 [0, 0, 0, *self.moment_of_inertia_matrix[0]],
                 [0, 0, 0, *self.moment_of_inertia_matrix[1]],
                 [0, 0, 0, *self.moment_of_inertia_matrix[2]],
-            ]
+            ],
         )
 
     def get_gravitational_matrix(
         self, index: Optional[int] = -1
     ) -> np.ndarray:
-        phi_x = self.eta_inertial[index][3]
-        phi_y = self.eta_inertial[index][4]
+        phi_x = self.eta_inertial[index][3][0]
+        phi_y = self.eta_inertial[index][4][0]
 
         return np.array(
             -self.vehicle_mass[index]
@@ -357,12 +365,12 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
     def get_coriolis_matrix(self, index: Optional[int] = -1) -> np.ndarray:
-        v_x = self.velocity_body[index][0]
-        v_y = self.velocity_body[index][1]
-        v_z = self.velocity_body[index][2]
-        w_x = self.velocity_body[index][3]
-        w_y = self.velocity_body[index][4]
-        w_z = self.velocity_body[index][5]
+        v_x = self.velocity_body[index][0][0]
+        v_y = self.velocity_body[index][1][0]
+        v_z = self.velocity_body[index][2][0]
+        w_x = self.velocity_body[index][3][0]
+        w_y = self.velocity_body[index][4][0]
+        w_z = self.velocity_body[index][5][0]
 
         vehicle_mass = self.vehicle_mass[index]
 
@@ -377,7 +385,7 @@ class Ballistic6DOFOperation(BallisticOperation):
                 [0, 0, 0, 0, 0, 0],
                 [0, 0, 0, -I_y * w_z, 0, I_x * w_x],
                 [0, 0, 0, I_y * w_y, -I_x * w_x, 0],
-            ]
+            ],
         )
 
     @property
@@ -423,28 +431,30 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         self.velocity_body = np.append(
             self.velocity_body,
-            np.transpose(
+            [
                 self.ballistics_solver.solve(
                     M=self.get_moment_matrix(),
                     C=self.get_coriolis_matrix(),
-                    V=self.velocity_body,
+                    V=self.velocity_body[-1],
                     D=self.get_aerodynamic_forces_matrix(),
                     G=self.get_gravitational_matrix(),
-                    tau=self.tau,
+                    tau=self.tau[-1],
                     d_t=d_t,
                 )
-            ),
+            ],
             axis=0,
         )
 
         self.velocity_inertial = np.append(
             self.velocity_inertial,
-            [self.get_J_matrix() @ self.velocity_body[-1]],
+            [
+                multiply_matrix(
+                    self.get_J_matrix(),
+                    self.velocity_body[-1],
+                )
+            ],
             axis=0,
         )
-
-        print("\n", np.shape(self.velocity_inertial), "\n", self.t)
-        print(scipy.integrate.cumtrapz(self.velocity_inertial, self.t, axis=0))
 
         # Find position by integrating velocity:
         self.eta_inertial = np.append(
