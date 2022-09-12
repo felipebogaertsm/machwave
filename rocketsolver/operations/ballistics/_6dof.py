@@ -458,12 +458,6 @@ class Ballistic6DOFOperation(BallisticOperation):
             axis=0,
         )
 
-        print(
-            self.velocity_inertial,
-            self.t,
-            np.shape(self.velocity_inertial),
-            np.shape(self.t),
-        )
         print(cumtrapz_matrices(self.velocity_inertial, self.t))
 
         # Find position by integrating velocity:
