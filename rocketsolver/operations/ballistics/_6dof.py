@@ -458,24 +458,20 @@ class Ballistic6DOFOperation(BallisticOperation):
             axis=0,
         )
 
-        print(cumtrapz_matrices(self.velocity_inertial, self.t))
-
         # Find position by integrating velocity:
         self.eta_inertial = np.append(
             self.eta_inertial,
             [
-                cumtrapz_matrices(
-                    self.velocity_inertial, np.array([np.transpose([self.t])])
-                )
+                cumtrapz_matrices(self.velocity_inertial, self.t)
+                + self.eta_inertial[-1]
             ],
+            axis=0,
         )
 
         self.attack_angle = np.append(
             self.attack_angle, self.get_attack_angle()
         )
         self.slip_angle = np.append(self.slip_angle, self.get_slip_angle())
-
-        print(self.attack_angle, "\n\n", self.slip_angle, "\n\n")
 
         exit()
 
