@@ -17,11 +17,28 @@ def get_percentage_error(numerator: float, denominator: float) -> float:
 
 
 def multiply_matrix(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    try:
-        return np.matmul(A, B)
-    except ValueError:
-        return np.matmul(A, np.transpose(B))
+    return np.matmul(A, B)
 
 
 def divide_matrix(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    return multiply_matrix(A, np.linalg.pinv(B))
+    try:
+        return multiply_matrix(A, np.linalg.pinv(B))
+    except ValueError:
+        return multiply_matrix(A, np.transpose(np.linalg.pinv(B)))
+
+
+def cumtrapz_matrices(
+    y: np.ndarray, x: np.ndarray, *args, **kwargs
+) -> np.ndarray:
+    """
+    Returns the cumulative integral of a matrix.
+    """
+
+    cumtrapz_result = np.array([])
+
+    for i in range(np.shape(y)[0]):
+        cumtrapz_result = np.append(
+            cumtrapz_result, scipy.integrate.cumtrapz(y[i], x, *args, **kwargs)
+        )
+
+    return cumtrapz_result

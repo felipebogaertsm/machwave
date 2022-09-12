@@ -15,7 +15,7 @@ from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.fuselage import Fuselage3D
 from rocketsolver.solvers.ballistics_6d import Ballistics6D
-from rocketsolver.utils.math import multiply_matrix
+from rocketsolver.utils.math import cumtrapz_matrices, multiply_matrix
 
 
 class Ballistic6DOFOperation(BallisticOperation):
@@ -96,9 +96,11 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
 
         self.velocity_inertial = np.array(
-            multiply_matrix(  # velocity, inertial frame
-                self.get_J_matrix(), self.velocity_body
-            )
+            [
+                multiply_matrix(  # velocity, inertial frame
+                    self.get_J_matrix(), self.velocity_body[-1]
+                )
+            ],
         )
 
         self.tau = np.array(  # forces and moments
@@ -303,9 +305,9 @@ class Ballistic6DOFOperation(BallisticOperation):
             )
 
     def get_J_matrix(self, index: Optional[int] = -1) -> np.ndarray:
-        phi_x = self.eta_inertial[index][3]
-        phi_y = self.eta_inertial[index][4]
-        phi_z = self.eta_inertial[index][5]
+        phi_x = self.eta_inertial[index][3][0]
+        phi_y = self.eta_inertial[index][4][0]
+        phi_z = self.eta_inertial[index][5][0]
 
         return np.array(
             [
@@ -456,11 +458,22 @@ class Ballistic6DOFOperation(BallisticOperation):
             axis=0,
         )
 
+        print(
+            self.velocity_inertial,
+            self.t,
+            np.shape(self.velocity_inertial),
+            np.shape(self.t),
+        )
+        print(cumtrapz_matrices(self.velocity_inertial, self.t))
+
         # Find position by integrating velocity:
         self.eta_inertial = np.append(
             self.eta_inertial,
-            [scipy.integrate.cumtrapz(self.velocity_inertial, self.t)],
-            axis=0,
+            [
+                cumtrapz_matrices(
+                    self.velocity_inertial, np.array([np.transpose([self.t])])
+                )
+            ],
         )
 
         self.attack_angle = np.append(
