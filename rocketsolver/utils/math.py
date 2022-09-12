@@ -36,9 +36,17 @@ def cumtrapz_matrices(
 
     cumtrapz_result = np.array([])
 
-    for i in range(np.shape(y)[0]):
+    for i in range(np.shape(y)[1]):
+        y_matrix = np.array([y[index][i][0] for index in range(len(y))])
+
+        trapz_integration = scipy.integrate.cumtrapz(
+            y_matrix, x, *args, **kwargs
+        )
+
         cumtrapz_result = np.append(
-            cumtrapz_result, scipy.integrate.cumtrapz(y[i], x, *args, **kwargs)
+            cumtrapz_result,
+            [trapz_integration],
+            axis=0,
         )
 
     return cumtrapz_result
