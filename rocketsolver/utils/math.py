@@ -45,8 +45,7 @@ def cumtrapz_matrices(
 
         cumtrapz_result = np.append(
             cumtrapz_result,
-            [trapz_integration],
-            axis=0,
+            trapz_integration,
         )
 
-    return cumtrapz_result
+    return np.transpose([cumtrapz_result])
