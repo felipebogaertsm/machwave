@@ -5,6 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+"""
+The 6DOF operation class is still under development.
+"""
+
 from typing import Optional
 
 import numpy as np
