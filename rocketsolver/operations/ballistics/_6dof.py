@@ -8,7 +8,6 @@
 from typing import Optional
 
 import numpy as np
-import scipy
 
 from . import BallisticOperation
 from rocketsolver.models.atmosphere import Atmosphere
@@ -234,38 +233,38 @@ class Ballistic6DOFOperation(BallisticOperation):
                     [
                         [
                             C_d_0 * velocity_modulus,
-                            (C_d_i - C_l_alpha) * self.velocity[index][1],
-                            (C_d_i - C_l_alpha) * self.velocity[index][2],
+                            (C_d_i - C_l_alpha) * self.velocity_body[index][1],
+                            (C_d_i - C_l_alpha) * self.velocity_body[index][2],
                             0,
                             0,
                             0,
                         ],
                         [
-                            C_d_0 * self.velocity[index][1],
+                            C_d_0 * self.velocity_body[index][1],
                             C_l_alpha * velocity_modulus
                             + (
                                 C_d_i
-                                * self.velocity[index][1] ** 2
+                                * self.velocity_body[index][1] ** 2
                                 / velocity_modulus
                             ),
                             C_d_i
-                            * self.velocity[index][2]
-                            * self.velocity[index][1]
+                            * self.velocity_body[index][2]
+                            * self.velocity_body[index][1]
                             / velocity_modulus,
                             0,
                             0,
                             0,
                         ],
                         [
-                            C_d_0 * self.velocity[index][2],
+                            C_d_0 * self.velocity_body[index][2],
                             C_d_i
-                            * self.velocity[index][2]
-                            * self.velocity[index][1]
+                            * self.velocity_body[index][2]
+                            * self.velocity_body[index][1]
                             / velocity_modulus,
                             C_l_alpha * velocity_modulus
                             + (
                                 C_d_i
-                                * self.velocity[index][2] ** 2
+                                * self.velocity_body[index][2] ** 2
                                 / velocity_modulus
                             ),
                             0,
@@ -421,13 +420,13 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.rho_air = np.append(
             self.rho_air,
             self.atmosphere.get_density(
-                y_amsl=(self.eta_inertial[-1][0] + self.initial_elevation_amsl)
+                y_amsl=(self.altitude + self.initial_elevation_amsl)
             ),
         )
         self.g = np.append(
             self.g,
             self.atmosphere.get_gravity(
-                self.initial_elevation_amsl + self.eta_inertial[-1][0]
+                self.initial_elevation_amsl + self.altitude
             ),
         )
 
@@ -473,7 +472,12 @@ class Ballistic6DOFOperation(BallisticOperation):
         )
         self.slip_angle = np.append(self.slip_angle, self.get_slip_angle())
 
-        exit()
+        self.P_ext = np.append(
+            self.P_ext,
+            self.atmosphere.get_pressure(
+                self.altitude + self.initial_elevation_amsl
+            ),
+        )
 
     def print_results(self) -> None:
         print("No results yet")
