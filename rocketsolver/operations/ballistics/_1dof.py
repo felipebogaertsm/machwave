@@ -165,11 +165,17 @@ class Ballistic1DOperation(BallisticOperation):
 
         self.mach_no = np.append(
             self.mach_no,
-            self.v[-1] / self.atmosphere.get_sonic_velocity(self.y[-1]),
+            self.v[-1]
+            / self.atmosphere.get_sonic_velocity(
+                self.y[-1] + self.initial_elevation_amsl
+            ),
         )
 
         self.P_ext = np.append(
-            self.P_ext, self.atmosphere.get_pressure(self.y[-1])
+            self.P_ext,
+            self.atmosphere.get_pressure(
+                self.y[-1] + self.initial_elevation_amsl
+            ),
         )
 
         if self.velocity_out_of_rail is None and self.y[-1] > self.rail_length:
