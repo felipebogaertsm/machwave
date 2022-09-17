@@ -44,7 +44,7 @@ class HaackSeriesNoseCone(NoseCone):
         Theta is used to calculate the Von Karman profile along the main nose
         cone axis.
         """
-        return np.arcos(1 - 2 * x / self.length)
+        return np.arccos(1 - 2 * x / self.length)
 
     def get_y_from_x(self, x: float) -> float:
         """
