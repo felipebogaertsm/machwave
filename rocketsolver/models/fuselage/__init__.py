@@ -91,12 +91,24 @@ class Fuselage3D:
         self.mass_without_motor = mass_without_motor
         self.body_segments: list[BodySegment] = []
 
-    def get_drag_coefficient(
-        self, velocity: float = None, mach_no: float = None
-    ) -> float:
-        return self.nose_cone.get_drag_coefficient() + np.sum(
+    def get_drag_coefficient(self, velocity: float, mach_no: float) -> float:
+        """
+        Not tested.
+        """
+        return self.nose_cone.get_drag_coefficient(velocity, mach_no) + np.sum(
             [
-                body_segment.get_drag_coefficient()
+                body_segment.get_drag_coefficient(velocity, mach_no)
+                for body_segment in self.body_segments
+            ]
+        )
+
+    def get_lift_coefficient(self, velocity: float, mach_no: float) -> float:
+        """
+        Not tested.
+        """
+        return self.nose_cone.get_lift_coefficient(velocity, mach_no) + np.sum(
+            [
+                body_segment.get_lift_coefficient(velocity, mach_no)
                 for body_segment in self.body_segments
             ]
         )

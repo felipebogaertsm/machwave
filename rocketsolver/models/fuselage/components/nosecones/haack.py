@@ -75,8 +75,8 @@ class HaackSeriesNoseCone(NoseCone):
 
         return area
 
-    def get_drag_coefficient(self) -> float:
+    def get_drag_coefficient(self, *args, **kwargs) -> float:
         return 0
 
-    def get_lift_coefficient(self) -> float:
+    def get_lift_coefficient(self, *args, **kwargs) -> float:
         return 2
