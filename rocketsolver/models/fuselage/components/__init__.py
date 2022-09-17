@@ -22,9 +22,9 @@ class FuselageComponent(ABC):
         self.mass = mass
 
     @abstractmethod
-    def get_drag_coefficient(self) -> float:
+    def get_drag_coefficient(self, *args, **kwargs) -> float:
         pass
 
     @abstractmethod
-    def get_lift_coefficient(self) -> float:
+    def get_lift_coefficient(self, *args, **kwargs) -> float:
         pass

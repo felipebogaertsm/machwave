@@ -52,7 +52,7 @@ class TrapezoidalFins(Fins):
             (self.body_diameter / 2) / (self.height + (self.body_diameter / 2))
         )
 
-    def get_drag_coefficient(self) -> float:
+    def get_drag_coefficient(self, *args, **kwargs) -> float:
         """
         Assuming 0 drag from fins.
         """
