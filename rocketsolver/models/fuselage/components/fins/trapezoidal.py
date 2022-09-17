@@ -47,21 +47,21 @@ class TrapezoidalFins(Fins):
             self.base_length, self.tip_length, self.height
         )
 
-    def get_AR(self):
-        return ((self.base_length / 2) ** 2) / self.get_area()
-
-    def get_A_1_4(self) -> float:
-        return np.deg2rad(45)
-
     def get_K_f(self) -> float:
         return 1 + (
             (self.body_diameter / 2) / (self.height + (self.body_diameter / 2))
         )
 
     def get_drag_coefficient(self) -> float:
+        """
+        Assuming 0 drag from fins.
+        """
         return 0
 
     def get_lift_coefficient(self, *args, **kwargs) -> float:
+        """
+        Not tested.
+        """
         return self.get_K_f * (
             (4 * self.count * (self.height / self.body_diameter) ** 2)
             / (

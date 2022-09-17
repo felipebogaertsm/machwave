@@ -51,6 +51,9 @@ class CylindricalBody(BodySegment):
     def get_cd_body(
         self, total_vehicle_length: float, nose_cone_length: float
     ) -> float:
+        """
+        Not tested.
+        """
         return (
             1
             + 60 / ((total_vehicle_length / self.outer_diameter) ** 3)
@@ -63,12 +66,31 @@ class CylindricalBody(BodySegment):
         )
 
     def get_cd_base(self) -> float:
+        """
+        Not tested.
+        """
         return 0.029 / np.sqrt(
             self.get_cd_body(total_vehicle_length=0, nose_cone_length=0)
         )
 
-    def get_drag_coefficient(self) -> float:
-        pass
+    def get_drag_coefficient(
+        self,
+        total_vehicle_length: float,
+        nose_cone_length: float,
+    ) -> float:
+        """
+        Not tested.
+        """
+        return (
+            self.get_cd_body(
+                total_vehicle_length=total_vehicle_length,
+                nose_cone_length=nose_cone_length,
+            )
+            + self.get_cd_base()
+        )
 
     def get_lift_coefficient(self) -> float:
+        """
+        Not tested.
+        """
         return self.constant_K * self.outer_surface_area / self.frontal_area

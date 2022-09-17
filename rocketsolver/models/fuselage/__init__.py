@@ -81,7 +81,7 @@ class Fuselage3D:
         self.I_zx = I_zx
         self.I_zy = I_zy
 
-        self.moment_of_inertia_matrix = [
+        self.moment_of_inertia_tensor = [
             [I_x, -I_xy, -I_xz],
             [-I_yx, I_y, -I_yz],
             [-I_zx, -I_zy, I_z],
