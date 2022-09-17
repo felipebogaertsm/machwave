@@ -13,7 +13,10 @@ from rocketsolver.models.materials import Material
 
 class HaackSeriesNoseCone(NoseCone):
     """
-    https://en.wikipedia.org/wiki/Nose_cone_design#Von_K%C3%A1rm%C3%A1n
+    Reference:
+    THE DESCRIPTIVE GEOMETRY OF NOSE CONES, Gary Crowell, 1996
+    http://servidor.demec.ufpr.br/CFD/bibliografia/aerodinamica/Crowell_1996.pdf
+    Accessed September 17, 2022 at 2:01 pm EST.
     """
 
     def __init__(
@@ -37,9 +40,17 @@ class HaackSeriesNoseCone(NoseCone):
         self.C = C
 
     def get_theta(self, x: float) -> float:
+        """
+        Theta is used to calculate the Von Karman profile along the main nose
+        cone axis.
+        """
         return np.arcos(1 - 2 * x / self.length)
 
     def get_y_from_x(self, x: float) -> float:
+        """
+        Calculates the y coordinate of the Von Karman profile along the x
+        axis.
+        """
         theta = self.get_theta(x)
 
         return (
@@ -52,6 +63,9 @@ class HaackSeriesNoseCone(NoseCone):
 
     @property
     def surface_area(self) -> float:
+        """
+        Calculates the surface area of the Haack Series nose cone.
+        """
         iterations = 1000
         area = 0  # initial value, to be incremented
 
@@ -62,7 +76,7 @@ class HaackSeriesNoseCone(NoseCone):
         return area
 
     def get_drag_coefficient(self) -> float:
-        pass
+        return 0
 
     def get_lift_coefficient(self) -> float:
         return 2

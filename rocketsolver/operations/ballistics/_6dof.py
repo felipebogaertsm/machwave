@@ -67,7 +67,7 @@ class Ballistic6DOFOperation(BallisticOperation):
         self.vehicle_mass = np.array(
             [initial_vehicle_mass]
         )  # total mass of the vehicle
-        self.moment_of_inertia_matrix = fuselage.moment_of_inertia_matrix
+        self.moment_of_inertia_tensor = fuselage.moment_of_inertia_tensor
         self.vehicle_wind_velocity = np.array(
             [self.get_vehicle_wind_velocity(self.wind_velocity[0])]
         )  # normal, lateral
@@ -180,9 +180,9 @@ class Ballistic6DOFOperation(BallisticOperation):
                 [self.vehicle_mass[index], 0, 0, 0, 0, 0],
                 [0, self.vehicle_mass[index], 0, 0, 0, 0],
                 [0, 0, self.vehicle_mass[index], 0, 0, 0],
-                [0, 0, 0, *self.moment_of_inertia_matrix[0]],
-                [0, 0, 0, *self.moment_of_inertia_matrix[1]],
-                [0, 0, 0, *self.moment_of_inertia_matrix[2]],
+                [0, 0, 0, *self.moment_of_inertia_tensor[0]],
+                [0, 0, 0, *self.moment_of_inertia_tensor[1]],
+                [0, 0, 0, *self.moment_of_inertia_tensor[2]],
             ],
         )
 
@@ -379,8 +379,8 @@ class Ballistic6DOFOperation(BallisticOperation):
 
         vehicle_mass = self.vehicle_mass[index]
 
-        I_x = self.fuselage.moment_of_inertia_matrix[0][0]
-        I_y = self.fuselage.moment_of_inertia_matrix[1][1]
+        I_x = self.fuselage.moment_of_inertia_tensor[0][0]
+        I_y = self.fuselage.moment_of_inertia_tensor[1][1]
 
         return np.array(
             [
