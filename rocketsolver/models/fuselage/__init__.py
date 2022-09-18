@@ -19,6 +19,13 @@ class DragCoefficientTypeError(Exception):
         super().__init__(message)
 
 
+class Fuselage3DValidationError(Exception):
+    def __init__(self, value: str, message: str) -> None:
+        self.value = value
+        self.message = message
+        super().__init__(message)
+
+
 class Fuselage:
     """
     Deals primarily with aerodynamic parameters.
@@ -60,36 +67,17 @@ class Fuselage3D:
         self,
         nose_cone: NoseCone,
         mass_without_motor: float,
-        I_x: float,
-        I_y: float,
-        I_z: float,
-        I_xy: float,
-        I_xz: float,
-        I_yz: float,
-        I_yx: float,
-        I_zx: float,
-        I_zy: float,
+        inertia_tensor: np.ndarray,
     ) -> None:
-        # Moment of inertia for each axis:
-        self.I_x = I_x
-        self.I_y = I_y
-        self.I_z = I_z
-        self.I_xy = I_xy
-        self.I_xz = I_xz
-        self.I_yz = I_yz
-        self.I_yx = I_yx
-        self.I_zx = I_zx
-        self.I_zy = I_zy
-
-        self.moment_of_inertia_tensor = [
-            [I_x, -I_xy, -I_xz],
-            [-I_yx, I_y, -I_yz],
-            [-I_zx, -I_zy, I_z],
-        ]
-
         self.nose_cone = nose_cone
         self.mass_without_motor = mass_without_motor
+        self.inertia_tensor = np.array(inertia_tensor)
+
         self.body_segments: list[BodySegment] = []
+
+    @property
+    def moment_of_intertia_tensor(self):
+        return self.inertia_tensor
 
     def get_drag_coefficient(self, velocity: float, mach_no: float) -> float:
         """
@@ -115,6 +103,10 @@ class Fuselage3D:
 
     def add_body_segment(self, body_segment: BodySegment) -> None:
         self.body_segments.append(body_segment)
+
+    @property
+    def is_valid(self) -> None:
+        self.nose_cone.is_valid
 
     def get_mass(self):
         return self.mass_without_motor

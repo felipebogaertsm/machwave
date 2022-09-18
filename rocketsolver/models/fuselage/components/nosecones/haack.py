@@ -28,6 +28,8 @@ class HaackSeriesNoseCone(NoseCone):
         base_diameter: float,
         C: float,
     ) -> None:
+        self.C = C
+
         super().__init__(
             material=material,
             center_of_gravity=center_of_gravity,
@@ -36,8 +38,6 @@ class HaackSeriesNoseCone(NoseCone):
             base_diameter=base_diameter,
             surface_area=None,
         )
-
-        self.C = C
 
     def get_theta(self, x: float) -> float:
         """
@@ -60,6 +60,10 @@ class HaackSeriesNoseCone(NoseCone):
                 theta - np.sin(2 * theta) / 2 + self.C * (np.sin(theta) ** 3)
             )
         )
+
+    @property
+    def is_valid(self) -> None:
+        assert self.C <= 4 / 3
 
     @property
     def surface_area(self) -> float:

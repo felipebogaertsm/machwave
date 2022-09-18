@@ -5,8 +5,11 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from rocketsolver.models.fuselage import Fuselage3D
+from . import Material
 
 
-def test_fuselage_3d_concorde(concorde_fuselage3d: Fuselage3D) -> None:
-    concorde_fuselage3d.is_valid
+class Fiberglass(Material):
+    def __init__(self) -> None:
+        super().__init__(
+            density=1700, yield_strength=200e6, ultimate_strength=210e6
+        )

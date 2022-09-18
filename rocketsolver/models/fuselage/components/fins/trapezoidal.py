@@ -74,3 +74,7 @@ class TrapezoidalFins(Fins):
                 )
             )
         )
+
+    @property
+    def is_valid(self) -> None:
+        pass

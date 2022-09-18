@@ -19,13 +19,13 @@ class NoseCone(FuselageComponent):
         base_diameter: float,
         surface_area: float,
     ) -> None:
-        super().__init__(
-            material=material, center_of_gravity=center_of_gravity, mass=mass
-        )
-
         self.length = length
         self.base_diameter = base_diameter
         self._surface_area = surface_area
+
+        super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )
 
     @property
     def surface_area(self) -> float:
