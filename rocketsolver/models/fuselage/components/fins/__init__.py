@@ -19,10 +19,10 @@ class Fins(FuselageComponent):
         count: int,
         rugosity: float,
     ) -> None:
-        super().__init__(
-            material=material, center_of_gravity=center_of_gravity, mass=mass
-        )
-
         self.thickness = thickness
         self.count = count
         self.rugosity = rugosity
+
+        super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )

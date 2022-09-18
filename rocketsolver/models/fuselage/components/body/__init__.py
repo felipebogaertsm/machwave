@@ -30,15 +30,15 @@ class CylindricalBody(BodySegment):
         constant_K: float,
         fins: Optional[Fins] = None,
     ) -> None:
-        super().__init__(
-            material=material, center_of_gravity=center_of_gravity, mass=mass
-        )
-
         self.length = length
         self.outer_diameter = outer_diameter
         self.rugosity = rugosity
         self.constant_K = constant_K
         self.fins = fins
+
+        super().__init__(
+            material=material, center_of_gravity=center_of_gravity, mass=mass
+        )
 
     @property
     def frontal_area(self) -> float:
@@ -47,6 +47,12 @@ class CylindricalBody(BodySegment):
     @property
     def outer_surface_area(self) -> float:
         return self.length * np.pi * (self.outer_diameter)
+
+    @property
+    def is_valid(self) -> None:
+        assert self.rugosity < 1e-3
+        assert self.frontal_area > 0
+        assert self.outer_surface_area > 0
 
     def get_cd_body(
         self, total_vehicle_length: float, nose_cone_length: float
