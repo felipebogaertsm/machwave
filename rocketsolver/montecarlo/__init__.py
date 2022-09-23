@@ -10,7 +10,10 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import numpy as np
+import plotly.graph_objects as go
 
+from rocketsolver.montecarlo.random import get_random_generator
+from rocketsolver.operations import Operation
 from rocketsolver.simulations import Simulation
 from rocketsolver.utils.utilities import obtain_attributes_from_object
 
@@ -19,18 +22,41 @@ from rocketsolver.utils.utilities import obtain_attributes_from_object
 class MonteCarloParameter:
     """
     Stores a Monte Carlo parameter alongside its upper/lower bound.
+
+    :param value: Parameter main value
+    :param lower_tolerance: Lower bound of the parameter
+    :param upper_tolerance: Upper bound of the parameter
+    :param tolerance: Tolerance of the parameter
+    :param probability_distribution: Probability distribution of the random
+        values. It can be set to 'uniform', 'normal' or any other distribution
+        supported by the numpy.random module.
+    :rtype: None
     """
 
     value: float | int
     lower_tolerance: Optional[float | int] = 0
     upper_tolerance: Optional[float | int] = 0
     tolerance: Optional[float | int] = 0
+    probability_distribution: str = "normal"
+
+    def __post_init__(self) -> None:
+        self.probability_distribution_class = get_random_generator(
+            probability_distribution=self.probability_distribution,
+            value=self.value,
+            lower_tolerance=self.lower_tolerance,
+            upper_tolerance=self.upper_tolerance,
+            tolerance=self.tolerance,
+        )
 
     def get_random_value(self) -> float:
-        return np.random.uniform(
-            low=self.value - self.lower_tolerance - self.tolerance,
-            high=self.value + self.upper_tolerance + self.tolerance,
-        )
+        """
+        Generates a random value for the parameter, according to the
+        probability distribution and tolerances.
+
+        :return: Random value
+        :rtype: float
+        """
+        return self.probability_distribution_class.get_value()
 
     def __lt__(self, other: Any) -> bool:
         return self.value < other
@@ -68,7 +94,10 @@ class MonteCarloParameter:
 
 class MonteCarloSimulation:
     """
-    Stores, executes and presents data from a Monte Carlo simulation.
+    The MonteCarloSimulation class:
+    - Stores data for a Monte Carlo simulation
+    - Executes the simulation
+    - Presents distribution of results
     """
 
     def __init__(
@@ -77,15 +106,36 @@ class MonteCarloSimulation:
         number_of_scenarios: int,
         simulation: Simulation,
     ) -> None:
+        """
+        :param parameters: List with the input parameters for a simulation
+            class instance.
+        :param number_of_scenarios: Number of scenarios to be simulated.
+        :param simulation: Simulation class instance.
+        :rtype: None
+        """
+
         self.parameters = parameters
         self.number_of_scenarios = number_of_scenarios
         self.simulation = simulation
 
         self.scenarios: list[list[float | int]] = []
 
-    def generate_scenario(self) -> list[float | int]:
+        # "results" gets populates when the "run" method is called. It gets
+        # filled with a list of simulation outputs.
+        self.results: list[list[Operation]] = []
+
+    def generate_scenario(
+        self,
+    ) -> list[float | int]:
         """
-        Generates a monte carlo scenario in the form of a list of parameters
+        Generates a monte carlo scenario in the form of a list of parameters.
+
+        These parameters are randomly generated within the tolerance bounds,
+        set in the MontrCarloParameter class. The random numbers follow a
+        gaussian distribution.
+
+        :return: Monte Carlo scenario
+        :rtype: list[float | int]
         """
 
         new_scenario = []
@@ -149,3 +199,43 @@ class MonteCarloSimulation:
             self.results.append(self.simulation(*scenario).run())
 
         return self.results
+
+    def retrieve_values_from_result(
+        self,
+        operation_index: int,
+        property: str,
+    ) -> np.ndarray:
+        return np.array(
+            [
+                getattr(result[operation_index], property)
+                for result in self.results
+            ]
+        )
+
+    def plot_histogram(
+        self,
+        operation_index: int,
+        property: str,
+        x_axes_title: Optional[str] = None,
+        *args,
+        **kwargs
+    ) -> None:
+        """
+        Plots a histogram given a result index and the property name.
+
+        :param operation_index: Index of the operation/result to plot
+        :param property: Name of the property or the attribute of the
+            operation to plot.
+        :param x_axes_title: Title of the x axes. By default, the property
+            name is used.
+        :rtype: None
+        """
+        values = self.retrieve_values_from_result(
+            operation_index=operation_index, property=property
+        )
+
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(x=values, *args, **kwargs))
+        fig.update_xaxes(title_text=property or x_axes_title)
+
+        fig.show()
