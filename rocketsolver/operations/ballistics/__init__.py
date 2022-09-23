@@ -29,12 +29,3 @@ class BallisticOperation(Operation):
     @abstractmethod
     def max_velocity_time(self) -> float:
         pass
-
-    @property
-    @abstractmethod
-    def apogee_time(self) -> float:
-        pass
-
-    @abstractmethod
-    def iterate(self) -> None:
-        pass

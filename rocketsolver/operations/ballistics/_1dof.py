@@ -197,10 +197,3 @@ class Ballistic1DOperation(BallisticOperation):
         )
         print(f" Liftoff mass: {self.vehicle_mass[0]:.3f} kg")
         print(f" Flight time: {self.t[-1]:.2f} s")
-
-    @property
-    def apogee_time(self) -> float:
-        """
-        Returns the time of the apogee.
-        """
-        return self.t[np.argmax(self.y)]
