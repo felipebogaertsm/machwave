@@ -12,7 +12,7 @@ class Operation(ABC):
     """
     The Operation class:
     - Stores simulation data
-    - Iterates inside a simulation loop
+    - Iterates a simulation loop
     - Presents simulation data
     """
 
@@ -28,7 +28,7 @@ class Operation(ABC):
     def iterate(self, *args, **kwargs):
         """
         Runs on every iteration of a simulation loop, incrementing results
-        and storing them in the Operation instance.
+        and storing them in the Operation instance (self).
         """
         pass
 
