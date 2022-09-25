@@ -10,20 +10,38 @@ from typing import Optional
 
 import numpy as np
 import skfmm
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 from .. import GrainSegment
 
 
 class FMMGrainSegment(GrainSegment, ABC):
-    def __init__(self, map_dim: Optional[int] = 10) -> None:
+    def __init__(self, map_dim: Optional[int] = 20) -> None:
         self.map_dim = map_dim
 
         super().__init__()
 
-    def validate(self) -> None:
-        super().validate()
+    @abstractmethod
+    def get_face_map(self) -> np.ndarray:
+        """
+        Method needs to be implemented for each and every geometry.
+        """
+        pass
 
-        # assert self.map_dim >= 100
+    @abstractmethod
+    def map_to_area(self, value: float) -> float:
+        """
+        Used to convert sq pixels to sqm.
+        For extracting real areas from the regression map.
+        """
+        pass
+
+    def validate(self) -> None:
+        """
+        NOTE: Minimum map_dim still needs to be implemented/asserted.
+        """
+        super().validate()
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
@@ -70,10 +88,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return np.ma.MaskedArray(self.get_face_map(), self.get_mask())
 
-    @abstractmethod
-    def get_face_map(self):
-        pass
-
     def get_cell_size(self) -> float:
         return 1 / self.map_dim
 
@@ -86,3 +100,30 @@ class FMMGrainSegment(GrainSegment, ABC):
         return (
             skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
         )
+
+    def unknown(self):
+        """
+        Function calculates many parameters, still needs to be organized.
+        """
+        regression_map = self.get_regression_map()
+        max_dist = np.amax(regression_map)
+
+        face_area = []
+        polled = []
+        valid = np.logical_not(self.get_mask())
+
+        for i in range(int(max_dist * self.map_dim) + 2):
+            polled.append(i / self.map_dim)
+            face_area.append(
+                self.map_to_area(
+                    np.count_nonzero(
+                        np.logical_and(
+                            regression_map > (i / self.map_dim), valid
+                        )
+                    )
+                )
+            )
+
+        face_area = savgol_filter(face_area, 31, 5)
+        face_area_interp = interp1d(polled, face_area)
+        print(face_area_interp)
