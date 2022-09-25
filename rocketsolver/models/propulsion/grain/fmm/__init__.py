@@ -10,10 +10,12 @@ from typing import Optional
 
 import numpy as np
 import skfmm
+from skimage import measure
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
 from .. import GrainSegment
+from rocketsolver.utils.geometric import get_length
 
 
 class FMMGrainSegment(GrainSegment, ABC):
@@ -37,6 +39,14 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         pass
 
+    @abstractmethod
+    def map_to_length(self, value: float) -> float:
+        """
+        Converts pixels to meters. Used to extract real distances from pixel
+        distances such as contour lengths
+        """
+        pass
+
     def validate(self) -> None:
         """
         NOTE: Minimum map_dim still needs to be implemented/asserted.
@@ -56,6 +66,38 @@ class FMMGrainSegment(GrainSegment, ABC):
         pass
 
     def get_volume(self) -> float:
+        """
+        Not implemented yet.
+        """
+        pass
+
+    def get_face_area(self, web_thickness: float) -> float:
+        """
+        NOTE: Still needs to implement control for when web thickness is over.
+        """
+
+        map_distance = self.normalize(web_thickness)
+        return self.get_face_area_interp_func()(map_distance)
+
+    def get_core_perimeter(self, web_thickness: float) -> float:
+        """
+        Not implemented yet.
+        """
+        map_dist = self.normalize(web_thickness)
+
+        core_perimeter = 0
+        contours = measure.find_contours(
+            self.get_regression_map(), map_dist, fully_connected="low"
+        )
+
+        for contour in contours:
+            core_perimeter += self.map_to_length(
+                get_length(contour, self.map_dim)
+            )
+
+        return core_perimeter
+
+    def get_core_area(self, web_thickness: float) -> float:
         """
         Not implemented yet.
         """
@@ -101,7 +143,7 @@ class FMMGrainSegment(GrainSegment, ABC):
             skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
         )
 
-    def unknown(self):
+    def get_face_area_interp_func(self):
         """
         Function calculates many parameters, still needs to be organized.
         """
@@ -125,5 +167,4 @@ class FMMGrainSegment(GrainSegment, ABC):
             )
 
         face_area = savgol_filter(face_area, 31, 5)
-        face_area_interp = interp1d(polled, face_area)
-        print(face_area_interp)
+        return interp1d(polled, face_area)
