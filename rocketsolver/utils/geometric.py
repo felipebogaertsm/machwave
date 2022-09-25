@@ -9,6 +9,8 @@
 Stores the functions used to calculate geometric parameters.
 """
 
+from typing import Optional
+
 import numpy as np
 
 
@@ -25,3 +27,21 @@ def get_trapezoidal_area(base_length, tip_length, height):
 
 def get_cylinder_volume(diameter, length):
     return np.pi * length * (diameter**2) / 4
+
+
+def get_length(
+    contour: np.ndarray, map_size: int, tolerance: Optional[float] = 3.0
+):
+    """
+    Returns the total length of all segments in a contour that aren't within
+    'tolerance' of the edge of a circle with diameter 'map_size'
+    """
+    offset = np.roll(contour.T, 1, axis=1)
+    lengths = np.linalg.norm(contour.T - offset, axis=0)
+
+    center_offset = np.array([[map_size / 2, map_size / 2]])
+    radius = np.linalg.norm(contour - center_offset, axis=1)
+
+    valid = radius < (map_size / 2) - tolerance
+
+    return np.sum(lengths[valid])

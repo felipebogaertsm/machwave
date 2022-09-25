@@ -28,6 +28,9 @@ class DGrain(FMMGrainSegment):
     def map_to_area(self, value):
         return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
+    def map_to_length(self, value: float) -> float:
+        return self.outer_diameter * (value / self.map_dim)
+
     def get_face_map(self) -> np.ndarray:
         slot_offset_normalized = self.normalize(self.slot_offset)
         map_x = self.get_maps()[0]
