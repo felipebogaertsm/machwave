@@ -20,6 +20,13 @@ class GrainGeometryError(Exception):
 
 
 class GrainSegment(ABC):
+    def __init__(self) -> None:
+        self.validate()
+
+    @abstractmethod
+    def validate(self) -> None:
+        pass
+
     @abstractmethod
     def get_burn_area(self, web_distance: float) -> float:
         pass

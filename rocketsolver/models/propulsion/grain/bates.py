@@ -23,7 +23,7 @@ class BatesSegment(GrainSegment):
         self.length = length
         self.spacing = spacing
 
-        self.validate()
+        super().__init__()
 
     def validate(self) -> None:
         """
