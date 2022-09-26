@@ -47,6 +47,14 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         pass
 
+    @abstractmethod
+    def get_segment_length(self, web_thickness: float) -> float:
+        """
+        Gets instantaneous segment length, in function of the web thickness
+        traveled.
+        """
+        pass
+
     def validate(self) -> None:
         """
         NOTE: Minimum map_dim still needs to be implemented/asserted.
@@ -101,7 +109,10 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         Not implemented yet.
         """
-        pass
+        return self.get_core_perimeter(web_thickness) * (
+            self.get_segment_length(web_thickness=web_thickness)
+            - 2 * web_thickness
+        )
 
     def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
         """
