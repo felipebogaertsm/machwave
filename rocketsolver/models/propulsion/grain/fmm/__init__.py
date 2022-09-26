@@ -18,7 +18,7 @@ from .. import GrainSegment
 from rocketsolver.utils.geometric import get_length
 
 
-class FMMGrainSegment(GrainSegment, ABC):
+class FMMGrainSegment2D(GrainSegment, ABC):
     """
     NOTE: Still needs to implement inhibited ends.
     """

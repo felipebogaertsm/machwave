@@ -6,6 +6,7 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import numpy as np
 
@@ -20,11 +21,40 @@ class GrainGeometryError(Exception):
 
 
 class GrainSegment(ABC):
-    def __init__(self) -> None:
+    """
+    Class that represents a grain segment.
+
+    Assumptions:
+    - Segment should have the outer diameter surface inhibited
+    - Cylindrical base shape (no taper or conical outer surface)
+    """
+
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
+        self._length = length
+        self._outer_diameter = outer_diameter
+        self.spacing = spacing
+        self.inhibited_ends = inhibited_ends
+
         self.validate()
 
-    @abstractmethod
     def validate(self) -> None:
+        assert self.spacing > 0
+        assert self.inhibited_ends in [0, 1, 2]
+
+    @property
+    @abstractmethod
+    def length(self, web_distance: float) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def outer_diameter(self, web_distance: float) -> float:
         pass
 
     @abstractmethod
@@ -34,6 +64,54 @@ class GrainSegment(ABC):
     @abstractmethod
     def get_volume(self, web_distance: float) -> float:
         pass
+
+
+class GrainSegment2D(GrainSegment):
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
+
+    def validate(self) -> None:
+        """
+        Validates segment's geometry. They include:
+
+        - Outer diameter shall be larger than core diameter
+        - Length shall be larger than 0
+        - Spacing shall be larger than or equal to 0
+
+        :rtype: None
+        """
+        assert self.length > 0
+        assert self.outer_diameter > self.core_diameter
+        assert self.spacing >= 0
+
+    @abstractmethod
+    def get_core_area(self, web_distance: float) -> float:
+        pass
+
+    @abstractmethod
+    def get_face_area(self, web_distance: float) -> float:
+        pass
+
+    def get_burn_area(self, web_distance: float) -> float:
+        """Not implemented yet."""
+        core_area = self.get_core_area(web_distance=web_distance)
+        single_face_area = self.get_face_area(web_distance=web_distance)
+        total_face_area = (2 - self.inhibited_ends) * single_face_area
+        return core_area + total_face_area
+
+    def get_volume(self, web_distance: float) -> float:
+        return self.length * self.get_face_area(web_distance=web_distance)
 
 
 class Grain:

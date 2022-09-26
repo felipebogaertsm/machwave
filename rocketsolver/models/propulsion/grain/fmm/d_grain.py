@@ -7,10 +7,10 @@
 
 import numpy as np
 
-from . import FMMGrainSegment
+from . import FMMGrainSegment2D
 
 
-class DGrainSegment(FMMGrainSegment):
+class DGrainSegment(FMMGrainSegment2D):
     def __init__(
         self,
         outer_diameter: float,
