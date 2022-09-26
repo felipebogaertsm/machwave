@@ -154,7 +154,7 @@ class SolidMotor(Motor):
         :rtype: float
         """
         return (
-            self.grain.get_propellant_volume(web_thickness=0)
+            self.grain.get_propellant_volume(web_distance=0)
             * self.propellant.density
         )
 
