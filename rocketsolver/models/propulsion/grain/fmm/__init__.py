@@ -67,11 +67,13 @@ class FMMGrainSegment(GrainSegment, ABC):
     def denormalize(self, value: int | float) -> float:
         return (value / 2) * (self.outer_diameter)
 
-    def get_burn_area(self) -> float:
+    def get_burn_area(self, web_thickness: float) -> float:
         """
         Not implemented yet.
         """
-        pass
+        return self.get_core_area(web_thickness) + 2 * self.get_face_area(
+            web_thickness
+        )
 
     def get_volume(self) -> float:
         """
