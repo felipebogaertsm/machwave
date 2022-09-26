@@ -23,10 +23,12 @@ class FMMGrainSegment(GrainSegment, ABC):
     NOTE: Still needs to implement inhibited ends.
     """
 
-    def __init__(self, map_dim: Optional[int] = 20) -> None:
+    def __init__(self, map_dim: Optional[int] = 1000) -> None:
         self.map_dim = map_dim
 
         super().__init__()
+
+        assert self.map_dim >= 100
 
     @abstractmethod
     def get_face_map(self) -> np.ndarray:
