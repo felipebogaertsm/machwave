@@ -109,10 +109,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         Not implemented yet.
         """
-        return self.get_core_perimeter(web_thickness) * (
-            self.get_segment_length(web_thickness=web_thickness)
-            - 2 * web_thickness
-        )
+        return self.get_core_perimeter(
+            web_thickness
+        ) * self.get_segment_length(web_thickness)
 
     def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
         """
