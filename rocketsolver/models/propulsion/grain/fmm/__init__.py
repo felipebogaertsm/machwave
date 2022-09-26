@@ -19,6 +19,10 @@ from rocketsolver.utils.geometric import get_length
 
 
 class FMMGrainSegment(GrainSegment, ABC):
+    """
+    NOTE: Still needs to implement inhibited ends.
+    """
+
     def __init__(self, map_dim: Optional[int] = 20) -> None:
         self.map_dim = map_dim
 
@@ -55,6 +59,10 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         pass
 
+    @abstractmethod
+    def get_outer_diameter(self) -> float:
+        pass
+
     def validate(self) -> None:
         """
         NOTE: Minimum map_dim still needs to be implemented/asserted.
@@ -69,17 +77,19 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     def get_burn_area(self, web_thickness: float) -> float:
         """
-        Not implemented yet.
+        Only implemented for neither of the ends inhibited.
         """
         return self.get_core_area(web_thickness) + 2 * self.get_face_area(
             web_thickness
         )
 
-    def get_volume(self) -> float:
+    def get_volume(self, web_thickness: float) -> float:
         """
-        Not implemented yet.
+        Only implemented for neither of the ends inhibited.
         """
-        pass
+        return self.get_segment_length(web_thickness) * self.get_face_area(
+            web_thickness
+        )
 
     def get_face_area(self, web_thickness: float) -> float:
         """
