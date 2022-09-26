@@ -25,6 +25,9 @@ class DGrain(FMMGrainSegment):
         assert self.length > 0
         assert self.slot_offset > 0
 
+    def get_outer_diameter(self) -> float:
+        return self.outer_diameter
+
     def get_segment_length(self, web_thickness: float) -> float:
         return self.length - 2 * web_thickness
 
