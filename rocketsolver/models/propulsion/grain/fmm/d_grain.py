@@ -12,11 +12,16 @@ from . import FMMGrainSegment
 
 class DGrain(FMMGrainSegment):
     def __init__(
-        self, outer_diameter: float, length: float, slot_offset: float
+        self,
+        outer_diameter: float,
+        length: float,
+        slot_offset: float,
+        spacing: float,
     ) -> None:
         self.outer_diameter = outer_diameter
         self.length = length
         self.slot_offset = slot_offset
+        self.spacing = spacing
 
         super().__init__()
 
