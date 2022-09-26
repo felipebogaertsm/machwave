@@ -11,7 +11,7 @@ class can be implemented in different ways by inheriting from it and then
 changing its methods depending on the particular parachute geometry. 
 """
 
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 
 from rocketsolver.utils.geometric import get_circle_area
 
@@ -20,11 +20,13 @@ class Parachute(ABC):
     def __init__(self) -> None:
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def drag_coefficient(self):
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def area(self):
         pass
 

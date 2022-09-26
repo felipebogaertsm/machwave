@@ -18,31 +18,26 @@ class BatesSegment(GrainSegment):
         length: float,
         spacing: float,
     ) -> None:
-        self.outer_diameter = outer_diameter
+        self._outer_diameter = outer_diameter
         self.core_diameter = core_diameter
-        self.length = length
+        self._length = length
         self.spacing = spacing
 
         super().__init__()
 
     def validate(self) -> None:
-        """
-        Validates segment's geometry. They include:
-
-        - Outer diameter shall be larger than core diameter
-        - Core diameter shall be larger than 0
-        - Length shall be larger than 0
-        - Spacing shall be larger than 0
-
-        :rtype: None
-        """
         try:
-            assert self.outer_diameter > self.core_diameter
             assert self.core_diameter > 0
-            assert self.length > 0
-            assert self.spacing >= 0
         except AssertionError:
             raise GrainGeometryError("Invalid segment geometry")
+
+    @property
+    def length(self) -> float:
+        return self._length
+
+    @property
+    def outer_diameter(self) -> float:
+        return self._outer_diameter
 
     @property
     def total_web_thickness(self) -> float:
