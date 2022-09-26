@@ -159,6 +159,7 @@ class SRMOperation(MotorOperation):
         The function uses the Runge-Kutta 4th order numerical method for
         solving the differential equations.
         """
+        print(self.P_0[-1] * 1e-6)
         if self.end_thrust is False:
             self.t = np.append(
                 self.t, self.t[-1] + d_t

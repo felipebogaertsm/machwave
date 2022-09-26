@@ -28,8 +28,6 @@ class FMMGrainSegment(GrainSegment, ABC):
 
         super().__init__()
 
-        assert self.map_dim >= 100
-
     @abstractmethod
     def get_face_map(self) -> np.ndarray:
         """
@@ -66,10 +64,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         pass
 
     def validate(self) -> None:
-        """
-        NOTE: Minimum map_dim still needs to be implemented/asserted.
-        """
         super().validate()
+
+        assert self.map_dim >= 100
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
