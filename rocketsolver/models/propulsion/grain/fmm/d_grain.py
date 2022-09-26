@@ -5,6 +5,8 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
+from typing import Optional
+
 import numpy as np
 
 from . import FMMGrainSegment2D
@@ -13,28 +15,24 @@ from . import FMMGrainSegment2D
 class DGrainSegment(FMMGrainSegment2D):
     def __init__(
         self,
-        outer_diameter: float,
         length: float,
-        slot_offset: float,
+        outer_diameter: float,
         spacing: float,
+        slot_offset: float,
+        inhibited_ends: Optional[int] = 0,
     ) -> None:
-        self.outer_diameter = outer_diameter
-        self.length = length
         self.slot_offset = slot_offset
-        self.spacing = spacing
 
-        super().__init__()
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
 
     def validate(self) -> None:
-        assert self.outer_diameter > 0
-        assert self.length > 0
         assert self.slot_offset > 0
-
-    def get_outer_diameter(self) -> float:
-        return self.outer_diameter
-
-    def get_segment_length(self, web_thickness: float) -> float:
-        return self.length - 2 * web_thickness
+        assert self.slot_offset < self.outer_diameter / 2
 
     def map_to_area(self, value):
         return (self.outer_diameter**2) * (value / (self.map_dim**2))

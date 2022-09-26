@@ -14,16 +14,23 @@ from skimage import measure
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from .. import GrainSegment
+from .. import GrainSegment2D
 from rocketsolver.utils.geometric import get_length
 
 
-class FMMGrainSegment2D(GrainSegment, ABC):
+class FMMGrainSegment2D(GrainSegment2D, ABC):
     """
     NOTE: Still needs to implement inhibited ends.
     """
 
-    def __init__(self, map_dim: Optional[int] = 1000) -> None:
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+        map_dim: Optional[int] = 1000,
+    ) -> None:
         self.map_dim = map_dim
 
         # "Cache" variables:
@@ -33,7 +40,12 @@ class FMMGrainSegment2D(GrainSegment, ABC):
         self.regression_map = None
         self.face_area_interp_func = None
 
-        super().__init__()
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
 
     @abstractmethod
     def get_face_map(self) -> np.ndarray:
@@ -58,22 +70,16 @@ class FMMGrainSegment2D(GrainSegment, ABC):
         """
         pass
 
-    @abstractmethod
-    def get_segment_length(self, web_thickness: float) -> float:
-        """
-        Gets instantaneous segment length, in function of the web thickness
-        traveled.
-        """
-        pass
-
-    @abstractmethod
-    def get_outer_diameter(self) -> float:
-        pass
-
     def validate(self) -> None:
         super().validate()
 
         assert self.map_dim >= 100
+
+    def get_web_thickness(self) -> float:
+        """
+        NOTE: Still needs to be implemented.
+        """
+        pass
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
@@ -81,34 +87,18 @@ class FMMGrainSegment2D(GrainSegment, ABC):
     def denormalize(self, value: int | float) -> float:
         return (value / 2) * (self.outer_diameter)
 
-    def get_burn_area(self, web_thickness: float) -> float:
-        """
-        Only implemented for neither of the ends inhibited.
-        """
-        return self.get_core_area(web_thickness) + 2 * self.get_face_area(
-            web_thickness
-        )
-
-    def get_volume(self, web_thickness: float) -> float:
-        """
-        Only implemented for neither of the ends inhibited.
-        """
-        return self.get_segment_length(web_thickness) * self.get_face_area(
-            web_thickness
-        )
-
-    def get_face_area(self, web_thickness: float) -> float:
+    def get_face_area(self, web_distance: float) -> float:
         """
         NOTE: Still needs to implement control for when web thickness is over.
         """
-        map_distance = self.normalize(web_thickness)
+        map_distance = self.normalize(web_distance)
         return self.get_face_area_interp_func()(map_distance)
 
-    def get_core_perimeter(self, web_thickness: float) -> float:
+    def get_core_perimeter(self, web_distance: float) -> float:
         """
         Gets core perimeter in function of the web thickness traveled.
         """
-        map_dist = self.normalize(web_thickness)
+        map_dist = self.normalize(web_distance)
         contours = measure.find_contours(
             self.get_regression_map(), map_dist, fully_connected="low"
         )
@@ -120,13 +110,13 @@ class FMMGrainSegment2D(GrainSegment, ABC):
             ]
         )
 
-    def get_core_area(self, web_thickness: float) -> float:
+    def get_core_area(self, web_distance: float) -> float:
         """
         Calculates the core area in function of the web thickness traveled.
         """
-        return self.get_core_perimeter(
-            web_thickness
-        ) * self.get_segment_length(web_thickness)
+        return self.get_core_perimeter(web_distance) * self.get_length(
+            web_distance
+        )
 
     def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
         """
