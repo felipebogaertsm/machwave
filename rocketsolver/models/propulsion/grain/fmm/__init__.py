@@ -6,7 +6,7 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Callable, Optional
 
 import numpy as np
 import skfmm
@@ -25,6 +25,13 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     def __init__(self, map_dim: Optional[int] = 1000) -> None:
         self.map_dim = map_dim
+
+        # "Cache" variables:
+        self.maps = None
+        self.mask = None
+        self.masked_face = None
+        self.regression_map = None
+        self.face_area_interp_func = None
 
         super().__init__()
 
@@ -94,31 +101,28 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         NOTE: Still needs to implement control for when web thickness is over.
         """
-
         map_distance = self.normalize(web_thickness)
         return self.get_face_area_interp_func()(map_distance)
 
     def get_core_perimeter(self, web_thickness: float) -> float:
         """
-        Not implemented yet.
+        Gets core perimeter in function of the web thickness traveled.
         """
         map_dist = self.normalize(web_thickness)
-
-        core_perimeter = 0
         contours = measure.find_contours(
             self.get_regression_map(), map_dist, fully_connected="low"
         )
 
-        for contour in contours:
-            core_perimeter += self.map_to_length(
-                get_length(contour, self.map_dim)
-            )
-
-        return core_perimeter
+        return np.sum(
+            [
+                self.map_to_length(get_length(contour, self.map_dim))
+                for contour in contours
+            ]
+        )
 
     def get_core_area(self, web_thickness: float) -> float:
         """
-        Not implemented yet.
+        Calculates the core area in function of the web thickness traveled.
         """
         return self.get_core_perimeter(
             web_thickness
@@ -128,13 +132,20 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         Returns a tuple, containing map_x in index 0 and map_y in index 1.
         """
-        return np.meshgrid(
-            np.linspace(-1, 1, self.map_dim), np.linspace(-1, 1, self.map_dim)
-        )
+        if self.maps is None:
+            self.maps = np.meshgrid(
+                np.linspace(-1, 1, self.map_dim),
+                np.linspace(-1, 1, self.map_dim),
+            )
+
+        return self.maps
 
     def get_mask(self) -> np.ndarray:
-        map_x, map_y = self.get_maps()
-        return (map_x**2 + map_y**2) > 1
+        if self.mask is None:
+            map_x, map_y = self.get_maps()
+            self.mask = (map_x**2 + map_y**2) > 1
+
+        return self.mask
 
     def get_empty_face_map(self) -> np.ndarray:
         """
@@ -149,7 +160,12 @@ class FMMGrainSegment(GrainSegment, ABC):
         Masks the face map.
         The mask is circular shaped and normalized to the shape of the matrix.
         """
-        return np.ma.MaskedArray(self.get_face_map(), self.get_mask())
+        if self.masked_face is None:
+            self.masked_face = np.ma.MaskedArray(
+                self.get_face_map(), self.get_mask()
+            )
+
+        return self.masked_face
 
     def get_cell_size(self) -> float:
         return 1 / self.map_dim
@@ -157,35 +173,43 @@ class FMMGrainSegment(GrainSegment, ABC):
     def get_regression_map(self):
         """
         Uses the fast marching method to generate an image of how the grain
-        regresses from the core map. The map is stored under
-        self.regressionMap.
+        regresses from the core map.
         """
-        return (
-            skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
-        )
+        if self.regression_map is None:
+            self.regression_map = (
+                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size())
+                * 2
+            )
 
-    def get_face_area_interp_func(self):
+        return self.regression_map
+
+    def get_face_area_interp_func(self) -> Callable[[float], float]:
         """
-        Function calculates many parameters, still needs to be organized.
+        :return: A function that interpolates the face area in function of
+            the mapped (normalized) web thickness.
+        :rtype: Callable[[float], float]
         """
-        regression_map = self.get_regression_map()
-        max_dist = np.amax(regression_map)
+        if self.face_area_interp_func is None:
+            regression_map = self.get_regression_map()
+            max_dist = np.amax(regression_map)
 
-        face_area = []
-        polled = []
-        valid = np.logical_not(self.get_mask())
+            face_area = []
+            polled = []
+            valid = np.logical_not(self.get_mask())
 
-        for i in range(int(max_dist * self.map_dim) + 2):
-            polled.append(i / self.map_dim)
-            face_area.append(
-                self.map_to_area(
-                    np.count_nonzero(
-                        np.logical_and(
-                            regression_map > (i / self.map_dim), valid
+            for i in range(int(max_dist * self.map_dim) + 2):
+                polled.append(i / self.map_dim)
+                face_area.append(
+                    self.map_to_area(
+                        np.count_nonzero(
+                            np.logical_and(
+                                regression_map > (i / self.map_dim), valid
+                            )
                         )
                     )
                 )
-            )
 
-        face_area = savgol_filter(face_area, 31, 5)
-        return interp1d(polled, face_area)
+            face_area = savgol_filter(face_area, 31, 5)
+            self.face_area_interp_func = interp1d(polled, face_area)
+
+        return self.face_area_interp_func
