@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
 import numpy as np
+import plotly.graph_objects as go
 import skfmm
 from skimage import measure
 from scipy.interpolate import interp1d
@@ -203,3 +204,21 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
             self.face_area_interp_func = interp1d(polled, face_area)
 
         return self.face_area_interp_func
+
+    def plot_masked_face(self) -> None:
+        face_mask = self.get_masked_face()
+        face_map = face_mask.filled(-1)
+
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=face_map,
+                colorscale=[
+                    [0, "rgb(50,50,50)"],
+                    [1, "rgb(200,200,200)"],
+                ],
+            )
+        )
+
+        fig.show()
+
+        return fig
