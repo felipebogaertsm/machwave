@@ -35,10 +35,6 @@ class GrainSegment(ABC):
 
         self.validate()
 
-    def validate(self) -> None:
-        assert self.spacing >= 0
-        assert self.inhibited_ends in [0, 1, 2]
-
     @abstractmethod
     def get_web_thickness(self) -> float:
         """
@@ -56,10 +52,10 @@ class GrainSegment(ABC):
     @abstractmethod
     def get_burn_area(self, web_distance: float) -> float:
         """
-        Calculates burn area in function of the instant web thickness.
+        Calculates burn area in function of the web distance traveled.
 
-        :param float web_distance: Instant web thickness
-        :return: Burn area in function of the instant web thickness
+        :param float web_distance: Web distance traveled
+        :return: Burn area in function of the web distance traveled
         :rtype: float
         """
         pass
@@ -67,16 +63,42 @@ class GrainSegment(ABC):
     @abstractmethod
     def get_volume(self, web_distance: float) -> float:
         """
-        Calculates volume in function of the instant web thickness.
+        Calculates volume in function of the web distance traveled.
 
-        :param float web_distance: Instant web thickness
+        :param float web_distance: Web distance traveled
         :return: Segment volume in function of the instant web thickness
         :rtype: float
         """
         pass
 
+    def validate(self) -> None:
+        """
+        Validates grain geometry.
+        For every attribute that a child class adds, it must be validated here.
+
+        :rtype: None
+        """
+        assert self.spacing >= 0
+        assert self.inhibited_ends in [0, 1, 2]
+
 
 class GrainSegment2D(GrainSegment, ABC):
+    """
+    Class that represents a 2D grain segment.
+
+    A 2D grain segment is a segment that has the same cross sectional geometry
+    throughout its length.
+
+    Some examples of 2D grain geometries:
+    - BATES
+    - Tubular
+    - Pseudo-finocyl
+
+    Some examples of non-2D (3D) grain geometries:
+    - Conical
+    - Finocyl
+    """
+
     def __init__(
         self,
         length: float,
@@ -92,17 +114,39 @@ class GrainSegment2D(GrainSegment, ABC):
             inhibited_ends=inhibited_ends,
         )
 
-    def validate(self) -> None:
-        assert self.length > 0
-        assert self.outer_diameter > 0
-
     @abstractmethod
     def get_core_area(self, web_distance: float) -> float:
+        """
+        Calculates the core area in function of the web distance traveled.
+
+        Example:
+        In a simple tubular geometry, the core area would be equal to the
+        instant length of the segment times the instant core area.
+
+        :param float web_distance: Web distance traveled
+        :return: Core area in function of the web distance traveled
+        :rtype: float
+        """
         pass
 
     @abstractmethod
     def get_face_area(self, web_distance: float) -> float:
+        """
+        Calculates the face area in function of the web distance traveled.
+
+        Example:
+        In a simple tubular geometry, the face area would be equal to the
+        outer diameter area minus the instantaneous core diameter area.
+
+        :param float web_distance: Web distance traveled
+        :return: Face area in function of the web distance traveled
+        :rtype: float
+        """
         pass
+
+    def validate(self) -> None:
+        assert self.length > 0
+        assert self.outer_diameter > 0
 
     def get_length(self, web_distance: float) -> float:
         return self.length - web_distance * (2 - self.inhibited_ends)
@@ -202,10 +246,6 @@ class Grain:
 
                 segment_mass_flux[j, i] = (
                     total_burn_area[j, i] * propellant_density * burn_rate[i]
-                ) / (
-                    get_circle_area(
-                        self.segments[j].core_diameter + web_distance[i]
-                    )
-                )
+                ) / (self.segments[j].get_core_area(web_distance[i]))
 
         return segment_mass_flux
