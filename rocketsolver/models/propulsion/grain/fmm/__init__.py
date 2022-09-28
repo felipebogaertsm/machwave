@@ -55,26 +55,24 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
         """
         pass
 
-    @abstractmethod
-    def map_to_area(self, value: float) -> float:
+    def validate(self) -> None:
+        super().validate()
+
+        assert self.map_dim >= 100
+
+    def map_to_area(self, value: float):
         """
         Used to convert sq pixels to sqm.
         For extracting real areas from the regression map.
         """
-        pass
+        return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
-    @abstractmethod
     def map_to_length(self, value: float) -> float:
         """
         Converts pixels to meters. Used to extract real distances from pixel
         distances such as contour lengths
         """
-        pass
-
-    def validate(self) -> None:
-        super().validate()
-
-        assert self.map_dim >= 100
+        return self.outer_diameter * (value / self.map_dim)
 
     def get_web_thickness(self) -> float:
         """
