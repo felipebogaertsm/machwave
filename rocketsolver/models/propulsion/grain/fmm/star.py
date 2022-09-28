@@ -41,11 +41,11 @@ class StarGrainSegment(FMMGrainSegment2D):
         assert self.point_width > 0
 
     def get_face_map(self) -> np.ndarray:
-        point_length_normalized = self.normalize(self.point_length)
-        point_width_normalized = self.normalize(self.point_width)
-
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
+
+        point_length_normalized = self.normalize(self.point_length)
+        point_width_normalized = self.normalize(self.point_width)
 
         for i in range(0, self.number_of_points):
             theta = 2 * np.pi / self.number_of_points * i
