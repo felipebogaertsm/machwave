@@ -21,6 +21,13 @@ from rocketsolver.utils.geometric import get_length
 
 class FMMGrainSegment2D(GrainSegment2D, ABC):
     """
+    Fast Marching Method (FMM) implementation for 2D grain segment.
+
+    This class was inspired by the Andrew Reilley's software openMotor, in
+    particular the fmm module.
+    openMotor's repository can be accessed at:
+    https://github.com/reilleya/openMotor
+
     NOTE: Still needs to implement inhibited ends.
     """
 
