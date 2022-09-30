@@ -188,11 +188,11 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
             max_dist = np.amax(regression_map)
 
             face_area = []
-            polled = []
+            web_distance_normalized = []
             valid = np.logical_not(self.get_mask())
 
             for i in range(int(max_dist * self.map_dim) + 2):
-                polled.append(i / self.map_dim)
+                web_distance_normalized.append(i / self.map_dim)
                 face_area.append(
                     self.map_to_area(
                         np.count_nonzero(
@@ -204,7 +204,9 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
                 )
 
             face_area = savgol_filter(face_area, 31, 5)
-            self.face_area_interp_func = interp1d(polled, face_area)
+            self.face_area_interp_func = interp1d(
+                web_distance_normalized, face_area
+            )
 
         return self.face_area_interp_func
 

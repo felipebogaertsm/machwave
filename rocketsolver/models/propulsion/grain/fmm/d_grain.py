@@ -31,7 +31,7 @@ class DGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
-        assert self.slot_offset > 0
+        assert self.slot_offset >= 0
         assert self.slot_offset < self.outer_diameter / 2
 
     def get_face_map(self) -> np.ndarray:
