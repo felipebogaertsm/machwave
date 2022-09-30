@@ -27,8 +27,6 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
     particular the fmm module.
     openMotor's repository can be accessed at:
     https://github.com/reilleya/openMotor
-
-    NOTE: Still needs to implement inhibited ends.
     """
 
     def __init__(
@@ -210,7 +208,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
 
         return self.face_area_interp_func
 
-    def plot_masked_face(self) -> None:
+    def plot_masked_face(self) -> go.Figure:
         face_mask = self.get_masked_face()
         face_map = face_mask.filled(-1)
 
