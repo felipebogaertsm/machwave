@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Felipe Bogaerts de Mattos
-# Contact me at felipe.bogaerts@engenharia.ufjf.br.
+# Contact me at me@felipebm.com.
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
@@ -41,4 +41,4 @@ def convert_mass_flux_metric_to_imperial(mass_flux_metric):
 def convert_burn_rate_coefficient_to_metric(
     a_imperial: float, n: float
 ) -> float:
-    return a_imperial * 25.4 / (0.0069 ** n)
+    return a_imperial * 25.4 / (0.0069**n)
