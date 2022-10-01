@@ -39,7 +39,7 @@ class DGrainSegment(FMMGrainSegment2D):
         assert self.slot_offset >= 0
         assert self.slot_offset < self.outer_diameter / 2
 
-    def get_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.ndarray:
         slot_offset_normalized = self.normalize(self.slot_offset)
         map_x = self.get_maps()[0]
         core_map = self.get_empty_face_map()

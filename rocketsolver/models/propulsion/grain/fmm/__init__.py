@@ -55,7 +55,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
         )
 
     @abstractmethod
-    def get_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.ndarray:
         """
         Method needs to be implemented for each and every geometry.
         """
@@ -159,7 +159,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
         """
         if self.masked_face is None:
             self.masked_face = np.ma.MaskedArray(
-                self.get_face_map(), self.get_mask()
+                self.get_initial_face_map(), self.get_mask()
             )
 
         return self.masked_face
@@ -183,7 +183,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
     def get_face_area_interp_func(self) -> Callable[[float], float]:
         """
         :return: A function that interpolates the face area in function of
-            the mapped (normalized) web thickness.
+            the (normalized) web thickness.
         :rtype: Callable[[float], float]
         """
         if self.face_area_interp_func is None:
@@ -215,9 +215,31 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
 
         return self.face_area_interp_func
 
-    def plot_masked_face(self) -> go.Figure:
-        face_mask = self.get_masked_face()
-        face_map = face_mask.filled(-1)
+    def get_face_map(self, web_distance: float) -> np.ndarray:
+        """
+        Returns a matrix of the grain face in function of the web distance
+        traveled.
+
+        :param float web_distance: The web distance traveled.
+        :return: A matrix of the grain face.
+        :rtype: np.ndarray
+        """
+        web_distance_normalized = self.normalize(web_distance)
+        regression_map = self.get_regression_map()
+        valid = np.logical_not(self.get_mask())
+
+        # Only keep values in regression map that are greater than the web
+        # distance:
+        log_and = np.logical_and(
+            regression_map > (web_distance_normalized),
+            valid,
+        )
+
+        face_mask = log_and * 1  # replace True and False with 1 and 0
+        return face_mask.filled(-1)  # fill masked values with -1
+
+    def plot_masked_face(self, web_distance: Optional[float] = 0) -> go.Figure:
+        face_map = self.get_face_map(web_distance=web_distance)
 
         fig = go.Figure(
             data=go.Heatmap(

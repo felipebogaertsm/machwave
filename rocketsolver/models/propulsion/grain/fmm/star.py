@@ -45,7 +45,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         assert self.point_length > 0
         assert self.point_width > 0
 
-    def get_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.ndarray:
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
 
