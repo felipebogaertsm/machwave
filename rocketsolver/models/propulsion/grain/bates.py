@@ -8,6 +8,7 @@
 import numpy as np
 
 from . import GrainSegment2D, GrainGeometryError
+from rocketsolver.utils.decorators import validate_assertions
 
 
 class BatesSegment(GrainSegment2D):
@@ -27,12 +28,12 @@ class BatesSegment(GrainSegment2D):
             inhibited_ends=0,
         )
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
-        try:
-            assert self.outer_diameter > self.core_diameter
-            assert self.core_diameter > 0
-        except AssertionError:
-            raise GrainGeometryError("Invalid segment geometry")
+        super().validate()
+
+        assert self.outer_diameter > self.core_diameter
+        assert self.core_diameter > 0
 
     def get_core_area(self, web_distance: float) -> float:
         return (self.length - 2 * web_distance) * (

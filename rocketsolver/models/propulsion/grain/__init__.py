@@ -10,7 +10,7 @@ from typing import Optional
 
 import numpy as np
 
-from rocketsolver.utils.geometric import get_circle_area
+from rocketsolver.utils.decorators import validate_assertions
 
 
 class GrainGeometryError(Exception):
@@ -71,6 +71,7 @@ class GrainSegment(ABC):
         """
         pass
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         """
         Validates grain geometry.
@@ -144,7 +145,10 @@ class GrainSegment2D(GrainSegment, ABC):
         """
         pass
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
+        super().validate()
+
         assert self.length > 0
         assert self.outer_diameter > 0
 

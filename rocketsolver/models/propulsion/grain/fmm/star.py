@@ -10,6 +10,8 @@ from typing import Optional
 import numpy as np
 
 from . import FMMGrainSegment2D
+from .. import GrainGeometryError
+from rocketsolver.utils.decorators import validate_assertions
 
 
 class StarGrainSegment(FMMGrainSegment2D):
@@ -34,7 +36,10 @@ class StarGrainSegment(FMMGrainSegment2D):
             inhibited_ends=inhibited_ends,
         )
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
+        super().validate()
+
         assert self.number_of_points > 0
         assert isinstance(self.number_of_points, int)
         assert self.point_length > 0
