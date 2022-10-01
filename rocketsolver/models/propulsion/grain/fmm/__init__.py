@@ -81,9 +81,10 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
 
     def get_web_thickness(self) -> float:
         """
-        NOTE: Still needs to be implemented.
+        The distance between the closest and furthest point to the center of
+        the grain segment.
         """
-        pass
+        return self.denormalize(np.amax(self.get_regression_map()))
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
