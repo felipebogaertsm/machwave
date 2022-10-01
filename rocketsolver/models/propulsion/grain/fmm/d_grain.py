@@ -10,6 +10,8 @@ from typing import Optional
 import numpy as np
 
 from . import FMMGrainSegment2D
+from .. import GrainGeometryError
+from rocketsolver.utils.decorators import validate_assertions
 
 
 class DGrainSegment(FMMGrainSegment2D):
@@ -30,7 +32,10 @@ class DGrainSegment(FMMGrainSegment2D):
             inhibited_ends=inhibited_ends,
         )
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
+        super().validate()
+
         assert self.slot_offset >= 0
         assert self.slot_offset < self.outer_diameter / 2
 

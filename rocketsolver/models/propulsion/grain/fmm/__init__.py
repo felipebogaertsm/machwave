@@ -15,7 +15,8 @@ from skimage import measure
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from .. import GrainSegment2D
+from .. import GrainSegment2D, GrainGeometryError
+from rocketsolver.utils.decorators import validate_assertions
 from rocketsolver.utils.geometric import get_length
 
 
@@ -60,6 +61,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
         """
         pass
 
+    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
