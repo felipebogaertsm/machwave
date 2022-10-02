@@ -94,6 +94,16 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
     def denormalize(self, value: int | float) -> float:
         return (value / 2) * (self.outer_diameter)
 
+    def get_contours(self, web_distance: float) -> np.ndarray:
+        """
+        Returns the contours of the regression map in function of the web
+        thickness traveled.
+        """
+        map_dist = self.normalize(web_distance)
+        return measure.find_contours(
+            self.get_regression_map(), map_dist, fully_connected="low"
+        )
+
     def get_face_area(self, web_distance: float) -> float:
         """
         NOTE: Still needs to implement control for when web thickness is over.
@@ -105,10 +115,7 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
         """
         Gets core perimeter in function of the web thickness traveled.
         """
-        map_dist = self.normalize(web_distance)
-        contours = measure.find_contours(
-            self.get_regression_map(), map_dist, fully_connected="low"
-        )
+        contours = self.get_contours(web_distance)
 
         return np.sum(
             [
