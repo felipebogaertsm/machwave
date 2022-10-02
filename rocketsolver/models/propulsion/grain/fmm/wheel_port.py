@@ -66,13 +66,24 @@ class WheelPortGrainSegment(FMMGrainSegment2D):
         core_map[map_x**2 + map_y**2 < (core_diameter_norm / 2) ** 2] = 0
 
         # Create the ports:
-        # for port_index in range(self.number_of_ports):
-        theta = np.deg2rad(self.port_angular_width)
-        print(theta, "THETA\n\n\n", np.rad2deg(theta))
-        core_map[
-            (map_x**2 + map_y**2 < (port_outer_diameter_norm / 2) ** 2)
-            & (map_x**2 + map_y**2 > (port_inner_diameter_norm / 2) ** 2)
-            # & (np.cos(theta) * map_x + np.sin(theta) * map_y < theta / 2)
-        ] = 0
+        for port_index in range(self.number_of_ports):
+            displacement_angle = 360 / self.number_of_ports * port_index
+
+            radius = map_x**2 + map_y**2
+
+            theta_1 = np.deg2rad(displacement_angle) / 2
+            theta_2 = (
+                np.deg2rad(self.port_angular_width + displacement_angle) / 2
+            )
+
+            map_x_y_arctan = np.arctan(np.abs(map_y) / np.abs(map_x))
+            np.set_printoptions(precision=2)
+
+            core_map[
+                (radius < (port_outer_diameter_norm / 2) ** 2)
+                & (radius > (port_inner_diameter_norm / 2) ** 2)
+                & (np.abs(map_x_y_arctan) < np.abs(theta_2))
+                & (np.abs(map_x_y_arctan) > np.abs(theta_1))
+            ] = 0
 
         return core_map
