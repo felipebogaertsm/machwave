@@ -14,7 +14,7 @@ from .. import GrainGeometryError
 from rocketsolver.utils.decorators import validate_assertions
 
 
-class WheelPortGrainSegment(FMMGrainSegment2D):
+class WagonWheelGrainSegment(FMMGrainSegment2D):
     def __init__(
         self,
         length: float,
