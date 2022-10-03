@@ -63,10 +63,10 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_inner_diameter_norm = self.normalize(self.port_inner_diameter)
         port_outer_diameter_norm = self.normalize(self.port_outer_diameter)
 
-        # Create the core:
-        core_map[map_x**2 + map_y**2 < (core_diameter_norm / 2) ** 2] = 0
+        radius = np.sqrt(map_x**2 + map_y**2)
 
-        radius = map_x**2 + map_y**2
+        # Create the core:
+        core_map[radius < core_diameter_norm / 2] = 0
 
         # Create the ports:
         for port_index in range(int(self.number_of_ports)):
@@ -84,8 +84,8 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
             map_x_y_arctan = np.arctan(map_y / map_x)
 
             core_map[
-                (radius < (port_outer_diameter_norm / 2) ** 2)
-                & (radius > (port_inner_diameter_norm / 2) ** 2)
+                (radius < port_outer_diameter_norm / 2)
+                & (radius > port_inner_diameter_norm / 2)
                 & (np.abs(map_x_y_arctan) < theta_2)
                 & (np.abs(map_x_y_arctan) > theta_1)
             ] = 0
