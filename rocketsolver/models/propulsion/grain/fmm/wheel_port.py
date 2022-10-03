@@ -45,6 +45,7 @@ class WheelPortGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         assert self.number_of_ports > 0
+        assert self.number_of_ports % 2 == 0
         assert isinstance(self.number_of_ports, int)
         assert self.port_inner_diameter > self.core_diameter
         assert self.port_outer_diameter > self.port_inner_diameter
@@ -65,25 +66,28 @@ class WheelPortGrainSegment(FMMGrainSegment2D):
         # Create the core:
         core_map[map_x**2 + map_y**2 < (core_diameter_norm / 2) ** 2] = 0
 
+        radius = map_x**2 + map_y**2
+
         # Create the ports:
-        for port_index in range(self.number_of_ports):
-            displacement_angle = 360 / self.number_of_ports * port_index
-
-            radius = map_x**2 + map_y**2
-
-            theta_1 = np.deg2rad(displacement_angle) / 2
-            theta_2 = (
-                np.deg2rad(self.port_angular_width + displacement_angle) / 2
+        for port_index in range(int(self.number_of_ports)):
+            displacement_angle = (
+                2 * np.pi / self.number_of_ports * (port_index)
             )
 
-            map_x_y_arctan = np.arctan(np.abs(map_y) / np.abs(map_x))
-            np.set_printoptions(precision=2)
+            theta_2 = (
+                np.deg2rad(self.port_angular_width / 2) + displacement_angle
+            )
+            theta_1 = displacement_angle - np.deg2rad(
+                self.port_angular_width / 2
+            )
+
+            map_x_y_arctan = np.arctan(map_y / map_x)
 
             core_map[
                 (radius < (port_outer_diameter_norm / 2) ** 2)
                 & (radius > (port_inner_diameter_norm / 2) ** 2)
-                & (np.abs(map_x_y_arctan) < np.abs(theta_2))
-                & (np.abs(map_x_y_arctan) > np.abs(theta_1))
+                & (np.abs(map_x_y_arctan) < theta_2)
+                & (np.abs(map_x_y_arctan) > theta_1)
             ] = 0
 
         return core_map
