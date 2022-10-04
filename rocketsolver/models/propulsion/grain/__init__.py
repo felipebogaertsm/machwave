@@ -71,6 +71,17 @@ class GrainSegment(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_center_of_gravity(self, *args, **kwargs) -> float:
+        """
+        Calculates the center of gravity of the segments in relation to the
+        upper end of the segment (closest to the bulkhead).
+
+        :return: The center of gravity of the segment
+        :rtype: float
+        """
+        pass
+
     @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         """
@@ -152,6 +163,12 @@ class GrainSegment2D(GrainSegment, ABC):
         assert self.length > 0
         assert self.outer_diameter > 0
 
+    def get_center_of_gravity(self, web_distance: float) -> float:
+        """
+        NOTE: Still needs to change based on inhibited ends.
+        """
+        return self.get_length(web_distance=web_distance) / 2
+
     def get_length(self, web_distance: float) -> float:
         return self.length - web_distance * (2 - self.inhibited_ends)
 
@@ -201,6 +218,25 @@ class Grain:
         :rtype: int
         """
         return len(self.segments)
+
+    def get_center_of_gravity(self, web_distance: float) -> float:
+        """
+        Calculates the center of gravity of the grain in relation to the
+        upper end of the grain (closest to the bulkhead). Sums the CoG of all
+        the segments. Assumes constant density in all segments (same
+        propellant composition).
+
+        :param float web_distance: Web distance traveled
+        :return: The center of gravity of the grain
+        :rtype: float
+        """
+        return np.sum(
+            [
+                segment.get_center_of_gravity(web_distance=web_distance)
+                * segment.get_volume(web_distance=web_distance)
+                for segment in self.segments
+            ]
+        ) / (self.get_propellant_volume(web_distance=web_distance))
 
     def get_burn_area(self, web_distance: float) -> float:
         """
