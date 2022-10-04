@@ -46,28 +46,25 @@ class StarGrainSegment(FMMGrainSegment2D):
         assert self.point_width > 0
 
     def get_initial_face_map(self) -> np.ndarray:
+        """
+        This method returns the initial face map for a star grain segment.
+
+        References:
+        openMotor, https://github.com/reilleya/openMotor
+        """
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
 
-        point_length_normalized = self.normalize(self.point_length)
-        point_width_normalized = self.normalize(self.point_width)
+        point_length_norm = self.normalize(self.point_length)
+        point_width_norm = self.normalize(self.point_width)
+
+        radius = (map_x**2 + map_y**2) ** 0.5
 
         for i in range(0, self.number_of_points):
             theta = 2 * np.pi / self.number_of_points * i
             rect = abs(np.cos(theta) * map_x + np.sin(theta) * map_y)
 
-            width = (
-                point_width_normalized
-                / 2
-                * (
-                    1
-                    - (
-                        ((map_x**2 + map_y**2) ** 0.5)
-                        / point_length_normalized
-                    )
-                )
-            )
-
+            width = point_width_norm / 2 * (1 - (radius / point_length_norm))
             vect = rect < width
             near = np.sin(theta) * map_x - np.cos(theta) * map_y > -0.025
 
