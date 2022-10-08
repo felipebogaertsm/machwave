@@ -25,6 +25,13 @@ def get_trapezoidal_area(base_length, tip_length, height):
     return (base_length + tip_length) * height / 2
 
 
+def get_cylinder_surface_area(length: float, diameter: float) -> float:
+    """
+    Returns the surface area of a cylinder.
+    """
+    return np.pi * length * diameter
+
+
 def get_cylinder_volume(diameter, length):
     return np.pi * length * (diameter**2) / 4
 
