@@ -173,13 +173,19 @@ class GrainSegment2D(GrainSegment, ABC):
         return self.length - web_distance * (2 - self.inhibited_ends)
 
     def get_burn_area(self, web_distance: float) -> float:
-        core_area = self.get_core_area(web_distance=web_distance)
-        single_face_area = self.get_face_area(web_distance=web_distance)
-        total_face_area = (2 - self.inhibited_ends) * single_face_area
-        return core_area + total_face_area
+        if self.get_web_thickness() >= web_distance:
+            core_area = self.get_core_area(web_distance=web_distance)
+            single_face_area = self.get_face_area(web_distance=web_distance)
+            total_face_area = (2 - self.inhibited_ends) * single_face_area
+            return core_area + total_face_area
+        else:
+            return 0
 
     def get_volume(self, web_distance: float) -> float:
-        return self.length * self.get_face_area(web_distance=web_distance)
+        if self.get_web_thickness() >= web_distance:
+            return self.length * self.get_face_area(web_distance=web_distance)
+        else:
+            return 0
 
 
 class Grain:

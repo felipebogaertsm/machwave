@@ -61,11 +61,26 @@ class Rocket(RocketBaseClass):
 
 class Rocket3D(RocketBaseClass):
     def __init__(
-        self, propulsion: Motor, recovery: Recovery, fuselage: Fuselage3D
+        self,
+        propulsion: Motor,
+        recovery: Recovery,
+        fuselage: Fuselage3D,
+        center_of_pressure: float,
     ) -> None:
         super().__init__(
             propulsion=propulsion, recovery=recovery, fuselage=fuselage
         )
+
+        self._center_of_pressure = center_of_pressure
+
+    def get_center_of_pressure(self) -> float:
+        """
+        Returns the center of pressure position, from the nose of the rocket.
+
+        :return: Center of pressure position, in meters.
+        :rtype: float
+        """
+        return self._center_of_pressure
 
     def get_launch_mass(self) -> float:
         return self.propulsion.get_launch_mass() + self.fuselage.get_mass()
