@@ -10,6 +10,7 @@ Stores Motor class and methods.
 """
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import pandas as pd
 import numpy as np
@@ -226,6 +227,9 @@ class MotorFromDataframe(Motor):
         initial_propellant_mass: float,
         dry_mass: float,
         length: float,
+        thrust_header_name: Optional[str] = "Force (N)",
+        time_header_name: Optional[str] = "Time (s)",
+        pressure_header_name: Optional[str] = "Pressure (MPa)",
     ) -> None:
         self.dataframe = dataframe
         self.nozzle = nozzle
@@ -233,6 +237,10 @@ class MotorFromDataframe(Motor):
         self.initial_propellant_mass = initial_propellant_mass
         self.dry_mass = dry_mass
         self.length = length
+
+        self.thrust_header_name = thrust_header_name
+        self.time_header_name = time_header_name
+        self.pressure_header_name = pressure_header_name
 
     def get_from_df(self, column_name: str) -> np.ndarray:
         return self.dataframe[column_name].to_numpy()
@@ -251,6 +259,9 @@ class MotorFromDataframe(Motor):
 
     def get_pressure(self) -> np.ndarray:
         return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
+
+    def get_thrust_coefficient_correction_factor(self) -> float:
+        return 1
 
     def get_thrust_coefficient(self) -> np.ndarray:
         return get_thrust_coefficient(

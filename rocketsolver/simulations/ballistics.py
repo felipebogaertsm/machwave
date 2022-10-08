@@ -53,7 +53,7 @@ class BallisticSimulation(Simulation):
         prop_mass = np.array([])
         time = self.params.time
 
-        for t in self.time:
+        for t in time:
             prop_mass = np.append(
                 prop_mass, initial_propellant_mass * (time[-1] - t) / time[-1]
             )
@@ -68,11 +68,9 @@ class BallisticSimulation(Simulation):
         self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
             self.atmosphere,
-            rail_length=self.rail_length,
-            motor_dry_mass=self.params.motor_dry_mass,
-            initial_vehicle_mass=self.rocket.structure.mass_without_motor
-            + self.params.motor_dry_mass
-            + self.params.initial_propellant_mass,
+            rail_length=self.params.rail_length,
+            motor_dry_mass=self.rocket.propulsion.get_dry_mass(),
+            initial_vehicle_mass=self.rocket.get_launch_mass(),
             initial_elevation_amsl=self.params.initial_elevation_amsl,
         )
 
@@ -81,12 +79,14 @@ class BallisticSimulation(Simulation):
         i = 0
 
         while self.ballistic_operation.y[i] >= 0:
-            self.t = np.append(self.t, self.t[i] + self.d_t)  # new time value
+            self.t = np.append(
+                self.t, self.t[i] + self.params.d_t
+            )  # new time value
 
             thrust = np.interp(
                 self.t[-1],
-                self.time,
-                self.thrust,
+                self.params.time,
+                self.params.thrust,
                 left=0,
                 right=0,
             )  # interpolating thrust with new time value
@@ -94,13 +94,13 @@ class BallisticSimulation(Simulation):
             self.ballistic_operation.iterate(
                 np.interp(
                     self.t[-1],
-                    self.time,
+                    self.params.time,
                     propellant_mass,
                     left=0,
                     right=0,
                 ),  # interpolating propellant mass with new time value
                 thrust,
-                self.d_t,
+                self.params.d_t,
             )
 
             i += 1
