@@ -5,7 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import pandas as pd
@@ -25,7 +25,10 @@ class Analyze(ABC):
     :rtype: None
     """
 
-    data: pd.DataFrame
+    @property
+    @abstractmethod
+    def data(self) -> pd.DataFrame:
+        pass
 
     def get_from_df(self, column_name: str) -> np.ndarray:
         return self.data[column_name].to_numpy()

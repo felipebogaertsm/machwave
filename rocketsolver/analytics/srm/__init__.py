@@ -8,6 +8,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
@@ -17,17 +18,16 @@ from rocketsolver.models.propulsion import MotorFromDataframe, SolidMotor
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.operations.ballistics._1dof import Ballistic1DOperation
-from rocketsolver.simulations.ballistics import BallisticSimulation
-from rocketsolver.simulations.internal_ballistics import InternalBallistics
-from rocketsolver.utils.isentropic_flow import (
-    get_total_impulse,
-    get_specific_impulse,
-    get_thrust_coefficient,
+from rocketsolver.simulations.ballistics import (
+    BallisticSimulation,
+    BallisticSimulationParameters,
+)
+from rocketsolver.simulations.internal_ballistics import (
+    InternalBallistics,
+    InternalBallisticsParams,
 )
 from rocketsolver.utils.math import get_percentage_error
-from rocketsolver.utils.units import convert_mpa_to_pa, convert_pa_to_mpa
-from rocketsolver.utils.geometric import get_circle_area
-from rocketsolver.utils.utilities import generate_eng
+from rocketsolver.utils.units import convert_pa_to_mpa
 
 
 @dataclass
@@ -36,20 +36,18 @@ class AnalyzeSRMOperation(Analyze):
     theoretical_motor: SolidMotor
     external_pressure: float
 
-    thrust_header_name: Optional[str] = "Force (N)"
-    time_header_name: Optional[str] = "Time (s)"
-    pressure_header_name: Optional[str] = "Pressure (MPa)"
-
     igniter_pressure: Optional[float] = 1.5e6  # in Pa
     external_pressure: Optional[float] = 1e5  # in Pa
     simulation_resolution: Optional[float] = 0.01
 
     def __post_init__(self):
-        self.ib_simulation = InternalBallistics(
-            motor=self.theoretical_motor,
+        params = InternalBallisticsParams(
             d_t=self.simulation_resolution,
             igniter_pressure=self.igniter_pressure,
             external_pressure=self.external_pressure,
+        )
+        self.ib_simulation = InternalBallistics(
+            motor=self.theoretical_motor, params=params
         )
 
         (
@@ -57,26 +55,31 @@ class AnalyzeSRMOperation(Analyze):
             self.theoretical_motor_operation,
         ) = self.ib_simulation.run()
 
+    @property
+    def data(self) -> pd.DataFrame:
+        return self.empirical_motor.dataframe
+
     def run_ballistic_simulation(
         self,
         rocket: Rocket,
-        recovery: Recovery,
         atmosphere: Atmosphere,
         d_t: float = 0.1,
         initial_elevation: float = 0.0,
         rail_length: float = 5.0,
     ) -> tuple[np.ndarray, Ballistic1DOperation]:
-        self.ballistic_simulation = BallisticSimulation(
+        params = BallisticSimulationParameters(
             thrust=self.empirical_motor.get_thrust(),
-            initial_propellant_mass=self.empirical_motor.initial_propellant_mass,
             motor_dry_mass=self.theoretical_motor.structure.dry_mass,
+            initial_propellant_mass=self.empirical_motor.initial_propellant_mass,
             time=self.empirical_motor.get_time(),
-            rocket=rocket,
-            recovery=recovery,
-            atmosphere=atmosphere,
             d_t=d_t,
             initial_elevation_amsl=initial_elevation,
             rail_length=rail_length,
+        )
+        self.ballistic_simulation = BallisticSimulation(
+            rocket=rocket,
+            atmosphere=atmosphere,
+            params=params,
         )
 
         (
@@ -301,7 +304,7 @@ class AnalyzeSRMOperation(Analyze):
         figure.add_trace(
             go.Scatter(
                 x=self.empirical_motor.get_time(),
-                y=self.empirical_motor.get_thrust_coefficient(),
+                y=self.empirical_motor.get_thrust(),
                 name="Thrust coefficient",
             ),
         )
