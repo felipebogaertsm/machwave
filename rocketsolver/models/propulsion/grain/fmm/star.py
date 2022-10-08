@@ -41,6 +41,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         assert self.number_of_points > 0
+        assert self.number_of_points < 12
         assert isinstance(self.number_of_points, int)
         assert self.point_length > 0
         assert self.point_width > 0
