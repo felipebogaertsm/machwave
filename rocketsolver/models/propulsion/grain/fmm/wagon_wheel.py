@@ -45,6 +45,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         assert self.number_of_ports > 0
+        assert self.number_of_ports < 12
         assert self.number_of_ports % 2 == 0
         assert isinstance(self.number_of_ports, int)
         assert self.port_inner_diameter > self.core_diameter
