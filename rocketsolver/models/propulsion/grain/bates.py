@@ -66,15 +66,3 @@ class BatesSegment(GrainSegment2D):
         :rtype: float
         """
         return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
-
-    def get_burn_area(self, web_distance: float) -> float:
-        if self.get_web_thickness() >= web_distance:
-            return super().get_burn_area(web_distance)
-        else:
-            return 0
-
-    def get_volume(self, web_distance: float) -> float:
-        if self.get_web_thickness() >= web_distance:
-            return super().get_volume(web_distance)
-        else:
-            return 0
