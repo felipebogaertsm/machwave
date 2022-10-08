@@ -269,14 +269,26 @@ class FMMGrainSegment2D(GrainSegment2D, ABC):
 
         for contour_index in range(number_of_contours):
             wt = self.get_web_thickness()
-            contours = self.get_contours(
-                web_distance=wt * contour_index / number_of_contours
-            )
+            web_fraction = contour_index / number_of_contours
+            contours = self.get_contours(web_distance=wt * web_fraction)
 
             for contour in contours:
-                x = [item[0] for item in contour]
-                y = [item[1] for item in contour]
-                fig.add_trace(go.Scatter(x=x, y=y, mode="lines"))
+                x = np.array([item[0] for item in contour])
+                y = np.array([item[1] for item in contour])
+
+                color_level = 255 * (1 - web_fraction)
+
+                fig.add_traces(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        mode="lines",
+                        name=f"{contour_index}",
+                        line=dict(
+                            color=f"rgb({color_level},{0},{0})",
+                        ),
+                    )
+                )
 
         fig.show()
 
