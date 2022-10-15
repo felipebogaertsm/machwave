@@ -10,7 +10,7 @@ from typing import Optional
 import numpy as np
 
 from .. import GrainGeometryError
-from ..fmm import FMMGrainSegment2D
+from ..fmm._2d import FMMGrainSegment2D
 from rocketsolver.utils.decorators import validate_assertions
 
 
