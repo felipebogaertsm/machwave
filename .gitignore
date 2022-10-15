@@ -67,4 +67,4 @@ var/
 *.egg
 
 # Example file:
-example.py
+example*.py
