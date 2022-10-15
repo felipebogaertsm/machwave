@@ -7,7 +7,7 @@
 
 import pytest
 
-from rocketsolver.models.propulsion.grain.fmm.rod_and_tube import (
+from rocketsolver.models.propulsion.grain.geometries import (
     RodAndTubeGrainSegment,
 )
 from rocketsolver.models.propulsion.grain import GrainGeometryError

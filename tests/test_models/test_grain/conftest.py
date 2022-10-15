@@ -8,7 +8,7 @@
 import pytest
 
 from rocketsolver.models.propulsion.grain import Grain
-from rocketsolver.models.propulsion.grain.bates import BatesSegment
+from rocketsolver.models.propulsion.grain.geometries.bates import BatesSegment
 
 """
 Olympus fixtures are based on the 2022 version of the motor.

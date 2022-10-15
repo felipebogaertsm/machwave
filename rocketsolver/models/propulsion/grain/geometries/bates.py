@@ -9,7 +9,7 @@ import numpy as np
 
 from rocketsolver.utils.geometric import get_cylinder_surface_area
 
-from . import GrainSegment2D, GrainGeometryError
+from .. import GrainSegment2D, GrainGeometryError
 from rocketsolver.utils.decorators import validate_assertions
 
 

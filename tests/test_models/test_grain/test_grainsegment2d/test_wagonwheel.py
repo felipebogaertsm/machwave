@@ -8,7 +8,7 @@
 import pytest
 
 from rocketsolver.models.propulsion.grain import GrainGeometryError
-from rocketsolver.models.propulsion.grain.fmm.wagon_wheel import (
+from rocketsolver.models.propulsion.grain.geometries import (
     WagonWheelGrainSegment,
 )
 

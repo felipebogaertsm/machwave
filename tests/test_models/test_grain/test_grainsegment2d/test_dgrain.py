@@ -7,7 +7,7 @@
 
 import pytest
 
-from rocketsolver.models.propulsion.grain.fmm.d_grain import DGrainSegment
+from rocketsolver.models.propulsion.grain.geometries import DGrainSegment
 from rocketsolver.models.propulsion.grain import GrainGeometryError
 
 

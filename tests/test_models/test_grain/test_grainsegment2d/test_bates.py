@@ -7,7 +7,7 @@
 
 import pytest
 
-from rocketsolver.models.propulsion.grain.bates import BatesSegment
+from rocketsolver.models.propulsion.grain.geometries import BatesSegment
 from rocketsolver.models.propulsion.grain import GrainGeometryError
 
 
