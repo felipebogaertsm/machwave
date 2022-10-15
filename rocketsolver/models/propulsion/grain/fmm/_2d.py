@@ -5,24 +5,21 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Callable, Optional
 
 import numpy as np
 import plotly.graph_objects as go
-import skfmm
-from skimage import measure
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
 
 from . import FMMGrainSegment
-from .. import GrainSegment2D, GrainGeometryError
-from rocketsolver.utils.decorators import validate_assertions
+from .. import GrainSegment2D
 from rocketsolver.utils.geometric import get_length
 
 
-class FMMGrainSegment2D(GrainSegment2D, FMMGrainSegment, ABC):
+class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
     """
     Fast Marching Method (FMM) implementation for 2D grain segment.
 
@@ -40,53 +37,26 @@ class FMMGrainSegment2D(GrainSegment2D, FMMGrainSegment, ABC):
         inhibited_ends: Optional[int] = 0,
         map_dim: Optional[int] = 1000,
     ) -> None:
-        # "Cache" variables:
-        self.maps = None
-        self.mask = None
-        self.masked_face = None
-        self.regression_map = None
-        self.face_area_interp_func = None
 
-        FMMGrainSegment.__init__(self, map_dim=map_dim)
-
-        GrainSegment2D.__init__(
-            self,
+        super().__init__(
             length=length,
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            map_dim=map_dim,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
-    def validate(self) -> None:
-        GrainSegment2D.validate(self)
+    def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns a tuple, containing map_x in index 0 and map_y in index 1.
+        """
+        if self.maps is None:
+            self.maps = np.meshgrid(
+                np.linspace(-1, 1, self.map_dim),
+                np.linspace(-1, 1, self.map_dim),
+            )
 
-    def map_to_area(self, value: float):
-        """
-        Used to convert sq pixels to sqm.
-        For extracting real areas from the regression map.
-        """
-        return (self.outer_diameter**2) * (value / (self.map_dim**2))
-
-    def map_to_length(self, value: float) -> float:
-        """
-        Converts pixels to meters. Used to extract real distances from pixel
-        distances such as contour lengths
-        """
-        return self.outer_diameter * (value / self.map_dim)
-
-    def get_web_thickness(self) -> float:
-        """
-        The distance between the closest and furthest point to the center of
-        the grain segment.
-        """
-        return self.denormalize(np.amax(self.get_regression_map()))
-
-    def normalize(self, value: int | float) -> float:
-        return value / (0.5 * self.outer_diameter)
-
-    def denormalize(self, value: int | float) -> float:
-        return (value / 2) * (self.outer_diameter)
+        return self.maps
 
     def get_face_area(self, web_distance: float) -> float:
         """
@@ -115,61 +85,6 @@ class FMMGrainSegment2D(GrainSegment2D, FMMGrainSegment, ABC):
         return self.get_core_perimeter(web_distance) * self.get_length(
             web_distance
         )
-
-    def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Returns a tuple, containing map_x in index 0 and map_y in index 1.
-        """
-        if self.maps is None:
-            self.maps = np.meshgrid(
-                np.linspace(-1, 1, self.map_dim),
-                np.linspace(-1, 1, self.map_dim),
-            )
-
-        return self.maps
-
-    def get_mask(self) -> np.ndarray:
-        if self.mask is None:
-            map_x, map_y = self.get_maps()
-            self.mask = (map_x**2 + map_y**2) > 1
-
-        return self.mask
-
-    def get_empty_face_map(self) -> np.ndarray:
-        """
-        Returns the empty geometry map/mesh of the 2D grain face.
-
-        https://pythonhosted.org/scikit-fmm/
-        """
-        return np.ones_like(self.get_maps()[0])
-
-    def get_masked_face(self) -> np.ndarray:
-        """
-        Masks the face map.
-        The mask is circular shaped and normalized to the shape of the matrix.
-        """
-        if self.masked_face is None:
-            self.masked_face = np.ma.MaskedArray(
-                self.get_initial_face_map(), self.get_mask()
-            )
-
-        return self.masked_face
-
-    def get_cell_size(self) -> float:
-        return 1 / self.map_dim
-
-    def get_regression_map(self):
-        """
-        Uses the fast marching method to generate an image of how the grain
-        regresses from the core map.
-        """
-        if self.regression_map is None:
-            self.regression_map = (
-                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size())
-                * 2
-            )
-
-        return self.regression_map
 
     def get_face_area_interp_func(self) -> Callable[[float], float]:
         """

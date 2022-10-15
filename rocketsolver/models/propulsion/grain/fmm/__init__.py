@@ -6,19 +6,17 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Optional
 
 import numpy as np
 import skfmm
 from skimage import measure
-from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 
-from .. import GrainGeometryError
+from .. import GrainGeometryError, GrainSegment
 from rocketsolver.utils.decorators import validate_assertions
 
 
-class FMMGrainSegment(ABC):
+class FMMGrainSegment(GrainSegment, ABC):
     """
     Fast Marching Method (FMM) implementation of a grain segment.
 
@@ -28,7 +26,14 @@ class FMMGrainSegment(ABC):
     https://github.com/reilleya/openMotor
     """
 
-    def __init__(self, map_dim: int) -> None:
+    def __init__(
+        self,
+        map_dim: int,
+        length: float,
+        outer_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
         self.map_dim = map_dim
 
         # "Cache" variables:
@@ -38,6 +43,13 @@ class FMMGrainSegment(ABC):
         self.regression_map = None
         self.face_area_interp_func = None
 
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
+
     @abstractmethod
     def get_initial_face_map(self) -> np.ndarray:
         """
@@ -46,64 +58,48 @@ class FMMGrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_mask(self) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_maps(self) -> tuple[np.ndarray]:
         """
-        Returns a tuple, containing map_x in index 0 and map_y in index 1.
+        Implementation varies depending if the geometry is 2D or 3D.
         """
         pass
 
-    @abstractmethod
+    @validate_assertions(exception=GrainGeometryError)
+    def validate(self) -> None:
+        super().validate()
+
+        assert self.map_dim >= 100
+
+    def normalize(self, value: int | float) -> float:
+        return value / (0.5 * self.outer_diameter)
+
+    def denormalize(self, value: int | float) -> float:
+        return (value / 2) * (self.outer_diameter)
+
     def map_to_area(self, value: float):
         """
         Used to convert sq pixels to sqm.
         For extracting real areas from the regression map.
         """
-        pass
+        return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
-    @abstractmethod
     def map_to_length(self, value: float) -> float:
         """
         Converts pixels to meters. Used to extract real distances from pixel
         distances such as contour lengths
         """
-        pass
+        return self.outer_diameter * (value / self.map_dim)
 
-    @abstractmethod
-    def normalize(self, value: int | float) -> float:
-        pass
+    def get_mask(self) -> np.ndarray:
+        if self.mask is None:
+            map_x, map_y = self.get_maps()
+            self.mask = (map_x**2 + map_y**2) > 1
 
-    @abstractmethod
-    def denormalize(self, value: int | float) -> float:
-        pass
-
-    @validate_assertions(exception=GrainGeometryError)
-    def validate(self) -> None:
-        assert self.map_dim >= 100
-
-    def get_web_thickness(self) -> float:
-        """
-        The distance between the closest and furthest point to the center of
-        the grain segment.
-        """
-        return self.denormalize(np.amax(self.get_regression_map()))
-
-    def get_contours(self, web_distance: float) -> np.ndarray:
-        """
-        Returns the contours of the regression map in function of the web
-        thickness traveled.
-        """
-        map_dist = self.normalize(web_distance)
-        return measure.find_contours(
-            self.get_regression_map(), map_dist, fully_connected="low"
-        )
+        return self.mask
 
     def get_empty_face_map(self) -> np.ndarray:
         """
-        Returns the empty geometry map/mesh of the 2D grain face.
+        Returns the empty geometry map/mesh of the grain.
 
         https://pythonhosted.org/scikit-fmm/
         """
@@ -137,60 +133,19 @@ class FMMGrainSegment(ABC):
 
         return self.regression_map
 
-    def get_face_area_interp_func(self) -> Callable[[float], float]:
+    def get_web_thickness(self) -> float:
         """
-        :return: A function that interpolates the face area in function of
-            the (normalized) web thickness.
-        :rtype: Callable[[float], float]
+        The distance between the closest and furthest point to the center of
+        the grain segment.
         """
-        if self.face_area_interp_func is None:
-            regression_map = self.get_regression_map()
-            max_dist = np.amax(regression_map)
+        return self.denormalize(np.amax(self.get_regression_map()))
 
-            face_area = []
-            web_distance_normalized = []
-            valid = np.logical_not(self.get_mask())
-
-            for i in range(int(max_dist * self.map_dim) + 2):
-                web_distance_normalized.append(i / self.map_dim)
-
-                face_area.append(
-                    self.map_to_area(
-                        np.count_nonzero(
-                            np.logical_and(
-                                regression_map > (web_distance_normalized[-1]),
-                                valid,
-                            )
-                        )
-                    )
-                )
-
-            face_area = savgol_filter(face_area, 31, 5)
-            self.face_area_interp_func = interp1d(
-                web_distance_normalized, face_area
-            )
-
-        return self.face_area_interp_func
-
-    def get_face_map(self, web_distance: float) -> np.ndarray:
+    def get_contours(self, web_distance: float) -> np.ndarray:
         """
-        Returns a matrix of the grain face in function of the web distance
-        traveled.
-
-        :param float web_distance: The web distance traveled.
-        :return: A matrix of the grain face.
-        :rtype: np.ndarray
+        Returns the contours of the regression map in function of the web
+        thickness traveled.
         """
-        web_distance_normalized = self.normalize(web_distance)
-        regression_map = self.get_regression_map()
-        valid = np.logical_not(self.get_mask())
-
-        # Only keep values in regression map that are greater than the web
-        # distance:
-        log_and = np.logical_and(
-            regression_map > (web_distance_normalized),
-            valid,
+        map_dist = self.normalize(web_distance)
+        return measure.find_contours(
+            self.get_regression_map(), map_dist, fully_connected="low"
         )
-
-        face_mask = log_and * 1  # replace True and False with 1 and 0
-        return face_mask.filled(-1)  # fill masked values with -1

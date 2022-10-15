@@ -111,10 +111,6 @@ class GrainSegment2D(GrainSegment, ABC):
     - BATES
     - Tubular
     - Pseudo-finocyl
-
-    Some examples of non-2D (3D) grain geometries:
-    - Conical
-    - Finocyl
     """
 
     def __init__(
@@ -209,22 +205,6 @@ class GrainSegment3D(GrainSegment, ABC):
             spacing=spacing,
             inhibited_ends=inhibited_ends,
         )
-
-    @abstractmethod
-    def get_burn_area(self, web_distance: float) -> float:
-        """
-        For 3D Segments, this will change based on the geometry and
-        numerical method.
-        """
-        pass
-
-    @abstractmethod
-    def get_volume(self, web_distance: float) -> float:
-        """
-        For 3D Segments, this will change based on the geometry and
-        numerical method.
-        """
-        pass
 
     def get_center_of_gravity(self, web_distance: float) -> float:
         """
