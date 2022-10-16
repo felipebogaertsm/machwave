@@ -46,7 +46,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         if self.maps is None:
             map_y, map_z, map_x = np.meshgrid(
                 np.linspace(-1, 1, self.map_dim),
-                np.linspace(0, 1, self.map_dim),  # z axis
+                np.linspace(1, 0, self.map_dim),  # z axis
                 np.linspace(-1, 1, self.map_dim),
             )
 
