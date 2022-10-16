@@ -48,4 +48,18 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         """
         NOTE: Still needs to implement.
         """
-        pass
+        map_x, map_y, map_z = self.get_maps()
+        core_map = self.get_empty_face_map()
+
+        upper_core_norm = self.normalize(self.upper_core_diameter)
+        lower_core_norm = self.normalize(self.lower_core_diameter)
+
+        radius = np.sqrt(map_x**2 + map_y**2)
+        core_diameter = (
+            map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
+        )
+
+        # Create the ring:
+        core_map[radius < core_diameter / 2] = 0
+
+        return core_map
