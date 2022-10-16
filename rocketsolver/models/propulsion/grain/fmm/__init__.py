@@ -69,6 +69,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         super().validate()
 
         assert self.map_dim >= 100
+        self.map_dim = 10
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
