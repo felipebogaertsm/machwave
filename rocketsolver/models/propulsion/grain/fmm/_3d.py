@@ -44,21 +44,14 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_maps(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         if self.maps is None:
-            map_x, map_y, map_z = np.meshgrid(
-                np.linspace(-1, 1, self.map_dim),
+            map_y, map_z, map_x = np.meshgrid(
                 np.linspace(-1, 1, self.map_dim),
                 np.linspace(0, 1, self.map_dim),  # z axis
+                np.linspace(-1, 1, self.map_dim),
             )
 
-        for i in range(self.map_dim):
-            z = np.ones_like(map_x[0]) * (i) / (self.map_dim - 1)
+            self.maps = (map_x, map_y, map_z)
 
-            if i == 0:
-                map_z = np.array([z])
-            else:
-                map_z = np.append(map_z, [z], axis=0)
-
-        self.maps = (map_x, map_y, map_z)
         return self.maps
 
     def get_burn_area(self, web_distance: float) -> float:
