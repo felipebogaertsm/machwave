@@ -10,22 +10,22 @@ from typing import Optional
 import numpy as np
 
 from .. import GrainGeometryError
-from ..fmm._2d import FMMGrainSegment2D
+from ..fmm._3d import FMMGrainSegment3D
 from rocketsolver.utils.decorators import validate_assertions
 
 
-class RodAndTubeGrainSegment(FMMGrainSegment2D):
+class ConicalGrainSegment(FMMGrainSegment3D):
     def __init__(
         self,
         length: float,
         outer_diameter: float,
-        rod_outer_diameter: float,
-        tube_inner_diameter: float,
+        upper_core_diameter: float,
+        lower_core_diameter: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
     ) -> None:
-        self.rod_outer_diameter = rod_outer_diameter
-        self.tube_inner_diameter = tube_inner_diameter
+        self.upper_core_diameter = upper_core_diameter
+        self.lower_core_diameter = lower_core_diameter
 
         super().__init__(
             length=length,
@@ -38,23 +38,25 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
     def validate(self) -> None:
         super().validate()
 
-        assert self.rod_outer_diameter > 0
-        assert self.tube_inner_diameter > self.rod_outer_diameter
-        assert self.tube_inner_diameter < self.outer_diameter
+        assert self.upper_core_diameter > 0
+        assert self.upper_core_diameter < self.outer_diameter
+
+        assert self.lower_core_diameter > 0
+        assert self.lower_core_diameter < self.outer_diameter
 
     def get_initial_face_map(self) -> np.ndarray:
-        """
-        NOTE: Still needs to correctly implement wagon wheel ports.
-        """
-        map_x, map_y = self.get_maps()
+        map_x, map_y, map_z = self.get_maps()
         core_map = self.get_empty_face_map()
 
-        rod_od_norm = self.normalize(self.rod_outer_diameter)
-        tube_id_norm = self.normalize(self.tube_inner_diameter)
+        upper_core_norm = self.normalize(self.upper_core_diameter)
+        lower_core_norm = self.normalize(self.lower_core_diameter)
 
         radius = np.sqrt(map_x**2 + map_y**2)
+        core_diameter = (
+            map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
+        )
 
         # Create the ring:
-        core_map[(radius > rod_od_norm / 2) & (radius < tube_id_norm / 2)] = 0
+        core_map[radius < core_diameter / 2] = 0
 
         return core_map
