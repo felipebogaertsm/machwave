@@ -32,7 +32,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 100,
+        map_dim: Optional[int] = 1000,
     ) -> None:
 
         super().__init__(
@@ -71,8 +71,14 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.get_face_area_interp_func()(self.normalize(web_distance))
 
+    def get_volume_per_element(self) -> float:
+        return (self.denormalize(self.get_cell_size()) * 2) ** 3
+
     def get_volume(self, web_distance: float) -> float:
         """
-        NOTE: Still needs to be implemented.
+        NOTE: Still needs to be tested.
         """
-        pass
+        face_map = self.get_face_map(web_distance=web_distance)
+        active_elements = np.count_nonzero(face_map == 1)
+        volume_per_element = self.get_volume_per_element()
+        return active_elements * volume_per_element
