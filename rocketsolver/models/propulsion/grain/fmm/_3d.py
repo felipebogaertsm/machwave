@@ -32,7 +32,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 1000,
+        map_dim: Optional[int] = 100,
     ) -> None:
 
         super().__init__(
@@ -47,7 +47,9 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         if self.maps is None:
             map_y, map_z, map_x = np.meshgrid(
                 np.linspace(-1, 1, self.map_dim),
-                np.linspace(1, 0, self.map_dim),  # z axis
+                np.linspace(
+                    1, 0, int(self.map_dim * self.length / self.outer_diameter)
+                ),  # z axis
                 np.linspace(-1, 1, self.map_dim),
             )
 
@@ -75,9 +77,6 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         return (self.denormalize(self.get_cell_size()) * 2) ** 3
 
     def get_volume(self, web_distance: float) -> float:
-        """
-        NOTE: Still needs to be tested.
-        """
         face_map = self.get_face_map(web_distance=web_distance)
         active_elements = np.count_nonzero(face_map == 1)
         volume_per_element = self.get_volume_per_element()
