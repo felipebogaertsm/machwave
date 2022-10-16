@@ -5,14 +5,15 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import ABC
+from typing import Callable, Optional
 
 import numpy as np
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
-from .. import GrainSegment3D, GrainGeometryError
-from rocketsolver.utils.decorators import validate_assertions
+from .. import GrainSegment3D
 
 
 class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
@@ -31,7 +32,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 1000,
+        map_dim: Optional[int] = 100,
     ) -> None:
 
         super().__init__(
@@ -63,9 +64,12 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_burn_area(self, web_distance: float) -> float:
         """
-        NOTE: Still needs to be implemented.
+        NOTE: Still needs to be tested.
         """
-        pass
+        if web_distance > self.get_web_thickness():
+            return 0
+
+        return self.get_face_area_interp_func()(self.normalize(web_distance))
 
     def get_volume(self, web_distance: float) -> float:
         """
