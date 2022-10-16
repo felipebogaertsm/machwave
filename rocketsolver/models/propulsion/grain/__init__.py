@@ -27,9 +27,13 @@ class GrainSegment(ABC):
 
     def __init__(
         self,
+        length: float,
+        outer_diameter: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
     ) -> None:
+        self.length = length
+        self.outer_diameter = outer_diameter
         self.spacing = spacing
         self.inhibited_ends = inhibited_ends
 
@@ -92,6 +96,8 @@ class GrainSegment(ABC):
         """
         assert self.spacing >= 0
         assert self.inhibited_ends in [0, 1, 2]
+        assert self.length > 0
+        assert self.outer_diameter > 0
 
 
 class GrainSegment2D(GrainSegment, ABC):
@@ -105,10 +111,6 @@ class GrainSegment2D(GrainSegment, ABC):
     - BATES
     - Tubular
     - Pseudo-finocyl
-
-    Some examples of non-2D (3D) grain geometries:
-    - Conical
-    - Finocyl
     """
 
     def __init__(
@@ -118,10 +120,9 @@ class GrainSegment2D(GrainSegment, ABC):
         spacing: float,
         inhibited_ends: Optional[int] = 0,
     ) -> None:
-        self.length = length
-        self.outer_diameter = outer_diameter
-
         super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
         )
@@ -156,13 +157,6 @@ class GrainSegment2D(GrainSegment, ABC):
         """
         pass
 
-    @validate_assertions(exception=GrainGeometryError)
-    def validate(self) -> None:
-        super().validate()
-
-        assert self.length > 0
-        assert self.outer_diameter > 0
-
     def get_center_of_gravity(self, web_distance: float) -> float:
         """
         NOTE: Still needs to change based on inhibited ends.
@@ -186,6 +180,43 @@ class GrainSegment2D(GrainSegment, ABC):
             return self.length * self.get_face_area(web_distance=web_distance)
         else:
             return 0
+
+
+class GrainSegment3D(GrainSegment, ABC):
+    """
+    Class that represents a 3D grain segment.
+
+    Some examples of 3D grain geometries:
+    - Conical
+    - Finocyl
+    """
+
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
+
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
+
+    def get_center_of_gravity(self, web_distance: float) -> float:
+        """
+        NOTE: Modify later.
+        """
+        return self.get_length(web_distance=web_distance) / 2
+
+    def get_length(self, web_distance: float) -> float:
+        """
+        NOTE: Modify later.
+        """
+        return self.length - web_distance * (2 - self.inhibited_ends)
 
 
 class Grain:
