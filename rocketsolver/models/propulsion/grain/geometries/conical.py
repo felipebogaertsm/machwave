@@ -45,9 +45,6 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         assert self.lower_core_diameter < self.outer_diameter
 
     def get_initial_face_map(self) -> np.ndarray:
-        """
-        NOTE: Still needs to implement.
-        """
         map_x, map_y, map_z = self.get_maps()
         core_map = self.get_empty_face_map()
 
