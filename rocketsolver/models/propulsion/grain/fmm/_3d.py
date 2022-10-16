@@ -54,6 +54,13 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.maps
 
+    def get_mask(self) -> np.ndarray:
+        if self.mask is None:
+            map_x, map_y, _ = self.get_maps()
+            self.mask = (map_x**2 + map_y**2) > 1
+
+        return self.mask
+
     def get_burn_area(self, web_distance: float) -> float:
         """
         NOTE: Still needs to be implemented.

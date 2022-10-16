@@ -58,7 +58,14 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         return self.maps
 
-    def get_face_area(self, web_distance: float) -> float:
+    def get_mask(self) -> np.ndarray:
+        if self.mask is None:
+            map_x, map_y = self.get_maps()
+            self.mask = (map_x**2 + map_y**2) > 1
+
+        return self.mask
+
+    def face_area(self, web_distance: float) -> float:
         """
         NOTE: Still needs to implement control for when web thickness is over.
         """
