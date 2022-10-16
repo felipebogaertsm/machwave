@@ -93,29 +93,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             web_distance
         )
 
-    def get_face_map(self, web_distance: float) -> np.ndarray:
-        """
-        Returns a matrix of the grain face in function of the web distance
-        traveled.
-
-        :param float web_distance: The web distance traveled.
-        :return: A matrix of the grain face.
-        :rtype: np.ndarray
-        """
-        web_distance_normalized = self.normalize(web_distance)
-        regression_map = self.get_regression_map()
-        valid = np.logical_not(self.get_mask())
-
-        # Only keep values in regression map that are greater than the web
-        # distance:
-        log_and = np.logical_and(
-            regression_map > (web_distance_normalized),
-            valid,
-        )
-
-        face_mask = log_and * 1  # replace True and False with 1 and 0
-        return face_mask.filled(-1)  # fill masked values with -1
-
     def plot_masked_face(self, web_distance: Optional[float] = 0) -> go.Figure:
         face_map = self.get_face_map(web_distance=web_distance)
 
