@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+# Author: Felipe Bogaerts de Mattos
+# Contact me at me@felipebm.com.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+
+from typing import Optional
+
+import numpy as np
+
+from .. import GrainGeometryError
+from ..fmm._3d import FMMGrainSegment3D
+from rocketsolver.utils.decorators import validate_assertions
+
+
+class ConicalGrainSegment(FMMGrainSegment3D):
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        upper_core_diameter: float,
+        lower_core_diameter: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
+        self.upper_core_diameter = upper_core_diameter
+        self.lower_core_diameter = lower_core_diameter
+
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
+
+    @validate_assertions(exception=GrainGeometryError)
+    def validate(self) -> None:
+        super().validate()
+
+        assert self.upper_core_diameter > 0
+        assert self.upper_core_diameter < self.outer_diameter
+
+        assert self.lower_core_diameter > 0
+        assert self.lower_core_diameter < self.outer_diameter
+
+    def get_initial_face_map(self) -> np.ndarray:
+        """
+        NOTE: Still needs to implement.
+        """
+        pass
