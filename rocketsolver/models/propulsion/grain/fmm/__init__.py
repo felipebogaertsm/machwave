@@ -64,12 +64,18 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         pass
 
+    @abstractmethod
+    def get_mask(self) -> np.ndarray:
+        """
+        Implementation varies depending if the geometry is 2D or 3D.
+        """
+        pass
+
     @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
         assert self.map_dim >= 100
-        self.map_dim = 10
 
     def normalize(self, value: int | float) -> float:
         return value / (0.5 * self.outer_diameter)
@@ -90,13 +96,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         distances such as contour lengths
         """
         return self.outer_diameter * (value / self.map_dim)
-
-    def get_mask(self) -> np.ndarray:
-        if self.mask is None:
-            map_x, map_y = self.get_maps()
-            self.mask = (map_x**2 + map_y**2) > 1
-
-        return self.mask
 
     def get_empty_face_map(self) -> np.ndarray:
         """
