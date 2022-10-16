@@ -65,7 +65,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         return self.mask
 
-    def face_area(self, web_distance: float) -> float:
+    def get_face_area(self, web_distance: float) -> float:
         """
         NOTE: Still needs to implement control for when web thickness is over.
         """
@@ -92,41 +92,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return self.get_core_perimeter(web_distance) * self.get_length(
             web_distance
         )
-
-    def get_face_area_interp_func(self) -> Callable[[float], float]:
-        """
-        :return: A function that interpolates the face area in function of
-            the (normalized) web thickness.
-        :rtype: Callable[[float], float]
-        """
-        if self.face_area_interp_func is None:
-            regression_map = self.get_regression_map()
-            max_dist = np.amax(regression_map)
-
-            face_area = []
-            web_distance_normalized = []
-            valid = np.logical_not(self.get_mask())
-
-            for i in range(int(max_dist * self.map_dim) + 2):
-                web_distance_normalized.append(i / self.map_dim)
-
-                face_area.append(
-                    self.map_to_area(
-                        np.count_nonzero(
-                            np.logical_and(
-                                regression_map > (web_distance_normalized[-1]),
-                                valid,
-                            )
-                        )
-                    )
-                )
-
-            face_area = savgol_filter(face_area, 31, 5)
-            self.face_area_interp_func = interp1d(
-                web_distance_normalized, face_area
-            )
-
-        return self.face_area_interp_func
 
     def get_face_map(self, web_distance: float) -> np.ndarray:
         """
