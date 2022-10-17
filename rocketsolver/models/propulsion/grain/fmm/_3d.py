@@ -6,11 +6,9 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
-from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
 from .. import GrainSegment3D
