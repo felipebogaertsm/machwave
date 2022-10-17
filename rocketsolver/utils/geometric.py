@@ -12,6 +12,7 @@ Stores the functions used to calculate geometric parameters.
 from typing import Optional
 
 import numpy as np
+from skimage import measure
 
 
 def get_circle_area(diameter):
@@ -34,6 +35,14 @@ def get_cylinder_surface_area(length: float, diameter: float) -> float:
 
 def get_cylinder_volume(diameter, length):
     return np.pi * length * (diameter**2) / 4
+
+
+def get_contours(
+    map: np.ndarray, map_dist: float, *args, **kwargs
+) -> np.ndarray:
+    return measure.find_contours(
+        map, map_dist, fully_connected="low", *args, **kwargs
+    )
 
 
 def get_length(
