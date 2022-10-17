@@ -42,6 +42,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             map_dim=map_dim,
         )
 
+        self.map_dim = 10
+
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
 
@@ -68,8 +70,13 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         self, web_distance: float, length_normalized: float
     ) -> np.ndarray:
         map_dist = self.normalize(web_distance)
+        valid = np.logical_not(self.get_mask())
+
+        map = np.logical_and(self.get_regression_map() > (map_dist), valid)
+
         return get_contours(
-            self.get_regression_map()[length_normalized], map_dist
+            map[length_normalized],
+            map_dist,
         )
 
     def get_burn_area(self, web_distance: float) -> float:
