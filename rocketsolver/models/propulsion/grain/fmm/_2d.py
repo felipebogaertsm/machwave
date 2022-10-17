@@ -16,7 +16,7 @@ from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
 from .. import GrainSegment2D
-from rocketsolver.utils.geometric import get_length
+from rocketsolver.utils.geometric import get_length, get_contours
 
 
 class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
@@ -37,6 +37,9 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         inhibited_ends: Optional[int] = 0,
         map_dim: Optional[int] = 1000,
     ) -> None:
+
+        # "Cache" variables:
+        self.face_area_interp_func = None
 
         super().__init__(
             length=length,
@@ -64,6 +67,46 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             self.mask = (map_x**2 + map_y**2) > 1
 
         return self.mask
+
+    def get_contours(self, web_distance: float) -> np.ndarray:
+        map_dist = self.normalize(web_distance)
+        return get_contours(self.get_regression_map(), map_dist)
+
+    def get_face_area_interp_func(self) -> Callable[[float], float]:
+        """
+        :return: A function that interpolates the face area in function of
+            the (normalized) web thickness.
+        :rtype: Callable[[float], float]
+        """
+
+        if self.face_area_interp_func is None:
+            regression_map = self.get_regression_map()
+            max_dist = np.amax(regression_map)
+
+            face_area = []
+            web_distance_normalized = []
+            valid = np.logical_not(self.get_mask())
+
+            for i in range(int(max_dist * self.map_dim) + 2):
+                web_distance_normalized.append(i / self.map_dim)
+
+                face_area.append(
+                    self.map_to_area(
+                        np.count_nonzero(
+                            np.logical_and(
+                                regression_map > (web_distance_normalized[-1]),
+                                valid,
+                            )
+                        )
+                    )
+                )
+
+            face_area = savgol_filter(face_area, 31, 5)
+            self.face_area_interp_func = interp1d(
+                web_distance_normalized, face_area
+            )
+
+        return self.face_area_interp_func
 
     def get_face_area(self, web_distance: float) -> float:
         """

@@ -6,13 +6,10 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
-from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 import skfmm
-from skimage import measure
 
 from .. import GrainGeometryError, GrainSegment
 from rocketsolver.utils.decorators import validate_assertions
@@ -43,7 +40,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         self.mask = None
         self.masked_face = None
         self.regression_map = None
-        self.face_area_interp_func = None
 
         super().__init__(
             length=length,
@@ -142,50 +138,13 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return self.denormalize(np.amax(self.get_regression_map()))
 
-    def get_contours(self, web_distance: float) -> np.ndarray:
+    @abstractmethod
+    def get_contours(self, web_distance: float, *args, **kwargs) -> np.ndarray:
         """
         Returns the contours of the regression map in function of the web
         thickness traveled.
         """
-        map_dist = self.normalize(web_distance)
-        return measure.find_contours(
-            self.get_regression_map(), map_dist, fully_connected="low"
-        )
-
-    def get_face_area_interp_func(self) -> Callable[[float], float]:
-        """
-        :return: A function that interpolates the face area in function of
-            the (normalized) web thickness.
-        :rtype: Callable[[float], float]
-        """
-        if self.face_area_interp_func is None:
-            regression_map = self.get_regression_map()
-            max_dist = np.amax(regression_map)
-
-            face_area = []
-            web_distance_normalized = []
-            valid = np.logical_not(self.get_mask())
-
-            for i in range(int(max_dist * self.map_dim) + 2):
-                web_distance_normalized.append(i / self.map_dim)
-
-                face_area.append(
-                    self.map_to_area(
-                        np.count_nonzero(
-                            np.logical_and(
-                                regression_map > (web_distance_normalized[-1]),
-                                valid,
-                            )
-                        )
-                    )
-                )
-
-            face_area = savgol_filter(face_area, 31, 5)
-            self.face_area_interp_func = interp1d(
-                web_distance_normalized, face_area
-            )
-
-        return self.face_area_interp_func
+        pass
 
     def get_face_map(self, web_distance: float) -> np.ndarray:
         """
