@@ -42,8 +42,6 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             map_dim=map_dim,
         )
 
-        self.map_dim = 10
-
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
 
@@ -81,7 +79,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_burn_area(self, web_distance: float) -> float:
         """
-        NOTE: Still needs to be tested.
+        NOTE 1: Still needs to be validated.
+        NOTE 2: Refactor to use only numpy arrays.
         """
         if web_distance > self.get_web_thickness():
             return 0
