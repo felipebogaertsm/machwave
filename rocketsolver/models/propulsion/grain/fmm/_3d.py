@@ -99,7 +99,10 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             )
 
             burn_area_array = np.append(
-                burn_area_array, perimeter * self.length / self.map_dim
+                burn_area_array,
+                perimeter
+                * self.get_length(web_distance=web_distance)
+                / self.map_dim,
             )
 
         return np.sum(burn_area_array)
