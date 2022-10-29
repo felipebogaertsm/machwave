@@ -1,0 +1,69 @@
+# -*- coding: utf-8 -*-
+# Author: Felipe Bogaerts de Mattos
+# Contact me at me@felipebm.com.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+
+from typing import Optional
+
+import numpy as np
+
+from .. import GrainGeometryError
+from ..fmm._2d import FMMGrainSegment2D
+from rocketsolver.utils.decorators import validate_assertions
+
+
+class MultiPortGrainSegment(FMMGrainSegment2D):
+    def __init__(
+        self,
+        length: float,
+        outer_diameter: float,
+        port_diameter: float,
+        port_radial_count: float,
+        port_level_count: float,
+        spacing: float,
+        inhibited_ends: Optional[int] = 0,
+    ) -> None:
+        self.port_diameter = port_diameter
+        self.port_radial_count = int(port_radial_count)
+        self.port_level_count = int(port_level_count)
+
+        super().__init__(
+            length=length,
+            outer_diameter=outer_diameter,
+            spacing=spacing,
+            inhibited_ends=inhibited_ends,
+        )
+
+    @validate_assertions(exception=GrainGeometryError)
+    def validate(self) -> None:
+        super().validate()
+
+        assert self.port_diameter > 0
+        assert self.port_level_count > 0
+        assert (
+            self.port_level_count * self.port_diameter
+            < self.outer_diameter / 2
+        )
+
+        assert self.port_radial_count > 0
+
+    def get_initial_face_map(self) -> np.ndarray:
+        """
+        NOTE: Still needs to correctly implement wagon wheel ports.
+        """
+        map_x, map_y = self.get_maps()
+        core_map = self.get_empty_face_map()
+
+        od_norm = self.normalize(self.outer_diameter)
+        port_od_norm = self.normalize(self.port_diameter)
+
+        for level in range(self.port_level_count):
+            x_offset = od_norm * level / (self.port_level_count) / 2
+            y_offset = 0 / 2
+
+            radius = np.sqrt((map_x - x_offset) ** 2 + (map_y - y_offset) ** 2)
+            core_map[radius < port_od_norm / 2] = 0
+
+        return core_map
