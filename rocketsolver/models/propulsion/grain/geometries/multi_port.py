@@ -59,11 +59,18 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         od_norm = self.normalize(self.outer_diameter)
         port_od_norm = self.normalize(self.port_diameter)
 
-        for level in range(self.port_level_count):
-            x_offset = od_norm * level / (self.port_level_count) / 2
-            y_offset = 0 / 2
+        for radius in range(self.port_radial_count):
+            angle = np.pi * 2 * radius / self.port_radial_count
 
-            radius = np.sqrt((map_x - x_offset) ** 2 + (map_y - y_offset) ** 2)
-            core_map[radius < port_od_norm / 2] = 0
+            for level in range(self.port_level_count):
+                radial_distance = od_norm * level / (self.port_level_count) / 2
+
+                x_offset = radial_distance * np.cos(angle)
+                y_offset = radial_distance * np.sin(angle)
+
+                radius = np.sqrt(
+                    (map_x - x_offset) ** 2 + (map_y - y_offset) ** 2
+                )
+                core_map[radius < port_od_norm / 2] = 0
 
         return core_map
