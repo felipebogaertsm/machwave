@@ -6,6 +6,7 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC
+from trimesh import load_mesh
 from typing import Optional
 
 import numpy as np
@@ -22,19 +23,19 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
     def __init__(
         self,
         file_path: str,
+        outer_diameter: float,
+        length: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 1000,
+        map_dim: Optional[int] = 100,
     ) -> None:
 
         self.file_path = file_path
+        self.outer_diameter = outer_diameter
+        self.length = length
 
         # "Cache" variables:
         self.face_area_interp_func = None
-
-        # NOTE: write methods to obtain these values:
-        length = 0
-        outer_diameter = 0
 
         super().__init__(
             length=length,
@@ -44,8 +45,19 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
             map_dim=map_dim,
         )
 
+    def get_voxel_size(self) -> float:
+        """
+        :return: the voxel edge size.
+        :rtype: float
+        """
+        return self.outer_diameter / self.map_dim
+
     def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
         """
-        NOTE: STILL NEEDS TO BE IMPLEMENTED.
+        NOTE: Still needs to convert boolean matrix to masked array.
         """
-        pass
+        mesh = load_mesh(self.file_path)
+        assert mesh.is_watertight
+        volume = mesh.voxelized(pitch=self.get_voxel_size())
+        map = volume.matrix
+        return map
