@@ -54,6 +54,8 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
 
     def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
         """
+        Generate a map by voxelizing an STL file. Uses trimesh library.
+
         NOTE: Still needs to convert boolean matrix to masked array.
         """
         mesh = load_mesh(self.file_path)
