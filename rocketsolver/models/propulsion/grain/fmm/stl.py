@@ -52,7 +52,7 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         """
         return self.outer_diameter / self.map_dim
 
-    def get_maps(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_initial_face_map(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Generate a map by voxelizing an STL file. Uses trimesh library.
 
@@ -61,5 +61,5 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         mesh = load_mesh(self.file_path)
         assert mesh.is_watertight
         volume = mesh.voxelized(pitch=self.get_voxel_size())
-        map = volume.matrix
+        map = volume.matrix * 1
         return map
