@@ -60,6 +60,6 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         """
         mesh = load_mesh(self.file_path)
         assert mesh.is_watertight
-        volume = mesh.voxelized(pitch=self.get_voxel_size())
+        volume = mesh.voxelized(pitch=self.get_voxel_size()).fill()
         map = volume.matrix * 1
-        return map
+        return map.transpose()
