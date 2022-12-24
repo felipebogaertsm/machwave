@@ -12,6 +12,8 @@ from typing import Optional
 import numpy as np
 
 from ._3d import FMMGrainSegment3D
+from .. import GrainGeometryError
+from rocketsolver.utils.decorators import validate_assertions
 
 
 class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
@@ -27,7 +29,7 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         length: float,
         spacing: float,
         inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 100,
+        map_dim: Optional[int] = 50,
     ) -> None:
 
         self.file_path = file_path
@@ -44,6 +46,10 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
             inhibited_ends=inhibited_ends,
             map_dim=map_dim,
         )
+
+    @validate_assertions(exception=GrainGeometryError)
+    def validate(self) -> None:
+        assert self.map_dim >= 20
 
     def get_voxel_size(self) -> float:
         """
