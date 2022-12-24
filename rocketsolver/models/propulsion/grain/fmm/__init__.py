@@ -86,7 +86,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         Used to convert sq pixels to sqm.
         For extracting real areas from the regression map.
         """
-        return (self.outer_diameter**2) * (value / (self.map_dim**2))
+        return (self.outer_diameter ** 2) * (value / (self.map_dim ** 2))
 
     def map_to_length(self, value: float) -> float:
         """
