@@ -6,10 +6,10 @@
 # the Free Software Foundation, version 3.
 
 from abc import ABC
-from trimesh import load_mesh
 from typing import Optional
 
 import numpy as np
+from trimesh import load_mesh
 
 from ._3d import FMMGrainSegment3D
 from .. import GrainGeometryError
@@ -56,7 +56,7 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         :return: the voxel edge size.
         :rtype: float
         """
-        return self.outer_diameter / self.map_dim
+        return self.outer_diameter / (self.map_dim - 1)
 
     def get_initial_face_map(self) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -67,5 +67,6 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         mesh = load_mesh(self.file_path)
         assert mesh.is_watertight
         volume = mesh.voxelized(pitch=self.get_voxel_size()).fill()
-        map = volume.matrix * 1
+        map = volume.matrix.view(np.ndarray) * 1
+        print(map.transpose().shape)
         return map.transpose()
