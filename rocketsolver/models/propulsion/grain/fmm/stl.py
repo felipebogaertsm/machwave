@@ -9,7 +9,9 @@ from abc import ABC
 from typing import Optional
 
 import numpy as np
+import trimesh
 from trimesh import load_mesh
+from trimesh.voxel import creation
 
 from ._3d import FMMGrainSegment3D
 from .. import GrainGeometryError
@@ -53,10 +55,12 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
 
     def get_voxel_size(self) -> float:
         """
+        NOTE: Only returns correct voxel size if map_dim is an odd number.
+
         :return: the voxel edge size.
         :rtype: float
         """
-        return self.outer_diameter / (self.map_dim - 1)
+        return self.outer_diameter / int(self.map_dim - 1)
 
     def get_initial_face_map(self) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -66,7 +70,9 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         """
         mesh = load_mesh(self.file_path)
         assert mesh.is_watertight
+
         volume = mesh.voxelized(pitch=self.get_voxel_size()).fill()
-        map = volume.matrix.view(np.ndarray) * 1
-        print(map.transpose().shape)
-        return map.transpose()
+        map = volume.matrix.view(np.ndarray).transpose() * 1
+
+        assert map.shape == self.get_maps()[0].shape
+        return map
