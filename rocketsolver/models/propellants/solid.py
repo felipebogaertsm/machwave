@@ -90,6 +90,39 @@ KNSU = SolidPropellant(
     0.321,
 )
 
+# Data for both RNXs still needs to be revised and updated according
+# to ProPEP3.
+
+RNX_57 = SolidPropellant(
+    [{"min": 0, "max": 100e6, "a": 1.95, "n": 0.477}],
+    0.95,
+    1844.5 * 0.95,
+    1.159,
+    1.026,
+    1644,
+    45.19 * 1e-3,
+    45.19 * 1e-3,
+    158.1,
+    158.1,
+    0.306,
+    0.321,
+)
+
+RNX_71V = SolidPropellant(
+    [{"min": 0, "max": 100e6, "a": 2.57, "n": 0.371}],
+    0.95,
+    1816.1 * 0.95,
+    1.180,
+    1.027,
+    1434,
+    41.83 * 1e-3,
+    41.83 * 1e-3,
+    153.6,
+    153.6,
+    0.306,
+    0.321,
+)
+
 KNER = SolidPropellant(
     [{"min": 0, "max": 100e6, "a": 2.903, "n": 0.395}],
     0.94,
@@ -121,6 +154,10 @@ def get_solid_propellant_from_name(prop_name: str) -> SolidPropellant:
         return KNSU
     elif prop_name.lower() == "kner":
         return KNER
+    elif prop_name.lower() == "rnx-57":
+        return RNX_57
+    elif prop_name.lower() == "rnx-71v":
+        return RNX_71V
     else:
         print(
             "\nPropellant name not recognized. Using values for KNSB instead."
