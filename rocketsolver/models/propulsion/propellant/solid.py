@@ -74,7 +74,8 @@ class SolidPropellant(Propellant):
     qsi_ex: float
 
     def __post_init__(self) -> None:
-        # Real combustion temperature based on the ideal temp. and the combustion efficiency [K]:
+        # Real combustion temperature based on the ideal temperature and the
+        # combustion efficiency [K]:
         self.T0 = self.T0_ideal * self.combustion_efficiency
 
         # Gas constant per molecular weight calculations:
