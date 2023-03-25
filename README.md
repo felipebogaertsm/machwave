@@ -42,3 +42,7 @@ Correction factors.
 ## Hans Seidel's Chamber Pressure article
 
 Chamber Pressure equation.
+
+## 6DOF Trajectory Simulator
+
+http://pee.ufrj.br/teses/textocompleto/2007062901.pdf
