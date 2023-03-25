@@ -140,7 +140,7 @@ class SRMOperation(MotorOperation):
             [self.motor.grain.get_burn_area(self.web[0])]
         )
         self.propellant_volume = np.array(
-            [self.motor.grain.get_burn_area(self.web[0])]
+            [self.motor.grain.get_propellant_volume(self.web[0])]
         )
         self.burn_rate = np.array([0])  # burn rate
 

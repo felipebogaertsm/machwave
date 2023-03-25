@@ -177,7 +177,9 @@ class GrainSegment2D(GrainSegment, ABC):
 
     def get_volume(self, web_distance: float) -> float:
         if self.get_web_thickness() >= web_distance:
-            return self.length * self.get_face_area(web_distance=web_distance)
+            return self.get_length(
+                web_distance=web_distance
+            ) * self.get_face_area(web_distance=web_distance)
         else:
             return 0
 
