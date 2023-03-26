@@ -365,10 +365,13 @@ class SRMOperation(MotorOperation):
 
     @property
     def grain_mass_flux(self) -> np.ndarray:
-        return self.motor.grain.get_mass_flux_per_segment(
-            self.burn_rate,
-            self.motor.propellant.density,
-            self.web,
+        return np.sum(
+            self.motor.grain.get_mass_flux_per_segment(
+                self.burn_rate,
+                self.motor.propellant.density,
+                self.web,
+            ),
+            axis=0,
         )
 
     @property
