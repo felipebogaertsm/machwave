@@ -16,7 +16,11 @@ from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
 from .. import GrainSegment2D
-from rocketsolver.utils.geometric import get_length, get_contours
+from rocketsolver.utils.geometric import (
+    get_circle_area,
+    get_contours,
+    get_length,
+)
 
 
 class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
@@ -64,13 +68,17 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
     def get_mask(self) -> np.ndarray:
         if self.mask is None:
             map_x, map_y = self.get_maps()
-            self.mask = (map_x**2 + map_y**2) > 1
+            self.mask = (map_x ** 2 + map_y ** 2) > 1
 
         return self.mask
 
     def get_contours(self, web_distance: float) -> np.ndarray:
         map_dist = self.normalize(web_distance)
         return get_contours(self.get_regression_map(), map_dist)
+
+    def get_port_area(self, web_distance: float) -> float | np.ndarray:
+        face_area = self.get_face_area(web_distance)
+        return get_circle_area(self.outer_diameter) - face_area
 
     def get_face_area_interp_func(self) -> Callable[[float], float]:
         """
