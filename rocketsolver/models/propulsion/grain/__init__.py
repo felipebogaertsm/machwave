@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
+from plotly import graph_objects as go
 
 from rocketsolver.utils.decorators import validate_assertions
 
@@ -51,6 +52,27 @@ class GrainSegment(ABC):
 
     @abstractmethod
     def get_length(self, web_distance: float) -> float:
+        pass
+
+    @abstractmethod
+    def get_port_area(self, web_distance: float) -> float | np.ndarray:
+        """
+        Calculates the port area in function of the web distance traveled.
+        For a 2D grain segment it should return a single value (constant core
+        geometry thoughout the segment's length).
+        For a 3D grain segment it should return an array of values (variable
+        core geometry thoughout the segment's length).
+
+        Example:
+        In a simple 2D tubular geometry, the port area would be equal to the
+        instantaneous core diameter area.
+
+        Not to be confused with core area!
+
+        :param float web_distance: Web distance traveled
+        :return: Port area in function of the web distance traveled
+        :rtype: float | np.ndarray[float]
+        """
         pass
 
     @abstractmethod
@@ -136,6 +158,8 @@ class GrainSegment2D(GrainSegment, ABC):
         In a simple tubular geometry, the core area would be equal to the
         instant length of the segment times the instant core area.
 
+        Not to be confused with port area!
+
         :param float web_distance: Web distance traveled
         :return: Core area in function of the web distance traveled
         :rtype: float
@@ -207,6 +231,19 @@ class GrainSegment3D(GrainSegment, ABC):
             spacing=spacing,
             inhibited_ends=inhibited_ends,
         )
+
+    @abstractmethod
+    def get_port_area(self, web_distance: float) -> np.ndarray:
+        """
+        Calculates the port area in function of the web distance traveled.
+
+        NOTE: NOT YET IMPLEMENTED
+
+        :param float web_distance: Web distance traveled
+        :return: Port area in function of the web distance traveled
+        :rtype: np.ndarray
+        """
+        pass
 
     def get_center_of_gravity(self, web_distance: float) -> float:
         """
@@ -314,17 +351,28 @@ class Grain:
         segment_mass_flux = np.zeros(
             (self.segment_count, np.size(web_distance))
         )
-        total_burn_area = np.zeros((self.segment_count, np.size(web_distance)))
 
         for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):
-                for _ in range(j + 1):
-                    total_burn_area[j, i] = total_burn_area[
-                        j, i
-                    ] + self.segments[j].get_burn_area(web_distance[i])
+                core_area = self.segments[j].get_port_area(web_distance[i])
+                burn_area = 0
+
+                for k in range(j + 1):
+                    burn_area = burn_area + self.segments[j - k].get_burn_area(
+                        web_distance[i]
+                    )
 
                 segment_mass_flux[j, i] = (
-                    total_burn_area[j, i] * propellant_density * burn_rate[i]
-                ) / (self.segments[j].get_core_area(web_distance[i]))
+                    burn_area * propellant_density * burn_rate[i]
+                ) / (core_area)
+
+        figure = go.Figure()
+
+        for i in range(self.segment_count):
+            figure.add_trace(
+                go.Scatter(x=web_distance, y=segment_mass_flux[i, :])
+            )
+
+        figure.show()
 
         return segment_mass_flux

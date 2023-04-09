@@ -7,7 +7,10 @@
 
 import numpy as np
 
-from rocketsolver.utils.geometric import get_cylinder_surface_area
+from rocketsolver.utils.geometric import (
+    get_circle_area,
+    get_cylinder_surface_area,
+)
 
 from .. import GrainSegment2D, GrainGeometryError
 from rocketsolver.utils.decorators import validate_assertions
@@ -37,15 +40,21 @@ class BatesSegment(GrainSegment2D):
         assert self.outer_diameter > self.core_diameter
         assert self.core_diameter > 0
 
+    def get_core_diameter(self, web_distance: float) -> float:
+        return self.core_diameter + 2 * web_distance
+
+    def get_port_area(self, web_distance: float) -> float:
+        return get_circle_area(diameter=self.get_core_diameter(web_distance))
+
     def get_core_area(self, web_distance: float) -> float:
         length = self.get_length(web_distance=web_distance)
         core_diameter = self.core_diameter + 2 * web_distance
         return get_cylinder_surface_area(length, core_diameter)
 
     def get_face_area(self, web_distance: float) -> float:
-        core_diameter = self.core_diameter + 2 * web_distance
+        core_diameter = self.get_core_diameter(web_distance)
         return np.pi * (
-            ((self.outer_diameter**2) - (core_diameter) ** 2) / 4
+            ((self.outer_diameter ** 2) - (core_diameter) ** 2) / 4
         )
 
     def get_web_thickness(self) -> float:
