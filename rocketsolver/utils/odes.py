@@ -82,34 +82,7 @@ def ballistics_ode(y, v, T, D, M, g):
     else:
         x = 1
 
-    dv_dt = (T - x * D * (v**2)) / M - g
+    dv_dt = (T - x * D * (v ** 2)) / M - g
     dy_dt = v
 
     return dy_dt, dv_dt
-
-
-def ballistics_6dof_ode(
-    M: np.ndarray,
-    C: np.ndarray,
-    V: np.ndarray,
-    D: np.ndarray,
-    G: np.ndarray,
-    tau: np.ndarray,
-):
-    """
-    :param M: moment matrix
-    :param C: coriolis matrix
-    :param V: velocity matrix
-    :param D: aerodynamical force matrix
-    :param G: grativational force matrix
-    :param tau: vehicle force matrix
-    :return: F_xy
-    :rtype: float
-    """
-
-    return (
-        -multiply_matrix(divide_matrix(M, C), V)
-        - multiply_matrix(divide_matrix(M, D), V)
-        - divide_matrix(M, G)
-        + divide_matrix(M, tau)
-    )
