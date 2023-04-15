@@ -12,7 +12,8 @@ import numpy as np
 from . import BallisticOperation
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.rocket import Rocket
-from rocketsolver.solvers.ballistics_1d import Ballistics1D
+from rocketsolver.utils.odes import ballistics_ode
+from rocketsolver.solvers.odes import rk4th_ode_solver
 
 
 class Ballistic1DOperation(BallisticOperation):
@@ -37,8 +38,6 @@ class Ballistic1DOperation(BallisticOperation):
         self.rail_length = rail_length
         self.motor_dry_mass = motor_dry_mass
         self.initial_elevation_amsl = initial_elevation_amsl
-
-        self.ballistics_solver = Ballistics1D()
 
         self.t = np.array([0])  # time vector
 
@@ -140,14 +139,14 @@ class Ballistic1DOperation(BallisticOperation):
             * 0.5
         )
 
-        ballistics_results = self.ballistics_solver.solve(
-            self.y[-1],
-            self.v[-1],
-            thrust,
-            D,
-            self.vehicle_mass[-1],
-            self.g[-1],
-            d_t,
+        ballistics_results = rk4th_ode_solver(
+            variables={"y": self.y[-1], "v": self.v[-1]},
+            equation=ballistics_ode,
+            d_t=d_t,
+            T=thrust,
+            D=D,
+            M=self.vehicle_mass[-1],
+            g=self.g[-1],
         )
 
         height = ballistics_results[0]

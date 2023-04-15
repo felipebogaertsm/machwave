@@ -9,10 +9,7 @@
 Stores solvers called inside the simulations.
 """
 
-import numpy as np
-
 from rocketsolver.utils.isentropic_flow import get_critical_pressure_ratio
-from rocketsolver.utils.math import divide_matrix, multiply_matrix
 
 
 def solve_cp_seidel(
@@ -61,7 +58,7 @@ def solve_cp_seidel(
         (R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))
     ) / V0
 
-    return dP0_dt
+    return (dP0_dt,)
 
 
 def ballistics_ode(y, v, T, D, M, g):
@@ -85,4 +82,4 @@ def ballistics_ode(y, v, T, D, M, g):
     dv_dt = (T - x * D * (v ** 2)) / M - g
     dy_dt = v
 
-    return dy_dt, dv_dt
+    return (dy_dt, dv_dt)

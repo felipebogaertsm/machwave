@@ -11,9 +11,8 @@ from typing import Optional
 import numpy as np
 
 from rocketsolver.operations import Operation
-from rocketsolver.solvers.srm_internal_ballistics import (
-    SRMInternalBallisticsSolver,
-)
+from rocketsolver.solvers.odes import rk4th_ode_solver
+from rocketsolver.utils.odes import solve_cp_seidel
 from rocketsolver.models.propulsion import Motor, SolidMotor
 from rocketsolver.utils.isentropic_flow import (
     get_critical_pressure_ratio,
@@ -119,14 +118,10 @@ class SRMOperation(MotorOperation):
         motor: SolidMotor,
         initial_pressure: float,
         initial_atmospheric_pressure: float,
-        ib_solver: Optional[
-            SRMInternalBallisticsSolver
-        ] = SRMInternalBallisticsSolver(),
     ) -> None:
         """
         Initial parameters for a SRM operation.
         """
-        self.ib_solver = ib_solver
 
         super().__init__(
             motor=motor,
@@ -194,19 +189,20 @@ class SRMOperation(MotorOperation):
 
             self.P_0 = np.append(
                 self.P_0,
-                self.ib_solver.solve(
-                    self.P_0[-1],
-                    P_ext,
-                    self.burn_area[-1],
-                    self.V_0[-1],
-                    self.motor.structure.nozzle.get_throat_area(),
-                    self.motor.propellant.density,
-                    self.motor.propellant.k_mix_ch,
-                    self.motor.propellant.R_ch,
-                    self.motor.propellant.T0,
-                    self.burn_rate[-1],
-                    d_t,
-                ),
+                rk4th_ode_solver(
+                    variables={"P0": self.P_0[-1]},
+                    equation=solve_cp_seidel,
+                    d_t=d_t,
+                    Pe=P_ext,
+                    Ab=self.burn_area[-1],
+                    V0=self.V_0[-1],
+                    At=self.motor.structure.nozzle.get_throat_area(),
+                    pp=self.motor.propellant.density,
+                    k=self.motor.propellant.k_mix_ch,
+                    R=self.motor.propellant.R_ch,
+                    T0=self.motor.propellant.T0,
+                    r=self.burn_rate[-1],
+                )[0],
             )
 
             self.optimal_expansion_ratio = np.append(
