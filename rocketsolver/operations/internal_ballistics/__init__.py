@@ -12,9 +12,9 @@ import numpy as np
 
 from rocketsolver.operations import Operation
 from rocketsolver.solvers.odes import rk4th_ode_solver
-from rocketsolver.utils.odes import solve_cp_seidel
+from rocketsolver.services.equations import solve_cp_seidel
 from rocketsolver.models.propulsion import Motor, SolidMotor
-from rocketsolver.utils.isentropic_flow import (
+from rocketsolver.services.isentropic_flow import (
     get_critical_pressure_ratio,
     get_opt_expansion_ratio,
     get_exit_pressure,
@@ -23,7 +23,7 @@ from rocketsolver.utils.isentropic_flow import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from rocketsolver.utils.units import (
+from rocketsolver.services.units import (
     convert_pa_to_psi,
     convert_mass_flux_metric_to_imperial,
 )

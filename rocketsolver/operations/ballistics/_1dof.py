@@ -12,7 +12,7 @@ import numpy as np
 from . import BallisticOperation
 from rocketsolver.models.atmosphere import Atmosphere
 from rocketsolver.models.rocket import Rocket
-from rocketsolver.utils.odes import ballistics_ode
+from rocketsolver.services.equations import ballistics_ode
 from rocketsolver.solvers.odes import rk4th_ode_solver
 
 

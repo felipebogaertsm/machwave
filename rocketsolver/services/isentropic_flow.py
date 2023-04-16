@@ -12,7 +12,7 @@ Stores the functions that solve isentropic flow equations.
 import numpy as np
 import scipy.optimize
 
-from rocketsolver.utils.geometric import get_circle_area
+from rocketsolver.services.math.geometric import get_circle_area
 
 
 def get_critical_pressure_ratio(k_mix_ch):
@@ -42,7 +42,7 @@ def get_exit_mach(k: float, E: float):
     """
     exit_mach_no = scipy.optimize.fsolve(
         lambda x: (
-            ((1 + 0.5 * (k - 1) * x**2) / (1 + 0.5 * (k - 1)))
+            ((1 + 0.5 * (k - 1) * x ** 2) / (1 + 0.5 * (k - 1)))
             ** ((k + 1) / (2 * (k - 1)))
         )
         / x
@@ -57,7 +57,7 @@ def get_exit_pressure(k_2ph_ex, E, P_0):
     Returns the exit pressure of the nozzle flow.
     """
     Mach_exit = get_exit_mach(k_2ph_ex, E)
-    P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit**2) ** (
+    P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit ** 2) ** (
         -k_2ph_ex / (k_2ph_ex - 1)
     )
     return P_exit
@@ -70,7 +70,7 @@ def get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf):
     """
     P_r = P_exit / P_0
     Cf_ideal = np.sqrt(
-        (2 * (k**2) / (k - 1))
+        (2 * (k ** 2) / (k - 1))
         * ((2 / (k + 1)) ** ((k + 1) / (k - 1)))
         * (1 - (P_r ** ((k - 1) / k)))
     )
@@ -185,15 +185,15 @@ def get_operational_correction_factors(
     if not is_flow_choked(P_0, P_external, critical_pressure_ratio):
         termC2 = 1 + 2 * np.exp(
             -structure.nozzle.material.C2
-            * P_0_psi**0.8
+            * P_0_psi ** 0.8
             * t
             / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
         )
-        E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio**-9
+        E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio ** -9
         n_bl = (
             structure.nozzle.material.C1
             * (
-                (P_0_psi**0.8)
+                (P_0_psi ** 0.8)
                 / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
             )
             * termC2
@@ -202,8 +202,8 @@ def get_operational_correction_factors(
 
         C7 = (
             0.454
-            * (P_0_psi**0.33)
-            * (propellant.qsi_ch**0.33)
+            * (P_0_psi ** 0.33)
+            * (propellant.qsi_ch ** 0.33)
             * (
                 1
                 - np.exp(
@@ -242,10 +242,10 @@ def get_operational_correction_factors(
                 elif C7 > 8:
                     C3, C5, C6 = 25.2, 0.8, 0.33
         n_tp = C3 * (
-            (propellant.qsi_ch * C4 * C7**C5)
+            (propellant.qsi_ch * C4 * C7 ** C5)
             / (
-                P_0_psi**0.15
-                * structure.nozzle.expansion_ratio**0.08
+                P_0_psi ** 0.15
+                * structure.nozzle.expansion_ratio ** 0.08
                 * (structure.nozzle.throat_diameter / 0.0254) ** C6
             )
         )

@@ -12,8 +12,10 @@ Stores MotorStructure class and methods.
 import numpy as np
 
 from .chamber import CombustionChamber
-from rocketsolver.utils.geometric import get_circle_area
-from rocketsolver.utils.isentropic_flow import get_divergent_correction_factor
+from rocketsolver.services.math.geometric import get_circle_area
+from rocketsolver.services.isentropic_flow import (
+    get_divergent_correction_factor,
+)
 
 
 class Nozzle:

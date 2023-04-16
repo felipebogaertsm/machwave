@@ -18,15 +18,15 @@ import numpy as np
 from rocketsolver.models.propulsion.grain import Grain
 from rocketsolver.models.propulsion.propellant import Propellant
 from rocketsolver.models.propulsion.structure import MotorStructure, Nozzle
-from rocketsolver.utils.isentropic_flow import (
+from rocketsolver.services.isentropic_flow import (
     get_thrust_coefficients,
     get_thrust_from_cf,
     get_thrust_coefficient,
     get_total_impulse,
     get_specific_impulse,
 )
-from rocketsolver.utils.units import convert_mpa_to_pa
-from rocketsolver.utils.utilities import generate_eng
+from rocketsolver.services.units import convert_mpa_to_pa
+from rocketsolver.services.common.utilities import generate_eng
 
 
 class Motor(ABC):

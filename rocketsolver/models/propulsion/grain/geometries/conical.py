@@ -11,7 +11,7 @@ import numpy as np
 
 from .. import GrainGeometryError
 from ..fmm._3d import FMMGrainSegment3D
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class ConicalGrainSegment(FMMGrainSegment3D):
@@ -51,7 +51,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         upper_core_norm = self.normalize(self.upper_core_diameter)
         lower_core_norm = self.normalize(self.lower_core_diameter)
 
-        radius = np.sqrt(map_x**2 + map_y**2)
+        radius = np.sqrt(map_x ** 2 + map_y ** 2)
         core_diameter = (
             map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
         )

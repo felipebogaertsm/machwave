@@ -9,7 +9,7 @@ import numpy as np
 
 from . import Fins
 from rocketsolver.models.materials import Material
-from rocketsolver.utils.geometric import get_trapezoidal_area
+from rocketsolver.services.math.geometric import get_trapezoidal_area
 
 
 class TrapezoidalFins(Fins):

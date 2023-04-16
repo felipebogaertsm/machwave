@@ -12,7 +12,7 @@ import numpy as np
 
 from . import FMMGrainSegment
 from .. import GrainSegment3D
-from rocketsolver.utils.geometric import get_length, get_contours
+from rocketsolver.services.math.geometric import get_length, get_contours
 
 
 class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):

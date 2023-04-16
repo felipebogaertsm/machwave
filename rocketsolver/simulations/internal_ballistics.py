@@ -10,7 +10,7 @@ import numpy as np
 from rocketsolver.models.propulsion import Motor
 from rocketsolver.operations.internal_ballistics import MotorOperation
 from rocketsolver.simulations import Simulation, SimulationParameters
-from rocketsolver.utils.classes import get_motor_operation_class
+from rocketsolver.services.factories import get_motor_operation_class
 
 
 class InternalBallisticsParams(SimulationParameters):
