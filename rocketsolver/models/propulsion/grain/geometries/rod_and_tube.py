@@ -11,7 +11,7 @@ import numpy as np
 
 from .. import GrainGeometryError
 from ..fmm._2d import FMMGrainSegment2D
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class RodAndTubeGrainSegment(FMMGrainSegment2D):
@@ -52,7 +52,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         rod_od_norm = self.normalize(self.rod_outer_diameter)
         tube_id_norm = self.normalize(self.tube_inner_diameter)
 
-        radius = np.sqrt(map_x**2 + map_y**2)
+        radius = np.sqrt(map_x ** 2 + map_y ** 2)
 
         # Create the ring:
         core_map[(radius > rod_od_norm / 2) & (radius < tube_id_norm / 2)] = 0

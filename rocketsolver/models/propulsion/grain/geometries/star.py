@@ -11,7 +11,7 @@ import numpy as np
 
 from .. import GrainGeometryError
 from ..fmm._2d import FMMGrainSegment2D
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class StarGrainSegment(FMMGrainSegment2D):
@@ -59,7 +59,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         point_length_norm = self.normalize(self.point_length)
         point_width_norm = self.normalize(self.point_width)
 
-        radius = (map_x**2 + map_y**2) ** 0.5
+        radius = (map_x ** 2 + map_y ** 2) ** 0.5
 
         for i in range(0, self.number_of_points):
             theta = 2 * np.pi / self.number_of_points * i

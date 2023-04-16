@@ -9,7 +9,7 @@
 Stores solvers called inside the simulations.
 """
 
-from rocketsolver.utils.isentropic_flow import get_critical_pressure_ratio
+from rocketsolver.services.isentropic_flow import get_critical_pressure_ratio
 
 
 def solve_cp_seidel(

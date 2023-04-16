@@ -7,13 +7,13 @@
 
 import numpy as np
 
-from rocketsolver.utils.geometric import (
+from rocketsolver.services.math.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
 )
 
 from .. import GrainSegment2D, GrainGeometryError
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class BatesSegment(GrainSegment2D):

@@ -11,7 +11,7 @@ import numpy as np
 
 from .. import GrainGeometryError
 from ..fmm._2d import FMMGrainSegment2D
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class WagonWheelGrainSegment(FMMGrainSegment2D):
@@ -64,7 +64,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_inner_diameter_norm = self.normalize(self.port_inner_diameter)
         port_outer_diameter_norm = self.normalize(self.port_outer_diameter)
 
-        radius = np.sqrt(map_x**2 + map_y**2)
+        radius = np.sqrt(map_x ** 2 + map_y ** 2)
 
         # Create the core:
         core_map[radius < core_diameter_norm / 2] = 0

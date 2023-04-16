@@ -11,7 +11,7 @@ from typing import Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class GrainGeometryError(Exception):

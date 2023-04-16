@@ -26,8 +26,8 @@ from rocketsolver.simulations.internal_ballistics import (
     InternalBallistics,
     InternalBallisticsParams,
 )
-from rocketsolver.utils.math import get_percentage_error
-from rocketsolver.utils.units import convert_pa_to_mpa
+from rocketsolver.services.math.matrices import get_percentage_error
+from rocketsolver.services.units import convert_pa_to_mpa
 
 
 @dataclass

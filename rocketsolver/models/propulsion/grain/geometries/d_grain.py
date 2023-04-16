@@ -11,7 +11,7 @@ import numpy as np
 
 from .. import GrainGeometryError
 from ..fmm._2d import FMMGrainSegment2D
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class DGrainSegment(FMMGrainSegment2D):

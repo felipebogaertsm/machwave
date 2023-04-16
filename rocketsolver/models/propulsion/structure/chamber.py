@@ -13,7 +13,7 @@ import numpy as np
 
 from rocketsolver.models.materials import Material
 from rocketsolver.models.propulsion.thermals import ThermalLiner
-from rocketsolver.utils.geometric import get_cylinder_volume
+from rocketsolver.services.math.geometric import get_cylinder_volume
 
 
 class CombustionChamber:

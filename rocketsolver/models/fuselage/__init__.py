@@ -9,7 +9,7 @@ import numpy as np
 
 from .components.body import BodySegment
 from .components.nosecones import NoseCone
-from rocketsolver.utils.geometric import get_circle_area
+from rocketsolver.services.math.geometric import get_circle_area
 
 
 class DragCoefficientTypeError(Exception):

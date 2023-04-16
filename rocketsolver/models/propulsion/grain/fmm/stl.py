@@ -15,7 +15,7 @@ from trimesh.voxel import creation
 
 from ._3d import FMMGrainSegment3D
 from .. import GrainGeometryError
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):

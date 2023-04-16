@@ -12,7 +12,7 @@ import numpy as np
 import skfmm
 
 from .. import GrainGeometryError, GrainSegment
-from rocketsolver.utils.decorators import validate_assertions
+from rocketsolver.services.decorators import validate_assertions
 
 
 class FMMGrainSegment(GrainSegment, ABC):
