@@ -14,7 +14,7 @@ from rocketsolver.operations.internal_ballistics import (
 
 def get_motor_operation_class(motor: Motor) -> MotorOperation:
     """
-    Will depend on the type of the motor (SR, HRE or LRE).
+    Will depend on the type of the motor (SRM, HRE or LRE).
     """
     if isinstance(motor, SolidMotor):
         return SRMOperation
