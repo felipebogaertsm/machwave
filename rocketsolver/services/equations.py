@@ -6,7 +6,8 @@
 # the Free Software Foundation, version 3.
 
 """
-Stores solvers called inside the simulations.
+Stores callables that are meant to be used with the solver functions in the
+'solvers' module.
 """
 
 from rocketsolver.services.isentropic_flow import get_critical_pressure_ratio
