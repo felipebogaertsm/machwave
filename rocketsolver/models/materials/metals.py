@@ -33,8 +33,8 @@ class Al6063T5(NozzleMaterial):
     def __init__(self) -> None:
         super().__init__(
             density=2700,
-            yield_strength=170e6,
-            ultimate_strength=180e6,
+            yield_strength=145e6,
+            ultimate_strength=185e6,
             C1=0.00506,
             C2=0.0,
         )
