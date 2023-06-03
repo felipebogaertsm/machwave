@@ -15,7 +15,9 @@ import plotly.graph_objects as go
 from rocketsolver.montecarlo.random import get_random_generator
 from rocketsolver.operations import Operation
 from rocketsolver.simulations import Simulation
-from rocketsolver.utils.utilities import obtain_attributes_from_object
+from rocketsolver.services.common.utilities import (
+    obtain_attributes_from_object,
+)
 
 
 @dataclass
@@ -83,7 +85,7 @@ class MonteCarloParameter:
             return self.value - other
 
     def __pow__(self, other: Any) -> float:
-        return self.value**other
+        return self.value ** other
 
     def __truediv__(self, other: Any) -> float:
         return self.value / other
