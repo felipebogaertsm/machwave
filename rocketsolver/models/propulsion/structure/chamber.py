@@ -49,6 +49,22 @@ class CombustionChamber:
     def casing_inner_radius(self) -> float:
         return self.casing_inner_diameter / 2
 
+    @property
+    def chamber_length(
+        self,
+        grain_length: float,
+        grain_count: int,
+        grain_spacing: float,
+    ) -> float:
+        """
+        Returns the chamber length of the SRM, given the grain parameters.
+        """
+        return np.sum(grain_length) + (grain_count - 1) * grain_spacing
+
+    @property
+    def empty_volume(self) -> None:
+        return get_cylinder_volume(self.inner_diameter, self.length)
+
     def get_bulkhead_thickness(
         self, chamber_pressure: np.ndarray, safety_factor: float
     ) -> float:
@@ -61,17 +77,6 @@ class CombustionChamber:
                 / (self.bulkhead_material.yield_strength / safety_factor)
             )
         )
-
-    def get_chamber_length(
-        self,
-        grain_length: float,
-        grain_count: int,
-        grain_spacing: float,
-    ) -> float:
-        """
-        Returns the chamber length of the SRM, given the grain parameters.
-        """
-        return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
     def get_casing_stress_theta(self, chamber_pressure: float) -> float:
         return (
@@ -118,9 +123,6 @@ class CombustionChamber:
             )
             / 2
         )
-
-    def get_empty_volume(self) -> None:
-        return get_cylinder_volume(self.inner_diameter, self.length)
 
 
 class BoltedCombustionChamber(CombustionChamber):
