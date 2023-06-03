@@ -41,4 +41,4 @@ def convert_mass_flux_metric_to_imperial(mass_flux_metric):
 def convert_burn_rate_coefficient_to_metric(
     a_imperial: float, n: float
 ) -> float:
-    return a_imperial * 25.4 / (0.0069**n)
+    return a_imperial * 25.4 / (0.0069 ** n)

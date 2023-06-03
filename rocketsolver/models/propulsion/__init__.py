@@ -25,7 +25,7 @@ from rocketsolver.services.isentropic_flow import (
     get_total_impulse,
     get_specific_impulse,
 )
-from rocketsolver.services.units import convert_mpa_to_pa
+from rocketsolver.services.conversions import convert_mpa_to_pa
 from rocketsolver.services.common.utilities import generate_eng
 
 

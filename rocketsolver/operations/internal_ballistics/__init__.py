@@ -23,7 +23,7 @@ from rocketsolver.services.isentropic_flow import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from rocketsolver.services.units import (
+from rocketsolver.services.conversions import (
     convert_pa_to_psi,
     convert_mass_flux_metric_to_imperial,
 )
