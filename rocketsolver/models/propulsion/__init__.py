@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 from rocketsolver.models.propulsion.grain import Grain
-from rocketsolver.models.propulsion.propellant import Propellant
+from rocketsolver.models.propulsion.propellants import Propellant
 from rocketsolver.models.propulsion.structure import MotorStructure, Nozzle
 from rocketsolver.services.isentropic_flow import (
     get_thrust_coefficients,
@@ -25,7 +25,7 @@ from rocketsolver.services.isentropic_flow import (
     get_total_impulse,
     get_specific_impulse,
 )
-from rocketsolver.services.units import convert_mpa_to_pa
+from rocketsolver.services.conversions import convert_mpa_to_pa
 from rocketsolver.services.common.utilities import generate_eng
 
 
@@ -146,7 +146,7 @@ class SolidMotor(Motor):
         :return: Free chamber volume, in m^3
         :rtype: float
         """
-        return self.structure.chamber.get_empty_volume() - propellant_volume
+        return self.structure.chamber.empty_volume - propellant_volume
 
     @property
     def initial_propellant_mass(self) -> float:

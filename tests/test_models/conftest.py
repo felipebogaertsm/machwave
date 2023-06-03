@@ -10,8 +10,12 @@ import pytest
 from rocketsolver.models.atmosphere import Atmosphere1976
 from rocketsolver.models.materials.elastics import EPDM
 from rocketsolver.models.materials.metals import Al6063T5, Steel
-from rocketsolver.models.propellants.solid import (
-    get_solid_propellant_from_name,
+from rocketsolver.models.propulsion.propellants.solid import (
+    KNSB,
+    KNSB_NAKKA,
+    KNDX,
+    KNER,
+    KNSU,
 )
 from rocketsolver.models.propulsion.structure.chamber import (
     CombustionChamber,
@@ -22,27 +26,27 @@ from rocketsolver.models.propulsion.thermals import ThermalLiner
 
 @pytest.fixture
 def propellant_KNDX():
-    return get_solid_propellant_from_name("kndx")
+    return KNDX
 
 
 @pytest.fixture
 def propellant_KNER():
-    return get_solid_propellant_from_name("kner")
+    return KNER
 
 
 @pytest.fixture
 def propellant_KNSB():
-    return get_solid_propellant_from_name("knsb")
+    return KNSB
 
 
 @pytest.fixture
 def propellant_KNSB_NAKKA():
-    return get_solid_propellant_from_name("knsb-nakka")
+    return KNSB_NAKKA
 
 
 @pytest.fixture
 def propellant_KNSU():
-    return get_solid_propellant_from_name("knsu")
+    return KNSU
 
 
 @pytest.fixture

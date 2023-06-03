@@ -7,19 +7,10 @@
 
 import numpy as np
 
-from .components.body import BodySegment
-from .components.nosecones import NoseCone
 from rocketsolver.services.math.geometric import get_circle_area
 
 
 class DragCoefficientTypeError(Exception):
-    def __init__(self, value: str, message: str) -> None:
-        self.value = value
-        self.message = message
-        super().__init__(message)
-
-
-class Fuselage3DValidationError(Exception):
     def __init__(self, value: str, message: str) -> None:
         self.value = value
         self.message = message
@@ -60,53 +51,3 @@ class Fuselage:
                 self._drag_coefficient,
                 "Type not recognized in 'drag_coefficient'",
             )
-
-
-class Fuselage3D:
-    def __init__(
-        self,
-        nose_cone: NoseCone,
-        mass_without_motor: float,
-        inertia_tensor: np.ndarray,
-    ) -> None:
-        self.nose_cone = nose_cone
-        self.mass_without_motor = mass_without_motor
-        self.inertia_tensor = np.array(inertia_tensor)
-
-        self.body_segments: list[BodySegment] = []
-
-    @property
-    def moment_of_intertia_tensor(self):
-        return self.inertia_tensor
-
-    def get_drag_coefficient(self, velocity: float, mach_no: float) -> float:
-        """
-        Not tested.
-        """
-        return self.nose_cone.get_drag_coefficient(velocity, mach_no) + np.sum(
-            [
-                body_segment.get_drag_coefficient(velocity, mach_no)
-                for body_segment in self.body_segments
-            ]
-        )
-
-    def get_lift_coefficient(self, velocity: float, mach_no: float) -> float:
-        """
-        Not tested.
-        """
-        return self.nose_cone.get_lift_coefficient(velocity, mach_no) + np.sum(
-            [
-                body_segment.get_lift_coefficient(velocity, mach_no)
-                for body_segment in self.body_segments
-            ]
-        )
-
-    def add_body_segment(self, body_segment: BodySegment) -> None:
-        self.body_segments.append(body_segment)
-
-    @property
-    def is_valid(self) -> None:
-        self.nose_cone.is_valid
-
-    def get_mass(self):
-        return self.mass_without_motor
