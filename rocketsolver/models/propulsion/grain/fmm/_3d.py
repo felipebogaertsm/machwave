@@ -9,10 +9,17 @@ from abc import ABC
 from typing import Optional
 
 import numpy as np
+import plotly.graph_objects as go
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
 from .. import GrainSegment3D
-from rocketsolver.services.math.geometric import get_length, get_contours
+from rocketsolver.services.math.geometric import (
+    get_circle_area,
+    get_contours,
+    get_length,
+)
 
 
 class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
@@ -41,6 +48,11 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             inhibited_ends=inhibited_ends,
             map_dim=map_dim,
         )
+
+    def get_port_area(self, web_distance: float) -> np.ndarray:
+        face_map = self.get_face_map(web_distance=web_distance)[1]
+        face_area = self.map_to_area(np.count_nonzero(face_map == 1))
+        return get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
