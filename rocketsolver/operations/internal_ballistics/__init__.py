@@ -50,7 +50,7 @@ class MotorOperation(Operation):
         self.t = np.array([0])  # time vector
 
         self.V_0 = np.array(
-            [motor.structure.chamber.get_empty_volume()]
+            [motor.structure.chamber.empty_volume]
         )  # empty chamber volume
         self.optimal_expansion_ratio = np.array([1])  # optimal expansion ratio
         self.m_prop = np.array(
@@ -338,7 +338,7 @@ class SRMOperation(MotorOperation):
     def volumetric_efficiency(self) -> float:
         return (
             self.propellant_volume[0]
-            / self.motor.structure.chamber.get_empty_volume()
+            / self.motor.structure.chamber.empty_volume
         )
 
     @property
