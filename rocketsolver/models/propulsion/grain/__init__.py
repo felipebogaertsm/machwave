@@ -366,13 +366,4 @@ class Grain:
                     burn_area * propellant_density * burn_rate[i]
                 ) / (core_area)
 
-        figure = go.Figure()
-
-        for i in range(self.segment_count):
-            figure.add_trace(
-                go.Scatter(x=web_distance, y=segment_mass_flux[i, :])
-            )
-
-        figure.show()
-
         return segment_mass_flux
