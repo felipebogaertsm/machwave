@@ -16,7 +16,6 @@ from rocketsolver.services.equations import solve_cp_seidel
 from rocketsolver.models.propulsion import Motor, SolidMotor
 from rocketsolver.services.isentropic_flow import (
     get_critical_pressure_ratio,
-    get_opt_expansion_ratio,
     get_exit_pressure,
     get_operational_correction_factors,
     get_thrust_coefficients,
@@ -106,7 +105,7 @@ class SRMOperation(MotorOperation):
     """
     Operation for a Solid Rocket Motor.
 
-    The variable names correspond to what they are commonly reffered to in
+    The variable names correspond to what they are commonly referred to in
     books and papers related to Solid Rocket Propulsion.
 
     Therefore, PEP8's snake_case will not be followed rigorously.
@@ -153,7 +152,7 @@ class SRMOperation(MotorOperation):
         The function uses the Runge-Kutta 4th order numerical method for
         solving the differential equations.
         """
-        if self.end_thrust is False:
+        if not self.end_thrust:
             self.t = np.append(
                 self.t, self.t[-1] + d_t
             )  # append new time value
@@ -262,7 +261,7 @@ class SRMOperation(MotorOperation):
                 ),
             )  # thrust calculation
 
-            if self.m_prop[-1] == 0 and self.end_burn is False:
+            if self.m_prop[-1] == 0 and not self.end_burn:
                 self.burn_time = self.t[-1]
                 self.end_burn = True
 
