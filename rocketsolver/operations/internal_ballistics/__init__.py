@@ -52,7 +52,6 @@ class MotorOperation(Operation):
         self.V_0 = np.array(
             [motor.structure.chamber.empty_volume]
         )  # empty chamber volume
-        self.optimal_expansion_ratio = np.array([1])  # optimal expansion ratio
         self.m_prop = np.array(
             [motor.initial_propellant_mass]
         )  # propellant mass
@@ -203,13 +202,6 @@ class SRMOperation(MotorOperation):
                     T0=self.motor.propellant.T0,
                     r=self.burn_rate[-1],
                 )[0],
-            )
-
-            self.optimal_expansion_ratio = np.append(
-                self.optimal_expansion_ratio,
-                get_opt_expansion_ratio(
-                    self.motor.propellant.k_2ph_ex, self.P_0[-1], P_ext
-                ),
             )
 
             self.P_exit = np.append(
