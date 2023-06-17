@@ -10,9 +10,7 @@ from rocketsolver.solvers.odes import rk4th_ode_solver
 
 
 class Ballistic1DOperation(BallisticOperation):
-    """
-    Stores and processes a ballistics operation (aka flight).
-    """
+    """Stores and processes a ballistics operation (aka flight)."""
 
     def __init__(
         self,
@@ -24,7 +22,15 @@ class Ballistic1DOperation(BallisticOperation):
         initial_elevation_amsl: Optional[float] = 0,
     ) -> None:
         """
-        Initializes attributes for the operation.
+        Initialize the attributes for the ballistics operation.
+
+        Args:
+            rocket (Rocket): The rocket used for the operation.
+            atmosphere (Atmosphere): The atmospheric conditions.
+            rail_length (float): The length of the rail for launch.
+            motor_dry_mass (float): The dry mass of the motor.
+            initial_vehicle_mass (float): The initial mass of the vehicle.
+            initial_elevation_amsl (float, optional): The initial elevation above mean sea level (AMSL). Defaults to 0.
         """
         self.rocket = rocket
         self.atmosphere = atmosphere
@@ -51,36 +57,28 @@ class Ballistic1DOperation(BallisticOperation):
         self.y = np.array([0])  # altitude, AGL
         self.v = np.array([0])  # velocity
         self.acceleration = np.array([0])  # acceleration
-        self.mach_no = np.array([0])  # mach number
+        self.mach_no = np.array([0])  # Mach number
 
         self.velocity_out_of_rail = None
 
     @property
     def apogee(self) -> float:
-        """
-        Returns the apogee of the operation.
-        """
+        """Get the apogee of the operation."""
         return np.max(self.y)
 
     @property
     def apogee_time(self) -> float:
-        """
-        Returns the time of the apogee.
-        """
+        """Get the time of the apogee."""
         return self.t[np.argmax(self.y)]
 
     @property
     def max_velocity(self) -> float:
-        """
-        Returns the maximum velocity of the operation.
-        """
+        """Get the maximum velocity of the operation."""
         return np.max(self.v)
 
     @property
     def max_velocity_time(self) -> float:
-        """
-        Returns the time of the maximum velocity.
-        """
+        """Get the time of the maximum velocity."""
         return self.t[np.argmax(self.v)]
 
     def iterate(
@@ -89,6 +87,14 @@ class Ballistic1DOperation(BallisticOperation):
         thrust: float,
         d_t: float,
     ) -> None:
+        """
+        Perform an iteration of the ballistics operation.
+
+        Args:
+            propellant_mass (float): The mass of the propellant.
+            thrust (float): The thrust force.
+            d_t (float): The time step.
+        """
         self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
 
         self.rho_air = np.append(
@@ -105,7 +111,7 @@ class Ballistic1DOperation(BallisticOperation):
         )
 
         # Appending the current vehicle mass, consisting of the motor
-        # structural mass, mass without the motor and propellant mass.
+        # structural mass, mass without the motor, and propellant mass.
         self.vehicle_mass = np.append(
             self.vehicle_mass, propellant_mass + self.rocket.get_dry_mass()
         )
@@ -175,7 +181,7 @@ class Ballistic1DOperation(BallisticOperation):
 
     def print_results(self) -> None:
         """
-        Prints the results of the operation.
+        Print the results of the ballistics operation.
         """
         print("\nROCKET BALLISTICS")
 
