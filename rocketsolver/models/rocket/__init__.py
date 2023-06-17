@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from rocketsolver.models.fuselage import Fuselage
+from rocketsolver.models.rocket.fuselage import Fuselage
 from rocketsolver.models.propulsion import Motor
 from rocketsolver.models.recovery import Recovery
 
