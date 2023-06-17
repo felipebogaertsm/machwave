@@ -1,8 +1,3 @@
-"""
-Stores utility functions, used in various locations throughtout the 
-application.
-"""
-
 from pathlib import Path
 
 import numpy as np
