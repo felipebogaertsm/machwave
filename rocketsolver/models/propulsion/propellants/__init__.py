@@ -6,6 +6,12 @@ from dataclasses import dataclass
 class Propellant(ABC):
     """
     Base class for any propellant.
+
+    Inherits:
+        ABC: Abstract Base Class representing an abstract class.
+
+    Attributes:
+        None
     """
 
     pass
