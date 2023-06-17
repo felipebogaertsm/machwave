@@ -1,7 +1,3 @@
-"""
-Plotting functions.
-"""
-
 import matplotlib.gridspec as gs
 import matplotlib.pyplot as plt
 import numpy as np
