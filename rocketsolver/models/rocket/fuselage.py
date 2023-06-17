@@ -18,6 +18,7 @@ class Fuselage:
         length: float,
         outer_diameter: float,
         drag_coefficient: np.ndarray | float | int,
+        frontal_area: float | None = None,
     ) -> None:
         """
         Initialize the Fuselage object.
@@ -34,14 +35,20 @@ class Fuselage:
         """
         self.length = length
         self.outer_diameter = outer_diameter
+        self._frontal_area = frontal_area
         self._drag_coefficient = drag_coefficient
 
-    def calculate_frontal_area(self) -> float:
-        """Calculate the frontal area of the fuselage.
+    @property
+    def frontal_area(self) -> float:
+        """
+        Frontal area of the fuselage.
 
         Returns:
             float: Frontal area in square meters.
         """
+        if self._frontal_area is not None:
+            return self._frontal_area
+
         return get_circle_area(self.outer_diameter)
 
     def get_drag_coefficient(self, velocity: float = None) -> float:
