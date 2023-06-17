@@ -7,6 +7,15 @@ from rocketsolver.services.factories import get_motor_operation_class
 
 
 class InternalBallisticsParams(SimulationParameters):
+    """
+    Parameters for an internal ballistics simulation.
+
+    Attributes:
+        d_t (float): Time step.
+        igniter_pressure (float): Igniter pressure.
+        external_pressure (float): External pressure.
+    """
+
     def __init__(
         self,
         d_t: float,
@@ -14,30 +23,47 @@ class InternalBallisticsParams(SimulationParameters):
         external_pressure: float,
     ) -> None:
         super().__init__()
-
         self.d_t = d_t
         self.igniter_pressure = igniter_pressure
         self.external_pressure = external_pressure
 
 
 class InternalBallistics(Simulation):
+    """
+    Internal ballistics simulation class.
+
+    Attributes:
+        motor (Motor): The motor object.
+        params (InternalBallisticsParams): The simulation parameters.
+        t (np.ndarray): Array of time values.
+        motor_operation (MotorOperation): The motor operation object.
+    """
+
     def __init__(
         self,
         motor: Motor,
         params: InternalBallisticsParams,
     ) -> None:
+        """
+        Initializes the InternalBallistics instance.
+
+        Args:
+            motor (Motor): The motor object.
+            params (InternalBallisticsParams): The simulation parameters.
+        """
         super().__init__(params=params)
-
         self.motor = motor
-
         self.t = np.array([0])
+        self.motor_operation = None
 
     def get_motor_operation(self) -> MotorOperation:
         """
-        Will depend on the type of the motor (SR, HRE or LRE).
+        Returns the motor operation object based on the type of the motor.
+
+        Returns:
+            MotorOperation: The motor operation object.
         """
         motor_operation_class = get_motor_operation_class(self.motor)
-
         return motor_operation_class(
             motor=self.motor,
             initial_pressure=self.params.igniter_pressure,
@@ -46,8 +72,12 @@ class InternalBallistics(Simulation):
 
     def run(self):
         """
-        Runs the main loop of the simulation, returning all the internal and
-        external ballistics parameters.
+        Runs the main loop of the simulation, returning the motor operation
+        object.
+
+        Returns:
+            tuple[np.ndarray, MotorOperation]: A tuple containing the time
+                array and the motor operation object.
         """
         self.motor_operation = self.get_motor_operation()
 

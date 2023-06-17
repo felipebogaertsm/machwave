@@ -19,6 +19,18 @@ from rocketsolver.services.factories import get_motor_operation_class
 
 
 class InternalBallisticsCoupledParams(SimulationParameters):
+    """
+    Parameters for a coupled internal ballistics simulation.
+
+    Attributes:
+        atmosphere (Atmosphere): The atmosphere object.
+        d_t (float): Time step for the ballistic simulation.
+        dd_t (float): Time step factor for the motor simulation.
+        initial_elevation_amsl (float): Initial elevation above mean sea level.
+        igniter_pressure (float): Igniter pressure.
+        rail_length (float): Length of the launch rail.
+    """
+
     def __init__(
         self,
         atmosphere: Atmosphere,
@@ -29,7 +41,6 @@ class InternalBallisticsCoupledParams(SimulationParameters):
         rail_length: float,
     ) -> None:
         super().__init__()
-
         self.atmosphere = atmosphere
         self.d_t = d_t
         self.dd_t = dd_t
@@ -39,25 +50,45 @@ class InternalBallisticsCoupledParams(SimulationParameters):
 
 
 class InternalBallisticsCoupled(Simulation):
+    """
+    Coupled internal ballistics simulation class.
+
+    Attributes:
+        rocket (Rocket): The rocket object.
+        params (InternalBallisticsCoupledParams): The simulation parameters.
+        t (np.ndarray): Array of time values.
+        motor_operation (MotorOperation): The motor operation object.
+        ballistic_operation (Ballistic1DOperation): The ballistic operation object.
+    """
+
     def __init__(
         self,
         rocket: Rocket,
         params: InternalBallisticsCoupledParams,
     ) -> None:
+        """
+        Initializes the InternalBallisticsCoupled instance.
+
+        Args:
+            rocket (Rocket): The rocket object.
+            params (InternalBallisticsCoupledParams): The simulation parameters.
+        """
         super().__init__(params=params)
-
         self.rocket = rocket
-
         self.t = np.array([0])
+        self.motor_operation = None
+        self.ballistic_operation = None
 
     def get_motor_operation(self) -> MotorOperation:
         """
-        Will depend on the type of the motor (SR, HRE or LRE).
+        Returns the motor operation object based on the type of the motor.
+
+        Returns:
+            MotorOperation: The motor operation object.
         """
         motor_operation_class = get_motor_operation_class(
             self.rocket.propulsion
         )
-
         return motor_operation_class(
             motor=self.rocket.propulsion,
             initial_pressure=self.params.igniter_pressure,
@@ -68,8 +99,12 @@ class InternalBallisticsCoupled(Simulation):
 
     def run(self) -> tuple[MotorOperation, Ballistic1DOperation]:
         """
-        Runs the main loop of the simulation, returning all the internal and
-        external ballistics parameters.
+        Runs the main loop of the simulation, returning the motor operation
+        and ballistic operation objects.
+
+        Returns:
+            tuple[MotorOperation, Ballistic1DOperation]: A tuple containing
+            the motor operation object and the ballistic operation object.
         """
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
