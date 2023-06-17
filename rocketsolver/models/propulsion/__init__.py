@@ -1,25 +1,14 @@
-"""
-Stores Motor class and methods.
-"""
-
 from abc import ABC, abstractmethod
-from typing import Optional
 
-import pandas as pd
 import numpy as np
 
 from rocketsolver.models.propulsion.grain import Grain
 from rocketsolver.models.propulsion.propellants import Propellant
-from rocketsolver.models.propulsion.structure import MotorStructure, Nozzle
+from rocketsolver.models.propulsion.structure import MotorStructure
 from rocketsolver.services.isentropic_flow import (
     get_thrust_coefficients,
     get_thrust_from_cf,
-    get_thrust_coefficient,
-    get_total_impulse,
-    get_specific_impulse,
 )
-from rocketsolver.services.conversions import convert_mpa_to_pa
-from rocketsolver.services.common.utilities import generate_eng
 
 
 class Motor(ABC):
@@ -37,9 +26,9 @@ class Motor(ABC):
         Instantiates object attributes common to any motor/engine (Solid,
         Hybrid or Liquid).
 
-        :param Propellant propellant: Object representing the propellant used in the motor
-        :param MotorStructure structure: Object representing the structure of the motor
-        :rtype: None
+        Args:
+            propellant (Propellant): Object representing the propellant used in the motor.
+            structure (MotorStructure): Object representing the structure of the motor.
         """
         self.propellant = propellant
         self.structure = structure
@@ -49,8 +38,8 @@ class Motor(ABC):
         """
         Calculates the total mass of the rocket before launch.
 
-        :return: Total mass of the rocket before launch, in kg
-        :rtype: float
+        Returns:
+            float: Total mass of the rocket before launch, in kg
         """
         pass
 
@@ -59,8 +48,8 @@ class Motor(ABC):
         """
         Calculates the dry mass of the rocket at any time.
 
-        :return: Dry mass of the rocket, in kg
-        :rtype: float
+        Returns:
+            float: Dry mass of the rocket, in kg
         """
         pass
 
@@ -72,8 +61,8 @@ class Motor(ABC):
         Coordinate system is originated in the point defined by the nozzle's
         exit area surface and the combustion chamber axis.
 
-        :return: Center of gravity position, in m, [x, y, z]
-        :rtype: np.ndarray
+        Returns:
+            np.ndarray: Center of gravity position, in m, [x, y, z]
         """
         pass
 
@@ -84,8 +73,8 @@ class Motor(ABC):
         adimensional and should be applied to the ideal thrust coefficient to
         get the real thrust coefficient.
 
-        :return: Thrust coefficient correction factor
-        :rtype: float
+        Returns:
+            float: Thrust coefficient correction factor
         """
         pass
 
@@ -94,8 +83,8 @@ class Motor(ABC):
         """
         Calculates the thrust coefficient at a particular instant.
 
-        :return: Thrust coefficient
-        :rtype: float
+        Returns:
+            float: Thrust coefficient
         """
         pass
 
@@ -106,10 +95,12 @@ class Motor(ABC):
 
         Utilized nozzle throat area from the structure and nozzle classes.
 
-        :param float cf: Instantaneous thrust coefficient, adimensional
-        :param float chamber_pressure: Instantaneous chamber pressure, in Pa
-        :return: Instantaneous thrust, in Newtons
-        :rtype: float
+        Args:
+            cf (float): Instantaneous thrust coefficient, adimensional
+            chamber_pressure (float): Instantaneous chamber pressure, in Pa
+
+        Returns:
+            float: Instantaneous thrust, in Newtons
         """
         return get_thrust_from_cf(
             cf,
@@ -135,17 +126,19 @@ class SolidMotor(Motor):
         """
         Calculates the chamber volume without any propellant.
 
-        :param float propellant_volume: Propellant volume, in m^3
-        :return: Free chamber volume, in m^3
-        :rtype: float
+        Args:
+            propellant_volume (float): Propellant volume, in m^3
+
+        Returns:
+            float: Free chamber volume, in m^3
         """
         return self.structure.chamber.empty_volume - propellant_volume
 
     @property
     def initial_propellant_mass(self) -> float:
         """
-        :return: Initial propellant mass, in kg
-        :rtype: float
+        Returns:
+            float: Initial propellant mass, in kg
         """
         return (
             self.grain.get_propellant_volume(web_distance=0)
@@ -156,11 +149,13 @@ class SolidMotor(Motor):
         self, n_kin: float, n_bl: float, n_tp: float
     ) -> float:
         """
-        :param float n_kin: Kinematic correction factor, adimensional
-        :param float n_bl: Boundary layer correction factor, adimensional
-        :param float n_tp: Two-phase correction factor, adimensional
-        :return: Thrust coefficient correction factor, adimensional
-        :rtype: float
+        Args:
+            n_kin (float): Kinematic correction factor, adimensional
+            n_bl (float): Boundary layer correction factor, adimensional
+            n_tp (float): Two-phase correction factor, adimensional
+
+        Returns:
+            float: Thrust coefficient correction factor, adimensional
         """
         return (
             (100 - (n_kin + n_bl + n_tp))
@@ -179,14 +174,16 @@ class SolidMotor(Motor):
         n_cf: float,
     ) -> float:
         """
-        :param float chamber_pressure: Chamber pressure, in Pa
-        :param float exit_pressure: Exit pressure, in Pa
-        :param float external_pressure: External pressure, in Pa
-        :param float expansion_ratio: Expansion ratio, adimensional
-        :param float k_2ph_ex: Two-phase isentropic coefficient, adimensional
-        :param float n_cf: Thrust coefficient correction factor, adimensional
-        :return: Instanteneous thrust coefficient, adimensional
-        :rtype: float
+        Args:
+            chamber_pressure (float): Chamber pressure, in Pa
+            exit_pressure (float): Exit pressure, in Pa
+            external_pressure (float): External pressure, in Pa
+            expansion_ratio (float): Expansion ratio, adimensional
+            k_2ph_ex (float): Two-phase isentropic coefficient, adimensional
+            n_cf (float): Thrust coefficient correction factor, adimensional
+
+        Returns:
+            float: Instanteneous thrust coefficient, adimensional
         """
         self.cf_ideal, self.cf_real = get_thrust_coefficients(
             chamber_pressure,
@@ -209,147 +206,3 @@ class SolidMotor(Motor):
         Constant CG throughout the operation. Half the chamber length.
         """
         return np.array([self.structure.chamber.length / 2, 0, 0])
-
-
-class MotorFromDataframe(Motor):
-    def __init__(
-        self,
-        dataframe: pd.DataFrame,
-        nozzle: Nozzle,
-        propellant: Propellant,
-        initial_propellant_mass: float,
-        dry_mass: float,
-        length: float,
-        thrust_header_name: Optional[str] = "Force (N)",
-        time_header_name: Optional[str] = "Time (s)",
-        pressure_header_name: Optional[str] = "Pressure (MPa)",
-    ) -> None:
-        self.dataframe = dataframe
-        self.nozzle = nozzle
-        self.propellant = propellant
-        self.initial_propellant_mass = initial_propellant_mass
-        self.dry_mass = dry_mass
-        self.length = length
-
-        self.thrust_header_name = thrust_header_name
-        self.time_header_name = time_header_name
-        self.pressure_header_name = pressure_header_name
-
-    def get_from_df(self, column_name: str) -> np.ndarray:
-        return self.dataframe[column_name].to_numpy()
-
-    def get_launch_mass(self) -> float:
-        return self.initial_propellant_mass + self.dry_mass
-
-    def get_dry_mass(self) -> float:
-        return self.dry_mass
-
-    def get_thrust(self) -> np.ndarray:
-        return self.get_from_df(self.thrust_header_name)
-
-    def get_time(self) -> np.ndarray:
-        return self.get_from_df(self.time_header_name)
-
-    def get_pressure(self) -> np.ndarray:
-        return convert_mpa_to_pa(self.get_from_df(self.pressure_header_name))
-
-    def get_thrust_coefficient_correction_factor(self) -> float:
-        return 1
-
-    def get_thrust_coefficient(self) -> np.ndarray:
-        return get_thrust_coefficient(
-            P_0=self.get_pressure(),
-            thrust=self.get_thrust(),
-            nozzle_throat_area=self.nozzle.get_throat_area(),
-        )
-
-    def generate_eng_file(self, name: str, manufacturer: str) -> None:
-        generate_eng(
-            time=self.get_time(),
-            thrust=self.get_thrust(),
-            propellant_mass=self.get_propellant_mass(),
-            name=name,
-            manufacturer=manufacturer,
-            chamber_length=1670,
-            outer_diameter=141.3,
-            motor_mass=17,
-        )
-
-    @property
-    def thrust_time(self) -> float:
-        return self.get_time()[-1] - self.get_time()[0]
-
-    @property
-    def thrust_time(self) -> float:
-        return self.get_time()[-1] - self.get_time()[0]
-
-    def get_temperatures(
-        self, col_name_startswith="Temperature"
-    ) -> np.ndarray:
-        """
-        :param str col_name_startswith: The name that the column starts with
-        :return: An array of temperatures captured by each thermopar.
-        :rtype: np.ndarray
-        """
-        col_names = self.data.columns.values().tolist()
-        temperature_col_names = [
-            col_name
-            for col_name in col_names
-            if col_name.startswith(col_name_startswith)
-        ]
-
-        temperatures = np.array([])
-
-        for name in temperature_col_names:
-            temperatures = np.append(temperatures, self.get_from_df(name))
-
-        return temperatures
-
-    def get_total_impulse(self) -> float:
-        return get_total_impulse(
-            np.average(self.get_thrust()), self.get_time()[-1]
-        )
-
-    def get_specific_impulse(self) -> float:
-        return get_specific_impulse(
-            self.get_total_impulse(), self.initial_propellant_mass
-        )
-
-    def get_instantaneous_propellant_mass(self, t: float) -> float:
-        """
-        IMPORTANT NOTE: this method is only an estimation of the propellant
-        mass during the operation of the motor. It assumes a constant nozzle
-        efficiency throughout the operation and perfect correlation between
-        thrust and pressure data.
-
-        :param float t: The time at which the propellant mass is desired
-        :return: The propellant mass at time t
-        :rtype: np.ndarray
-        """
-        t_index = np.where(self.get_time() == t)[0][0]
-
-        time = self.get_time()[t_index:-1]
-        thrust = self.get_thrust()[t_index:-1]
-
-        return (
-            np.trapz(y=thrust, x=time) / self.get_total_impulse()
-        ) * self.initial_propellant_mass
-
-    def get_propellant_mass(self) -> np.ndarray:
-        """
-        Calculates propellant mass for each instant and appends in an array.
-
-        :return: The propellant mass at each time step
-        :rtype: np.ndarray
-        """
-        return np.array(
-            list(
-                map(
-                    lambda time: self.get_instantaneous_propellant_mass(time),
-                    self.get_time(),
-                )
-            )
-        )
-
-    def get_center_of_gravity(self) -> np.ndarray:
-        return np.array([self.length / 2, 0, 0])
