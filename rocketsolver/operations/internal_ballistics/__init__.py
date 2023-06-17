@@ -89,7 +89,10 @@ class MotorOperation(Operation):
     @property
     def initial_propellant_mass(self) -> float:
         """
-        :return: Initial propellant mass.
+        Get the initial propellant mass.
+
+        Returns:
+            float: The initial propellant mass.
         """
         return self.motor.initial_propellant_mass
 
@@ -113,7 +116,6 @@ class SRMOperation(MotorOperation):
         """
         Initial parameters for a SRM operation.
         """
-
         super().__init__(
             motor=motor,
             initial_pressure=initial_pressure,
@@ -142,8 +144,12 @@ class SRMOperation(MotorOperation):
         P_ext: float,
     ) -> None:
         """
-        The function uses the Runge-Kutta 4th order numerical method for
-        solving the differential equations.
+        Iterate the motor operation by calculating and storing operational
+        parameters in the corresponding vectors.
+
+        Args:
+            d_t (float): The time increment.
+            P_ext (float): The external pressure.
         """
         if not self.end_thrust:
             self.t = np.append(
@@ -269,6 +275,9 @@ class SRMOperation(MotorOperation):
                 self.end_thrust = True
 
     def print_results(self) -> None:
+        """
+        Prints the results obtained during the SRM operation.
+        """
         print("\nBURN REGRESSION")
         if self.m_prop[0] > 1:
             print(f" Propellant initial mass {self.m_prop[0]:.3f} kg")
@@ -309,6 +318,12 @@ class SRMOperation(MotorOperation):
 
     @property
     def klemmung(self) -> np.ndarray:
+        """
+        Get the klemmung values.
+
+        Returns:
+            np.ndarray: The klemmung values.
+        """
         return (
             self.burn_area[self.burn_area > 0]
             / self.motor.structure.nozzle.get_throat_area()
@@ -316,10 +331,22 @@ class SRMOperation(MotorOperation):
 
     @property
     def initial_to_final_klemmung_ratio(self) -> float:
+        """
+        Get the ratio of the initial to final klemmung.
+
+        Returns:
+            float: The ratio of the initial to final klemmung.
+        """
         return self.klemmung[0] / self.klemmung[-1]
 
     @property
     def volumetric_efficiency(self) -> float:
+        """
+        Get the volumetric efficiency.
+
+        Returns:
+            float: The volumetric efficiency.
+        """
         return (
             self.propellant_volume[0]
             / self.motor.structure.chamber.empty_volume
@@ -328,7 +355,14 @@ class SRMOperation(MotorOperation):
     @property
     def burn_profile(self, deviancy: Optional[float] = 0.02) -> str:
         """
-        Returns string with burn profile.
+        Get the burn profile.
+
+        Args:
+            deviancy (float, optional): The deviancy threshold for determining the burn profile.
+                Defaults to 0.02.
+
+        Returns:
+            str: The burn profile ("regressive", "progressive", or "neutral").
         """
         burn_area = self.burn_area[self.burn_area > 0]
 
@@ -341,10 +375,22 @@ class SRMOperation(MotorOperation):
 
     @property
     def max_mass_flux(self) -> float:
+        """
+        Get the maximum mass flux.
+
+        Returns:
+            float: The maximum mass flux.
+        """
         return np.max(self.grain_mass_flux)
 
     @property
     def grain_mass_flux(self) -> np.ndarray:
+        """
+        Get the grain mass flux.
+
+        Returns:
+            np.ndarray: The grain mass flux.
+        """
         return self.motor.grain.get_mass_flux_per_segment(
             self.burn_rate,
             self.motor.propellant.density,
@@ -353,8 +399,20 @@ class SRMOperation(MotorOperation):
 
     @property
     def total_impulse(self) -> float:
+        """
+        Get the total impulse.
+
+        Returns:
+            float: The total impulse.
+        """
         return np.mean(self.thrust) * self.t[-1]
 
     @property
     def specific_impulse(self) -> float:
+        """
+        Get the specific impulse.
+
+        Returns:
+            float: The specific impulse.
+        """
         return self.total_impulse / self.m_prop[0] / 9.81
