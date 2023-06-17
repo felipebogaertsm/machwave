@@ -5,14 +5,13 @@ from rocketsolver.operations import Operation
 
 class SimulationParameters(ABC):
     """
-    Class that stores simulation parameters and that should always be passed
-    to the corresponding simulation. Every Simulation class should also have
-    a SimulationParameters class associated with it.
+    Abstract class that stores simulation parameters and should be subclassed
+    for specific simulations.
 
     Examples of simulation parameters:
-    - time step for an time-based iterative simulation
-    - initial elevation, in case of a rocket launch
-    - igniter pressure, in case of an internal ballistic simulation
+    - time step for a time-based iterative simulation
+    - initial elevation in the case of a rocket launch
+    - igniter pressure in the case of an internal ballistic simulation
     """
 
     pass
@@ -20,40 +19,51 @@ class SimulationParameters(ABC):
 
 class Simulation(ABC):
     """
-    The Simulation class stores simulation parameters, arguments and runs the
-    main loop of an iterative simulation.
+    Abstract class that represents a simulation. Subclasses of Simulation
+    implement specific simulation logic.
 
-    NOTE: Instances of this class shall not store any simulation state.
-    Storing and analyzing simulation data should be done only by the
-    Operation class.
+    NOTE: Instances of this class should not store any simulation state.
+    Storing and analyzing simulation data should be done only by the Operation
+    class.
+
+    Attributes:
+        params (SimulationParameters): Object containing simulation parameters.
+
     """
 
     def __init__(self, params: SimulationParameters) -> None:
         """
-        :param SimulationParameters params: Object containing every parameter
-            needed for a certain simulation to execute. Example:
-            A Rocket launch needs to know the initial elevation of the launch
-            base in order to determine the air density.
-        :returns: None
-        :rtype: None
+        Initializes the Simulation instance with the provided parameters.
+
+        Args:
+            params (SimulationParameters): Object containing simulation
+                parameters.
+
         """
         self.params = params
 
     @abstractmethod
     def run(self) -> list[Operation]:
         """
-        Runs the simulation. In most cases, contains a loop that iterates over
-        time or distance.
+        Runs the simulation. This method should be implemented by subclasses.
+        It typically contains a loop that iterates over time or distance.
 
-        :returns: A list of instances of the Operation class.
-        :rtype: list[Operation]
+        Returns:
+            list[Operation]: A list of Operation instances representing the
+            operations performed during the simulation.
+
         """
         pass
 
     @abstractmethod
     def print_results(self, *args, **kwargs):
         """
-        Prints the results of the simulation, by calling the print_results
-        method inside the Operation class instances of the simulation.
+        Prints the results of the simulation by calling the print_results
+        method on the Operation instances of the simulation.
+
+        Args:
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
         """
         pass

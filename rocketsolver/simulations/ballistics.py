@@ -8,6 +8,19 @@ from rocketsolver.simulations import Simulation, SimulationParameters
 
 
 class BallisticSimulationParameters(SimulationParameters):
+    """
+    Parameters for a ballistic simulation.
+
+    Attributes:
+        thrust (np.ndarray): Array of thrust values.
+        motor_dry_mass (float): Dry mass of the motor.
+        initial_propellant_mass (float): Initial mass of the propellant.
+        time (np.ndarray): Array of time values.
+        d_t (float): Time step.
+        initial_elevation_amsl (float): Initial elevation above mean sea level.
+        rail_length (float): Length of the launch rail.
+    """
+
     def __init__(
         self,
         thrust: np.ndarray,
@@ -28,20 +41,45 @@ class BallisticSimulationParameters(SimulationParameters):
 
 
 class BallisticSimulation(Simulation):
+    """
+    Ballistic simulation class.
+
+    Attributes:
+        rocket (Rocket): The rocket object.
+        atmosphere (Atmosphere): The atmosphere object.
+        params (BallisticSimulationParameters): The simulation parameters.
+        t (np.ndarray): Array of time values.
+        ballistic_operation (Ballistic1DOperation): The ballistic operation
+            object.
+    """
+
     def __init__(
         self,
         rocket: Rocket,
         atmosphere: Atmosphere,
         params: BallisticSimulationParameters,
     ) -> None:
-        super().__init__(params=params)
+        """
+        Initializes the BallisticSimulation instance.
 
+        Args:
+            rocket (Rocket): The rocket object.
+            atmosphere (Atmosphere): The atmosphere object.
+            params (BallisticSimulationParameters): The simulation parameters.
+        """
+        super().__init__(params=params)
         self.rocket = rocket
         self.atmosphere = atmosphere
-
         self.t = np.array([0])
+        self.ballistic_operation = None
 
     def get_propellant_mass(self) -> np.ndarray:
+        """
+        Computes the propellant mass at each time step.
+
+        Returns:
+            np.ndarray: Array of propellant mass values.
+        """
         initial_propellant_mass = self.params.initial_propellant_mass
         prop_mass = np.array([])
         time = self.params.time
@@ -55,8 +93,12 @@ class BallisticSimulation(Simulation):
 
     def run(self) -> tuple[np.array, Ballistic1DOperation]:
         """
-        Runs the main loop of the simulation, returning all the internal and
-        external ballistics parameters.
+        Runs the main loop of the simulation, returning the time array and
+        the ballistic operation object.
+
+        Returns:
+            tuple[np.array, Ballistic1DOperation]: A tuple containing the time
+            array and the ballistic operation object.
         """
         self.ballistic_operation = Ballistic1DOperation(
             self.rocket,
