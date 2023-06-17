@@ -1,15 +1,25 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
+from dataclasses import dataclass
 
 from . import Material
 
 
+@dataclass
 class Fiberglass(Material):
-    def __init__(self) -> None:
-        super().__init__(
-            density=1700, yield_strength=200e6, ultimate_strength=210e6
-        )
+    """
+    Fiberglass material class derived from the Material base class.
+
+    This class represents a specific type of material, Fiberglass, which
+    inherits properties from the Material base class. It provides default
+    values for the density, yield strength, and ultimate strength specific to
+    Fiberglass.
+
+    Inherits:
+        Material: Base class representing a generic material.
+
+    Attributes:
+        None
+    """
+
+    density: float = 1700
+    yield_strength: float = 200e6
+    ultimate_strength: float = 210e6

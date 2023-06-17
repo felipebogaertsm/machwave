@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
+from abc import ABC
 from dataclasses import dataclass
 
 import scipy.constants
@@ -13,6 +7,17 @@ from . import Propellant
 
 
 class BurnRateOutOfBoundsError(Exception):
+    """
+    Exception raised when the chamber pressure is out of the burn rate range.
+
+    This exception is raised when the chamber pressure provided is outside the
+    valid burn rate range for a specific solid propellant.
+
+    Attributes:
+        value (float): The chamber pressure that caused the error.
+        message (str): The error message.
+    """
+
     def __init__(self, value: float) -> None:
         self.value = value
         self.message = (
@@ -25,39 +30,38 @@ class BurnRateOutOfBoundsError(Exception):
 @dataclass
 class SolidPropellant(Propellant):
     """
-    Class that stores solid propellant data. Most of this data can be
-    obtained from ProPEP3 or similar software. Burn rate data is generally
-    empirical, as well as combustion efficiency.
+    Class that stores solid propellant data.
 
-    :param float burn_rate: Burn rate information list.
-        Since the burn rate coefficients can vary with the chamber
-        pressure itself, there is a particular data structure for how to
-        describe this behavior.
-        Example:
-            [{'min': 0, 'max': 1e6, 'a': 8.875, 'n': 0.619}]
-        Where:
-            min = Minimum chamber pressure [Pa]
-            max = Maximum chamber pressure [Pa]
-            a = Burn rate coefficient [kg/s/Pa^n]
-            n = Burn rate exponent
-        The example above tells that the burn rate coefficients - a and n
-        - are 8.875 and 0.619, respectively, within the range of 0 to 1
-        MPa.
-        The list must be ordered by increasing min value.
-    :param float combustion_efficiency: Combustion, two phase,
-        heat loss, friction efficiency (0 to 1)
-    :param float density: Propellant density [kg/m^3]
-    :param float k_mix_ch: Isentropic exponent (chamber)
-    :param float k_2ph_ex: Isentropic exponent (exhaust)
-    :param float T0_ideal: Ideal combustion temperature [K]
-    :param float M_ch: Molar weight (chamber) [100g/mole]
-    :param float M_ex: Molar weight (exhaust) [100g/mole]
-    :param float Isp_frozen: Frozen specific impulse [s]
-    :param float Isp_shifting: Shipping specific impulse [s]
-    :param float qsi_ch: Number of condensed phase moles per 100 gram
-        (chamber) [moles]
-    :param float qsi_ex: Number of condensed phase moles per 100 gram
-        (exhaust) [moles]
+    This class represents a specific type of propellant, SolidPropellant, which
+    inherits properties from the Propellant base class. It provides attributes to
+    store the data related to a solid propellant, such as burn rate information,
+    combustion efficiency, density, isentropic exponents, molar weights, specific
+    impulses, and more.
+
+    The burn rate data is described using a list of dictionaries, where each
+    dictionary contains the minimum and maximum chamber pressure values, the burn
+    rate coefficient 'a', and the burn rate exponent 'n'. The burn rate coefficients
+    can vary with the chamber pressure, and the list must be ordered by increasing
+    minimum chamber pressure.
+
+    Inherits:
+        Propellant: Base class representing a propellant.
+
+    Attributes:
+        burn_rate (list[dict[str, float | int]]): Burn rate information list.
+            Each dictionary in the list describes the burn rate behavior within a
+            specific chamber pressure range.
+        combustion_efficiency (float): Combustion efficiency (0 to 1).
+        density (float): Propellant density [kg/m^3].
+        k_mix_ch (float): Isentropic exponent (chamber).
+        k_2ph_ex (float): Isentropic exponent (exhaust).
+        T0_ideal (float): Ideal combustion temperature [K].
+        M_ch (float): Molar weight (chamber) [100g/mole].
+        M_ex (float): Molar weight (exhaust) [100g/mole].
+        Isp_frozen (float): Frozen specific impulse [s].
+        Isp_shifting (float): Shifting specific impulse [s].
+        qsi_ch (float): Number of condensed phase moles per 100 gram (chamber) [moles].
+        qsi_ex (float): Number of condensed phase moles per 100 gram (exhaust) [moles].
     """
 
     burn_rate: list[dict[str, float | int]]
@@ -74,6 +78,19 @@ class SolidPropellant(Propellant):
     qsi_ex: float
 
     def __post_init__(self) -> None:
+        """
+        Perform post-initialization tasks.
+
+        This method is called after the object initialization to perform any
+        additional setup or calculations required based on the provided
+        attributes.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Real combustion temperature based on the ideal temperature and the
         # combustion efficiency [K]:
         self.T0 = self.T0_ideal * self.combustion_efficiency
@@ -84,11 +101,19 @@ class SolidPropellant(Propellant):
 
     def get_burn_rate(self, chamber_pressure: float) -> float:
         """
-        :param float chamber_pressure: Instantaneous stagnation pressure [Pa]
-        :return: Instantaneous burn rate using St. Robert's law
-        :rtype: float
-        :raises BurnRateOutOfBoundsError: If the chamber pressure is out of
-            the burn rate range.
+        Get the instantaneous burn rate.
+
+        This method calculates the instantaneous burn rate of the solid propellant
+        based on the provided chamber pressure using St. Robert's law.
+
+        Args:
+            chamber_pressure (float): Instantaneous stagnation pressure [Pa].
+
+        Returns:
+            float: Instantaneous burn rate in meters per second [m/s].
+
+        Raises:
+            BurnRateOutOfBoundsError: If the chamber pressure is out of the burn rate range.
         """
         for item in self.burn_rate:
             if item["min"] <= chamber_pressure <= item["max"]:
@@ -99,6 +124,7 @@ class SolidPropellant(Propellant):
         raise BurnRateOutOfBoundsError(chamber_pressure)
 
 
+# Propellant instances
 KNDX = SolidPropellant(
     [
         {"min": 0, "max": 0.779e6, "a": 8.875, "n": 0.619},
@@ -120,8 +146,6 @@ KNDX = SolidPropellant(
     0.321,
 )
 
-# Obtained from (Magnus version):
-# https://www.nakka-rocketry.net/sorb.html
 KNSB = SolidPropellant(
     [
         {"min": 0, "max": 11e6, "a": 5.13, "n": 0.222},
@@ -139,8 +163,6 @@ KNSB = SolidPropellant(
     0.321,
 )
 
-# Obtained from:
-# https://www.nakka-rocketry.net/sorb.html
 KNSB_NAKKA = SolidPropellant(
     [
         {"min": 0, "max": 0.807e6, "a": 10.708, "n": 0.625},

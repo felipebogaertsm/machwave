@@ -1,29 +1,30 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
 from typing import Callable
 
 
 def rk4th_ode_solver(
-    variables: dict[str, float], equation: Callable, d_t: float, **kwargs
+    variables: dict[str, float],
+    equation: Callable,
+    d_t: float,
+    **kwargs,
 ) -> tuple[float]:
     """
-    Solves a system of ODEs using the 4th order Runge-Kutta method.
+    Solves a system of ordinary differential equations using the 4th order
+    Runge-Kutta method.
 
-    :param variables: A dictionary containing the variables to be solved.
-    :param equation: A function that returns the derivatives of the variables.
-    :param d_t: The time step.
-    :param kwargs: Additional keyword arguments to be passed to the equation
-        function.
-    :return: A tuple containing the new values of the variables. The length of
-        the tuple is equal to the number of variables + 1.
-    :rtype: tuple[float]
+    Args:
+        variables (dict[str, float]): A dictionary containing the variables to
+            be solved.
+        equation (Callable): A function that returns the derivatives of the
+            variables.
+        d_t (float): The time step.
+        **kwargs: Additional keyword arguments to be passed to the equation
+            function.
+
+    Returns:
+        tuple[float]: A tuple containing the new values of the variables. The
+        length of the tuple is equal to the number of variables + 1.
+
     """
-
     k_1 = equation(**variables, **kwargs)
     k_2 = equation(
         **{
@@ -52,7 +53,7 @@ def rk4th_ode_solver(
         + (1 / 6)
         * (k_1[index] + 2 * (k_2[index] + k_3[index]) + k_4[index])
         * d_t
-        for index, (key) in enumerate(variables.keys())
+        for index, key in enumerate(variables.keys())
     )
 
     return (
