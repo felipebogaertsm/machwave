@@ -14,7 +14,7 @@ def test_frontal_area_calculation():
     fuselage = Fuselage(length, outer_diameter, 0.0)
 
     expected_area = get_circle_area(outer_diameter)
-    calculated_area = fuselage.calculate_frontal_area()
+    calculated_area = fuselage.frontal_area
 
     assert calculated_area == expected_area
 
