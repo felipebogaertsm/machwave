@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 import plotly.graph_objects as go
@@ -25,14 +18,14 @@ class MonteCarloParameter:
     """
     Stores a Monte Carlo parameter alongside its upper/lower bound.
 
-    :param value: Parameter main value
-    :param lower_tolerance: Lower bound of the parameter
-    :param upper_tolerance: Upper bound of the parameter
-    :param tolerance: Tolerance of the parameter
-    :param probability_distribution: Probability distribution of the random
-        values. It can be set to 'uniform', 'normal' or any other distribution
-        supported by the numpy.random module.
-    :rtype: None
+    Args:
+        value: Parameter main value
+        lower_tolerance: Lower bound of the parameter
+        upper_tolerance: Upper bound of the parameter
+        tolerance: Tolerance of the parameter
+        probability_distribution: Probability distribution of the random
+            values. It can be set to 'uniform', 'normal' or any other
+            distribution supported by the numpy.random module.
     """
 
     value: float | int
@@ -55,8 +48,8 @@ class MonteCarloParameter:
         Generates a random value for the parameter, according to the
         probability distribution and tolerances.
 
-        :return: Random value
-        :rtype: float
+        Returns:
+            Random value
         """
         return self.probability_distribution_class.get_value()
 
@@ -85,7 +78,7 @@ class MonteCarloParameter:
             return self.value - other
 
     def __pow__(self, other: Any) -> float:
-        return self.value ** other
+        return self.value**other
 
     def __truediv__(self, other: Any) -> float:
         return self.value / other
@@ -104,42 +97,37 @@ class MonteCarloSimulation:
 
     def __init__(
         self,
-        parameters: list[Any],
+        parameters: List[Any],
         number_of_scenarios: int,
         simulation: Simulation,
     ) -> None:
         """
-        :param parameters: List with the input parameters for a simulation
-            class instance.
-        :param number_of_scenarios: Number of scenarios to be simulated.
-        :param simulation: Simulation class instance.
-        :rtype: None
-        """
+        Initializes a MonteCarloSimulation object.
 
+        Args:
+            parameters: List with the input parameters for a simulation
+                class instance.
+            number_of_scenarios: Number of scenarios to be simulated.
+            simulation: Simulation class instance.
+        """
         self.parameters = parameters
         self.number_of_scenarios = number_of_scenarios
         self.simulation = simulation
 
-        self.scenarios: list[list[float | int]] = []
+        self.scenarios: List[List[float | int]] = []
+        self.results: List[List[Operation]] = []
 
-        # "results" gets populates when the "run" method is called. It gets
-        # filled with a list of simulation outputs.
-        self.results: list[list[Operation]] = []
-
-    def generate_scenario(
-        self,
-    ) -> list[float | int]:
+    def generate_scenario(self) -> List[float | int]:
         """
-        Generates a monte carlo scenario in the form of a list of parameters.
+        Generates a Monte Carlo scenario in the form of a list of parameters.
 
         These parameters are randomly generated within the tolerance bounds,
-        set in the MontrCarloParameter class. The random numbers follow a
-        gaussian distribution.
+        set in the MonteCarloParameter class. The random numbers follow a
+        Gaussian distribution.
 
-        :return: Monte Carlo scenario
-        :rtype: list[float | int]
+        Returns:
+            Monte Carlo scenario
         """
-
         new_scenario = []
         parameters = deepcopy(self.parameters)
 
@@ -153,10 +141,10 @@ class MonteCarloSimulation:
                 i = 0
 
                 while True:
-                    new_search_tree = {}  # search tree for the next iteration
+                    new_search_tree = {}
 
                     if len(search_tree) == 0:
-                        break  # skip iteration if there are no sub params
+                        break
 
                     for param, sub_params in search_tree.items():
                         for name, attr in sub_params.items():
@@ -194,19 +182,32 @@ class MonteCarloSimulation:
         return new_scenario
 
     def run(self) -> None:
+        """
+        Executes the Monte Carlo simulation.
+        """
         self.results = []
 
         for _ in range(self.number_of_scenarios):
             scenario = self.generate_scenario()
             self.results.append(self.simulation(*scenario).run())
 
-        return self.results
-
     def retrieve_values_from_result(
         self,
         operation_index: int,
         property: str,
     ) -> np.ndarray:
+        """
+        Retrieves a specific property from the simulation results.
+
+        Args:
+            operation_index: Index of the operation/result to retrieve the
+                property from.
+            property: Name of the property or the attribute of the operation
+                to retrieve.
+
+        Returns:
+            Numpy array containing the values of the specified property.
+        """
         return np.array(
             [
                 getattr(result[operation_index], property)
@@ -220,17 +221,20 @@ class MonteCarloSimulation:
         property: str,
         x_axes_title: Optional[str] = None,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plots a histogram given a result index and the property name.
 
-        :param operation_index: Index of the operation/result to plot
-        :param property: Name of the property or the attribute of the
-            operation to plot.
-        :param x_axes_title: Title of the x axes. By default, the property
-            name is used.
-        :rtype: None
+        Args:
+            operation_index: Index of the operation/result to plot.
+            property: Name of the property or the attribute of the operation
+                to plot.
+            x_axes_title: Title of the x axes. By default, the property name
+                is used.
+            *args: Additional arguments to pass to the histogram plot.
+            **kwargs: Additional keyword arguments to pass to the histogram
+                plot.
         """
         values = self.retrieve_values_from_result(
             operation_index=operation_index, property=property

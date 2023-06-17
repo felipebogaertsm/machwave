@@ -1,14 +1,4 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
-"""
-Stores callables that are meant to be used with the solver functions in the
-'solvers' module.
-"""
+from typing import Tuple
 
 from rocketsolver.services.isentropic_flow import get_critical_pressure_ratio
 
@@ -24,7 +14,7 @@ def solve_cp_seidel(
     R: float,
     T0: float,
     r: float,
-):
+) -> Tuple[float]:
     """
     Calculates the chamber pressure by solving Hans Seidel's differential
     equation.
@@ -33,18 +23,21 @@ def solve_cp_seidel(
     "Transient Chamber Pressure and Thrust in Solid Rocket Motors", published
     in March, 1965.
 
-    :param P0: chamber pressure
-    :param Pe: external pressure
-    :param Ab: burn area
-    :param V0: chamber free volume
-    :param At: nozzle throat area
-    :param pp: propellant density
-    :param k: isentropic exponent of the mix
-    :param R: gas constant per molecular weight
-    :param T0: flame temperature
-    :param r: propellant burn rate
-    :return: dP0 / dt
-    :rtype: float
+    Args:
+        P0 (float): Chamber pressure.
+        Pe (float): External pressure.
+        Ab (float): Burn area.
+        V0 (float): Chamber free volume.
+        At (float): Nozzle throat area.
+        pp (float): Propellant density.
+        k (float): Isentropic exponent of the mix.
+        R (float): Gas constant per molecular weight.
+        T0 (float): Flame temperature.
+        r (float): Propellant burn rate.
+
+    Returns:
+        Tuple[float]: Derivative of chamber pressure with respect to time.
+
     """
     critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch=k)
 
@@ -62,25 +55,29 @@ def solve_cp_seidel(
     return (dP0_dt,)
 
 
-def ballistics_ode(y, v, T, D, M, g):
+def ballistics_ode(
+    y: float, v: float, T: float, D: float, M: float, g: float
+) -> Tuple[float, float]:
     """
-    Returns dy_dt and dv_dt.
+    Returns the derivatives of elevation and velocity.
 
-    :param y: instant elevation
-    :param v: instant velocity
-    :param T: instant thrust
-    :param D: instant drag constant (Cd * A * rho / 2)
-    :param M: instant total mass
-    :param g: instant acceleration of gravity
-    :return: dy_dt, dv_dt
-    :rtype: tuple[float, float]
+    Args:
+        y (float): Instant elevation.
+        v (float): Instant velocity.
+        T (float): Instant thrust.
+        D (float): Instant drag constant (Cd * A * rho / 2).
+        M (float): Instant total mass.
+        g (float): Instant acceleration of gravity.
+
+    Returns:
+        Tuple[float, float]: Derivatives of elevation and velocity.
     """
     if v < 0:
         x = -1
     else:
         x = 1
 
-    dv_dt = (T - x * D * (v ** 2)) / M - g
+    dv_dt = (T - x * D * (v**2)) / M - g
     dy_dt = v
 
     return (dy_dt, dv_dt)

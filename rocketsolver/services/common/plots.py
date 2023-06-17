@@ -1,14 +1,3 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
-"""
-Plotting functions.
-"""
-
 import matplotlib.gridspec as gs
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,6 +44,23 @@ def performance_interactive_plot(ib_parameters):
     figure.update_yaxes(
         title_text="<b>Pressure</b> (MPa)", secondary_y=True, color="#008141"
     )
+
+    return figure
+
+
+def mass_flux_plot(mass_flux: np.ndarray, t: np.ndarray) -> go.Figure:
+    figure = go.Figure()
+
+    for i in range(len(mass_flux)):
+        figure.add_trace(
+            go.Scatter(
+                x=t,
+                y=mass_flux[i, :],
+                name="Segment " + str(i + 1),
+            )
+        )
+
+    figure.update_layout(title="Segment Mass Flux")
 
     return figure
 
@@ -289,21 +295,3 @@ def main_plot(t, F, P0, Kn, m_prop, t_burnout):
     main_figure.set_size_inches(12, 8, forward=True)
     main_figure.savefig("output/MotorPlots.png", dpi=300)
     return main_figure
-
-
-def mass_flux_plot(t, grain_mass_flux, t_burnout):
-    """Plots and saves figure of the mass flux for all the grain segments"""
-    t = t[t <= t_burnout]
-    t = np.append(t, t[-1])
-    grain_mass_flux = grain_mass_flux
-    N, index = grain_mass_flux.shape
-    mass_flux_figure = plt.figure()
-    for i in range(N):
-        plt.plot(t[: len(grain_mass_flux[i])], grain_mass_flux[i] * 1.42233e-3)
-    plt.ylabel("Mass Flux [lb/s-in-in]")
-    plt.xlabel("Time [s]")
-    plt.ylim(0, np.max(grain_mass_flux) * 1.42233e-3 * 1.05)
-    plt.xlim(0, t[-1])
-    plt.grid(linestyle="-", linewidth=".4")
-    mass_flux_figure.savefig("output/GrainMassFlux.png", dpi=300)
-    return mass_flux_figure

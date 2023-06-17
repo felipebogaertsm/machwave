@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
 """
 NOTE: Due to the nature of the FMM algorithm, the results of this test are
 dependent on the map_dim parameter. The higher the map_dim, the more accurate

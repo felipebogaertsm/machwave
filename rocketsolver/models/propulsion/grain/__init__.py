@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# Author: Felipe Bogaerts de Mattos
-# Contact me at me@felipebm.com.
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3.
-
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -365,14 +358,5 @@ class Grain:
                 segment_mass_flux[j, i] = (
                     burn_area * propellant_density * burn_rate[i]
                 ) / (core_area)
-
-        figure = go.Figure()
-
-        for i in range(self.segment_count):
-            figure.add_trace(
-                go.Scatter(x=web_distance, y=segment_mass_flux[i, :])
-            )
-
-        figure.show()
 
         return segment_mass_flux
