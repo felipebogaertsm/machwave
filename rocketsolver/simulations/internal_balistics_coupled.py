@@ -5,7 +5,7 @@ external ballistics parameters simulatneously.
 The main advantage of this strategy is that, while some environmental 
 attributes change during flight, they also serve as inputs for the internal 
 ballistic of the motor. The main attribute that changes during flight is the 
-ambient pressure, which impacts the propellant burn rate inside the motor.
+ambient pressure, which impacts motor performance.
 """
 
 import numpy as np
