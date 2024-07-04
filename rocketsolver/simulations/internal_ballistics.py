@@ -101,5 +101,5 @@ class InternalBallistics(Simulation):
         """
         Prints the results of the simulation.
         """
-        print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
+        print("\nINTERNAL BALLISTICS SIMULATION RESULTS")
         self.motor_operation.print_results()
