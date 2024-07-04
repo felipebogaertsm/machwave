@@ -25,6 +25,10 @@ from rocketsolver.models.materials.metals import Steel, Al6063T5
 from rocketsolver.models.materials.elastics import EPDM
 from rocketsolver.models.propulsion.thermals import ThermalLiner
 from rocketsolver.models.propulsion import SolidMotor
+from rocketsolver.services.common.plots import (
+    performance_interactive_plot,
+    mass_flux_plot,
+)
 from rocketsolver.services.common.utilities import timing
 from rocketsolver.simulations.internal_ballistics import (
     InternalBallistics,
@@ -100,9 +104,20 @@ def main():
         ),
     )
 
-    ib_operation = simulation.run()
+    (time, ib_operation) = simulation.run()
 
     simulation.print_results()
+
+    # Plots:
+    performance_interactive_plot(ib_operation).show()
+    mass_flux_plot(
+        grain.get_mass_flux_per_segment(
+            ib_operation.burn_rate,
+            propellant.density,
+            ib_operation.web,
+        ),
+        ib_operation.t,
+    ).show()
 
 
 if __name__ == "__main__":
