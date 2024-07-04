@@ -22,7 +22,7 @@ from rocketsolver.models.propulsion.structure.chamber import (
 )
 from rocketsolver.models.propulsion.propellants.solid import KNSB_NAKKA
 from rocketsolver.models.materials.metals import Steel, Al6063T5
-from rocketsolver.models.materials.elastics import EPDM
+from rocketsolver.models.materials.polymers import EPDM
 from rocketsolver.models.propulsion.thermals import ThermalLiner
 from rocketsolver.models.propulsion import SolidMotor
 from rocketsolver.services.common.plots import (
