@@ -22,18 +22,16 @@ class NozzleMaterial(Material):
     """
     Base class for a Nozzle material.
 
-    Contains all attributes from the Material class, adding special info for
-    parameters that need to be used when calculating isentropic flow correction
-    factors.
-
-    These special parameters are C1 and C2, referenced in the a015140 paper.
+    Contains all attributes from the Material class, adding c_1 and c_2 for
+    calculating isentropic flow correction factors. These special parameters
+    are referenced in the a015140 paper.
 
     Attributes:
-        C1 (float): Parameter used in isentropic flow correction factor
-            calculations.
-        C2 (float): Parameter used in isentropic flow correction factor
-            calculations.
+        c_1 (float): Coefficient related to heat transfer properties of a BATES
+            motor.
+        c_2 (float): Time constant obtained from the analysis of the transient
+            heating of a standard BATES motor.
     """
 
-    C1: float
-    C2: float
+    c_1: float
+    c_2: float

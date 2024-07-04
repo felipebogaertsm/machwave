@@ -10,7 +10,7 @@ class Steel(NozzleMaterial):
 
     This class represents a specific type of material, Steel, which inherits
     properties from the NozzleMaterial base class. It provides default values
-    for the density, yield strength, ultimate strength, C1, and C2 specific to
+    for the density, yield strength, ultimate strength, c_1, and c_2 specific to
     Steel.
 
     Data obtained from:
@@ -26,8 +26,8 @@ class Steel(NozzleMaterial):
     density: float = 8000
     yield_strength: float = 210e6
     ultimate_strength: float = 520e6
-    C1: float = 0.00506
-    C2: float = 0.0
+    c_1: float = 0.00506
+    c_2: float = 0.0
 
 
 @dataclass
@@ -38,8 +38,8 @@ class Al6063T5(NozzleMaterial):
 
     This class represents a specific type of material, Al6063T5 (Aluminum),
     which inherits properties from the NozzleMaterial base class. It provides
-    default values for the density, yield strength, ultimate strength, C1, and
-    C2 specific to Al6063T5.
+    default values for the density, yield strength, ultimate strength, c_1, and
+    c_2 specific to Al6063T5.
 
     Data obtained from:
     https://www.makeitfrom.com/material-properties/6063-T5-Aluminum
@@ -54,8 +54,8 @@ class Al6063T5(NozzleMaterial):
     density: float = 2700
     yield_strength: float = 145e6
     ultimate_strength: float = 185e6
-    C1: float = 0.00506
-    C2: float = 0.0
+    c_1: float = 0.00506
+    c_2: float = 0.0
 
 
 @dataclass
@@ -66,8 +66,8 @@ class Al6061T6(NozzleMaterial):
 
     This class represents a specific type of material, Al6061T6 (Aluminum),
     which inherits properties from the NozzleMaterial base class. It provides
-    default values for the density, yield strength, ultimate strength, C1, and
-    C2 specific to Al6061T6.
+    default values for the density, yield strength, ultimate strength, c_1, and
+    c_2 specific to Al6061T6.
 
     Data obtained from:
     https://matweb.com/search/DataSheet.aspx?MatGUID=b8d536e0b9b54bd7b69e4124d8f1d20a&ckck=1
@@ -82,5 +82,5 @@ class Al6061T6(NozzleMaterial):
     density: float = 2700
     yield_strength: float = 262e6
     ultimate_strength: float = 290e6
-    C1: float = 0.00506
-    C2: float = 0.0
+    c_1: float = 0.00506
+    c_2: float = 0.0
