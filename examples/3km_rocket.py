@@ -29,7 +29,7 @@ from rocketsolver.models.recovery.events import (
 )
 from rocketsolver.models.recovery.parachutes import HemisphericalParachute
 from rocketsolver.models.rocket.fuselage import Fuselage
-from rocketsolver.models.atmosphere import Atmosphere1976
+from rocketsolver.models.atmosphere.atm_1976 import Atmosphere1976
 from rocketsolver.models.propulsion import SolidMotor
 from rocketsolver.services.common.utilities import timing
 from rocketsolver.simulations.internal_balistics_coupled import (

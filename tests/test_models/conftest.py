@@ -1,6 +1,6 @@
 import pytest
 
-from rocketsolver.models.atmosphere import Atmosphere1976
+from rocketsolver.models.atmosphere.atm_1976 import Atmosphere1976
 from rocketsolver.models.materials.elastics import EPDM
 from rocketsolver.models.materials.metals import Al6063T5, Steel
 from rocketsolver.models.propulsion.propellants.solid import (
