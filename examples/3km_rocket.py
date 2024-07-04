@@ -21,7 +21,7 @@ from rocketsolver.models.propulsion.propellants.solid import KNSB_NAKKA
 from rocketsolver.models.recovery import Recovery
 from rocketsolver.models.rocket import Rocket
 from rocketsolver.models.materials.metals import Steel, Al6061T6
-from rocketsolver.models.materials.elastics import EPDM
+from rocketsolver.models.materials.polymers import EPDM
 from rocketsolver.models.propulsion.thermals import ThermalLiner
 from rocketsolver.models.recovery.events import (
     AltitudeBasedEvent,
