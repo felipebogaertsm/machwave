@@ -26,6 +26,9 @@ class Atmosphere1976(Atmosphere):
         return ATMOSPHERE_1976(y_amsl).v_sonic
 
     def get_wind_velocity(self, y_amsl: float) -> tuple[float, float]:
+        """
+        TODO: Implement wind velocity calculation.
+        """
         return (10, 10)
 
     def get_viscosity(self, y_amsl: float) -> float:
