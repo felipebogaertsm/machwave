@@ -6,8 +6,7 @@ from . import Material
 @dataclass
 class EPDM(Material):
     """
-    EPDM (Ethylene Propylene Diene Monomer) material class derived from the
-    Material base class.
+    EPDM (Ethylene Propylene Diene Monomer) material class.
 
     Data obtained from:
     https://www.matweb.com/search/datasheet.aspx?matguid=f8e3355cc2c541fbb0174960466819c0&ckck=1
@@ -26,12 +25,7 @@ class EPDM(Material):
 
 class EpoxiResin(Material):
     """
-    EpoxiResin material class derived from the Material base class.
-
-    This class represents a specific type of material, EpoxiResin, which
-    inherits properties from the Material base class. It provides default
-    values for the density, yield strength, and ultimate strength specific to
-    EpoxiResin.
+    EpoxiResin material class.
 
     Inherits:
         Material: Base class representing a generic material.
