@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 
-from rocketsolver.models.recovery.parachutes import (
+from machwave.models.recovery.parachutes import (
     Parachute,
     HemisphericalParachute,
     ToroidalParachute,

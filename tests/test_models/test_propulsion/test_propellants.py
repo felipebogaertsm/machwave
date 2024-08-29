@@ -1,6 +1,6 @@
 import numpy as np
 
-from rocketsolver.models.propulsion.propellants import Propellant
+from machwave.models.propulsion.propellants import Propellant
 
 
 def _test_propellant_burn_rate(propellant: Propellant):

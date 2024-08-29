@@ -2,7 +2,7 @@ from typing import Callable
 
 import pytest
 
-from rocketsolver.models.atmosphere import Atmosphere
+from machwave.models.atmosphere import Atmosphere
 
 
 @pytest.fixture()

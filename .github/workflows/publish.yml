@@ -1,4 +1,4 @@
-name: Publish RocketSolver to PyPi
+name: Publish Machwave to PyPi
 
 on: workflow_dispatch
 

@@ -1,6 +1,6 @@
 """
 This example demonstrates the capability of analyzing different grain 
-geometries within RocketSolver.
+geometries within Machwave.
 """
 
 import os
@@ -10,7 +10,7 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from rocketsolver.models.propulsion.grain.geometries import (
+from machwave.models.propulsion.grain.geometries import (
     BatesSegment,
     MultiPortGrainSegment,
     ConicalGrainSegment,

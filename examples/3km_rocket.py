@@ -8,31 +8,31 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from rocketsolver.models.propulsion.grain import Grain
-from rocketsolver.models.propulsion.grain.geometries import BatesSegment
-from rocketsolver.models.propulsion.structure import (
+from machwave.models.propulsion.grain import Grain
+from machwave.models.propulsion.grain.geometries import BatesSegment
+from machwave.models.propulsion.structure import (
     MotorStructure,
     Nozzle,
 )
-from rocketsolver.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.structure.chamber import (
     BoltedCombustionChamber,
 )
-from rocketsolver.models.propulsion.propellants.solid import KNSB_NAKKA
-from rocketsolver.models.recovery import Recovery
-from rocketsolver.models.rocket import Rocket
-from rocketsolver.models.materials.metals import Steel, Al6061T6
-from rocketsolver.models.materials.polymers import EPDM
-from rocketsolver.models.propulsion.thermals import ThermalLiner
-from rocketsolver.models.recovery.events import (
+from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
+from machwave.models.recovery import Recovery
+from machwave.models.rocket import Rocket
+from machwave.models.materials.metals import Steel, Al6061T6
+from machwave.models.materials.polymers import EPDM
+from machwave.models.propulsion.thermals import ThermalLiner
+from machwave.models.recovery.events import (
     AltitudeBasedEvent,
     ApogeeBasedEvent,
 )
-from rocketsolver.models.recovery.parachutes import HemisphericalParachute
-from rocketsolver.models.rocket.fuselage import Fuselage
-from rocketsolver.models.atmosphere.atm_1976 import Atmosphere1976
-from rocketsolver.models.propulsion import SolidMotor
-from rocketsolver.services.common.utilities import timing
-from rocketsolver.simulations.internal_balistics_coupled import (
+from machwave.models.recovery.parachutes import HemisphericalParachute
+from machwave.models.rocket.fuselage import Fuselage
+from machwave.models.atmosphere.atm_1976 import Atmosphere1976
+from machwave.models.propulsion import SolidMotor
+from machwave.services.common.utilities import timing
+from machwave.simulations.internal_balistics_coupled import (
     InternalBallisticsCoupled,
     InternalBallisticsCoupledParams,
 )

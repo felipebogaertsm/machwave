@@ -1,7 +1,7 @@
 import pytest
 
-from rocketsolver.models.propulsion.grain import GrainGeometryError
-from rocketsolver.models.propulsion.grain.geometries import (
+from machwave.models.propulsion.grain import GrainGeometryError
+from machwave.models.propulsion.grain.geometries import (
     WagonWheelGrainSegment,
 )
 

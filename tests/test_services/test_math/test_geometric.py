@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 
-from rocketsolver.services.math.geometric import (
+from machwave.services.math.geometric import (
     get_circle_area,
     get_torus_area,
     get_cylinder_surface_area,

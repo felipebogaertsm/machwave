@@ -1,4 +1,4 @@
-name: RocketSolver CI
+name: Machwave CI
 
 on: [push, pull_request]
 

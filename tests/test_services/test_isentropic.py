@@ -2,7 +2,7 @@ import numpy as np
 
 from pytest import approx, mark
 
-from rocketsolver.services.isentropic_flow import (
+from machwave.services.isentropic_flow import (
     get_critical_pressure_ratio,
     get_opt_expansion_ratio,
     get_exit_mach,

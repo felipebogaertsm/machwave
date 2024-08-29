@@ -1,11 +1,11 @@
 import numpy as np
 
-from rocketsolver.models.recovery import Recovery
-from rocketsolver.models.recovery.events import (
+from machwave.models.recovery import Recovery
+from machwave.models.recovery.events import (
     AltitudeBasedEvent,
     ApogeeBasedEvent,
 )
-from rocketsolver.models.recovery.parachutes import (
+from machwave.models.recovery.parachutes import (
     HemisphericalParachute,
     ToroidalParachute,
 )

@@ -13,7 +13,7 @@ import pytest
 
 import numpy as np
 
-from rocketsolver.models.propulsion.grain.geometries import (
+from machwave.models.propulsion.grain.geometries import (
     BatesSegment,
     ConicalGrainSegment,
 )
