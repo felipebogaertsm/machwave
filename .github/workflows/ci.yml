@@ -37,7 +37,8 @@ jobs:
           pip install -r requirements.txt
       - name: Build documentation
         run: |
-          sh scripts/sphinx-docs.sh
+          sh scripts/sphinx-docs.sh apidoc
+          sh scripts/sphinx-docs.sh html
       - name: Setup Pages
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
