@@ -37,6 +37,7 @@ jobs:
           pip install -r requirements.txt
       - name: Build documentation
         run: |
+          chmod +x scripts/sphinx-docs.sh
           sh scripts/sphinx-docs.sh apidoc
           sh scripts/sphinx-docs.sh html
       - name: Setup Pages
