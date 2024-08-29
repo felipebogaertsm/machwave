@@ -43,6 +43,12 @@ apidoc() {
 }
 
 html() {
+    echo "Creating _build, _static, and _templates directories..."
+    mkdir -p "$SOURCEDIR/_build"
+    mkdir -p "$SOURCEDIR/_static"
+    mkdir -p "$SOURCEDIR/_templates"
+    echo "Directories created."
+
     echo "Building HTML documentation..."
     $SPHINXBUILD -M html $SOURCEDIR $OUTPUTDIR
     echo "HTML documentation built in $OUTPUTDIR."
