@@ -2,7 +2,7 @@
 
 SPHINXBUILD="sphinx-build"
 SPHINXQUICK="sphinx-quickstart"
-SOURCEDIR="machwave/docs/"
+SOURCEDIR="machwave/docs"
 OUTPUTDIR="machwave/docs/_build/html"
 PROJECT_NAME="Machwave"
 AUTHOR_NAME="Felipe Bogaerts de Mattos"
@@ -22,7 +22,8 @@ $SPHINXQUICK $SOURCEDIR \
     --project="$PROJECT_NAME" \
     --author="$AUTHOR_NAME" \
     --release="$RELEASE" \
-    --language="$LANGUAGE"
+    --language="$LANGUAGE" \
+    --extensions=sphinx.ext.autodoc,sphinx.ext.viewcode,sphinx.ext.napoleon
 echo "sphinx-quickstart completed."
 
 # Check if conf.py was created
@@ -32,5 +33,5 @@ if [ ! -f "$SOURCEDIR/conf.py" ]; then
 fi
 
 echo "Building HTML documentation..."
-$SPHINXBUILD -b html $SOURCEDIR $OUTPUTDIR
+$SPHINXBUILD -M html $SOURCEDIR $OUTPUTDIR
 echo "HTML documentation built in $OUTPUTDIR."
