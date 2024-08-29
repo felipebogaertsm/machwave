@@ -2,10 +2,10 @@ version: "3.9"
 
 services:
   test-srm-solver:
-    build: 
+    build:
       context: ./
       dockerfile: Dockerfile
-    container_name: test_rocketsolver
+    container_name: test_machwave
     entrypoint: bash -c "python3 -m pytest"
     volumes:
       - ./:/usr/app/

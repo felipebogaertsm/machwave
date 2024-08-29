@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
 
-from rocketsolver.models.rocket.fuselage import (
+from machwave.models.rocket.fuselage import (
     Fuselage,
     DragCoefficientTypeError,
 )
-from rocketsolver.services.math.geometric import get_circle_area
+from machwave.services.math.geometric import get_circle_area
 
 
 def test_frontal_area_calculation():

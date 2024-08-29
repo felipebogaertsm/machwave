@@ -1,20 +1,20 @@
 import pytest
 
-from rocketsolver.models.atmosphere.atm_1976 import Atmosphere1976
-from rocketsolver.models.materials.polymers import EPDM
-from rocketsolver.models.materials.metals import Al6063T5, Steel
-from rocketsolver.models.propulsion.propellants.solid import (
+from machwave.models.atmosphere.atm_1976 import Atmosphere1976
+from machwave.models.materials.polymers import EPDM
+from machwave.models.materials.metals import Al6063T5, Steel
+from machwave.models.propulsion.propellants.solid import (
     KNSB,
     KNSB_NAKKA,
     KNDX,
     KNER,
     KNSU,
 )
-from rocketsolver.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.structure.chamber import (
     CombustionChamber,
     BoltedCombustionChamber,
 )
-from rocketsolver.models.propulsion.thermals import ThermalLiner
+from machwave.models.propulsion.thermals import ThermalLiner
 
 
 @pytest.fixture

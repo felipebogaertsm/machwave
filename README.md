@@ -1,8 +1,10 @@
-# RocketSolver
+# Machwave
+
 ## Written by: Felipe Bogaerts de Mattos
+
 ## Created on August, 2020
 
-RocketSolver is a Python package that helps engineers design rockets, rocket motors and rocket engines with efficiency and precision.
+Machwave is a Python package that helps engineers design rockets, rocket motors and rocket engines with efficiency and precision.
 
 # Models and simulations
 
@@ -24,7 +26,7 @@ Correction factors applied:
 
 ## Propellants
 
-Propellant data was obtained from ProPEP3. This software has been used in several applications/projects and it is capable of delivering reliable information on the chemical characteristics of a specific propellant composition. Burn rate data is obtained from experiments conducted by Richard Nakka and Magnus Gudnason. 
+Propellant data was obtained from ProPEP3. This software has been used in several applications/projects and it is capable of delivering reliable information on the chemical characteristics of a specific propellant composition. Burn rate data is obtained from experiments conducted by Richard Nakka and Magnus Gudnason.
 
 ### Supported propellants
 

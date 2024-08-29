@@ -1,7 +1,7 @@
 import pytest
 
-from rocketsolver.models.propulsion.grain import GrainGeometryError
-from rocketsolver.models.propulsion.grain import GrainSegment2D
+from machwave.models.propulsion.grain import GrainGeometryError
+from machwave.models.propulsion.grain import GrainSegment2D
 
 
 def test_grain_segment_2d_geometry_validation():
