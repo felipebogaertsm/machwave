@@ -2,6 +2,11 @@ name: Machwave CI
 
 on: [push]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     name: Testing
