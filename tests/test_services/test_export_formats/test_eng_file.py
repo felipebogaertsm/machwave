@@ -87,9 +87,17 @@ def test_eng_header_format(payload_data):
         eng_res=payload_data["eng_res"],
     )
 
+    print("\n\n\n")
+    print(content)
+    print("\n\n\n")
+
     # Extract the header (first line after the comments)
     lines = content.strip().split("\n")
-    header = lines[2]  # 3rd line after comments
+    header = lines[1]  # 3rd line after comments
+
+    print("\n\nHeader:\n")
+    print(lines)
+    print("\n\n\n")
 
     # Check the format of the header
     expected_start = f"{payload_data['name']} {payload_data['outer_diameter'] * 1e3:.4f} {payload_data['chamber_length'] * 1e3:.4f} P"
