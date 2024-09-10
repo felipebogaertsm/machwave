@@ -36,6 +36,7 @@ from machwave.simulations.internal_balistics_coupled import (
     InternalBallisticsCoupled,
     InternalBallisticsCoupledParams,
 )
+from machwave.services.plots.ballistics import ballistics_plots
 
 
 @timing
@@ -138,6 +139,13 @@ def main():
     simulation = InternalBallisticsCoupled(rocket=rocket, params=params)
 
     (ib_operation, ballistic_operation) = simulation.run()
+
+    ballistics_plots(
+        ballistic_operation.t,
+        ballistic_operation.acceleration,
+        ballistic_operation.v,
+        ballistic_operation.y,
+    ).show()
 
     simulation.print_results()
 
