@@ -1,6 +1,7 @@
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, List, Optional
+import uuid
 
 import numpy as np
 import plotly.graph_objects as go
@@ -9,6 +10,8 @@ from machwave.montecarlo.random import get_random_generator
 from machwave.operations import Operation
 from machwave.simulations import Simulation
 from machwave.services.common import obtain_attributes_from_object
+
+SEARCH_TREE_DEPTH_LIMIT = 20
 
 
 @dataclass
@@ -115,6 +118,10 @@ class MonteCarloSimulation:
         self.scenarios: List[List[float | int]] = []
         self.results: List[List[Operation]] = []
 
+        self._object_store = (
+            dict()
+        )  # maps UUIDs to objects in generate_scenario
+
     def generate_scenario(self) -> List[float | int]:
         """
         Generates a Monte Carlo scenario in the form of a list of parameters.
@@ -127,57 +134,68 @@ class MonteCarloSimulation:
             Monte Carlo scenario
         """
         new_scenario = []
-        parameters = deepcopy(self.parameters)
+        parameters_copy = deepcopy(self.parameters)
 
-        for parameter in parameters:
+        for parameter in parameters_copy:
             if isinstance(parameter, MonteCarloParameter):
                 parameter = parameter.get_random_value()
-            else:
-                search_tree = {
-                    parameter: obtain_attributes_from_object(parameter)
-                }
-                i = 0
-
-                while True:
-                    new_search_tree = {}
-
-                    if len(search_tree) == 0:
-                        break
-
-                    for param, sub_params in search_tree.items():
-                        for name, attr in sub_params.items():
-                            if isinstance(attr, MonteCarloParameter):
-                                setattr(param, name, attr.get_random_value())
-                            elif isinstance(attr, list):
-                                for item in attr:
-                                    if isinstance(item, dict):
-                                        continue
-
-                                    new_search_tree = {
-                                        **new_search_tree,
-                                        **{
-                                            item: obtain_attributes_from_object(
-                                                item
-                                            )
-                                        },
-                                    }
-                            else:
-                                new_search_tree = {
-                                    **new_search_tree,
-                                    **{
-                                        attr: obtain_attributes_from_object(
-                                            attr
-                                        )
-                                    },
-                                }
-
-                    search_tree = new_search_tree
-                    i += 1
+            else:  # search for MonteCarloParameter instances recursively
+                self._process_nested_parameters(parameter)
 
             new_scenario.append(parameter)
 
         self.scenarios.append(new_scenario)
         return new_scenario
+
+    def _process_nested_parameters(self, parameter: Any) -> None:
+        """
+        Recursively processes an object's attributes to replace
+        MonteCarloParameter instances with randomized values and store objects
+        using UUIDs.
+
+        Args:
+            parameter: The object whose attributes will be processed.
+        """
+        parameter_uuid = uuid.uuid4()
+        self._object_store[parameter_uuid] = parameter
+        search_tree = {
+            parameter_uuid: obtain_attributes_from_object(parameter)
+        }
+
+        i = 0  # iteration counter
+
+        while search_tree and i < SEARCH_TREE_DEPTH_LIMIT:
+            i += 1
+            print(i)
+            new_search_tree = {}
+
+            for param_uuid, sub_params in search_tree.items():
+                param = self._object_store[param_uuid]
+
+                for name, attr in sub_params.items():
+                    object_uuid = uuid.uuid4()
+
+                    if isinstance(attr, MonteCarloParameter):
+                        setattr(param, name, attr.get_random_value())
+                    elif isinstance(attr, list):
+                        for item in attr:
+                            if isinstance(item, dict):
+                                continue
+
+                            self._object_store[object_uuid] = item
+
+                            new_search_tree[object_uuid] = (
+                                obtain_attributes_from_object(item)
+                            )
+                    else:
+                        object_uuid = uuid.uuid4()
+                        self._object_store[object_uuid] = attr
+
+                        new_search_tree[object_uuid] = (
+                            obtain_attributes_from_object(attr)
+                        )
+
+            search_tree = new_search_tree
 
     def run(self) -> None:
         """
