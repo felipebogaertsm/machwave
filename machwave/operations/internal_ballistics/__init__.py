@@ -55,6 +55,9 @@ class MotorOperation(Operation):
         self.C_f_ideal = np.array([0])  # ideal thrust coefficient
         self.thrust = np.array([0])  # thrust force (N)
 
+        # Thrust time:
+        self._thrust_time = None
+
         # If the propellant mass is non zero, 'end_thrust' must be False,
         # since there is still thrust being produced.
         # After the propellant has finished burning and the thrust chamber has
@@ -95,6 +98,21 @@ class MotorOperation(Operation):
             float: The initial propellant mass.
         """
         return self.motor.initial_propellant_mass
+
+    @property
+    def thrust_time(self) -> float:
+        """
+        Total time of thrust production.
+
+        Returns:
+            float: The thrust time.
+        """
+        if self._thrust_time is None:
+            raise ValueError(
+                "Thrust time has not been set, run the simulation."
+            )
+
+        return self._thrust_time
 
 
 class SRMOperation(MotorOperation):
@@ -271,7 +289,7 @@ class SRMOperation(MotorOperation):
                 P_ext,
                 get_critical_pressure_ratio(self.motor.propellant.k_mix_ch),
             ):
-                self.thrust_time = self.t[-1]
+                self._thrust_time = self.t[-1]
                 self.end_thrust = True
 
     def print_results(self) -> None:
