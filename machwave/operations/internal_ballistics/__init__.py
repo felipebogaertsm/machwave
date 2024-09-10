@@ -284,7 +284,7 @@ class SRMOperation(MotorOperation):
 
             # This if statement changes 'end_thrust' to True if supersonic
             # flow is not achieved anymore.
-            if is_flow_choked(
+            if not is_flow_choked(
                 self.P_0[-1],
                 P_ext,
                 get_critical_pressure_ratio(self.motor.propellant.k_mix_ch),
