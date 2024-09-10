@@ -199,36 +199,6 @@ def is_flow_choked(
     return chamber_pressure >= external_pressure / critical_pressure_ratio
 
 
-def get_impulses(
-    F_avg: float, t: np.ndarray, t_burnout: float, m_prop: np.ndarray
-) -> tuple[float, float]:
-    """
-    Calculates the total and specific impulses based on the average thrust,
-    time array, and propellant mass array.
-
-    Args:
-        F_avg (float): The average thrust.
-        t (np.ndarray): The time array.
-        t_burnout (float): The burnout time.
-        m_prop (np.ndarray): The propellant mass array.
-
-    Returns:
-        tuple[float, float]: The total impulse and specific impulse.
-
-    Example:
-        total_impulse, specific_impulse = get_impulses(5000, [0, 1, 2, 3], 3, [100, 90, 80, 70])
-    """
-    t = t[t <= t_burnout]
-    index = np.where(t == t_burnout)
-
-    m_prop = m_prop[: index[0][0]]
-
-    I_total = F_avg * t[-1]
-    I_sp = I_total / (m_prop[0] * 9.81)
-
-    return I_total, I_sp
-
-
 def get_total_impulse(average_thrust: float, thrust_time: float) -> float:
     """
     Calculates the total impulse of the operation based on the average thrust and thrust time.
