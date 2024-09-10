@@ -139,6 +139,7 @@ def main():
 
     montecarlo_sim.run()
     montecarlo_sim.plot_histogram(0, "total_impulse", "Total Impulse (N.s)")
+    montecarlo_sim.plot_histogram(1, "apogee", "Apogee (m)")
 
 
 if __name__ == "__main__":

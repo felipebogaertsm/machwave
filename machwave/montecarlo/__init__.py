@@ -166,7 +166,6 @@ class MonteCarloSimulation:
 
         while search_tree and i < SEARCH_TREE_DEPTH_LIMIT:
             i += 1
-            print(i)
             new_search_tree = {}
 
             for param_uuid, sub_params in search_tree.items():
