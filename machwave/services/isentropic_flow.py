@@ -196,7 +196,7 @@ def is_flow_choked(
     Example:
         choked = is_flow_choked(100000, 5000, 0.5)
     """
-    return chamber_pressure <= external_pressure / critical_pressure_ratio
+    return chamber_pressure >= external_pressure / critical_pressure_ratio
 
 
 def get_impulses(
