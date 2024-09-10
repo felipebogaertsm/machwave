@@ -8,9 +8,7 @@ import plotly.graph_objects as go
 from machwave.montecarlo.random import get_random_generator
 from machwave.operations import Operation
 from machwave.simulations import Simulation
-from machwave.services.common.utilities import (
-    obtain_attributes_from_object,
-)
+from machwave.services.common import obtain_attributes_from_object
 
 
 @dataclass
