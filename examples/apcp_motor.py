@@ -21,8 +21,8 @@ from machwave.models.materials.metals import Steel, Al6061T6
 from machwave.models.materials.polymers import EPDM
 from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.models.propulsion import SolidMotor
-from machwave.services.common.plots import (
-    performance_interactive_plot,
+from machwave.services.plots.internal_ballistics import (
+    thrust_pressure_plot,
     mass_flux_plot,
 )
 from machwave.services.common.utilities import timing
@@ -98,14 +98,17 @@ def main():
     simulation.print_results()
 
     # Plots:
-    performance_interactive_plot(ib_operation).show()
+    thrust_pressure_plot(
+        ib_operation.t, ib_operation.thrust, ib_operation.P_0
+    ).show()
+
     mass_flux_plot(
+        ib_operation.t,
         grain.get_mass_flux_per_segment(
             ib_operation.burn_rate,
             propellant.density,
             ib_operation.web,
         ),
-        ib_operation.t,
     ).show()
 
 
