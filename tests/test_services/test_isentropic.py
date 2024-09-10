@@ -34,21 +34,19 @@ def test_get_opt_expansion_ratio():
     assert exp_opt == approx(9.37, rel=1e-2)
 
 
-@mark.skip("Verify calculations")
 def test_get_exit_mach():
     k = 1.4
-    E = 8
-    exit_mach = get_exit_mach(k, E)
-    assert exit_mach == approx(1.51845024)
+    expansion_ratio = 8
+    exit_mach = get_exit_mach(k, expansion_ratio)
+    assert exit_mach == approx(3.677229)
 
 
-@mark.skip("Verify calculations")
 def test_get_exit_pressure():
     k_2ph_ex = 1.4
-    E = 0.99
+    E = 8
     P_0 = 100000
     P_exit = get_exit_pressure(k_2ph_ex, E, P_0)
-    assert P_exit == approx(10557.9996)
+    assert P_exit == approx(1022.083457)
 
 
 @mark.skip("Verify calculations")
