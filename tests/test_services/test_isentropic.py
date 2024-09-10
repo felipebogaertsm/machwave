@@ -20,11 +20,10 @@ from machwave.services.isentropic_flow import (
 )
 
 
-@mark.skip("Verify calculations")
 def test_get_critical_pressure_ratio():
     k_mix_ch = 1.4
     critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch)
-    assert critical_pressure_ratio == approx(0.528317)
+    assert critical_pressure_ratio == approx(0.528282)
 
 
 def test_get_opt_expansion_ratio():
