@@ -31,7 +31,7 @@ from machwave.models.recovery.parachutes import HemisphericalParachute
 from machwave.models.rocket.fuselage import Fuselage
 from machwave.models.atmosphere.atm_1976 import Atmosphere1976
 from machwave.models.propulsion import SolidMotor
-from machwave.services.common.utilities import timing
+from machwave.services.decorators import timing
 from machwave.simulations.internal_balistics_coupled import (
     InternalBallisticsCoupled,
     InternalBallisticsCoupledParams,

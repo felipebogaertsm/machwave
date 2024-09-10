@@ -29,7 +29,7 @@ from machwave.services.plots.internal_ballistics import (
     thrust_pressure_plot,
     mass_flux_plot,
 )
-from machwave.services.common.utilities import timing
+from machwave.services.decorators import timing
 from machwave.simulations.internal_ballistics import (
     InternalBallistics,
     InternalBallisticsParams,
