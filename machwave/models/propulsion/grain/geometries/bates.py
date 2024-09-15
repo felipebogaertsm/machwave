@@ -65,3 +65,10 @@ class BatesSegment(GrainSegment2D):
         :rtype: float
         """
         return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
+
+    def get_center_of_gravity(self, *args, **kwargs) -> float:
+        """
+        BATES is a symmetrical 2D geometry, so the center of gravity is always
+        at the middle of the segment.
+        """
+        return self.length / 2

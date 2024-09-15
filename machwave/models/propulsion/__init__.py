@@ -204,5 +204,7 @@ class SolidMotor(Motor):
     def get_center_of_gravity(self) -> np.ndarray:
         """
         Constant CG throughout the operation. Half the chamber length.
+
+        TODO: implement grain CG calculation.
         """
         return np.array([self.structure.chamber.length / 2, 0, 0])
