@@ -174,12 +174,6 @@ class GrainSegment2D(GrainSegment, ABC):
         """
         pass
 
-    def get_center_of_gravity(self, web_distance: float) -> float:
-        """
-        NOTE: Still needs to change based on inhibited ends.
-        """
-        return self.get_length(web_distance=web_distance) / 2
-
     def get_length(self, web_distance: float) -> float:
         return self.length - web_distance * (2 - self.inhibited_ends)
 
@@ -237,12 +231,6 @@ class GrainSegment3D(GrainSegment, ABC):
         :rtype: np.ndarray
         """
         pass
-
-    def get_center_of_gravity(self, web_distance: float) -> float:
-        """
-        NOTE: Modify later.
-        """
-        return self.get_length(web_distance=web_distance) / 2
 
     def get_length(self, web_distance: float) -> float:
         """
