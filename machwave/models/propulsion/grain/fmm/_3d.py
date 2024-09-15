@@ -2,12 +2,9 @@ from abc import ABC
 from typing import Optional
 
 import numpy as np
-import plotly.graph_objects as go
-from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 
 from . import FMMGrainSegment
-from .. import GrainSegment3D
+from .. import GrainSegment3D, GrainGeometryError
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,
@@ -120,3 +117,50 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         active_elements = np.count_nonzero(face_map == 1)
         volume_per_element = self.get_volume_per_element()
         return active_elements * volume_per_element
+
+    def get_center_of_gravity(
+        self, web_distance: float
+    ) -> tuple[float, float, float]:
+        """
+        Calculates the center of gravity of a 3D grain segment in 3D space at a
+        specific web distance.
+
+        :param float web_distance: The web distance traveled.
+        :return: (x_cog, y_cog, z_cog) - the coordinates of the center of
+            gravity in meters.
+        :raises GrainGeometryError: If the web distance traveled is greater
+            than the grain segment's web thickness.
+        :rtype: tuple[float, float, float]
+        """
+        if web_distance > self.get_web_thickness():
+            raise GrainGeometryError(
+                "The web distance traveled is greater than the grain "
+                "segment's web thickness."
+            )
+
+        # Get the 2D face map at the given web distance
+        face_map = self.get_face_map(web_distance)
+
+        # Mask the regions where the face map has active material (equal to 1)
+        mask = face_map == 1
+
+        # Get the non-masked elements
+        z_indices, y_indices, x_indices = np.where(mask)
+
+        # Point of reference is semgent's top center
+        center_shift = self.map_dim / 2
+        x_coords = x_indices - center_shift
+        y_coords = y_indices - center_shift
+        z_coords = z_indices
+
+        # Calculate the weighted center of gravity for x and y
+        x_cog_normalized = np.mean(x_coords)
+        y_cog_normalized = np.mean(y_coords)
+        z_cog_normalized = np.mean(z_coords)
+
+        # Denormalize to get the physical coordinates in meters
+        x_cog = self.map_to_length(x_cog_normalized)
+        y_cog = self.map_to_length(y_cog_normalized)
+        z_cog = self.map_to_length(z_cog_normalized)
+
+        return x_cog, y_cog, z_cog
