@@ -196,6 +196,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         The point of reference is the center of the circle.
 
+        NOTE: Considering uninhibited ends.
+
         :param float web_distance: The web distance traveled.
         :return: (x_cog, y_cog, z_cog) - the coordinates of the center of
             gravity in meters.
@@ -238,6 +240,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         x_cog = self.map_to_length(x_cog_normalized)
         y_cog = self.map_to_length(y_cog_normalized)
 
-        z_cog = self.length / 2  # NOTE: considering uninhibited ends
+        z_cog = self.length / 2
 
         return x_cog, y_cog, z_cog
