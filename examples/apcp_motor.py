@@ -41,8 +41,8 @@ def main():
 
     bates_segment = BatesSegment(
         outer_diameter=0.085,
-        core_diameter=0.040,
-        length=0.1475,
+        core_diameter=0.035,
+        length=0.150,
         spacing=0.01,
     )
 
@@ -51,13 +51,11 @@ def main():
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
-    grain.add_segment(bates_segment)
-    grain.add_segment(bates_segment)
 
     nozzle = Nozzle(
-        throat_diameter=0.0255,
-        divergent_angle=15,
-        convergent_angle=40,
+        throat_diameter=0.022,
+        divergent_angle=12,
+        convergent_angle=45,
         expansion_ratio=8,
         material=Steel(),
     )
