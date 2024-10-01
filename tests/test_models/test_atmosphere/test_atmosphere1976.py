@@ -17,6 +17,26 @@ def test_atmosphere1976_up_to_karman_line(
     test_atmosphere_up_to_karman_line(atmosphere=Atmosphere1976())
 
 
+def test_atmosphere1976_default_wind_velocity_yamsl_0():
+    """
+    Test that the default wind velocity is (7, 7) in Atmosphere1976.
+    y_amsl = 0.
+    """
+    atmosphere1976 = Atmosphere1976()
+    wind_velocity = atmosphere1976.get_wind_velocity(0)
+    np_testing.assert_almost_equal(wind_velocity, (7, 7), decimal=5)
+
+
+def test_atmosphere1976_default_wind_velocity_yamsl_500():
+    """
+    Test that the default wind velocity is (7, 7) in Atmosphere1976.
+    y_amsl = 500.
+    """
+    atmosphere1976 = Atmosphere1976()
+    wind_velocity = atmosphere1976.get_wind_velocity(500)
+    np_testing.assert_almost_equal(wind_velocity, (7, 7), decimal=5)
+
+
 def test_atmosphere1976windpowerlaw_z_ref_zero():
     """
     Test that an exception is raised when z_ref is set to 0 in
