@@ -3,6 +3,7 @@ from typing import Callable
 import pytest
 
 from machwave.models.atmosphere import Atmosphere
+from machwave.models.atmosphere.atm_1976 import Atmosphere1976WindPowerLaw
 
 
 @pytest.fixture()
@@ -34,3 +35,10 @@ def test_atmosphere_up_to_karman_line() -> Callable[[Atmosphere], None]:
             assert viscosity >= 0
 
     return test
+
+
+@pytest.fixture()
+def atmosphere1976withwindpowerlaw() -> Atmosphere1976WindPowerLaw:
+    return Atmosphere1976WindPowerLaw(
+        v_ref=7, z_ref=0, alpha=0.1, direction_deg=60
+    )
