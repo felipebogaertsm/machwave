@@ -3,7 +3,7 @@ Implementation of the 1976 Standard Atmosphere model.
 """
 
 from fluids.atmosphere import ATMOSPHERE_1976
-from numpy import np
+import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
 
