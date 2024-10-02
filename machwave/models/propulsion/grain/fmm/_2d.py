@@ -223,38 +223,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         return fig
 
-    def plot_contours(
-        self, number_of_contours: Optional[float] = 1
-    ) -> go.Figure:
-        fig = go.Figure()
-
-        for contour_index in range(number_of_contours):
-            wt = self.get_web_thickness()
-            web_fraction = contour_index / number_of_contours
-            contours = self.get_contours(web_distance=wt * web_fraction)
-
-            for contour in contours:
-                x = np.array([item[0] for item in contour])
-                y = np.array([item[1] for item in contour])
-
-                color_level = 255 * (1 - web_fraction)
-
-                fig.add_traces(
-                    go.Scatter(
-                        x=x,
-                        y=y,
-                        mode="lines",
-                        name=f"{contour_index}",
-                        line=dict(
-                            color=f"rgb({color_level},{0},{0})",
-                        ),
-                    )
-                )
-
-        fig.show()
-
-        return fig
-
     def get_center_of_gravity(
         self, web_distance: float
     ) -> tuple[float, float, float]:
