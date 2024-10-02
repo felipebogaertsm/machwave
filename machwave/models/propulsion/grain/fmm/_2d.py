@@ -2,14 +2,12 @@ from abc import ABC
 from typing import Callable, Optional
 
 import numpy as np
-import plotly.graph_objects as go
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
 
 from . import FMMGrainSegment
 from .. import GrainSegment2D, GrainGeometryError
-from machwave.services.numpy import replace_array_values
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,
@@ -137,91 +135,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return self.get_core_perimeter(web_distance) * self.get_length(
             web_distance
         )
-
-    def plot_face(
-        self, web_distance: Optional[float] = 0, z: Optional[float] = 0
-    ) -> go.Figure:
-        """
-        Plots the face map with a heatmap and contour lines, ensuring that the x
-        and y axes have the same scale.
-
-        Args:
-            web_distance (float, optional): The web distance traveled. Defaults to 0.
-            z (float, optional): The z-coordinate. Defaults to 0.
-
-        Returns:
-            go.Figure: A Plotly Figure object.
-        """
-        face_map = self.get_face_map(web_distance=web_distance)
-
-        fig = go.Figure()
-
-        fig.add_traces(
-            [
-                go.Heatmap(
-                    z=face_map,
-                    colorscale=[
-                        [0, "rgb(255, 255, 255)"],  # -1 mapped white
-                        [0.5, "rgb(255, 255, 255)"],  # 0 mapped to white
-                        [1, "rgb(51, 55, 61)"],  # 1 mapped to dark bluish grey
-                    ],
-                    zmin=-1,
-                    zmax=1,
-                    showscale=False,
-                ),
-                go.Contour(  # burn area contour
-                    z=replace_array_values(face_map, -1, 0),
-                    contours=dict(
-                        start=-1,
-                        end=1,
-                        size=1,
-                        coloring="none",
-                        showlines=True,
-                    ),
-                    line=dict(
-                        color="red",
-                        width=3,
-                    ),
-                    showscale=False,
-                ),
-                go.Contour(  # inhibited area contour
-                    z=replace_array_values(face_map, 1, 0),
-                    contours=dict(
-                        start=-1,
-                        end=1,
-                        size=1,
-                        coloring="none",
-                        showlines=True,
-                    ),
-                    line=dict(
-                        color="rgb(3, 232, 252)",
-                        width=3,
-                    ),
-                    showscale=False,
-                ),
-            ]
-        )
-
-        fig.update_layout(
-            xaxis=dict(
-                showgrid=False,
-                zeroline=False,
-                scaleanchor="y",  # Lock aspect ratio
-                scaleratio=1,
-            ),
-            yaxis=dict(
-                showgrid=False,
-                zeroline=False,
-                scaleanchor="x",  # Lock aspect ratio
-                scaleratio=1,
-            ),
-            template="none",
-            title="Face Map with Contours and Equal Axis Scaling",
-        )
-
-        fig.show()
-
-        return fig
 
     def get_center_of_gravity(
         self, web_distance: float
