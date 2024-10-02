@@ -142,7 +142,7 @@ class FMMGrainSegment(GrainSegment, ABC):
     def get_face_map(self, web_distance: float) -> np.ndarray:
         """
         Returns a matrix of the grain face in function of the web distance
-        traveled.
+        traveled. Values are either -1, 0, and 1.
 
         :param float web_distance: The web distance traveled.
         :return: A matrix of the grain face.
