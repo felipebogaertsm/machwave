@@ -138,7 +138,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             web_distance
         )
 
-    def plot_masked_face(self, web_distance: Optional[float] = 0) -> go.Figure:
+    def plot_face(self, web_distance: Optional[float] = 0) -> go.Figure:
         face_map = self.get_face_map(web_distance=web_distance)
 
         fig = go.Figure(
