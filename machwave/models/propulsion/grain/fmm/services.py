@@ -134,6 +134,7 @@ def plot_2d_face_map_animated(
     fig.add_traces(_create_plot_2d_frame(initial_face_map))
 
     frames = []
+    steps = []
     for i, face_map in enumerate(face_maps):
         frame = go.Frame(
             data=_create_plot_2d_frame(face_map),
@@ -141,15 +142,7 @@ def plot_2d_face_map_animated(
         )
         frames.append(frame)
 
-    fig.frames = frames
-
-    steps = []
-    for i in range(num_frames):
-        label = (
-            f"{web_distances[i]:.2f}" if web_distances is not None else str(i)
-        )
         step = dict(
-            method="animate",
             args=[
                 [str(i)],
                 dict(
@@ -158,29 +151,30 @@ def plot_2d_face_map_animated(
                     transition=dict(duration=0),
                 ),
             ],
-            label=label,
+            label=(f"{web_distances[i]:.1e}"),
+            method="animate",
         )
         steps.append(step)
 
-    sliders = [
-        dict(
-            active=0,
-            steps=steps,
-            currentvalue=dict(
-                prefix=(
-                    "Web Distance: "
-                    if web_distances is not None
-                    else "Frame: "
-                ),
-                visible=True,
-                xanchor="right",
-            ),
-            pad=dict(t=50),
-        )
-    ]
+    fig.frames = frames
 
     fig.update_layout(
-        sliders=sliders,
+        sliders=[
+            dict(
+                active=0,
+                steps=steps,
+                currentvalue=dict(
+                    prefix=(
+                        "Web Distance (m): "
+                        if web_distances is not None
+                        else "Frame: "
+                    ),
+                    visible=True,
+                    xanchor="right",
+                ),
+                pad=dict(t=50),
+            )
+        ],
         updatemenus=[
             dict(
                 type="buttons",
@@ -193,7 +187,7 @@ def plot_2d_face_map_animated(
                             dict(
                                 frame=dict(duration=500, redraw=True),
                                 fromcurrent=True,
-                                transition=dict(duration=0),
+                                transition=dict(duration=100),
                             ),
                         ],
                     ),
@@ -210,12 +204,11 @@ def plot_2d_face_map_animated(
                         ],
                     ),
                 ],
-                direction="left",
-                pad=dict(r=10, t=70),
+                direction="right",
                 showactive=False,
                 x=0.1,
-                xanchor="right",
-                y=0,
+                xanchor="left",
+                y=1,
                 yanchor="top",
             )
         ],
