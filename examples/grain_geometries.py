@@ -66,7 +66,7 @@ def main():
     print(
         f"Dgrain center of gravity: {dgrain_segment.get_center_of_gravity(0)}"
     )
-    dgrain_segment.plot_masked_face(web_distance=web_distance)
+    dgrain_segment.plot_face(web_distance=web_distance)
 
     grain_area = multiport_segment.get_burn_area(web_distance=web_distance)
     port_area = multiport_segment.get_port_area(web_distance=web_distance)
@@ -75,7 +75,7 @@ def main():
     print(
         f"Multiport center of gravity: {multiport_segment.get_center_of_gravity(0)}"
     )
-    multiport_segment.plot_masked_face(web_distance=web_distance)
+    multiport_segment.plot_face(web_distance=web_distance)
 
     grain_area = conical_segment.get_burn_area(web_distance=web_distance)
     print(f"Conical grain area: {grain_area * 1e6:2f} mm^2")
