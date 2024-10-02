@@ -1,9 +1,7 @@
 from abc import ABC
-from time import sleep
 from typing import Callable, Optional
 
 import numpy as np
-import plotly.graph_objects as go
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
@@ -137,55 +135,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return self.get_core_perimeter(web_distance) * self.get_length(
             web_distance
         )
-
-    def plot_masked_face(self, web_distance: Optional[float] = 0) -> go.Figure:
-        face_map = self.get_face_map(web_distance=web_distance)
-
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=face_map,
-                colorscale=[
-                    [0, "rgb(50,50,50)"],
-                    [1, "rgb(200,200,200)"],
-                ],
-            )
-        )
-
-        fig.show()
-
-        return fig
-
-    def plot_contours(
-        self, number_of_contours: Optional[float] = 1
-    ) -> go.Figure:
-        fig = go.Figure()
-
-        for contour_index in range(number_of_contours):
-            wt = self.get_web_thickness()
-            web_fraction = contour_index / number_of_contours
-            contours = self.get_contours(web_distance=wt * web_fraction)
-
-            for contour in contours:
-                x = np.array([item[0] for item in contour])
-                y = np.array([item[1] for item in contour])
-
-                color_level = 255 * (1 - web_fraction)
-
-                fig.add_traces(
-                    go.Scatter(
-                        x=x,
-                        y=y,
-                        mode="lines",
-                        name=f"{contour_index}",
-                        line=dict(
-                            color=f"rgb({color_level},{0},{0})",
-                        ),
-                    )
-                )
-
-        fig.show()
-
-        return fig
 
     def get_center_of_gravity(
         self, web_distance: float
