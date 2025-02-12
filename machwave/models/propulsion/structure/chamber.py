@@ -150,23 +150,15 @@ class BoltedCombustionChamber(CombustionChamber):
         Calculates tear area for screw section.
         """
         return (
-            (
-                np.pi
-                * 0.25
-                * ((self.outer_diameter**2) - (self.inner_diameter**2))
-            )
+            (np.pi * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2)))
             / screw_count
         ) - (
-            np.arcsin(
-                (self.screw_clearance_diameter / 2) / (self.inner_diameter / 2)
-            )
-        ) * 0.25 * (
-            (self.outer_diameter**2) - (self.inner_diameter**2)
-        )
+            np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
+        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
 
     def get_compression_area(self) -> float:
         return (
-            ((self.outer_diameter - self.inner_diameter))
+            (self.outer_diameter - self.inner_diameter)
             * self.screw_clearance_diameter
             / 2
         )
@@ -218,9 +210,7 @@ class BoltedCombustionChamber(CombustionChamber):
                 compression_safety_factor,
             )
         )
-        max_safety_factor_fastener = np.max(
-            np.min(fastener_safety_factor, axis=0)
-        )
+        max_safety_factor_fastener = np.max(np.min(fastener_safety_factor, axis=0))
         optimal_fasteners = np.argmax(np.min(fastener_safety_factor, axis=0))
 
         return (

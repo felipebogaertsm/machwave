@@ -118,9 +118,7 @@ class MonteCarloSimulation:
         self.scenarios: List[List[float | int]] = []
         self.results: List[List[Operation]] = []
 
-        self._object_store = (
-            dict()
-        )  # maps UUIDs to objects in generate_scenario
+        self._object_store = dict()  # maps UUIDs to objects in generate_scenario
 
     def generate_scenario(self) -> List[float | int]:
         """
@@ -158,9 +156,7 @@ class MonteCarloSimulation:
         """
         parameter_uuid = uuid.uuid4()
         self._object_store[parameter_uuid] = parameter
-        search_tree = {
-            parameter_uuid: obtain_attributes_from_object(parameter)
-        }
+        search_tree = {parameter_uuid: obtain_attributes_from_object(parameter)}
 
         i = 0  # iteration counter
 
@@ -190,8 +186,8 @@ class MonteCarloSimulation:
                         object_uuid = uuid.uuid4()
                         self._object_store[object_uuid] = attr
 
-                        new_search_tree[object_uuid] = (
-                            obtain_attributes_from_object(attr)
+                        new_search_tree[object_uuid] = obtain_attributes_from_object(
+                            attr
                         )
 
             search_tree = new_search_tree
@@ -224,10 +220,7 @@ class MonteCarloSimulation:
             Numpy array containing the values of the specified property.
         """
         return np.array(
-            [
-                getattr(result[operation_index], property)
-                for result in self.results
-            ]
+            [getattr(result[operation_index], property) for result in self.results]
         )
 
     def plot_histogram(

@@ -47,6 +47,4 @@ class EpoxiResin(Material):
         Returns:
             None
         """
-        super().__init__(
-            density=1100, yield_strength=60e6, ultimate_strength=60e6
-        )
+        super().__init__(density=1100, yield_strength=60e6, ultimate_strength=60e6)

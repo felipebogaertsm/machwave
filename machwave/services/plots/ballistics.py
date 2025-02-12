@@ -21,16 +21,12 @@ def ballistics_plots(
     fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True)
 
     fig.add_trace(
-        go.Scatter(
-            x=t, y=y, mode="lines", name="Height", line=dict(color="blue")
-        ),
+        go.Scatter(x=t, y=y, mode="lines", name="Height", line=dict(color="blue")),
         row=1,
         col=1,
     )
     fig.add_trace(
-        go.Scatter(
-            x=t, y=v, mode="lines", name="Velocity", line=dict(color="green")
-        ),
+        go.Scatter(x=t, y=v, mode="lines", name="Velocity", line=dict(color="green")),
         row=2,
         col=1,
     )

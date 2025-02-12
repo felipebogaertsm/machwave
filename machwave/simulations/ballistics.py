@@ -113,9 +113,7 @@ class BallisticSimulation(Simulation):
         i = 0
 
         while self.ballistic_operation.y[i] >= 0:
-            self.t = np.append(
-                self.t, self.t[i] + self.params.d_t
-            )  # new time value
+            self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
             thrust = np.interp(
                 self.t[-1],

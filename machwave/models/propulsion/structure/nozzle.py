@@ -43,10 +43,8 @@ class Nozzle:
         Considers thin wall approximation.
         """
         return (chamber_pressure * chamber_inner_diameter / 2) / (
-            (
-                self.material.yield_strength / safety_factor
-                - 0.6 * chamber_pressure * (np.cos(np.deg2rad(wall_angle)))
-            )
+            self.material.yield_strength / safety_factor
+            - 0.6 * chamber_pressure * (np.cos(np.deg2rad(wall_angle)))
         )
 
     def get_nozzle_thickness(

@@ -141,8 +141,7 @@ class SolidMotor(Motor):
             float: Initial propellant mass, in kg
         """
         return (
-            self.grain.get_propellant_volume(web_distance=0)
-            * self.propellant.density
+            self.grain.get_propellant_volume(web_distance=0) * self.propellant.density
         )
 
     def get_thrust_coefficient_correction_factor(

@@ -50,9 +50,7 @@ def convert_mass_flux_metric_to_imperial(mass_flux_metric: float) -> float:
     return mass_flux_metric * 1.42233e-3
 
 
-def convert_burn_rate_coefficient_to_metric(
-    a_imperial: float, n: float
-) -> float:
+def convert_burn_rate_coefficient_to_metric(a_imperial: float, n: float) -> float:
     """
     Converts the burn rate coefficient from imperial to metric units.
 

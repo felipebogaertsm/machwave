@@ -24,7 +24,6 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         inhibited_ends: Optional[int] = 0,
         map_dim: Optional[int] = 50,
     ) -> None:
-
         self.file_path = file_path
         self.outer_diameter = outer_diameter
         self.length = length

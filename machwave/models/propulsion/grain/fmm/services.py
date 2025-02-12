@@ -124,9 +124,7 @@ def plot_2d_face_map_animated(
     num_frames = web_distances.shape[0]
 
     if num_frames != face_maps.shape[0]:
-        raise ValueError(
-            "The number of frames must match the number of face maps."
-        )
+        raise ValueError("The number of frames must match the number of face maps.")
 
     initial_face_map = face_maps[0]
 
@@ -165,9 +163,7 @@ def plot_2d_face_map_animated(
                 steps=steps,
                 currentvalue=dict(
                     prefix=(
-                        "Web Distance (m): "
-                        if web_distances is not None
-                        else "Frame: "
+                        "Web Distance (m): " if web_distances is not None else "Frame: "
                     ),
                     visible=True,
                     xanchor="right",

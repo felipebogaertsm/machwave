@@ -33,7 +33,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         inhibited_ends: Optional[int] = 0,
         map_dim: Optional[int] = 1000,
     ) -> None:
-
         # "Cache" variables:
         self.face_area_interp_func = None
 
@@ -102,9 +101,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                 )
 
             face_area = savgol_filter(face_area, 31, 5)
-            self.face_area_interp_func = interp1d(
-                web_distance_normalized, face_area
-            )
+            self.face_area_interp_func = interp1d(web_distance_normalized, face_area)
 
         return self.face_area_interp_func
 
@@ -132,13 +129,9 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         Calculates the core area in function of the web thickness traveled.
         """
-        return self.get_core_perimeter(web_distance) * self.get_length(
-            web_distance
-        )
+        return self.get_core_perimeter(web_distance) * self.get_length(web_distance)
 
-    def get_center_of_gravity(
-        self, web_distance: float
-    ) -> tuple[float, float, float]:
+    def get_center_of_gravity(self, web_distance: float) -> tuple[float, float, float]:
         """
         Calculates the center of gravity of a 2D grain segment in 3D space at a
         specific web distance.

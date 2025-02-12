@@ -118,8 +118,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         if self.regression_map is None:
             self.regression_map = (
-                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size())
-                * 2
+                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
             )
 
         return self.regression_map

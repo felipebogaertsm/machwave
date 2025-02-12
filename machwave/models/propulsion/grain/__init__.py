@@ -188,9 +188,9 @@ class GrainSegment2D(GrainSegment, ABC):
 
     def get_volume(self, web_distance: float) -> float:
         if self.get_web_thickness() >= web_distance:
-            return self.get_length(
+            return self.get_length(web_distance=web_distance) * self.get_face_area(
                 web_distance=web_distance
-            ) * self.get_face_area(web_distance=web_distance)
+            )
         else:
             return 0
 
@@ -211,7 +211,6 @@ class GrainSegment3D(GrainSegment, ABC):
         spacing: float,
         inhibited_ends: Optional[int] = 0,
     ) -> None:
-
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -263,9 +262,7 @@ class Grain:
 
         :rtype: float
         """
-        return np.sum(
-            [grain.length + grain.spacing for grain in self.segments]
-        )
+        return np.sum([grain.length + grain.spacing for grain in self.segments])
 
     @property
     def segment_count(self) -> int:
@@ -315,9 +312,7 @@ class Grain:
         :return: Instant propellant volume, in m^3 and in function of web
         :rtype: float
         """
-        return np.sum(
-            [segment.get_volume(web_distance) for segment in self.segments]
-        )
+        return np.sum([segment.get_volume(web_distance) for segment in self.segments])
 
     def get_mass_flux_per_segment(
         self,
@@ -329,9 +324,7 @@ class Grain:
         Returns a numpy multidimensional array with the mass flux for each
         grain.
         """
-        segment_mass_flux = np.zeros(
-            (self.segment_count, np.size(web_distance))
-        )
+        segment_mass_flux = np.zeros((self.segment_count, np.size(web_distance)))
 
         for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):

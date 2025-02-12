@@ -30,7 +30,6 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         inhibited_ends: Optional[int] = 0,
         map_dim: Optional[int] = 100,
     ) -> None:
-
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -66,9 +65,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.mask
 
-    def get_contours(
-        self, web_distance: float, length_normalized: float
-    ) -> np.ndarray:
+    def get_contours(self, web_distance: float, length_normalized: float) -> np.ndarray:
         map_dist = self.normalize(web_distance)
         valid = np.logical_not(self.get_mask())
 
@@ -90,9 +87,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         burn_area_array = np.array([])
 
         for i in range(self.get_normalized_length()):
-            contours = self.get_contours(
-                web_distance=web_distance, length_normalized=i
-            )
+            contours = self.get_contours(web_distance=web_distance, length_normalized=i)
             perimeter = np.sum(
                 [
                     self.map_to_length(get_length(contour, self.map_dim))
@@ -102,9 +97,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
             burn_area_array = np.append(
                 burn_area_array,
-                perimeter
-                * self.get_length(web_distance=web_distance)
-                / self.map_dim,
+                perimeter * self.get_length(web_distance=web_distance) / self.map_dim,
             )
 
         return np.sum(burn_area_array)
@@ -118,9 +111,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         volume_per_element = self.get_volume_per_element()
         return active_elements * volume_per_element
 
-    def get_center_of_gravity(
-        self, web_distance: float
-    ) -> tuple[float, float, float]:
+    def get_center_of_gravity(self, web_distance: float) -> tuple[float, float, float]:
         """
         Calculates the center of gravity of a 3D grain segment in 3D space at a
         specific web distance.

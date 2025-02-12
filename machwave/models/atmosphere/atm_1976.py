@@ -42,9 +42,7 @@ class Atmosphere1976WindPowerLaw(Atmosphere1976):
     model for wind velocity variation with altitude.
     """
 
-    def __init__(
-        self, v_ref: float, z_ref: float, alpha: float, direction_deg: float
-    ):
+    def __init__(self, v_ref: float, z_ref: float, alpha: float, direction_deg: float):
         """
         Initialize the atmosphere model with power-law wind parameters.
 
@@ -57,9 +55,7 @@ class Atmosphere1976WindPowerLaw(Atmosphere1976):
         super().__init__()
 
         if z_ref == 0:
-            raise ValueError(
-                "Please provide a non-zero reference height 'z_ref'."
-            )
+            raise ValueError("Please provide a non-zero reference height 'z_ref'.")
 
         self.v_ref = v_ref
         self.z_ref = z_ref
