@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   static-checks:
-    name: Static Checks (Ruff & Pyright)
+    name: Static Checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -24,10 +24,10 @@ jobs:
         run: |
           pip install ruff pyright
 
-      - name: Run Ruff checks (lint and format)
-        run: ruff check . --fix --diff
+      - name: Run Ruff checks
+        run: ruff check .
 
-      - name: Run Pyright (type checking)
+      - name: Run Pyright
         run: pyright .
 
   test:
