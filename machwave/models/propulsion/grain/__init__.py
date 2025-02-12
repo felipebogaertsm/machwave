@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
-from plotly import graph_objects as go
 
 from machwave.services.decorators import validate_assertions
 
