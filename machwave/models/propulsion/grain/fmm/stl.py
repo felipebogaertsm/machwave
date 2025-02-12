@@ -2,9 +2,7 @@ from abc import ABC
 from typing import Optional
 
 import numpy as np
-import trimesh
 from trimesh import load_mesh
-from trimesh.voxel import creation
 
 from ._3d import FMMGrainSegment3D
 from .. import GrainGeometryError

@@ -1,4 +1,3 @@
-from abc import ABC
 from dataclasses import dataclass
 
 import scipy.constants
