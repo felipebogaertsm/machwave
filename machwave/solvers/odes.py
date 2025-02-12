@@ -50,9 +50,7 @@ def rk4th_ode_solver(
 
     derivatives = (
         variables[key]
-        + (1 / 6)
-        * (k_1[index] + 2 * (k_2[index] + k_3[index]) + k_4[index])
-        * d_t
+        + (1 / 6) * (k_1[index] + 2 * (k_2[index] + k_3[index]) + k_4[index]) * d_t
         for index, key in enumerate(variables.keys())
     )
 

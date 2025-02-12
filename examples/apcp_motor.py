@@ -96,9 +96,7 @@ def main():
     simulation.print_results()
 
     # Plots:
-    thrust_pressure_plot(
-        ib_operation.t, ib_operation.thrust, ib_operation.P_0
-    ).show()
+    thrust_pressure_plot(ib_operation.t, ib_operation.thrust, ib_operation.P_0).show()
 
     mass_flux_plot(
         ib_operation.t,

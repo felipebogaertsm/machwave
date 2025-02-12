@@ -1,10 +1,10 @@
 """
-The coupled internal ballistics simulation calculates both internal and 
-external ballistics parameters simulatneously. 
+The coupled internal ballistics simulation calculates both internal and
+external ballistics parameters simulatneously.
 
-The main advantage of this strategy is that, while some environmental 
-attributes change during flight, they also serve as inputs for the internal 
-ballistic of the motor. The main attribute that changes during flight is the 
+The main advantage of this strategy is that, while some environmental
+attributes change during flight, they also serve as inputs for the internal
+ballistic of the motor. The main attribute that changes during flight is the
 ambient pressure, which impacts motor performance.
 """
 
@@ -86,9 +86,7 @@ class InternalBallisticsCoupled(Simulation):
         Returns:
             MotorOperation: The motor operation object.
         """
-        motor_operation_class = get_motor_operation_class(
-            self.rocket.propulsion
-        )
+        motor_operation_class = get_motor_operation_class(self.rocket.propulsion)
         return motor_operation_class(
             motor=self.rocket.propulsion,
             initial_pressure=self.params.igniter_pressure,
@@ -118,13 +116,8 @@ class InternalBallisticsCoupled(Simulation):
 
         i = 0
 
-        while (
-            self.ballistic_operation.y[i] >= 0
-            or self.motor_operation.m_prop[-1] > 0
-        ):
-            self.t = np.append(
-                self.t, self.t[i] + self.params.d_t
-            )  # new time value
+        while self.ballistic_operation.y[i] >= 0 or self.motor_operation.m_prop[-1] > 0:
+            self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
             if self.motor_operation.end_thrust is False:
                 self.motor_operation.iterate(

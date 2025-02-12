@@ -64,16 +64,10 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
 
         # Create the ports:
         for port_index in range(int(self.number_of_ports)):
-            displacement_angle = (
-                2 * np.pi / self.number_of_ports * (port_index)
-            )
+            displacement_angle = 2 * np.pi / self.number_of_ports * (port_index)
 
-            theta_2 = (
-                np.deg2rad(self.port_angular_width / 2) + displacement_angle
-            )
-            theta_1 = displacement_angle - np.deg2rad(
-                self.port_angular_width / 2
-            )
+            theta_2 = np.deg2rad(self.port_angular_width / 2) + displacement_angle
+            theta_1 = displacement_angle - np.deg2rad(self.port_angular_width / 2)
 
             map_x_y_arctan = np.arctan(map_y / map_x)
 

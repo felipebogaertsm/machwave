@@ -30,9 +30,7 @@ def get_torus_area(major_radius: float, minor_radius: float) -> float:
     return 4 * np.pi**2 * major_radius * minor_radius
 
 
-def get_trapezoidal_area(
-    base_length: float, tip_length: float, height: float
-) -> float:
+def get_trapezoidal_area(base_length: float, tip_length: float, height: float) -> float:
     """
     Calculates the area of a trapezoid.
 
@@ -75,9 +73,7 @@ def get_cylinder_volume(diameter: float, length: float) -> float:
     return np.pi * length * (diameter**2) / 4
 
 
-def get_contours(
-    map: np.ndarray, map_dist: float, *args, **kwargs
-) -> np.ndarray:
+def get_contours(map: np.ndarray, map_dist: float, *args, **kwargs) -> np.ndarray:
     """
     Finds contours in an image.
 
@@ -90,9 +86,7 @@ def get_contours(
     Returns:
         np.ndarray: An array of contours.
     """
-    return measure.find_contours(
-        map, map_dist, fully_connected="low", *args, **kwargs
-    )
+    return measure.find_contours(map, map_dist, fully_connected="low", *args, **kwargs)
 
 
 def get_length(

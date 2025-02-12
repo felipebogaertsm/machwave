@@ -5,7 +5,7 @@ the results will be, but the slower the algorithm will be.
 
 To compensate for this imprecision, the tolerance is set to 10% of the expected
 value. Also, the tests only run for a web distance up to 80% of the web
-thickness, since the FMM algorithm is not accurate enough (given the lower 
+thickness, since the FMM algorithm is not accurate enough (given the lower
 map_dim) for the last 20% of the web thickness.
 """
 
@@ -52,17 +52,15 @@ def test_burn_area(conical_grain_segment_1, bates_equivalent_1):
     ):
         value = conical_grain_segment_1.get_burn_area(web_distance)
 
-        assert isinstance(
-            value, float
-        ), f"Expected float, but got {type(value)}"
+        assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
         # Asserting that the burn area is the same as the bates equivalent:
         expected_value = bates_equivalent_1.get_burn_area(web_distance)
         tolerance = expected_value * TOLERANCE
 
-        assert value == pytest.approx(
-            expected_value, abs=tolerance
-        ), f"Expected value {expected_value} with tolerance {tolerance}, but got {value} for web_distance {web_distance} out of {web_thickness}"
+        assert value == pytest.approx(expected_value, abs=tolerance), (
+            f"Expected value {expected_value} with tolerance {tolerance}, but got {value} for web_distance {web_distance} out of {web_thickness}"
+        )
 
 
 def test_port_area(conical_grain_segment_1, bates_equivalent_1):
@@ -74,6 +72,6 @@ def test_port_area(conical_grain_segment_1, bates_equivalent_1):
     expected_value = bates_equivalent_1.get_port_area(0)
     tolerance = expected_value * TOLERANCE * 2
 
-    assert value == pytest.approx(
-        expected_value, abs=tolerance
-    ), f"Expected value {expected_value} with tolerance {tolerance}"
+    assert value == pytest.approx(expected_value, abs=tolerance), (
+        f"Expected value {expected_value} with tolerance {tolerance}"
+    )

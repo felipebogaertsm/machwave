@@ -39,6 +39,4 @@ def test_atmosphere_up_to_karman_line() -> Callable[[Atmosphere], None]:
 
 @pytest.fixture()
 def atmosphere1976withwindpowerlaw() -> Atmosphere1976WindPowerLaw:
-    return Atmosphere1976WindPowerLaw(
-        v_ref=7, z_ref=10, alpha=0.1, direction_deg=60
-    )
+    return Atmosphere1976WindPowerLaw(v_ref=7, z_ref=10, alpha=0.1, direction_deg=60)

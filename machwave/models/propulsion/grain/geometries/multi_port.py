@@ -35,10 +35,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
 
         assert self.port_diameter > 0
         assert self.port_level_count > 0
-        assert (
-            self.port_level_count * self.port_diameter
-            < self.outer_diameter / 2
-        )
+        assert self.port_level_count * self.port_diameter < self.outer_diameter / 2
 
         assert self.port_radial_count > 0
 
@@ -61,9 +58,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
                 x_offset = radial_distance * np.cos(angle)
                 y_offset = radial_distance * np.sin(angle)
 
-                radius = np.sqrt(
-                    (map_x - x_offset) ** 2 + (map_y - y_offset) ** 2
-                )
+                radius = np.sqrt((map_x - x_offset) ** 2 + (map_y - y_offset) ** 2)
                 core_map[radius < port_od_norm / 2] = 0
 
         return core_map

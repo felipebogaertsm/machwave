@@ -44,9 +44,7 @@ class MotorOperation(Operation):
         self.V_0 = np.array(
             [motor.structure.chamber.empty_volume]
         )  # empty chamber volume
-        self.m_prop = np.array(
-            [motor.initial_propellant_mass]
-        )  # propellant mass
+        self.m_prop = np.array([motor.initial_propellant_mass])  # propellant mass
         self.P_0 = np.array([initial_pressure])  # chamber stagnation pressure
         self.P_exit = np.array([initial_atmospheric_pressure])  # exit pressure
 
@@ -108,9 +106,7 @@ class MotorOperation(Operation):
             float: The thrust time.
         """
         if self._thrust_time is None:
-            raise ValueError(
-                "Thrust time has not been set, run the simulation."
-            )
+            raise ValueError("Thrust time has not been set, run the simulation.")
 
         return self._thrust_time
 
@@ -142,9 +138,7 @@ class SRMOperation(MotorOperation):
 
         # Grain and propellant parameters:
         self.web = np.array([0])  # instant web thickness
-        self.burn_area = np.array(
-            [self.motor.grain.get_burn_area(self.web[0])]
-        )
+        self.burn_area = np.array([self.motor.grain.get_burn_area(self.web[0])])
         self.propellant_volume = np.array(
             [self.motor.grain.get_propellant_volume(self.web[0])]
         )
@@ -170,9 +164,7 @@ class SRMOperation(MotorOperation):
             P_ext (float): The external pressure.
         """
         if not self.end_thrust:
-            self.t = np.append(
-                self.t, self.t[-1] + d_t
-            )  # append new time value
+            self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
 
             self.burn_area = np.append(
                 self.burn_area, self.motor.grain.get_burn_area(self.web[-1])
@@ -303,9 +295,7 @@ class SRMOperation(MotorOperation):
             print(f" Propellant initial mass {self.m_prop[0] * 1e3:.3f} g")
         print(" Mean Kn: %.2f" % np.mean(self.klemmung))
         print(" Max Kn: %.2f" % np.max(self.klemmung))
-        print(
-            f" Initial to final Kn ratio: {self.initial_to_final_klemmung_ratio:.3f}"
-        )
+        print(f" Initial to final Kn ratio: {self.initial_to_final_klemmung_ratio:.3f}")
         print(f" Volumetric efficiency: {self.volumetric_efficiency:.3%}")
         print(" Burn profile: " + self.burn_profile)
         print(
@@ -365,10 +355,7 @@ class SRMOperation(MotorOperation):
         Returns:
             float: The volumetric efficiency.
         """
-        return (
-            self.propellant_volume[0]
-            / self.motor.structure.chamber.empty_volume
-        )
+        return self.propellant_volume[0] / self.motor.structure.chamber.empty_volume
 
     @property
     def burn_profile(self, deviancy: Optional[float] = 0.02) -> str:

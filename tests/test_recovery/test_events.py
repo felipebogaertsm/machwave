@@ -49,7 +49,6 @@ def test_recovery_get_drag_coefficient_and_area():
 
     assert (
         drag_coefficient
-        == event1.parachute.drag_coefficient
-        + event2.parachute.drag_coefficient
+        == event1.parachute.drag_coefficient + event2.parachute.drag_coefficient
     )
     assert area == event1.parachute.area + event2.parachute.area

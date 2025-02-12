@@ -19,9 +19,7 @@ class BurnRateOutOfBoundsError(Exception):
 
     def __init__(self, value: float) -> None:
         self.value = value
-        self.message = (
-            f"Chamber pressure out of bounds: {value * 1e-6:.2f} MPa"
-        )
+        self.message = f"Chamber pressure out of bounds: {value * 1e-6:.2f} MPa"
 
         super().__init__(self.message)
 

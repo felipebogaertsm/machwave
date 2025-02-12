@@ -63,6 +63,4 @@ def test_olympus_grain_total_length_property(bates_grain_olympus):
 
 def test_olympus_grain_segment_count(bates_grain_olympus):
     assert bates_grain_olympus.segment_count == 7
-    assert bates_grain_olympus.segment_count == len(
-        bates_grain_olympus.segments
-    )
+    assert bates_grain_olympus.segment_count == len(bates_grain_olympus.segments)
