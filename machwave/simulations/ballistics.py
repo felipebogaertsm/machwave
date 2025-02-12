@@ -1,7 +1,6 @@
 import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
-from machwave.models.recovery import Recovery
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.simulations import Simulation, SimulationParameters

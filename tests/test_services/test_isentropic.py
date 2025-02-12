@@ -1,6 +1,6 @@
 import numpy as np
 
-from pytest import approx, mark
+from pytest import approx
 
 from machwave.services.isentropic_flow import (
     get_critical_pressure_ratio,
@@ -12,7 +12,6 @@ from machwave.services.isentropic_flow import (
     is_flow_choked,
     get_total_impulse,
     get_specific_impulse,
-    get_operational_correction_factors,
     get_divergent_correction_factor,
     get_expansion_ratio,
 )
