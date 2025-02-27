@@ -1,6 +1,6 @@
 [project]
 name = "machwave"
-version = "0.5.1"
+version = "0.1.1"
 description = "Rocket simulator"
 readme = "README.md"
 authors = [
@@ -14,7 +14,7 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
 ]
 keywords = ["python", "rocket", "srm", "engine", "propulsion"]
-requires-python = ">=3.9,<=3.13"
+requires-python = ">=3.9,<=3.14"
 dependencies = [
     "numpy",
     "pandas",
@@ -29,7 +29,6 @@ dev = [
     "ruff",
     "pyright",
     "pytest",
-    "bumpver",
 ]
 
 [build-system]
