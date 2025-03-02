@@ -28,7 +28,7 @@ jobs:
         run: ruff check .
 
       - name: Run Pyright
-        run: pyright .
+        run: pyright machwave
 
   test:
     name: Testing
