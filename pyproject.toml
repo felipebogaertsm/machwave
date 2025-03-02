@@ -20,6 +20,7 @@ dependencies = [
     "plotly (>=6.0.0,<7.0.0)",
     "scipy (>=1.15.2,<2.0.0)",
     "pandas (>=2.2.3,<3.0.0)",
+    "scikit-image (>=0.25.2,<0.26.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
