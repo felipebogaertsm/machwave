@@ -74,6 +74,11 @@ class InternalBallisticsCoupled(Simulation):
             params (InternalBallisticsCoupledParams): The simulation parameters.
         """
         super().__init__(params=params)
+
+        self.params: InternalBallisticsCoupledParams = (
+            params  # explicitly defining the type of params to avoid type errors
+        )
+
         self.rocket = rocket
         self.t = np.array([0])
         self.motor_operation = None
@@ -142,10 +147,19 @@ class InternalBallisticsCoupled(Simulation):
 
         return (self.motor_operation, self.ballistic_operation)
 
-    def print_results(self):
-        """
-        Prints the results of the simulation.
-        """
+    def print_results(self) -> None:
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
-        self.motor_operation.print_results()
-        self.ballistic_operation.print_results()
+
+        if self.motor_operation is not None:
+            self.motor_operation.print_results()
+        else:
+            print(
+                "No motor operation results available. Try running the simulation first."
+            )
+
+        if self.ballistic_operation is not None:
+            self.ballistic_operation.print_results()
+        else:
+            print(
+                "No ballistic operation results available. Try running the simulation first."
+            )
