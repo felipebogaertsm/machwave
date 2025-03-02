@@ -67,6 +67,11 @@ class BallisticSimulation(Simulation):
             params (BallisticSimulationParameters): The simulation parameters.
         """
         super().__init__(params=params)
+
+        self.params: BallisticSimulationParameters = (
+            params  # explicitly defining the type of params to avoid pyright error
+        )
+
         self.rocket = rocket
         self.atmosphere = atmosphere
         self.t = np.array([0])
@@ -144,4 +149,8 @@ class BallisticSimulation(Simulation):
         Prints the results of the simulation.
         """
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
-        self.ballistic_operation.print_results()
+
+        if self.ballistic_operation is not None:
+            self.ballistic_operation.print_results()
+        else:
+            print("Simulation not run yet. Try running the simulation first.")
