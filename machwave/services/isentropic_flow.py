@@ -261,6 +261,8 @@ def get_operational_correction_factors(
     Example:
         n_kin, n_tp, n_bl = get_operational_correction_factors(100000, 5000, 100, propellant, structure, 0.5, 0.1, 10)
     """
+    C3, C4, C5, C6 = 0, 0, 0, 0
+
     # Kinetic losses
     if P_0_psi >= 200:
         n_kin = 33.3 * 200 * (propellant.Isp_frozen / propellant.Isp_shifting) / P_0_psi
