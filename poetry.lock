@@ -914,6 +914,23 @@ files = [
 ]
 
 [[package]]
+name = "scikit-fmm"
+version = "2025.1.29"
+description = "An extension module implementing the fast marching method"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+files = [
+    {file = "scikit_fmm-2025.1.29-cp310-cp310-win_amd64.whl", hash = "sha256:2487ef20a77ecbbea5d9efa2c0a88464ce993606b850f395cb7bc613d73e37e4"},
+    {file = "scikit_fmm-2025.1.29-cp311-cp311-win_amd64.whl", hash = "sha256:0be276543b119174908f4f981948fc7b5581975cbe4f87b8dae4f7609e2f35cd"},
+    {file = "scikit_fmm-2025.1.29-cp312-cp312-win_amd64.whl", hash = "sha256:5dd0a17d5d79e57ed15d55dfa3a868aa2189a06629dbe85d5f99ce337f12509a"},
+    {file = "scikit_fmm-2025.1.29-cp313-cp313-win_amd64.whl", hash = "sha256:b79f17f505ab0a6ddebd1fcb10291ecb035d9020bc0f359f4ddac7a93d9659db"},
+    {file = "scikit_fmm-2025.1.29-cp39-cp39-win_amd64.whl", hash = "sha256:5f0c949f991ca20ce4d204cbe5e01037def33a6e06a7649d377aa1376a89647a"},
+    {file = "scikit_fmm-2025.1.29.tar.gz", hash = "sha256:ee04cab8e6c201a8448df9882fc0336dbcb79f124f3e1e2b8dbe31d4ee31050c"},
+]
+
+[[package]]
 name = "scikit-image"
 version = "0.25.2"
 description = "Image processing in Python"
@@ -1138,4 +1155,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<=3.14"
-content-hash = "8558c328d32a577f4b0a0c5ca8d0f0d18fb5cbf80a3e88bb8b57f827ace31203"
+content-hash = "9ffcae896f3c0b1293596f38e21b5d9bbf3d5833736ec515a8bf3cbb93ca8f32"

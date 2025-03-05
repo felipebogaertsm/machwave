@@ -8,14 +8,8 @@ class EPDM(Material):
     """
     EPDM (Ethylene Propylene Diene Monomer) material class.
 
-    Data obtained from:
+    Source:
     https://www.matweb.com/search/datasheet.aspx?matguid=f8e3355cc2c541fbb0174960466819c0&ckck=1
-
-    Inherits:
-        Material: Base class representing a generic material.
-
-    Attributes:
-        None
     """
 
     density: float = 1500
@@ -26,12 +20,6 @@ class EPDM(Material):
 class EpoxiResin(Material):
     """
     EpoxiResin material class.
-
-    Inherits:
-        Material: Base class representing a generic material.
-
-    Attributes:
-        None
     """
 
     def __init__(self) -> None:
@@ -40,11 +28,5 @@ class EpoxiResin(Material):
 
         This constructor sets the default values for the density, yield
         strength, and ultimate strength of EpoxiResin.
-
-        Args:
-            None
-
-        Returns:
-            None
         """
         super().__init__(density=1100, yield_strength=60e6, ultimate_strength=60e6)
