@@ -12,6 +12,7 @@ import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
+from machwave.operations import Operation
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
@@ -100,14 +101,14 @@ class InternalBallisticsCoupled(Simulation):
             ),
         )
 
-    def run(self) -> tuple[MotorOperation, Ballistic1DOperation]:
+    def run(self) -> list[Operation]:
         """
         Runs the main loop of the simulation, returning the motor operation
-        and ballistic operation objects.
+        and ballistic operation objects as a list.
 
         Returns:
-            tuple[MotorOperation, Ballistic1DOperation]: A tuple containing
-            the motor operation object and the ballistic operation object.
+            list[Operation]: A list containing the motor operation object
+            and the ballistic operation object.
         """
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
@@ -124,28 +125,24 @@ class InternalBallisticsCoupled(Simulation):
         while self.ballistic_operation.y[i] >= 0 or self.motor_operation.m_prop[-1] > 0:
             self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
-            if self.motor_operation.end_thrust is False:
+            if not self.motor_operation.end_thrust:
                 self.motor_operation.iterate(
                     self.params.d_t,
                     self.ballistic_operation.P_ext[i],
                 )
-
                 propellant_mass = self.motor_operation.m_prop[i]
                 thrust = self.motor_operation.thrust[i]
                 d_t = self.params.d_t
             else:
                 propellant_mass = 0
                 thrust = 0
-
-                # Adding new delta time value for ballistic simulation:
                 d_t = self.params.d_t * self.params.dd_t
                 self.t[-1] = self.t[-2] + self.params.dd_t * self.params.d_t
 
             self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
-
             i += 1
 
-        return (self.motor_operation, self.ballistic_operation)
+        return [self.motor_operation, self.ballistic_operation]
 
     def print_results(self) -> None:
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
