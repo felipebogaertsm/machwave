@@ -15,7 +15,7 @@ class Atmosphere1976(Atmosphere):
     """
 
     def get_density(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976(y_amsl).rho
+        return ATMOSPHERE_1976.density(y_amsl)
 
     def get_gravity(self, y_amsl: float) -> float:
         return ATMOSPHERE_1976.gravity(y_amsl)
@@ -24,7 +24,7 @@ class Atmosphere1976(Atmosphere):
         return ATMOSPHERE_1976(y_amsl).P
 
     def get_sonic_velocity(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976(y_amsl).v_sonic
+        return ATMOSPHERE_1976.sonic_velocity(y_amsl)
 
     def get_wind_velocity(self, y_amsl: float) -> tuple[float, float]:
         """
@@ -33,7 +33,7 @@ class Atmosphere1976(Atmosphere):
         return (7, 7)
 
     def get_viscosity(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976(y_amsl).mu
+        return ATMOSPHERE_1976.viscosity(y_amsl)
 
 
 class Atmosphere1976WindPowerLaw(Atmosphere1976):

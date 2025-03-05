@@ -136,6 +136,8 @@ class SRMOperation(MotorOperation):
             initial_atmospheric_pressure=initial_atmospheric_pressure,
         )
 
+        self.motor: SolidMotor = motor
+
         # Grain and propellant parameters:
         self.web = np.array([0])  # instant web thickness
         self.burn_area = np.array([self.motor.grain.get_burn_area(self.web[0])])
