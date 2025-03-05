@@ -13,14 +13,8 @@ class Steel(NozzleMaterial):
     for the density, yield strength, ultimate strength, c_1, and c_2 specific to
     Steel.
 
-    Data obtained from:
+    Source:
     https://www.thyssenkrupp-materials.co.uk/stainless-steel-304-14301.html
-
-    Inherits:
-        NozzleMaterial: Base class representing a nozzle material.
-
-    Attributes:
-        None
     """
 
     density: float = 8000
@@ -41,14 +35,8 @@ class Al6063T5(NozzleMaterial):
     default values for the density, yield strength, ultimate strength, c_1, and
     c_2 specific to Al6063T5.
 
-    Data obtained from:
+    Source:
     https://www.makeitfrom.com/material-properties/6063-T5-Aluminum
-
-    Inherits:
-        NozzleMaterial: Base class representing a nozzle material.
-
-    Attributes:
-        None
     """
 
     density: float = 2700
@@ -69,14 +57,8 @@ class Al6061T6(NozzleMaterial):
     default values for the density, yield strength, ultimate strength, c_1, and
     c_2 specific to Al6061T6.
 
-    Data obtained from:
+    Source:
     https://matweb.com/search/DataSheet.aspx?MatGUID=b8d536e0b9b54bd7b69e4124d8f1d20a&ckck=1
-
-    Inherits:
-        NozzleMaterial: Base class representing a nozzle material.
-
-    Attributes:
-        None
     """
 
     density: float = 2700

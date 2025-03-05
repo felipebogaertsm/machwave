@@ -47,10 +47,10 @@ class Atmosphere1976WindPowerLaw(Atmosphere1976):
         Initialize the atmosphere model with power-law wind parameters.
 
         Args:
-            v_ref (float): Wind speed at the reference height (in m/s).
-            z_ref (float): Reference height (in meters) where the wind speed is known.
-            alpha (float): Wind shear exponent.
-            direction_deg (float): Wind direction in degrees (0° is North, 90° is East).
+            v_ref: Wind speed at the reference height (in m/s).
+            z_ref: Reference height (in meters) where the wind speed is known.
+            alpha: Wind shear exponent.
+            direction_deg: Wind direction in degrees (0° is North, 90° is East).
         """
         super().__init__()
 
@@ -68,10 +68,10 @@ class Atmosphere1976WindPowerLaw(Atmosphere1976):
         using the power law.
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            tuple[float, float]: Wind velocity components (Northward, Eastward) in m/s.
+            Wind velocity components (Northward, Eastward) in m/s.
         """
         if y_amsl <= 0:
             y_amsl = self.z_ref
