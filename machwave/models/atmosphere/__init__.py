@@ -4,7 +4,7 @@ calculate the properties of the atmosphere at a given altitude above mean sea
 level (AMSL).
 """
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 
 class Atmospher:
