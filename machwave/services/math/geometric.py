@@ -73,19 +73,20 @@ def get_cylinder_volume(diameter: float, length: float) -> float:
 
 
 def get_contours(
-    map: np.ndarray, map_dist: float, *args, **kwargs
+    map: np.typing.NDArray[np.float64], map_dist: float, *args, **kwargs
 ) -> list[np.typing.NDArray[np.float64]]:
     """
-    Finds contours in an image.
+    Finds contours in a 2D array at a specified iso-value (map_dist).
 
     Args:
-        map: The input image.
-        map_dist: The map distance.
-        *args: Additional arguments to be passed to the find_contours function.
-        **kwargs: Additional keyword arguments to be passed to the find_contours function.
+        map: The 2D NumPy array (float64) from which to extract contours.
+        map_dist: The iso-value level at which to trace contours.
+        *args: Additional positional arguments passed to skimage.measure.find_contours.
+        **kwargs: Additional keyword arguments passed to skimage.measure.find_contours.
 
     Returns:
-        An array of contours.
+        A list of float64 arrays, where each array represents a contour.
+        Each contour array is typically shaped (N, 2) with (row, col) coordinates.
     """
     return measure.find_contours(map, map_dist, fully_connected="low", *args, **kwargs)
 

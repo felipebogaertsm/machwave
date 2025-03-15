@@ -2,6 +2,7 @@ from abc import ABC
 from typing import Optional
 
 import numpy as np
+from numpy.typing import NDArray
 
 from . import FMMGrainSegment
 from .. import GrainSegment3D, GrainGeometryError
@@ -46,7 +47,13 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
 
-    def get_maps(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def get_maps(
+        self,
+    ) -> tuple[
+        NDArray[np.float64],
+        NDArray[np.float64],
+        NDArray[np.float64],
+    ]:
         if self.maps is None:
             map_y, map_z, map_x = np.meshgrid(
                 np.linspace(-1, 1, self.map_dim),
