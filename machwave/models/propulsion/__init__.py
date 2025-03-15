@@ -68,7 +68,7 @@ class Motor(ABC):
         pass
 
     @abstractmethod
-    def get_thrust_coefficient_correction_factor(self) -> float:
+    def get_thrust_coefficient_correction_factor(self, *args, **kwargs) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
         adimensional and should be applied to the ideal thrust coefficient to
@@ -80,7 +80,7 @@ class Motor(ABC):
         pass
 
     @abstractmethod
-    def get_thrust_coefficient(self) -> float:
+    def get_thrust_coefficient(self, *args, **kwargs) -> float:
         """
         Calculates the thrust coefficient at a particular instant.
 
