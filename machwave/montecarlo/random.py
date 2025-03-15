@@ -17,7 +17,6 @@ class RandomGenerator(ABC):
 
     Methods:
         get_value(): Gets a random value based on a probability distribution.
-
     """
 
     value: float
@@ -27,13 +26,10 @@ class RandomGenerator(ABC):
 
     def __post_init__(self) -> None:
         """
-        Post-initialization method. Can be overridden in derived classes if
-        additional setup is required.
-
-        Returns:
-            None
+        Ensures non-negative tolerance values and valid inputs.
         """
-        pass
+        if self.lower_tolerance < 0 or self.upper_tolerance < 0 or self.tolerance < 0:
+            raise ValueError("Tolerances must be non-negative values.")
 
     @abstractmethod
     def get_value(self) -> float:
@@ -60,14 +56,10 @@ class NormalRandomGenerator(RandomGenerator):
 
     def __post_init__(self) -> None:
         """
-        Post-initialization method. Raises an exception if lower/upper
-        tolerances are specified.
+        Ensures `lower_tolerance` and `upper_tolerance` are not set.
 
         Raises:
-            ValueError: If lower/upper tolerances are specified.
-
-        Returns:
-            None
+            ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
         """
         super().__post_init__()
 
@@ -87,9 +79,13 @@ class NormalRandomGenerator(RandomGenerator):
 
         Returns:
             Random value.
-
         """
-        return np.random.normal(loc=self.value, scale=self.tolerance / 3)
+        return np.random.normal(
+            loc=self.value,
+            scale=(
+                self.tolerance / 3 if self.tolerance != 0 else 1e-6
+            ),  # Prevent division by zero
+        )
 
 
 @dataclass
@@ -105,18 +101,16 @@ class UniformRandomGenerator(RandomGenerator):
 
     def __post_init__(self) -> None:
         """
-        Post-initialization method. Raises an exception if both lower/upper
-        tolerances and a symmetrical tolerance are specified.
+        Ensures valid tolerances.
 
         Raises:
-            ValueError: If conflicting tolerances are specified.
-
-        Returns:
-            None
+            ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
         """
         super().__post_init__()
 
-        if (self.lower_tolerance or self.upper_tolerance) and self.tolerance:
+        if (
+            self.lower_tolerance != 0 or self.upper_tolerance != 0
+        ) and self.tolerance != 0:
             raise ValueError(
                 "UniformRandomGenerator does not support lower/upper "
                 "tolerances and symmetrical tolerance simultaneously."
@@ -153,7 +147,6 @@ def get_random_generator(
 
     Raises:
         ValueError: If the specified probability distribution is not supported.
-
     """
     if probability_distribution == "normal":
         return NormalRandomGenerator(*args, **kwargs)
