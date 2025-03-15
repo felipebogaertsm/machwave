@@ -1127,6 +1127,30 @@ files = [
 ]
 
 [[package]]
+name = "trimesh"
+version = "4.6.4"
+description = "Import, export, process, analyze and view triangular meshes."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+files = [
+    {file = "trimesh-4.6.4-py3-none-any.whl", hash = "sha256:608eba071f13840a1c9de69f560d93b81cd216ce95da7bf748457aed989cf722"},
+    {file = "trimesh-4.6.4.tar.gz", hash = "sha256:bd052cd94650860c4e68f6cbf48a14d43a43ceb4d7a8152f4650ff62b6b9965d"},
+]
+
+[package.dependencies]
+numpy = ">=1.20"
+
+[package.extras]
+all = ["trimesh[deprecated,easy,recommend,test,test-more]"]
+deprecated = ["gmsh (==4.12.2)"]
+easy = ["charset-normalizer", "colorlog", "embreex", "httpx", "jsonschema", "lxml", "manifold3d (>=2.3.0)", "mapbox_earcut (>=1.0.2)", "networkx", "pillow", "pycollada", "rtree", "scipy", "shapely", "svg.path", "vhacdx", "xatlas", "xxhash"]
+recommend = ["cascadio", "fast-simplification", "meshio", "openctm", "psutil", "pyglet (<2)", "scikit-image", "sympy"]
+test = ["pyinstrument", "pytest", "pytest-cov", "ruff"]
+test-more = ["coveralls", "ezdxf", "ipython", "matplotlib", "pymeshlab", "pyright", "pytest-beartype", "triangle"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -1155,4 +1179,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<=3.14"
-content-hash = "9ffcae896f3c0b1293596f38e21b5d9bbf3d5833736ec515a8bf3cbb93ca8f32"
+content-hash = "4c956070382a58ceef9da8f3c008d646228b348fbe51f2025e35d6eeed6917d9"
