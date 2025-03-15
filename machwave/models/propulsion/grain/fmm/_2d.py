@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Callable, Optional
+
 import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
@@ -28,8 +29,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 1000,
+        inhibited_ends: int = 0,
+        map_dim: int = 1000,
     ) -> None:
         self.face_area_interp_func: Optional[Callable[[float], float]] = None
         super().__init__(
@@ -46,10 +47,11 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Each is of shape (map_dim, map_dim), ranging from -1 to 1.
         """
         if self.maps is None:
-            self.maps = np.meshgrid(
-                np.linspace(-1, 1, self.map_dim),
-                np.linspace(-1, 1, self.map_dim),
+            map_x, map_y = np.meshgrid(
+                np.linspace(-1, 1, self.map_dim, dtype=np.float64),
+                np.linspace(-1, 1, self.map_dim, dtype=np.float64),
             )
+            self.maps = (map_x, map_y)
         return self.maps
 
     def get_mask(self) -> NDArray[np.bool]:

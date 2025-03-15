@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, overload
 
 import numpy as np
+from numpy.typing import NDArray
 import skfmm
 
 from .. import GrainGeometryError, GrainSegment
@@ -24,7 +25,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.map_dim = map_dim
 
@@ -49,9 +50,11 @@ class FMMGrainSegment(GrainSegment, ABC):
         pass
 
     @abstractmethod
-    def get_maps(self) -> tuple[np.ndarray]:
+    def get_maps(self) -> tuple:
         """
-        Implementation varies depending if the geometry is 2D or 3D.
+        Returns:
+            - 2D: (map_x, map_y)
+            - 3D: (map_x, map_y, map_z)
         """
         pass
 
@@ -189,7 +192,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         return self.denormalize(np.amax(self.get_regression_map()))
 
     @abstractmethod
-    def get_contours(self, web_distance: float, *args, **kwargs) -> np.ndarray:
+    def get_contours(
+        self, web_distance: float, *args, **kwargs
+    ) -> list[NDArray[np.float64]]:
         """
         Return the contours of the regression map after a specified web distance.
 
