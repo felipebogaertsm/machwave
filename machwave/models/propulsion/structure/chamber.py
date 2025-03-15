@@ -55,7 +55,7 @@ class CombustionChamber:
         return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
     @property
-    def empty_volume(self) -> None:
+    def empty_volume(self) -> float:
         return get_cylinder_volume(self.inner_diameter, self.length)
 
     def get_bulkhead_thickness(
@@ -154,7 +154,9 @@ class BoltedCombustionChamber(CombustionChamber):
             / screw_count
         ) - (
             np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
-        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
+        ) * 0.25 * (
+            (self.outer_diameter**2) - (self.inner_diameter**2)
+        )
 
     def get_compression_area(self) -> float:
         return (
