@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -52,18 +51,11 @@ class NormalRandomGenerator(RandomGenerator):
     """
     Random number generator based on a normal distribution.
 
-    Attributes:
-        value (float | int): The main value of the random generator.
-        lower_tolerance (Optional[float | int]): The lower bound of the
-            parameter (default: 0).
-        upper_tolerance (Optional[float | int]): The upper bound of the
-            parameter (default: 0).
-        tolerance (Optional[float | int]): The tolerance of the parameter
-            (default: 0).
+    - Uses `tolerance` as 3σ (99.7% confidence interval).
+    - Does **not** support `lower_tolerance` and `upper_tolerance`.
 
-    Methods:
-        get_value(): Gets a random value based on a normal probability distribution.
-
+    Raises:
+        ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
     """
 
     def __post_init__(self) -> None:
@@ -105,18 +97,10 @@ class UniformRandomGenerator(RandomGenerator):
     """
     Random number generator based on a uniform distribution.
 
-    Attributes:
-        value (float | int): The main value of the random generator.
-        lower_tolerance (Optional[float | int]): The lower bound of the
-            parameter (default: 0).
-        upper_tolerance (Optional[float | int]): The upper bound of the
-            parameter (default: 0).
-        tolerance (Optional[float | int]): The tolerance of the parameter
-            (default: 0).
+    - Can use either `lower_tolerance` and `upper_tolerance` **or** `tolerance`, but not both.
 
-    Methods:
-        get_value(): Gets a random value based on a uniform probability distribution.
-
+    Raises:
+        ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
     """
 
     def __post_init__(self) -> None:
