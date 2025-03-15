@@ -11,23 +11,20 @@ class RandomGenerator(ABC):
     Abstract class for a random number generator.
 
     Attributes:
-        value (float | int): The main value of the random generator.
-        lower_tolerance (Optional[float | int]): The lower bound of the
-            parameter (default: 0).
-        upper_tolerance (Optional[float | int]): The upper bound of the
-            parameter (default: 0).
-        tolerance (Optional[float | int]): The tolerance of the parameter
-            (default: 0).
+        value: The main value of the random generator.
+        lower_tolerance: The lower bound of the parameter (default: 0).
+        upper_tolerance: The upper bound of the parameter (default: 0).
+        tolerance: The tolerance of the parameter (default: 0).
 
     Methods:
         get_value(): Gets a random value based on a probability distribution.
 
     """
 
-    value: float | int
-    lower_tolerance: Optional[float | int] = 0
-    upper_tolerance: Optional[float | int] = 0
-    tolerance: Optional[float | int] = 0
+    value: float
+    lower_tolerance: float = 0
+    upper_tolerance: float = 0
+    tolerance: float = 0
 
     def __post_init__(self) -> None:
         """
