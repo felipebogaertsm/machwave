@@ -230,8 +230,10 @@ class FMMGrainSegment(GrainSegment, ABC):
         regression_map = self.get_regression_map()
         valid = np.logical_not(self.get_mask())
 
-        # Keep only values in regression_map that are greater than web_distance_normalized
-        log_and = np.logical_and(regression_map > web_distance_normalized, valid)
+        # Create a masked array, where ~valid cells are masked out
+        maskarr = np.ma.MaskedArray(
+            (regression_map > web_distance_normalized).astype(np.int64), mask=~valid
+        )
 
-        face_mask = log_and * 1  # Convert booleans to 0 or 1
-        return face_mask.filled(-1)  # Fill masked elements with -1
+        # Fill masked entries with -1, valid/true entries remain 1 or 0
+        return maskarr.filled(-1)
