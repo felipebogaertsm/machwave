@@ -118,17 +118,14 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         volume_per_element = self.get_volume_per_element()
         return active_elements * volume_per_element
 
-    def get_center_of_gravity(self, web_distance: float) -> tuple[float, float, float]:
+    def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
-        Calculates the center of gravity of a 3D grain segment in 3D space at a
-        specific web distance.
+        Calculates the center of gravity of a 3D grain segment in 3D space
+        at a specific web distance.
 
-        :param float web_distance: The web distance traveled.
-        :return: (x_cog, y_cog, z_cog) - the coordinates of the center of
-            gravity in meters.
-        :raises GrainGeometryError: If the web distance traveled is greater
-            than the grain segment's web thickness.
-        :rtype: tuple[float, float, float]
+        Raises:
+            GrainGeometryError: If the web distance traveled is greater than
+                the grain segment's web thickness.
         """
         if web_distance > self.get_web_thickness():
             raise GrainGeometryError(
@@ -145,20 +142,20 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         # Get the non-masked elements
         z_indices, y_indices, x_indices = np.where(mask)
 
-        # Point of reference is semgent's top center
+        # Point of reference is segment's top center
         center_shift = self.map_dim / 2
         x_coords = x_indices - center_shift
         y_coords = y_indices - center_shift
-        z_coords = z_indices
+        z_coords = z_indices  # Already 0-based
 
-        # Calculate the weighted center of gravity for x and y
+        # Calculate the normalized center of gravity
         x_cog_normalized = np.mean(x_coords)
         y_cog_normalized = np.mean(y_coords)
         z_cog_normalized = np.mean(z_coords)
 
-        # Denormalize to get the physical coordinates in meters
+        # Convert normalized coordinates into physical meters
         x_cog = self.map_to_length(x_cog_normalized)
         y_cog = self.map_to_length(y_cog_normalized)
         z_cog = self.map_to_length(z_cog_normalized)
 
-        return x_cog, y_cog, z_cog
+        return np.array([x_cog, y_cog, z_cog], dtype=np.float64)

@@ -134,13 +134,12 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         return self.get_core_perimeter(web_distance) * self.get_length(web_distance)
 
-    def get_center_of_gravity(self, web_distance: float) -> tuple[float, float, float]:
+    def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
         Return the center of gravity of the 2D grain segment at a specific web distance.
 
         Raises:
-            GrainGeometryError: If web distance exceeds the web thickness, or
-                                if no active material is found.
+            GrainGeometryError: If web distance exceeds the web thickness, or if no active material is found.
         """
         if web_distance > self.get_web_thickness():
             raise GrainGeometryError(
@@ -167,4 +166,5 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         y_cog = self.map_to_length(y_cog_normalized)
         z_cog = self.length / 2
 
-        return x_cog, y_cog, z_cog
+        # Return as a float64 NumPy array
+        return np.array([x_cog, y_cog, z_cog], dtype=np.float64)
