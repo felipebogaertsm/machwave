@@ -1,4 +1,3 @@
-from typing import Optional
 import numpy as np
 from skimage import measure
 
@@ -91,9 +90,7 @@ def get_contours(
     return measure.find_contours(map, map_dist, fully_connected="low", *args, **kwargs)
 
 
-def get_length(
-    contour: np.ndarray, map_size: int, tolerance: Optional[float] = 3.0
-) -> float:
+def get_length(contour: np.ndarray, map_size: int, tolerance: float = 3.0) -> float:
     """
     Returns the total length of all segments in a contour that aren't within
     'tolerance' of the edge of a circle with diameter 'map_size'.
