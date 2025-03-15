@@ -8,7 +8,7 @@ from machwave.services.numpy import replace_array_values
 
 def _create_plot_2d_frame(
     face_map: np.ndarray,
-) -> list[go.Heatmap, go.Contour, go.Contour]:
+) -> tuple[go.Heatmap, go.Contour, go.Contour]:
     """
     Creates a 2D frame with a heatmap and contour lines of a segment face.
 
@@ -16,9 +16,9 @@ def _create_plot_2d_frame(
         face_map (np.ndarray): A 2D NumPy array representing the face map.
 
     Returns:
-        list[go.Heatmap, go.Contour, go.Contour]: A list of Plotly traces.
+        tuple[go.Heatmap, go.Contour, go.Contour]: A list of Plotly traces.
     """
-    return [
+    return (
         go.Heatmap(
             z=face_map,
             colorscale=[
@@ -62,7 +62,7 @@ def _create_plot_2d_frame(
             ),
             showscale=False,
         ),
-    ]
+    )
 
 
 def plot_2d_face_map(
