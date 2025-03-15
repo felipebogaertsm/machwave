@@ -7,7 +7,7 @@ level (AMSL).
 from abc import abstractmethod
 
 
-class Atmospher:
+class Atmosphere:
     """Abstract class that represents an atmospheric model."""
 
     @abstractmethod

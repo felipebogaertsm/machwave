@@ -21,7 +21,7 @@ class Atmosphere1976(Atmosphere):
         return ATMOSPHERE_1976.gravity(y_amsl)
 
     def get_pressure(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976(y_amsl).P
+        return ATMOSPHERE_1976(y_amsl).P  # type: ignore[call-arg, attr-defined]
 
     def get_sonic_velocity(self, y_amsl: float) -> float:
         return ATMOSPHERE_1976.sonic_velocity(y_amsl)
