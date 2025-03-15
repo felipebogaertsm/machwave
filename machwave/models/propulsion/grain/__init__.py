@@ -6,7 +6,7 @@ from machwave.services.decorators import validate_assertions
 
 
 class GrainGeometryError(Exception):
-    def __init__(self, message: float) -> None:
+    def __init__(self, message: str) -> None:
         self.message = message
 
         super().__init__(self.message)
@@ -89,7 +89,7 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_center_of_gravity(self, *args, **kwargs) -> float:
+    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
         Calculates the center of gravity of the segments in relation to the
         upper end of the segment (closest to the bulkhead).
@@ -271,24 +271,27 @@ class Grain:
         """
         return len(self.segments)
 
-    def get_center_of_gravity(self, web_distance: float) -> float:
-        """
-        Calculates the center of gravity of the grain in relation to the
-        upper end of the grain (closest to the bulkhead). Sums the CoG of all
-        the segments. Assumes constant density in all segments (same
-        propellant composition).
+    def get_center_of_gravity(
+        self, web_distance: float
+    ) -> np.typing.NDArray[np.float64]:
+        weighted_cogs = [
+            segment.get_center_of_gravity(web_distance=web_distance)
+            * segment.get_volume(web_distance=web_distance)
+            for segment in self.segments
+        ]
+        # If there's a chance segments is empty, handle that:
+        if not weighted_cogs:
+            # raise an error or return a zero vector
+            raise ValueError("No segments found, cannot compute CoG.")
 
-        :param float web_distance: Web distance traveled
-        :return: The center of gravity of the grain
-        :rtype: float
-        """
-        return np.sum(
-            [
-                segment.get_center_of_gravity(web_distance=web_distance)
-                * segment.get_volume(web_distance=web_distance)
-                for segment in self.segments
-            ]
-        ) / (self.get_propellant_volume(web_distance=web_distance))
+        # Stack into shape (N, 3) and sum along axis=0 => guaranteed shape (3,)
+        total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
+            axis=0, dtype=np.float64
+        )
+
+        propellant_vol = self.get_propellant_volume(web_distance=web_distance)
+
+        return (total_weighted_cogs / propellant_vol).astype(np.float64)
 
     def get_burn_area(self, web_distance: float) -> float:
         """
