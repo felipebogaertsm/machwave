@@ -72,7 +72,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         # get_contours is imported from machwave.services.math.geometric
         return get_contours(self.get_regression_map(), map_dist)
 
-    def get_port_area(self, web_distance: float) -> float | NDArray[np.float64]:
+    def get_port_area(self, web_distance: float) -> float:
         """
         Return the grain's port area (open cross-sectional area) at the given web distance.
         Could be a scalar or array, depending on how the computations are done.

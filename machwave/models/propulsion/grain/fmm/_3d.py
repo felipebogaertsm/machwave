@@ -28,8 +28,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 100,
+        inhibited_ends: int = 0,
+        map_dim: int = 100,
     ) -> None:
         super().__init__(
             length=length,
@@ -39,9 +39,36 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             map_dim=map_dim,
         )
 
-    def get_port_area(self, web_distance: float) -> np.ndarray:
-        face_map = self.get_face_map(web_distance=web_distance)[1]
-        face_area = self.map_to_area(np.count_nonzero(face_map == 1))
+    def get_port_area(self, web_distance: float, z: float) -> float:
+        """
+        Calculates the port area at a given web distance and axial height z.
+
+        This method extracts a single 2D slice from the 3D face map by converting
+        the physical height z into an integer index, and then computes the port
+        area for that slice.
+
+        Args:
+            web_distance: The distance traveled into the grain web.
+            z: Axial position (in meters) along the grain, where z=0 is the top
+                and z=self.length is the bottom (or vice versa, depending on
+                geometry setup).
+
+        Returns:
+            A float representing the port area at the specified z slice, in m².
+        """
+        face_map_3d = self.get_face_map(web_distance=web_distance)  # 3D face map
+
+        normalized_z = z / self.length
+        max_index = self.get_normalized_length() - 1  # last valid slice index
+        z_index = int(round(normalized_z * max_index))
+
+        if z_index < 0:
+            z_index = 0
+        elif z_index > max_index:
+            z_index = max_index
+
+        face_map_slice = face_map_3d[z_index]
+        face_area = self.map_to_area(np.count_nonzero(face_map_slice == 1))
         return get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
@@ -72,14 +99,18 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.mask
 
-    def get_contours(self, web_distance: float, length_normalized: float) -> np.ndarray:
+    def get_contours(
+        self, web_distance: float, length_normalized: float
+    ) -> list[np.typing.NDArray[np.float64]]:
         map_dist = self.normalize(web_distance)
         valid = np.logical_not(self.get_mask())
+        boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
 
-        map = np.logical_and(self.get_regression_map() > (map_dist), valid)
+        z_index = int(round(length_normalized))
+        boolean_slice_2d = boolean_3d[z_index]
 
         return get_contours(
-            map[length_normalized],
+            boolean_slice_2d,
             map_dist,
         )
 

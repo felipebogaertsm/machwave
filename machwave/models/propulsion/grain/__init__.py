@@ -46,23 +46,20 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_port_area(self, web_distance: float) -> float | np.ndarray:
+    def get_port_area(self, web_distance: float, *args, **kwargs) -> float:
         """
-        Calculates the port area in function of the web distance traveled.
-        For a 2D grain segment it should return a single value (constant core
-        geometry thoughout the segment's length).
-        For a 3D grain segment it should return an array of values (variable
-        core geometry thoughout the segment's length).
+        Calculates the port area as a function of the web distance traveled.
 
-        Example:
-        In a simple 2D tubular geometry, the port area would be equal to the
-        instantaneous core diameter area.
+        This method assumes a 2D or simplified model where the port area can
+        be represented by a single scalar value at a given web distance.
 
-        Not to be confused with core area!
+        Args:
+            web_distance: Distance traveled into the grain web.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
 
-        :param float web_distance: Web distance traveled
-        :return: Port area in function of the web distance traveled
-        :rtype: float | np.ndarray[float]
+        Returns:
+            A float representing the port area.
         """
         pass
 
@@ -217,15 +214,19 @@ class GrainSegment3D(GrainSegment, ABC):
         )
 
     @abstractmethod
-    def get_port_area(self, web_distance: float) -> np.ndarray:
+    def get_port_area(self, web_distance: float, z: float) -> float:
         """
-        Calculates the port area in function of the web distance traveled.
+        Calculates the port area as a function of the web distance traveled
+        and a specified height (z).
 
-        NOTE: NOT YET IMPLEMENTED
+        NOTE: This method is not implemented.
 
-        :param float web_distance: Web distance traveled
-        :return: Port area in function of the web distance traveled
-        :rtype: np.ndarray
+        Args:
+            web_distance: The distance traveled into the grain web.
+            z: The axial position (height) along the grain.
+
+        Returns:
+            The port area at the given web distance and height.
         """
         pass
 
