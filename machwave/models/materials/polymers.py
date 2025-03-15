@@ -13,7 +13,7 @@ class EPDM(Material):
     """
 
     density: float = 1500
-    yield_strength: float = None
+    yield_strength: float = 0
     ultimate_strength: float = 17e6
 
 
