@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import numpy as np
 
@@ -23,7 +22,7 @@ class GrainSegment(ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.length = length
         self.outer_diameter = outer_diameter
@@ -132,7 +131,7 @@ class GrainSegment2D(GrainSegment, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         super().__init__(
             length=length,
@@ -208,7 +207,7 @@ class GrainSegment3D(GrainSegment, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         super().__init__(
             length=length,
