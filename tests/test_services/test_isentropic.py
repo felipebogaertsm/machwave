@@ -1,6 +1,6 @@
 import numpy as np
 
-from pytest import approx, mark
+from pytest import approx
 
 from machwave.services.isentropic_flow import (
     get_critical_pressure_ratio,
@@ -12,7 +12,6 @@ from machwave.services.isentropic_flow import (
     is_flow_choked,
     get_total_impulse,
     get_specific_impulse,
-    get_operational_correction_factors,
     get_divergent_correction_factor,
     get_expansion_ratio,
 )
@@ -80,17 +79,12 @@ def test_is_flow_choked():
 
     # Flow is choked
     assert (
-        is_flow_choked(
-            chamber_pressure, external_pressure, critical_pressure_ratio
-        )
+        is_flow_choked(chamber_pressure, external_pressure, critical_pressure_ratio)
         is True
     )
 
     # Flow is NOT choked
-    assert (
-        is_flow_choked(external_pressure * 1.1, external_pressure, 0.5)
-        is False
-    )
+    assert is_flow_choked(external_pressure * 1.1, external_pressure, 0.5) is False
 
 
 def test_get_total_impulse():
@@ -103,9 +97,7 @@ def test_get_total_impulse():
 def test_get_specific_impulse():
     total_impulse = 2500
     initial_propellant_mass = 100
-    specific_impulse = get_specific_impulse(
-        total_impulse, initial_propellant_mass
-    )
+    specific_impulse = get_specific_impulse(total_impulse, initial_propellant_mass)
     assert specific_impulse == approx(2.542, rel=1e-2)
 
 

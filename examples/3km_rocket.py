@@ -1,5 +1,5 @@
 """
-This example simulates a rocket with a solid motor that reaches an altitude 
+This example simulates a rocket with a solid motor that reaches an altitude
 of 3 km.
 """
 
@@ -116,9 +116,7 @@ def main():
     )
 
     # Rocket:
-    fuselage = Fuselage(
-        length=2900, drag_coefficient=0.75, outer_diameter=0.12
-    )
+    fuselage = Fuselage(length=2900, drag_coefficient=0.75, outer_diameter=0.12)
 
     rocket = Rocket(
         propulsion=motor,

@@ -11,7 +11,7 @@ from machwave.models.recovery.parachutes import (
 
 def test_parachute_abstract_class():
     with pytest.raises(TypeError):
-        parachute = Parachute()
+        _ = Parachute()
 
 
 def test_hemispherical_parachute_initialization():

@@ -5,7 +5,7 @@ from machwave.operations.internal_ballistics import (
 )
 
 
-def get_motor_operation_class(motor: Motor) -> MotorOperation:
+def get_motor_operation_class(motor: Motor) -> type[MotorOperation]:
     """
     Returns the appropriate motor operation class based on the type of motor.
 

@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from machwave.operations import Operation
-
 
 class SimulationParameters(ABC):
     """
@@ -43,7 +41,7 @@ class Simulation(ABC):
         self.params = params
 
     @abstractmethod
-    def run(self) -> list[Operation]:
+    def run(self) -> tuple:
         """
         Runs the simulation. This method should be implemented by subclasses.
         It typically contains a loop that iterates over time or distance.

@@ -18,7 +18,7 @@ class Nozzle:
         divergent_angle,
         convergent_angle,
         expansion_ratio,
-        material=None,
+        material,
     ) -> None:
         self.throat_diameter = throat_diameter
         self.divergent_angle = divergent_angle
@@ -43,15 +43,13 @@ class Nozzle:
         Considers thin wall approximation.
         """
         return (chamber_pressure * chamber_inner_diameter / 2) / (
-            (
-                self.material.yield_strength / safety_factor
-                - 0.6 * chamber_pressure * (np.cos(np.deg2rad(wall_angle)))
-            )
+            self.material.yield_strength / safety_factor
+            - 0.6 * chamber_pressure * (np.cos(np.deg2rad(wall_angle)))
         )
 
     def get_nozzle_thickness(
         self,
-        chamber_pressure: np.ndarray,
+        chamber_pressure: float,
         safety_factor: float,
         chamber: CombustionChamber,
     ):

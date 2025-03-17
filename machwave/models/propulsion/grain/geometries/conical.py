@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from .. import GrainGeometryError
@@ -15,7 +13,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         upper_core_diameter: float,
         lower_core_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.upper_core_diameter = upper_core_diameter
         self.lower_core_diameter = lower_core_diameter
@@ -37,7 +35,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         assert self.lower_core_diameter > 0
         assert self.lower_core_diameter < self.outer_diameter
 
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         map_x, map_y, map_z = self.get_maps()
         core_map = self.get_empty_face_map()
 
@@ -45,9 +43,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         lower_core_norm = self.normalize(self.lower_core_diameter)
 
         radius = np.sqrt(map_x**2 + map_y**2)
-        core_diameter = (
-            map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
-        )
+        core_diameter = map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
 
         # Create the ring:
         core_map[radius < core_diameter / 2] = 0

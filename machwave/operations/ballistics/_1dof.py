@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from . import BallisticOperation
@@ -19,7 +17,7 @@ class Ballistic1DOperation(BallisticOperation):
         rail_length: float,
         motor_dry_mass: float,
         initial_vehicle_mass: float,
-        initial_elevation_amsl: Optional[float] = 0,
+        initial_elevation_amsl: float = 0,
     ) -> None:
         """
         Initialize the attributes for the ballistics operation.
@@ -105,9 +103,7 @@ class Ballistic1DOperation(BallisticOperation):
         )
         self.g = np.append(
             self.g,
-            self.atmosphere.get_gravity(
-                self.initial_elevation_amsl + self.y[-1]
-            ),
+            self.atmosphere.get_gravity(self.initial_elevation_amsl + self.y[-1]),
         )
 
         # Appending the current vehicle mass, consisting of the motor
@@ -130,10 +126,7 @@ class Ballistic1DOperation(BallisticOperation):
         )
 
         D = (
-            (
-                fuselage_area * fuselage_drag_coeff
-                + recovery_area * recovery_drag_coeff
-            )
+            (fuselage_area * fuselage_drag_coeff + recovery_area * recovery_drag_coeff)
             * self.rho_air[-1]
             * 0.5
         )
@@ -171,9 +164,7 @@ class Ballistic1DOperation(BallisticOperation):
 
         self.P_ext = np.append(
             self.P_ext,
-            self.atmosphere.get_pressure(
-                self.y[-1] + self.initial_elevation_amsl
-            ),
+            self.atmosphere.get_pressure(self.y[-1] + self.initial_elevation_amsl),
         )
 
         if self.velocity_out_of_rail is None and self.y[-1] > self.rail_length:
@@ -190,8 +181,6 @@ class Ballistic1DOperation(BallisticOperation):
         print(f" Max. Mach number: {np.max(self.mach_no):.3f}")
         print(f" Max. acceleration: {np.max(self.acceleration) / 9.81:.2f} gs")
         print(f" Time to apogee: {self.apogee_time:.2f} s")
-        print(
-            f" Velocity out of the rail: {self.velocity_out_of_rail:.2f} m/s"
-        )
+        print(f" Velocity out of the rail: {self.velocity_out_of_rail:.2f} m/s")
         print(f" Liftoff mass: {self.vehicle_mass[0]:.3f} kg")
         print(f" Flight time: {self.t[-1]:.2f} s")

@@ -43,7 +43,10 @@ class CombustionChamber:
         return self.casing_inner_diameter / 2
 
     @property
-    def chamber_length(
+    def empty_volume(self) -> float:
+        return get_cylinder_volume(self.inner_diameter, self.length)
+
+    def get_chamber_length(
         self,
         grain_length: float,
         grain_count: int,
@@ -54,12 +57,8 @@ class CombustionChamber:
         """
         return np.sum(grain_length) + (grain_count - 1) * grain_spacing
 
-    @property
-    def empty_volume(self) -> None:
-        return get_cylinder_volume(self.inner_diameter, self.length)
-
     def get_bulkhead_thickness(
-        self, chamber_pressure: np.ndarray, safety_factor: float
+        self, chamber_pressure: float, safety_factor: float
     ) -> float:
         """
         Returns the thickness of a planar bulkhead pressure vessel.
@@ -93,7 +92,7 @@ class CombustionChamber:
             / (self.outer_radius**2 - self.casing_inner_radius**2)
         )
 
-    def get_casing_safety_factor(self, chamber_pressure: np.ndarray) -> float:
+    def get_casing_safety_factor(self, chamber_pressure: float) -> float:
         """
         Returns the thickness for a cylindrical pressure vessel, using
         Von Misses criteria.
@@ -150,23 +149,15 @@ class BoltedCombustionChamber(CombustionChamber):
         Calculates tear area for screw section.
         """
         return (
-            (
-                np.pi
-                * 0.25
-                * ((self.outer_diameter**2) - (self.inner_diameter**2))
-            )
+            (np.pi * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2)))
             / screw_count
         ) - (
-            np.arcsin(
-                (self.screw_clearance_diameter / 2) / (self.inner_diameter / 2)
-            )
-        ) * 0.25 * (
-            (self.outer_diameter**2) - (self.inner_diameter**2)
-        )
+            np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
+        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
 
     def get_compression_area(self) -> float:
         return (
-            ((self.outer_diameter - self.inner_diameter))
+            (self.outer_diameter - self.inner_diameter)
             * self.screw_clearance_diameter
             / 2
         )
@@ -178,7 +169,7 @@ class BoltedCombustionChamber(CombustionChamber):
             chamber_pressure * (np.pi * (self.inner_diameter / 2) ** 2)
         ) / screw_count
 
-    def get_optimal_fasteners(self, chamber_pressure: np.ndarray):
+    def get_optimal_fasteners(self, chamber_pressure: float):
         max_screw_count = self.max_screw_count
         casing_yield_strength = self.casing_material.yield_strength
         screw_ultimate_strength = self.screw_material.ultimate_strength
@@ -218,9 +209,7 @@ class BoltedCombustionChamber(CombustionChamber):
                 compression_safety_factor,
             )
         )
-        max_safety_factor_fastener = np.max(
-            np.min(fastener_safety_factor, axis=0)
-        )
+        max_safety_factor_fastener = np.max(np.min(fastener_safety_factor, axis=0))
         optimal_fasteners = np.argmax(np.min(fastener_safety_factor, axis=0))
 
         return (

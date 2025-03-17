@@ -1,5 +1,5 @@
 """
-This example demonstrates the capability of analyzing different grain 
+This example demonstrates the capability of analyzing different grain
 geometries within Machwave.
 """
 
@@ -65,28 +65,22 @@ def main():
 
     grain_area = conical_segment.get_burn_area(web_distance=web_distance)
     print(f"Conical grain area: {grain_area * 1e6:2f} mm^2")
-    port_area = conical_segment.get_port_area(web_distance=web_distance)
+    port_area = conical_segment.get_port_area(web_distance=web_distance, z=0)
     print(f"Conical grain port area: {port_area * 1e6:2f} mm^2")
-    print(
-        f"Conical center of gravity: {conical_segment.get_center_of_gravity(0)}"
-    )
+    print(f"Conical center of gravity: {conical_segment.get_center_of_gravity(0)}")
 
     grain_area = dgrain_segment.get_burn_area(web_distance=web_distance)
     port_area = dgrain_segment.get_port_area(web_distance=web_distance)
     face_map = dgrain_segment.get_face_map(web_distance=web_distance)
     print(f"Dgrain grain area: {grain_area * 1e6:2f} mm^2")
     print(f"Dgrain grain port area: {port_area * 1e6:2f} mm^2")
-    print(
-        f"Dgrain center of gravity: {dgrain_segment.get_center_of_gravity(0)}"
-    )
+    print(f"Dgrain center of gravity: {dgrain_segment.get_center_of_gravity(0)}")
     plot_2d_face_map(face_map).show()
 
     grain_area = multiport_segment.get_burn_area(web_distance=web_distance)
     port_area = multiport_segment.get_port_area(web_distance=web_distance)
     face_map = multiport_segment.get_face_map(web_distance=web_distance)
-    web_distance_array = np.linspace(
-        0, multiport_segment.get_web_thickness(), 50
-    )
+    web_distance_array = np.linspace(0, multiport_segment.get_web_thickness(), 50)
     print(f"Multiport grain area: {grain_area * 1e6:2f} mm^2")
     print(f"Multiport grain port area: {port_area * 1e6:2f} mm^2")
     print(

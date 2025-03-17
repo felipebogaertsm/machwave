@@ -1,13 +1,12 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any
 import uuid
 
 import numpy as np
 import plotly.graph_objects as go
 
 from machwave.montecarlo.random import get_random_generator
-from machwave.operations import Operation
 from machwave.simulations import Simulation
 from machwave.services.common import obtain_attributes_from_object
 
@@ -30,9 +29,9 @@ class MonteCarloParameter:
     """
 
     value: float | int
-    lower_tolerance: Optional[float | int] = 0
-    upper_tolerance: Optional[float | int] = 0
-    tolerance: Optional[float | int] = 0
+    lower_tolerance: float | int = 0
+    upper_tolerance: float | int = 0
+    tolerance: float | int = 0
     probability_distribution: str = "normal"
 
     def __post_init__(self) -> None:
@@ -98,15 +97,15 @@ class MonteCarloSimulation:
 
     def __init__(
         self,
-        parameters: List[Any],
+        parameters: list[Any],
         number_of_scenarios: int,
-        simulation: Simulation,
+        simulation: type[Simulation],
     ) -> None:
         """
         Initializes a MonteCarloSimulation object.
 
         Args:
-            parameters: List with the input parameters for a simulation
+            parameters: list with the input parameters for a simulation
                 class instance.
             number_of_scenarios: Number of scenarios to be simulated.
             simulation: Simulation class instance.
@@ -115,14 +114,12 @@ class MonteCarloSimulation:
         self.number_of_scenarios = number_of_scenarios
         self.simulation = simulation
 
-        self.scenarios: List[List[float | int]] = []
-        self.results: List[List[Operation]] = []
+        self.scenarios: list = []
+        self.results: list = []
 
-        self._object_store = (
-            dict()
-        )  # maps UUIDs to objects in generate_scenario
+        self._object_store = dict()  # maps UUIDs to objects in generate_scenario
 
-    def generate_scenario(self) -> List[float | int]:
+    def generate_scenario(self) -> list[Any]:
         """
         Generates a Monte Carlo scenario in the form of a list of parameters.
 
@@ -158,9 +155,7 @@ class MonteCarloSimulation:
         """
         parameter_uuid = uuid.uuid4()
         self._object_store[parameter_uuid] = parameter
-        search_tree = {
-            parameter_uuid: obtain_attributes_from_object(parameter)
-        }
+        search_tree = {parameter_uuid: obtain_attributes_from_object(parameter)}
 
         i = 0  # iteration counter
 
@@ -190,8 +185,8 @@ class MonteCarloSimulation:
                         object_uuid = uuid.uuid4()
                         self._object_store[object_uuid] = attr
 
-                        new_search_tree[object_uuid] = (
-                            obtain_attributes_from_object(attr)
+                        new_search_tree[object_uuid] = obtain_attributes_from_object(
+                            attr
                         )
 
             search_tree = new_search_tree
@@ -224,17 +219,14 @@ class MonteCarloSimulation:
             Numpy array containing the values of the specified property.
         """
         return np.array(
-            [
-                getattr(result[operation_index], property)
-                for result in self.results
-            ]
+            [getattr(result[operation_index], property) for result in self.results]
         )
 
     def plot_histogram(
         self,
         operation_index: int,
         property: str,
-        x_axes_title: Optional[str] = None,
+        x_axes_title: str = "x",
         *args,
         **kwargs,
     ) -> None:

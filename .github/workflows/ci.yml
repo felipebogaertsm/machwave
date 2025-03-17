@@ -8,14 +8,38 @@ permissions:
   id-token: write
 
 jobs:
+  static-checks:
+    name: Static Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install Dependencies
+        run: poetry install --no-root --with dev
+
+      - name: Run Ruff checks
+        run: poetry run ruff check .
+
+      - name: Run Pyright
+        run: poetry run pyright machwave
+
   test:
     name: Testing
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Testing
-        run: |
-          docker compose -f docker-compose-test.yaml up --build --exit-code-from test-machwave
+      
+      - name: Run Tests
+        run: docker compose -f compose.test.yaml up --build --exit-code-from test-machwave
 
   build-deploy-docs:
     name: Build and deploy documentation
@@ -26,29 +50,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10.x"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx_rtd_theme
           pip install -r requirements.txt
+
       - name: Build documentation
         run: |
           chmod +x scripts/sphinx-docs.sh
           sh scripts/sphinx-docs.sh apidoc
           sh scripts/sphinx-docs.sh html
+
       - name: Setup Pages
+        uses: actions/configure-pages@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           enablement: true
-        uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "docs/_build/html/html"
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -23,16 +23,16 @@ class RecoveryEvent(ABC):
         height: np.ndarray,
         time: np.ndarray,
         velocity: np.ndarray,
-        propellant_mass: float,
+        propellant_mass: np.ndarray,
     ) -> bool:
         """
         Checks if the recovery event is active based on the given conditions.
 
         Args:
-            height (np.ndarray): The array of heights.
-            time (np.ndarray): The array of time values.
-            velocity (np.ndarray): The array of velocities.
-            propellant_mass (float): Instant propellant mass.
+            height: The array of heights.
+            time: The array of time values.
+            velocity: The array of velocities.
+            propellant_mass: The array of propellant masses.
 
         Returns:
             bool: True if the recovery event is active, False otherwise.
@@ -55,10 +55,10 @@ class AltitudeBasedEvent(RecoveryEvent):
         the current height is below the trigger value.
 
         Args:
-            height (np.ndarray): The array of heights.
-            time (np.ndarray): The array of time values.
-            velocity (np.ndarray): The array of velocities.
-            propellant_mass (np.ndarray): The array of propellant masses.
+            height: The array of heights.
+            time: The array of time values.
+            velocity: The array of velocities.
+            propellant_mass: The array of propellant masses.
 
         Returns:
             bool: True if the altitude-based recovery event is active, False otherwise.
@@ -85,7 +85,7 @@ class ApogeeBasedEvent(RecoveryEvent):
         height: np.ndarray,
         time: np.ndarray,
         velocity: np.ndarray,
-        propellant_mass: float,
+        propellant_mass: np.ndarray,
     ) -> bool:
         """
         Checks if the apogee-based recovery event is active.
@@ -95,10 +95,10 @@ class ApogeeBasedEvent(RecoveryEvent):
         since apogee is greater than or equal to the trigger value.
 
         Args:
-            height (np.ndarray): The array of heights.
-            time (np.ndarray): The array of time values.
-            velocity (np.ndarray): The array of velocities.
-            propellant_mass (float): The propellant mass.
+            height: The array of heights.
+            time: The array of time values.
+            velocity: The array of velocities.
+            propellant_mass: The array of propellant masses.
 
         Returns:
             bool: True if the apogee-based recovery event is active, False otherwise.

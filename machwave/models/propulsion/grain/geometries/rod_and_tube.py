@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from .. import GrainGeometryError
@@ -15,7 +13,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         rod_outer_diameter: float,
         tube_inner_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.rod_outer_diameter = rod_outer_diameter
         self.tube_inner_diameter = tube_inner_diameter
@@ -35,7 +33,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         assert self.tube_inner_diameter > self.rod_outer_diameter
         assert self.tube_inner_diameter < self.outer_diameter
 
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         NOTE: Still needs to correctly implement wagon wheel ports.
         """

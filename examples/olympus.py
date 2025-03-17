@@ -1,6 +1,6 @@
 """
-Olympus is an O-class solid rocket motor designed during the LASC Cooperation 
-Program (2020-2022). It was originally intended to be used in the Concorde 
+Olympus is an O-class solid rocket motor designed during the LASC Cooperation
+Program (2020-2022). It was originally intended to be used in the Concorde
 5km-apogee rocket, but was never used in a flight. The motor was successfully
 tested on July 2, 2022 and, at the time, it was the largest experimental motor
 ever built in Latin America.
@@ -109,9 +109,7 @@ def main():
     simulation.print_results()
 
     # Plots:
-    thrust_pressure_plot(
-        ib_operation.t, ib_operation.thrust, ib_operation.P_0
-    ).show()
+    thrust_pressure_plot(ib_operation.t, ib_operation.thrust, ib_operation.P_0).show()
 
     mass_flux_plot(
         ib_operation.t,
