@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from machwave.operations import Operation
-
 
 class SimulationParameters(ABC):
     """
