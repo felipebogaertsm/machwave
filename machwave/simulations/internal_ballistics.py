@@ -61,7 +61,7 @@ class InternalBallistics(Simulation):
             initial_atmospheric_pressure=self.params.external_pressure,
         )
 
-    def run_ballistics(self) -> tuple[np.ndarray, MotorOperation]:
+    def run(self) -> tuple[np.ndarray, MotorOperation]:
         """
         Runs the main loop of the simulation, returning the time array and
         the motor operation object.
