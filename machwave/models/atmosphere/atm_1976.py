@@ -15,13 +15,15 @@ class Atmosphere1976(Atmosphere):
     """
 
     def get_density(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976.density(y_amsl)
+        return ATMOSPHERE_1976.density(y_amsl)  # type: ignore
 
     def get_gravity(self, y_amsl: float) -> float:
         return ATMOSPHERE_1976.gravity(y_amsl)
 
     def get_pressure(self, y_amsl: float) -> float:
-        return ATMOSPHERE_1976(y_amsl).P  # type: ignore[call-arg, attr-defined]
+        return self.SEA_LEVEL_PRESSURE + ATMOSPHERE_1976.pressure_integral(
+            self.SEA_LEVEL_TEMPERATURE, self.SEA_LEVEL_PRESSURE, y_amsl
+        )
 
     def get_sonic_velocity(self, y_amsl: float) -> float:
         return ATMOSPHERE_1976.sonic_velocity(y_amsl)

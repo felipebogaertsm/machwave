@@ -10,6 +10,13 @@ from abc import abstractmethod
 class Atmosphere:
     """Abstract class that represents an atmospheric model."""
 
+    SEA_LEVEL_PRESSURE: float = 101325.0  # Pa
+    SEA_LEVEL_DENSITY: float = 1.225  # kg/m³
+    SEA_LEVEL_TEMPERATURE: float = 288.15  # K
+    SEA_LEVEL_SONIC_VELOCITY: float = 340.29  # m/s
+    SEA_LEVEL_VISCOSITY: float = 1.7894e-5  # Pa·s
+    SEA_LEVEL_GRAVITY: float = 9.80665  # m/s²
+
     @abstractmethod
     def get_density(self, y_amsl: float) -> float:
         """
