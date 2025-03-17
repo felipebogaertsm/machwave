@@ -12,7 +12,6 @@ import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
-from machwave.operations import Operation
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
