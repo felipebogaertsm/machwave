@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -43,7 +42,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         )
 
     @abstractmethod
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         Method needs to be implemented for each and every geometry.
         """

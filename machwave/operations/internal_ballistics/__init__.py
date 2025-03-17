@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Optional
 
 import numpy as np
 
@@ -360,7 +359,7 @@ class SRMOperation(MotorOperation):
         return self.propellant_volume[0] / self.motor.structure.chamber.empty_volume
 
     @property
-    def burn_profile(self, deviancy: Optional[float] = 0.02) -> str:
+    def burn_profile(self, deviancy: float = 0.02) -> str:
         """
         Get the burn profile.
 

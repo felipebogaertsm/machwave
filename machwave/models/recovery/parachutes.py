@@ -20,7 +20,7 @@ class Parachute(ABC):
 
     @property
     @abstractmethod
-    def drag_coefficient(self):
+    def drag_coefficient(self) -> float:
         """
         The drag coefficient of the parachute.
         Subclasses must override this property to provide the appropriate drag
@@ -30,7 +30,7 @@ class Parachute(ABC):
 
     @property
     @abstractmethod
-    def area(self):
+    def area(self) -> float:
         """
         The area of the parachute.
         Subclasses must override this property to provide the appropriate area

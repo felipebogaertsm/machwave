@@ -66,9 +66,12 @@ class BatesSegment(GrainSegment2D):
         """
         return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
 
-    def get_center_of_gravity(self, *args, **kwargs) -> float:
+    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
         BATES is a symmetrical 2D geometry, so the center of gravity is always
-        at the middle of the segment.
+        at the middle of the segment along the axial (length) direction.
+
+        Returns:
+            Center of gravity in 3D space [x, y, z].
         """
-        return self.length / 2
+        return np.array([self.length / 2, 0.0, 0.0], dtype=np.float64)

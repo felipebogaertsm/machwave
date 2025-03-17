@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from . import BallisticOperation
@@ -19,7 +17,7 @@ class Ballistic1DOperation(BallisticOperation):
         rail_length: float,
         motor_dry_mass: float,
         initial_vehicle_mass: float,
-        initial_elevation_amsl: Optional[float] = 0,
+        initial_elevation_amsl: float = 0,
     ) -> None:
         """
         Initialize the attributes for the ballistics operation.

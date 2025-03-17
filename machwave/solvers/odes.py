@@ -6,7 +6,7 @@ def rk4th_ode_solver(
     equation: Callable,
     d_t: float,
     **kwargs,
-) -> tuple[float]:
+) -> tuple[float, ...]:
     """
     Solves a system of ordinary differential equations using the 4th order
     Runge-Kutta method.

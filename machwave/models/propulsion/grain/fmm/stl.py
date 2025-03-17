@@ -1,8 +1,7 @@
 from abc import ABC
-from typing import Optional
 
 import numpy as np
-from trimesh import load_mesh
+import trimesh
 
 from ._3d import FMMGrainSegment3D
 from .. import GrainGeometryError
@@ -21,8 +20,8 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         outer_diameter: float,
         length: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
-        map_dim: Optional[int] = 50,
+        inhibited_ends: int = 0,
+        map_dim: int = 50,
     ) -> None:
         self.file_path = file_path
         self.outer_diameter = outer_diameter
@@ -52,17 +51,22 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         """
         return self.outer_diameter / int(self.map_dim - 1)
 
-    def get_initial_face_map(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         Generate a map by voxelizing an STL file. Uses trimesh library.
 
         NOTE: Still needs to convert boolean matrix to masked array.
         """
-        mesh = load_mesh(self.file_path)
-        assert mesh.is_watertight
+        mesh: trimesh.Trimesh = trimesh.load_mesh(self.file_path)
+        assert mesh.is_watertight, "Mesh must be watertight"
 
         volume = mesh.voxelized(pitch=self.get_voxel_size()).fill()
-        map = volume.matrix.view(np.ndarray).transpose() * 1
+        voxel_map: np.typing.NDArray[np.int_] = (
+            volume.matrix.view(np.ndarray).transpose().astype(np.int_)
+        )
 
-        assert map.shape == self.get_maps()[0].shape
-        return map
+        assert voxel_map.shape == self.get_maps()[0].shape, (
+            "Generated map shape mismatch"
+        )
+
+        return voxel_map
