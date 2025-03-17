@@ -1,14 +1,13 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any
 import uuid
 
 import numpy as np
 import plotly.graph_objects as go
 
 from machwave.montecarlo.random import get_random_generator
-from machwave.operations import Operation
-from machwave.simulations import Simulation
+from machwave.simulations import Simulation, SimulationParameters
 from machwave.services.common import obtain_attributes_from_object
 
 SEARCH_TREE_DEPTH_LIMIT = 20
@@ -30,9 +29,9 @@ class MonteCarloParameter:
     """
 
     value: float | int
-    lower_tolerance: Optional[float | int] = 0
-    upper_tolerance: Optional[float | int] = 0
-    tolerance: Optional[float | int] = 0
+    lower_tolerance: float | int = 0
+    upper_tolerance: float | int = 0
+    tolerance: float | int = 0
     probability_distribution: str = "normal"
 
     def __post_init__(self) -> None:
@@ -98,15 +97,16 @@ class MonteCarloSimulation:
 
     def __init__(
         self,
-        parameters: List[Any],
+        parameters: list[Any],
         number_of_scenarios: int,
-        simulation: Simulation,
+        simulation: type[Simulation],
+        simulation_params: type[SimulationParameters],
     ) -> None:
         """
         Initializes a MonteCarloSimulation object.
 
         Args:
-            parameters: List with the input parameters for a simulation
+            parameters: list with the input parameters for a simulation
                 class instance.
             number_of_scenarios: Number of scenarios to be simulated.
             simulation: Simulation class instance.
@@ -115,12 +115,12 @@ class MonteCarloSimulation:
         self.number_of_scenarios = number_of_scenarios
         self.simulation = simulation
 
-        self.scenarios: List[List[float | int]] = []
-        self.results: List[List[Operation]] = []
+        self.scenarios: list = []
+        self.results: list = []
 
         self._object_store = dict()  # maps UUIDs to objects in generate_scenario
 
-    def generate_scenario(self) -> List[float | int]:
+    def generate_scenario(self) -> list[float | int]:
         """
         Generates a Monte Carlo scenario in the form of a list of parameters.
 
@@ -200,7 +200,9 @@ class MonteCarloSimulation:
 
         for _ in range(self.number_of_scenarios):
             scenario = self.generate_scenario()
-            self.results.append(self.simulation(*scenario).run())
+            self.results.append(
+                self.simulation(params=SimulationParameters(*scenario)).run()
+            )
 
     def retrieve_values_from_result(
         self,
@@ -227,7 +229,7 @@ class MonteCarloSimulation:
         self,
         operation_index: int,
         property: str,
-        x_axes_title: Optional[str] = None,
+        x_axes_title: str = "x",
         *args,
         **kwargs,
     ) -> None:
