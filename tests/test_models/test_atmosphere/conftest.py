@@ -12,9 +12,9 @@ def test_atmosphere_up_to_karman_line() -> Callable[[Atmosphere], None]:
         pressure_at_sea_level = atmosphere.get_pressure(y_amsl=0)
         assert pressure_at_sea_level == pytest.approx(101325, rel=1e-3)
 
-        heights = [0, 5e3, 10e3, 20e3, 30e3, 50e3, 70e3, 100e3]# 0 up to 100 km
+        heights = [0, 5e3, 10e3, 20e3, 30e3, 50e3, 70e3, 100e3]  # 0 up to 100 km
 
-        for i in heights:  
+        for i in heights:
             height = float(i)
 
             # Test density:
