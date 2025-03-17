@@ -95,7 +95,7 @@ class BallisticSimulation(Simulation):
 
         return prop_mass
 
-    def run(self) -> tuple[np.typing.NDArray[np.float64], Ballistic1DOperation]:
+    def run(self) -> tuple:
         """
         Runs the main loop of the simulation, returning the time array and
         the ballistic operation object.

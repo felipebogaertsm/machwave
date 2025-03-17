@@ -101,14 +101,13 @@ class InternalBallisticsCoupled(Simulation):
             ),
         )
 
-    def run(self) -> list[Operation]:
+    def run(self) -> tuple:
         """
         Runs the main loop of the simulation, returning the motor operation
         and ballistic operation objects as a list.
 
         Returns:
-            list[Operation]: A list containing the motor operation object
-            and the ballistic operation object.
+            A list containing the motor operation object and the ballistic operation object.
         """
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
@@ -142,7 +141,7 @@ class InternalBallisticsCoupled(Simulation):
             self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
             i += 1
 
-        return [self.motor_operation, self.ballistic_operation]
+        return (self.motor_operation, self.ballistic_operation)
 
     def print_results(self) -> None:
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
