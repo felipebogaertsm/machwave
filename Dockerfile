@@ -1,12 +1,14 @@
-FROM python:3.10
+FROM python:3.13
 LABEL maintainer="Felipe Bogaerts de Mattos"
 
 ENV PYTHONUNBUFFERED 1
 
 WORKDIR /usr/app
 
-COPY ./requirements.txt ./requirements.txt
-RUN pip3 install -r ./requirements.txt
+RUN pip install poetry
+COPY ./pyproject.toml ./license.txt ./poetry.lock ./
+
+RUN poetry install --no-root --with dev
 
 COPY . .
 
