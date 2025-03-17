@@ -1,5 +1,4 @@
 FROM python:3.13
-LABEL maintainer="Felipe Bogaerts de Mattos"
 
 ENV PYTHONUNBUFFERED 1
 
