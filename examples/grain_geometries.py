@@ -65,7 +65,7 @@ def main():
 
     grain_area = conical_segment.get_burn_area(web_distance=web_distance)
     print(f"Conical grain area: {grain_area * 1e6:2f} mm^2")
-    port_area = conical_segment.get_port_area(web_distance=web_distance)
+    port_area = conical_segment.get_port_area(web_distance=web_distance, z=0)
     print(f"Conical grain port area: {port_area * 1e6:2f} mm^2")
     print(f"Conical center of gravity: {conical_segment.get_center_of_gravity(0)}")
 
