@@ -1,6 +1,8 @@
 FROM python:3.13
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    PATH="/root/.local/bin:$PATH"
 
 WORKDIR /usr/app
 
