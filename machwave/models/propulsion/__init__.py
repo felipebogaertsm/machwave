@@ -91,6 +91,15 @@ class Motor(ABC):
         """
         pass
 
+    @property
+    @abstractmethod
+    def initial_propellant_mass(self) -> float:
+        """
+        Returns:
+            Initial propellant mass, in kg
+        """
+        pass
+
     def get_thrust(self, cf: float, chamber_pressure: float) -> float:
         """
         Calculates the thrust based on instantaneous thrust coefficient and

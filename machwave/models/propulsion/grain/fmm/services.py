@@ -1,5 +1,3 @@
-from typing import Union, Optional
-
 import numpy as np
 import plotly.graph_objects as go
 
@@ -103,23 +101,20 @@ def plot_2d_face_map(
 
 def plot_2d_face_map_animated(
     face_maps: np.ndarray,
-    web_distances: Optional[Union[np.ndarray, list]] = None,
+    web_distances: np.typing.NDArray[np.float64],
 ) -> go.Figure:
     """
     Plots an animated 2D face map with heatmaps and contour lines.
 
     Args:
-        face_maps (np.ndarray): A 3D NumPy array representing the face maps.
-            The first dimension corresponds to the frames.
-        web_distances (np.ndarray or list, optional): An array or list of web
-            distances corresponding to each face map frame. Defaults to None.
+        face_maps: A 3D NumPy array representing the face maps. The first dimension corresponds to the frames.
+        web_distances: An array or list of web distances corresponding to each face map frame.
 
     Returns:
-        go.Figure: A Plotly Figure object with the animation.
+        A Plotly Figure object with the animation.
 
     Raises:
-        ValueError: If the number of frames does not match the number of face
-            maps.
+        ValueError: If the number of frames does not match the number of face maps.
     """
     num_frames = web_distances.shape[0]
 

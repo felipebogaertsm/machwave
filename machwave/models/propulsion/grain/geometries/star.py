@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from .. import GrainGeometryError
@@ -16,7 +14,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         point_length: float,
         point_width: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.number_of_points = int(number_of_points)
         self.point_length = point_length
@@ -39,7 +37,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         assert self.point_length > 0
         assert self.point_width > 0
 
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         This method returns the initial face map for a star grain segment.
 

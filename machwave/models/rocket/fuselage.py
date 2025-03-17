@@ -51,7 +51,7 @@ class Fuselage:
 
         return get_circle_area(self.outer_diameter)
 
-    def get_drag_coefficient(self, velocity: float = None) -> float:
+    def get_drag_coefficient(self, velocity: float = 0) -> float:
         """Get the drag coefficient of the fuselage.
 
         Args:
