@@ -100,7 +100,6 @@ class MonteCarloSimulation:
         parameters: list[Any],
         number_of_scenarios: int,
         simulation: type[Simulation],
-        simulation_params: type[SimulationParameters],
     ) -> None:
         """
         Initializes a MonteCarloSimulation object.
@@ -120,7 +119,7 @@ class MonteCarloSimulation:
 
         self._object_store = dict()  # maps UUIDs to objects in generate_scenario
 
-    def generate_scenario(self) -> list[float | int]:
+    def generate_scenario(self) -> list[Any]:
         """
         Generates a Monte Carlo scenario in the form of a list of parameters.
 
@@ -200,9 +199,7 @@ class MonteCarloSimulation:
 
         for _ in range(self.number_of_scenarios):
             scenario = self.generate_scenario()
-            self.results.append(
-                self.simulation(params=SimulationParameters(*scenario)).run()
-            )
+            self.results.append(self.simulation(*scenario).run())
 
     def retrieve_values_from_result(
         self,

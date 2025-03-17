@@ -135,7 +135,6 @@ def main():
         [rocket, params],
         100,
         InternalBallisticsCoupled,
-        InternalBallisticsCoupledParams,
     )
 
     montecarlo_sim.run()
