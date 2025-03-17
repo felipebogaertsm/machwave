@@ -64,7 +64,7 @@ def test_burn_area(conical_grain_segment_1, bates_equivalent_1):
 
 
 def test_port_area(conical_grain_segment_1, bates_equivalent_1):
-    value = conical_grain_segment_1.get_port_area(0)
+    value = conical_grain_segment_1.get_port_area(0, 0.01)
 
     assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
