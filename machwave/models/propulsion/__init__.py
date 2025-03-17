@@ -4,6 +4,7 @@ import numpy as np
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.propellants import Propellant
+from machwave.models.propulsion.propellants.solid import SolidPropellant
 from machwave.models.propulsion.structure import MotorStructure
 from machwave.services.isentropic_flow import (
     get_thrust_coefficients,
@@ -54,20 +55,22 @@ class Motor(ABC):
         pass
 
     @abstractmethod
-    def get_center_of_gravity(self) -> np.ndarray:
+    def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
         """
-        Calculates center of gravity of the propulsion system.
+        Calculate the center of gravity of the propulsion system.
 
-        Coordinate system is originated in the point defined by the nozzle's
-        exit area surface and the combustion chamber axis.
+        The coordinate system is defined such that the origin (0, 0, 0) corresponds
+        to the nozzle exit area on the combustion chamber axis.
 
         Returns:
-            np.ndarray: Center of gravity position, in m, [x, y, z]
+            NDArray[np.float64]:
+                A 1D array of shape (3,) representing the [x, y, z] coordinates
+                of the center of gravity, in meters.
         """
         pass
 
     @abstractmethod
-    def get_thrust_coefficient_correction_factor(self) -> float:
+    def get_thrust_coefficient_correction_factor(self, *args, **kwargs) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
         adimensional and should be applied to the ideal thrust coefficient to
@@ -79,12 +82,21 @@ class Motor(ABC):
         pass
 
     @abstractmethod
-    def get_thrust_coefficient(self) -> float:
+    def get_thrust_coefficient(self, *args, **kwargs) -> float:
         """
         Calculates the thrust coefficient at a particular instant.
 
         Returns:
             float: Thrust coefficient
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def initial_propellant_mass(self) -> float:
+        """
+        Returns:
+            Initial propellant mass, in kg
         """
         pass
 
@@ -113,12 +125,13 @@ class SolidMotor(Motor):
     def __init__(
         self,
         grain: Grain,
-        propellant: Propellant,
+        propellant: SolidPropellant,
         structure: MotorStructure,
     ) -> None:
         self.grain = grain
         super().__init__(propellant, structure)
 
+        self.propellant: SolidPropellant = propellant
         self.cf_ideal = None  # ideal thrust coefficient
         self.cf_real = None  # real thrust coefficient
 
@@ -141,8 +154,7 @@ class SolidMotor(Motor):
             float: Initial propellant mass, in kg
         """
         return (
-            self.grain.get_propellant_volume(web_distance=0)
-            * self.propellant.density
+            self.grain.get_propellant_volume(web_distance=0) * self.propellant.density
         )
 
     def get_thrust_coefficient_correction_factor(
@@ -201,10 +213,10 @@ class SolidMotor(Motor):
     def get_dry_mass(self) -> float:
         return self.structure.dry_mass
 
-    def get_center_of_gravity(self) -> np.ndarray:
+    def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
         """
         Constant CG throughout the operation. Half the chamber length.
 
         TODO: implement grain CG calculation.
         """
-        return np.array([self.structure.chamber.length / 2, 0, 0])
+        return np.array([self.structure.chamber.length / 2, 0.0, 0.0], dtype=np.float64)

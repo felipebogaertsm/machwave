@@ -1,7 +1,6 @@
 import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
-from machwave.models.recovery import Recovery
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.simulations import Simulation, SimulationParameters
@@ -68,6 +67,11 @@ class BallisticSimulation(Simulation):
             params (BallisticSimulationParameters): The simulation parameters.
         """
         super().__init__(params=params)
+
+        self.params: BallisticSimulationParameters = (
+            params  # explicitly defining the type of params to avoid pyright error
+        )
+
         self.rocket = rocket
         self.atmosphere = atmosphere
         self.t = np.array([0])
@@ -91,7 +95,7 @@ class BallisticSimulation(Simulation):
 
         return prop_mass
 
-    def run(self) -> tuple[np.array, Ballistic1DOperation]:
+    def run(self) -> tuple:
         """
         Runs the main loop of the simulation, returning the time array and
         the ballistic operation object.
@@ -114,9 +118,7 @@ class BallisticSimulation(Simulation):
         i = 0
 
         while self.ballistic_operation.y[i] >= 0:
-            self.t = np.append(
-                self.t, self.t[i] + self.params.d_t
-            )  # new time value
+            self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
             thrust = np.interp(
                 self.t[-1],
@@ -147,4 +149,8 @@ class BallisticSimulation(Simulation):
         Prints the results of the simulation.
         """
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
-        self.ballistic_operation.print_results()
+
+        if self.ballistic_operation is not None:
+            self.ballistic_operation.print_results()
+        else:
+            print("Simulation not run yet. Try running the simulation first.")

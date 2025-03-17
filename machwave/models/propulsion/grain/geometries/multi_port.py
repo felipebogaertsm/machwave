@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from .. import GrainGeometryError
@@ -16,7 +14,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         port_radial_count: float,
         port_level_count: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.port_diameter = port_diameter
         self.port_radial_count = int(port_radial_count)
@@ -35,14 +33,11 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
 
         assert self.port_diameter > 0
         assert self.port_level_count > 0
-        assert (
-            self.port_level_count * self.port_diameter
-            < self.outer_diameter / 2
-        )
+        assert self.port_level_count * self.port_diameter < self.outer_diameter / 2
 
         assert self.port_radial_count > 0
 
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         NOTE: Still needs to correctly implement wagon wheel ports.
         """
@@ -61,9 +56,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
                 x_offset = radial_distance * np.cos(angle)
                 y_offset = radial_distance * np.sin(angle)
 
-                radius = np.sqrt(
-                    (map_x - x_offset) ** 2 + (map_y - y_offset) ** 2
-                )
+                radius = np.sqrt((map_x - x_offset) ** 2 + (map_y - y_offset) ** 2)
                 core_map[radius < port_od_norm / 2] = 0
 
         return core_map

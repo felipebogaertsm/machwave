@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import numpy as np
-from plotly import graph_objects as go
 
 from machwave.services.decorators import validate_assertions
 
 
 class GrainGeometryError(Exception):
-    def __init__(self, message: float) -> None:
+    def __init__(self, message: str) -> None:
         self.message = message
 
         super().__init__(self.message)
@@ -24,7 +22,7 @@ class GrainSegment(ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.length = length
         self.outer_diameter = outer_diameter
@@ -48,23 +46,20 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_port_area(self, web_distance: float) -> float | np.ndarray:
+    def get_port_area(self, web_distance: float, *args, **kwargs) -> float:
         """
-        Calculates the port area in function of the web distance traveled.
-        For a 2D grain segment it should return a single value (constant core
-        geometry thoughout the segment's length).
-        For a 3D grain segment it should return an array of values (variable
-        core geometry thoughout the segment's length).
+        Calculates the port area as a function of the web distance traveled.
 
-        Example:
-        In a simple 2D tubular geometry, the port area would be equal to the
-        instantaneous core diameter area.
+        This method assumes a 2D or simplified model where the port area can
+        be represented by a single scalar value at a given web distance.
 
-        Not to be confused with core area!
+        Args:
+            web_distance: Distance traveled into the grain web.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
 
-        :param float web_distance: Web distance traveled
-        :return: Port area in function of the web distance traveled
-        :rtype: float | np.ndarray[float]
+        Returns:
+            A float representing the port area.
         """
         pass
 
@@ -91,7 +86,7 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_center_of_gravity(self, *args, **kwargs) -> float:
+    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
         Calculates the center of gravity of the segments in relation to the
         upper end of the segment (closest to the bulkhead).
@@ -133,7 +128,7 @@ class GrainSegment2D(GrainSegment, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         super().__init__(
             length=length,
@@ -188,9 +183,9 @@ class GrainSegment2D(GrainSegment, ABC):
 
     def get_volume(self, web_distance: float) -> float:
         if self.get_web_thickness() >= web_distance:
-            return self.get_length(
+            return self.get_length(web_distance=web_distance) * self.get_face_area(
                 web_distance=web_distance
-            ) * self.get_face_area(web_distance=web_distance)
+            )
         else:
             return 0
 
@@ -209,9 +204,8 @@ class GrainSegment3D(GrainSegment, ABC):
         length: float,
         outer_diameter: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
-
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -220,15 +214,19 @@ class GrainSegment3D(GrainSegment, ABC):
         )
 
     @abstractmethod
-    def get_port_area(self, web_distance: float) -> np.ndarray:
+    def get_port_area(self, web_distance: float, z: float) -> float:
         """
-        Calculates the port area in function of the web distance traveled.
+        Calculates the port area as a function of the web distance traveled
+        and a specified height (z).
 
-        NOTE: NOT YET IMPLEMENTED
+        NOTE: This method is not implemented.
 
-        :param float web_distance: Web distance traveled
-        :return: Port area in function of the web distance traveled
-        :rtype: np.ndarray
+        Args:
+            web_distance: The distance traveled into the grain web.
+            z: The axial position (height) along the grain.
+
+        Returns:
+            The port area at the given web distance and height.
         """
         pass
 
@@ -263,9 +261,7 @@ class Grain:
 
         :rtype: float
         """
-        return np.sum(
-            [grain.length + grain.spacing for grain in self.segments]
-        )
+        return np.sum([grain.length + grain.spacing for grain in self.segments])
 
     @property
     def segment_count(self) -> int:
@@ -276,24 +272,27 @@ class Grain:
         """
         return len(self.segments)
 
-    def get_center_of_gravity(self, web_distance: float) -> float:
-        """
-        Calculates the center of gravity of the grain in relation to the
-        upper end of the grain (closest to the bulkhead). Sums the CoG of all
-        the segments. Assumes constant density in all segments (same
-        propellant composition).
+    def get_center_of_gravity(
+        self, web_distance: float
+    ) -> np.typing.NDArray[np.float64]:
+        weighted_cogs = [
+            segment.get_center_of_gravity(web_distance=web_distance)
+            * segment.get_volume(web_distance=web_distance)
+            for segment in self.segments
+        ]
+        # If there's a chance segments is empty, handle that:
+        if not weighted_cogs:
+            # raise an error or return a zero vector
+            raise ValueError("No segments found, cannot compute CoG.")
 
-        :param float web_distance: Web distance traveled
-        :return: The center of gravity of the grain
-        :rtype: float
-        """
-        return np.sum(
-            [
-                segment.get_center_of_gravity(web_distance=web_distance)
-                * segment.get_volume(web_distance=web_distance)
-                for segment in self.segments
-            ]
-        ) / (self.get_propellant_volume(web_distance=web_distance))
+        # Stack into shape (N, 3) and sum along axis=0 => guaranteed shape (3,)
+        total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
+            axis=0, dtype=np.float64
+        )
+
+        propellant_vol = self.get_propellant_volume(web_distance=web_distance)
+
+        return (total_weighted_cogs / propellant_vol).astype(np.float64)
 
     def get_burn_area(self, web_distance: float) -> float:
         """
@@ -315,9 +314,7 @@ class Grain:
         :return: Instant propellant volume, in m^3 and in function of web
         :rtype: float
         """
-        return np.sum(
-            [segment.get_volume(web_distance) for segment in self.segments]
-        )
+        return np.sum([segment.get_volume(web_distance) for segment in self.segments])
 
     def get_mass_flux_per_segment(
         self,
@@ -329,9 +326,7 @@ class Grain:
         Returns a numpy multidimensional array with the mass flux for each
         grain.
         """
-        segment_mass_flux = np.zeros(
-            (self.segment_count, np.size(web_distance))
-        )
+        segment_mass_flux = np.zeros((self.segment_count, np.size(web_distance)))
 
         for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):

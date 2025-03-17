@@ -1,10 +1,10 @@
 """
-The coupled internal ballistics simulation calculates both internal and 
-external ballistics parameters simulatneously. 
+The coupled internal ballistics simulation calculates both internal and
+external ballistics parameters simulatneously.
 
-The main advantage of this strategy is that, while some environmental 
-attributes change during flight, they also serve as inputs for the internal 
-ballistic of the motor. The main attribute that changes during flight is the 
+The main advantage of this strategy is that, while some environmental
+attributes change during flight, they also serve as inputs for the internal
+ballistic of the motor. The main attribute that changes during flight is the
 ambient pressure, which impacts motor performance.
 """
 
@@ -74,6 +74,11 @@ class InternalBallisticsCoupled(Simulation):
             params (InternalBallisticsCoupledParams): The simulation parameters.
         """
         super().__init__(params=params)
+
+        self.params: InternalBallisticsCoupledParams = (
+            params  # explicitly defining the type of params to avoid type errors
+        )
+
         self.rocket = rocket
         self.t = np.array([0])
         self.motor_operation = None
@@ -86,9 +91,7 @@ class InternalBallisticsCoupled(Simulation):
         Returns:
             MotorOperation: The motor operation object.
         """
-        motor_operation_class = get_motor_operation_class(
-            self.rocket.propulsion
-        )
+        motor_operation_class = get_motor_operation_class(self.rocket.propulsion)
         return motor_operation_class(
             motor=self.rocket.propulsion,
             initial_pressure=self.params.igniter_pressure,
@@ -97,14 +100,13 @@ class InternalBallisticsCoupled(Simulation):
             ),
         )
 
-    def run(self) -> tuple[MotorOperation, Ballistic1DOperation]:
+    def run(self) -> tuple:
         """
         Runs the main loop of the simulation, returning the motor operation
-        and ballistic operation objects.
+        and ballistic operation objects as a list.
 
         Returns:
-            tuple[MotorOperation, Ballistic1DOperation]: A tuple containing
-            the motor operation object and the ballistic operation object.
+            A list containing the motor operation object and the ballistic operation object.
         """
         self.motor_operation = self.get_motor_operation()
         self.ballistic_operation = Ballistic1DOperation(
@@ -118,41 +120,41 @@ class InternalBallisticsCoupled(Simulation):
 
         i = 0
 
-        while (
-            self.ballistic_operation.y[i] >= 0
-            or self.motor_operation.m_prop[-1] > 0
-        ):
-            self.t = np.append(
-                self.t, self.t[i] + self.params.d_t
-            )  # new time value
+        while self.ballistic_operation.y[i] >= 0 or self.motor_operation.m_prop[-1] > 0:
+            self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
-            if self.motor_operation.end_thrust is False:
+            if not self.motor_operation.end_thrust:
                 self.motor_operation.iterate(
                     self.params.d_t,
                     self.ballistic_operation.P_ext[i],
                 )
-
                 propellant_mass = self.motor_operation.m_prop[i]
                 thrust = self.motor_operation.thrust[i]
                 d_t = self.params.d_t
             else:
                 propellant_mass = 0
                 thrust = 0
-
-                # Adding new delta time value for ballistic simulation:
                 d_t = self.params.d_t * self.params.dd_t
                 self.t[-1] = self.t[-2] + self.params.dd_t * self.params.d_t
 
             self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
-
             i += 1
 
         return (self.motor_operation, self.ballistic_operation)
 
-    def print_results(self):
-        """
-        Prints the results of the simulation.
-        """
+    def print_results(self) -> None:
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
-        self.motor_operation.print_results()
-        self.ballistic_operation.print_results()
+
+        if self.motor_operation is not None:
+            self.motor_operation.print_results()
+        else:
+            print(
+                "No motor operation results available. Try running the simulation first."
+            )
+
+        if self.ballistic_operation is not None:
+            self.ballistic_operation.print_results()
+        else:
+            print(
+                "No ballistic operation results available. Try running the simulation first."
+            )

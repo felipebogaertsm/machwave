@@ -7,9 +7,9 @@ class Material:
     Base class representing a generic material.
 
     Attributes:
-        density (float): Density of the material.
-        yield_strength (float): Yield strength of the material.
-        ultimate_strength (float): Ultimate strength of the material.
+        density: Density of the material.
+        yield_strength: Yield strength of the material.
+        ultimate_strength: Ultimate strength of the material.
     """
 
     density: float
@@ -27,9 +27,9 @@ class NozzleMaterial(Material):
     are referenced in the a015140 paper.
 
     Attributes:
-        c_1 (float): Coefficient related to heat transfer properties of a BATES
+        c_1: Coefficient related to heat transfer properties of a BATES
             motor.
-        c_2 (float): Time constant obtained from the analysis of the transient
+        c_2: Time constant obtained from the analysis of the transient
             heating of a standard BATES motor.
     """
 

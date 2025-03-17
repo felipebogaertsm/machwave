@@ -48,9 +48,7 @@ def solve_cp_seidel(
             ((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5
         )
 
-    dP0_dt = (
-        (R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))
-    ) / V0
+    dP0_dt = ((R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
 
     return (dP0_dt,)
 

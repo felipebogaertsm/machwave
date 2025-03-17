@@ -1,13 +1,11 @@
 import pytest
 
-import numpy as np
 
 from machwave.services.math.geometric import (
     get_circle_area,
     get_torus_area,
     get_cylinder_surface_area,
     get_cylinder_volume,
-    get_length,
     get_trapezoidal_area,
 )
 
@@ -36,9 +34,7 @@ def test_get_trapezoidal_area():
     tip_length = 6
     height = 3
     expected_area = 15.0
-    assert (
-        get_trapezoidal_area(base_length, tip_length, height) == expected_area
-    )
+    assert get_trapezoidal_area(base_length, tip_length, height) == expected_area
 
 
 def test_get_cylinder_surface_area():

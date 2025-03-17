@@ -1,33 +1,26 @@
 import time
-from typing import Callable, Any, TypeVar
+import functools
+from typing import Callable, Any, TypeVar, Type
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def validate_assertions(exception: Exception) -> Callable:
+def validate_assertions(
+    exception: Type[Exception],
+) -> Callable[[Callable[..., None]], Callable[..., None]]:
     """
     Decorator that validates assertions in a function and raises a specified
     exception if an assertion fails.
 
     Args:
-        exception (Exception): The exception to raise if an assertion fails.
+        exception (Type[Exception]): The exception class to raise if an assertion fails.
 
     Returns:
         Callable: The decorated function.
     """
 
     def decorator(function: Callable[..., None]) -> Callable[..., None]:
-        """
-        Inner decorator function that wraps the input function and performs
-        the assertion validation.
-
-        Args:
-            function (Callable): The function to decorate.
-
-        Returns:
-            Callable: The wrapped function.
-        """
-
+        @functools.wraps(function)
         def wrapper(*args, **kwargs) -> None:
             try:
                 function(*args, **kwargs)
@@ -52,6 +45,7 @@ def timing(f: F) -> F:
         Callable: The wrapped function with added timing functionality.
     """
 
+    @functools.wraps(f)
     def wrap(*args: Any, **kwargs: Any) -> Any:
         start_time = time.time()
         result = f(*args, **kwargs)
@@ -59,4 +53,4 @@ def timing(f: F) -> F:
         print(f"\nExecution time: {end_time - start_time:.4f} seconds")
         return result
 
-    return wrap
+    return wrap  # type: ignore

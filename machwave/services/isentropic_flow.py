@@ -134,9 +134,7 @@ def get_thrust_coefficients(
     return Cf, Cf_ideal
 
 
-def get_thrust_from_cf(
-    C_f: float, P_0: float, nozzle_throat_area: float
-) -> float:
+def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> float:
     """
     Calculates the thrust based on the thrust coefficient, chamber stagnation pressure,
     and nozzle throat area.
@@ -216,9 +214,7 @@ def get_total_impulse(average_thrust: float, thrust_time: float) -> float:
     return average_thrust * thrust_time
 
 
-def get_specific_impulse(
-    total_impulse: float, initial_propellant_mass: float
-) -> float:
+def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -> float:
     """
     Calculates the specific impulse of the operation based on the total impulse and initial propellant mass.
 
@@ -265,14 +261,11 @@ def get_operational_correction_factors(
     Example:
         n_kin, n_tp, n_bl = get_operational_correction_factors(100000, 5000, 100, propellant, structure, 0.5, 0.1, 10)
     """
+    C3, C4, C5, C6 = 0, 0, 0, 0
+
     # Kinetic losses
     if P_0_psi >= 200:
-        n_kin = (
-            33.3
-            * 200
-            * (propellant.Isp_frozen / propellant.Isp_shifting)
-            / P_0_psi
-        )
+        n_kin = 33.3 * 200 * (propellant.Isp_frozen / propellant.Isp_shifting) / P_0_psi
     else:
         n_kin = 0
 
@@ -287,10 +280,7 @@ def get_operational_correction_factors(
         E_cf = 1 + 0.016 * structure.nozzle.expansion_ratio**-9
         n_bl = (
             structure.nozzle.material.c_1
-            * (
-                (P_0_psi**0.8)
-                / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2)
-            )
+            * ((P_0_psi**0.8) / ((structure.nozzle.throat_diameter / 0.0254) ** 0.2))
             * termc_2
             * E_cf
         )
@@ -393,8 +383,7 @@ def get_expansion_ratio(
             E[i] = (
                 ((k + 1) / 2) ** (1 / (k - 1))
                 * pressure_ratio ** (1 / k)
-                * ((k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k)))
-                ** 0.5
+                * ((k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k))) ** 0.5
             ) ** -1
         else:
             E[i] = 1

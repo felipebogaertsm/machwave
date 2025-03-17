@@ -4,6 +4,6 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: test_machwave
-    entrypoint: bash -c "python3 -m pytest"
+    entrypoint: bash -c "poetry run pytest"
     volumes:
       - ./:/usr/app/

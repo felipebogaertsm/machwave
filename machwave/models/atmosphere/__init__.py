@@ -4,11 +4,18 @@ calculate the properties of the atmosphere at a given altitude above mean sea
 level (AMSL).
 """
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 
-class Atmosphere(ABC):
+class Atmosphere:
     """Abstract class that represents an atmospheric model."""
+
+    SEA_LEVEL_PRESSURE: float = 101325.0  # Pa
+    SEA_LEVEL_DENSITY: float = 1.225  # kg/m³
+    SEA_LEVEL_TEMPERATURE: float = 288.15  # K
+    SEA_LEVEL_SONIC_VELOCITY: float = 340.29  # m/s
+    SEA_LEVEL_VISCOSITY: float = 1.7894e-5  # Pa·s
+    SEA_LEVEL_GRAVITY: float = 9.80665  # m/s²
 
     @abstractmethod
     def get_density(self, y_amsl: float) -> float:
@@ -16,10 +23,10 @@ class Atmosphere(ABC):
         Get the air density at the given altitude above mean sea level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            float: Air density in kg/m^3.
+            Air density in kg/m^3.
         """
 
     @abstractmethod
@@ -29,10 +36,10 @@ class Atmosphere(ABC):
         sea level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            float: Acceleration due to gravity in m/s^2.
+            Acceleration due to gravity in m/s^2.
         """
 
     @abstractmethod
@@ -41,10 +48,10 @@ class Atmosphere(ABC):
         Get the air pressure at the given altitude above mean sea level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            float: Air pressure in Pascal (Pa).
+            Air pressure in Pascal (Pa).
         """
 
     @abstractmethod
@@ -54,10 +61,10 @@ class Atmosphere(ABC):
         level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            float: Speed of sound in m/s.
+            Speed of sound in m/s.
         """
 
     @abstractmethod
@@ -67,10 +74,10 @@ class Atmosphere(ABC):
         sea level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            tuple[float, float]: Wind velocity components (Northward, Eastward) in m/s.
+            Wind velocity components (Northward, Eastward) in m/s.
         """
 
     @abstractmethod
@@ -80,8 +87,8 @@ class Atmosphere(ABC):
         level (AMSL).
 
         Args:
-            y_amsl (float): Altitude above mean sea level in meters.
+            y_amsl: Altitude above mean sea level in meters.
 
         Returns:
-            float: Dynamic viscosity of air in Pascal-second (Pa-s).
+            Dynamic viscosity of air in Pascal-second (Pa-s).
         """

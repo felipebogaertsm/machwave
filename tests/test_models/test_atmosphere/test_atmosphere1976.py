@@ -12,7 +12,7 @@ from machwave.models.atmosphere.atm_1976 import (
 
 
 def test_atmosphere1976_up_to_karman_line(
-    test_atmosphere_up_to_karman_line: Callable[[Atmosphere], None]
+    test_atmosphere_up_to_karman_line: Callable[[Atmosphere], None],
 ) -> None:
     test_atmosphere_up_to_karman_line(atmosphere=Atmosphere1976())
 
@@ -46,25 +46,19 @@ def test_atmosphere1976windpowerlaw_z_ref_zero():
         ValueError,
         match="Please provide a non-zero reference height 'z_ref'.",
     ):
-        Atmosphere1976WindPowerLaw(
-            v_ref=7, z_ref=0, alpha=0.1, direction_deg=60
-        )
+        Atmosphere1976WindPowerLaw(v_ref=7, z_ref=0, alpha=0.1, direction_deg=60)
 
 
 def test_atmosphere1976windpowerlaw_up_to_karman_line(
     test_atmosphere_up_to_karman_line: Callable[[Atmosphere], None],
     atmosphere1976withwindpowerlaw: Atmosphere1976,
 ) -> None:
-    test_atmosphere_up_to_karman_line(
-        atmosphere=atmosphere1976withwindpowerlaw
-    )
+    test_atmosphere_up_to_karman_line(atmosphere=atmosphere1976withwindpowerlaw)
 
 
 def test_get_wind_velocity_low_altitude(atmosphere1976withwindpowerlaw):
     """Test wind velocity at a low altitude using the power law."""
-    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(
-        10.0
-    )
+    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(10.0)
     expected_speed = 7.0  # Since altitude is equal to reference height
     direction_rad = np.radians(60.0)
     expected_northward = expected_speed * np.cos(direction_rad)
@@ -78,9 +72,7 @@ def test_get_wind_velocity_low_altitude(atmosphere1976withwindpowerlaw):
 
 def test_get_wind_velocity_higher_altitude(atmosphere1976withwindpowerlaw):
     """Test wind velocity at a higher altitude using the power law."""
-    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(
-        100.0
-    )
+    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(100.0)
     expected_speed = 7.0 * (100.0 / 10.0) ** 0.1  # Apply power law
     direction_rad = np.radians(60.0)
     expected_northward = expected_speed * np.cos(direction_rad)
@@ -94,9 +86,7 @@ def test_get_wind_velocity_higher_altitude(atmosphere1976withwindpowerlaw):
 
 def test_get_wind_velocity_negative_altitude(atmosphere1976withwindpowerlaw):
     """Test wind velocity when given a negative altitude (should return wind at reference height)."""
-    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(
-        -50.0
-    )
+    northward, eastward = atmosphere1976withwindpowerlaw.get_wind_velocity(-50.0)
     expected_speed = 7.0  # Should default to reference height speed
     direction_rad = np.radians(60.0)
     expected_northward = expected_speed * np.cos(direction_rad)

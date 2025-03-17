@@ -30,9 +30,7 @@ def test_convert_mass_flux_metric_to_imperial():
     assert convert_mass_flux_metric_to_imperial(0.001) == pytest.approx(
         1.42233e-6, rel=1e-2
     )
-    assert convert_mass_flux_metric_to_imperial(0) == pytest.approx(
-        0.0, rel=1e-2
-    )
+    assert convert_mass_flux_metric_to_imperial(0) == pytest.approx(0.0, rel=1e-2)
     assert convert_mass_flux_metric_to_imperial(-0.002) == pytest.approx(
         -2.84466e-6, rel=1e-2
     )

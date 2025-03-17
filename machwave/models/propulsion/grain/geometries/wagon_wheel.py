@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from .. import GrainGeometryError
@@ -18,7 +16,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_outer_diameter: float,
         port_angular_width: float,
         spacing: float,
-        inhibited_ends: Optional[int] = 0,
+        inhibited_ends: int = 0,
     ) -> None:
         self.core_diameter = core_diameter
         self.number_of_ports = int(number_of_ports)
@@ -46,7 +44,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         assert self.port_angular_width > 0
         assert self.port_angular_width < 360 / self.number_of_ports
 
-    def get_initial_face_map(self) -> np.ndarray:
+    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
         NOTE: Still needs to correctly implement wagon wheel ports.
         """
@@ -64,16 +62,10 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
 
         # Create the ports:
         for port_index in range(int(self.number_of_ports)):
-            displacement_angle = (
-                2 * np.pi / self.number_of_ports * (port_index)
-            )
+            displacement_angle = 2 * np.pi / self.number_of_ports * (port_index)
 
-            theta_2 = (
-                np.deg2rad(self.port_angular_width / 2) + displacement_angle
-            )
-            theta_1 = displacement_angle - np.deg2rad(
-                self.port_angular_width / 2
-            )
+            theta_2 = np.deg2rad(self.port_angular_width / 2) + displacement_angle
+            theta_1 = displacement_angle - np.deg2rad(self.port_angular_width / 2)
 
             map_x_y_arctan = np.arctan(map_y / map_x)
 
