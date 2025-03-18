@@ -28,8 +28,8 @@ class Motor(ABC):
         Hybrid or Liquid).
 
         Args:
-            propellant (Propellant): Object representing the propellant used in the motor.
-            structure (MotorStructure): Object representing the structure of the motor.
+            propellant: Object representing the propellant used in the motor.
+            structure: Object representing the structure of the motor.
         """
         self.propellant = propellant
         self.structure = structure
@@ -37,10 +37,10 @@ class Motor(ABC):
     @abstractmethod
     def get_launch_mass(self) -> float:
         """
-        Calculates the total mass of the rocket before launch.
+        Calculates the total mass of the motor before launch.
 
         Returns:
-            float: Total mass of the rocket before launch, in kg
+            Total mass of the motor before launch, in kg
         """
         pass
 
@@ -50,7 +50,7 @@ class Motor(ABC):
         Calculates the dry mass of the rocket at any time.
 
         Returns:
-            float: Dry mass of the rocket, in kg
+            Dry mass of the rocket, in kg
         """
         pass
 
@@ -63,9 +63,7 @@ class Motor(ABC):
         to the nozzle exit area on the combustion chamber axis.
 
         Returns:
-            NDArray[np.float64]:
-                A 1D array of shape (3,) representing the [x, y, z] coordinates
-                of the center of gravity, in meters.
+            A 1D array of shape (3,) representing the [x, y, z] coordinates of the center of gravity, in meters.
         """
         pass
 
@@ -77,7 +75,7 @@ class Motor(ABC):
         get the real thrust coefficient.
 
         Returns:
-            float: Thrust coefficient correction factor
+            Thrust coefficient correction factor
         """
         pass
 
@@ -87,7 +85,7 @@ class Motor(ABC):
         Calculates the thrust coefficient at a particular instant.
 
         Returns:
-            float: Thrust coefficient
+            Thrust coefficient
         """
         pass
 
@@ -108,11 +106,11 @@ class Motor(ABC):
         Utilized nozzle throat area from the structure and nozzle classes.
 
         Args:
-            cf (float): Instantaneous thrust coefficient, adimensional
-            chamber_pressure (float): Instantaneous chamber pressure, in Pa
+            cf: Instantaneous thrust coefficient, adimensional
+            chamber_pressure: Instantaneous chamber pressure, in Pa
 
         Returns:
-            float: Instantaneous thrust, in Newtons
+            Instantaneous thrust, in Newtons
         """
         return get_thrust_from_cf(
             cf,
@@ -140,10 +138,10 @@ class SolidMotor(Motor):
         Calculates the chamber volume without any propellant.
 
         Args:
-            propellant_volume (float): Propellant volume, in m^3
+            propellant_volume: Propellant volume, in m^3
 
         Returns:
-            float: Free chamber volume, in m^3
+            Free chamber volume, in m^3
         """
         return self.structure.chamber.empty_volume - propellant_volume
 
@@ -151,7 +149,7 @@ class SolidMotor(Motor):
     def initial_propellant_mass(self) -> float:
         """
         Returns:
-            float: Initial propellant mass, in kg
+            Initial propellant mass, in kg
         """
         return (
             self.grain.get_propellant_volume(web_distance=0) * self.propellant.density
@@ -162,9 +160,9 @@ class SolidMotor(Motor):
     ) -> float:
         """
         Args:
-            n_kin (float): Kinematic correction factor, adimensional
-            n_bl (float): Boundary layer correction factor, adimensional
-            n_tp (float): Two-phase correction factor, adimensional
+            n_kin: Kinematic correction factor, adimensional
+            n_bl: Boundary layer correction factor, adimensional
+            n_tp: Two-phase correction factor, adimensional
 
         Returns:
             float: Thrust coefficient correction factor, adimensional
@@ -187,15 +185,15 @@ class SolidMotor(Motor):
     ) -> float:
         """
         Args:
-            chamber_pressure (float): Chamber pressure, in Pa
-            exit_pressure (float): Exit pressure, in Pa
-            external_pressure (float): External pressure, in Pa
-            expansion_ratio (float): Expansion ratio, adimensional
-            k_2ph_ex (float): Two-phase isentropic coefficient, adimensional
-            n_cf (float): Thrust coefficient correction factor, adimensional
+            chamber_pressure: Chamber pressure, in Pa
+            exit_pressure: Exit pressure, in Pa
+            external_pressure: External pressure, in Pa
+            expansion_ratio: Expansion ratio, adimensional
+            k_2ph_ex: Two-phase isentropic coefficient, adimensional
+            n_cf: Thrust coefficient correction factor, adimensional
 
         Returns:
-            float: Instanteneous thrust coefficient, adimensional
+            Instanteneous thrust coefficient, adimensional
         """
         self.cf_ideal, self.cf_real = get_thrust_coefficients(
             chamber_pressure,
