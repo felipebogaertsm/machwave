@@ -3,6 +3,7 @@ import numpy as np
 from machwave.models.propulsion.propellants.liquid import LiquidPropellant
 from machwave.models.propulsion.structure import MotorStructure
 from machwave.models.propulsion.motors.base import Motor
+from machwave.services.isentropic_flow import get_ideal_thrust_coefficient
 
 
 class LiquidEngine(Motor):
@@ -26,10 +27,35 @@ class LiquidEngine(Motor):
 
     def get_thrust_coefficient_correction_factor(self, *args, **kwargs):
         """
-        TODO: implement method.
+        NOTE: temporary implementation, set to 100% efficiency.
         """
+        return 1
 
-    def get_thrust_coefficient(self, *args, **kwargs):
+    def get_thrust_coefficient(
+        self,
+        chamber_pressure: float,
+        exit_pressure: float,
+        external_pressure: float,
+        expansion_ratio: float,
+        k_2ph_ex: float,
+    ) -> float:
         """
-        TODO: implement method.
+        Args:
+            chamber_pressure: Chamber pressure (Pa)
+            exit_pressure: Exit pressure (Pa)
+            external_pressure: External pressure (Pa)
+            expansion_ratio: Expansion ratio
+            k_2ph_ex: Two-phase isentropic coefficient
+
+        Returns:
+            Instantaneous thrust coefficient
         """
+        cf_ideal = get_ideal_thrust_coefficient(
+            chamber_pressure=chamber_pressure,
+            exit_pressure=exit_pressure,
+            external_pressure=external_pressure,
+            expansion_ratio=expansion_ratio,
+            k_2ph_ex=k_2ph_ex,
+        )
+        n_cf = self.get_thrust_coefficient_correction_factor()
+        return cf_ideal * n_cf
