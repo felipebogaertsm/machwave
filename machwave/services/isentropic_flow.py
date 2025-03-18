@@ -156,7 +156,7 @@ def get_thrust_coefficients(
         Cf, Cf_ideal = get_thrust_coefficients(100000, 5000, 1000, 5.0, 1.4, 0.8)
     """
     Cf_ideal = get_ideal_thrust_coefficient(P_0, P_exit, P_external, E, k)
-    Cf = (Cf_ideal + E * (P_exit - P_external) / P_0) * n_cf
+    Cf = Cf_ideal * n_cf
 
     if Cf <= 0:
         Cf = 0
