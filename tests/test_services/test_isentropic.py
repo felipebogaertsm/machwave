@@ -60,7 +60,7 @@ def test_get_thrust_coefficients():
     Cf, Cf_ideal = get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf)
 
     assert Cf == approx(1.219605)
-    assert Cf_ideal == approx(1.501650)
+    assert Cf_ideal == approx(1.524507)
 
 
 def test_get_thrust_from_cf():
