@@ -5,7 +5,7 @@ import numpy as np
 from machwave.operations import Operation
 from machwave.solvers.odes import rk4th_ode_solver
 from machwave.services.equations import solve_cp_seidel
-from machwave.models.propulsion import Motor, SolidMotor
+from machwave.models.propulsion.motors import Motor, SolidMotor
 from machwave.services.isentropic_flow import (
     get_critical_pressure_ratio,
     get_exit_pressure,

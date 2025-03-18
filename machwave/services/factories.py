@@ -1,4 +1,4 @@
-from machwave.models.propulsion import Motor, SolidMotor
+from machwave.models.propulsion.motors import Motor, SolidMotor
 from machwave.operations.internal_ballistics import (
     MotorOperation,
     SRMOperation,
