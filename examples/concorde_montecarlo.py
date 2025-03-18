@@ -23,7 +23,7 @@ from machwave.models.recovery.events import (
 from machwave.models.recovery.parachutes import HemisphericalParachute
 from machwave.models.rocket.fuselage import Fuselage
 from machwave.models.atmosphere.atm_1976 import Atmosphere1976
-from machwave.models.propulsion import SolidMotor
+from machwave.models.propulsion.motors import SolidMotor
 
 from machwave.montecarlo import MonteCarloParameter, MonteCarloSimulation
 
