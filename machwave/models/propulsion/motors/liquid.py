@@ -22,8 +22,9 @@ class LiquidEngine(Motor):
 
     def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
         """
-        Constant CG throughout the operation. Half the chamber length.
+        TODO: implement this method.
         """
+        return np.array([0, 0, 0])
 
     def get_thrust_coefficient_correction_factor(self, *args, **kwargs):
         """

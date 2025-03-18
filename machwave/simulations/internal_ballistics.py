@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.models.propulsion.motor import Motor
+from machwave.models.propulsion.motors import Motor
 from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
 from machwave.services.factories import get_motor_operation_class
