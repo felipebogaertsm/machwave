@@ -82,7 +82,10 @@ def _mass_flux_pressure_fed_orifice(
     """
     return np.sqrt(
         (P_tank - P0)
-        / (1 / (2 * rho * C_d**2 * A_inj**2) + (2 * f_d * line_length) / line_diameter)
+        / (
+            1 / (2 * rho * C_d**2 * A_inj**2)
+            + (8 * f_d * line_length) / (np.pi * line_diameter**5)
+        )
     )
 
 
