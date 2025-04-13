@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from machwave.services.isentropic_flow import get_critical_pressure_ratio
+from machwave.services.flow.isentropic import get_critical_pressure_ratio
 
 
 def solve_cp_seidel(
@@ -55,40 +55,6 @@ def solve_cp_seidel(
     return (dP0_dt,)
 
 
-def _mass_flux_pressure_fed_orifice(
-    P0: float,
-    P_tank: float,
-    rho: float,
-    A_inj: float,
-    C_d: float,
-    f_d: float,
-    line_length: float,
-    line_diameter: float,
-) -> float:
-    """
-    Calulates the mass flux through an orifice for a pressure-fed tank system.
-
-    TODO: Relocate this function.
-
-    Args:
-        P0: Chamber pressure.
-        P_tank: Tank pressure.
-        rho: Density of the fluid.
-        A_inj: Orifice area.
-        C_d: Discharge coefficient.
-        f_d: Friction factor.
-        line_length: Length of the line.
-        line_diameter: Diameter of the line.
-    """
-    return np.sqrt(
-        (P_tank - P0)
-        / (
-            1 / (2 * rho * C_d**2 * A_inj**2)
-            + (8 * f_d * line_length) / (np.pi * line_diameter**5)
-        )
-    )
-
-
 def solve_pressure_fed_lre_chamber_pressure(
     P0: float,
     R: float,
@@ -96,40 +62,9 @@ def solve_pressure_fed_lre_chamber_pressure(
     V0: float,
     At: float,
     c_star: float,
-    Cd_ox: float,
-    Cd_fuel: float,
-    A_inj: float,
-    f_d: float,
-    line_length_ox: float,
-    line_diameter_ox: float,
-    line_length_fuel: float,
-    line_diameter_fuel: float,
-    rho_ox: float,
-    rho_fuel: float,
-    tank_pressure_ox: float,
-    tank_pressure_fuel: float,
+    m_dot_ox: float,
+    m_dot_fuel: float,
 ) -> tuple[float]:
-    m_dot_ox = _mass_flux_pressure_fed_orifice(
-        P0,
-        tank_pressure_ox,
-        rho_ox,
-        A_inj,
-        Cd_ox,
-        f_d,
-        line_length_ox,
-        line_diameter_ox,
-    )
-    m_dot_fuel = _mass_flux_pressure_fed_orifice(
-        P0,
-        tank_pressure_fuel,
-        rho_fuel,
-        A_inj,
-        Cd_fuel,
-        f_d,
-        line_length_fuel,
-        line_diameter_fuel,
-    )
-
     dP0_dt = (R * T0 / V0) * ((m_dot_ox + m_dot_fuel) - (P0 * At * c_star))
     return (dP0_dt,)
 
