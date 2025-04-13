@@ -997,6 +997,33 @@ files = [
 ]
 
 [[package]]
+name = "rocketcea"
+version = "1.2.1"
+description = "RocketCEA wraps the FORTRAN CEA code and provides some useful tools."
+optional = false
+python-versions = "*"
+groups = ["main"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+files = [
+    {file = "rocketcea-1.2.1-cp310-cp310-win_amd64.whl", hash = "sha256:338f9b1917c24e8ca721526c2af1bebbbb5d6efaa7d87d2fd848a5a696510f4d"},
+    {file = "rocketcea-1.2.1-cp311-cp311-win_amd64.whl", hash = "sha256:bbe88e5f51dc7a15c0655c426ffb661afe65189b1aaff46ba9b03d029200b895"},
+    {file = "rocketcea-1.2.1-cp312-cp312-win_amd64.whl", hash = "sha256:e318e3df2a3a6fd1a558dbb4827230163809f4b72bcf48cc118e53b2874b2f2c"},
+    {file = "rocketcea-1.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:9e472df94057b901215087a98539bf890ac71014d8de1fd0f7307cc244219c80"},
+    {file = "rocketcea-1.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:82cd323b5a59e02b750e700cdc6d321cd10148b3fa0f61bd4cbca616f7c9ece0"},
+    {file = "rocketcea-1.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:52d373644759f9df1f98c4733be2363026a1122622939fc7a9c6bc46642cf00a"},
+    {file = "rocketcea-1.2.1.tar.gz", hash = "sha256:dd3f527089c19dfeb74d00f35bf48c2eef009a0c2f76638a72565fa9e9f9e02f"},
+]
+
+[package.dependencies]
+matplotlib = "*"
+numpy = "*"
+scipy = "*"
+
+[package.extras]
+dev = ["check-manifest"]
+test = ["coverage", "nose", "pytest"]
+
+[[package]]
 name = "ruff"
 version = "0.9.8"
 description = "An extremely fast Python linter and code formatter, written in Rust."
@@ -1304,4 +1331,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<=3.14"
-content-hash = "fd87601ac9bc7ef2a0605a703fe34ed6150f8369c926086e29069e070bcfe1e0"
+content-hash = "df03247887b1f73016ffb7db6d923e7172703beaa461d1a700b50105c9fb18c2"
