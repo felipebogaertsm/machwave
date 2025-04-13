@@ -6,7 +6,7 @@ import numpy as np
 
 from .chamber import CombustionChamber
 from machwave.services.math.geometric import get_circle_area
-from machwave.services.isentropic_flow import (
+from machwave.services.flow.isentropic import (
     get_divergent_correction_factor,
 )
 

@@ -4,7 +4,7 @@ from machwave.operations.internal_ballistics.base import MotorOperation
 from machwave.solvers.odes import rk4th_ode_solver
 from machwave.services.equations import solve_cp_seidel
 from machwave.models.propulsion.motors import SolidMotor
-from machwave.services.isentropic_flow import (
+from machwave.services.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
     get_operational_correction_factors,
