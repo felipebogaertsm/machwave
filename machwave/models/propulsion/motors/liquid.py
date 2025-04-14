@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.models.propulsion.propellants.liquid import LiquidPropellant
+from machwave.models.propulsion.propellants.biliquid import BiliquidPropellant
 from machwave.models.propulsion.structure import MotorStructure
 from machwave.models.propulsion.motors.base import Motor
 from machwave.services.flow.isentropic import get_ideal_thrust_coefficient
@@ -9,7 +9,7 @@ from machwave.services.flow.isentropic import get_ideal_thrust_coefficient
 class LiquidEngine(Motor):
     def __init__(
         self,
-        propellant: LiquidPropellant,
+        propellant: BiliquidPropellant,
         structure: MotorStructure,
     ) -> None:
         super().__init__(propellant, structure)

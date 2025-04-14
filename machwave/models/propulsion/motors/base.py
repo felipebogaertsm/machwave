@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from machwave.models.propulsion.propellants import Propellant
+from machwave.models.propulsion.propellants import SolidPropellant, BiliquidPropellant
 from machwave.models.propulsion.structure import MotorStructure
 from machwave.services.flow.isentropic import get_thrust_from_cf
 
@@ -15,7 +15,7 @@ class Motor(ABC):
 
     def __init__(
         self,
-        propellant: Propellant,
+        propellant: SolidPropellant | BiliquidPropellant,
         structure: MotorStructure,
     ) -> None:
         """

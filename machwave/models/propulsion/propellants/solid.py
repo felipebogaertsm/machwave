@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 import scipy.constants
 
-from . import Propellant
-
 
 class BurnRateOutOfBoundsError(Exception):
     """
@@ -13,110 +11,81 @@ class BurnRateOutOfBoundsError(Exception):
     valid burn rate range for a specific solid propellant.
 
     Attributes:
-        value (float): The chamber pressure that caused the error.
-        message (str): The error message.
+        value: The chamber pressure that caused the error.
+        message: The error message.
     """
 
     def __init__(self, value: float) -> None:
         self.value = value
         self.message = f"Chamber pressure out of bounds: {value * 1e-6:.2f} MPa"
-
         super().__init__(self.message)
 
 
 @dataclass
-class SolidPropellant(Propellant):
+class SolidPropellant:
     """
-    Class that stores solid propellant data.
-
-    This class represents a specific type of propellant, SolidPropellant, which
-    inherits properties from the Propellant base class. It provides attributes to
-    store the data related to a solid propellant, such as burn rate information,
-    combustion efficiency, density, isentropic exponents, molar weights, specific
-    impulses, and more.
-
-    The burn rate data is described using a list of dictionaries, where each
-    dictionary contains the minimum and maximum chamber pressure values, the burn
-    rate coefficient 'a', and the burn rate exponent 'n'. The burn rate coefficients
-    can vary with the chamber pressure, and the list must be ordered by increasing
-    minimum chamber pressure.
-
-    Inherits:
-        Propellant: Base class representing a propellant.
+    Single-class representation of a solid propellant, encompassing both the
+    generic propellant properties and solid-specific attributes.
 
     Attributes:
-        burn_rate (list[dict[str, float | int]]): Burn rate information list.
-            Each dictionary in the list describes the burn rate behavior within a
-            specific chamber pressure range.
-        combustion_efficiency (float): Combustion efficiency (0 to 1).
-        density (float): Propellant density [kg/m^3].
-        k_mix_ch (float): Isentropic exponent (chamber).
-        k_2ph_ex (float): Isentropic exponent (exhaust).
-        T0_ideal (float): Ideal combustion temperature [K].
-        M_ch (float): Molar weight (chamber) [100g/mole].
-        M_ex (float): Molar weight (exhaust) [100g/mole].
-        Isp_frozen (float): Frozen specific impulse [s].
-        Isp_shifting (float): Shifting specific impulse [s].
-        qsi_ch (float): Number of condensed phase moles per 100 gram (chamber) [moles].
-        qsi_ex (float): Number of condensed phase moles per 100 gram (exhaust) [moles].
+        density: Propellant density [kg/m^3].
+        combustion_efficiency: Combustion efficiency (0 to 1).
+        T0_ideal: Ideal combustion temperature [K].
+        k_mix: Isentropic exponent for the combustion chamber.
+        k_ex: Isentropic exponent for the exhaust.
+        M_ch: Molar weight in the chamber [kg/mol].
+        M_ex: Molar weight in the exhaust [kg/mol].
+        Isp_frozen: Frozen specific impulse [s].
+        Isp_shifting: Shifting specific impulse [s].
+        burn_rate: List of dictionaries describing
+            burn rate behavior (St. Robert's law parameters) with keys:
+            "min", "max", "a", and "n".
+        qsi_ch: Number of condensed-phase moles per 100 g in the chamber.
+        qsi_ex: Number of condensed-phase moles per 100 g in the exhaust.
     """
 
-    burn_rate: list[dict[str, float | int]]
-    combustion_efficiency: float
     density: float
-    k_mix_ch: float
-    k_2ph_ex: float
+    combustion_efficiency: float
     T0_ideal: float
+    k_mix: float
+    k_ex: float
     M_ch: float
     M_ex: float
     Isp_frozen: float
     Isp_shifting: float
+    burn_rate: list[dict[str, float | int]]
     qsi_ch: float
     qsi_ex: float
 
     def __post_init__(self) -> None:
-        """
-        Perform post-initialization tasks.
-
-        This method is called after the object initialization to perform any
-        additional setup or calculations required based on the provided
-        attributes.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        # Real combustion temperature based on the ideal temperature and the
-        # combustion efficiency [K]:
+        # Effective combustion temperature:
         self.T0 = self.T0_ideal * self.combustion_efficiency
 
-        # Gas constant per molecular weight calculations:
+        # Gas constants for chamber and exhaust:
         self.R_ch = scipy.constants.R / self.M_ch
         self.R_ex = scipy.constants.R / self.M_ex
 
     def get_burn_rate(self, chamber_pressure: float) -> float:
         """
-        Get the instantaneous burn rate.
-
-        This method calculates the instantaneous burn rate of the solid propellant
-        based on the provided chamber pressure using St. Robert's law.
+        Calculates the instantaneous burn rate of the solid propellant using St. Robert's law.
 
         Args:
-            chamber_pressure (float): Instantaneous stagnation pressure [Pa].
+            chamber_pressure (float): The instantaneous stagnation pressure [Pa].
 
         Returns:
-            float: Instantaneous burn rate in meters per second [m/s].
+            float: The instantaneous burn rate in meters per second.
 
         Raises:
-            BurnRateOutOfBoundsError: If the chamber pressure is out of the burn rate range.
+            BurnRateOutOfBoundsError: If the chamber pressure is not within any
+            burn rate range.
         """
         for item in self.burn_rate:
             if item["min"] <= chamber_pressure <= item["max"]:
                 a = item["a"]
                 n = item["n"]
-                return (a * (chamber_pressure * 1e-6) ** n) * 1e-3  # in m/s
+                # Convert pressure from Pa to MPa, apply St. Robert's law,
+                # then convert from mm/s to m/s
+                return (a * (chamber_pressure * 1e-6) ** n) * 1e-3
 
         raise BurnRateOutOfBoundsError(chamber_pressure)
 
