@@ -62,3 +62,29 @@ def convert_burn_rate_coefficient_to_metric(a_imperial: float, n: float) -> floa
         float: Burn rate coefficient in metric units.
     """
     return a_imperial * 25.4 / (0.0069**n)
+
+
+def convert_rankine_to_kelvin(temperature_rankine: float) -> float:
+    """
+    Converts temperature from Rankine to Kelvin.
+
+    Args:
+        temperature_rankine (float): Temperature in Rankine.
+
+    Returns:
+        float: Temperature in Kelvin.
+    """
+    return temperature_rankine * 5 / 9
+
+
+def convert_lbft3_to_kgm3(density_lbft3: float) -> float:
+    """
+    Converts density from lb/ft³ to kg/m³.
+
+    Args:
+        density_lbft3 (float): Density in lb/ft³.
+
+    Returns:
+        float: Density in kg/m³.
+    """
+    return density_lbft3 * 16.01846337
