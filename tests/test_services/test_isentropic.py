@@ -18,8 +18,8 @@ from machwave.services.flow.isentropic import (
 
 
 def test_get_critical_pressure_ratio():
-    k_mix_ch = 1.4
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch)
+    k_mix = 1.4
+    critical_pressure_ratio = get_critical_pressure_ratio(k_mix)
 
     assert critical_pressure_ratio == approx(0.528282)
 
@@ -42,10 +42,10 @@ def test_get_exit_mach():
 
 
 def test_get_exit_pressure():
-    k_2ph_ex = 1.4
+    k_ex = 1.4
     E = 8
     P_0 = 7e6
-    P_exit = get_exit_pressure(k_2ph_ex, E, P_0)
+    P_exit = get_exit_pressure(k_ex, E, P_0)
 
     assert P_exit == approx(71545.88, rel=1e-2)
 

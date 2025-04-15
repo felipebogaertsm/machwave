@@ -1,7 +1,3 @@
-"""
-Stores MotorStructure class and methods.
-"""
-
 import numpy as np
 
 from machwave.models.materials import Material
@@ -153,7 +149,9 @@ class BoltedCombustionChamber(CombustionChamber):
             / screw_count
         ) - (
             np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
-        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
+        ) * 0.25 * (
+            (self.outer_diameter**2) - (self.inner_diameter**2)
+        )
 
     def get_compression_area(self) -> float:
         return (

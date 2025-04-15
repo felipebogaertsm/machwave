@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from machwave.models.propulsion.propellants import SolidPropellant, BiliquidPropellant
-from machwave.models.propulsion.structure import MotorStructure
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.services.flow.isentropic import get_thrust_from_cf
 
 
@@ -16,7 +16,7 @@ class Motor(ABC):
     def __init__(
         self,
         propellant: SolidPropellant | BiliquidPropellant,
-        structure: MotorStructure,
+        thrust_chamber: ThrustChamber,
     ) -> None:
         """
         Instantiates object attributes common to any motor/engine (Solid,
@@ -24,10 +24,10 @@ class Motor(ABC):
 
         Args:
             propellant: Object representing the propellant used in the motor.
-            structure: Object representing the structure of the motor.
+            thrust_chamber: Object representing the thrust chamber of the motor.
         """
         self.propellant = propellant
-        self.structure = structure
+        self.thrust_chamber = thrust_chamber
 
     @abstractmethod
     def get_launch_mass(self) -> float:
@@ -110,5 +110,5 @@ class Motor(ABC):
         return get_thrust_from_cf(
             cf,
             chamber_pressure,
-            self.structure.nozzle.get_throat_area(),
+            self.thrust_chamber.nozzle.get_throat_area(),
         )
