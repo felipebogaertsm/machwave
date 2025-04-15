@@ -28,8 +28,11 @@ class SolidPropellant:
     generic propellant properties and solid-specific attributes.
 
     Attributes:
-        density: Propellant density [kg/m^3].
+        burn_rate: List of dictionaries describing
+            burn rate behavior (St. Robert's law parameters) with keys:
+            "min", "max", "a", and "n".
         combustion_efficiency: Combustion efficiency (0 to 1).
+        density: Propellant density [kg/m^3].
         T0_ideal: Ideal combustion temperature [K].
         k_mix: Isentropic exponent for the combustion chamber.
         k_ex: Isentropic exponent for the exhaust.
@@ -37,15 +40,13 @@ class SolidPropellant:
         M_ex: Molar weight in the exhaust [kg/mol].
         Isp_frozen: Frozen specific impulse [s].
         Isp_shifting: Shifting specific impulse [s].
-        burn_rate: List of dictionaries describing
-            burn rate behavior (St. Robert's law parameters) with keys:
-            "min", "max", "a", and "n".
         qsi_ch: Number of condensed-phase moles per 100 g in the chamber.
         qsi_ex: Number of condensed-phase moles per 100 g in the exhaust.
     """
 
-    density: float
+    burn_rate: list[dict[str, float | int]]
     combustion_efficiency: float
+    density: float
     T0_ideal: float
     k_mix: float
     k_ex: float
@@ -53,7 +54,6 @@ class SolidPropellant:
     M_ex: float
     Isp_frozen: float
     Isp_shifting: float
-    burn_rate: list[dict[str, float | int]]
     qsi_ch: float
     qsi_ex: float
 
