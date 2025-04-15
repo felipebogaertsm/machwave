@@ -3,19 +3,16 @@ import numpy as np
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.motors.base import Motor
 from machwave.models.propulsion.propellants.solid import SolidPropellant
-from machwave.models.propulsion.structure import MotorStructure
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.services.flow.isentropic import get_thrust_coefficients
 
 
 class SolidMotor(Motor):
     def __init__(
-        self,
-        grain: Grain,
-        propellant: SolidPropellant,
-        structure: MotorStructure,
+        self, grain: Grain, propellant: SolidPropellant, thrust_chamber: ThrustChamber
     ) -> None:
         self.grain = grain
-        super().__init__(propellant, structure)
+        super().__init__(propellant, thrust_chamber)
 
         self.propellant: SolidPropellant = propellant
         self.cf_ideal = None  # ideal thrust coefficient
@@ -31,7 +28,7 @@ class SolidMotor(Motor):
         Returns:
             Free chamber volume, in m^3
         """
-        return self.structure.chamber.empty_volume - propellant_volume
+        return self.thrust_chamber.combustion_chamber.empty_volume - propellant_volume
 
     @property
     def initial_propellant_mass(self) -> float:
@@ -57,7 +54,7 @@ class SolidMotor(Motor):
         """
         return (
             (100 - (n_kin + n_bl + n_tp))
-            * self.structure.nozzle.get_divergent_correction_factor()
+            * self.thrust_chamber.nozzle.get_divergent_correction_factor()
             / 100
             * self.propellant.combustion_efficiency
         )
@@ -68,7 +65,7 @@ class SolidMotor(Motor):
         exit_pressure: float,
         external_pressure: float,
         expansion_ratio: float,
-        k_2ph_ex: float,
+        k_ex: float,
         n_cf: float,
     ) -> float:
         """
@@ -77,7 +74,7 @@ class SolidMotor(Motor):
             exit_pressure: Exit pressure, in Pa
             external_pressure: External pressure, in Pa
             expansion_ratio: Expansion ratio, adimensional
-            k_2ph_ex: Two-phase isentropic coefficient, adimensional
+            k_ex: Two-phase isentropic coefficient, adimensional
             n_cf: Thrust coefficient correction factor, adimensional
 
         Returns:
@@ -88,16 +85,16 @@ class SolidMotor(Motor):
             exit_pressure,
             external_pressure,
             expansion_ratio,
-            k_2ph_ex,
+            k_ex,
             n_cf,
         )
         return self.cf_real
 
     def get_launch_mass(self) -> float:
-        return self.structure.dry_mass + self.initial_propellant_mass
+        return self.thrust_chamber.dry_mass + self.initial_propellant_mass
 
     def get_dry_mass(self) -> float:
-        return self.structure.dry_mass
+        return self.thrust_chamber.dry_mass
 
     def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
         """
@@ -105,4 +102,7 @@ class SolidMotor(Motor):
 
         TODO: implement grain CG calculation.
         """
-        return np.array([self.structure.chamber.length / 2, 0.0, 0.0], dtype=np.float64)
+        return np.array(
+            [self.thrust_chamber.combustion_chamber.length / 2, 0.0, 0.0],
+            dtype=np.float64,
+        )

@@ -10,13 +10,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.structure import (
-    MotorStructure,
-    Nozzle,
-)
-from machwave.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
 from machwave.models.recovery import Recovery
 from machwave.models.rocket import Rocket
@@ -69,6 +67,7 @@ def main():
     grain.add_segment(bates_segment_2)
 
     nozzle = Nozzle(
+        inlet_diameter=0.086,
         throat_diameter=0.0327,
         divergent_angle=12,
         convergent_angle=40,
@@ -91,14 +90,15 @@ def main():
         screw_diameter=0.00675,
     )
 
-    structure = MotorStructure(
-        safety_factor=4,
+    thrust_chamber = ThrustChamber(
         dry_mass=6.404,
         nozzle=nozzle,
-        chamber=chamber,
+        combustion_chamber=chamber,
     )
 
-    motor = SolidMotor(grain=grain, propellant=propellant, structure=structure)
+    motor = SolidMotor(
+        grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
+    )
 
     # Recovery:
     recovery = Recovery()

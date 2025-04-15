@@ -1,10 +1,5 @@
-"""
-Stores MotorStructure class and methods.
-"""
-
 import numpy as np
 
-from .chamber import CombustionChamber
 from machwave.services.math.geometric import get_circle_area
 from machwave.services.flow.isentropic import (
     get_divergent_correction_factor,
@@ -14,12 +9,14 @@ from machwave.services.flow.isentropic import (
 class Nozzle:
     def __init__(
         self,
+        inlet_diameter,
         throat_diameter,
         divergent_angle,
         convergent_angle,
         expansion_ratio,
         material,
     ) -> None:
+        self.inlet_diameter = inlet_diameter
         self.throat_diameter = throat_diameter
         self.divergent_angle = divergent_angle
         self.convergent_angle = convergent_angle
@@ -51,7 +48,6 @@ class Nozzle:
         self,
         chamber_pressure: float,
         safety_factor: float,
-        chamber: CombustionChamber,
     ):
         """
         Returns nozzle convergent and divergent thickness.
@@ -59,14 +55,14 @@ class Nozzle:
         nozzle_conv_thickness = self.get_nozzle_wall_thickness(
             chamber_pressure,
             safety_factor,
-            chamber.inner_diameter,
+            self.inlet_diameter,
             self.convergent_angle,
         )
 
         nozzle_div_thickness = self.get_nozzle_wall_thickness(
             chamber_pressure,
             safety_factor,
-            chamber.inner_diameter,
+            self.inlet_diameter,
             self.divergent_angle,
         )
 

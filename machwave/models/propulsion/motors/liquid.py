@@ -1,7 +1,8 @@
 import numpy as np
 
 from machwave.models.propulsion.propellants.biliquid import BiliquidPropellant
-from machwave.models.propulsion.structure import MotorStructure
+from machwave.models.propulsion.feed_systems.base import FeedSystem
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.models.propulsion.motors.base import Motor
 from machwave.services.flow.isentropic import get_ideal_thrust_coefficient
 
@@ -10,15 +11,17 @@ class LiquidEngine(Motor):
     def __init__(
         self,
         propellant: BiliquidPropellant,
-        structure: MotorStructure,
+        thrust_chamber: ThrustChamber,
+        feed_system: FeedSystem,
     ) -> None:
-        super().__init__(propellant, structure)
+        super().__init__(propellant, thrust_chamber)
+        self.feed_system = feed_system
 
     def get_launch_mass(self) -> float:
-        return self.structure.dry_mass + self.initial_propellant_mass
+        return self.thrust_chamber.dry_mass + self.initial_propellant_mass
 
     def get_dry_mass(self) -> float:
-        return self.structure.dry_mass
+        return self.thrust_chamber.dry_mass
 
     def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
         """
@@ -38,7 +41,7 @@ class LiquidEngine(Motor):
         exit_pressure: float,
         external_pressure: float,
         expansion_ratio: float,
-        k_2ph_ex: float,
+        k_ex: float,
     ) -> float:
         """
         Args:
@@ -46,7 +49,7 @@ class LiquidEngine(Motor):
             exit_pressure: Exit pressure (Pa)
             external_pressure: External pressure (Pa)
             expansion_ratio: Expansion ratio
-            k_2ph_ex: Two-phase isentropic coefficient
+            k_ex: Two-phase isentropic coefficient
 
         Returns:
             Instantaneous thrust coefficient
@@ -56,7 +59,7 @@ class LiquidEngine(Motor):
             exit_pressure=exit_pressure,
             external_pressure=external_pressure,
             expansion_ratio=expansion_ratio,
-            k_2ph_ex=k_2ph_ex,
+            k_ex=k_ex,
         )
         n_cf = self.get_thrust_coefficient_correction_factor()
         return cf_ideal * n_cf

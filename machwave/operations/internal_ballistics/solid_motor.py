@@ -47,7 +47,7 @@ class SolidMotorOperation(MotorOperation):
 
         # Grain and propellant parameters:
         self.V_0 = np.array(
-            [motor.structure.chamber.empty_volume]
+            [motor.thrust_chamber.combustion_chamber.empty_volume]
         )  # empty chamber volume
         self.web = np.array([0])  # instant web thickness
         self.burn_area = np.array([self.motor.grain.get_burn_area(self.web[0])])
@@ -115,9 +115,9 @@ class SolidMotorOperation(MotorOperation):
                     Pe=P_ext,
                     Ab=self.burn_area[-1],
                     V0=self.V_0[-1],
-                    At=self.motor.structure.nozzle.get_throat_area(),
+                    At=self.motor.thrust_chamber.nozzle.get_throat_area(),
                     pp=self.motor.propellant.density,
-                    k=self.motor.propellant.k_mix_ch,
+                    k=self.motor.propellant.k_mix,
                     R=self.motor.propellant.R_ch,
                     T0=self.motor.propellant.T0,
                     r=self.burn_rate[-1],
@@ -127,8 +127,8 @@ class SolidMotorOperation(MotorOperation):
             self.P_exit = np.append(
                 self.P_exit,
                 get_exit_pressure(
-                    self.motor.propellant.k_2ph_ex,
-                    self.motor.structure.nozzle.expansion_ratio,
+                    self.motor.propellant.k_ex,
+                    self.motor.thrust_chamber.nozzle.expansion_ratio,
                     self.P_0[-1],
                 ),
             )
@@ -142,8 +142,8 @@ class SolidMotorOperation(MotorOperation):
                 P_ext,
                 convert_pa_to_psi(self.P_0[-1]),
                 self.motor.propellant,
-                self.motor.structure,
-                get_critical_pressure_ratio(self.motor.propellant.k_mix_ch),
+                self.motor.thrust_chamber,
+                get_critical_pressure_ratio(self.motor.propellant.k_mix),
                 self.V_0[0],
                 self.t[-1],
             )
@@ -156,7 +156,7 @@ class SolidMotorOperation(MotorOperation):
                 self.n_cf,
                 (
                     (100 - (n_kin_atual + n_bl_atual + n_tp_atual))
-                    * self.motor.structure.nozzle.get_divergent_correction_factor()
+                    * self.motor.thrust_chamber.nozzle.get_divergent_correction_factor()
                     / 100
                     * self.motor.propellant.combustion_efficiency
                 ),
@@ -166,8 +166,8 @@ class SolidMotorOperation(MotorOperation):
                 self.P_0[-1],
                 self.P_exit[-1],
                 P_ext,
-                self.motor.structure.nozzle.expansion_ratio,
-                self.motor.propellant.k_2ph_ex,
+                self.motor.thrust_chamber.nozzle.expansion_ratio,
+                self.motor.propellant.k_ex,
                 self.n_cf[-1],
             )
 
@@ -178,7 +178,7 @@ class SolidMotorOperation(MotorOperation):
                 get_thrust_from_cf(
                     self.C_f[-1],
                     self.P_0[-1],
-                    self.motor.structure.nozzle.get_throat_area(),
+                    self.motor.thrust_chamber.nozzle.get_throat_area(),
                 ),
             )  # thrust calculation
 
@@ -191,7 +191,7 @@ class SolidMotorOperation(MotorOperation):
             if not is_flow_choked(
                 self.P_0[-1],
                 P_ext,
-                get_critical_pressure_ratio(self.motor.propellant.k_mix_ch),
+                get_critical_pressure_ratio(self.motor.propellant.k_mix),
             ):
                 self._thrust_time = self.t[-1]
                 self.end_thrust = True

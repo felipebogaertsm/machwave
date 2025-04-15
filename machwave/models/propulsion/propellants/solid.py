@@ -33,9 +33,9 @@ class SolidPropellant:
             "min", "max", "a", and "n".
         combustion_efficiency: Combustion efficiency (0 to 1).
         density: Propellant density [kg/m^3].
-        T0_ideal: Ideal combustion temperature [K].
         k_mix: Isentropic exponent for the combustion chamber.
         k_ex: Isentropic exponent for the exhaust.
+        T0_ideal: Ideal combustion temperature [K].
         M_ch: Molar weight in the chamber [kg/mol].
         M_ex: Molar weight in the exhaust [kg/mol].
         Isp_frozen: Frozen specific impulse [s].
@@ -47,9 +47,9 @@ class SolidPropellant:
     burn_rate: list[dict[str, float | int]]
     combustion_efficiency: float
     density: float
-    T0_ideal: float
     k_mix: float
     k_ex: float
+    T0_ideal: float
     M_ch: float
     M_ex: float
     Isp_frozen: float
