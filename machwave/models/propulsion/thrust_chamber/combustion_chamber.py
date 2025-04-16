@@ -24,7 +24,7 @@ class CombustionChamber:
 
     @property
     def inner_diameter(self) -> float:
-        return self.inner_diameter - 2 * self.liner.thickness
+        return self.casing_inner_diameter - 2 * self.liner.thickness
 
     @property
     def inner_radius(self) -> float:
