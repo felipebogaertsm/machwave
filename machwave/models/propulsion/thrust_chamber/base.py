@@ -33,6 +33,16 @@ class ThrustChamber:
         self.dry_mass = dry_mass
 
 
+class SolidMotorThrustChamber(ThrustChamber):
+    def __init__(
+        self,
+        nozzle: Nozzle,
+        combustion_chamber: CombustionChamber,
+        dry_mass: float,
+    ):
+        super().__init__(nozzle, combustion_chamber, dry_mass)
+
+
 class LiquidEngineThrustChamber(ThrustChamber):
     """
     Represents the thrust chamber assembly of a liquid rocket engine.

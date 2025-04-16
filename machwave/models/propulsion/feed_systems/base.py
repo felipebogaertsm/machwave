@@ -22,6 +22,15 @@ class FeedSystem(ABC):
         self.fuel_tank = fuel_tank
         self.oxidizer_tank = oxidizer_tank
 
+    def get_propellant_mass(self) -> float:
+        """
+        Compute and return the initial propellant mass in the system.
+
+        Returns:
+            float: The initial propellant mass in kilograms (kg).
+        """
+        return self.fuel_tank.fluid_mass + self.oxidizer_tank.fluid_mass
+
     @abstractmethod
     def get_mass_flow_ox(self, *args, **kwargs) -> float:
         """
