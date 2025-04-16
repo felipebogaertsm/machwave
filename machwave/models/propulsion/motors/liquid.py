@@ -22,7 +22,7 @@ class LiquidEngine(Motor):
         """
         Returns the initial propellant mass in kg.
         """
-        return self.feed_system.get_initial_propellant_mass()
+        return self.feed_system.get_propellant_mass()
 
     def get_launch_mass(self) -> float:
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass
