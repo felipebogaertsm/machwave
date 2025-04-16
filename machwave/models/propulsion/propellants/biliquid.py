@@ -141,3 +141,27 @@ class BiliquidPropellant:
         # 7) Gas constants at chamber & exit conditions
         self.R_chamber = scipy.constants.R / self.chamber_molecular_weight
         self.R_exit = scipy.constants.R / self.exit_molecular_weight
+
+    def get_c_star(self) -> float:
+        """
+        Compute and return the characteristic velocity (c*) of the propellant.
+
+        The characteristic velocity is a key performance parameter defined by:
+            c* = sqrt((R * T_c) / gamma) * ((gamma+1)/2)^((gamma+1)/(2*(gamma-1)))
+        where:
+            T_c is the combustion temperature (adjusted for efficiency) [K],
+            R is the specific gas constant for the chamber [J/(kg·K)],
+            gamma is the isentropic exponent in the chamber.
+
+        Returns:
+            float: Characteristic velocity in m/s.
+        """
+        # Use the chamber conditions for calculation
+        T_c = self.combustion_temperature
+        R_ch = self.R_chamber
+        gamma = self.chamber_gamma
+
+        # Calculate the factor based on the isentropic exponent
+        factor = ((gamma + 1) / 2) ** ((gamma + 1) / (2 * (gamma - 1)))
+        c_star = (R_ch * T_c / gamma) ** 0.5 * factor
+        return c_star
