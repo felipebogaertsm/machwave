@@ -55,7 +55,7 @@ def thermal_liner_olympus():
 @pytest.fixture
 def combustion_chamber_olympus(thermal_liner_olympus):
     return CombustionChamber(
-        casing_inner_diameter=128.2e-3,
+        inner_diameter=128.2e-3,
         outer_diameter=141.3e-3,
         liner=thermal_liner_olympus,
         length=1500e-3,
@@ -67,7 +67,7 @@ def combustion_chamber_olympus(thermal_liner_olympus):
 @pytest.fixture
 def bolted_combustion_chamber_olympus(thermal_liner_olympus):
     return BoltedCombustionChamber(
-        casing_inner_diameter=128.2e-3,
+        inner_diameter=128.2e-3,
         outer_diameter=141.3e-3,
         liner=thermal_liner_olympus,
         length=1500e-3,

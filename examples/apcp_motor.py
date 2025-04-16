@@ -65,7 +65,7 @@ def main():
     liner = ThermalLiner(thickness=0.003, material=EPDM())
 
     chamber = BoltedCombustionChamber(
-        casing_inner_diameter=0.09525,
+        inner_diameter=0.09525,
         outer_diameter=0.1016,
         liner=liner,
         length=grain.total_length + 0.01,

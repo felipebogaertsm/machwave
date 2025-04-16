@@ -17,6 +17,13 @@ class LiquidEngine(Motor):
         super().__init__(propellant, thrust_chamber)
         self.feed_system = feed_system
 
+    @property
+    def initial_propellant_mass(self) -> float:
+        """
+        Returns the initial propellant mass in kg.
+        """
+        return self.feed_system.get_initial_propellant_mass()
+
     def get_launch_mass(self) -> float:
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass
 

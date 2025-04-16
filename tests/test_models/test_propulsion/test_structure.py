@@ -9,15 +9,14 @@ def _test_combustion_chamber_properties(combustion_chamber):
     assert inner_diameter > 0
     assert (
         inner_diameter
-        == combustion_chamber.casing_inner_diameter
-        - 2 * combustion_chamber.liner.thickness
+        == combustion_chamber.inner_diameter - 2 * combustion_chamber.liner.thickness
     )
 
     assert combustion_chamber.inner_radius == inner_diameter / 2
     assert combustion_chamber.outer_radius == combustion_chamber.outer_diameter / 2
 
     assert (
-        combustion_chamber.casing_inner_diameter
+        combustion_chamber.inner_diameter
         == inner_diameter + 2 * combustion_chamber.liner.thickness
     )
 

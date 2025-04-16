@@ -8,14 +8,14 @@ from machwave.services.math.geometric import get_cylinder_volume
 class CombustionChamber:
     def __init__(
         self,
-        casing_inner_diameter: float,
+        inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
         casing_material: Material,
         bulkhead_material: Material,
     ) -> None:
-        self.casing_inner_diameter = casing_inner_diameter
+        self.casing_inner_diameter = inner_diameter
         self.outer_diameter = outer_diameter
         self.liner = liner
         self.length = length
@@ -24,7 +24,7 @@ class CombustionChamber:
 
     @property
     def inner_diameter(self) -> float:
-        return self.casing_inner_diameter - 2 * self.liner.thickness
+        return self.inner_diameter - 2 * self.liner.thickness
 
     @property
     def inner_radius(self) -> float:
@@ -36,35 +36,11 @@ class CombustionChamber:
 
     @property
     def casing_inner_radius(self) -> float:
-        return self.casing_inner_diameter / 2
+        return self.inner_diameter / 2
 
     @property
     def empty_volume(self) -> float:
         return get_cylinder_volume(self.inner_diameter, self.length)
-
-    def get_chamber_length(
-        self,
-        grain_length: float,
-        grain_count: int,
-        grain_spacing: float,
-    ) -> float:
-        """
-        Returns the chamber length of the SRM, given the grain parameters.
-        """
-        return np.sum(grain_length) + (grain_count - 1) * grain_spacing
-
-    def get_bulkhead_thickness(
-        self, chamber_pressure: float, safety_factor: float
-    ) -> float:
-        """
-        Returns the thickness of a planar bulkhead pressure vessel.
-        """
-        return self.inner_diameter * (
-            np.sqrt(
-                (0.75 * chamber_pressure)
-                / (self.bulkhead_material.yield_strength / safety_factor)
-            )
-        )
 
     def get_casing_stress_theta(self, chamber_pressure: float) -> float:
         return (
@@ -113,7 +89,7 @@ class CombustionChamber:
 class BoltedCombustionChamber(CombustionChamber):
     def __init__(
         self,
-        casing_inner_diameter: float,
+        inner_diameter: float,
         outer_diameter: float,
         liner: ThermalLiner,
         length: float,
@@ -125,7 +101,7 @@ class BoltedCombustionChamber(CombustionChamber):
         screw_diameter: float,
     ) -> None:
         super().__init__(
-            casing_inner_diameter,
+            inner_diameter,
             outer_diameter,
             liner,
             length,
