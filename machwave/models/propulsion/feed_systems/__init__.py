@@ -1,1 +1,3 @@
-from machwave.models.propulsion.feed_systems.pressure_fed import PressureFedFeedSystem
+from machwave.models.propulsion.feed_systems.pressure_fed import (
+    StackedTankPressureFedFeedSystem,
+)
