@@ -60,9 +60,38 @@ class Tank:
 
     def get_density(self) -> float:
         """
-        Returns the bulk density [kg/m^3], simply fluid_mass / volume.
+        Returns the fluid density [kg/m^3] at the current tank pressure and
+        temperature, using CoolProp.  In two‐phase situations (P ≃ P_sat),
+        computes the mixture density based on vapor quality.
         """
-        return self.fluid_mass / self.volume
+        # Empty tank?
+        if self.fluid_mass <= 0:
+            return 0.0
+
+        # 1) Current pressure
+        p = self.get_pressure()
+
+        try:
+            # 2a) Single‐phase (or off‐saturation) density
+            return CP.PropsSI("D", "T", self.temperature, "P", p, self.fluid_name)
+
+        except ValueError:
+            # 2b) Two‐phase: density at saturation is ambiguous, so compute mixture
+            #    via quality:  x = m_vapor / m_total
+            #    ρ_mix = 1 / ( x/ρ_v + (1−x)/ρ_l )
+
+            # saturation pressure & max vapor mass
+            p_sat = CP.PropsSI("P", "T", self.temperature, "Q", 0, self.fluid_name)
+            m_vap_max = self._mass_if_all_vapor(p_sat)
+
+            if self.fluid_mass > m_vap_max:
+                x = m_vap_max / self.fluid_mass
+                rho_v = CP.PropsSI("D", "T", self.temperature, "Q", 1, self.fluid_name)
+                rho_l = CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
+                return 1.0 / (x / rho_v + (1 - x) / rho_l)
+
+            # If mass ≤ m_vap_max but still hit a weird error, fallback to ideal‐gas bulk
+            return self.fluid_mass / self.volume
 
     def remove_propellant(self, mass: float) -> None:
         """
