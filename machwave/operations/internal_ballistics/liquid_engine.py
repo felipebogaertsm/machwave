@@ -64,17 +64,20 @@ class LiquidEngineOperation(MotorOperation):
                 eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
             )  # update propellant properties based on chamber pressure from last iteration
 
-            fuel_mass_flow = self.motor.feed_system.get_mass_flow_fuel(
-                chamber_pressure=self.P_0[-1],
-                discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_fuel,
-                injector_area=self.motor.thrust_chamber.injector.area_fuel,
-            )
-
-            ox_mass_flow = self.motor.feed_system.get_mass_flow_ox(
-                chamber_pressure=self.P_0[-1],
-                discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_oxidizer,
-                injector_area=self.motor.thrust_chamber.injector.area_ox,
-            )
+            if self.m_prop[-1] >= 0:
+                fuel_mass_flow = self.motor.feed_system.get_mass_flow_fuel(
+                    chamber_pressure=self.P_0[-1],
+                    discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_fuel,
+                    injector_area=self.motor.thrust_chamber.injector.area_fuel,
+                )
+                ox_mass_flow = self.motor.feed_system.get_mass_flow_ox(
+                    chamber_pressure=self.P_0[-1],
+                    discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_oxidizer,
+                    injector_area=self.motor.thrust_chamber.injector.area_ox,
+                )
+            else:
+                fuel_mass_flow = 0
+                ox_mass_flow = 0
 
             P0 = rk4th_ode_solver(
                 variables={"P0": self.P_0[-1]},
@@ -134,7 +137,7 @@ class LiquidEngineOperation(MotorOperation):
                 self.oxidizer_mass[-1] + self.fuel_mass[-1],
             )  # update propellant mass
 
-            if self.m_prop[-1] == 0 and not self.end_burn:
+            if self.m_prop[-1] <= 0 and not self.end_burn:
                 self.burn_time = self.t[-1]
                 self.end_burn = True
 
