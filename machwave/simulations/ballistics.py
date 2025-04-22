@@ -128,7 +128,7 @@ class BallisticSimulation(Simulation):
                 right=0,
             )  # interpolating thrust with new time value
 
-            self.ballistic_operation.iterate(
+            self.ballistic_operation.run_timestep(
                 np.interp(
                     self.t[-1],
                     self.params.time,

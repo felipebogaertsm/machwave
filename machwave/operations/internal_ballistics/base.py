@@ -48,7 +48,7 @@ class MotorOperation(Operation):
         self.end_burn = False
 
     @abstractmethod
-    def iterate(self, *args, **kwargs) -> None:
+    def run_timestep(self, *args, **kwargs) -> None:
         """
         Calculates and stores operational parameters in the corresponding
         vectors.

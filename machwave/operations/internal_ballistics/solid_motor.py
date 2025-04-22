@@ -62,7 +62,7 @@ class SolidMotorOperation(MotorOperation):
         self.n_tp = np.array([0])  # two-phase flow correction factor
         self.n_cf = np.array([0])  # thrust coefficient correction factor
 
-    def iterate(
+    def run_timestep(
         self,
         d_t: float,
         P_ext: float,

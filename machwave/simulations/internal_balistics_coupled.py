@@ -124,7 +124,7 @@ class InternalBallisticsCoupled(Simulation):
             self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
             if not self.motor_operation.end_thrust:
-                self.motor_operation.iterate(
+                self.motor_operation.run_timestep(
                     self.params.d_t,
                     self.ballistic_operation.P_ext[i],
                 )
@@ -137,7 +137,7 @@ class InternalBallisticsCoupled(Simulation):
                 d_t = self.params.d_t * self.params.dd_t
                 self.t[-1] = self.t[-2] + self.params.dd_t * self.params.d_t
 
-            self.ballistic_operation.iterate(propellant_mass, thrust, d_t)
+            self.ballistic_operation.run_timestep(propellant_mass, thrust, d_t)
             i += 1
 
         return (self.motor_operation, self.ballistic_operation)
