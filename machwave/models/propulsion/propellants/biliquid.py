@@ -6,9 +6,10 @@ from machwave.services.conversions import (
     convert_rankine_to_kelvin,
     convert_lbft3_to_kgm3,
 )
+from machwave.models.propulsion.propellants.base import Propellant
 
 
-class BiliquidPropellant:
+class BiliquidPropellant(Propellant):
     """
     Stores and manages liquid propellant data with RocketCEA integration.
 
@@ -92,7 +93,7 @@ class BiliquidPropellant:
         self.update_properties(chamber_pressure=400.0)
 
     def update_properties(
-        self, chamber_pressure: float, eps: float = 8.0, frozen: 0 | 1 = 0
+        self, chamber_pressure: float, eps: float = 8.0, frozen: int = 0
     ):
         """
         Update propellant thermochemical properties using RocketCEA.

@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.propulsion.motors import LiquidEngine
+from machwave.models.propulsion.propellants import BiliquidPropellant
 from machwave.operations.internal_ballistics.base import MotorOperation
 from machwave.services.equations import solve_pressure_fed_lre_chamber_pressure
 from machwave.solvers.odes import rk4th_ode_solver
@@ -20,6 +21,8 @@ class LiquidEngineOperation(MotorOperation):
     The variable names correspond to what they are commonly referred to in books and papers related to
     Rocket Propulsion. Therefore, PEP8's snake_case will not be followed rigorously.
     """
+
+    motor: LiquidEngine
 
     def __init__(
         self,

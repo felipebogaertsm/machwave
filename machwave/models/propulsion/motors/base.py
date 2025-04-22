@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 import numpy as np
 
-from machwave.models.propulsion.propellants import SolidPropellant, BiliquidPropellant
+from machwave.models.propulsion.propellants import Propellant
 from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.services.flow.isentropic import get_thrust_from_cf
 
+P = TypeVar("P", bound=Propellant)
+T = TypeVar("T", bound=ThrustChamber)
 
-class Motor(ABC):
+
+class Motor(Generic[P, T], ABC):
     """
     Abstract rocket motor/engine class. Can be used to model any chemical
     rocket propulsion system, such as Solid, Hybrid and Liquid.
@@ -15,8 +19,8 @@ class Motor(ABC):
 
     def __init__(
         self,
-        propellant: SolidPropellant | BiliquidPropellant,
-        thrust_chamber: ThrustChamber,
+        propellant: P,
+        thrust_chamber: T,
     ) -> None:
         """
         Instantiates object attributes common to any motor/engine (Solid,
