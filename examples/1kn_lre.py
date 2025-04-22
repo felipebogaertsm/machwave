@@ -24,6 +24,7 @@ from machwave.simulations.internal_ballistics import (
     InternalBallistics,
     InternalBallisticsParams,
 )
+from machwave.services.plots.internal_ballistics import thrust_pressure_plot
 
 FUEL_NAME = "Ethanol"
 OXIDIZER_NAME = "N2O"
@@ -91,6 +92,8 @@ def main():
     (time, ib_operation) = simulation.run()
 
     simulation.print_results()
+    figure = thrust_pressure_plot(time, ib_operation.thrust, ib_operation.P_0)
+    figure.show()
 
 
 if __name__ == "__main__":
