@@ -79,7 +79,7 @@ class Ballistic1DOperation(BallisticOperation):
         """Get the time of the maximum velocity."""
         return self.t[np.argmax(self.v)]
 
-    def iterate(
+    def run_timestep(
         self,
         propellant_mass: float,
         thrust: float,

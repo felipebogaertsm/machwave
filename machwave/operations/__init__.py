@@ -18,7 +18,7 @@ class Operation(ABC):
         pass
 
     @abstractmethod
-    def iterate(self, *args, **kwargs):
+    def run_timestep(self, *args, **kwargs):
         """
         Runs on every iteration of a simulation loop, incrementing results
         and storing them in the Operation instance (self).

@@ -42,7 +42,7 @@ class LiquidEngineOperation(MotorOperation):
         self.fuel_mass = np.array([motor.feed_system.fuel_tank.fluid_mass])
         self.n_cf = np.array([0])  # thrust coefficient correction factor
 
-    def iterate(
+    def run_timestep(
         self,
         d_t: float,
         P_ext: float,
