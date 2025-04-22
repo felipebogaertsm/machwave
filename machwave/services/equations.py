@@ -61,11 +61,19 @@ def solve_pressure_fed_lre_chamber_pressure(
     T0: float,
     V0: float,
     At: float,
-    c_star: float,
+    k: float,
     m_dot_ox: float,
     m_dot_fuel: float,
 ) -> tuple[float]:
-    dP0_dt = (R * T0 / V0) * ((m_dot_ox + m_dot_fuel) - (P0 * At / c_star))
+    m_dot_out = (
+        At
+        * P0
+        * k
+        * (np.sqrt((2 / (k + 1)) ** ((k + 1) / (k - 1))))
+        / (np.sqrt(k * R * T0))
+    )
+    m_dot_in = m_dot_ox + m_dot_fuel
+    dP0_dt = (R * T0 / V0) * (m_dot_in - m_dot_out)
     return (dP0_dt,)
 
 
