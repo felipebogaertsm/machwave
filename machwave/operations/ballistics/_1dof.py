@@ -79,12 +79,7 @@ class Ballistic1DOperation(BallisticOperation):
         """Get the time of the maximum velocity."""
         return self.t[np.argmax(self.v)]
 
-    def run_timestep(
-        self,
-        propellant_mass: float,
-        thrust: float,
-        d_t: float,
-    ) -> None:
+    def run_timestep(self, propellant_mass: float, thrust: float, d_t: float) -> None:
         """
         Perform an iteration of the ballistics operation.
 
@@ -93,80 +88,71 @@ class Ballistic1DOperation(BallisticOperation):
             thrust (float): The thrust force.
             d_t (float): The time step.
         """
-        self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
+        self._append_time(d_t)
+        self._update_atmosphere()
+        self._update_vehicle_mass(propellant_mass)
+        drag = self._compute_drag()
+        y_new, v_new, a_new = self._solve_ballistics_ode(thrust, drag, d_t)
+        self._append_flight_states(y_new, v_new, a_new)
+        self._update_mach_and_pressure()
+        self._check_rail_exit()
 
-        self.rho_air = np.append(
-            self.rho_air,
-            self.atmosphere.get_density(
-                y_amsl=(self.y[-1] + self.initial_elevation_amsl)
-            ),
-        )
-        self.g = np.append(
-            self.g,
-            self.atmosphere.get_gravity(self.initial_elevation_amsl + self.y[-1]),
-        )
+    def _append_time(self, d_t: float) -> None:
+        self.t = np.append(self.t, self.t[-1] + d_t)
 
-        # Appending the current vehicle mass, consisting of the motor
-        # structural mass, mass without the motor, and propellant mass.
-        self.vehicle_mass = np.append(
-            self.vehicle_mass, propellant_mass + self.rocket.get_dry_mass()
-        )
+    def _update_atmosphere(self) -> None:
+        altitude = self.y[-1] + self.initial_elevation_amsl
+        self.rho_air = np.append(self.rho_air, self.atmosphere.get_density(altitude))
+        self.g = np.append(self.g, self.atmosphere.get_gravity(altitude))
 
-        # Drag properties:
-        fuselage_area = self.rocket.fuselage.frontal_area
-        fuselage_drag_coeff = self.rocket.fuselage.get_drag_coefficient()
-        (
-            recovery_drag_coeff,
-            recovery_area,
-        ) = self.rocket.recovery.get_drag_coefficient_and_area(
+    def _update_vehicle_mass(self, propellant_mass: float) -> None:
+        dry = self.rocket.get_dry_mass() + self.motor_dry_mass
+        self.vehicle_mass = np.append(self.vehicle_mass, dry + propellant_mass)
+
+    def _compute_drag(self) -> float:
+        rho = self.rho_air[-1]
+        fus_area = self.rocket.fuselage.frontal_area
+        fus_cd = self.rocket.fuselage.get_drag_coefficient()
+        rec_cd, rec_area = self.rocket.recovery.get_drag_coefficient_and_area(
             height=self.y,
             time=self.t,
             velocity=self.v,
-            propellant_mass=propellant_mass,
+            propellant_mass=self.vehicle_mass[-1],
         )
+        return 0.5 * rho * (fus_area * fus_cd + rec_area * rec_cd)
 
-        D = (
-            (fuselage_area * fuselage_drag_coeff + recovery_area * recovery_drag_coeff)
-            * self.rho_air[-1]
-            * 0.5
-        )
-
-        ballistics_results = rk4th_ode_solver(
-            variables={"y": self.y[-1], "v": self.v[-1]},
+    def _solve_ballistics_ode(self, thrust: float, drag: float, d_t: float):
+        vars0 = {"y": self.y[-1], "v": self.v[-1]}
+        results = rk4th_ode_solver(
+            variables=vars0,
             equation=ballistics_ode,
             d_t=d_t,
             T=thrust,
-            D=D,
+            D=drag,
             M=self.vehicle_mass[-1],
             g=self.g[-1],
         )
+        return results[0], results[1], results[2]
 
-        height = ballistics_results[0]
-        velocity = ballistics_results[1]
-        acceleration = ballistics_results[2]
+    def _append_flight_states(self, y: float, v: float, a: float) -> None:
+        # ground-impact check
+        y = max(y, 0.0) if len(self.y[self.y > 0]) == 0 else y
+        self.y = np.append(self.y, y)
+        self.v = np.append(self.v, v)
+        self.acceleration = np.append(self.acceleration, a)
 
-        if height < 0 and len(self.y[self.y > 0]) == 0:
-            height = 0
-            velocity = 0
-            acceleration = 0
-
-        self.y = np.append(self.y, height)
-        self.v = np.append(self.v, velocity)
-        self.acceleration = np.append(self.acceleration, acceleration)
-
+    def _update_mach_and_pressure(self) -> None:
+        altitude = self.y[-1] + self.initial_elevation_amsl
         self.mach_no = np.append(
             self.mach_no,
-            self.v[-1]
-            / self.atmosphere.get_sonic_velocity(
-                self.y[-1] + self.initial_elevation_amsl
-            ),
+            self.v[-1] / self.atmosphere.get_sonic_velocity(altitude),
         )
-
         self.P_ext = np.append(
             self.P_ext,
-            self.atmosphere.get_pressure(self.y[-1] + self.initial_elevation_amsl),
+            self.atmosphere.get_pressure(altitude),
         )
 
+    def _check_rail_exit(self) -> None:
         if self.velocity_out_of_rail is None and self.y[-1] > self.rail_length:
             self.velocity_out_of_rail = self.v[-2]
 
