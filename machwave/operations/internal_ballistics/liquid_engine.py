@@ -195,6 +195,10 @@ class LiquidEngineOperation(MotorOperation):
     ) -> None:
         consumed_f = m_dot_fuel * d_t
         consumed_o = m_dot_ox * d_t
+
+        self.motor.feed_system.fuel_tank.remove_propellant(consumed_f)
+        self.motor.feed_system.oxidizer_tank.remove_propellant(consumed_o)
+
         new_fuel = self.fuel_mass[-1] - consumed_f
         new_ox = self.oxidizer_mass[-1] - consumed_o
         self.fuel_mass = np.append(self.fuel_mass, new_fuel)
