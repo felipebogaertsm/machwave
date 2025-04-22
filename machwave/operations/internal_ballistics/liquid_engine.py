@@ -53,8 +53,6 @@ class LiquidEngineOperation(MotorOperation):
         Args:
             d_t: Time step.
             P_ext: External pressure.
-
-        TODO: update this method.
         """
         if not self.end_thrust:
             self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
@@ -153,5 +151,37 @@ class LiquidEngineOperation(MotorOperation):
 
     def print_results(self) -> None:
         """
-        TODO: implement this method.
+        Prints the results obtained during the Liquid Rocket Engine operation.
         """
+        # HEADER
+        print("\nLIQUID ENGINE OPERATION RESULTS")
+
+        # Propellant summary
+        print(f"Initial propellant mass: {self.m_prop[0]:.3f} kg")
+        try:
+            print(f"Burnout time: {self.burn_time:.3f} s")
+        except AttributeError:
+            print("Burnout time: (not reached)")
+        print(f"Thrust time: {self.thrust_time:.3f} s")
+
+        # Chamber pressure
+        print("\nCHAMBER PRESSURE (MPa)")
+        print(f"  Max: {np.max(self.P_0) * 1e-6:.3f}")
+        print(f"  Mean: {np.mean(self.P_0) * 1e-6:.3f}")
+
+        # Thrust
+        print("\nTHRUST (N)")
+        print(f"  Max: {np.max(self.thrust):.3f}")
+        print(f"  Mean: {np.mean(self.thrust):.3f}")
+
+        # Impulse
+        impulse = np.trapz(self.thrust, self.t)
+        isp = impulse / (self.m_prop[0] * 9.81)
+        print("\nIMPULSE AND I_SP")
+        print(f"  Total impulse: {impulse:.3f} N·s")
+        print(f"  Specific impulse: {isp:.3f} s")
+
+        # Remaining propellant masses
+        print("\nPROPELLANT REMAINING (kg)")
+        print(f"  Oxidizer: {self.oxidizer_mass[-1]:.3f}")
+        print(f"  Fuel:     {self.fuel_mass[-1]:.3f}")
