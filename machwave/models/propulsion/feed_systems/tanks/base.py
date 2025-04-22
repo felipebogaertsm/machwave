@@ -31,6 +31,7 @@ class Tank:
         self.fluid_name = fluid_name
         self.volume = volume
         self.temperature = temperature
+        self.initial_fluid_mass = initial_fluid_mass
         self.fluid_mass = initial_fluid_mass
 
     def get_pressure(self) -> float:
@@ -41,6 +42,9 @@ class Tank:
         2) If fluid_mass > mass_if_all_vapor(p_sat), the tank is partially liquid
            and the pressure is pinned at saturation.
         3) Otherwise, the tank is all vapor (ideal gas), and we use P = (m / M) * R * T / V.
+
+        Returns:
+            float: Tank pressure [Pa].
         """
         # 1) Saturation pressure at the given T (if subcritical and property is defined).
         #    For cryogenics or other fluids, ensure T is within valid range for saturation data.
@@ -61,8 +65,11 @@ class Tank:
     def get_density(self) -> float:
         """
         Returns the fluid density [kg/m^3] at the current tank pressure and
-        temperature, using CoolProp.  In two‐phase situations (P ≃ P_sat),
+        temperature, using CoolProp.  In two-phase situations (P ≃ P_sat),
         computes the mixture density based on vapor quality.
+
+        Returns:
+            float: Fluid density [kg/m^3].
         """
         # Empty tank?
         if self.fluid_mass <= 0:
