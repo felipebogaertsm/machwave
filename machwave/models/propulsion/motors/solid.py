@@ -3,13 +3,16 @@ import numpy as np
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.motors.base import Motor
 from machwave.models.propulsion.propellants.solid import SolidPropellant
-from machwave.models.propulsion.thrust_chamber import ThrustChamber
+from machwave.models.propulsion.thrust_chamber import SolidMotorThrustChamber
 from machwave.services.flow.isentropic import get_thrust_coefficients
 
 
-class SolidMotor(Motor):
+class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
     def __init__(
-        self, grain: Grain, propellant: SolidPropellant, thrust_chamber: ThrustChamber
+        self,
+        grain: Grain,
+        propellant: SolidPropellant,
+        thrust_chamber: SolidMotorThrustChamber,
     ) -> None:
         self.grain = grain
         super().__init__(propellant, thrust_chamber)

@@ -246,7 +246,7 @@ class SolidMotorOperation(MotorOperation):
         """
         return (
             self.burn_area[self.burn_area > 0]
-            / self.motor.structure.nozzle.get_throat_area()
+            / self.motor.thrust_chamber.nozzle.get_throat_area()
         )
 
     @property
@@ -267,7 +267,10 @@ class SolidMotorOperation(MotorOperation):
         Returns:
             float: The volumetric efficiency.
         """
-        return self.propellant_volume[0] / self.motor.structure.chamber.empty_volume
+        return (
+            self.propellant_volume[0]
+            / self.motor.thrust_chamber.combustion_chamber.empty_volume
+        )
 
     @property
     def burn_profile(self, deviancy: float = 0.02) -> str:

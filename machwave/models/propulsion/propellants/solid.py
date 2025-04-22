@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 import scipy.constants
 
+from machwave.models.propulsion.propellants.base import Propellant
+
 
 class BurnRateOutOfBoundsError(Exception):
     """
@@ -22,7 +24,7 @@ class BurnRateOutOfBoundsError(Exception):
 
 
 @dataclass
-class SolidPropellant:
+class SolidPropellant(Propellant):
     """
     Single-class representation of a solid propellant, encompassing both the
     generic propellant properties and solid-specific attributes.

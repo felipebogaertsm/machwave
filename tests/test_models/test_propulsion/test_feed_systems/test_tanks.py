@@ -44,9 +44,9 @@ def test_saturated_condition(fluid_name, temperature):
     )
 
     # 4) Check the tank pressure ~ saturation
-    assert tank.get_pressure() == pytest.approx(
-        p_sat, rel=1e-3
-    ), f"Expected saturation pressure for {fluid_name} at T={temperature} K."
+    assert tank.get_pressure() == pytest.approx(p_sat, rel=1e-3), (
+        f"Expected saturation pressure for {fluid_name} at T={temperature} K."
+    )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -76,9 +76,9 @@ def test_all_vapor_condition(fluid_name, temperature):
     n_moles = mass / molar_mass
     p_ideal = (n_moles * R_universal * temperature) / volume
 
-    assert tank.get_pressure() == pytest.approx(
-        p_ideal, rel=1e-3
-    ), f"Expected ideal-gas pressure for {fluid_name} at T={temperature} K with insufficient mass."
+    assert tank.get_pressure() == pytest.approx(p_ideal, rel=1e-3), (
+        f"Expected ideal-gas pressure for {fluid_name} at T={temperature} K with insufficient mass."
+    )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -104,9 +104,9 @@ def test_remove_propellant(fluid_name, temperature):
 
     assert tank.fluid_mass == pytest.approx(initial_mass - remove_mass_1, abs=1e-9)
     new_density = tank.get_density()
-    assert (
-        new_density < original_density
-    ), "Density should decrease after removing mass."
+    assert new_density < original_density, (
+        "Density should decrease after removing mass."
+    )
 
     # 2) Remove more mass than is left => tank empties
     tank.remove_propellant(5.0)  # definitely more than remains
@@ -115,9 +115,9 @@ def test_remove_propellant(fluid_name, temperature):
 
     # Depending on your model, if fluid_mass=0 => get_pressure() might be 0 or very small
     empty_pressure = tank.get_pressure()
-    assert empty_pressure == pytest.approx(
-        0.0, abs=1e-9
-    ), f"Pressure should be ~0 for an empty tank of {fluid_name}."
+    assert empty_pressure == pytest.approx(0.0, abs=1e-9), (
+        f"Pressure should be ~0 for an empty tank of {fluid_name}."
+    )
 
 
 def test_remove_negative_mass():
