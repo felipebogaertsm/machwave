@@ -10,7 +10,7 @@ from machwave.models.propulsion.propellants.solid import (
     KNER,
     KNSU,
 )
-from machwave.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     CombustionChamber,
     BoltedCombustionChamber,
 )
