@@ -88,20 +88,21 @@ class Ballistic1DOperation(BallisticOperation):
             thrust (float): The thrust force.
             d_t (float): The time step.
         """
+        altitude = self.y[-1] + self.initial_elevation_amsl
+
         self._append_time(d_t)
-        self._update_atmosphere()
+        self._update_atmosphere(altitude)
         self._update_vehicle_mass(propellant_mass)
         drag = self._compute_drag()
         y_new, v_new, a_new = self._solve_ballistics_ode(thrust, drag, d_t)
         self._append_flight_states(y_new, v_new, a_new)
-        self._update_mach_and_pressure()
+        self._update_mach_and_pressure(altitude)
         self._check_rail_exit()
 
     def _append_time(self, d_t: float) -> None:
         self.t = np.append(self.t, self.t[-1] + d_t)
 
-    def _update_atmosphere(self) -> None:
-        altitude = self.y[-1] + self.initial_elevation_amsl
+    def _update_atmosphere(self, altitude: float) -> None:
         self.rho_air = np.append(self.rho_air, self.atmosphere.get_density(altitude))
         self.g = np.append(self.g, self.atmosphere.get_gravity(altitude))
 
@@ -141,15 +142,13 @@ class Ballistic1DOperation(BallisticOperation):
         self.v = np.append(self.v, v)
         self.acceleration = np.append(self.acceleration, a)
 
-    def _update_mach_and_pressure(self) -> None:
-        altitude = self.y[-1] + self.initial_elevation_amsl
+    def _update_mach_and_pressure(self, altitude: float):
         self.mach_no = np.append(
-            self.mach_no,
-            self.v[-1] / self.atmosphere.get_sonic_velocity(altitude),
+            self.mach_no, self.atmosphere.get_sonic_velocity(altitude)
         )
         self.P_ext = np.append(
             self.P_ext,
-            self.atmosphere.get_pressure(altitude),
+            self.atmosphere.get_pressure(self.y[-1] + self.initial_elevation_amsl),
         )
 
     def _check_rail_exit(self) -> None:
