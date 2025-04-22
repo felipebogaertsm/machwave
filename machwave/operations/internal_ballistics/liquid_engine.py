@@ -48,106 +48,145 @@ class LiquidEngineOperation(MotorOperation):
         P_ext: float,
     ) -> None:
         """
-        Iterate liquid engine operation.
+        Advance simulation by time step d_t under external pressure P_ext.
 
         Args:
             d_t: Time step.
             P_ext: External pressure.
         """
-        if not self.end_thrust:
-            self.t = np.append(self.t, self.t[-1] + d_t)  # append new time value
+        if self.end_thrust:
+            return
 
-            self.motor.propellant.update_properties(
+        self._append_time(d_t)
+        self._update_propellant_properties()
+        fuel_flow, ox_flow = self._compute_mass_flows()
+        chamber_pressure = self._compute_chamber_pressure(d_t, fuel_flow, ox_flow)
+        self._append_chamber_pressure(chamber_pressure)
+        exit_pressure = self._compute_exit_pressure()
+        self._append_exit_pressure(exit_pressure)
+        self._append_cf_correction(1.0)
+        cf, cf_ideal = self._compute_thrust_coefficients(exit_pressure, P_ext)
+        self._append_thrust(cf, cf_ideal)
+        self._update_propellant_masses(fuel_flow, ox_flow, d_t)
+        self._check_burn_end()
+        self._check_thrust_end(P_ext)
+
+    def _append_time(self, d_t: float) -> None:
+        self.t = np.append(self.t, self.t[-1] + d_t)
+
+    def _update_propellant_properties(self) -> None:
+        self.motor.propellant.update_properties(
+            chamber_pressure=self.P_0[-1],
+            eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
+        )
+
+    def _compute_mass_flows(self) -> tuple[float, float]:
+        if self.m_prop[-1] > 0:
+            fuel_flow = self.motor.feed_system.get_mass_flow_fuel(
                 chamber_pressure=self.P_0[-1],
-                eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
-            )  # update propellant properties based on chamber pressure from last iteration
-
-            if self.m_prop[-1] >= 0:
-                fuel_mass_flow = self.motor.feed_system.get_mass_flow_fuel(
-                    chamber_pressure=self.P_0[-1],
-                    discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_fuel,
-                    injector_area=self.motor.thrust_chamber.injector.area_fuel,
-                )
-                ox_mass_flow = self.motor.feed_system.get_mass_flow_ox(
-                    chamber_pressure=self.P_0[-1],
-                    discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_oxidizer,
-                    injector_area=self.motor.thrust_chamber.injector.area_ox,
-                )
-            else:
-                fuel_mass_flow = 0
-                ox_mass_flow = 0
-
-            P0 = rk4th_ode_solver(
-                variables={"P0": self.P_0[-1]},
-                equation=solve_pressure_fed_lre_chamber_pressure,
-                d_t=d_t,
-                R=self.motor.propellant.R_chamber,
-                T0=self.motor.propellant.combustion_temperature,
-                V0=self.motor.thrust_chamber.combustion_chamber.empty_volume,
-                At=self.motor.thrust_chamber.nozzle.get_throat_area(),
-                k=self.motor.propellant.chamber_gamma,
-                m_dot_ox=ox_mass_flow,
-                m_dot_fuel=fuel_mass_flow,
-            )[0]
-            self.P_0 = np.append(self.P_0, P0)  # calculate new chamber pressure
-
-            P_exit = get_exit_pressure(
-                self.motor.propellant.exit_gamma,
-                self.motor.thrust_chamber.nozzle.expansion_ratio,
-                self.P_0[-1],
+                discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_fuel,
+                injector_area=self.motor.thrust_chamber.injector.area_fuel,
             )
-            self.P_exit = np.append(
-                self.P_exit,
-                P_exit,
-            )  # calculate new exit pressure
-
-            self.n_cf = np.append(
-                self.n_cf, 1
-            )  # TODO: calculate new thrust coefficient correction
-
-            C_f, C_f_ideal = get_thrust_coefficients(
-                self.P_0[-1],
-                self.P_exit[-1],
-                P_ext,
-                self.motor.thrust_chamber.nozzle.expansion_ratio,
-                self.motor.propellant.exit_gamma,
-                self.n_cf[-1],
+            ox_flow = self.motor.feed_system.get_mass_flow_ox(
+                chamber_pressure=self.P_0[-1],
+                discharge_coefficient=self.motor.thrust_chamber.injector.discharge_coefficient_oxidizer,
+                injector_area=self.motor.thrust_chamber.injector.area_ox,
             )
-            self.C_f = np.append(self.C_f, C_f)
-            self.C_f_ideal = np.append(self.C_f_ideal, C_f_ideal)
-            thrust = get_thrust_from_cf(
-                C_f,
-                self.P_0[-1],
-                self.motor.thrust_chamber.nozzle.get_throat_area(),
-            )
-            self.thrust = np.append(self.thrust, thrust)  # in N
+        else:
+            fuel_flow = ox_flow = 0.0
+        return fuel_flow, ox_flow
 
-            self.oxidizer_mass = np.append(
-                self.oxidizer_mass,
-                self.oxidizer_mass[-1] - ox_mass_flow * d_t,
-            )
-            self.fuel_mass = np.append(
-                self.fuel_mass,
-                self.fuel_mass[-1] - fuel_mass_flow * d_t,
-            )
-            self.m_prop = np.append(
-                self.m_prop,
-                self.oxidizer_mass[-1] + self.fuel_mass[-1],
-            )  # update propellant mass
+    def _compute_chamber_pressure(
+        self,
+        d_t: float,
+        m_dot_fuel: float,
+        m_dot_ox: float,
+    ) -> float:
+        return rk4th_ode_solver(
+            variables={"P0": self.P_0[-1]},
+            equation=solve_pressure_fed_lre_chamber_pressure,
+            d_t=d_t,
+            R=self.motor.propellant.R_chamber,
+            T0=self.motor.propellant.combustion_temperature,
+            V0=self.motor.thrust_chamber.combustion_chamber.empty_volume,
+            At=self.motor.thrust_chamber.nozzle.get_throat_area(),
+            k=self.motor.propellant.chamber_gamma,
+            m_dot_ox=m_dot_ox,
+            m_dot_fuel=m_dot_fuel,
+        )[0]
 
-            if self.m_prop[-1] <= 0 and not self.end_burn:
-                self.burn_time = self.t[-1]
-                self.end_burn = True
+    def _append_chamber_pressure(self, pressure: float) -> None:
+        self.P_0 = np.append(self.P_0, pressure)
 
-            # This if statement changes 'end_thrust' to True if supersonic
-            # flow is not achieved anymore.
-            if not is_flow_choked(
-                self.P_0[-1],
-                P_ext,
-                get_critical_pressure_ratio(self.motor.propellant.chamber_gamma),
-            ):
-                self._thrust_time = self.t[-1]
-                self.end_thrust = True
+    def _compute_exit_pressure(self) -> float:
+        return get_exit_pressure(
+            self.motor.propellant.exit_gamma,
+            self.motor.thrust_chamber.nozzle.expansion_ratio,
+            self.P_0[-1],
+        )
+
+    def _append_exit_pressure(self, pressure: float) -> None:
+        self.P_exit = np.append(self.P_exit, pressure)
+
+    def _append_cf_correction(self, value: float) -> None:
+        self.n_cf = np.append(self.n_cf, value)
+
+    def _compute_thrust_coefficients(
+        self,
+        exit_pressure: float,
+        P_ext: float,
+    ) -> tuple[float, float]:
+        return get_thrust_coefficients(
+            self.P_0[-1],
+            exit_pressure,
+            P_ext,
+            self.motor.thrust_chamber.nozzle.expansion_ratio,
+            self.motor.propellant.exit_gamma,
+            self.n_cf[-1],
+        )
+
+    def _append_thrust(self, cf: float, cf_ideal: float) -> None:
+        thrust_val = get_thrust_from_cf(
+            cf,
+            self.P_0[-1],
+            self.motor.thrust_chamber.nozzle.get_throat_area(),
+        )
+        self.C_f = np.append(self.C_f, cf)
+        self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
+        self.thrust = np.append(self.thrust, thrust_val)
+
+    def _update_propellant_masses(
+        self,
+        m_dot_fuel: float,
+        m_dot_ox: float,
+        d_t: float,
+    ) -> None:
+        self.oxidizer_mass = np.append(
+            self.oxidizer_mass,
+            self.oxidizer_mass[-1] - m_dot_ox * d_t,
+        )
+        self.fuel_mass = np.append(
+            self.fuel_mass,
+            self.fuel_mass[-1] - m_dot_fuel * d_t,
+        )
+        self.m_prop = np.append(
+            self.m_prop,
+            self.oxidizer_mass[-1] + self.fuel_mass[-1],
+        )
+
+    def _check_burn_end(self) -> None:
+        if self.m_prop[-1] <= 0 and not self.end_burn:
+            self.burn_time = self.t[-1]
+            self.end_burn = True
+
+    def _check_thrust_end(self, P_ext: float) -> None:
+        if not is_flow_choked(
+            self.P_0[-1],
+            P_ext,
+            get_critical_pressure_ratio(self.motor.propellant.chamber_gamma),
+        ):
+            self._thrust_time = self.t[-1]
+            self.end_thrust = True
 
     def print_results(self) -> None:
         """
