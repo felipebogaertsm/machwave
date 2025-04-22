@@ -5,9 +5,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.structure import MotorStructure
-from machwave.models.propulsion.structure.nozzle import Nozzle
-from machwave.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
 from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
@@ -61,6 +61,7 @@ def main():
     grain.add_segment(bates_segment_60)
 
     nozzle = Nozzle(
+        inlet_diameter=80e-3,
         throat_diameter=MonteCarloParameter(value=37e-3, tolerance=0.5e-3),
         divergent_angle=12,
         convergent_angle=45,
@@ -83,14 +84,15 @@ def main():
         screw_diameter=6.75e-3,
     )
 
-    structure = MotorStructure(
-        safety_factor=4,
+    thrust_chamber = ThrustChamber(
         dry_mass=21.013,
         nozzle=nozzle,
-        chamber=chamber,
+        combustion_chamber=chamber,
     )
 
-    motor = SolidMotor(grain=grain, propellant=propellant, structure=structure)
+    motor = SolidMotor(
+        grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
+    )
 
     # Recovery:
     recovery = Recovery()

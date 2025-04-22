@@ -11,8 +11,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.structure import Nozzle
-from machwave.models.propulsion.structure.chamber import BoltedCombustionChamber
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
+    BoltedCombustionChamber,
+)
 from machwave.models.propulsion.propellants.solid import MIT_CHERRY_LIMEADE
 from machwave.models.materials.metals import Steel, Al6061T6
 from machwave.models.materials.polymers import EPDM
@@ -55,6 +57,7 @@ def main():
 
     # 2) Define nozzle and combustion chamber (instead of MotorStructure)
     nozzle = Nozzle(
+        inlet_diameter=0.080,
         throat_diameter=0.022,
         divergent_angle=12,
         convergent_angle=45,
