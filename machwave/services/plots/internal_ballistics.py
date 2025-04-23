@@ -81,3 +81,49 @@ def mass_flux_plot(time: np.ndarray, mass_flux: np.ndarray) -> go.Figure:
     figure.update_layout(title="Segment Mass Flux")
 
     return figure
+
+
+def plot_bipropellant_tank_pressures(
+    time: np.ndarray,
+    oxidizer_tank_pressure: np.ndarray,
+    fuel_tank_pressure: np.ndarray,
+) -> go.Figure:
+    """
+    Generates an interactive plot for oxidizer and fuel tank pressures over time.
+
+    Args:
+        time (np.ndarray): Time array.
+        oxidizer_tank_pressure (np.ndarray): Oxidizer tank pressure array.
+        fuel_tank_pressure (np.ndarray): Fuel tank pressure array.
+
+    Returns:
+        go.Figure: A Plotly figure with oxidizer and fuel tank pressures over time.
+    """
+    figure = go.Figure()
+
+    figure.add_trace(
+        go.Scatter(
+            x=time,
+            y=oxidizer_tank_pressure * 1e-6,
+            mode="lines",
+            name="Oxidizer Tank Pressure",
+            line=dict(color="#6a006a"),
+        )
+    )
+
+    figure.add_trace(
+        go.Scatter(
+            x=time,
+            y=fuel_tank_pressure * 1e-6,
+            mode="lines",
+            name="Fuel Tank Pressure",
+            line=dict(color="#008141"),
+        )
+    )
+
+    figure.update_layout(title_text="<b>Tank Pressures vs Time</b>")
+
+    figure.update_xaxes(title_text="Time (s)")
+    figure.update_yaxes(title_text="<b>Pressure</b> (MPa)")
+
+    return figure
