@@ -30,7 +30,7 @@ class LiquidEngineOperation(MotorOperation):
         initial_atmospheric_pressure: float,
     ) -> None:
         """
-        Initial parameters for a SRM operation.
+        Initial parameters for a LRE operation.
         """
         super().__init__(
             motor=motor,
