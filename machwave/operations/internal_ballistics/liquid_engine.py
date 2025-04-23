@@ -40,7 +40,7 @@ class LiquidEngineOperation(MotorOperation):
 
         self.oxidizer_mass = np.array([motor.feed_system.oxidizer_tank.fluid_mass])
         self.fuel_mass = np.array([motor.feed_system.fuel_tank.fluid_mass])
-        self.n_cf = np.array([0])  # thrust coefficient correction factor
+        self.n_cf = np.array([1.0])  # thrust coefficient correction factor
 
         self.fuel_tank_pressure = np.array([motor.feed_system.fuel_tank.get_pressure()])
         self.oxidizer_tank_pressure = np.array(
