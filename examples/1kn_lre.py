@@ -26,7 +26,7 @@ from machwave.simulations.internal_ballistics import (
 )
 from machwave.services.plots.internal_ballistics import (
     thrust_pressure_plot,
-    plot_bipropellant_tank_pressures,
+    plot_bipropellant_tank_profiles,
 )
 
 FUEL_NAME = "Ethanol"
@@ -96,8 +96,12 @@ def main():
 
     simulation.print_results()
     thrust_pressure_plot(time, ib_operation.thrust, ib_operation.P_0).show()
-    plot_bipropellant_tank_pressures(
-        time, ib_operation.oxidizer_tank_pressure, ib_operation.fuel_tank_pressure
+    plot_bipropellant_tank_profiles(
+        time,
+        ib_operation.oxidizer_tank_pressure,
+        ib_operation.fuel_tank_pressure,
+        ib_operation.oxidizer_mass,
+        ib_operation.fuel_mass,
     ).show()
 
 
