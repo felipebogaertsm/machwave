@@ -42,6 +42,11 @@ class LiquidEngineOperation(MotorOperation):
         self.fuel_mass = np.array([motor.feed_system.fuel_tank.fluid_mass])
         self.n_cf = np.array([0])  # thrust coefficient correction factor
 
+        self.fuel_tank_pressure = np.array([motor.feed_system.fuel_tank.get_pressure()])
+        self.oxidizer_tank_pressure = np.array(
+            [motor.feed_system.oxidizer_tank.get_pressure()]
+        )
+
     def run_timestep(
         self,
         d_t: float,
@@ -63,6 +68,8 @@ class LiquidEngineOperation(MotorOperation):
         m_dot_fuel, m_dot_ox = self._adjust_flows_for_stoichiometry(
             m_dot_fuel, m_dot_ox, d_t
         )
+        self._update_propellant_properties()
+        self._update_tank_pressures()
 
         new_P = self._compute_chamber_pressure(d_t, m_dot_fuel, m_dot_ox)
         self._append_chamber_pressure(new_P)
@@ -83,6 +90,17 @@ class LiquidEngineOperation(MotorOperation):
         self.motor.propellant.update_properties(
             chamber_pressure=self.P_0[-1],
             eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
+        )
+
+    def _update_tank_pressures(self) -> float:
+        new_fuel_tank_pressure = self.motor.feed_system.fuel_tank.get_pressure()
+        new_oxidizer_tank_pressure = self.motor.feed_system.oxidizer_tank.get_pressure()
+
+        self.fuel_tank_pressure = np.append(
+            self.fuel_tank_pressure, new_fuel_tank_pressure
+        )
+        self.oxidizer_tank_pressure = np.append(
+            self.oxidizer_tank_pressure, new_oxidizer_tank_pressure
         )
 
     def _compute_nominal_mass_flows(self) -> tuple[float, float]:
