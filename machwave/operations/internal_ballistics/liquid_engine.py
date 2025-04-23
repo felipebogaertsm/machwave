@@ -92,7 +92,7 @@ class LiquidEngineOperation(MotorOperation):
             eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
         )
 
-    def _update_tank_pressures(self) -> float:
+    def _update_tank_pressures(self) -> None:
         new_fuel_tank_pressure = self.motor.feed_system.fuel_tank.get_pressure()
         new_oxidizer_tank_pressure = self.motor.feed_system.oxidizer_tank.get_pressure()
 
