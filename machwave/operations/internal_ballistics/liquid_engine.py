@@ -69,7 +69,6 @@ class LiquidEngineOperation(MotorOperation):
             m_dot_fuel, m_dot_ox, d_t
         )
         self._update_propellant_properties()
-        self._update_tank_pressures()
 
         new_P = self._compute_chamber_pressure(d_t, m_dot_fuel, m_dot_ox)
         self._append_chamber_pressure(new_P)
@@ -80,6 +79,7 @@ class LiquidEngineOperation(MotorOperation):
         self._append_thrust(cf, cf_ideal)
 
         self._update_propellant_masses(m_dot_fuel, m_dot_ox, d_t)
+        self._update_tank_pressures()
         self._check_burn_end()
         self._check_thrust_end(P_ext)
 
@@ -90,17 +90,6 @@ class LiquidEngineOperation(MotorOperation):
         self.motor.propellant.update_properties(
             chamber_pressure=self.P_0[-1],
             eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
-        )
-
-    def _update_tank_pressures(self) -> None:
-        new_fuel_tank_pressure = self.motor.feed_system.fuel_tank.get_pressure()
-        new_oxidizer_tank_pressure = self.motor.feed_system.oxidizer_tank.get_pressure()
-
-        self.fuel_tank_pressure = np.append(
-            self.fuel_tank_pressure, new_fuel_tank_pressure
-        )
-        self.oxidizer_tank_pressure = np.append(
-            self.oxidizer_tank_pressure, new_oxidizer_tank_pressure
         )
 
     def _compute_nominal_mass_flows(self) -> tuple[float, float]:
@@ -222,6 +211,17 @@ class LiquidEngineOperation(MotorOperation):
         self.fuel_mass = np.append(self.fuel_mass, new_fuel)
         self.oxidizer_mass = np.append(self.oxidizer_mass, new_ox)
         self.m_prop = np.append(self.m_prop, new_fuel + new_ox)
+
+    def _update_tank_pressures(self) -> None:
+        new_fuel_tank_pressure = self.motor.feed_system.fuel_tank.get_pressure()
+        new_oxidizer_tank_pressure = self.motor.feed_system.oxidizer_tank.get_pressure()
+
+        self.fuel_tank_pressure = np.append(
+            self.fuel_tank_pressure, new_fuel_tank_pressure
+        )
+        self.oxidizer_tank_pressure = np.append(
+            self.oxidizer_tank_pressure, new_oxidizer_tank_pressure
+        )
 
     def _check_burn_end(self) -> None:
         if self.end_burn:
