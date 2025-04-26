@@ -1,6 +1,8 @@
 from typing import Tuple
 
-from machwave.services.isentropic_flow import get_critical_pressure_ratio
+import numpy as np
+
+from machwave.services.flow.isentropic import get_critical_pressure_ratio
 
 
 def solve_cp_seidel(
@@ -39,7 +41,7 @@ def solve_cp_seidel(
         Tuple[float]: Derivative of chamber pressure with respect to time.
 
     """
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch=k)
+    critical_pressure_ratio = get_critical_pressure_ratio(k_mix=k)
 
     if Pe / P0 <= critical_pressure_ratio:
         H = ((k / (k + 1)) ** 0.5) * ((2 / (k + 1)) ** (1 / (k - 1)))
@@ -50,6 +52,28 @@ def solve_cp_seidel(
 
     dP0_dt = ((R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
 
+    return (dP0_dt,)
+
+
+def solve_pressure_fed_lre_chamber_pressure(
+    P0: float,
+    R: float,
+    T0: float,
+    V0: float,
+    At: float,
+    k: float,
+    m_dot_ox: float,
+    m_dot_fuel: float,
+) -> tuple[float]:
+    m_dot_out = (
+        At
+        * P0
+        * k
+        * (np.sqrt((2 / (k + 1)) ** ((k + 1) / (k - 1))))
+        / (np.sqrt(k * R * T0))
+    )
+    m_dot_in = m_dot_ox + m_dot_fuel
+    dP0_dt = (R * T0 / V0) * (m_dot_in - m_dot_out)
     return (dP0_dt,)
 
 

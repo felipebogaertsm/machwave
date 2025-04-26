@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.models.propulsion import Motor
+from machwave.models.propulsion.motors import Motor
 from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
 from machwave.services.factories import get_motor_operation_class
@@ -72,7 +72,7 @@ class InternalBallistics(Simulation):
         while not self.motor_operation.end_thrust:
             self.t = np.append(self.t, self.t[i] + self.params.d_t)
 
-            self.motor_operation.iterate(
+            self.motor_operation.run_timestep(
                 self.params.d_t,
                 self.params.external_pressure,
             )

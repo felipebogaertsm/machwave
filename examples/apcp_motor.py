@@ -1,5 +1,7 @@
 """
-Sample APCP solid rocket motor.
+This example simulates a rocket with an APCP solid motor, using
+an InternalBallisticsCoupled simulation that includes both
+internal ballistics and atmospheric flight.
 """
 
 import os
@@ -9,36 +11,36 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.structure import (
-    MotorStructure,
-    Nozzle,
-)
-from machwave.models.propulsion.structure.chamber import (
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
 from machwave.models.propulsion.propellants.solid import MIT_CHERRY_LIMEADE
 from machwave.models.materials.metals import Steel, Al6061T6
 from machwave.models.materials.polymers import EPDM
 from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.models.propulsion import SolidMotor
-from machwave.services.plots.internal_ballistics import (
-    thrust_pressure_plot,
-    mass_flux_plot,
-)
+from machwave.models.propulsion.motors import SolidMotor
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
+from machwave.models.rocket import Rocket
+from machwave.models.rocket.fuselage import Fuselage
+from machwave.models.recovery import Recovery
+from machwave.models.recovery.events import ApogeeBasedEvent, AltitudeBasedEvent
+from machwave.models.recovery.parachutes import HemisphericalParachute
+from machwave.models.atmosphere.atm_1976 import Atmosphere1976
 from machwave.services.decorators import timing
-from machwave.simulations.internal_ballistics import (
-    InternalBallistics,
-    InternalBallisticsParams,
+from machwave.simulations.internal_balistics_coupled import (
+    InternalBallisticsCoupled,
+    InternalBallisticsCoupledParams,
 )
+from machwave.services.plots.ballistics import ballistics_plots
 
 
 @timing
 def main():
-    # Motor:
+    # 1) Define the propellant and grain geometry
     propellant = MIT_CHERRY_LIMEADE
 
     grain = Grain()
-
     bates_segment = BatesSegment(
         outer_diameter=0.085,
         core_diameter=0.035,
@@ -46,13 +48,16 @@ def main():
         spacing=0.01,
     )
 
+    # Add multiple segments
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
 
+    # 2) Define nozzle and combustion chamber (instead of MotorStructure)
     nozzle = Nozzle(
+        inlet_diameter=0.080,
         throat_diameter=0.022,
         divergent_angle=12,
         convergent_angle=45,
@@ -63,7 +68,7 @@ def main():
     liner = ThermalLiner(thickness=0.003, material=EPDM())
 
     chamber = BoltedCombustionChamber(
-        casing_inner_diameter=0.09525,
+        inner_diameter=0.09525,
         outer_diameter=0.1016,
         liner=liner,
         length=grain.total_length + 0.01,
@@ -75,37 +80,68 @@ def main():
         screw_diameter=0.005,
     )
 
-    structure = MotorStructure(
-        safety_factor=4,
-        dry_mass=6,
+    # Build a ThrustChamber for this solid motor
+    # (We assume some dry mass for the chamber assembly)
+    thrust_chamber = ThrustChamber(
+        dry_mass=6.0,  # adapt as needed
         nozzle=nozzle,
-        chamber=chamber,
+        combustion_chamber=chamber,
     )
 
-    motor = SolidMotor(grain=grain, propellant=propellant, structure=structure)
-
-    simulation = InternalBallistics(
-        motor=motor,
-        params=InternalBallisticsParams(
-            d_t=0.01, igniter_pressure=1e6, external_pressure=1e5
-        ),
+    # 3) Create the SolidMotor using the newly formed thrust chamber
+    motor = SolidMotor(
+        grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 
-    (time, ib_operation) = simulation.run()
+    # 4) Recovery system (if desired)
+    #    Add events for apogee and a secondary chute at altitude
+    recovery = Recovery()
+    recovery.add_event(
+        ApogeeBasedEvent(
+            trigger_value=1,  # seconds after apogee
+            parachute=HemisphericalParachute(diameter=1.25),
+        )
+    )
+    recovery.add_event(
+        AltitudeBasedEvent(
+            trigger_value=300,
+            parachute=HemisphericalParachute(diameter=2.0),
+        )
+    )
 
-    simulation.print_results()
+    # 5) Define the rocket: fuselage + motor + recovery
+    fuselage = Fuselage(length=2.0, drag_coefficient=0.75, outer_diameter=0.12)
+    rocket = Rocket(
+        propulsion=motor,
+        recovery=recovery,
+        fuselage=fuselage,
+        mass_without_motor=10.0,  # structure, avionics, payload, etc.
+    )
 
-    # Plots:
-    thrust_pressure_plot(ib_operation.t, ib_operation.thrust, ib_operation.P_0).show()
+    # 6) Set up the InternalBallisticsCoupled simulation parameters
+    params = InternalBallisticsCoupledParams(
+        atmosphere=Atmosphere1976(),
+        d_t=0.01,  # time step for flight & internal ballistics
+        dd_t=10,  # iteration sub-steps for solver
+        initial_elevation_amsl=0,  # your launch site altitude
+        igniter_pressure=1e6,  # ignition pressure guess
+        rail_length=3.0,  # launch rail length [m]
+    )
 
-    mass_flux_plot(
-        ib_operation.t,
-        grain.get_mass_flux_per_segment(
-            ib_operation.burn_rate,
-            propellant.density,
-            ib_operation.web,
-        ),
+    # 7) Run the combined internal-ballistics + flight simulation
+    simulation = InternalBallisticsCoupled(rocket=rocket, params=params)
+    ib_operation, ballistic_operation = simulation.run()
+
+    # 8) Plot flight results
+    ballistics_plots(
+        ballistic_operation.t,
+        ballistic_operation.acceleration,
+        ballistic_operation.v,
+        ballistic_operation.y,
     ).show()
+
+    # 9) Print summary results
+    simulation.print_results()
 
 
 if __name__ == "__main__":

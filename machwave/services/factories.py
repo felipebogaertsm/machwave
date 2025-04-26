@@ -1,7 +1,8 @@
-from machwave.models.propulsion import Motor, SolidMotor
+from machwave.models.propulsion.motors import Motor, SolidMotor, LiquidEngine
 from machwave.operations.internal_ballistics import (
     MotorOperation,
-    SRMOperation,
+    SolidMotorOperation,
+    LiquidEngineOperation,
 )
 
 
@@ -23,6 +24,8 @@ def get_motor_operation_class(motor: Motor) -> type[MotorOperation]:
         motor_operation_class = get_motor_operation_class(motor)
     """
     if isinstance(motor, SolidMotor):
-        return SRMOperation
+        return SolidMotorOperation
+    if isinstance(motor, LiquidEngine):
+        return LiquidEngineOperation
     else:
         raise ValueError("Unsupported motor type.")

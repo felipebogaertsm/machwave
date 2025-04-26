@@ -2,7 +2,7 @@ import numpy as np
 
 from pytest import approx
 
-from machwave.services.isentropic_flow import (
+from machwave.services.flow.isentropic import (
     get_critical_pressure_ratio,
     get_opt_expansion_ratio,
     get_exit_mach,
@@ -18,8 +18,8 @@ from machwave.services.isentropic_flow import (
 
 
 def test_get_critical_pressure_ratio():
-    k_mix_ch = 1.4
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix_ch)
+    k_mix = 1.4
+    critical_pressure_ratio = get_critical_pressure_ratio(k_mix)
 
     assert critical_pressure_ratio == approx(0.528282)
 
@@ -42,10 +42,10 @@ def test_get_exit_mach():
 
 
 def test_get_exit_pressure():
-    k_2ph_ex = 1.4
+    k_ex = 1.4
     E = 8
     P_0 = 7e6
-    P_exit = get_exit_pressure(k_2ph_ex, E, P_0)
+    P_exit = get_exit_pressure(k_ex, E, P_0)
 
     assert P_exit == approx(71545.88, rel=1e-2)
 
@@ -60,7 +60,7 @@ def test_get_thrust_coefficients():
     Cf, Cf_ideal = get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf)
 
     assert Cf == approx(1.219605)
-    assert Cf_ideal == approx(1.501650)
+    assert Cf_ideal == approx(1.524507)
 
 
 def test_get_thrust_from_cf():

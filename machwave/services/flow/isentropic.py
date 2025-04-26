@@ -4,12 +4,12 @@ import scipy.optimize
 from machwave.services.math.geometric import get_circle_area
 
 
-def get_critical_pressure_ratio(k_mix_ch: float) -> float:
+def get_critical_pressure_ratio(k_mix: float) -> float:
     """
     Returns the value of the critical pressure ratio.
 
     Args:
-        k_mix_ch (float): The isentropic exponent of the mixture.
+        k_mix (float): The isentropic exponent of the mixture.
 
     Returns:
         float: The critical pressure ratio.
@@ -17,7 +17,7 @@ def get_critical_pressure_ratio(k_mix_ch: float) -> float:
     Example:
         critical_ratio = get_critical_pressure_ratio(1.4)
     """
-    return (2 / (k_mix_ch + 1)) ** (k_mix_ch / (k_mix_ch - 1))
+    return (2 / (k_mix + 1)) ** (k_mix / (k_mix - 1))
 
 
 def get_opt_expansion_ratio(k: float, P_0: float, P_ext: float) -> float:
@@ -71,12 +71,12 @@ def get_exit_mach(k: float, E: float) -> float:
     return exit_mach_no[0]
 
 
-def get_exit_pressure(k_2ph_ex: float, E: float, P_0: float) -> float:
+def get_exit_pressure(k_ex: float, E: float, P_0: float) -> float:
     """
     Calculates the exit pressure of the nozzle flow.
 
     Args:
-        k_2ph_ex (float): The isentropic exponent in the exit region.
+        k_ex (float): The isentropic exponent in the exit region.
         E (float): The expansion ratio.
         P_0 (float): The chamber pressure.
 
@@ -86,11 +86,46 @@ def get_exit_pressure(k_2ph_ex: float, E: float, P_0: float) -> float:
     Example:
         exit_pressure = get_exit_pressure(1.4, 5.0, 100000)
     """
-    Mach_exit = get_exit_mach(k_2ph_ex, E)
-    P_exit = P_0 * (1 + 0.5 * (k_2ph_ex - 1) * Mach_exit**2) ** (
-        -k_2ph_ex / (k_2ph_ex - 1)
-    )
+    Mach_exit = get_exit_mach(k_ex, E)
+    P_exit = P_0 * (1 + 0.5 * (k_ex - 1) * Mach_exit**2) ** (-k_ex / (k_ex - 1))
     return P_exit
+
+
+def get_ideal_thrust_coefficient(
+    chamber_pressure: float,
+    exit_pressure: float,
+    external_pressure: float,
+    expansion_ratio: float,
+    k_ex: float,
+) -> float:
+    """
+    Calculates the thrust coefficient.
+
+    Source:
+    https://www.nakka-rocketry.net/th_thrst.html
+
+    Args:
+        chamber_pressure: The chamber pressure (Pa).
+        exit_pressure: The exit pressure (Pa).
+        external_pressure: The external pressure (Pa).
+        expansion_ratio: The expansion ratio.
+        k_ex: The isentropic exponent in the exit region.
+
+    Returns:
+        The thrust coefficient.
+
+    Example:
+        cf_ideal = get_ideal_thrust_coefficient(100e3, 91e3, 90e3, 7.0, 1.4)
+    """
+    pressure_ratio = exit_pressure / chamber_pressure
+    return (
+        np.sqrt(
+            (2 * (k_ex**2) / (k_ex - 1))
+            * ((2 / (k_ex + 1)) ** ((k_ex + 1) / (k_ex - 1)))
+            * (1 - (pressure_ratio ** ((k_ex - 1) / k_ex)))
+        )
+        + expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
+    )
 
 
 def get_thrust_coefficients(
@@ -118,13 +153,8 @@ def get_thrust_coefficients(
     Example:
         Cf, Cf_ideal = get_thrust_coefficients(100000, 5000, 1000, 5.0, 1.4, 0.8)
     """
-    P_r = P_exit / P_0
-    Cf_ideal = np.sqrt(
-        (2 * (k**2) / (k - 1))
-        * ((2 / (k + 1)) ** ((k + 1) / (k - 1)))
-        * (1 - (P_r ** ((k - 1) / k)))
-    )
-    Cf = (Cf_ideal + E * (P_exit - P_external) / P_0) * n_cf
+    Cf_ideal = get_ideal_thrust_coefficient(P_0, P_exit, P_external, E, k)
+    Cf = Cf_ideal * n_cf
 
     if Cf <= 0:
         Cf = 0
