@@ -16,8 +16,8 @@ from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
 from machwave.models.propulsion.propellants.solid import MIT_CHERRY_LIMEADE
-from machwave.models.materials.metals import Steel, Al6061T6
-from machwave.models.materials.polymers import EPDM
+from machwave.models.materials import Steel, Al6061T6
+from machwave.models.materials import EPDM
 from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.models.propulsion.motors import SolidMotor
 from machwave.models.propulsion.thrust_chamber import ThrustChamber

@@ -18,8 +18,8 @@ from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
 )
 from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 from machwave.models.propulsion.thrust_chamber.injector import BipropellantInjector
-from machwave.models.materials.metals import Steel, Al6061T6
-from machwave.models.materials.polymers import EPDM
+from machwave.models.materials import Steel, Al6061T6
+from machwave.models.materials import EPDM
 from machwave.simulations.internal_ballistics import (
     InternalBallistics,
     InternalBallisticsParams,
