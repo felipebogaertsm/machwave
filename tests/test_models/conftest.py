@@ -1,8 +1,8 @@
 import pytest
 
 from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.materials.polymers import EPDM
-from machwave.models.materials.metals import Al6063T5, Steel
+from machwave.models.materials import EPDM
+from machwave.models.materials import Al6063T5, Steel
 from machwave.models.propulsion.propellants.solid import (
     KNSB,
     KNSB_NAKKA,

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from . import NozzleMaterial
+from machwave.models.materials import NozzleMaterial
 
 
 @dataclass

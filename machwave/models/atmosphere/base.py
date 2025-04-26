@@ -4,10 +4,10 @@ calculate the properties of the atmosphere at a given altitude above mean sea
 level (AMSL).
 """
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 
-class Atmosphere:
+class Atmosphere(ABC):
     """Abstract class that represents an atmospheric model."""
 
     SEA_LEVEL_PRESSURE: float = 101325.0  # Pa
