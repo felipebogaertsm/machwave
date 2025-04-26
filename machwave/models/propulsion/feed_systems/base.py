@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from machwave.models.propulsion.feed_systems.tanks.base import Tank
+
+from machwave.models.propulsion.feed_systems.tanks import Tank
 
 
 class FeedSystem(ABC):
