@@ -213,8 +213,8 @@ class LiquidEngineOperation(MotorOperation):
         self.m_prop = np.append(self.m_prop, new_fuel + new_ox)
 
     def _update_tank_pressures(self) -> None:
-        new_fuel_tank_pressure = self.motor.feed_system.fuel_tank.get_pressure()
-        new_oxidizer_tank_pressure = self.motor.feed_system.oxidizer_tank.get_pressure()
+        new_fuel_tank_pressure = self.motor.feed_system.get_fuel_tank_pressure()
+        new_oxidizer_tank_pressure = self.motor.feed_system.get_oxidizer_tank_pressure()
 
         self.fuel_tank_pressure = np.append(
             self.fuel_tank_pressure, new_fuel_tank_pressure

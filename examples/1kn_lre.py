@@ -52,6 +52,7 @@ def main():
         fuel_line_length=0.5,
         oxidizer_tank=oxidizer_tank,
         fuel_tank=fuel_tank,
+        piston_loss=1e5,
     )
 
     nozzle = Nozzle(
