@@ -94,6 +94,7 @@ def main():
     )
     mc.run()
     mc.plot_histogram(1, "total_impulse", "Total Impulse (N·s)")
+    mc.plot_histogram(1, "specific_impulse", "Specific Impulse (N·s)")
 
 
 if __name__ == "__main__":
