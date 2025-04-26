@@ -28,7 +28,7 @@ from machwave.models.rocket.fuselage import Fuselage
 from machwave.models.recovery import Recovery
 from machwave.models.recovery.events import ApogeeBasedEvent, AltitudeBasedEvent
 from machwave.models.recovery.parachutes import HemisphericalParachute
-from machwave.models.atmosphere.atm_1976 import Atmosphere1976
+from machwave.models.atmosphere import Atmosphere1976
 
 from machwave.services.decorators import timing
 from machwave.simulations.internal_balistics_coupled import (
