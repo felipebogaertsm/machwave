@@ -50,3 +50,23 @@ class FeedSystem(ABC):
             float: The fuel mass flow rate in kilograms per second (kg/s).
         """
         pass
+
+    @abstractmethod
+    def get_oxidizer_tank_pressure(self) -> float:
+        """
+        Compute and return the current oxidizer tank pressure.
+
+        Returns:
+            float: The oxidizer tank pressure in pascals (Pa).
+        """
+        pass
+
+    @abstractmethod
+    def get_fuel_tank_pressure(self) -> float:
+        """
+        Compute and return the current fuel tank pressure.
+
+        Returns:
+            float: The fuel tank pressure in pascals (Pa).
+        """
+        pass

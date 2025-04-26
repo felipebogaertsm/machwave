@@ -5,11 +5,10 @@ from machwave.services.flow.incompressible import mass_flow_orifice
 
 class StackedTankPressureFedFeedSystem(FeedSystem):
     """
-    Concrete implementation of a pressure-fed feed system for a liquid rocket engine.
+    Represents a bipropellant liquid rocket engine feed system with stacked tanks.
 
-    This class uses a simplified pressure-difference model with a discharge coefficient
-    to calculate the mass flow rates for oxidizer and fuel. The default approach here treats
-    the flow as if it passes through a single orifice (the injector).
+    A stacked tank system is a type of pressure-fed system where the oxidizer and fuel tanks are arranged in a
+    vertical stack. The tanks are separated by a piston and the fuel is pressurized by the oxidizer tank.
     """
 
     def __init__(
@@ -20,6 +19,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         fuel_line_length: float,
         fuel_tank: Tank,
         oxidizer_tank: Tank,
+        piston_loss: float = 0.0,
     ):
         """
         Initialize the StackedTankPressureFedFeedSystem with feedline dimensions, tank objects, and fluid densities.
@@ -31,6 +31,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
             fuel_line_length: Length of the fuel feedline [m].
             fuel_tank: An instance representing the fuel tank.
             oxidizer_tank: An instance representing the oxidizer tank.
+            piston_loss: Pressure loss across the piston [Pa]. Default is 0.0.
         """
         super().__init__(fuel_tank, oxidizer_tank)
 
@@ -38,6 +39,8 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         self.oxidizer_line_length = oxidizer_line_length
         self.fuel_line_diameter = fuel_line_diameter
         self.fuel_line_length = fuel_line_length
+
+        self.piston_loss = piston_loss
 
         # Tank objects
         self.fuel_tank = fuel_tank
@@ -60,7 +63,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         Returns:
             Oxidizer mass flow rate [kg/s].
         """
-        p_up = self.oxidizer_tank.get_pressure()
+        p_up = self.get_oxidizer_tank_pressure()
         p_down = chamber_pressure
         oxidizer_density = self.oxidizer_tank.get_density()
 
@@ -90,7 +93,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         Returns:
             Fuel mass flow rate [kg/s].
         """
-        p_up = self.oxidizer_tank.get_pressure()
+        p_up = self.get_oxidizer_tank_pressure() - self.piston_loss
         p_down = chamber_pressure
         fuel_density = self.fuel_tank.get_density()
 
@@ -101,3 +104,15 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
             p_up=p_up,
             p_down=p_down,
         )
+
+    def get_oxidizer_tank_pressure(self) -> float:
+        """
+        Returns the tank pressure [Pa].
+        """
+        return self.oxidizer_tank.get_pressure()
+
+    def get_fuel_tank_pressure(self) -> float:
+        """
+        Returns the tank pressure [Pa].
+        """
+        return self.oxidizer_tank.get_pressure()
