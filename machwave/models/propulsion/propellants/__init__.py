@@ -1,17 +1,9 @@
-from abc import ABC
-from dataclasses import dataclass
+from machwave.models.propulsion.propellants.base import Propellant
+from machwave.models.propulsion.propellants.biliquid import BiliquidPropellant
+from machwave.models.propulsion.propellants.solid import SolidPropellant
 
-
-@dataclass
-class Propellant(ABC):
-    """
-    Base class for any propellant.
-
-    Inherits:
-        ABC: Abstract Base Class representing an abstract class.
-
-    Attributes:
-        None
-    """
-
-    pass
+__all__ = [
+    "Propellant",
+    "BiliquidPropellant",
+    "SolidPropellant",
+]

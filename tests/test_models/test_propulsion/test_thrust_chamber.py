@@ -5,21 +5,16 @@ def _test_combustion_chamber_properties(combustion_chamber):
     Tests geometric properties of the class, such as inner radius
     (calculated from inner diameter) and more.
     """
-    inner_diameter = combustion_chamber.inner_diameter
-    assert inner_diameter > 0
-    assert (
-        inner_diameter
-        == combustion_chamber.casing_inner_diameter
-        - 2 * combustion_chamber.liner.thickness
-    )
+    net = combustion_chamber.inner_diameter
+    gross = combustion_chamber.casing_inner_diameter
 
-    assert combustion_chamber.inner_radius == inner_diameter / 2
+    assert net > 0
+    assert net == gross - 2 * combustion_chamber.liner.thickness
+
+    assert combustion_chamber.inner_radius == net / 2
     assert combustion_chamber.outer_radius == combustion_chamber.outer_diameter / 2
 
-    assert (
-        combustion_chamber.casing_inner_diameter
-        == inner_diameter + 2 * combustion_chamber.liner.thickness
-    )
+    assert gross == net + 2 * combustion_chamber.liner.thickness
 
 
 def test_combustion_chamber_properties(combustion_chamber_olympus):

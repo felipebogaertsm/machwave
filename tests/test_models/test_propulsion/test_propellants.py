@@ -1,9 +1,9 @@
 import numpy as np
 
-from machwave.models.propulsion.propellants import Propellant
+from machwave.models.propulsion.propellants import SolidPropellant
 
 
-def _test_propellant_burn_rate(propellant: Propellant):
+def _test_propellant_burn_rate(propellant: SolidPropellant):
     burn_rate_map = propellant.burn_rate
 
     # Getting pressure range covered by burn rate map:
