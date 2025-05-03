@@ -1,6 +1,6 @@
 import numpy as np
 
-from . import RecoveryEvent
+from machwave.models.recovery.events import RecoveryEvent
 
 
 class Recovery:

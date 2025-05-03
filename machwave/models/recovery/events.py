@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from machwave.models.recovery import Parachute
+from machwave.models.recovery.parachutes import Parachute
 
 
 class RecoveryEvent(ABC):
