@@ -1,7 +1,7 @@
 import scipy.constants
 from rocketcea.cea_obj import CEA_Obj
 
-from machwave.models.propulsion.propellants.base import Propellant
+from .base import Propellant
 from machwave.services.conversions import (
     convert_lbft3_to_kgm3,
     convert_pa_to_psi,

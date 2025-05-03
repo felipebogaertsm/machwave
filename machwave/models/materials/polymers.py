@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from machwave.models.materials import Material
+from .base import Material
 
 
 @dataclass
