@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from numpy.typing import NDArray
 import skfmm
+from numpy.typing import NDArray
+
+from machwave.services.decorators import validate_assertions
 
 from .. import GrainGeometryError, GrainSegment
-from machwave.services.decorators import validate_assertions
 
 
 class FMMGrainSegment(GrainSegment, ABC):

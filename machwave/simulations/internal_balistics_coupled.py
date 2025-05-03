@@ -14,8 +14,8 @@ from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.operations.internal_ballistics import MotorOperation
-from machwave.simulations import Simulation, SimulationParameters
 from machwave.services.factories import get_motor_operation_class
+from machwave.simulations import Simulation, SimulationParameters
 
 
 class InternalBallisticsCoupledParams(SimulationParameters):

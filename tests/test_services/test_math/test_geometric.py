@@ -1,11 +1,10 @@
 import pytest
 
-
 from machwave.services.math.geometric import (
     get_circle_area,
-    get_torus_area,
     get_cylinder_surface_area,
     get_cylinder_volume,
+    get_torus_area,
     get_trapezoidal_area,
 )
 

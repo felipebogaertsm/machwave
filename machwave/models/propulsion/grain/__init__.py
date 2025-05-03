@@ -1,6 +1,6 @@
 from machwave.models.propulsion.grain.base import (
-    GrainGeometryError,
     Grain,
+    GrainGeometryError,
     GrainSegment,
     GrainSegment2D,
     GrainSegment3D,

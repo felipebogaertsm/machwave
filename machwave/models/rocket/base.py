@@ -1,6 +1,6 @@
-from machwave.models.rocket.fuselage import Fuselage
 from machwave.models.propulsion.motors import Motor
 from machwave.models.recovery import Recovery
+from machwave.models.rocket.fuselage import Fuselage
 
 
 class Rocket:

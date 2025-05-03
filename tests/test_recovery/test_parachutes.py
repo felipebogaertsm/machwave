@@ -1,10 +1,9 @@
+import numpy as np
 import pytest
 
-import numpy as np
-
 from machwave.models.recovery.parachutes import (
-    Parachute,
     HemisphericalParachute,
+    Parachute,
     ToroidalParachute,
 )
 

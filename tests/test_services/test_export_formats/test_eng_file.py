@@ -43,8 +43,8 @@ Requirements for an .eng file:
      by simulation software.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from machwave.services.export_formats import generate_eng_file_content
 
