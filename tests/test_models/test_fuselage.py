@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from machwave.models.rocket.fuselage import (
+from machwave.models.rocket import (
     Fuselage,
     DragCoefficientTypeError,
 )
