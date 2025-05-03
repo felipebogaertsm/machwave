@@ -1,9 +1,9 @@
-import pytest
 import numpy as np
+import pytest
 
-from machwave.models.rocket.fuselage import (
-    Fuselage,
+from machwave.models.rocket import (
     DragCoefficientTypeError,
+    Fuselage,
 )
 from machwave.services.math.geometric import get_circle_area
 

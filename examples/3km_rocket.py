@@ -8,33 +8,32 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from machwave.models.atmosphere import Atmosphere1976
+from machwave.models.materials import EPDM, Al6061T6, Steel
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models.propulsion.motors import SolidMotor
+from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
+from machwave.models.propulsion.thermals import ThermalLiner
+from machwave.models.propulsion.thrust_chamber import ThrustChamber
 from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
-from machwave.models.propulsion.thrust_chamber import ThrustChamber
-from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 from machwave.models.recovery import Recovery
-from machwave.models.rocket import Rocket
-from machwave.models.materials.metals import Steel, Al6061T6
-from machwave.models.materials.polymers import EPDM
-from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.models.recovery.events import (
     AltitudeBasedEvent,
     ApogeeBasedEvent,
 )
 from machwave.models.recovery.parachutes import HemisphericalParachute
+from machwave.models.rocket import Rocket
 from machwave.models.rocket.fuselage import Fuselage
-from machwave.models.atmosphere.atm_1976 import Atmosphere1976
-from machwave.models.propulsion.motors import SolidMotor
 from machwave.services.decorators import timing
+from machwave.services.plots.ballistics import ballistics_plots
 from machwave.simulations.internal_balistics_coupled import (
     InternalBallisticsCoupled,
     InternalBallisticsCoupledParams,
 )
-from machwave.services.plots.ballistics import ballistics_plots
 
 
 @timing

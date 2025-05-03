@@ -2,8 +2,8 @@ from abc import abstractmethod
 
 import numpy as np
 
-from machwave.operations import Operation
 from machwave.models.propulsion.motors import Motor
+from machwave.operations import Operation
 
 
 class MotorOperation(Operation):

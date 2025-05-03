@@ -1,7 +1,7 @@
 import numpy as np
 
 from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.motors.base import Motor
+from .base import Motor
 from machwave.models.propulsion.propellants.solid import SolidPropellant
 from machwave.models.propulsion.thrust_chamber import SolidMotorThrustChamber
 from machwave.services.flow.isentropic import get_thrust_coefficients

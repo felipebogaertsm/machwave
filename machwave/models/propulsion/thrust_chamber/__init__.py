@@ -1,7 +1,7 @@
 from machwave.models.propulsion.thrust_chamber.base import (
-    ThrustChamber,
     LiquidEngineThrustChamber,
     SolidMotorThrustChamber,
+    ThrustChamber,
 )
 
 __all__ = [

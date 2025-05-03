@@ -1,7 +1,7 @@
 import numpy as np
 
-from .. import GrainGeometryError
-from ..fmm._2d import FMMGrainSegment2D
+from machwave.models.propulsion.grain import GrainGeometryError
+from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 from machwave.services.decorators import validate_assertions
 
 

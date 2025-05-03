@@ -7,26 +7,25 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.models.propulsion.motors import LiquidEngine
-from machwave.models.propulsion.propellants import BiliquidPropellant
+from machwave.models.materials import EPDM, Al6061T6, Steel
 from machwave.models.propulsion.feed_systems import StackedTankPressureFedFeedSystem
 from machwave.models.propulsion.feed_systems.tanks import Tank
+from machwave.models.propulsion.motors import LiquidEngine
+from machwave.models.propulsion.propellants import BiliquidPropellant
 from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
 from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     CombustionChamber,
 )
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 from machwave.models.propulsion.thrust_chamber.injector import BipropellantInjector
-from machwave.models.materials.metals import Steel, Al6061T6
-from machwave.models.materials.polymers import EPDM
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.services.plots.internal_ballistics import (
+    plot_bipropellant_tank_profiles,
+    thrust_pressure_plot,
+)
 from machwave.simulations.internal_ballistics import (
     InternalBallistics,
     InternalBallisticsParams,
-)
-from machwave.services.plots.internal_ballistics import (
-    thrust_pressure_plot,
-    plot_bipropellant_tank_profiles,
 )
 
 FUEL_NAME = "Ethanol"
