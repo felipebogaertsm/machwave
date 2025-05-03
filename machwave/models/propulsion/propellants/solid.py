@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import scipy.constants
 
-from machwave.models.propulsion.propellants.base import Propellant
+from .base import Propellant
 
 
 class BurnRateOutOfBoundsError(Exception):
