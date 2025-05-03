@@ -1,5 +1,5 @@
 test:
-	@docker compose -f compose.test.yaml up --build --remove-orphans
+	@poetry run pytest
 publish:
 	@twine upload dist/*
 check:
