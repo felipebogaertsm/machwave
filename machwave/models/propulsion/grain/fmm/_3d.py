@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment
-from .. import GrainSegment3D, GrainGeometryError
+from machwave.models.propulsion.grain import GrainSegment3D, GrainGeometryError
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,
