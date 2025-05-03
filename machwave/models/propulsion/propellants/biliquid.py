@@ -1,12 +1,12 @@
-from rocketcea.cea_obj import CEA_Obj
 import scipy.constants
+from rocketcea.cea_obj import CEA_Obj
 
+from .base import Propellant
 from machwave.services.conversions import (
+    convert_lbft3_to_kgm3,
     convert_pa_to_psi,
     convert_rankine_to_kelvin,
-    convert_lbft3_to_kgm3,
 )
-from machwave.models.propulsion.propellants.base import Propellant
 
 
 class BiliquidPropellant(Propellant):

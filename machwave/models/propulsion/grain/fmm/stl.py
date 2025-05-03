@@ -3,8 +3,8 @@ from abc import ABC
 import numpy as np
 import trimesh
 
-from ._3d import FMMGrainSegment3D
-from .. import GrainGeometryError
+from machwave.models.propulsion.grain import GrainGeometryError
+from machwave.models.propulsion.grain.fmm import FMMGrainSegment3D
 from machwave.services.decorators import validate_assertions
 
 
@@ -65,8 +65,8 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
             volume.matrix.view(np.ndarray).transpose().astype(np.int_)
         )
 
-        assert voxel_map.shape == self.get_maps()[0].shape, (
-            "Generated map shape mismatch"
-        )
+        assert (
+            voxel_map.shape == self.get_maps()[0].shape
+        ), "Generated map shape mismatch"
 
         return voxel_map

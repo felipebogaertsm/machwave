@@ -3,18 +3,17 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from machwave.models.materials import EPDM, Al6063T5, Steel
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries import BatesSegment
 from machwave.models.propulsion.motors import SolidMotor
+from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
+from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.models.propulsion.thrust_chamber import ThrustChamber
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     BoltedCombustionChamber,
 )
-from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
-from machwave.models.materials.metals import Steel, Al6063T5
-from machwave.models.materials.polymers import EPDM
-from machwave.models.propulsion.thermals import ThermalLiner
+from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 from machwave.montecarlo import MonteCarloParameter, MonteCarloSimulation
 from machwave.simulations.internal_ballistics import (
     InternalBallistics,

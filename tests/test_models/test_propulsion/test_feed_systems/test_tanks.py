@@ -1,6 +1,6 @@
 # test_tank.py
-import pytest
 import CoolProp.CoolProp as CP
+import pytest
 import scipy.constants
 
 from machwave.models.propulsion.feed_systems.tanks import Tank

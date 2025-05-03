@@ -9,9 +9,8 @@ thickness, since the FMM algorithm is not accurate enough (given the lower
 map_dim) for the last 20% of the web thickness.
 """
 
-import pytest
-
 import numpy as np
+import pytest
 
 from machwave.models.propulsion.grain.geometries import (
     BatesSegment,

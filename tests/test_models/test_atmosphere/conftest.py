@@ -2,8 +2,7 @@ from typing import Callable
 
 import pytest
 
-from machwave.models.atmosphere import Atmosphere
-from machwave.models.atmosphere.atm_1976 import Atmosphere1976WindPowerLaw
+from machwave.models.atmosphere import Atmosphere, Atmosphere1976WindPowerLaw
 
 
 @pytest.fixture()

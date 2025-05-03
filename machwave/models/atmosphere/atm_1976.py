@@ -2,10 +2,10 @@
 Implementation of the 1976 Standard Atmosphere model.
 """
 
-from fluids.atmosphere import ATMOSPHERE_1976
 import numpy as np
+from fluids.atmosphere import ATMOSPHERE_1976
 
-from machwave.models.atmosphere import Atmosphere
+from .base import Atmosphere
 
 
 class Atmosphere1976(Atmosphere):

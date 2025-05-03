@@ -1,9 +1,9 @@
 import pytest
 
+from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.geometries import (
     RodAndTubeGrainSegment,
 )
-from machwave.models.propulsion.grain import GrainGeometryError
 
 
 def test_rodandtube_segment_geometry_validation():

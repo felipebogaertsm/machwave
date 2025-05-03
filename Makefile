@@ -1,8 +1,8 @@
 test:
-	@docker compose -f compose.test.yaml up --build --remove-orphans
+	@poetry run pytest
 publish:
 	@twine upload dist/*
-pre-commit:
+check:
 	@poetry run ruff format
-	@poetry run ruff check --fix
+	@poetry run ruff check --fix --select I
 	@poetry run pyright machwave

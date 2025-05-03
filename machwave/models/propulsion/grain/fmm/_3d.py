@@ -3,8 +3,8 @@ from abc import ABC
 import numpy as np
 from numpy.typing import NDArray
 
-from . import FMMGrainSegment
-from .. import GrainSegment3D, GrainGeometryError
+from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment3D
+from .base import FMMGrainSegment
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,

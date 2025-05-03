@@ -1,10 +1,11 @@
 import numpy as np
 
-from . import BallisticOperation
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.services.equations import ballistics_ode
 from machwave.solvers.odes import rk4th_ode_solver
+
+from . import BallisticOperation
 
 
 class Ballistic1DOperation(BallisticOperation):

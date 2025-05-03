@@ -1,8 +1,8 @@
-from machwave.models.propulsion.motors import Motor, SolidMotor, LiquidEngine
+from machwave.models.propulsion.motors import LiquidEngine, Motor, SolidMotor
 from machwave.operations.internal_ballistics import (
+    LiquidEngineOperation,
     MotorOperation,
     SolidMotorOperation,
-    LiquidEngineOperation,
 )
 
 

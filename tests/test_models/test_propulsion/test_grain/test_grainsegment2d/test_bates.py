@@ -1,7 +1,7 @@
 import pytest
 
-from machwave.models.propulsion.grain.geometries import BatesSegment
 from machwave.models.propulsion.grain import GrainGeometryError
+from machwave.models.propulsion.grain.geometries import BatesSegment
 
 
 def test_bates_segment_geometry_validation():

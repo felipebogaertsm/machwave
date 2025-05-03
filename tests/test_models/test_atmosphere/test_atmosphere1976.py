@@ -1,11 +1,11 @@
 from typing import Callable
 
 import numpy as np
-from numpy import testing as np_testing
 import pytest
+from numpy import testing as np_testing
 
-from machwave.models.atmosphere import Atmosphere
-from machwave.models.atmosphere.atm_1976 import (
+from machwave.models.atmosphere import (
+    Atmosphere,
     Atmosphere1976,
     Atmosphere1976WindPowerLaw,
 )

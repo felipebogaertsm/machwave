@@ -1,9 +1,12 @@
 import numpy as np
 
-from machwave.operations.internal_ballistics.base import MotorOperation
-from machwave.solvers.odes import rk4th_ode_solver
-from machwave.services.equations import solve_cp_seidel
 from machwave.models.propulsion.motors import SolidMotor
+from machwave.operations.internal_ballistics.base import MotorOperation
+from machwave.services.conversions import (
+    convert_mass_flux_metric_to_imperial,
+    convert_pa_to_psi,
+)
+from machwave.services.equations import solve_cp_seidel
 from machwave.services.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
@@ -12,10 +15,7 @@ from machwave.services.flow.isentropic import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from machwave.services.conversions import (
-    convert_pa_to_psi,
-    convert_mass_flux_metric_to_imperial,
-)
+from machwave.solvers.odes import rk4th_ode_solver
 
 
 class SolidMotorOperation(MotorOperation):
