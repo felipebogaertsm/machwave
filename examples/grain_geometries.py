@@ -10,15 +10,15 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.models.propulsion.grain.geometries import (
-    BatesSegment,
-    MultiPortGrainSegment,
-    ConicalGrainSegment,
-    DGrainSegment,
-)
 from machwave.models.propulsion.grain.fmm.services import (
     plot_2d_face_map,
     plot_2d_face_map_animated,
+)
+from machwave.models.propulsion.grain.geometries import (
+    BatesSegment,
+    ConicalGrainSegment,
+    DGrainSegment,
+    MultiPortGrainSegment,
 )
 
 np.set_printoptions(precision=2, suppress=True)

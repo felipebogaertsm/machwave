@@ -1,20 +1,19 @@
 import pytest
 
 from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.materials import EPDM
-from machwave.models.materials import Al6063T5, Steel
+from machwave.models.materials import EPDM, Al6063T5, Steel
 from machwave.models.propulsion.propellants.solid import (
-    KNSB,
-    KNSB_NAKKA,
     KNDX,
     KNER,
+    KNSB,
+    KNSB_NAKKA,
     KNSU,
 )
-from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
-    CombustionChamber,
-    BoltedCombustionChamber,
-)
 from machwave.models.propulsion.thermals import ThermalLiner
+from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
+    BoltedCombustionChamber,
+    CombustionChamber,
+)
 
 
 @pytest.fixture

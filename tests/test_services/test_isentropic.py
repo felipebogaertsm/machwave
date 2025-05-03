@@ -1,19 +1,18 @@
 import numpy as np
-
 from pytest import approx
 
 from machwave.services.flow.isentropic import (
     get_critical_pressure_ratio,
-    get_opt_expansion_ratio,
+    get_divergent_correction_factor,
     get_exit_mach,
     get_exit_pressure,
+    get_expansion_ratio,
+    get_opt_expansion_ratio,
+    get_specific_impulse,
     get_thrust_coefficients,
     get_thrust_from_cf,
-    is_flow_choked,
     get_total_impulse,
-    get_specific_impulse,
-    get_divergent_correction_factor,
-    get_expansion_ratio,
+    is_flow_choked,
 )
 
 
