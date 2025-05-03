@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from . import FMMGrainSegment
+from machwave.models.propulsion.grain.fmm import FMMGrainSegment
 from .. import GrainSegment2D, GrainGeometryError
 from machwave.services.math.geometric import (
     get_circle_area,
