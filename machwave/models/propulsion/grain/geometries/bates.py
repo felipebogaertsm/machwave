@@ -5,7 +5,7 @@ from machwave.services.math.geometric import (
     get_cylinder_surface_area,
 )
 
-from .. import GrainSegment2D, GrainGeometryError
+from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 from machwave.services.decorators import validate_assertions
 
 
