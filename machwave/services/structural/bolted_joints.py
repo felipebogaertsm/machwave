@@ -207,18 +207,3 @@ def get_max_net_tension_load_cylinder(
         allowable_tensile_stress,
         n_bolts_in_row=n_bolts_in_row,
     )
-
-
-def combined_capacity(capacities: Iterable[float]) -> float:
-    """
-    Return the governing (minimum) capacity among all failure modes supplied.
-
-    Args:
-        capacities (Iterable[float]): List of capacities for different failure modes.
-    Returns:
-        float: Minimum capacity among the supplied capacities.
-    Example:
-        >>> combined_capacity([1000, 2000, 1500])
-        1000.0
-    """
-    return min(capacities)
