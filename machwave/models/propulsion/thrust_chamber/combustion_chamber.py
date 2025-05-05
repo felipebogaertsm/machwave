@@ -3,6 +3,7 @@ import numpy as np
 from machwave.models.materials import Material
 from machwave.models.propulsion.thermals import ThermalLiner
 from machwave.services.math.geometric import get_cylinder_volume
+from machwave.services.structural import bolted_joints, pressure_vessels
 
 
 class CombustionChamber:
@@ -42,48 +43,22 @@ class CombustionChamber:
     def empty_volume(self) -> float:
         return get_cylinder_volume(self.inner_diameter, self.length)
 
-    def get_casing_stress_theta(self, chamber_pressure: float) -> float:
-        return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-            * (1 + ((self.outer_radius**2) / (self.casing_inner_radius**2)))
-        )
-
-    def get_casing_stress_radius(self, chamber_pressure: float) -> float:
-        return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-            * (1 - ((self.outer_radius) / (self.casing_inner_radius)) ** 2)
-        )
-
-    def get_casing_stress_z(self, chamber_pressure: float) -> float:
-        return (
-            2
-            * chamber_pressure
-            * self.casing_inner_radius**2
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-        )
-
     def get_casing_safety_factor(self, chamber_pressure: float) -> float:
         """
-        Returns the thickness for a cylindrical pressure vessel, using
-        Von Misses criteria.
+        Calculates the safety factor of the casing.
+
+        Args:
+            chamber_pressure (float): The pressure inside the combustion chamber.
+        Returns:
+            float: The safety factor of the casing.
         """
-        casing_yield_strength = self.casing_material.yield_strength
-        max_chamber_pressure = chamber_pressure
-
-        gama_z = self.get_casing_stress_z(max_chamber_pressure)
-        gama_r = self.get_casing_stress_radius(max_chamber_pressure)
-        gama_theta = self.get_casing_stress_theta(max_chamber_pressure)
-
-        return casing_yield_strength / np.sqrt(
-            (
-                (gama_z - gama_r) ** 2
-                + (gama_r - gama_theta) ** 2
-                + (gama_theta - gama_z) ** 2
-            )
-            / 2
+        casing_burst_pressure = pressure_vessels.get_cylindrical_vessel_burst_pressure(
+            inner_radius=self.inner_radius,
+            outer_radius=self.outer_radius,
+            material_yield_strength=self.casing_material.yield_strength,
         )
+
+        return chamber_pressure / casing_burst_pressure
 
 
 class BoltedCombustionChamber(CombustionChamber):
