@@ -58,10 +58,12 @@ class CombustionChamber:
             material_yield_strength=self.casing_material.yield_strength,
         )
 
-        return chamber_pressure / casing_burst_pressure
+        return casing_burst_pressure / chamber_pressure
 
 
 class BoltedCombustionChamber(CombustionChamber):
+    """Combustion-chamber closed by a bolted flange/bulkhead interface."""
+
     def __init__(
         self,
         inner_diameter: float,
@@ -88,81 +90,103 @@ class BoltedCombustionChamber(CombustionChamber):
         self.screw_clearance_diameter = screw_clearance_diameter
         self.screw_diameter = screw_diameter
 
-    def get_shear_area(self) -> float:
-        return (self.screw_diameter**2) * np.pi * 0.25
+        self.wall_thickness = (outer_diameter - inner_diameter) / 2
 
-    def get_tear_area(self, screw_count: int) -> float:
-        """
-        Calculates tear area for screw section.
-        """
-        return (
-            (np.pi * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2)))
-            / screw_count
-        ) - (
-            np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
-        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
+        # Allowable stresses (Pa)
+        self._allow_shear_bolt = screw_material.ultimate_strength
+        self._allow_shear_wall = casing_material.yield_strength / np.sqrt(3)
+        self._allow_bearing_wall = casing_material.yield_strength
+        self._allow_tension_wall = casing_material.yield_strength
 
-    def get_compression_area(self) -> float:
-        return (
-            (self.outer_diameter - self.inner_diameter)
-            * self.screw_clearance_diameter
-            / 2
+    def _edge_angle(self) -> float:
+        """Central angle bolt-to-inner-edge (deg)."""
+        return np.rad2deg(
+            np.asin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
         )
 
-    def get_force_on_each_fastener(
-        self, screw_count: int, chamber_pressure: float
-    ) -> float:
-        return (
-            chamber_pressure * (np.pi * (self.inner_diameter / 2) ** 2)
-        ) / screw_count
+    @staticmethod
+    def _pitch_angle(n_bolts: int) -> float:
+        """Central angle between adjacent bolts (deg)."""
+        return np.rad2deg(2 * np.pi / n_bolts)
 
-    def get_optimal_fasteners(self, chamber_pressure: float):
-        max_screw_count = self.max_screw_count
-        casing_yield_strength = self.casing_material.yield_strength
-        screw_ultimate_strength = self.screw_material.ultimate_strength
+    def _total_axial_load(self, chamber_pressure: float) -> float:
+        """Total axial load on the flange (N)."""
+        return chamber_pressure * np.pi * (self.inner_diameter / 2) ** 2
 
-        shear_safety_factor = np.zeros(max_screw_count)
-        tear_safety_factor = np.zeros(max_screw_count)
-        compression_safety_factor = np.zeros(max_screw_count)
+    def _load_per_bolt(self, n_bolts: int, chamber_pressure: float) -> float:
+        """Axial load per bolt (N)."""
+        return self._total_axial_load(chamber_pressure) / n_bolts
 
-        for screw_count in range(1, max_screw_count + 1):
-            shear_area = self.get_shear_area()
-            tear_area = self.get_tear_area(screw_count)
-            compression_area = self.get_compression_area()
+    def get_optimal_fasteners(
+        self, chamber_pressure: float
+    ) -> tuple[int, float, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Return bolt count with max governing safety factor.
 
-            force_on_each_fastener = self.get_force_on_each_fastener(
-                screw_count=screw_count, chamber_pressure=chamber_pressure
-            )
+        Args:
+            chamber_pressure: Maximum expected chamber pressure (Pa).
 
-            shear_stress = force_on_each_fastener / shear_area
-            shear_safety_factor[screw_count - 1] = (
-                screw_ultimate_strength / shear_stress
-            )
+        Returns:
+            * index (int): zero-based index ⇒ `n_bolts = index + 1`.
+            * governing_sf (float): Safety factor at that bolt count.
+            * shear_sf (ndarray)
+            * tear_sf (ndarray)
+            * bearing_sf (ndarray)
+            * tension_sf (ndarray)
+        """
+        m = self.max_screw_count
+        shear_sf = np.zeros(m)
+        tear_sf = np.zeros(m)
+        bearing_sf = np.zeros(m)
+        tension_sf = np.zeros(m)
 
-            tear_stress = force_on_each_fastener / tear_area
-            tear_safety_factor[screw_count - 1] = (
-                casing_yield_strength / np.sqrt(3)
-            ) / tear_stress
-
-            compression_stress = force_on_each_fastener / compression_area
-            compression_safety_factor[screw_count - 1] = (
-                casing_yield_strength / compression_stress
-            )
-
-        fastener_safety_factor = np.vstack(
-            (
-                shear_safety_factor,
-                tear_safety_factor,
-                compression_safety_factor,
-            )
+        # Capacities independent of bolt count
+        shear_cap = bolted_joints.get_max_shear_load(
+            shank_diameter=self.screw_diameter,
+            allowable_shear_stress=self._allow_shear_bolt,
         )
-        max_safety_factor_fastener = np.max(np.min(fastener_safety_factor, axis=0))
-        optimal_fasteners = np.argmax(np.min(fastener_safety_factor, axis=0))
+        tear_cap = bolted_joints.get_max_tearout_load_cylinder(
+            edge_angle=self._edge_angle(),
+            wall_thickness=self.wall_thickness,
+            outer_diameter=self.outer_diameter,
+            allowable_shear_stress=self._allow_shear_wall,
+        )
+        bearing_cap = bolted_joints.get_max_bearing_load(
+            plate_thickness=self.wall_thickness,
+            hole_diameter=self.screw_clearance_diameter,
+            allowable_bearing_stress=self._allow_bearing_wall,
+        )
+
+        total_load = self._total_axial_load(chamber_pressure)
+
+        for i, n in enumerate(range(1, m + 1)):
+            F_bolt = total_load / n
+
+            # Per-bolt modes
+            shear_sf[i] = shear_cap / F_bolt
+            tear_sf[i] = tear_cap / F_bolt
+            bearing_sf[i] = bearing_cap / F_bolt
+
+            # Net-section tension across the entire bolt row (global mode)
+            tension_cap = bolted_joints.get_max_net_tension_load_cylinder(
+                pitch_angle=self._pitch_angle(n),
+                wall_thickness=self.wall_thickness,
+                hole_diameter=self.screw_clearance_diameter,
+                allowable_tensile_stress=self._allow_tension_wall,
+                outer_diameter=self.outer_diameter,
+                n_bolts_in_row=n,
+            )
+            tension_sf[i] = tension_cap / total_load
+
+        governing_sf = np.min(
+            np.vstack((shear_sf, tear_sf, bearing_sf, tension_sf)), axis=0
+        )
+        best_idx = int(np.argmax(governing_sf))
 
         return (
-            optimal_fasteners,
-            max_safety_factor_fastener,
-            shear_safety_factor,
-            tear_safety_factor,
-            compression_safety_factor,
+            best_idx,
+            governing_sf[best_idx],
+            shear_sf,
+            tear_sf,
+            bearing_sf,
+            tension_sf,
         )
