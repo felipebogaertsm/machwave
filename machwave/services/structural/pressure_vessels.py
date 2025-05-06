@@ -112,3 +112,23 @@ def get_cylindrical_vessel_burst_pressure(
     )
 
     return material_yield_strength / equiv_per_unit
+
+
+def get_flat_plate_burst_pressure(
+    diameter: float,
+    thickness: float,
+    material_yield_strength: float,
+) -> float:
+    """
+    Calculate the internal burst pressure at which the Von Mises equivalent
+    stress reaches the material's yield strength.
+
+    Args:
+        diameter (float): Diameter of the plate.
+        thickness (float): Thickness of the plate.
+        material_yield_strength (float): Yield strength of the material.
+
+    Returns:
+        float: Burst pressure (same units as yield strength).
+    """
+    return 2 * material_yield_strength * thickness / diameter
