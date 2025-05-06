@@ -1,5 +1,3 @@
-from collections.abc import Iterable
-
 import numpy as np
 
 from machwave.services.math.geometric import get_circle_area
@@ -70,7 +68,6 @@ def _arc_length(angle: float, diameter: float) -> float:
 def get_max_shear_load(
     shank_diameter: float,
     allowable_shear_stress: float,
-    *,
     n_shear_planes: int = 1,
 ) -> float:
     """
