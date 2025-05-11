@@ -1,6 +1,16 @@
+"""
+Bolted joints stress and load calculations.
+This module provides functions to calculate shear, bearing, and tensile stresses
+and loads for bolted joints in plates and cylinders.
+"""
+
 import numpy as np
 
 from machwave.services.math.geometric import get_circle_area
+
+"""
+Areas to calculate stress and load:
+"""
 
 
 def _bolt_cross_sectional_area(screw_diameter: float) -> float:
@@ -63,6 +73,97 @@ def _arc_length(angle: float, diameter: float) -> float:
     angle_radians = np.deg2rad(angle)  # Convert to radians
     radius = diameter / 2.0
     return radius * angle_radians
+
+
+"""
+Stress calculations:
+"""
+
+
+def get_shear_stress_per_bolt(
+    load: float,
+    shank_diameter: float,
+    n_shear_planes: int = 1,
+) -> float:
+    """
+    Transverse shear stress on a bolt (single or double shear).
+
+    Args:
+        load: Applied transverse shear load per bolt.
+        shank_diameter: Diameter of the bolt shank.
+        n_shear_planes: 1 for single shear, 2 for double shear, etc.
+    """
+    area_each = _bolt_cross_sectional_area(shank_diameter)
+    return load / (n_shear_planes * area_each)
+
+
+def get_bearing_stress(
+    load: float,
+    plate_thickness: float,
+    hole_diameter: float,
+) -> float:
+    """
+    Compressive (bearing) stress between bolt shank and plate.
+    """
+    return load / _bearing_area_per_bolt(plate_thickness, hole_diameter)
+
+
+def get_tearout_shear_stress_plate(
+    load: float,
+    edge_distance: float,
+    plate_thickness: float,
+) -> float:
+    """
+    Average shear stress along the tearout plane toward a free edge.
+    """
+    return load / _tearout_area_per_bolt(edge_distance, plate_thickness)
+
+
+def get_net_section_tension_stress_plate(
+    load: float,
+    pitch_distance: float,
+    plate_thickness: float,
+    hole_diameter: float,
+    n_bolts_in_row: int = 1,
+) -> float:
+    """
+    Tensile stress across the reduced net section of a bolted plate row.
+    """
+    area_each = _net_section_area(pitch_distance, plate_thickness, hole_diameter)
+    return load / (n_bolts_in_row * area_each)
+
+
+def get_tearout_shear_stress_cylinder(
+    load: float,
+    edge_angle: float,
+    wall_thickness: float,
+    outer_diameter: float,
+) -> float:
+    edge_distance = _arc_length(edge_angle, outer_diameter)
+    return get_tearout_shear_stress_plate(load, edge_distance, wall_thickness)
+
+
+def get_net_section_tension_stress_cylinder(
+    load: float,
+    pitch_angle: float,
+    wall_thickness: float,
+    hole_diameter: float,
+    outer_diameter: float,
+    n_bolts_in_row: int = 1,
+) -> float:
+    pitch_distance = _arc_length(pitch_angle, outer_diameter)
+    return get_net_section_tension_stress_plate(
+        load,
+        pitch_distance,
+        wall_thickness,
+        hole_diameter,
+        n_bolts_in_row=n_bolts_in_row,
+    )
+
+
+"""
+Load calculations:
+"""
 
 
 def get_max_shear_load(
