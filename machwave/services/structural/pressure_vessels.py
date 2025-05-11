@@ -1,10 +1,20 @@
 """
+This module provides functions to calculate the burst pressure of pressure vessels,
+specifically closed-end thick-walled cylindrical vessels and flat plates, based on
+the Von Mises equivalent stress theory.
+
+
 References:
     Shigley, J.E., Mischke, C.R., & Budynas, R.G., "Mechanical Engineering
     Design", 10th ed., McGraw-Hill, 2015.
 """
 
 import numpy as np
+
+"""
+Individual stress calculations for a closed-end thick-walled cylindrical vessel
+under internal pressure.
+"""
 
 
 def _get_cylindrical_vessel_hoop_stress(
@@ -81,6 +91,59 @@ def _get_cylindrical_vessel_logitudinal_stress(
     return 2 * pressure * a**2 / (b**2 - a**2)
 
 
+"""
+Stress calculations:
+"""
+
+
+def get_cylindrical_vessel_von_mises_stress(
+    pressure: float,
+    inner_radius: float,
+    outer_radius: float,
+) -> float:
+    """
+    Calculate the Von Mises equivalent stress for a closed-end thick-walled
+    cylindrical vessel under internal pressure.
+
+    Args:
+        pressure (float): Internal pressure.
+        inner_radius (float): Inner radius of the cylinder.
+        outer_radius (float): Outer radius of the cylinder.
+    Returns:
+        float: Von Mises equivalent stress (same units as pressure).
+    """
+    sigma_t = _get_cylindrical_vessel_hoop_stress(pressure, inner_radius, outer_radius)
+    sigma_r = _get_cylindrical_vessel_radial_stress(
+        pressure, inner_radius, outer_radius
+    )
+    sigma_l = _get_cylindrical_vessel_logitudinal_stress(
+        pressure, inner_radius, outer_radius
+    )
+
+    sigma_eq = np.sqrt(
+        ((sigma_l - sigma_r) ** 2 + (sigma_r - sigma_t) ** 2 + (sigma_t - sigma_l) ** 2)
+        / 2.0
+    )
+
+    return sigma_eq
+
+
+def get_flat_plate_stress(pressure: float, diameter: float, thickness: float) -> float:
+    """
+    Membrane (tensile) stress in a flat, simply supported circular plate
+    loaded by uniform internal pressure.
+
+    This is conservative for real end caps, which often include edge
+    bending restraint or doming.
+    """
+    return pressure * diameter / (2.0 * thickness)
+
+
+"""
+Burst pressure calculations:
+"""
+
+
 def get_cylindrical_vessel_burst_pressure(
     inner_radius: float,
     outer_radius: float,
@@ -98,17 +161,9 @@ def get_cylindrical_vessel_burst_pressure(
     Returns:
         float: Burst pressure (same units as yield strength).
     """
-    # Stresses per unit internal pressure
-    sigma_t = _get_cylindrical_vessel_hoop_stress(1.0, inner_radius, outer_radius)
-    sigma_r = _get_cylindrical_vessel_radial_stress(1.0, inner_radius, outer_radius)
-    sigma_l = _get_cylindrical_vessel_logitudinal_stress(
+    # Von Mises stress per unit internal pressure
+    equiv_per_unit = get_cylindrical_vessel_von_mises_stress(
         1.0, inner_radius, outer_radius
-    )
-
-    # Von Mises equivalent stress per unit pressure
-    equiv_per_unit = np.sqrt(
-        ((sigma_l - sigma_r) ** 2 + (sigma_r - sigma_t) ** 2 + (sigma_t - sigma_l) ** 2)
-        / 2.0
     )
 
     return material_yield_strength / equiv_per_unit
