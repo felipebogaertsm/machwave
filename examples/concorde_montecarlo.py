@@ -15,7 +15,6 @@ from machwave.models import recovery as recovery_models
 from machwave.models.recovery import events
 from machwave.models.recovery import parachutes
 from machwave.models import rocket as rocket_models
-from machwave.services.plots import ballistics as ballistics_plots
 from machwave.simulations import internal_balistics_coupled
 from machwave import montecarlo
 
