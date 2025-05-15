@@ -8,49 +8,37 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.materials import EPDM, Al6061T6, Steel
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.motors import SolidMotor
-from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
-from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.models.propulsion.thrust_chamber import ThrustChamber
-from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
-    BoltedCombustionChamber,
-)
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
-from machwave.models.recovery import Recovery
-from machwave.models.recovery.events import (
-    AltitudeBasedEvent,
-    ApogeeBasedEvent,
-)
-from machwave.models.recovery.parachutes import HemisphericalParachute
-from machwave.models.rocket import Rocket
-from machwave.models.rocket.fuselage import Fuselage
 from machwave.services.decorators import timing
-from machwave.services.plots.ballistics import ballistics_plots
-from machwave.simulations.internal_balistics_coupled import (
-    InternalBallisticsCoupled,
-    InternalBallisticsCoupledParams,
-)
+from machwave.models import materials
+from machwave.models import atmosphere
+from machwave.models.propulsion import motors
+from machwave.models.propulsion import grain as grain_models
+from machwave.models.propulsion.grain import geometries as grain_geometries
+from machwave.models.propulsion.propellants import solid as solid_propellants
+from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
+from machwave.models import recovery as recovery_models
+from machwave.models.recovery import events
+from machwave.models.recovery import parachutes
+from machwave.models import rocket as rocket_models
+from machwave.services.plots import ballistics as ballistics_plots
+from machwave.simulations import internal_balistics_coupled
 
 
 @timing
 def main():
     # Motor:
-    propellant = KNSB_NAKKA
+    propellant = solid_propellants.KNSB_NAKKA
 
-    grain = Grain()
+    grain = grain_models.Grain()
 
-    bates_segment_1 = BatesSegment(
+    bates_segment_1 = grain_geometries.BatesSegment(
         outer_diameter=0.086,
         core_diameter=0.032,
         length=0.150,
         spacing=0.01,
     )
 
-    bates_segment_2 = BatesSegment(
+    bates_segment_2 = grain_geometries.BatesSegment(
         outer_diameter=0.086,
         core_diameter=0.046,
         length=0.150,
@@ -65,59 +53,53 @@ def main():
     grain.add_segment(bates_segment_2)
     grain.add_segment(bates_segment_2)
 
-    nozzle = Nozzle(
+    nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.086,
         throat_diameter=0.0327,
         divergent_angle=12,
         convergent_angle=40,
         expansion_ratio=5,
-        material=Steel(),
+        material=materials.Steel(),
     )
 
-    liner = ThermalLiner(thickness=0.002, material=EPDM())
-
-    chamber = BoltedCombustionChamber(
-        inner_diameter=0.09525,
-        outer_diameter=0.1016,
-        liner=liner,
-        length=grain.total_length + 0.01,
-        casing_material=Al6061T6(),
-        bulkhead_material=Al6061T6(),
-        screw_material=Steel(),
-        max_screw_count=30,
-        screw_clearance_diameter=0.0085,
-        screw_diameter=0.00675,
+    combustion_chamber = thrust_chamber_models.CombustionChamber(
+        casing_inner_diameter=95.25e-3,
+        casing_outer_diameter=101.6e-3,
+        thermal_liner_thickness=3e-3,
+        internal_length=grain.total_length + 0.01,
     )
 
-    thrust_chamber = ThrustChamber(
+    thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
         dry_mass=6.404,
         nozzle=nozzle,
-        combustion_chamber=chamber,
+        combustion_chamber=combustion_chamber,
     )
 
-    motor = SolidMotor(
+    motor = motors.SolidMotor(
         grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 
     # Recovery:
-    recovery = Recovery()
+    recovery = recovery_models.Recovery()
     recovery.add_event(
-        ApogeeBasedEvent(
+        events.ApogeeBasedEvent(
             trigger_value=1,
-            parachute=HemisphericalParachute(diameter=1.25),
+            parachute=parachutes.HemisphericalParachute(diameter=1.25),
         )
     )
     recovery.add_event(
-        AltitudeBasedEvent(
+        events.AltitudeBasedEvent(
             trigger_value=450,
-            parachute=HemisphericalParachute(diameter=2.66),
+            parachute=parachutes.HemisphericalParachute(diameter=2.66),
         )
     )
 
     # Rocket:
-    fuselage = Fuselage(length=2900, drag_coefficient=0.75, outer_diameter=0.12)
+    fuselage = rocket_models.Fuselage(
+        length=2900, drag_coefficient=0.75, outer_diameter=0.12
+    )
 
-    rocket = Rocket(
+    rocket = rocket_models.Rocket(
         propulsion=motor,
         recovery=recovery,
         fuselage=fuselage,
@@ -125,19 +107,21 @@ def main():
     )
 
     # IB coupled simulation:
-    params = InternalBallisticsCoupledParams(
-        atmosphere=Atmosphere1976(),
+    params = internal_balistics_coupled.InternalBallisticsCoupledParams(
+        atmosphere=atmosphere.Atmosphere1976(),
         d_t=0.01,
         dd_t=10,
         initial_elevation_amsl=645,
         igniter_pressure=1.5e6,
         rail_length=5,
     )
-    simulation = InternalBallisticsCoupled(rocket=rocket, params=params)
+    simulation = internal_balistics_coupled.InternalBallisticsCoupled(
+        rocket=rocket, params=params
+    )
 
     (ib_operation, ballistic_operation) = simulation.run()
 
-    ballistics_plots(
+    ballistics_plots.ballistics_plots(
         ballistic_operation.t,
         ballistic_operation.acceleration,
         ballistic_operation.v,

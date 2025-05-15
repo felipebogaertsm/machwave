@@ -31,7 +31,9 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         Returns:
             Free chamber volume, in m^3
         """
-        return self.thrust_chamber.combustion_chamber.empty_volume - propellant_volume
+        return (
+            self.thrust_chamber.combustion_chamber.internal_volume - propellant_volume
+        )
 
     @property
     def initial_propellant_mass(self) -> float:
@@ -106,6 +108,6 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         TODO: implement grain CG calculation.
         """
         return np.array(
-            [self.thrust_chamber.combustion_chamber.length / 2, 0.0, 0.0],
+            [self.thrust_chamber.combustion_chamber.internal_length / 2, 0.0, 0.0],
             dtype=np.float64,
         )

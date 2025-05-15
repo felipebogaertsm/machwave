@@ -7,18 +7,12 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.models.materials import EPDM, Al6061T6, Steel
-from machwave.models.propulsion.feed_systems import StackedTankPressureFedFeedSystem
-from machwave.models.propulsion.feed_systems.tanks import Tank
-from machwave.models.propulsion.motors import LiquidEngine
-from machwave.models.propulsion.propellants import BiliquidPropellant
-from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
-from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
-    CombustionChamber,
-)
-from machwave.models.propulsion.thrust_chamber.injector import BipropellantInjector
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+from machwave.models import materials
+from machwave.models.propulsion import feed_systems
+from machwave.models.propulsion.feed_systems import tanks
+from machwave.models.propulsion import motors
+from machwave.models.propulsion import propellants
+from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 from machwave.services.plots.internal_ballistics import (
     plot_bipropellant_tank_profiles,
     thrust_pressure_plot,
@@ -33,18 +27,18 @@ OXIDIZER_NAME = "N2O"
 
 
 def main():
-    propellant = BiliquidPropellant(
+    propellant = propellants.BiliquidPropellant(
         oxidizer_name=OXIDIZER_NAME, fuel_name=FUEL_NAME, of_ratio=1.9495
     )
 
-    fuel_tank = Tank(
+    fuel_tank = tanks.Tank(
         FUEL_NAME.upper(), volume=2.261e-4, temperature=300, initial_fluid_mass=1.55
     )
-    oxidizer_tank = Tank(
+    oxidizer_tank = tanks.Tank(
         OXIDIZER_NAME, volume=3.622e-3, temperature=300, initial_fluid_mass=2.78
     )
 
-    feed_system = StackedTankPressureFedFeedSystem(
+    feed_system = feed_systems.StackedTankPressureFedFeedSystem(
         oxidizer_line_diameter=7.925e-3,
         oxidizer_line_length=0.5,
         fuel_line_diameter=5.715e-3,
@@ -54,36 +48,33 @@ def main():
         piston_loss=1e5,
     )
 
-    nozzle = Nozzle(
+    nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=55e-3,
         throat_diameter=25.4e-3,
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=4,
-        material=Steel(),
+        material=materials.Steel(),
     )
 
-    injector = BipropellantInjector(
+    injector = thrust_chamber_models.BipropellantInjector(
         discharge_coefficient_fuel=0.48,
         discharge_coefficient_oxidizer=0.48,
         area_fuel=8.2e-6 / 0.48,
         area_ox=1.4e-5 / 0.48,
     )
 
-    liner = ThermalLiner(thickness=0.003, material=EPDM())
-    chamber = CombustionChamber(
-        inner_diameter=70e-3,
-        outer_diameter=76e-3,
-        liner=liner,
-        length=25e-2,
-        casing_material=Al6061T6(),
-        bulkhead_material=Al6061T6(),
+    chamber = thrust_chamber_models.CombustionChamber(
+        casing_inner_diameter=70e-3,
+        casing_outer_diameter=76e-3,
+        internal_length=13e-3,
+        thermal_liner_thickness=2e-3,
     )
-    thrust_chamber = LiquidEngineThrustChamber(
+    thrust_chamber = thrust_chamber_models.LiquidEngineThrustChamber(
         nozzle=nozzle, injector=injector, combustion_chamber=chamber, dry_mass=2
     )
 
-    lre = LiquidEngine(
+    lre = motors.LiquidEngine(
         propellant=propellant, feed_system=feed_system, thrust_chamber=thrust_chamber
     )
 

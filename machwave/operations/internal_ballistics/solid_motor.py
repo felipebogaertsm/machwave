@@ -47,7 +47,7 @@ class SolidMotorOperation(MotorOperation):
 
         # Grain and propellant parameters:
         self.V_0 = np.array(
-            [motor.thrust_chamber.combustion_chamber.empty_volume]
+            [motor.thrust_chamber.combustion_chamber.internal_volume]
         )  # empty chamber volume
         self.web = np.array([0])  # instant web thickness
         self.burn_area = np.array([self.motor.grain.get_burn_area(self.web[0])])
@@ -256,7 +256,7 @@ class SolidMotorOperation(MotorOperation):
         """
         return (
             self.propellant_volume[0]
-            / self.motor.thrust_chamber.combustion_chamber.empty_volume
+            / self.motor.thrust_chamber.combustion_chamber.internal_volume
         )
 
     @property
