@@ -7,12 +7,13 @@ from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
-from .base import FMMGrainSegment
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,
     get_length,
 )
+
+from .base import FMMGrainSegment
 
 
 class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):

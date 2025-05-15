@@ -1,10 +1,11 @@
 import numpy as np
 
 from machwave.models.propulsion.grain import Grain
-from .base import Motor
 from machwave.models.propulsion.propellants.solid import SolidPropellant
 from machwave.models.propulsion.thrust_chamber import SolidMotorThrustChamber
 from machwave.services.flow.isentropic import get_thrust_coefficients
+
+from .base import Motor
 
 
 class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):

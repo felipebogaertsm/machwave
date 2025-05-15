@@ -8,11 +8,9 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave.models import materials
-from machwave.models.propulsion import feed_systems
-from machwave.models.propulsion.feed_systems import tanks
-from machwave.models.propulsion import motors
-from machwave.models.propulsion import propellants
+from machwave.models.propulsion import feed_systems, motors, propellants
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
+from machwave.models.propulsion.feed_systems import tanks
 from machwave.services.plots.internal_ballistics import (
     plot_bipropellant_tank_profiles,
     thrust_pressure_plot,

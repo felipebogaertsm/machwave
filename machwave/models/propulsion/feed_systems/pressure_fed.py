@@ -1,6 +1,7 @@
-from .base import FeedSystem
 from machwave.models.propulsion.feed_systems.tanks import Tank
 from machwave.services.flow.incompressible import mass_flow_orifice
+
+from .base import FeedSystem
 
 
 class StackedTankPressureFedFeedSystem(FeedSystem):
