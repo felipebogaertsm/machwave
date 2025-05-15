@@ -108,6 +108,6 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         TODO: implement grain CG calculation.
         """
         return np.array(
-            [self.thrust_chamber.combustion_chamber.length / 2, 0.0, 0.0],
+            [self.thrust_chamber.combustion_chamber.internal_length / 2, 0.0, 0.0],
             dtype=np.float64,
         )
