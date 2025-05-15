@@ -20,9 +20,9 @@ class CombustionChamber:
                 nozzle inlet (m).
             thermal_liner (float, None): Thermal liner object. Defaults to 0.0.
         """
-        self.casing_inner_diameter = float(casing_inner_diameter)
-        self.casing_outer_diameter = float(casing_outer_diameter)
-        self.internal_length = float(internal_length)
+        self.casing_inner_diameter = casing_inner_diameter
+        self.casing_outer_diameter = casing_outer_diameter
+        self.internal_length = internal_length
         self.thermal_liner_thickness = thermal_liner_thickness
 
     @property
