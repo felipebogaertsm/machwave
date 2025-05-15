@@ -1,7 +1,6 @@
 import pytest
 
 from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.materials import EPDM, Al6063T5, Steel
 from machwave.models.propulsion.propellants.solid import (
     KNDX,
     KNER,
@@ -9,9 +8,7 @@ from machwave.models.propulsion.propellants.solid import (
     KNSB_NAKKA,
     KNSU,
 )
-from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
-    BoltedCombustionChamber,
+from machwave.models.propulsion.thrust_chamber import (
     CombustionChamber,
 )
 
@@ -47,33 +44,10 @@ def atmosphere_1976():
 
 
 @pytest.fixture
-def thermal_liner_olympus():
-    return ThermalLiner(thickness=3e-3, material=EPDM)
-
-
-@pytest.fixture
-def combustion_chamber_olympus(thermal_liner_olympus):
+def combustion_chamber_olympus():
     return CombustionChamber(
-        inner_diameter=128.2e-3,
-        outer_diameter=141.3e-3,
-        liner=thermal_liner_olympus,
-        length=1500e-3,
-        casing_material=Al6063T5(),
-        bulkhead_material=Al6063T5(),
-    )
-
-
-@pytest.fixture
-def bolted_combustion_chamber_olympus(thermal_liner_olympus):
-    return BoltedCombustionChamber(
-        inner_diameter=128.2e-3,
-        outer_diameter=141.3e-3,
-        liner=thermal_liner_olympus,
-        length=1500e-3,
-        casing_material=Al6063T5(),
-        bulkhead_material=Al6063T5(),
-        screw_material=Steel(),
-        max_screw_count=30,
-        screw_clearance_diameter=9e-3,
-        screw_diameter=6.75e-3,
+        casing_inner_diameter=128.2e-3,
+        casing_outer_diameter=141.3e-3,
+        thermal_liner_thickness=3e-3,
+        internal_length=1500e-3,
     )
