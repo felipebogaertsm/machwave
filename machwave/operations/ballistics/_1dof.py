@@ -5,7 +5,7 @@ from machwave.models.rocket import Rocket
 from machwave.services.equations import ballistics_ode
 from machwave.solvers.odes import rk4th_ode_solver
 
-from . import BallisticOperation
+from machwave.operations.ballistics.base import BallisticOperation
 
 
 class Ballistic1DOperation(BallisticOperation):

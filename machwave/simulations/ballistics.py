@@ -3,7 +3,7 @@ import numpy as np
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics._1dof import Ballistic1DOperation
-from machwave.simulations import Simulation, SimulationParameters
+from machwave.simulations.base import Simulation, SimulationParameters
 
 
 class BallisticSimulationParameters(SimulationParameters):

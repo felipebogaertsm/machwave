@@ -150,7 +150,7 @@ class LiquidEngineOperation(MotorOperation):
             d_t=d_t,
             R=self.motor.propellant.R_chamber,
             T0=self.motor.propellant.combustion_temperature,
-            V0=self.motor.thrust_chamber.combustion_chamber.empty_volume,
+            V0=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
             k=self.motor.propellant.chamber_gamma,
             m_dot_ox=m_dot_ox,

@@ -1,193 +1,67 @@
 import numpy as np
 
-from machwave.models.materials import Material
-from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.services.math.geometric import get_cylinder_volume
-
 
 class CombustionChamber:
+    """Geometry model of a cylindrical combustion-chamber."""
+
     def __init__(
         self,
-        inner_diameter: float,
-        outer_diameter: float,
-        liner: ThermalLiner,
-        length: float,
-        casing_material: Material,
-        bulkhead_material: Material,
+        casing_inner_diameter: float,
+        casing_outer_diameter: float,
+        internal_length: float,
+        thermal_liner_thickness: float = 0.0,
     ) -> None:
-        self.casing_inner_diameter = inner_diameter
-        self.outer_diameter = outer_diameter
-        self.liner = liner
-        self.length = length
-        self.casing_material = casing_material
-        self.bulkhead_material = bulkhead_material
+        """Create a new CombustionChamber instance.
+
+        Args:
+            casing_inner_diameter (float): Internal diameter (m).
+            casing_outer_diameter (float): Outer diameter (m).
+            internal_length (float): Distance from the combustion chamber inlet to the
+                nozzle inlet (m).
+            thermal_liner (float, None): Thermal liner object. Defaults to 0.0.
+        """
+        self.casing_inner_diameter = casing_inner_diameter
+        self.casing_outer_diameter = casing_outer_diameter
+        self.internal_length = internal_length
+        self.thermal_liner_thickness = thermal_liner_thickness
 
     @property
     def inner_diameter(self) -> float:
-        return self.casing_inner_diameter - 2 * self.liner.thickness
+        """
+        Returns:
+            float: Inner diameter of the combustion chamber (m).
+        """
+        return self.casing_inner_diameter - 2 * self.thermal_liner_thickness
+
+    @property
+    def outer_diameter(self) -> float:
+        """
+        Returns:
+            float: Outer diameter of the combustion chamber (m).
+        """
+        return self.casing_outer_diameter
 
     @property
     def inner_radius(self) -> float:
-        return self.inner_diameter / 2
+        """
+        Returns:
+            float: Inner radius of the combustion chamber (m).
+        """
+        return 0.5 * self.inner_diameter
 
     @property
     def outer_radius(self) -> float:
-        return self.outer_diameter / 2
+        """
+        Returns:
+            float: Outer radius of the combustion chamber (m).
+        """
+        return 0.5 * self.outer_radius
 
     @property
-    def casing_inner_radius(self) -> float:
-        return self.inner_diameter / 2
-
-    @property
-    def empty_volume(self) -> float:
-        return get_cylinder_volume(self.inner_diameter, self.length)
-
-    def get_casing_stress_theta(self, chamber_pressure: float) -> float:
-        return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-            * (1 + ((self.outer_radius**2) / (self.casing_inner_radius**2)))
-        )
-
-    def get_casing_stress_radius(self, chamber_pressure: float) -> float:
-        return (
-            (chamber_pressure * self.casing_inner_radius**2)
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-            * (1 - ((self.outer_radius) / (self.casing_inner_radius)) ** 2)
-        )
-
-    def get_casing_stress_z(self, chamber_pressure: float) -> float:
-        return (
-            2
-            * chamber_pressure
-            * self.casing_inner_radius**2
-            / (self.outer_radius**2 - self.casing_inner_radius**2)
-        )
-
-    def get_casing_safety_factor(self, chamber_pressure: float) -> float:
+    def internal_volume(self) -> float:
         """
-        Returns the thickness for a cylindrical pressure vessel, using
-        Von Misses criteria.
+        Returns:
+            float: Internal volume of the combustion chamber (m^3).
         """
-        casing_yield_strength = self.casing_material.yield_strength
-        max_chamber_pressure = chamber_pressure
-
-        gama_z = self.get_casing_stress_z(max_chamber_pressure)
-        gama_r = self.get_casing_stress_radius(max_chamber_pressure)
-        gama_theta = self.get_casing_stress_theta(max_chamber_pressure)
-
-        return casing_yield_strength / np.sqrt(
-            (
-                (gama_z - gama_r) ** 2
-                + (gama_r - gama_theta) ** 2
-                + (gama_theta - gama_z) ** 2
-            )
-            / 2
-        )
-
-
-class BoltedCombustionChamber(CombustionChamber):
-    def __init__(
-        self,
-        inner_diameter: float,
-        outer_diameter: float,
-        liner: ThermalLiner,
-        length: float,
-        casing_material: Material,
-        bulkhead_material: Material,
-        screw_material: Material,
-        max_screw_count: int,
-        screw_clearance_diameter: float,
-        screw_diameter: float,
-    ) -> None:
-        super().__init__(
-            inner_diameter,
-            outer_diameter,
-            liner,
-            length,
-            casing_material,
-            bulkhead_material,
-        )
-        self.screw_material = screw_material
-        self.max_screw_count = max_screw_count
-        self.screw_clearance_diameter = screw_clearance_diameter
-        self.screw_diameter = screw_diameter
-
-    def get_shear_area(self) -> float:
-        return (self.screw_diameter**2) * np.pi * 0.25
-
-    def get_tear_area(self, screw_count: int) -> float:
-        """
-        Calculates tear area for screw section.
-        """
-        return (
-            (np.pi * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2)))
-            / screw_count
-        ) - (
-            np.arcsin((self.screw_clearance_diameter / 2) / (self.inner_diameter / 2))
-        ) * 0.25 * ((self.outer_diameter**2) - (self.inner_diameter**2))
-
-    def get_compression_area(self) -> float:
-        return (
-            (self.outer_diameter - self.inner_diameter)
-            * self.screw_clearance_diameter
-            / 2
-        )
-
-    def get_force_on_each_fastener(
-        self, screw_count: int, chamber_pressure: float
-    ) -> float:
-        return (
-            chamber_pressure * (np.pi * (self.inner_diameter / 2) ** 2)
-        ) / screw_count
-
-    def get_optimal_fasteners(self, chamber_pressure: float):
-        max_screw_count = self.max_screw_count
-        casing_yield_strength = self.casing_material.yield_strength
-        screw_ultimate_strength = self.screw_material.ultimate_strength
-
-        shear_safety_factor = np.zeros(max_screw_count)
-        tear_safety_factor = np.zeros(max_screw_count)
-        compression_safety_factor = np.zeros(max_screw_count)
-
-        for screw_count in range(1, max_screw_count + 1):
-            shear_area = self.get_shear_area()
-            tear_area = self.get_tear_area(screw_count)
-            compression_area = self.get_compression_area()
-
-            force_on_each_fastener = self.get_force_on_each_fastener(
-                screw_count=screw_count, chamber_pressure=chamber_pressure
-            )
-
-            shear_stress = force_on_each_fastener / shear_area
-            shear_safety_factor[screw_count - 1] = (
-                screw_ultimate_strength / shear_stress
-            )
-
-            tear_stress = force_on_each_fastener / tear_area
-            tear_safety_factor[screw_count - 1] = (
-                casing_yield_strength / np.sqrt(3)
-            ) / tear_stress
-
-            compression_stress = force_on_each_fastener / compression_area
-            compression_safety_factor[screw_count - 1] = (
-                casing_yield_strength / compression_stress
-            )
-
-        fastener_safety_factor = np.vstack(
-            (
-                shear_safety_factor,
-                tear_safety_factor,
-                compression_safety_factor,
-            )
-        )
-        max_safety_factor_fastener = np.max(np.min(fastener_safety_factor, axis=0))
-        optimal_fasteners = np.argmax(np.min(fastener_safety_factor, axis=0))
-
-        return (
-            optimal_fasteners,
-            max_safety_factor_fastener,
-            shear_safety_factor,
-            tear_safety_factor,
-            compression_safety_factor,
-        )
+        r = self.inner_radius
+        return np.pi * r * r * self.internal_length
