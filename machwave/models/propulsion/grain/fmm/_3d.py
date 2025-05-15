@@ -4,12 +4,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment3D
-from .base import FMMGrainSegment
 from machwave.services.math.geometric import (
     get_circle_area,
     get_contours,
     get_length,
 )
+
+from .base import FMMGrainSegment
 
 
 class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):

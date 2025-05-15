@@ -65,8 +65,8 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
             volume.matrix.view(np.ndarray).transpose().astype(np.int_)
         )
 
-        assert (
-            voxel_map.shape == self.get_maps()[0].shape
-        ), "Generated map shape mismatch"
+        assert voxel_map.shape == self.get_maps()[0].shape, (
+            "Generated map shape mismatch"
+        )
 
         return voxel_map
