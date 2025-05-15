@@ -31,7 +31,9 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         Returns:
             Free chamber volume, in m^3
         """
-        return self.thrust_chamber.combustion_chamber.empty_volume - propellant_volume
+        return (
+            self.thrust_chamber.combustion_chamber.internal_volume - propellant_volume
+        )
 
     @property
     def initial_propellant_mass(self) -> float:
