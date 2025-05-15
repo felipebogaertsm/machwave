@@ -3,93 +3,79 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.models.materials import EPDM, Al6063T5, Steel
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.grain.geometries import BatesSegment
-from machwave.models.propulsion.motors import SolidMotor
-from machwave.models.propulsion.propellants.solid import KNSB_NAKKA
-from machwave.models.propulsion.thermals import ThermalLiner
-from machwave.models.propulsion.thrust_chamber import ThrustChamber
-from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
-    BoltedCombustionChamber,
-)
-from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
-from machwave.montecarlo import MonteCarloParameter, MonteCarloSimulation
-from machwave.simulations.internal_ballistics import (
-    InternalBallistics,
-    InternalBallisticsParams,
-)
+from machwave.services.decorators import timing
+from machwave.models import materials
+from machwave.models.propulsion import motors
+from machwave.models.propulsion import grain as grain_models
+from machwave.models.propulsion.grain import geometries as grain_geometries
+from machwave.models.propulsion.propellants import solid as solid_propellants
+from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
+from machwave.simulations import internal_ballistics
+from machwave import montecarlo
 
 
+@timing
 def main():
-    propellant = KNSB_NAKKA
+    propellant = solid_propellants.KNSB_NAKKA
 
-    grain = Grain()
+    grain = grain_models.Grain()
     for _ in range(4):
         grain.add_segment(
-            BatesSegment(
-                outer_diameter=MonteCarloParameter(0.115, tolerance=0.001),
-                core_diameter=MonteCarloParameter(0.045, tolerance=0.001),
-                length=MonteCarloParameter(0.200, tolerance=0.001),
-                spacing=MonteCarloParameter(0.010, tolerance=0.005),
+            grain_geometries.BatesSegment(
+                outer_diameter=montecarlo.MonteCarloParameter(0.115, tolerance=0.001),
+                core_diameter=montecarlo.MonteCarloParameter(0.045, tolerance=0.001),
+                length=montecarlo.MonteCarloParameter(0.200, tolerance=0.001),
+                spacing=montecarlo.MonteCarloParameter(0.010, tolerance=0.005),
             )
         )
     for _ in range(3):
         grain.add_segment(
-            BatesSegment(
-                outer_diameter=MonteCarloParameter(0.115, tolerance=0.001),
-                core_diameter=MonteCarloParameter(0.060, tolerance=0.001),
-                length=MonteCarloParameter(0.200, tolerance=0.001),
-                spacing=MonteCarloParameter(0.010, tolerance=0.005),
+            grain_geometries.BatesSegment(
+                outer_diameter=montecarlo.MonteCarloParameter(0.115, tolerance=0.001),
+                core_diameter=montecarlo.MonteCarloParameter(0.060, tolerance=0.001),
+                length=montecarlo.MonteCarloParameter(0.200, tolerance=0.001),
+                spacing=montecarlo.MonteCarloParameter(0.010, tolerance=0.005),
             )
         )
 
-    nozzle = Nozzle(
+    nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.080,
-        throat_diameter=MonteCarloParameter(0.037, tolerance=0.0005),
+        throat_diameter=montecarlo.MonteCarloParameter(0.037, tolerance=0.0005),
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
-        material=Steel(),
+        material=materials.Steel(),
     )
 
-    liner = ThermalLiner(thickness=2e-3, material=EPDM())
-
-    chamber = BoltedCombustionChamber(
-        inner_diameter=0.1282,
-        outer_diameter=0.1413,
-        liner=liner,
-        length=grain.total_length + 0.010,
-        casing_material=Al6063T5(),
-        bulkhead_material=Al6063T5(),
-        screw_material=Steel(),
-        max_screw_count=30,
-        screw_clearance_diameter=0.009,
-        screw_diameter=0.00675,
+    combustion_chamber = thrust_chamber_models.CombustionChamber(
+        casing_inner_diameter=0.1282,
+        casing_outer_diameter=0.1413,
+        thermal_liner_thickness=0.003,
+        internal_length=grain.total_length + 0.010,
     )
 
-    thrust_chamber = ThrustChamber(
+    thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
         dry_mass=21.013,
         nozzle=nozzle,
-        combustion_chamber=chamber,
+        combustion_chamber=combustion_chamber,
     )
 
-    motor = SolidMotor(
+    motor = motors.SolidMotor(
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,
     )
 
-    ib_params = InternalBallisticsParams(
+    ib_params = internal_ballistics.InternalBallisticsParams(
         d_t=0.01,
         external_pressure=1e5,
         igniter_pressure=1e6,
     )
 
-    mc = MonteCarloSimulation(
+    mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
         100,
-        InternalBallistics,
+        internal_ballistics.InternalBallistics,
     )
     mc.run()
     mc.plot_histogram(1, "total_impulse", "Total Impulse (N·s)")

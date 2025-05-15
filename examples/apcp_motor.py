@@ -53,7 +53,7 @@ def main():
         internal_length=grain.total_length + 0.01,
     )
 
-    thrust_chamber = thrust_chamber_models.ThrustChamber(
+    thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
         dry_mass=6.0,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,

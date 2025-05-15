@@ -1,3 +1,5 @@
+import abc
+
 from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
     CombustionChamber,
 )
@@ -5,7 +7,7 @@ from machwave.models.propulsion.thrust_chamber.injector import BipropellantInjec
 from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 
 
-class ThrustChamber:
+class ThrustChamber(abc.ABC):
     """
     Represents the thrust chamber assembly of a liquid rocket engine.
     ThrustChamber acts as a coordinating layer that ties these elements together.
