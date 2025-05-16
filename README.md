@@ -34,3 +34,11 @@ An **import permission matrix** describes which modules can import from one anot
 | **montecarlo**  |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✗     |  ✓  |     ✗    |
 | **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
 | **services**    |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✓     |  ✓  |     ✗    |
+
+# 2. Simulations
+
+Machwave currently supports internal ballistics simulations for solid motors and liquid engines and point-mass trajectory simulations.
+
+Simulation classes receive the models to be simulated (rockets, motors, and/or engines) and a SimulationParams class instance, specific for each simulation type.
+
+Internally, one or more Operations class is instantiated to handle the simulation states. Inside Operations is where the time-history arrays are stored, such as thrust, altitude, chamber pressure, and others.
