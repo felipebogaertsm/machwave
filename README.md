@@ -35,7 +35,11 @@ An **import permission matrix** describes which modules can import from one anot
 | **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
 | **services**    |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✓     |  ✓  |     ✗    |
 
-# 2. Simulations
+# 2. Models
+
+Models are object representations of physical devices or phenomena. They represent things such as a rocket's fuselage, a motor/engine nozzle, a combustion chamber, and more.
+
+# 3. Simulations
 
 Machwave currently supports internal ballistics simulations for solid motors and liquid engines and point-mass trajectory simulations.
 
