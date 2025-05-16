@@ -6,12 +6,12 @@ from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
-from machwave.services.math.geometric import (
+from machwave.core.math.geometric import (
     get_circle_area,
     get_contours,
     get_length,
 )
+from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 
 from .base import FMMGrainSegment
 
@@ -70,7 +70,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Each contour is typically an (N,2) array of (row, col) points.
         """
         map_dist = self.normalize(web_distance)
-        # get_contours is imported from machwave.services.math.geometric
+        # get_contours is imported from machwave.core.math.geometric
         return get_contours(self.get_regression_map(), map_dist)
 
     def get_port_area(self, web_distance: float) -> float:

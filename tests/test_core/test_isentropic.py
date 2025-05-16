@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from machwave.services.flow.isentropic import (
+from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_divergent_correction_factor,
     get_exit_mach,
