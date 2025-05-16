@@ -10,7 +10,7 @@ from machwave.core.flow.isentropic import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from machwave.solvers.odes import rk4th_ode_solver
+from machwave.math.rk4s import rk4th_ode_solver
 
 
 class LiquidEngineOperation(MotorOperation):
