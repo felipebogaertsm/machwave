@@ -1,7 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
 
-from machwave.services.numpy import replace_array_values
+from machwave.common.arrays import replace_array_values
 
 
 def _create_plot_2d_frame(

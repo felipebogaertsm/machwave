@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.optimize
 
-from machwave.services.math.geometric import get_circle_area
+from machwave.core.math.geometric import get_circle_area
 
 
 def get_critical_pressure_ratio(k_mix: float) -> float:

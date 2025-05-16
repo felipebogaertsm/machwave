@@ -6,7 +6,7 @@ and loads for bolted joints in plates and cylinders.
 
 import numpy as np
 
-from machwave.services.math.geometric import get_circle_area
+from machwave.core.math.geometric import get_circle_area
 
 """
 Areas to calculate stress and load:

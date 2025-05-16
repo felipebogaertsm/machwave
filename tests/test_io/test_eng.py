@@ -46,7 +46,7 @@ Requirements for an .eng file:
 import numpy as np
 import pytest
 
-from machwave.services.export_formats import generate_eng_file_content
+from machwave.io.eng import generate_eng_file_content
 
 
 @pytest.fixture

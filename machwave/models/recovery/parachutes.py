@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from machwave.services.math.geometric import (
+from machwave.core.math.geometric import (
     get_circle_area,
     get_torus_area,
 )

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from machwave.services.decorators import validate_assertions
+from machwave.common.decorators import validate_assertions
 
 
 class GrainGeometryError(Exception):
