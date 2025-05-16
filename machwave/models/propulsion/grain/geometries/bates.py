@@ -1,11 +1,11 @@
 import numpy as np
 
+from machwave.common.decorators import validate_assertions
 from machwave.core.math.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
 )
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
-from machwave.common.decorators import validate_assertions
 
 
 class BatesSegment(GrainSegment2D):

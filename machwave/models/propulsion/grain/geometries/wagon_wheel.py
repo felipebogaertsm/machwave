@@ -1,8 +1,8 @@
 import numpy as np
 
+from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
-from machwave.common.decorators import validate_assertions
 
 
 class WagonWheelGrainSegment(FMMGrainSegment2D):

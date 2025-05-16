@@ -1,5 +1,6 @@
 import numpy as np
 
+from machwave.core.des import compute_chamber_pressure_mass_balance_lre
 from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
@@ -10,7 +11,6 @@ from machwave.core.flow.isentropic import (
 from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.propulsion.motors import LiquidEngine
 from machwave.operations.internal_ballistics.base import MotorOperation
-from machwave.services.equations import solve_pressure_fed_lre_chamber_pressure
 
 
 class LiquidEngineOperation(MotorOperation):
@@ -146,7 +146,7 @@ class LiquidEngineOperation(MotorOperation):
     ) -> float:
         return rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
-            equation=solve_pressure_fed_lre_chamber_pressure,
+            equation=compute_chamber_pressure_mass_balance_lre,
             d_t=d_t,
             R=self.motor.propellant.R_chamber,
             T0=self.motor.propellant.combustion_temperature,
