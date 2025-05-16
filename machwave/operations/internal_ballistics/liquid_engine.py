@@ -7,7 +7,7 @@ from machwave.core.flow.isentropic import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from machwave.math.rk4s import rk4th_ode_solver
+from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.propulsion.motors import LiquidEngine
 from machwave.operations.internal_ballistics.base import MotorOperation
 from machwave.services.equations import solve_pressure_fed_lre_chamber_pressure

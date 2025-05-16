@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.math.rk4s import rk4th_ode_solver
+from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics.base import BallisticOperation
