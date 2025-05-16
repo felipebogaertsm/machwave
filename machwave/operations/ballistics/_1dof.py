@@ -1,10 +1,10 @@
 import numpy as np
 
+from machwave.core.des import compute_point_mass_trajectory
 from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.operations.ballistics.base import BallisticOperation
-from machwave.services.equations import ballistics_ode
 
 
 class Ballistic1DOperation(BallisticOperation):
@@ -94,7 +94,9 @@ class Ballistic1DOperation(BallisticOperation):
         self._update_atmosphere(altitude)
         self._update_vehicle_mass(propellant_mass)
         drag = self._compute_drag()
-        y_new, v_new, a_new = self._solve_ballistics_ode(thrust, drag, d_t)
+        y_new, v_new, a_new = self._solve_compute_point_mass_trajectory(
+            thrust, drag, d_t
+        )
         self._append_flight_states(y_new, v_new, a_new)
         self._update_mach_and_pressure(altitude)
         self._check_rail_exit()
@@ -122,11 +124,13 @@ class Ballistic1DOperation(BallisticOperation):
         )
         return 0.5 * rho * (fus_area * fus_cd + rec_area * rec_cd)
 
-    def _solve_ballistics_ode(self, thrust: float, drag: float, d_t: float):
+    def _solve_compute_point_mass_trajectory(
+        self, thrust: float, drag: float, d_t: float
+    ):
         vars0 = {"y": self.y[-1], "v": self.v[-1]}
         results = rk4th_ode_solver(
             variables=vars0,
-            equation=ballistics_ode,
+            equation=compute_point_mass_trajectory,
             d_t=d_t,
             T=thrust,
             D=drag,

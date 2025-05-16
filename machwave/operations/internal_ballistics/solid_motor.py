@@ -4,6 +4,7 @@ from machwave.core.conversions import (
     convert_mass_flux_metric_to_imperial,
     convert_pa_to_psi,
 )
+from machwave.core.des import compute_chamber_pressure_mass_balance_srm
 from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
@@ -15,7 +16,6 @@ from machwave.core.flow.isentropic import (
 from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.propulsion.motors import SolidMotor
 from machwave.operations.internal_ballistics.base import MotorOperation
-from machwave.services.equations import solve_cp_seidel
 
 
 class SolidMotorOperation(MotorOperation):
@@ -111,7 +111,7 @@ class SolidMotorOperation(MotorOperation):
     def _compute_pressure(self, d_t: float, P_ext: float) -> None:
         new_P = rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
-            equation=solve_cp_seidel,
+            equation=compute_chamber_pressure_mass_balance_srm,
             d_t=d_t,
             Pe=P_ext,
             Ab=self.burn_area[-1],

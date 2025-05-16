@@ -4,13 +4,13 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from machwave import montecarlo
+from machwave.common.decorators import timing
 from machwave.models import materials
 from machwave.models.propulsion import grain as grain_models
 from machwave.models.propulsion import motors
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.propellants import solid as solid_propellants
-from machwave.common.decorators import timing
 from machwave.simulations import internal_ballistics
 
 
