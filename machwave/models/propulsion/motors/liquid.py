@@ -3,7 +3,7 @@ import numpy as np
 from machwave.models.propulsion.feed_systems.base import FeedSystem
 from machwave.models.propulsion.propellants.biliquid import BiliquidPropellant
 from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
-from machwave.services.flow.isentropic import get_ideal_thrust_coefficient
+from machwave.core.flow.isentropic import get_ideal_thrust_coefficient
 
 from .base import Motor
 
