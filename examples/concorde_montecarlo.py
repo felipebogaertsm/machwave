@@ -13,7 +13,7 @@ from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.propellants import solid as solid_propellants
 from machwave.models.recovery import events, parachutes
-from machwave.services.decorators import timing
+from machwave.common.decorators import timing
 from machwave.simulations import internal_balistics_coupled
 
 

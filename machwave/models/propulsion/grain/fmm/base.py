@@ -5,7 +5,7 @@ import skfmm
 from numpy.typing import NDArray
 
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment
-from machwave.services.decorators import validate_assertions
+from machwave.common.decorators import validate_assertions
 
 
 class FMMGrainSegment(GrainSegment, ABC):
