@@ -7,11 +7,13 @@ Machwave is an all-in-one Python package built for simulating rocket engines and
 
 ## 1.1. Modules
 
-Machwave contains 6 modules in its source folder. They are as follow:
-
-1. Models: contains classes used to model physical systems. I.e., grain configurations, propellants, motors/engines, parachutes, etc.
-2. Montecarlo: contains classes used in Monte Carlo simulations.
-3. Operations: contains operation classes, which represent simulation states.
-4. Services: service functions.
-5. Simulations: contains simulation classes, which execute the simulation loop.
-6. Solvers: solver functions, like ODEs or integrators.
+| Topic | Path | Purpose |
+| -------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Core math & physics**    | `machwave.core`        | Pure, side-effect-free formulas & algorithms (`flow`, `math`, `structural`, `conversions`, `des`). |
+| **Domain models**          | `machwave.models`      | Data-rich objects that describe reality—materials, propellants, motors, grain geometry, rockets, atmosphere, recovery. |
+| **State snapshots**        | `machwave.operations`  | Immutable records of simulation state (internal-ballistics steps, flight 1-DoF states, etc.). |
+| **Simulation engines**     | `machwave.simulations` | Time-loop drivers that orchestrate models & produce operation streams; includes factory helpers. |
+| **Monte-Carlo strategies** | `machwave.montecarlo`  | Runs Monte Carlos simulations. |
+| **File I/O**               | `machwave.io`          | Gateways for external formats (e.g., `eng.py` to export RASP *.eng* thrust files). |
+| **User-facing services**   | `machwave.services`    | Presentation & convenience: plotting helpers under `services.plots`. |
+| **Utility helpers**        | `machwave.common`      | Small, generic helpers (array ops, decorators, misc generics) used by any layer. |
