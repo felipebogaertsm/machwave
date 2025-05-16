@@ -2,7 +2,7 @@ import numpy as np
 
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
-from machwave.services.decorators import validate_assertions
+from machwave.common.decorators import validate_assertions
 
 
 class RodAndTubeGrainSegment(FMMGrainSegment2D):
