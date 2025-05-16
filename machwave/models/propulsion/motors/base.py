@@ -3,9 +3,9 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
+from machwave.core.flow.isentropic import get_thrust_from_cf
 from machwave.models.propulsion.propellants import Propellant
 from machwave.models.propulsion.thrust_chamber import ThrustChamber
-from machwave.core.flow.isentropic import get_thrust_from_cf
 
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
