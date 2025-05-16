@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
+from machwave.core.math.geometric import get_circle_area
 from machwave.models.rocket import (
     DragCoefficientTypeError,
     Fuselage,
 )
-from machwave.core.math.geometric import get_circle_area
 
 
 def test_frontal_area_calculation():

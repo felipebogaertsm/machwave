@@ -1,5 +1,5 @@
-from machwave.models.propulsion.feed_systems.tanks import Tank
 from machwave.core.flow.incompressible import mass_flow_orifice
+from machwave.models.propulsion.feed_systems.tanks import Tank
 
 from .base import FeedSystem
 

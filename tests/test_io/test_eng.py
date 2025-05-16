@@ -126,9 +126,9 @@ def test_eng_data_format(payload_data):
     for line in data_lines:
         time_value, thrust_value = line.split()
         assert len(time_value.split(".")[1]) == 2, "Time must have two decimal places."
-        assert (
-            len(thrust_value.split(".")) == 1
-        ), "Thrust must have zero decimal places."
+        assert len(thrust_value.split(".")) == 1, (
+            "Thrust must have zero decimal places."
+        )
 
 
 def test_eng_data_values(payload_data):
@@ -165,9 +165,9 @@ def test_eng_data_values(payload_data):
 
     # Ensure time is increasing and starts from 0
     assert times[0] == 0, "Time must start from 0."
-    assert all(
-        t2 > t1 for t1, t2 in zip(times, times[1:])
-    ), "Time must be strictly increasing."
+    assert all(t2 > t1 for t1, t2 in zip(times, times[1:])), (
+        "Time must be strictly increasing."
+    )
 
     # Ensure thrust values are non-negative
     assert all(t >= 0 for t in thrusts), "Thrust must be non-negative."

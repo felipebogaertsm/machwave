@@ -6,12 +6,12 @@ from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 from machwave.core.math.geometric import (
     get_circle_area,
     get_contours,
     get_length,
 )
+from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 
 from .base import FMMGrainSegment
 

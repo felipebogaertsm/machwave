@@ -1,8 +1,5 @@
 import numpy as np
 
-from machwave.models.propulsion.motors import LiquidEngine
-from machwave.operations.internal_ballistics.base import MotorOperation
-from machwave.services.equations import solve_pressure_fed_lre_chamber_pressure
 from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
@@ -11,6 +8,9 @@ from machwave.core.flow.isentropic import (
     is_flow_choked,
 )
 from machwave.math.rk4s import rk4th_ode_solver
+from machwave.models.propulsion.motors import LiquidEngine
+from machwave.operations.internal_ballistics.base import MotorOperation
+from machwave.services.equations import solve_pressure_fed_lre_chamber_pressure
 
 
 class LiquidEngineOperation(MotorOperation):
