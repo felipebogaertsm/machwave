@@ -12,10 +12,11 @@ Machwave is a Python library for modelling solid rocket motors, liquid rocket en
   - Transient mass-balance chamber pressure calculations
   - Supports multiple types of pressure feed systems
   - High-fidelity propellant models with RocketCEA
+- Point-mass trajectory simulation
 - Monte Carlo simulations
-  - All simulations can be executed through the Monte Carlo method
+  - All previous simulations can be executed through the Monte Carlo method
   - Any parameter can be randomized
-  - Simulation analysis tools built-in
+  - Simulation analysis tooling built-in
 
 # Modules
 
