@@ -3,9 +3,9 @@ from abc import ABC
 import numpy as np
 import trimesh
 
+from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment3D
-from machwave.services.decorators import validate_assertions
 
 
 class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):

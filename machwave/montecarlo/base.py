@@ -6,8 +6,8 @@ from typing import Any
 import numpy as np
 import plotly.graph_objects as go
 
+from machwave.common.generic import obtain_attributes_from_object
 from machwave.montecarlo.random import get_random_generator
-from machwave.services.common import obtain_attributes_from_object
 from machwave.simulations import Simulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
