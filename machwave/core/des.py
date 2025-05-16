@@ -1,6 +1,6 @@
 """
 This module groups pure functions that return the right-hand side of ODEs used
-throughout Machwave.
+throughout Machwave. DEs stand for differential equations.
 
 They are intentionally *stateless* and side-effect-free so that any numerical
 integrator (RK4, RK45, implicit Euler, JAX-based solvers, etc.) can consume
