@@ -2,12 +2,12 @@ import numpy as np
 
 from machwave.models.propulsion.motors import SolidMotor
 from machwave.operations.internal_ballistics.base import MotorOperation
-from machwave.services.conversions import (
+from machwave.core.conversions import (
     convert_mass_flux_metric_to_imperial,
     convert_pa_to_psi,
 )
 from machwave.services.equations import solve_cp_seidel
-from machwave.services.flow.isentropic import (
+from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
     get_operational_correction_factors,

@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.services.math.geometric import get_circle_area
+from machwave.core.math.geometric import get_circle_area
 
 
 class DragCoefficientTypeError(Exception):

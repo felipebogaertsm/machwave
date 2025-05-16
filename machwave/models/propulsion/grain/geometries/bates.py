@@ -2,7 +2,7 @@ import numpy as np
 
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 from machwave.services.decorators import validate_assertions
-from machwave.services.math.geometric import (
+from machwave.core.math.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
 )

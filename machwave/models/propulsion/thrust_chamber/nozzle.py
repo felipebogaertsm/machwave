@@ -1,9 +1,9 @@
 import numpy as np
 
-from machwave.services.flow.isentropic import (
+from machwave.core.flow.isentropic import (
     get_divergent_correction_factor,
 )
-from machwave.services.math.geometric import get_circle_area
+from machwave.core.math.geometric import get_circle_area
 
 
 class Nozzle:

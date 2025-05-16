@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.services.conversions import (
+from machwave.core.conversions import (
     convert_mass_flux_metric_to_imperial,
     convert_mpa_to_pa,
     convert_pa_to_mpa,

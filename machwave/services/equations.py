@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from machwave.services.flow.isentropic import get_critical_pressure_ratio
+from machwave.core.flow.isentropic import get_critical_pressure_ratio
 
 
 def solve_cp_seidel(
