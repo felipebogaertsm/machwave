@@ -17,3 +17,20 @@ Machwave is an all-in-one Python package built for simulating rocket engines and
 | **File I/O**               | `machwave.io`          | Gateways for external formats (e.g., `eng.py` to export RASP *.eng* thrust files). |
 | **User-facing services**   | `machwave.services`    | Presentation & convenience: plotting helpers under `services.plots`. |
 | **Utility helpers**        | `machwave.common`      | Small, generic helpers (array ops, decorators, misc generics) used by any layer. |
+
+An **import permission matrix** describes which modules can import from one another inside the application. Rules of thumb:
+
+- Arrows always point outward; a layer may only import the ones marked ✓ in its row.
+- No layer ever imports inward (up the column).
+- services is the outer facade - everything can be used there; common is the innermost helper layer - nothing else is imported by it.
+
+| *From / To*     | common | core | models | operations | simulations | montecarlo |  io | services |
+| --------------- | :----: | :--: | :----: | :--------: | :---------: | :--------: | :-: | :------: |
+| **common**      |    ✗   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **core**        |    ✓   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **models**      |    ✓   |   ✓  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **operations**  |    ✓   |   ✓  |    ✓   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **simulations** |    ✓   |   ✓  |    ✓   |      ✓     |      ✗      |      ✗     |  ✓  |     ✗    |
+| **montecarlo**  |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✗     |  ✓  |     ✗    |
+| **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
+| **services**    |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✓     |  ✓  |     ✗    |
