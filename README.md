@@ -1,46 +1,66 @@
 # Machwave
 
-## Written by: Felipe Bogaerts de Mattos
+Machwave is a Python library for modelling solid rocket motors, liquid rocket engines, and whole vehicles, then running high-fidelity internal-ballistics and point-mass flight simulations—all with a clean, layered architecture.
 
-## Created on August, 2020
+# Main features
 
-Machwave is a Python package that helps engineers design rockets, rocket motors and rocket engines with efficiency and precision.
+- Transient Solid Rocket Motor simulation
+  - Transient mass-balance chamber pressure calculations
+  - Wide variety of grain geometries and configurations
+  - Calculated correction factors
+- Transient Liquid Rocket Engine simulation (beta)
+  - Transient mass-balance chamber pressure calculations
+  - Supports multiple types of pressure feed systems
+  - High-fidelity propellant models with RocketCEA
+- Point-mass trajectory simulation
+- Monte Carlo simulations
+  - All previous simulations can be executed through the Monte Carlo method
+  - Any parameter can be randomized
+  - Simulation analysis tooling built-in
 
-# Models and simulations
+# Modules
 
-The following assertions were taken into consideration:
+| Topic | Path | Purpose |
+| -------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Core math & physics**    | `machwave.core`        | Pure, side-effect-free formulas & algorithms (`flow`, `math`, `structural`, `conversions`, `des`). |
+| **Domain models**          | `machwave.models`      | Data-rich objects that describe reality—materials, propellants, motors, grain geometry, rockets, atmosphere, recovery. |
+| **State snapshots**        | `machwave.operations`  | Immutable records of simulation state (internal-ballistics steps, flight 1-DoF states, etc.). |
+| **Simulation engines**     | `machwave.simulations` | Time-loop drivers that orchestrate models & produce operation streams; includes factory helpers. |
+| **Monte-Carlo strategies** | `machwave.montecarlo`  | Runs Monte Carlos simulations. |
+| **File I/O**               | `machwave.io`          | Gateways for external formats (e.g., `eng.py` to export RASP *.eng* thrust files). |
+| **User-facing services**   | `machwave.services`    | Presentation & convenience: plotting helpers under `services.plots`. |
+| **Utility helpers**        | `machwave.common`      | Small, generic helpers (array ops, decorators, misc generics) used by any layer. |
 
-- Propellant consisting of 2D BATES grain segments
-- Cylindrical combustion chamber
-- Thrust chamber composed of a simple flat end cap, conical nozzle and tubular casing
-- Isentropic flow through nozzle
-- Non-submerged nozzle
-- Structure with screws as fasteners of both end cap and nozzle
+An **import permission matrix** describes which modules can import from one another inside the application. Rules of thumb:
 
-Correction factors applied:
+- Arrows always point outward; a layer may only import the ones marked ✓ in its row.
+- No layer ever imports inward (up the column).
+- services is the outer facade - everything can be used there; common is the innermost helper layer - nothing else is imported by it.
 
-- Divergent CD nozzle angle
-- Two phase flow
-- Kinetic losses
-- Boundary layer losses
+| *From / To*     | common | core | models | operations | simulations | montecarlo |  io | services |
+| --------------- | :----: | :--: | :----: | :--------: | :---------: | :--------: | :-: | :------: |
+| **common**      |    ✗   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **core**        |    ✓   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **models**      |    ✓   |   ✓  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **operations**  |    ✓   |   ✓  |    ✓   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **simulations** |    ✓   |   ✓  |    ✓   |      ✓     |      ✗      |      ✗     |  ✓  |     ✗    |
+| **montecarlo**  |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✗     |  ✓  |     ✗    |
+| **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
+| **services**    |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✓     |  ✓  |     ✗    |
 
-## Propellants
+# Main components
 
-Propellant data was obtained from ProPEP3. This software has been used in several applications/projects and it is capable of delivering reliable information on the chemical characteristics of a specific propellant composition. Burn rate data is obtained from experiments conducted by Richard Nakka and Magnus Gudnason.
+## Models
 
-### Supported propellants
+Models contain data-rich Python classes that mirror physical hardware or environments. Each model encapsulates state and invariants only (no time marching, no plotting).
 
-- KNDX (Nakka burn rate data)
-- KNSB-NAKKA (Nakka burn rate data) and KNSB (Magnus Gudnason burn rate data)
-- KNSU (Nakka burn rate data)
-- KNER (Magnus Gudnason burn rate data)
+## Simulations
 
-# References
+Machwave currently supports internal ballistics simulations for solid motors and liquid engines and point-mass trajectory simulations.
 
-## a015140
+A simulation class is the engine that drives the time loop.
+It receives:
+- the models to be simulated (rocket, motor/engine, etc.);
+- a SimulationParams instance tailored to that simulation type.
 
-Correction factors.
-
-## Hans Seidel's Chamber Pressure article
-
-Chamber Pressure equation.
+During execution the solver instantiates one or more Operation objects that hold the evolving state arrays - chamber pressure, thrust, altitude, and so on, providing a clean, immutable record of the run.
