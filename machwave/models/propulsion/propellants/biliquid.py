@@ -1,7 +1,7 @@
 import scipy.constants
 from rocketcea.cea_obj import CEA_Obj
 
-from machwave.services.conversions import (
+from machwave.core.conversions import (
     convert_lbft3_to_kgm3,
     convert_pa_to_psi,
     convert_rankine_to_kelvin,
