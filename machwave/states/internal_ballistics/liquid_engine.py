@@ -10,12 +10,12 @@ from machwave.core.flow.isentropic import (
 )
 from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.propulsion.motors import LiquidEngine
-from machwave.operations.internal_ballistics.base import MotorOperation
+from machwave.states.internal_ballistics.base import MotorState
 
 
-class LiquidEngineOperation(MotorOperation):
+class LiquidEngineState(MotorState):
     """
-    Operation for a Liquid Rocket Engine.
+    State for a Liquid Rocket Engine.
 
     The variable names correspond to what they are commonly referred to in books and papers related to
     Rocket Propulsion. Therefore, PEP8's snake_case will not be followed rigorously.

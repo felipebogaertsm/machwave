@@ -70,10 +70,10 @@ def main():
     )
 
     simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
-    (time, ib_operation) = simulation.run()
+    (time, ib_state) = simulation.run()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        time, ib_operation.thrust, ib_operation.P_0
+        time, ib_state.thrust, ib_state.P_0
     ).show()
 
     simulation.print_results()

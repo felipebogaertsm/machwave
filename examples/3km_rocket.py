@@ -117,13 +117,13 @@ def main():
         rocket=rocket, params=params
     )
 
-    (ib_operation, ballistic_operation) = simulation.run()
+    (ib_state, ballistic_state) = simulation.run()
 
     ballistics_plots.ballistics_plots(
-        ballistic_operation.t,
-        ballistic_operation.acceleration,
-        ballistic_operation.v,
-        ballistic_operation.y,
+        ballistic_state.t,
+        ballistic_state.acceleration,
+        ballistic_state.v,
+        ballistic_state.y,
     ).show()
 
     simulation.print_results()

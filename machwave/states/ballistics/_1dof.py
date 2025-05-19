@@ -4,11 +4,11 @@ from machwave.core.des import compute_point_mass_trajectory
 from machwave.core.math.rk4 import rk4th_ode_solver
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
-from machwave.operations.ballistics.base import BallisticOperation
+from machwave.states.ballistics.base import BallisticState
 
 
-class Ballistic1DOperation(BallisticOperation):
-    """Stores and processes a ballistics operation (aka flight)."""
+class Ballistic1DState(BallisticState):
+    """Stores and processes a ballistics state (aka flight)."""
 
     def __init__(
         self,
@@ -20,7 +20,7 @@ class Ballistic1DOperation(BallisticOperation):
         initial_elevation_amsl: float = 0,
     ) -> None:
         """
-        Initialize the attributes for the ballistics operation.
+        Initialize the attributes for the ballistics state.
 
         Args:
             rocket (Rocket): The rocket used for the operation.
