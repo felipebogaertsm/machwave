@@ -1,5 +1,5 @@
 """
-Olympus is an O-class solid rocket motor designed during the LASC Cooperation
+Olympus is an O-class solid rocket motor designed during the LASC Costate
 Program (2020-2022). It was originally intended for a 5km-apogee rocket but
 never used in flight. The motor was successfully tested on July 2, 2022, and
 at the time, it was the largest experimental motor ever built in Latin America.
@@ -118,15 +118,15 @@ def main():
     simulation = internal_balistics_coupled.InternalBallisticsCoupled(
         rocket=rocket, params=params
     )
-    ib_operation, ballistic_operation = simulation.run()
+    ib_state, ballistic_state = simulation.run()
 
     simulation.print_results()
 
     ballistics_plots.ballistics_plots(
-        ballistic_operation.t,
-        ballistic_operation.acceleration,
-        ballistic_operation.v,
-        ballistic_operation.y,
+        ballistic_state.t,
+        ballistic_state.acceleration,
+        ballistic_state.v,
+        ballistic_state.y,
     ).show()
 
 

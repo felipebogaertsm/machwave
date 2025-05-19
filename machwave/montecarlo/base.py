@@ -203,28 +203,28 @@ class MonteCarloSimulation:
 
     def retrieve_values_from_result(
         self,
-        operation_index: int,
+        state_index: int,
         property: str,
     ) -> np.ndarray:
         """
         Retrieves a specific property from the simulation results.
 
         Args:
-            operation_index: Index of the operation/result to retrieve the
+            state_index: Index of the state/result to retrieve the
                 property from.
-            property: Name of the property or the attribute of the operation
+            property: Name of the property or the attribute of the state
                 to retrieve.
 
         Returns:
             Numpy array containing the values of the specified property.
         """
         return np.array(
-            [getattr(result[operation_index], property) for result in self.results]
+            [getattr(result[state_index], property) for result in self.results]
         )
 
     def plot_histogram(
         self,
-        operation_index: int,
+        state_index: int,
         property: str,
         x_axes_title: str = "x",
         *args,
@@ -234,8 +234,8 @@ class MonteCarloSimulation:
         Plots a histogram given a result index and the property name.
 
         Args:
-            operation_index: Index of the operation/result to plot.
-            property: Name of the property or the attribute of the operation
+            state_index: Index of the state/result to plot.
+            property: Name of the property or the attribute of the state
                 to plot.
             x_axes_title: Title of the x axes. By default, the property name
                 is used.
@@ -244,7 +244,7 @@ class MonteCarloSimulation:
                 plot.
         """
         values = self.retrieve_values_from_result(
-            operation_index=operation_index, property=property
+            state_index=state_index, property=property
         )
 
         fig = go.Figure()

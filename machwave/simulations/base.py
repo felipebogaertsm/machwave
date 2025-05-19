@@ -21,7 +21,7 @@ class Simulation(ABC):
     implement specific simulation logic.
 
     NOTE: Instances of this class should not store any simulation state.
-    Storing and analyzing simulation data should be done only by the Operation
+    Storing and analyzing simulation data should be done only by the State
     class.
 
     Attributes:
@@ -47,8 +47,8 @@ class Simulation(ABC):
         It typically contains a loop that iterates over time or distance.
 
         Returns:
-            list[Operation]: A list of Operation instances representing the
-            operations performed during the simulation.
+            list[State]: A list of State instances representing the
+            states performed during the simulation.
 
         """
         pass
@@ -57,7 +57,7 @@ class Simulation(ABC):
     def print_results(self, *args, **kwargs):
         """
         Prints the results of the simulation by calling the print_results
-        method on the Operation instances of the simulation.
+        method on the State instances of the simulation.
 
         Args:
             *args: Additional positional arguments.
