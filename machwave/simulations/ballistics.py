@@ -2,8 +2,8 @@ import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
-from machwave.operations.ballistics._1dof import Ballistic1DOperation
 from machwave.simulations.base import Simulation, SimulationParameters
+from machwave.states.ballistics._1dof import Ballistic1DState
 
 
 class BallisticSimulationParameters(SimulationParameters):
@@ -48,8 +48,7 @@ class BallisticSimulation(Simulation):
         atmosphere (Atmosphere): The atmosphere object.
         params (BallisticSimulationParameters): The simulation parameters.
         t (np.ndarray): Array of time values.
-        ballistic_operation (Ballistic1DOperation): The ballistic operation
-            object.
+        ballistic_state (Ballistic1DState): The ballistic state object.
     """
 
     def __init__(
@@ -75,7 +74,7 @@ class BallisticSimulation(Simulation):
         self.rocket = rocket
         self.atmosphere = atmosphere
         self.t = np.array([0])
-        self.ballistic_operation = None
+        self.ballistic_state = None
 
     def get_propellant_mass(self) -> np.ndarray:
         """
@@ -98,13 +97,13 @@ class BallisticSimulation(Simulation):
     def run(self) -> tuple:
         """
         Runs the main loop of the simulation, returning the time array and
-        the ballistic operation object.
+        the ballistic state object.
 
         Returns:
-            tuple[np.array, Ballistic1DOperation]: A tuple containing the time
-            array and the ballistic operation object.
+            tuple[np.array, Ballistic1DState]: A tuple containing the time
+            array and the ballistic state object.
         """
-        self.ballistic_operation = Ballistic1DOperation(
+        self.ballistic_state = Ballistic1DState(
             self.rocket,
             self.atmosphere,
             rail_length=self.params.rail_length,
@@ -117,7 +116,7 @@ class BallisticSimulation(Simulation):
 
         i = 0
 
-        while self.ballistic_operation.y[i] >= 0:
+        while self.ballistic_state.y[i] >= 0:
             self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
             thrust = np.interp(
@@ -128,7 +127,7 @@ class BallisticSimulation(Simulation):
                 right=0,
             )  # interpolating thrust with new time value
 
-            self.ballistic_operation.run_timestep(
+            self.ballistic_state.run_timestep(
                 np.interp(
                     self.t[-1],
                     self.params.time,
@@ -142,7 +141,7 @@ class BallisticSimulation(Simulation):
 
             i += 1
 
-        return (self.t, self.ballistic_operation)
+        return (self.t, self.ballistic_state)
 
     def print_results(self):
         """
@@ -150,7 +149,7 @@ class BallisticSimulation(Simulation):
         """
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
 
-        if self.ballistic_operation is not None:
-            self.ballistic_operation.print_results()
+        if self.ballistic_state is not None:
+            self.ballistic_state.print_results()
         else:
             print("Simulation not run yet. Try running the simulation first.")

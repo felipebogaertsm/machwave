@@ -12,10 +12,10 @@ import numpy as np
 
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
-from machwave.operations.ballistics._1dof import Ballistic1DOperation
-from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
-from machwave.simulations.factories import get_motor_operation_class
+from machwave.simulations.factories import get_motor_state_class
+from machwave.states.ballistics._1dof import Ballistic1DState
+from machwave.states.internal_ballistics import MotorState
 
 
 class InternalBallisticsCoupledParams(SimulationParameters):
@@ -57,8 +57,8 @@ class InternalBallisticsCoupled(Simulation):
         rocket (Rocket): The rocket object.
         params (InternalBallisticsCoupledParams): The simulation parameters.
         t (np.ndarray): Array of time values.
-        motor_operation (MotorOperation): The motor operation object.
-        ballistic_operation (Ballistic1DOperation): The ballistic operation object.
+        motor_state (MotorState): The motor state object.
+        ballistic_state (Ballistic1DState): The ballistic state object.
     """
 
     def __init__(
@@ -81,18 +81,18 @@ class InternalBallisticsCoupled(Simulation):
 
         self.rocket = rocket
         self.t = np.array([0])
-        self.motor_operation = None
-        self.ballistic_operation = None
+        self.motor_state = None
+        self.ballistic_state = None
 
-    def get_motor_operation(self) -> MotorOperation:
+    def get_motor_state(self) -> MotorState:
         """
-        Returns the motor operation object based on the type of the motor.
+        Returns the motor state object based on the type of the motor.
 
         Returns:
-            MotorOperation: The motor operation object.
+            MotorState: The motor state object.
         """
-        motor_operation_class = get_motor_operation_class(self.rocket.propulsion)
-        return motor_operation_class(
+        motor_state_class = get_motor_state_class(self.rocket.propulsion)
+        return motor_state_class(
             motor=self.rocket.propulsion,
             initial_pressure=self.params.igniter_pressure,
             initial_atmospheric_pressure=self.params.atmosphere.get_pressure(
@@ -102,14 +102,14 @@ class InternalBallisticsCoupled(Simulation):
 
     def run(self) -> tuple:
         """
-        Runs the main loop of the simulation, returning the motor operation
-        and ballistic operation objects as a list.
+        Runs the main loop of the simulation, returning the motor state
+        and ballistic state objects as a list.
 
         Returns:
-            A list containing the motor operation object and the ballistic operation object.
+            A list containing the motor state object and the ballistic state object.
         """
-        self.motor_operation = self.get_motor_operation()
-        self.ballistic_operation = Ballistic1DOperation(
+        self.motor_state = self.get_motor_state()
+        self.ballistic_state = Ballistic1DState(
             self.rocket,
             self.params.atmosphere,
             rail_length=self.params.rail_length,
@@ -120,16 +120,16 @@ class InternalBallisticsCoupled(Simulation):
 
         i = 0
 
-        while self.ballistic_operation.y[i] >= 0 or self.motor_operation.m_prop[-1] > 0:
+        while self.ballistic_state.y[i] >= 0 or self.motor_state.m_prop[-1] > 0:
             self.t = np.append(self.t, self.t[i] + self.params.d_t)  # new time value
 
-            if not self.motor_operation.end_thrust:
-                self.motor_operation.run_timestep(
+            if not self.motor_state.end_thrust:
+                self.motor_state.run_timestep(
                     self.params.d_t,
-                    self.ballistic_operation.P_ext[i],
+                    self.ballistic_state.P_ext[i],
                 )
-                propellant_mass = self.motor_operation.m_prop[i]
-                thrust = self.motor_operation.thrust[i]
+                propellant_mass = self.motor_state.m_prop[i]
+                thrust = self.motor_state.thrust[i]
                 d_t = self.params.d_t
             else:
                 propellant_mass = 0
@@ -137,24 +137,22 @@ class InternalBallisticsCoupled(Simulation):
                 d_t = self.params.d_t * self.params.dd_t
                 self.t[-1] = self.t[-2] + self.params.dd_t * self.params.d_t
 
-            self.ballistic_operation.run_timestep(propellant_mass, thrust, d_t)
+            self.ballistic_state.run_timestep(propellant_mass, thrust, d_t)
             i += 1
 
-        return (self.motor_operation, self.ballistic_operation)
+        return (self.motor_state, self.ballistic_state)
 
     def print_results(self) -> None:
         print("\nINTERNAL BALLISTICS COUPLED SIMULATION RESULTS")
 
-        if self.motor_operation is not None:
-            self.motor_operation.print_results()
+        if self.motor_state is not None:
+            self.motor_state.print_results()
         else:
-            print(
-                "No motor operation results available. Try running the simulation first."
-            )
+            print("No motor state results available. Try running the simulation first.")
 
-        if self.ballistic_operation is not None:
-            self.ballistic_operation.print_results()
+        if self.ballistic_state is not None:
+            self.ballistic_state.print_results()
         else:
             print(
-                "No ballistic operation results available. Try running the simulation first."
+                "No ballistic state results available. Try running the simulation first."
             )
