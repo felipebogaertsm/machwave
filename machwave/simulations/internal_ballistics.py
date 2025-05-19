@@ -1,9 +1,9 @@
 import numpy as np
 
 from machwave.models.propulsion.motors import Motor
-from machwave.operations.internal_ballistics import MotorOperation
 from machwave.simulations import Simulation, SimulationParameters
-from machwave.simulations.factories import get_motor_operation_class
+from machwave.simulations.factories import get_motor_state_class
+from machwave.states.internal_ballistics import MotorState
 
 
 class InternalBallisticsParams(SimulationParameters):
@@ -36,7 +36,7 @@ class InternalBallistics(Simulation):
         motor (Motor): The motor object.
         params (InternalBallisticsParams): The simulation parameters.
         t (np.ndarray): Array of time values.
-        motor_operation (MotorOperation | None): The motor operation object.
+        motor_state (MotorState | None): The motor state object.
     """
 
     def __init__(
@@ -48,47 +48,45 @@ class InternalBallistics(Simulation):
         self.motor: Motor = motor
         self.params: InternalBallisticsParams = params
         self.t: np.ndarray = np.array([0])
-        self.motor_operation: MotorOperation | None = None
+        self.motor_state: MotorState | None = None
 
-    def get_motor_operation(self) -> MotorOperation:
+    def get_motor_state(self) -> MotorState:
         """
-        Returns the motor operation object based on the type of the motor.
+        Returns the motor state object based on the type of the motor.
         """
-        motor_operation_class = get_motor_operation_class(self.motor)
-        return motor_operation_class(
+        motor_state_class = get_motor_state_class(self.motor)
+        return motor_state_class(
             motor=self.motor,
             initial_pressure=self.params.igniter_pressure,
             initial_atmospheric_pressure=self.params.external_pressure,
         )
 
-    def run(self) -> tuple[np.ndarray, MotorOperation]:
+    def run(self) -> tuple[np.ndarray, MotorState]:
         """
         Runs the main loop of the simulation, returning the time array and
-        the motor operation object.
+        the motor state object.
         """
-        self.motor_operation = self.get_motor_operation()
+        self.motor_state = self.get_motor_state()
 
         i = 0
-        while not self.motor_operation.end_thrust:
+        while not self.motor_state.end_thrust:
             self.t = np.append(self.t, self.t[i] + self.params.d_t)
 
-            self.motor_operation.run_timestep(
+            self.motor_state.run_timestep(
                 self.params.d_t,
                 self.params.external_pressure,
             )
             i += 1
 
-        return (self.t, self.motor_operation)
+        return (self.t, self.motor_state)
 
     def print_results(self) -> None:
         """
         Prints the results of the simulation.
         """
-        if self.motor_operation is None:
-            print(
-                "No motor operation results available. Try running the simulation first."
-            )
+        if self.motor_state is None:
+            print("No motor state results available. Try running the simulation first.")
             return
 
         print("\nINTERNAL BALLISTICS SIMULATION RESULTS")
-        self.motor_operation.print_results()
+        self.motor_state.print_results()

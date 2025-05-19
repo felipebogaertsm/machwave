@@ -1,31 +1,31 @@
 from machwave.models.propulsion.motors import LiquidEngine, Motor, SolidMotor
-from machwave.operations.internal_ballistics import (
-    LiquidEngineOperation,
-    MotorOperation,
-    SolidMotorOperation,
+from machwave.states.internal_ballistics import (
+    LiquidEngineState,
+    MotorState,
+    SolidMotorState,
 )
 
 
-def get_motor_operation_class(motor: Motor) -> type[MotorOperation]:
+def get_motor_state_class(motor: Motor) -> type[MotorState]:
     """
-    Returns the appropriate motor operation class based on the type of motor.
+    Returns the appropriate motor state class based on the type of motor.
 
     Args:
         motor (Motor): The motor object.
 
     Returns:
-        MotorOperation: The motor operation class.
+        MotorState: The motor state class.
 
     Raises:
         ValueError: If the motor type is not supported.
 
     Example:
         motor = SolidMotor(...)
-        motor_operation_class = get_motor_operation_class(motor)
+        motor_state_class = get_motor_state_class(motor)
     """
     if isinstance(motor, SolidMotor):
-        return SolidMotorOperation
+        return SolidMotorState
     if isinstance(motor, LiquidEngine):
-        return LiquidEngineOperation
+        return LiquidEngineState
     else:
         raise ValueError("Unsupported motor type.")

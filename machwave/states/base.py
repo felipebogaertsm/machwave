@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
 
-class Operation(ABC):
+class State(ABC):
     """
-    The Operation class:
+    The State class:
     - Stores simulation data
     - Iterates a simulation loop
     - Presents simulation data
@@ -21,7 +21,7 @@ class Operation(ABC):
     def run_timestep(self, *args, **kwargs):
         """
         Runs on every iteration of a simulation loop, incrementing results
-        and storing them in the Operation instance (self).
+        and storing them in the State instance (self).
         """
         pass
 

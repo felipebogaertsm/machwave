@@ -1,9 +1,9 @@
 from abc import abstractmethod
 
-from machwave.operations import Operation
+from machwave.states import State
 
 
-class BallisticOperation(Operation):
+class BallisticState(State):
     @property
     @abstractmethod
     def apogee(self) -> float:

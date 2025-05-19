@@ -24,8 +24,8 @@ Machwave is a Python library for modelling solid rocket motors, liquid rocket en
 | -------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **Core math & physics**    | `machwave.core`        | Pure, side-effect-free formulas & algorithms (`flow`, `math`, `structural`, `conversions`, `des`). |
 | **Domain models**          | `machwave.models`      | Data-rich objects that describe reality—materials, propellants, motors, grain geometry, rockets, atmosphere, recovery. |
-| **State snapshots**        | `machwave.operations`  | Immutable records of simulation state (internal-ballistics steps, flight 1-DoF states, etc.). |
-| **Simulation engines**     | `machwave.simulations` | Time-loop drivers that orchestrate models & produce operation streams; includes factory helpers. |
+| **Simulation states**        | `machwave.states`  | Immutable records of simulation state (internal-ballistics steps, flight 1-DoF states, etc.). |
+| **Simulation engines**     | `machwave.simulations` | Time-loop drivers that orchestrate models & produce state streams; includes factory helpers. |
 | **Monte-Carlo strategies** | `machwave.montecarlo`  | Runs Monte Carlos simulations. |
 | **File I/O**               | `machwave.io`          | Gateways for external formats (e.g., `eng.py` to export RASP *.eng* thrust files). |
 | **User-facing services**   | `machwave.services`    | Presentation & convenience: plotting helpers under `services.plots`. |
@@ -37,12 +37,12 @@ An **import permission matrix** describes which modules can import from one anot
 - No layer ever imports inward (up the column).
 - services is the outer facade - everything can be used there; common is the innermost helper layer - nothing else is imported by it.
 
-| *From / To*     | common | core | models | operations | simulations | montecarlo |  io | services |
+| *From / To*     | common | core | models | states | simulations | montecarlo |  io | services |
 | --------------- | :----: | :--: | :----: | :--------: | :---------: | :--------: | :-: | :------: |
 | **common**      |    ✗   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
 | **core**        |    ✓   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
 | **models**      |    ✓   |   ✓  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
-| **operations**  |    ✓   |   ✓  |    ✓   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
+| **states**  |    ✓   |   ✓  |    ✓   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
 | **simulations** |    ✓   |   ✓  |    ✓   |      ✓     |      ✗      |      ✗     |  ✓  |     ✗    |
 | **montecarlo**  |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✗     |  ✓  |     ✗    |
 | **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
@@ -63,4 +63,4 @@ It receives:
 - the models to be simulated (rocket, motor/engine, etc.);
 - a SimulationParams instance tailored to that simulation type.
 
-During execution the solver instantiates one or more Operation objects that hold the evolving state arrays - chamber pressure, thrust, altitude, and so on, providing a clean, immutable record of the run.
+During execution the solver instantiates one or more SimulationState objects that hold the evolving state arrays - chamber pressure, thrust, altitude, and so on, providing a clean, immutable record of the run.

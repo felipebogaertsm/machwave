@@ -229,7 +229,7 @@ def is_flow_choked(
 
 def get_total_impulse(average_thrust: float, thrust_time: float) -> float:
     """
-    Calculates the total impulse of the operation based on the average thrust and thrust time.
+    Calculates the total impulse of the state based on the average thrust and thrust time.
 
     Args:
         average_thrust (float): The average thrust.
@@ -246,7 +246,7 @@ def get_total_impulse(average_thrust: float, thrust_time: float) -> float:
 
 def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -> float:
     """
-    Calculates the specific impulse of the operation based on the total impulse and initial propellant mass.
+    Calculates the specific impulse of the state based on the total impulse and initial propellant mass.
 
     Args:
         total_impulse (float): The total impulse.

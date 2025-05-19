@@ -81,16 +81,16 @@ def main():
     )
     simulation = InternalBallistics(motor=lre, params=sim_params)
 
-    (time, ib_operation) = simulation.run()
+    (time, ib_state) = simulation.run()
 
     simulation.print_results()
-    thrust_pressure_plot(time, ib_operation.thrust, ib_operation.P_0).show()
+    thrust_pressure_plot(time, ib_state.thrust, ib_state.P_0).show()
     plot_bipropellant_tank_profiles(
         time,
-        ib_operation.oxidizer_tank_pressure,
-        ib_operation.fuel_tank_pressure,
-        ib_operation.oxidizer_mass,
-        ib_operation.fuel_mass,
+        ib_state.oxidizer_tank_pressure,
+        ib_state.fuel_tank_pressure,
+        ib_state.oxidizer_mass,
+        ib_state.fuel_mass,
     ).show()
 
 
