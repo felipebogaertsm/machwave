@@ -72,8 +72,8 @@ def get_kinetics_correction_factor(
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_boundary_layer_correction_factor(
-    chamber_pressure: float,
-    throat_diameter: float,
+    chamber_pressure_psi: float,
+    throat_diameter_inch: float,
     expansion_ratio: float,
     time: float,
     c_1: float,
@@ -106,8 +106,8 @@ def get_boundary_layer_correction_factor(
     C2 = 0.000000
 
     Args:
-        chamber_pressure (float): The chamber pressure in Pascals.
-        throat_diameter (float): The throat diameter in meters.
+        chamber_pressure_psi (float): The chamber pressure in psi.
+        throat_diameter_inch (float): The throat diameter in inches.
         expansion_ratio (float): The expansion ratio of the nozzle.
         time (float): The time in seconds.
         c_1 (float): Coefficient for the boundary layer correction factor.
@@ -115,9 +115,6 @@ def get_boundary_layer_correction_factor(
     Returns:
         float: The boundary layer correction factor.
     """
-    chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
-    throat_diameter_inch = conversions.convert_meter_to_inch(throat_diameter)
-
     term_1 = c_1 * (chamber_pressure_psi**0.8) / (throat_diameter_inch**0.2)
     term_2 = 1 + 2 * np.exp(
         (-c_2 * chamber_pressure_psi**0.8 * time) / (throat_diameter_inch**0.2)
@@ -127,13 +124,42 @@ def get_boundary_layer_correction_factor(
     return term_1 * term_2 * term_3
 
 
+def _get_two_phase_phase_loss_particle_size(
+    chamber_pressure_psi: float,
+    xi: float,
+    throat_diameter_inch: float,
+    characteristic_length_inch: float,
+) -> float:
+    """
+    Helper function to calculate the two-phase flow loss due to
+    particle size.
+
+    Args:
+        chamber_pressure_psi (float): The chamber pressure in psi.
+        xi (float): The mole fraction of the condensed phase.
+        throat_diameter_inch (float): The throat diameter in inches.
+        characteristic_length_inch (float): The characteristic length
+            in inches.
+
+    Returns:
+        float: The two-phase flow average particle size in micrometers.
+    """
+    return (
+        0.454
+        * chamber_pressure_psi ** (1 / 3)
+        * xi ** (1 / 3)
+        * (1 - np.exp(-0.004 * characteristic_length_inch))
+        * (1 + 0.045 * throat_diameter_inch)
+    )
+
+
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_two_phase_flow_correction_factor(
-    chamber_pressure: float,
+    chamber_pressure_psi: float,
     mole_fraction_of_condensed_phase: float,
-    particle_size: float,
     expansion_ratio: float,
-    throat_diameter: float,
+    throat_diameter_inch: float,
+    characteristic_length_inch: float,
 ) -> float:
     """
     Two-phase flow correction factor accounts for the decrement in
@@ -143,18 +169,22 @@ def get_two_phase_flow_correction_factor(
     Valid for solid, and hybrid propellants.
 
     Args:
-        chamber_pressure (float): The chamber pressure in Pascals.
+        chamber_pressure_psi (float): The chamber pressure in psi.
         mole_fraction_of_condensed_phase (float): The mole fraction of
             the condensed phase in moles / 100 gm.
-        particle_size (float): The particle size in meters.
         expansion_ratio (float): The expansion ratio of the nozzle.
-        throat_diameter (float): The throat diameter in meters.
+        throat_diameter_inch (float): The throat diameter in inches.
+        characteristic_length_inch (float): The characteristic length
+            in inches.
     Returns:
         float: The two-phase flow correction factor.
     """
-    throat_diameter_inch: float = conversions.convert_meter_to_inch(throat_diameter)
-    chamber_pressure_psi: float = conversions.convert_pa_to_psi(chamber_pressure)
-    particle_size_um: float = conversions.convert_meter_to_micrometer(particle_size)
+    particle_size_um: float = _get_two_phase_phase_loss_particle_size(
+        chamber_pressure_psi,
+        mole_fraction_of_condensed_phase,
+        throat_diameter_inch,
+        characteristic_length_inch,
+    )
     xi: float = mole_fraction_of_condensed_phase  # rename for brevity
 
     if xi >= 0.09:
@@ -184,13 +214,11 @@ def get_two_phase_flow_correction_factor(
             else:
                 c_3, c_5, c_6 = 25.2, 0.8, 0.33
 
-    numerator = np.power(xi, c_4) * np.power(particle_size_um, c_5)
+    numerator = xi * c_4 * np.power(particle_size_um, c_5)
     denominator = (
         np.power(chamber_pressure_psi, 0.15)
         * np.power(expansion_ratio, 0.08)
         * np.power(throat_diameter_inch, c_6)
     )
 
-    eta_tp: float = c_3 * numerator / denominator
-
-    return float(eta_tp)
+    return c_3 * numerator / denominator
