@@ -12,10 +12,12 @@ References:
 """
 
 import numpy as np
+from machwave.common import decorators
 
 from machwave.core import conversions
 
 
+@decorators.check_bounds(lower=0.0, upper=1.0)
 def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
     """
     Calculates the divergent nozzle correction factor given the half angle.
@@ -33,6 +35,7 @@ def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
     return 0.5 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
 
+@decorators.check_bounds(lower=0.0, upper=1.0)
 def get_kinetics_correction_factor(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure: float
 ) -> float:
