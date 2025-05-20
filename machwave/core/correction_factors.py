@@ -12,8 +12,8 @@ References:
 """
 
 import numpy as np
-from machwave.common import decorators
 
+from machwave.common import decorators
 from machwave.core import conversions
 
 
