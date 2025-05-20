@@ -100,7 +100,7 @@ def convert_meter_to_inch(measure: float) -> float:
     Returns:
         float: Size in inches.
     """
-    return measure * 39.3701
+    return measure / 0.0254
 
 
 def convert_meter_to_micrometer(measure: float) -> float:
