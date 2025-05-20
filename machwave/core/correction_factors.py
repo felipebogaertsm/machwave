@@ -14,7 +14,6 @@ References:
 import numpy as np
 
 from machwave.common import decorators
-from machwave.core import conversions
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
@@ -133,6 +132,9 @@ def _get_two_phase_phase_loss_particle_size(
     """
     Helper function to calculate the two-phase flow loss due to
     particle size.
+
+    Combines theories of particle growth by condensation in the chamber
+    and collisions in the nozzle.
 
     Args:
         chamber_pressure_psi (float): The chamber pressure in psi.
