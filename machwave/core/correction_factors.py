@@ -15,6 +15,8 @@ import numpy as np
 
 from machwave.common import decorators
 
+KINETICS_CF_PRESSURE_THRESHOLD_PSI = 200  # psi
+
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
@@ -36,7 +38,7 @@ def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_kinetics_correction_factor(
-    i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure: float
+    i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
 ) -> float:
     """
     The kinetics correction factor accounts for the decrement in
@@ -53,20 +55,22 @@ def get_kinetics_correction_factor(
     the kinetics correction factor.
 
     Args:
-        i_sp_th_frozen (float): The specific impulse of the frozen flow.
-        i_sp_th_shifting (float): The specific impulse of the shifting flow.
-        chamber_pressure (float): The chamber pressure in Pascals.
+        i_sp_th_frozen (float): The specific impulse of the frozen
+            flow.
+        i_sp_th_shifting (float): The specific impulse of the shifting
+            flow.
+        chamber_pressure_psi (float): The chamber pressure in psi.
     Returns:
         float: The kinetics correction factor.
     """
     i_sp_th_ratio = i_sp_th_frozen / i_sp_th_shifting
 
-    if chamber_pressure < 1.379e6:
+    if chamber_pressure_psi < KINETICS_CF_PRESSURE_THRESHOLD_PSI:
         pressure_correction = 1.0
     else:
-        pressure_correction = 1.379e-6 / chamber_pressure
+        pressure_correction = KINETICS_CF_PRESSURE_THRESHOLD_PSI / chamber_pressure_psi
 
-    return 33.3 / 100 * (1 - i_sp_th_ratio) * pressure_correction
+    return (1 - i_sp_th_ratio) * pressure_correction / 3
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
