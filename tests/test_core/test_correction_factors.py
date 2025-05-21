@@ -185,3 +185,39 @@ def test_get_two_phase_flow_correction_factor(
     )
 
     assert eta_tp == pytest.approx(expected_eta_tp, abs=1e-12)
+
+
+@pytest.mark.parametrize(
+    "eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz",
+    [
+        (0.0, 0.0, 0.0, 0.0, 0.0),  # all zero → lower-bound edge case
+        (0.02, 0.03, 0.04, 0.05, 0.14),  # typical values
+        (0.25, 0.25, 0.25, 0.25, 1.0),  # upper-bound edge case (exactly 1.0)
+    ],
+)
+def test_get_overall_nozzle_efficiency_valid(
+    eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz
+):
+    """
+    Ensures the overall efficiency equals the arithmetic sum and
+    respects decorator-enforced [0, 1] bounds.
+    """
+    eta_total = correction_factors.get_overall_nozzle_efficiency(
+        eta_div=eta_div,
+        eta_kin=eta_kin,
+        eta_bl=eta_bl,
+        eta_2p=eta_2p,
+    )
+
+    assert eta_total == pytest.approx(expected_eta_noz, abs=1e-12)
+
+
+def test_get_overall_nozzle_efficiency_out_of_bounds():
+    """
+    When the sum exceeds 1, the @check_bounds decorator should raise.
+    """
+    with pytest.raises((ValueError, AssertionError)):
+        # Sum = 1.10, outside allowed range.
+        correction_factors.get_overall_nozzle_efficiency(
+            eta_div=0.4, eta_kin=0.3, eta_bl=0.2, eta_2p=0.2
+        )
