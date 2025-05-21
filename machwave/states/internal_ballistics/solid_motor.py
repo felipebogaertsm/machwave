@@ -180,8 +180,6 @@ class SolidMotorState(MotorState):
         self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
         self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
 
-        print("Overall efficiency: ", overall_efficiency)
-
         cf, cf_ideal = get_thrust_coefficients(
             P0,
             self.P_exit[-1],
