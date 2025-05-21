@@ -1,14 +1,15 @@
 import numpy as np
 
+from machwave.core import correction_factors
 from machwave.core.conversions import (
     convert_mass_flux_metric_to_imperial,
+    convert_meter_to_inch,
     convert_pa_to_psi,
 )
 from machwave.core.des import compute_chamber_pressure_mass_balance_srm
 from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
-    get_operational_correction_factors,
     get_thrust_coefficients,
     get_thrust_from_cf,
     is_flow_choked,
@@ -57,10 +58,12 @@ class SolidMotorState(MotorState):
         self.burn_rate = np.array([0])  # burn rate
 
         # Correction factors:
-        self.n_kin = np.array([0])  # kinetics correction factor
-        self.n_bl = np.array([0])  # boundary layer correction factor
-        self.n_tp = np.array([0])  # two-phase flow correction factor
-        self.n_cf = np.array([0])  # thrust coefficient correction factor
+        self.eta_div = np.array([0])  # divergent nozzle correction factor
+        self.eta_kin = np.array([0])  # kinetics correction factor
+        self.eta_bl = np.array([0])  # boundary layer correction factor
+        self.eta_2p = np.array([0])  # two-phase flow correction factor
+        self.nozzle_efficiency = np.array([0])  # overall nozzle efficiency
+        self.overall_efficiency = np.array([0])  # overall efficiency
 
     def run_timestep(
         self,
@@ -133,34 +136,59 @@ class SolidMotorState(MotorState):
 
     def _compute_flow(self, P_ext: float) -> None:
         P0 = self.P_0[-1]
-        tex = convert_pa_to_psi(P0)
-        n_kin, n_tp, n_bl = get_operational_correction_factors(
-            P0,
-            P_ext,
-            tex,
-            self.motor.propellant,
-            self.motor.thrust_chamber,
-            get_critical_pressure_ratio(self.motor.propellant.k_mix),
-            self.V_0[0],
-            self.t[-1],
+        chamber_pressure_psi = convert_pa_to_psi(P0)
+        throat_diameter_inch = convert_meter_to_inch(
+            self.motor.thrust_chamber.nozzle.throat_diameter
         )
-        self.n_kin = np.append(self.n_kin, n_kin)
-        self.n_tp = np.append(self.n_tp, n_tp)
-        self.n_bl = np.append(self.n_bl, n_bl)
-        cf_corr = (
-            (100 - (n_kin + n_tp + n_bl))
-            * self.motor.thrust_chamber.nozzle.get_divergent_correction_factor()
-            / 100
-            * self.motor.propellant.combustion_efficiency
+
+        eta_div = correction_factors.get_nozzle_divergent_correction_factor(
+            divergent_angle=self.motor.thrust_chamber.nozzle.divergent_angle,
         )
-        self.n_cf = np.append(self.n_cf, cf_corr)
+        eta_kin = correction_factors.get_kinetics_correction_factor(
+            i_sp_th_frozen=self.motor.propellant.Isp_frozen,
+            i_sp_th_shifting=self.motor.propellant.Isp_shifting,
+            chamber_pressure_psi=chamber_pressure_psi,
+        )
+        eta_bl = correction_factors.get_boundary_layer_correction_factor(
+            chamber_pressure_psi=chamber_pressure_psi,
+            throat_diameter_inch=throat_diameter_inch,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
+            time=self.t[-1],
+            c_1=self.motor.thrust_chamber.nozzle.material.c_1,
+            c_2=self.motor.thrust_chamber.nozzle.material.c_2,
+        )
+        eta_2p = correction_factors.get_two_phase_flow_correction_factor(
+            chamber_pressure_psi=chamber_pressure_psi,
+            mole_fraction_of_condensed_phase=self.motor.propellant.qsi_ch,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
+            throat_diameter_inch=throat_diameter_inch,
+            characteristic_length_inch=convert_meter_to_inch(
+                self.V_0[-1] / self.motor.thrust_chamber.nozzle.get_throat_area()
+            ),
+        )
+        nozzle_efficiency = correction_factors.get_overall_nozzle_efficiency(
+            eta_div, eta_kin, eta_bl, eta_2p
+        )
+        overall_efficiency = (
+            nozzle_efficiency * self.motor.propellant.combustion_efficiency
+        )
+
+        self.eta_div = np.append(self.eta_div, eta_div)
+        self.eta_kin = np.append(self.eta_kin, eta_kin)
+        self.eta_bl = np.append(self.eta_bl, eta_bl)
+        self.eta_2p = np.append(self.eta_2p, eta_2p)
+        self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
+        self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
+
+        print("Overall efficiency: ", overall_efficiency)
+
         cf, cf_ideal = get_thrust_coefficients(
             P0,
             self.P_exit[-1],
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             self.motor.propellant.k_ex,
-            cf_corr,
+            overall_efficiency,
         )
         self.C_f = np.append(self.C_f, cf)
         self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
@@ -221,7 +249,7 @@ class SolidMotorState(MotorState):
         )
 
         print("\nNOZZLE DESIGN")
-        print(f" Average nozzle efficiency: {np.mean(self.n_cf):.3%}")
+        print(f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}")
 
     @property
     def klemmung(self) -> np.ndarray:
