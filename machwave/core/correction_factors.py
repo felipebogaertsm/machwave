@@ -250,4 +250,4 @@ def get_overall_nozzle_efficiency(
     Returns:
         float: The overall nozzle efficiency.
     """
-    return eta_div + eta_kin + eta_bl + eta_2p
+    return 1 - (eta_div + eta_kin + eta_bl + eta_2p)
