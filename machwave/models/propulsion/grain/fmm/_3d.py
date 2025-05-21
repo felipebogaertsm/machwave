@@ -3,7 +3,7 @@ from abc import ABC
 import numpy as np
 from numpy.typing import NDArray
 
-from machwave.core.math.geometric import (
+from machwave.core.mathematics.geometric import (
     get_circle_area,
     get_contours,
     get_length,
