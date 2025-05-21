@@ -156,7 +156,6 @@ def _get_two_phase_phase_loss_particle_size(
         * xi ** (1 / 3)
         * (1 - np.exp(-0.004 * characteristic_length_inch))
         * (1 + 0.045 * throat_diameter_inch)
-        / 100
     )
 
 
