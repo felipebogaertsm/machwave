@@ -190,9 +190,9 @@ def test_get_two_phase_flow_correction_factor(
 @pytest.mark.parametrize(
     "eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz",
     [
-        (0.0, 0.0, 0.0, 0.0, 0.0),  # all zero → lower-bound edge case
-        (0.02, 0.03, 0.04, 0.05, 0.14),  # typical values
-        (0.25, 0.25, 0.25, 0.25, 1.0),  # upper-bound edge case (exactly 1.0)
+        (0.0, 0.0, 0.0, 0.0, 1.0),  # all zero → upper-bound edge case
+        (0.02, 0.03, 0.04, 0.05, 0.86),  # typical values
+        (0.25, 0.25, 0.25, 0.25, 0.0),  # lower-bound edge case (sums 1.0)
     ],
 )
 def test_get_overall_nozzle_efficiency_valid(
