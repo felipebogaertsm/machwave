@@ -250,6 +250,11 @@ class SolidMotorState(MotorState):
 
         print("\nNOZZLE DESIGN")
         print(f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}")
+        print(f" Average overall efficiency: {np.mean(self.overall_efficiency):.3%}")
+        print(f" Divergent nozzle correction factor: {np.mean(self.eta_div):.3%}")
+        print(f" Average kinetics correction factor: {np.mean(self.eta_kin):.3%}")
+        print(f" Average boundary layer correction factor: {np.mean(self.eta_bl):.3%}")
+        print(f" Average two-phase flow correction factor: {np.mean(self.eta_2p):.3%}")
 
     @property
     def klemmung(self) -> np.ndarray:
