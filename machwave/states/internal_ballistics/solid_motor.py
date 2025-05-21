@@ -13,7 +13,7 @@ from machwave.core.flow.isentropic import (
     get_thrust_from_cf,
     is_flow_choked,
 )
-from machwave.core.math.rk4 import rk4th_ode_solver
+from machwave.core.mathematics.rk4 import rk4th_ode_solver
 from machwave.models.propulsion.motors import SolidMotor
 from machwave.states.internal_ballistics.base import MotorState
 
