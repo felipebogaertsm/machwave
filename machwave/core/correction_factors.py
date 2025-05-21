@@ -124,7 +124,7 @@ def get_boundary_layer_correction_factor(
     )
     term_3 = 1 + 0.016 * (expansion_ratio - 9)
 
-    return term_1 * term_2 * term_3
+    return term_1 * term_2 * term_3 / 100
 
 
 def _get_two_phase_phase_loss_particle_size(
@@ -156,6 +156,7 @@ def _get_two_phase_phase_loss_particle_size(
         * xi ** (1 / 3)
         * (1 - np.exp(-0.004 * characteristic_length_inch))
         * (1 + 0.045 * throat_diameter_inch)
+        / 100
     )
 
 
@@ -228,3 +229,4 @@ def get_two_phase_flow_correction_factor(
     )
 
     return c_3 * numerator / denominator
+    return c_3 * numerator / denominator / 100
