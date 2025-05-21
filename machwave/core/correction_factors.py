@@ -228,5 +228,27 @@ def get_two_phase_flow_correction_factor(
         * np.power(throat_diameter_inch, c_6)
     )
 
-    return c_3 * numerator / denominator
     return c_3 * numerator / denominator / 100
+
+
+@decorators.check_bounds(lower=0.0, upper=1.0)
+def get_overall_nozzle_efficiency(
+    eta_div: float,
+    eta_kin: float,
+    eta_bl: float,
+    eta_2p: float,
+) -> float:
+    """
+    Overall nozzle efficiency is the sum of the individual correction
+    factors.
+
+    Args:
+        eta_div (float): The divergent nozzle correction factor.
+        eta_kin (float): The kinetics correction factor.
+        eta_bl (float): The boundary layer correction factor.
+        eta_2p (float): The two-phase flow correction factor.
+
+    Returns:
+        float: The overall nozzle efficiency.
+    """
+    return eta_div + eta_kin + eta_bl + eta_2p
