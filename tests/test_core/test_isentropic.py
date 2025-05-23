@@ -3,7 +3,6 @@ from pytest import approx
 
 from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
-    get_divergent_correction_factor,
     get_exit_mach,
     get_exit_pressure,
     get_expansion_ratio,
@@ -98,12 +97,6 @@ def test_get_specific_impulse():
     initial_propellant_mass = 100
     specific_impulse = get_specific_impulse(total_impulse, initial_propellant_mass)
     assert specific_impulse == approx(2.542, rel=1e-2)
-
-
-def test_get_divergent_correction_factor():
-    divergent_angle = 15
-    correction_factor = get_divergent_correction_factor(divergent_angle)
-    assert correction_factor == approx(0.982962)
 
 
 def test_get_expansion_ratio():
