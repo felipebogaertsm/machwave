@@ -17,8 +17,16 @@ from machwave.common import decorators
 
 KINETICS_CF_PRESSURE_THRESHOLD_PSI = 200  # psi
 
+# TODO: add 2-phase flow loss to TYPICAL_RANGES
+TYPICAL_RANGES = {
+    "divergent_loss": {"lower": 0.75e-2, "upper": 5e-2},
+    "kinetics_loss": {"lower": 0.2e-2, "upper": 5e-2},
+    "boundary_layer_loss": {"lower": 0.1e-2, "upper": 2e-2},
+}
+
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.warn_if_outside_range(**TYPICAL_RANGES["divergent_loss"])
 def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
     """
     Calculates the divergent nozzle correction factor given the half angle.
@@ -37,6 +45,7 @@ def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.warn_if_outside_range(**TYPICAL_RANGES["kinetics_loss"])
 def get_kinetics_correction_factor(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
 ) -> float:
@@ -74,6 +83,7 @@ def get_kinetics_correction_factor(
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.warn_if_outside_range(**TYPICAL_RANGES["boundary_layer_loss"])
 def get_boundary_layer_correction_factor(
     chamber_pressure_psi: float,
     throat_diameter_inch: float,
@@ -159,6 +169,7 @@ def _get_two_phase_phase_loss_particle_size(
     )
 
 
+# TODO: add 2-phase flow loss warning ranges
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_two_phase_flow_correction_factor(
     chamber_pressure_psi: float,
