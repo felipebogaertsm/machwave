@@ -3,6 +3,9 @@ import pytest
 from machwave.core import correction_factors
 
 
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
+
+
 @pytest.mark.parametrize(
     "divergent_angle, expected_correction_factor",
     [
