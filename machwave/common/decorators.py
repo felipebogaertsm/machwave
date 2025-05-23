@@ -1,5 +1,6 @@
 import functools
 import time
+import warnings
 from typing import Any, Callable, Type, TypeVar
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -96,3 +97,17 @@ def check_bounds(lower: Number = 0.0, upper: Number = 1.0) -> Callable:
         return wrapper
 
     return decorator
+
+
+def warn_if_outside_range(lower: float, upper: float):
+    def _decorator(f):
+        @functools.wraps(f)
+        def _wrapper(*args, **kw):
+            value = f(*args, **kw)
+            if not lower <= value <= upper:
+                warnings.warn(f"{f.__name__} result {value} outside [{lower}, {upper}]")
+            return value
+
+        return _wrapper
+
+    return _decorator
