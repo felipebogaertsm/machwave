@@ -16,6 +16,7 @@ import numpy as np
 from machwave.common import decorators
 
 KINETICS_CF_PRESSURE_THRESHOLD_PSI = 200  # psi
+OTHER_LOSSES_DEFAULT = 5.0e-2
 
 # TODO: add 2-phase flow loss to TYPICAL_RANGES
 TYPICAL_RANGES = {
@@ -247,6 +248,7 @@ def get_overall_nozzle_efficiency(
     eta_kin: float,
     eta_bl: float,
     eta_2p: float,
+    other_losses: float = OTHER_LOSSES_DEFAULT,
 ) -> float:
     """
     Overall nozzle efficiency is the sum of the individual correction
@@ -261,4 +263,4 @@ def get_overall_nozzle_efficiency(
     Returns:
         float: The overall nozzle efficiency.
     """
-    return 1 - (eta_div + eta_kin + eta_bl + eta_2p)
+    return 1 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses)

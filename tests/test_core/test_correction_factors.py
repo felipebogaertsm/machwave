@@ -210,6 +210,7 @@ def test_get_overall_nozzle_efficiency_valid(
         eta_kin=eta_kin,
         eta_bl=eta_bl,
         eta_2p=eta_2p,
+        other_losses=0,
     )
 
     assert eta_total == pytest.approx(expected_eta_noz, abs=1e-12)
