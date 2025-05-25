@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.core import correction_factors
+from machwave.core import losses
 from machwave.core.conversions import (
     convert_mass_flux_metric_to_imperial,
     convert_meter_to_inch,
@@ -141,15 +141,15 @@ class SolidMotorState(MotorState):
             self.motor.thrust_chamber.nozzle.throat_diameter
         )
 
-        eta_div = correction_factors.get_nozzle_divergent_correction_factor(
+        eta_div = losses.get_nozzle_divergent_percentage_loss(
             divergent_angle=self.motor.thrust_chamber.nozzle.divergent_angle,
         )
-        eta_kin = correction_factors.get_kinetics_correction_factor(
+        eta_kin = losses.get_kinetics_percentage_loss(
             i_sp_th_frozen=self.motor.propellant.Isp_frozen,
             i_sp_th_shifting=self.motor.propellant.Isp_shifting,
             chamber_pressure_psi=chamber_pressure_psi,
         )
-        eta_bl = correction_factors.get_boundary_layer_correction_factor(
+        eta_bl = losses.get_boundary_layer_percentage_loss(
             chamber_pressure_psi=chamber_pressure_psi,
             throat_diameter_inch=throat_diameter_inch,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
@@ -157,7 +157,7 @@ class SolidMotorState(MotorState):
             c_1=self.motor.thrust_chamber.nozzle.material.c_1,
             c_2=self.motor.thrust_chamber.nozzle.material.c_2,
         )
-        eta_2p = correction_factors.get_two_phase_flow_correction_factor(
+        eta_2p = losses.get_two_phase_flow_percentage_loss(
             chamber_pressure_psi=chamber_pressure_psi,
             mole_fraction_of_condensed_phase=self.motor.propellant.qsi_ch,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
@@ -166,7 +166,7 @@ class SolidMotorState(MotorState):
                 self.V_0[-1] / self.motor.thrust_chamber.nozzle.get_throat_area()
             ),
         )
-        nozzle_efficiency = correction_factors.get_overall_nozzle_efficiency(
+        nozzle_efficiency = losses.get_overall_nozzle_efficiency(
             eta_div, eta_kin, eta_bl, eta_2p
         )
         overall_efficiency = (
