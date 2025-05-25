@@ -1,5 +1,5 @@
 """
-Correction factors for rocket engines.
+Losses and correction factors for rocket engines.
 All functions return a correction factor that is between 0 and 1.
 
 References:
@@ -15,7 +15,7 @@ import numpy as np
 
 from machwave.common import decorators
 
-KINETICS_CF_PRESSURE_THRESHOLD_PSI = 200  # psi
+KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 OTHER_LOSSES_DEFAULT = 5.0e-2
 
 # TODO: add 2-phase flow loss to TYPICAL_RANGES
@@ -28,7 +28,7 @@ TYPICAL_RANGES = {
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["divergent_loss"])
-def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
+def get_nozzle_divergent_percentage_loss(divergent_angle: float) -> float:
     """
     Calculates the divergent nozzle correction factor given the half angle.
     NOTE: only applicable for a conical convergent-divergent nozzle.
@@ -47,7 +47,7 @@ def get_nozzle_divergent_correction_factor(divergent_angle: float) -> float:
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["kinetics_loss"])
-def get_kinetics_correction_factor(
+def get_kinetics_percentage_loss(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
 ) -> float:
     """
@@ -75,17 +75,19 @@ def get_kinetics_correction_factor(
     """
     i_sp_th_ratio = i_sp_th_frozen / i_sp_th_shifting
 
-    if chamber_pressure_psi < KINETICS_CF_PRESSURE_THRESHOLD_PSI:
+    if chamber_pressure_psi < KINETICS_LOSS_PRESSURE_THRESHOLD_PSI:
         pressure_correction = 1.0
     else:
-        pressure_correction = KINETICS_CF_PRESSURE_THRESHOLD_PSI / chamber_pressure_psi
+        pressure_correction = (
+            KINETICS_LOSS_PRESSURE_THRESHOLD_PSI / chamber_pressure_psi
+        )
 
     return (1 - i_sp_th_ratio) * pressure_correction / 3
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["boundary_layer_loss"])
-def get_boundary_layer_correction_factor(
+def get_boundary_layer_percentage_loss(
     chamber_pressure_psi: float,
     throat_diameter_inch: float,
     expansion_ratio: float,
@@ -172,7 +174,7 @@ def _get_two_phase_phase_loss_particle_size(
 
 # TODO: add 2-phase flow loss warning ranges
 @decorators.check_bounds(lower=0.0, upper=1.0)
-def get_two_phase_flow_correction_factor(
+def get_two_phase_flow_percentage_loss(
     chamber_pressure_psi: float,
     mole_fraction_of_condensed_phase: float,
     expansion_ratio: float,

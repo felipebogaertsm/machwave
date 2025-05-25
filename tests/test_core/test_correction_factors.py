@@ -1,7 +1,6 @@
 import pytest
 
-from machwave.core import correction_factors
-
+from machwave.core import losses
 
 pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
@@ -27,7 +26,7 @@ def test_get_nozzle_divergent_correction_factor(
     """
     Parameters obtained from Sutton.
     """
-    eta_div = correction_factors.get_nozzle_divergent_correction_factor(
+    eta_div = losses.get_nozzle_divergent_percentage_loss(
         divergent_angle=divergent_angle
     )
     assert eta_div == pytest.approx(expected_correction_factor, abs=1e-4)
@@ -50,7 +49,7 @@ def test_get_nozzle_divergent_correction_factor(
 def test_get_kinetics_correction_factor(
     i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_correction_factor
 ):
-    eta_kin = correction_factors.get_kinetics_correction_factor(
+    eta_kin = losses.get_kinetics_percentage_loss(
         i_sp_th_frozen=i_sp_th_frozen,
         i_sp_th_shifting=i_sp_th_shifting,
         chamber_pressure_psi=chamber_pressure_psi,
@@ -83,7 +82,7 @@ def test_get_boundary_layer_correction_factor(
     c2,
     expected_eta_bl,
 ):
-    eta_bl = correction_factors.get_boundary_layer_correction_factor(
+    eta_bl = losses.get_boundary_layer_percentage_loss(
         chamber_pressure_psi=chamber_pressure_psi,
         throat_diameter_inch=throat_diam_in,
         expansion_ratio=expansion_ratio,
@@ -117,7 +116,7 @@ def test_get_boundary_layer_correction_factor(
 def test_get_two_phase_phase_loss_particle_size(
     P_psi, xi, d_throat_in, L_c_in, expected_um
 ):
-    size_um = correction_factors._get_two_phase_phase_loss_particle_size(
+    size_um = losses._get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi=P_psi,
         xi=xi,
         throat_diameter_inch=d_throat_in,
@@ -174,12 +173,12 @@ def test_get_two_phase_flow_correction_factor(
 ):
     # Patch the private helper to return a controlled particle size.
     monkeypatch.setattr(
-        correction_factors,
+        losses,
         "_get_two_phase_phase_loss_particle_size",
         lambda *_a, **_kw: mock_particle_um,
     )
 
-    eta_tp = correction_factors.get_two_phase_flow_correction_factor(
+    eta_tp = losses.get_two_phase_flow_percentage_loss(
         chamber_pressure_psi=chamber_psi,
         mole_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,
@@ -205,7 +204,7 @@ def test_get_overall_nozzle_efficiency_valid(
     Ensures the overall efficiency equals the arithmetic sum and
     respects decorator-enforced [0, 1] bounds.
     """
-    eta_total = correction_factors.get_overall_nozzle_efficiency(
+    eta_total = losses.get_overall_nozzle_efficiency(
         eta_div=eta_div,
         eta_kin=eta_kin,
         eta_bl=eta_bl,
@@ -222,6 +221,6 @@ def test_get_overall_nozzle_efficiency_out_of_bounds():
     """
     with pytest.raises((ValueError, AssertionError)):
         # Sum = 1.10, outside allowed range.
-        correction_factors.get_overall_nozzle_efficiency(
+        losses.get_overall_nozzle_efficiency(
             eta_div=0.4, eta_kin=0.3, eta_bl=0.2, eta_2p=0.2
         )
