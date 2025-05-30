@@ -37,12 +37,6 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         """
         return np.array([0, 0, 0])
 
-    def get_thrust_coefficient_correction_factor(self, *args, **kwargs):
-        """
-        NOTE: temporary implementation, set to 100% efficiency.
-        """
-        return 1
-
     def get_thrust_coefficient(
         self,
         chamber_pressure: float,
@@ -50,17 +44,19 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         external_pressure: float,
         expansion_ratio: float,
         k_ex: float,
+        n_cf: float,
     ) -> float:
         """
         Args:
-            chamber_pressure: Chamber pressure (Pa)
-            exit_pressure: Exit pressure (Pa)
-            external_pressure: External pressure (Pa)
-            expansion_ratio: Expansion ratio
-            k_ex: Two-phase isentropic coefficient
+            chamber_pressure (float): Chamber pressure in Pa.
+            exit_pressure (float): Exit pressure in Pa.
+            external_pressure (float): External pressure in Pa.
+            expansion_ratio (float): Expansion ratio, adimensional.
+            k_ex (float): Two-phase isentropic coefficient, adimensional.
+            n_cf (float): Thrust coefficient correction factor, adimensional.
 
         Returns:
-            Instantaneous thrust coefficient
+            Instantaneous thrust coefficient.
         """
         cf_ideal = get_ideal_thrust_coefficient(
             chamber_pressure=chamber_pressure,
