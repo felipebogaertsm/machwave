@@ -247,8 +247,8 @@ class SolidMotorState(MotorState):
         )
 
         print("\nNOZZLE DESIGN")
-        print(f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3f}")
-        print(f" Average overall efficiency: {np.mean(self.overall_efficiency):.3f}")
+        print(f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}")
+        print(f" Average overall efficiency: {np.mean(self.overall_efficiency):.3%}")
         print(f" Divergent nozzle correction factor: {np.mean(self.eta_div):.3f}%")
         print(f" Average kinetics correction factor: {np.mean(self.eta_kin):.3f}%")
         print(f" Average boundary layer correction factor: {np.mean(self.eta_bl):.3f}%")
