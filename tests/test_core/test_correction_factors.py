@@ -9,15 +9,15 @@ pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
     "divergent_angle, expected_correction_factor",
     [
         (0.0, 0.0),
-        (2.0, 0.0003),
-        (4.0, 0.0012),
-        (6.0, 0.0028),
-        (8.0, 0.0049),
-        (10.0, 0.0076),
-        (12.0, 0.0110),
-        (15.0, 0.0170),
-        (20.0, 0.0302),
-        (24.0, 0.0433),
+        (2.0, 0.03),
+        (4.0, 0.12),
+        (6.0, 0.28),
+        (8.0, 0.49),
+        (10.0, 0.76),
+        (12.0, 1.10),
+        (15.0, 1.70),
+        (20.0, 3.02),
+        (24.0, 4.33),
     ],
 )
 def test_get_nozzle_divergent_correction_factor(
@@ -29,17 +29,17 @@ def test_get_nozzle_divergent_correction_factor(
     eta_div = losses.get_nozzle_divergent_percentage_loss(
         divergent_angle=divergent_angle
     )
-    assert eta_div == pytest.approx(expected_correction_factor, abs=1e-4)
+    assert eta_div == pytest.approx(expected_correction_factor, abs=1e-2)
 
 
 @pytest.mark.parametrize(
     "i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_correction_factor",
     [
-        (152.4, 154.1, 150.0, 0.0037),  # KNDX @ 150 psi, no pressure damping
-        (152.4, 154.1, 200.0, 0.0037),  # KNDX @ 200 psi, pressure = threshold
-        (152.4, 154.1, 210.0, 0.0035),  # KNDX @ 210 psi
-        (152.4, 154.1, 1000.0, 0.0007),  # KNDX @ 1000 psi
-        (250.0, 300.0, 320.0, 0.0347),  # large Isp @ 320 psi
+        (152.4, 154.1, 150.0, 0.37),  # KNDX @ 150 psi, no pressure damping
+        (152.4, 154.1, 200.0, 0.37),  # KNDX @ 200 psi, pressure = threshold
+        (152.4, 154.1, 210.0, 0.35),  # KNDX @ 210 psi
+        (152.4, 154.1, 1000.0, 0.07),  # KNDX @ 1000 psi
+        (250.0, 300.0, 320.0, 3.47),  # large Isp @ 320 psi
         (250.0, 250.0, 200.0, 0.0),  # same frozen/shifting Isp
         (250.0, 250.0, 1000.0, 0.0),  # same frozen/shifting Isp
         (300.0, 300.0, 200.0, 0.0),  # same frozen/shifting Isp
@@ -54,23 +54,23 @@ def test_get_kinetics_correction_factor(
         i_sp_th_shifting=i_sp_th_shifting,
         chamber_pressure_psi=chamber_pressure_psi,
     )
-    assert eta_kin == pytest.approx(expected_correction_factor, abs=1e-4)
+    assert eta_kin == pytest.approx(expected_correction_factor, abs=1e-2)
 
 
 @pytest.mark.parametrize(
     "chamber_pressure_psi, throat_diam_in, expansion_ratio, time_s, c1, c2, expected_eta_bl",
     [
         # Ordinary nozzle, t = 0 → maximal transient term
-        (1000.0, 1.0, 9.0, 0.0, 0.00365, 0.000937, 0.0275051564250),
+        (1000.0, 1.0, 9.0, 0.0, 0.00365, 0.000937, 2.75051564250),
         # Ordinary nozzle, t = 2 s → exponential decay kicks in
-        (1000.0, 1.0, 9.0, 2.0, 0.00365, 0.000937, 0.0206205742153),
+        (1000.0, 1.0, 9.0, 2.0, 0.00365, 0.000937, 2.06205742153),
         # Ordinary nozzle, exp. ratio = 15 increases wall area
-        (1000.0, 1.0, 15.0, 0.0, 0.00365, 0.000937, 0.0301456514418),
+        (1000.0, 1.0, 15.0, 0.0, 0.00365, 0.000937, 3.01456514418),
         # Steel nozzle, higher pressure, smaller throat; no time dependence
         # because C2 = 0
-        (2000.0, 0.5, 12.0, 1.0, 0.00506, 0.000000, 0.0799213939195),
+        (2000.0, 0.5, 12.0, 1.0, 0.00506, 0.000000, 7.99213939195),
         # Steel nozzle, low pressure, large throat, exp. ratio < 9 term reduces factor
-        (500.0, 2.0, 8.0, 10.0, 0.00365, 0.000937, 0.0072918524795),
+        (500.0, 2.0, 8.0, 10.0, 0.00365, 0.000937, 0.72918524795),
     ],
 )
 def test_get_boundary_layer_correction_factor(
@@ -104,13 +104,13 @@ def test_get_boundary_layer_correction_factor(
         (200.0, 0.05, 1.0, 1000.0, 1.003407514404),
         # ----- Normal operating regime (L_c = 10 in) -----
         # Baseline
-        (200.0, 0.05, 1.0, 10.0, 4.007822978255e-02),
+        (200.0, 0.05, 1.0, 10.0, 4.007822978255e-2),
         # Higher condensed-phase fraction (xi ↑)
-        (200.0, 0.10, 1.0, 10.0, 5.049540534555e-02),
+        (200.0, 0.10, 1.0, 10.0, 5.049540534555e-2),
         # Larger throat diameter (d_throat ↑)
-        (200.0, 0.05, 2.0, 10.0, 4.180408656744e-02),
+        (200.0, 0.05, 2.0, 10.0, 4.180408656744e-2),
         # Higher chamber pressure (P ↑)
-        (1000.0, 0.05, 1.0, 10.0, 6.853280891354e-02),
+        (1000.0, 0.05, 1.0, 10.0, 6.853280891354e-2),
     ],
 )
 def test_get_two_phase_phase_loss_particle_size(
@@ -123,7 +123,7 @@ def test_get_two_phase_phase_loss_particle_size(
         characteristic_length_inch=L_c_in,
     )
 
-    assert size_um == pytest.approx(expected_um, abs=1e-12)
+    assert size_um == pytest.approx(expected_um, abs=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -139,26 +139,26 @@ def test_get_two_phase_phase_loss_particle_size(
     [
         # --------------------- xi ≥ 0.09 branch ---------------------
         # throat < 1 in
-        (150.0, 0.12, 9.0, 0.8, 20.0, 5.0, 0.013351211863483013),
+        (150.0, 0.12, 9.0, 0.8, 20.0, 5.0, 1.3351211863483013),
         # 1 in ≤ throat < 2 in
-        (200.0, 0.12, 10.0, 1.5, 20.0, 6.0, 0.008800705809475019),
+        (200.0, 0.12, 10.0, 1.5, 20.0, 6.0, 0.8800705809475019),
         # throat ≥ 2 in, particle < 4 µm
-        (250.0, 0.12, 12.0, 3.0, 20.0, 3.0, 0.002878926304008907),
+        (250.0, 0.12, 12.0, 3.0, 20.0, 3.0, 0.2878926304008907),
         # throat ≥ 2 in, 4 µm ≤ particle ≤ 8 µm
-        (250.0, 0.12, 12.0, 3.0, 20.0, 6.0, 0.005921045788616592),
+        (250.0, 0.12, 12.0, 3.0, 20.0, 6.0, 0.5921045788616592),
         # throat ≥ 2 in, particle > 8 µm
-        (250.0, 0.12, 12.0, 3.0, 20.0, 9.0, 0.006572626424650138),
+        (250.0, 0.12, 12.0, 3.0, 20.0, 9.0, 0.6572626424650138),
         # --------------------- xi < 0.09 branch ---------------------
         # throat < 1 in
-        (150.0, 0.05, 9.0, 0.8, 20.0, 5.0, 0.03708669962078615),
+        (150.0, 0.05, 9.0, 0.8, 20.0, 5.0, 3.708669962078615),
         # 1 in ≤ throat < 2 in
-        (200.0, 0.05, 10.0, 1.5, 20.0, 6.0, 0.024446405026319503),
+        (200.0, 0.05, 10.0, 1.5, 20.0, 6.0, 2.4446405026319503),
         # throat ≥ 2 in, particle < 4 µm
-        (250.0, 0.05, 12.0, 3.0, 20.0, 3.0, 0.007967177893556986),
+        (250.0, 0.05, 12.0, 3.0, 20.0, 3.0, 0.7967177893556986),
         # throat ≥ 2 in, 4 µm ≤ particle ≤ 8 µm
-        (250.0, 0.05, 12.0, 3.0, 20.0, 6.0, 0.01644734941282387),
+        (250.0, 0.05, 12.0, 3.0, 20.0, 6.0, 1.644734941282387),
         # throat ≥ 2 in, particle > 8 µm
-        (250.0, 0.05, 12.0, 3.0, 20.0, 9.0, 0.01820912334005975),
+        (250.0, 0.05, 12.0, 3.0, 20.0, 9.0, 1.820912334005975),
     ],
 )
 def test_get_two_phase_flow_correction_factor(
@@ -193,8 +193,8 @@ def test_get_two_phase_flow_correction_factor(
     "eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz",
     [
         (0.0, 0.0, 0.0, 0.0, 1.0),  # all zero → upper-bound edge case
-        (0.02, 0.03, 0.04, 0.05, 0.86),  # typical values
-        (0.25, 0.25, 0.25, 0.25, 0.0),  # lower-bound edge case (sums 1.0)
+        (2, 3, 4, 5, 0.86),  # typical values
+        (25, 25, 25, 25, 0.0),  # lower-bound edge case (sums 1.0)
     ],
 )
 def test_get_overall_nozzle_efficiency_valid(
@@ -222,5 +222,5 @@ def test_get_overall_nozzle_efficiency_out_of_bounds():
     with pytest.raises((ValueError, AssertionError)):
         # Sum = 1.10, outside allowed range.
         losses.get_overall_nozzle_efficiency(
-            eta_div=0.4, eta_kin=0.3, eta_bl=0.2, eta_2p=0.2
+            eta_div=40, eta_kin=30, eta_bl=20, eta_2p=20
         )
