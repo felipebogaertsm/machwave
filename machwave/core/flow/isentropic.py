@@ -18,15 +18,17 @@ def get_critical_pressure_ratio(k_mix: float) -> float:
     return (2 / (k_mix + 1)) ** (k_mix / (k_mix - 1))
 
 
-def get_opt_expansion_ratio(k: float, P_0: float, P_ext: float) -> float:
+def get_opt_expansion_ratio(
+    k: float, chamber_pressure: float, atmospheric_pressurext: float
+) -> float:
     """
     Returns the optimal expansion ratio based on the current chamber pressure,
     specific heat ratio, and external pressure.
 
     Args:
         k (float): The isentropic exponent.
-        P_0 (float): The chamber pressure.
-        P_ext (float): The external pressure.
+        chamber_pressure (float): The chamber pressure.
+        atmospheric_pressurext (float): The external pressure.
 
     Returns:
         float: The optimal expansion ratio.
@@ -36,8 +38,11 @@ def get_opt_expansion_ratio(k: float, P_0: float, P_ext: float) -> float:
     """
     exp_opt = (
         (((k + 1) / 2) ** (1 / (k - 1)))
-        * ((P_ext / P_0) ** (1 / k))
-        * np.sqrt(((k + 1) / (k - 1)) * (1 - (P_ext / P_0) ** ((k - 1) / k)))
+        * ((atmospheric_pressurext / chamber_pressure) ** (1 / k))
+        * np.sqrt(
+            ((k + 1) / (k - 1))
+            * (1 - (atmospheric_pressurext / chamber_pressure) ** ((k - 1) / k))
+        )
     ) ** -1
 
     return exp_opt
@@ -69,14 +74,16 @@ def get_exit_mach(k: float, E: float) -> float:
     return exit_mach_no[0]
 
 
-def get_exit_pressure(k_ex: float, E: float, P_0: float) -> float:
+def get_exit_pressure(
+    k_ex: float, expansion_ratio: float, chamber_pressure: float
+) -> float:
     """
     Calculates the exit pressure of the nozzle flow.
 
     Args:
         k_ex (float): The isentropic exponent in the exit region.
-        E (float): The expansion ratio.
-        P_0 (float): The chamber pressure.
+        expansion_ratio (float): The expansion ratio.
+        chamber_pressure (float): The chamber pressure.
 
     Returns:
         float: The exit pressure.
@@ -84,9 +91,11 @@ def get_exit_pressure(k_ex: float, E: float, P_0: float) -> float:
     Example:
         exit_pressure = get_exit_pressure(1.4, 5.0, 100000)
     """
-    Mach_exit = get_exit_mach(k_ex, E)
-    P_exit = P_0 * (1 + 0.5 * (k_ex - 1) * Mach_exit**2) ** (-k_ex / (k_ex - 1))
-    return P_exit
+    exit_mach = get_exit_mach(k_ex, expansion_ratio)
+    exit_pressure = chamber_pressure * (1 + 0.5 * (k_ex - 1) * exit_mach**2) ** (
+        -k_ex / (k_ex - 1)
+    )
+    return exit_pressure
 
 
 def get_ideal_thrust_coefficient(
@@ -127,23 +136,23 @@ def get_ideal_thrust_coefficient(
 
 
 def get_thrust_coefficients(
-    P_0: float,
-    P_exit: float,
-    P_external: float,
-    E: float,
+    chamber_pressure: float,
+    exit_pressure: float,
+    atmospheric_pressure: float,
+    expansion_ratio: float,
     k: float,
-    n_cf: float,
+    nozzle_correction_factor: float,
 ) -> tuple[float, float]:
     """
     Calculates the thrust coefficients based on the chamber pressure and correction factor.
 
     Args:
-        P_0 (float): The chamber pressure.
-        P_exit (float): The exit pressure.
-        P_external (float): The external pressure.
-        E (float): The expansion ratio.
+        chamber_pressure (float): The chamber pressure.
+        exit_pressure (float): The exit pressure.
+        atmospheric_pressure (float): The external pressure.
+        expansion_ratio (float): The expansion ratio.
         k (float): The isentropic exponent.
-        n_cf (float): The correction factor.
+        nozzle_correction_factor (float): The correction factor.
 
     Returns:
         tuple[float, float]: The thrust coefficients (Cf, Cf_ideal).
@@ -151,8 +160,10 @@ def get_thrust_coefficients(
     Example:
         Cf, Cf_ideal = get_thrust_coefficients(100000, 5000, 1000, 5.0, 1.4, 0.8)
     """
-    Cf_ideal = get_ideal_thrust_coefficient(P_0, P_exit, P_external, E, k)
-    Cf = Cf_ideal * n_cf
+    Cf_ideal = get_ideal_thrust_coefficient(
+        chamber_pressure, exit_pressure, atmospheric_pressure, expansion_ratio, k
+    )
+    Cf = Cf_ideal * nozzle_correction_factor
 
     if Cf <= 0:
         Cf = 0
@@ -162,14 +173,16 @@ def get_thrust_coefficients(
     return Cf, Cf_ideal
 
 
-def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> float:
+def get_thrust_from_cf(
+    thrust_coefficient: float, chamber_pressure: float, nozzle_throat_area: float
+) -> float:
     """
     Calculates the thrust based on the thrust coefficient, chamber stagnation pressure,
     and nozzle throat area.
 
     Args:
-        C_f (float): The thrust coefficient.
-        P_0 (float): The chamber stagnation pressure.
+        thrust_coefficient (float): The thrust coefficient.
+        chamber_pressure (float): The chamber stagnation pressure.
         nozzle_throat_area (float): The nozzle throat area.
 
     Returns:
@@ -178,18 +191,18 @@ def get_thrust_from_cf(C_f: float, P_0: float, nozzle_throat_area: float) -> flo
     Example:
         thrust = get_thrust_from_cf(0.8, 100000, 0.02)
     """
-    return C_f * P_0 * nozzle_throat_area
+    return thrust_coefficient * chamber_pressure * nozzle_throat_area
 
 
 def get_thrust_coefficient(
-    P_0: float, thrust: float, nozzle_throat_area: float
+    chamber_pressure: float, thrust: float, nozzle_throat_area: float
 ) -> float:
     """
     Calculates the thrust coefficient based on the chamber stagnation pressure, thrust,
     and nozzle throat area.
 
     Args:
-        P_0 (float): The chamber stagnation pressure.
+        chamber_pressure (float): The chamber stagnation pressure.
         thrust (float): The thrust.
         nozzle_throat_area (float): The nozzle throat area.
 
@@ -199,7 +212,7 @@ def get_thrust_coefficient(
     Example:
         Cf = get_thrust_coefficient(100000, 5000, 0.02)
     """
-    return thrust / (P_0 * nozzle_throat_area)
+    return thrust / (chamber_pressure * nozzle_throat_area)
 
 
 def is_flow_choked(
@@ -260,14 +273,17 @@ def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -
 
 
 def get_expansion_ratio(
-    P_e: np.ndarray, P_0: np.ndarray, k: float, critical_pressure_ratio: float
+    atmospheric_pressure: np.ndarray,
+    chamber_pressure: np.ndarray,
+    k: float,
+    critical_pressure_ratio: float,
 ) -> float:
     """
     Calculates the mean expansion ratio based on the pressure ratios.
 
     Args:
-        P_e (np.ndarray): The pressure ratios.
-        P_0 (np.ndarray): The chamber stagnation pressures.
+        atmospheric_pressure (np.ndarray): The pressure ratios.
+        chamber_pressure (np.ndarray): The chamber stagnation pressures.
         k (float): The isentropic exponent.
         critical_pressure_ratio (float): The critical pressure ratio.
 
@@ -277,16 +293,16 @@ def get_expansion_ratio(
     Example:
         expansion_ratio = get_expansion_ratio([5000, 6000], [100000, 150000], 1.4, 0.5)
     """
-    E = np.zeros(np.size(P_0))
+    expansion_ratio = np.zeros(np.size(chamber_pressure))
 
-    for i in range(np.size(P_0)):
-        if P_e[i] / P_0[i] <= critical_pressure_ratio:
-            pressure_ratio = P_e[i] / P_0[i]
-            E[i] = (
+    for i in range(np.size(chamber_pressure)):
+        if atmospheric_pressure[i] / chamber_pressure[i] <= critical_pressure_ratio:
+            pressure_ratio = atmospheric_pressure[i] / chamber_pressure[i]
+            expansion_ratio[i] = (
                 ((k + 1) / 2) ** (1 / (k - 1))
                 * pressure_ratio ** (1 / k)
                 * ((k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k))) ** 0.5
             ) ** -1
         else:
-            E[i] = 1
-    return np.mean(E)
+            expansion_ratio[i] = 1
+    return np.mean(expansion_ratio)
