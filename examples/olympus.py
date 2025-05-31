@@ -51,7 +51,6 @@ def main():
     grain.add_segment(bates_segment_60)
     grain.add_segment(bates_segment_60)
 
-    # 2) Nozzle + combustion chamber => ThrustChamber
     nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.080,
         throat_diameter=0.037,
@@ -74,14 +73,12 @@ def main():
         combustion_chamber=combustion_chamber,
     )
 
-    # 3) SolidMotor using the new thrust chamber
     motor = motors.SolidMotor(
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,
     )
 
-    # 4) (Optional) Recovery system - if you want to see flight with parachutes
     recovery = recovery_models.Recovery()
     recovery.add_event(
         events.ApogeeBasedEvent(
@@ -97,14 +94,14 @@ def main():
     )
 
     fuselage = rocket_models.Fuselage(
-        length=3.0, drag_coefficient=0.6, outer_diameter=0.15
+        length=3.0, drag_coefficient=0.5, outer_diameter=0.15
     )
 
     rocket = rocket_models.Rocket(
         propulsion=motor,
         recovery=recovery,
         fuselage=fuselage,
-        mass_without_motor=30,
+        mass_without_motor=25,
     )
 
     params = internal_balistics_coupled.InternalBallisticsCoupledParams(
