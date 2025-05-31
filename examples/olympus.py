@@ -123,6 +123,8 @@ def main():
 
     simulation.print_results()
 
+    internal_ballistics_plots.thrust_pressure_plot(
+        ib_state.t, ib_state.thrust, ib_state.P_0
     ).show()
 
     ballistics_plots.ballistics_plots(
