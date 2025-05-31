@@ -4,11 +4,6 @@ an InternalBallisticsCoupled simulation that includes both
 internal ballistics and atmospheric flight.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.common.decorators import timing
 from machwave.models import materials
 from machwave.models.propulsion import grain as grain_models

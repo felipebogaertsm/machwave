@@ -5,11 +5,6 @@ never used in flight. The motor was successfully tested on July 2, 2022, and
 at the time, it was the largest experimental motor ever built in Latin America.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.common.decorators import timing
 from machwave.models import atmosphere, materials
 from machwave.models import recovery as recovery_models

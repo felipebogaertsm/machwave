@@ -4,11 +4,6 @@ Supernova Rocketry UFJF in 2019. It is a class J KNDX motor with a
 maximum operating pressure of 7 MPa.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.common.decorators import timing
 from machwave.models import materials
 from machwave.models.propulsion import grain as grain_models
