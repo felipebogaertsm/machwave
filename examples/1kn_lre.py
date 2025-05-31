@@ -2,11 +2,6 @@
 Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.models import materials
 from machwave.models.propulsion import feed_systems, motors, propellants
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
