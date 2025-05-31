@@ -21,8 +21,8 @@ OTHER_LOSSES_DEFAULT = 15.0
 # TODO: add 2-phase flow loss to TYPICAL_RANGES
 TYPICAL_RANGES = {
     "divergent_loss": {"lower": 0.75, "upper": 5},
-    "kinetics_loss": {"lower": 0.2, "upper": 5},
-    "boundary_layer_loss": {"lower": 0.1, "upper": 2},
+    "kinetics_loss": {"lower": 0.1, "upper": 5},
+    "boundary_layer_loss": {"lower": 0.1, "upper": 5},
 }
 
 
