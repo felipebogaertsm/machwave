@@ -21,6 +21,7 @@ from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.propellants import solid as solid_propellants
 from machwave.models.recovery import events, parachutes
 from machwave.services.plots import ballistics as ballistics_plots
+from machwave.services.plots import internal_ballistics as internal_ballistics_plots
 from machwave.simulations import internal_balistics_coupled
 
 
@@ -121,6 +122,8 @@ def main():
     ib_state, ballistic_state = simulation.run()
 
     simulation.print_results()
+
+    ).show()
 
     ballistics_plots.ballistics_plots(
         ballistic_state.t,
