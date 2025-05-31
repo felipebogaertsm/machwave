@@ -16,17 +16,17 @@ import numpy as np
 from machwave.common import decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
-OTHER_LOSSES_DEFAULT = 5.0e-2
+OTHER_LOSSES_DEFAULT = 15.0
 
 # TODO: add 2-phase flow loss to TYPICAL_RANGES
 TYPICAL_RANGES = {
-    "divergent_loss": {"lower": 0.75e-2, "upper": 5e-2},
-    "kinetics_loss": {"lower": 0.2e-2, "upper": 5e-2},
-    "boundary_layer_loss": {"lower": 0.1e-2, "upper": 2e-2},
+    "divergent_loss": {"lower": 0.75, "upper": 5},
+    "kinetics_loss": {"lower": 0.2, "upper": 5},
+    "boundary_layer_loss": {"lower": 0.1, "upper": 2},
 }
 
 
-@decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.check_bounds(lower=0.0, upper=100.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["divergent_loss"])
 def get_nozzle_divergent_percentage_loss(divergent_angle: float) -> float:
     """
@@ -42,10 +42,10 @@ def get_nozzle_divergent_percentage_loss(divergent_angle: float) -> float:
     Example:
         correction_factor = get_divergent_correction_factor(15.0)
     """
-    return 0.5 * (1 - np.cos(np.deg2rad(divergent_angle)))
+    return 50 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
 
-@decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.check_bounds(lower=0.0, upper=100.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["kinetics_loss"])
 def get_kinetics_percentage_loss(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
@@ -82,10 +82,10 @@ def get_kinetics_percentage_loss(
             KINETICS_LOSS_PRESSURE_THRESHOLD_PSI / chamber_pressure_psi
         )
 
-    return (1 - i_sp_th_ratio) * pressure_correction / 3
+    return 33.3 * (1 - i_sp_th_ratio) * pressure_correction
 
 
-@decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.check_bounds(lower=0.0, upper=100.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["boundary_layer_loss"])
 def get_boundary_layer_percentage_loss(
     chamber_pressure_psi: float,
@@ -137,7 +137,7 @@ def get_boundary_layer_percentage_loss(
     )
     term_3 = 1 + 0.016 * (expansion_ratio - 9)
 
-    return term_1 * term_2 * term_3 / 100
+    return term_1 * term_2 * term_3
 
 
 def _get_two_phase_phase_loss_particle_size(
@@ -173,7 +173,7 @@ def _get_two_phase_phase_loss_particle_size(
 
 
 # TODO: add 2-phase flow loss warning ranges
-@decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.check_bounds(lower=0.0, upper=100.0)
 def get_two_phase_flow_percentage_loss(
     chamber_pressure_psi: float,
     mole_fraction_of_condensed_phase: float,
@@ -241,10 +241,10 @@ def get_two_phase_flow_percentage_loss(
         * np.power(throat_diameter_inch, c_6)
     )
 
-    return c_3 * numerator / denominator / 100
+    return c_3 * numerator / denominator
 
 
-@decorators.check_bounds(lower=0.0, upper=1.0)
+@decorators.check_bounds(lower=0.0, upper=100.0)
 def get_overall_nozzle_efficiency(
     eta_div: float,
     eta_kin: float,
@@ -265,4 +265,4 @@ def get_overall_nozzle_efficiency(
     Returns:
         float: The overall nozzle efficiency.
     """
-    return 1 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses)
+    return (100 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses)) / 100
