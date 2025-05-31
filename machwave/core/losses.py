@@ -18,11 +18,11 @@ from machwave.common import decorators
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 OTHER_LOSSES_DEFAULT = 15.0
 
-# TODO: add 2-phase flow loss to TYPICAL_RANGES
 TYPICAL_RANGES = {
     "divergent_loss": {"lower": 0.75, "upper": 5},
     "kinetics_loss": {"lower": 0.1, "upper": 5},
     "boundary_layer_loss": {"lower": 0.1, "upper": 5},
+    "two_phase_flow_loss": {"lower": 0.1, "upper": 5},
 }
 
 
@@ -172,8 +172,8 @@ def _get_two_phase_phase_loss_particle_size(
     )
 
 
-# TODO: add 2-phase flow loss warning ranges
 @decorators.check_bounds(lower=0.0, upper=100.0)
+@decorators.warn_if_outside_range(**TYPICAL_RANGES["two_phase_flow_loss"])
 def get_two_phase_flow_percentage_loss(
     chamber_pressure_psi: float,
     mole_fraction_of_condensed_phase: float,
