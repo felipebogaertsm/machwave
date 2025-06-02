@@ -244,10 +244,10 @@ class MonteCarloSimulation:
         )
 
         return {
-            "mean": np.mean(values),
-            "median": np.median(values),
-            "variance": np.var(values),
-            "std_dev": np.std(values),
+            "mean": float(np.mean(values)),
+            "median": float(np.median(values)),
+            "variance": float(np.var(values)),
+            "std_dev": float(np.std(values)),
         }
 
     def plot_histogram(
