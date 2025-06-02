@@ -1,7 +1,7 @@
 """
-This example simulates a rocket with an APCP solid motor, using
-an InternalBallisticsCoupled simulation that includes both
-internal ballistics and atmospheric flight.
+This example simulates a rocket with the Nero motor, developed at
+Supernova Rocketry UFJF in 2019. It is a class J KNDX motor with a
+maximum operating pressure of 7 MPa.
 """
 
 from machwave.common.decorators import timing
@@ -17,39 +17,38 @@ from machwave.simulations import internal_ballistics
 
 @timing
 def main():
-    propellant = solid_propellants.MIT_CHERRY_LIMEADE
+    propellant = solid_propellants.KNDX
 
     grain = grain_models.Grain()
     bates_segment = grain_geometries.BatesSegment(
-        outer_diameter=0.085,
-        core_diameter=0.035,
-        length=0.150,
-        spacing=0.01,
+        outer_diameter=41e-3,
+        core_diameter=15e-3,
+        length=67.5e-3,
+        spacing=10e-3,
     )
 
-    grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
     grain.add_segment(bates_segment)
 
     nozzle = thrust_chamber_models.Nozzle(
-        inlet_diameter=0.080,
-        throat_diameter=0.022,
+        inlet_diameter=43e-3,
+        throat_diameter=9.5e-3,
         divergent_angle=12,
-        convergent_angle=45,
+        convergent_angle=40,
         expansion_ratio=8,
         material=materials.Steel(),
     )
     combustion_chamber = thrust_chamber_models.CombustionChamber(
-        casing_inner_diameter=95.25e-3,
-        casing_outer_diameter=101.6e-3,
-        thermal_liner_thickness=3e-3,
-        internal_length=grain.total_length + 0.01,
+        casing_inner_diameter=44.5e-3,
+        casing_outer_diameter=50.8e-3,
+        thermal_liner_thickness=1e-3,
+        internal_length=grain.total_length + 10e-3,
     )
 
     thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
-        dry_mass=6.0,
+        dry_mass=0.85,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
     )

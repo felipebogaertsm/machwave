@@ -1,7 +1,7 @@
 import numpy as np
 
 from machwave.core.des import compute_point_mass_trajectory
-from machwave.core.math.rk4 import rk4th_ode_solver
+from machwave.core.mathematics.rk4 import rk4th_ode_solver
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.states.ballistics.base import BallisticState

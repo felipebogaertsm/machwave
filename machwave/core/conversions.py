@@ -88,3 +88,28 @@ def convert_lbft3_to_kgm3(density_lbft3: float) -> float:
         float: Density in kg/m³.
     """
     return density_lbft3 * 16.01846337
+
+
+def convert_meter_to_inch(measure: float) -> float:
+    """
+    Converts length from meters to inches.
+
+    Args:
+        measure (float): Length in meters.
+
+    Returns:
+        float: Size in inches.
+    """
+    return measure / 0.0254
+
+
+def convert_meter_to_micrometer(measure: float) -> float:
+    """
+    Converts from meters to micrometers.
+
+    Args:
+        measure (float): Size in meters.
+    Returns:
+        float: Length in micrometers.
+    """
+    return measure * 1e6
