@@ -18,10 +18,16 @@ from machwave.common import decorators
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 OTHER_LOSSES_DEFAULT = 12.0
 
+"""
+AD-A015 140 cites typical ranges for the correction factors.
+Some of these ranges were adjusted based on the experience of the
+authors and the typical outcomes for validation cases.
+"""
+
 TYPICAL_RANGES = {
     "divergent_loss": {"lower": 0.75, "upper": 5},
     "kinetics_loss": {"lower": 0.1, "upper": 5},
-    "boundary_layer_loss": {"lower": 0.1, "upper": 2},
+    "boundary_layer_loss": {"lower": 0.1, "upper": 3},
     "two_phase_flow_loss": {"lower": 0.1, "upper": 5},
 }
 

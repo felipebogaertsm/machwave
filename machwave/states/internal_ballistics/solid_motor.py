@@ -167,7 +167,7 @@ class SolidMotorState(MotorState):
             ),
         )
         nozzle_efficiency = losses.get_overall_nozzle_efficiency(
-            eta_div, eta_kin, eta_bl, eta_2p
+            eta_div, eta_kin, eta_bl, eta_2p, other_losses=self.motor.other_losses
         )
         overall_efficiency = (
             nozzle_efficiency * self.motor.propellant.combustion_efficiency
