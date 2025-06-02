@@ -222,6 +222,33 @@ class MonteCarloSimulation:
             [getattr(result[state_index], property) for result in self.results]
         )
 
+    def get_property_stats(self, state_index: int, property: str) -> dict[str, float]:
+        """
+        Calculates the mean, median, variance, and standard deviation
+        of a specific property from the simulation results.
+
+        Args:
+            state_index (int): Index of the state/result to retrieve
+                the property from.
+            property (str): Name of the property or the attribute of the
+                state to retrieve.
+
+        Returns:
+            dict[str, float]: A dictionary containing the mean, median,
+                variance, and standard deviation of the specified
+                property.
+        """
+        values = self.retrieve_values_from_result(
+            state_index=state_index, property=property
+        )
+
+        return {
+            "mean": np.mean(values),
+            "median": np.median(values),
+            "variance": np.var(values),
+            "std_dev": np.std(values),
+        }
+
     def plot_histogram(
         self,
         state_index: int,
