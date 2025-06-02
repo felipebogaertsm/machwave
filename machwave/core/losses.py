@@ -16,12 +16,12 @@ import numpy as np
 from machwave.common import decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
-OTHER_LOSSES_DEFAULT = 15.0
+OTHER_LOSSES_DEFAULT = 12.0
 
 TYPICAL_RANGES = {
     "divergent_loss": {"lower": 0.75, "upper": 5},
     "kinetics_loss": {"lower": 0.1, "upper": 5},
-    "boundary_layer_loss": {"lower": 0.1, "upper": 5},
+    "boundary_layer_loss": {"lower": 0.1, "upper": 2},
     "two_phase_flow_loss": {"lower": 0.1, "upper": 5},
 }
 
@@ -234,11 +234,11 @@ def get_two_phase_flow_percentage_loss(
             else:
                 c_3, c_5, c_6 = 25.2, 0.8, 0.33
 
-    numerator = xi * c_4 * np.power(particle_size_um, c_5)
+    numerator = (xi**c_4) * (particle_size_um**c_5)
     denominator = (
-        np.power(chamber_pressure_psi, 0.15)
-        * np.power(expansion_ratio, 0.08)
-        * np.power(throat_diameter_inch, c_6)
+        (chamber_pressure_psi**0.15)
+        * (expansion_ratio**0.08)
+        * (throat_diameter_inch**c_6)
     )
 
     return c_3 * numerator / denominator
