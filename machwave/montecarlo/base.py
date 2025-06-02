@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import plotly.graph_objects as go
+from scipy import stats as scipy_stats
 
 from machwave.common.generic import obtain_attributes_from_object
 from machwave.montecarlo.random import get_random_generator
@@ -278,4 +279,93 @@ class MonteCarloSimulation:
         fig.add_trace(go.Histogram(x=values, *args, **kwargs))
         fig.update_xaxes(title_text=property or x_axes_title)
 
+        fig.show()
+
+    def plot_histogram_with_kde(
+        self,
+        state_index: int,
+        property: str,
+        x_axes_title: str = "x",
+        nbins: int = 30,
+        kde_points: int = 200,
+        *args,
+        **kwargs,
+    ) -> None:
+        """
+        Plots a histogram with a Kernel Density Estimate (KDE) curve.
+
+        Args:
+            state_index: Index of the state/result to plot.
+            property: Name of the property or the attribute of the state
+                to plot.
+            x_axes_title: Title of the x axes. By default, the property name
+                is used.
+            nbins: Number of bins for the histogram (default: 30).
+            kde_points: Number of points for the KDE curve (default: 200).
+            *args: Additional arguments to pass to the histogram plot.
+            **kwargs: Additional keyword arguments to pass to the histogram
+                plot.
+        """
+        values = self.retrieve_values_from_result(
+            state_index=state_index, property=property
+        )
+
+        kde = scipy_stats.gaussian_kde(values)
+        xs = np.linspace(values.min(), values.max(), kde_points)
+        kde_vals = kde(xs)
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Histogram(
+                x=values,
+                histnorm="probability density",
+                nbinsx=nbins,
+                opacity=0.5,
+                name="Histogram",
+                *args,
+                **kwargs,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(x=xs, y=kde_vals, mode="lines", name="KDE", line=dict(width=2))
+        )
+        fig.update_layout(
+            xaxis_title=property or x_axes_title,
+            yaxis_title="Density",
+            title=f"Histogram + '{property}' KDE",
+        )
+        fig.show()
+
+    def plot_cdf(
+        self, state_index: int, property: str, x_axes_title: str = "x", *args, **kwargs
+    ) -> None:
+        """
+        Plots the empirical cumulative distribution function (CDF) of a
+        specific property from the simulation results.
+
+        Args:
+            state_index: Index of the state/result to plot.
+            property: Name of the property or the attribute of the state
+                to plot.
+            x_axes_title: Title of the x axes. By default, the property name
+                is used.
+            *args: Additional arguments to pass to the CDF plot.
+            **kwargs: Additional keyword arguments to pass to the CDF plot.
+        """
+        values = self.retrieve_values_from_result(
+            state_index=state_index, property=property
+        )
+
+        sorted_vals = np.sort(values)
+        cdf = np.arange(1, len(sorted_vals) + 1) / len(sorted_vals)
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=sorted_vals, y=cdf, mode="lines", name="CDF", *args, **kwargs)
+        )
+        fig.update_layout(
+            xaxis_title=property or x_axes_title,
+            yaxis_title="Cummulative Probability",
+            title=f"CDF of '{property}'",
+        )
         fig.show()
