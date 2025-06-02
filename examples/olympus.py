@@ -5,11 +5,6 @@ never used in flight. The motor was successfully tested on July 2, 2022, and
 at the time, it was the largest experimental motor ever built in Latin America.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.common.decorators import timing
 from machwave.models import atmosphere, materials
 from machwave.models import recovery as recovery_models
@@ -21,6 +16,7 @@ from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.propellants import solid as solid_propellants
 from machwave.models.recovery import events, parachutes
 from machwave.services.plots import ballistics as ballistics_plots
+from machwave.services.plots import internal_ballistics as internal_ballistics_plots
 from machwave.simulations import internal_balistics_coupled
 
 
@@ -50,7 +46,6 @@ def main():
     grain.add_segment(bates_segment_60)
     grain.add_segment(bates_segment_60)
 
-    # 2) Nozzle + combustion chamber => ThrustChamber
     nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.080,
         throat_diameter=0.037,
@@ -73,14 +68,12 @@ def main():
         combustion_chamber=combustion_chamber,
     )
 
-    # 3) SolidMotor using the new thrust chamber
     motor = motors.SolidMotor(
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,
     )
 
-    # 4) (Optional) Recovery system - if you want to see flight with parachutes
     recovery = recovery_models.Recovery()
     recovery.add_event(
         events.ApogeeBasedEvent(
@@ -96,14 +89,14 @@ def main():
     )
 
     fuselage = rocket_models.Fuselage(
-        length=3.0, drag_coefficient=0.6, outer_diameter=0.15
+        length=3.0, drag_coefficient=0.5, outer_diameter=0.15
     )
 
     rocket = rocket_models.Rocket(
         propulsion=motor,
         recovery=recovery,
         fuselage=fuselage,
-        mass_without_motor=30,
+        mass_without_motor=25,
     )
 
     params = internal_balistics_coupled.InternalBallisticsCoupledParams(
@@ -121,6 +114,10 @@ def main():
     ib_state, ballistic_state = simulation.run()
 
     simulation.print_results()
+
+    internal_ballistics_plots.thrust_pressure_plot(
+        ib_state.t, ib_state.thrust, ib_state.P_0
+    ).show()
 
     ballistics_plots.ballistics_plots(
         ballistic_state.t,

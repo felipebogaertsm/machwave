@@ -1,9 +1,6 @@
 import numpy as np
 
-from machwave.core.flow.isentropic import (
-    get_divergent_correction_factor,
-)
-from machwave.core.math.geometric import get_circle_area
+from machwave.core.mathematics.geometric import get_circle_area
 
 
 class Nozzle:
@@ -25,9 +22,6 @@ class Nozzle:
 
     def get_throat_area(self):
         return get_circle_area(self.throat_diameter)
-
-    def get_divergent_correction_factor(self):
-        return get_divergent_correction_factor(self.divergent_angle)
 
     def get_nozzle_wall_thickness(
         self,

@@ -1,5 +1,6 @@
 import numpy as np
 
+from machwave.core import losses
 from machwave.core.flow.isentropic import get_thrust_coefficients
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.propellants.solid import SolidPropellant
@@ -60,7 +61,9 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         """
         return (
             (100 - (n_kin + n_bl + n_tp))
-            * self.thrust_chamber.nozzle.get_divergent_correction_factor()
+            * losses.get_nozzle_divergent_percentage_loss(
+                self.thrust_chamber.nozzle.throat_diameter
+            )
             / 100
             * self.propellant.combustion_efficiency
         )

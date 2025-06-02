@@ -3,11 +3,6 @@ This example simulates a rocket with a solid motor that reaches an altitude
 of 3 km.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from machwave.common.decorators import timing
 from machwave.models import atmosphere, materials
 from machwave.models import recovery as recovery_models

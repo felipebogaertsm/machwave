@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core.math.geometric import (
+from machwave.core.mathematics.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
     get_cylinder_volume,

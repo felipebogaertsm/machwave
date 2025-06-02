@@ -23,6 +23,7 @@ def compute_chamber_pressure_mass_balance_srm(
     R: float,
     T0: float,
     r: float,
+    Cd: float = 1.0,
 ) -> tuple[float]:
     """
     Calculates the chamber pressure by solving Hans Seidel's differential
@@ -43,22 +44,24 @@ def compute_chamber_pressure_mass_balance_srm(
         R (float): Gas constant per molecular weight.
         T0 (float): Flame temperature.
         r (float): Propellant burn rate.
+        Cd (float): Discharge coefficient, default is 1.0.
 
     Returns:
         tuple[float]: Derivative of chamber pressure with respect to time.
 
     """
     critical_pressure_ratio = get_critical_pressure_ratio(k_mix=k)
+    Pr = Pe / P0
 
-    if Pe / P0 <= critical_pressure_ratio:
-        H = ((k / (k + 1)) ** 0.5) * ((2 / (k + 1)) ** (1 / (k - 1)))
-    else:
-        H = ((Pe / P0) ** (1 / k)) * (
-            ((k / (k - 1)) * (1 - (Pe / P0) ** ((k - 1) / k))) ** 0.5
-        )
+    if Pr <= critical_pressure_ratio:  # choked
+        H = (k**0.5) * (2 / (k + 1)) ** ((k + 1) / (2 * (k - 1)))
+    else:  # sub-critical
+        H = ((k / (k - 1)) ** 0.5) * Pr ** (1 / k) * (1 - Pr ** ((k - 1) / k)) ** 0.5
 
-    dP0_dt = ((R * T0 * Ab * pp * r) - (P0 * At * H * ((2 * R * T0) ** 0.5))) / V0
+    m_dot_gen = pp * r * Ab
+    m_dot_exit = Cd * P0 * At * H / (R * T0) ** 0.5
 
+    dP0_dt = (R * T0 / V0) * (m_dot_gen - m_dot_exit)
     return (dP0_dt,)
 
 

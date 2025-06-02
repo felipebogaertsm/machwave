@@ -10,6 +10,8 @@ from machwave.models.propulsion.thrust_chamber import ThrustChamber
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
 
+DEFAULT_OTHER_MOTOR_LOSSES = 12.0  # percent
+
 
 class Motor(Generic[P, T], ABC):
     """
@@ -21,6 +23,7 @@ class Motor(Generic[P, T], ABC):
         self,
         propellant: P,
         thrust_chamber: T,
+        other_losses: float = DEFAULT_OTHER_MOTOR_LOSSES,
     ) -> None:
         """
         Instantiates object attributes common to any motor/engine (Solid,
@@ -29,9 +32,12 @@ class Motor(Generic[P, T], ABC):
         Args:
             propellant: Object representing the propellant used in the motor.
             thrust_chamber: Object representing the thrust chamber of the motor.
+            other_losses: Other motor losses, in percent.
         """
         self.propellant = propellant
         self.thrust_chamber = thrust_chamber
+
+        self.other_losses = other_losses
 
     @abstractmethod
     def get_launch_mass(self) -> float:
