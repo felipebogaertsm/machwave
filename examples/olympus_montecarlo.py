@@ -83,6 +83,12 @@ def main():
     mc.plot_histogram(1, "total_impulse", "Total Impulse (N·s)")
     mc.plot_histogram_with_kde(1, "total_impulse", "Total Impulse (N·s)")
     mc.plot_cdf(1, "total_impulse", "Total Impulse (N·s)")
+    mc.plot_time_series_extremes(
+        1,
+        "t",
+        series_property="P_0",
+        title="Thrust Time Series",
+    )
 
 
 if __name__ == "__main__":

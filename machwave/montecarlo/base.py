@@ -369,3 +369,130 @@ class MonteCarloSimulation:
             title=f"CDF of '{property}'",
         )
         fig.show()
+
+    def plot_time_series_extremes(
+        self,
+        state_index: int,
+        time_property: str,
+        series_property: str,
+        x_axes_title: str = "time",
+        title: str | None = None,
+        **plotly_kwargs,
+    ) -> None:
+        """
+        Among all Monte Carlo scenarios, find:
+          - the scenario whose series_property has the lowest mean;
+          - the scenario whose series_property has the highest mean;
+          - the scenario whose series_property has the median.
+
+        Then plot those three curves against the longest time array,
+        padding shorter series with NaN so that each stops where its
+        data ends. Finally, shade between the min-mean and max-mean
+        curves only where both have real data.
+
+        Args:
+            state_index: index into each simulation result that holds
+                your object containing time/series.
+            time_property: attribute name of the time array in that
+                object.
+            series_property: attribute name of the y(t) array in that
+                object.
+            x_axes_title: label for the x-axis.
+            title: overall plot title.
+            **plotly_kwargs: extra kwargs to pass into go.Scatter
+                (e.g. line={"dash":"dash"}).
+        """
+        all_times = []
+        all_series = []
+
+        # 1. Gather every scenario’s raw time-series
+        for sim_result in self.results:
+            state_obj = sim_result[state_index]
+            t = np.asarray(getattr(state_obj, time_property))  # e.g. state.time
+            y = np.asarray(getattr(state_obj, series_property))  # e.g. state.thrust
+
+            all_times.append(t)
+            all_series.append(y)
+
+        # 2. Identify the longest time array (highest length)
+        lengths = [len(t) for t in all_times]
+        idx_longest = int(np.argmax(lengths))
+        common_time = all_times[idx_longest]
+        Nmax = len(common_time)
+
+        # 3. Pad each series array with np.nan out to Nmax
+        padded_series = []
+        for y in all_series:
+            n = len(y)
+            if n < Nmax:
+                # create an array of length Nmax, fill first n entries with y, rest with nan
+                padded = np.full(Nmax, np.nan, dtype=float)
+                padded[:n] = y
+                padded_series.append(padded)
+            else:
+                # already the longest (or equal), no padding needed
+                padded_series.append(y.copy())
+
+        series_mat = np.vstack(padded_series)  # shape = (n_scenarios, Nmax)
+
+        # 4. Compute each scenario’s mean over its actual points (ignore NaN)
+        means = np.nanmean(series_mat, axis=1)  # shape = (n_scenarios,)
+
+        # 5. Find indices for lowest-mean, highest-mean, and closest-to-median
+        i_min = int(np.nanargmin(means))
+        i_max = int(np.nanargmax(means))
+
+        median_of_means = np.median(means)
+        i_med = int(np.nanargmin(np.abs(means - median_of_means)))
+
+        y_min = series_mat[i_min]  # length = Nmax, but NaN beyond its real data
+        y_med = series_mat[i_med]
+        y_max = series_mat[i_max]
+
+        # 6. Build Plotly figure
+        fig = go.Figure()
+
+        # Lowest-mean curve (no fill yet)
+        fig.add_trace(
+            go.Scatter(
+                x=common_time,
+                y=y_min,
+                name="Lowest-mean scenario",
+                line=dict(color="blue"),
+                **plotly_kwargs,
+            )
+        )
+
+        # Highest-mean curve, with fill down to the previous trace
+        # (y_min), but beyond the overlap (where either is NaN),
+        # Plotly will simply not draw.
+        fig.add_trace(
+            go.Scatter(
+                x=common_time,
+                y=y_max,
+                name="Highest-mean scenario",
+                line=dict(color="red"),
+                fill="tonexty",
+                **plotly_kwargs,
+            )
+        )
+
+        # Median-mean curve on top
+        fig.add_trace(
+            go.Scatter(
+                x=common_time,
+                y=y_med,
+                name="Median-mean scenario",
+                line=dict(color="green", width=2, dash="dash"),
+                **plotly_kwargs,
+            )
+        )
+
+        fig.update_layout(
+            xaxis_title=x_axes_title,
+            yaxis_title=series_property,
+            title=title
+            or f"Extremes of '{series_property}' across {self.number_of_scenarios} scenarios",
+        )
+
+        fig.show()
