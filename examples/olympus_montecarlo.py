@@ -73,8 +73,22 @@ def main():
         internal_ballistics.InternalBallistics,
     )
     mc.run()
+
+    total_impulse_stats = mc.get_property_stats(1, "total_impulse")
+    print(f"Total impulse (N.s) mean: {total_impulse_stats.get('mean'):.2f}")
+    print(f"Total impulse (N.s) median: {total_impulse_stats.get('median'):.2f}")
+    print(f"Total impulse (N.s) variance: {total_impulse_stats.get('variance'):.2f}")
+    print(f"Total impulse (N.s) std: {total_impulse_stats.get('std_dev'):.2f}")
+
     mc.plot_histogram(1, "total_impulse", "Total Impulse (N·s)")
-    mc.plot_histogram(1, "specific_impulse", "Specific Impulse (N·s)")
+    mc.plot_histogram_with_kde(1, "total_impulse", "Total Impulse (N·s)")
+    mc.plot_cdf(1, "total_impulse", "Total Impulse (N·s)")
+    mc.plot_time_series_extremes(
+        1,
+        "t",
+        series_property="P_0",
+        title="Thrust Time Series",
+    )
 
 
 if __name__ == "__main__":
