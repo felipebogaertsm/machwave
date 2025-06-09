@@ -95,16 +95,19 @@ def plot_cdf(
     state_index: int,
     property_name: str,
     x_axes_title: str = "x",
+    percentiles: list[int] = (5, 25, 50, 75, 95),
     **plotly_kwargs,
 ) -> None:
     """
-    Plots the empirical CDF of a single scalar property across all results.
+    Plots the empirical CDF of a single scalar property across all results,
+    marks specified percentiles, and adjusts y-axis to percent format.
 
     Args:
         results: List of simulation results (each result is a list/tuple of state-objects).
         state_index: Index within each result where the state-object holds the desired property.
         property_name: Name of the attribute to plot.
         x_axes_title: Label for the x-axis.
+        percentiles: Iterable of percentiles to mark on the plot (e.g. [5,25,50,75,95]).
         **plotly_kwargs: Additional kwargs passed to go.Scatter.
     """
     values = np.array(
@@ -113,15 +116,47 @@ def plot_cdf(
     sorted_vals = np.sort(values)
     cdf = np.arange(1, len(sorted_vals) + 1) / len(sorted_vals)
 
+    pct_values = np.percentile(values, percentiles)
+
     fig = go.Figure()
     fig.add_trace(
-        go.Scatter(x=sorted_vals, y=cdf, mode="lines", name="CDF", **plotly_kwargs)
+        go.Scatter(
+            x=sorted_vals,
+            y=cdf,
+            mode="lines",
+            name="CDF",
+            **plotly_kwargs,
+        )
     )
+
+    for p, v in zip(percentiles, pct_values):
+        fig.add_trace(
+            go.Scatter(
+                x=[v, v],
+                y=[0, p / 100],
+                mode="lines",
+                line=dict(dash="dash"),
+                showlegend=False,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[v],
+                y=[p / 100],
+                mode="markers+text",
+                text=[f"{p}th"],
+                textposition="top center",
+                showlegend=False,
+            )
+        )
+
     fig.update_layout(
         xaxis_title=property_name or x_axes_title,
         yaxis_title="Cumulative Probability",
         title=f"CDF of '{property_name}'",
     )
+    fig.update_yaxes(tickformat=".0%", range=[0, 1])
+
     fig.show()
 
 
