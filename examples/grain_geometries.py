@@ -19,7 +19,9 @@ from machwave.models.propulsion.grain.geometries import (
     ConicalGrainSegment,
     DGrainSegment,
     MultiPortGrainSegment,
+    StarGrainSegment,
 )
+from machwave.io import plot_exporters
 
 np.set_printoptions(precision=2, suppress=True)
 
@@ -56,6 +58,15 @@ def main():
         spacing=0.01,
     )
 
+    star_segment = StarGrainSegment(
+        length=68e-3,
+        outer_diameter=41e-3,
+        number_of_points=5,
+        point_length=12e-3,
+        point_width=6e-3,
+        spacing=0.01,
+    )
+
     web_distance = 0
 
     grain_area = bates_segment.get_burn_area(web_distance=web_distance)
@@ -86,7 +97,7 @@ def main():
     print(
         f"Multiport center of gravity: {multiport_segment.get_center_of_gravity(web_distance)}"
     )
-    plot_2d_face_map_animated(
+    multiport_fig = plot_2d_face_map_animated(
         face_maps=np.array(
             [
                 multiport_segment.get_face_map(web_distance)
@@ -94,7 +105,19 @@ def main():
             ]
         ),
         web_distances=web_distance_array,
-    ).show()
+    )
+    multiport_fig.show()
+
+    star_fig = plot_2d_face_map_animated(
+        face_maps=np.array(
+            [
+                star_segment.get_face_map(web_distance)
+                for web_distance in web_distance_array
+            ]
+        ),
+        web_distances=web_distance_array,
+    )
+    star_fig.show()
 
 
 if __name__ == "__main__":
