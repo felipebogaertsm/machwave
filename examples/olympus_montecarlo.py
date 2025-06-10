@@ -17,18 +17,18 @@ def main():
     for _ in range(4):
         grain.add_segment(
             grain_geometries.BatesSegment(
-                outer_diameter=montecarlo.MonteCarloParameter(0.115, tolerance=0.001),
-                core_diameter=montecarlo.MonteCarloParameter(0.045, tolerance=0.001),
-                length=montecarlo.MonteCarloParameter(0.200, tolerance=0.001),
+                outer_diameter=montecarlo.MonteCarloParameter(0.117, tolerance=0.002),
+                core_diameter=montecarlo.MonteCarloParameter(0.045, tolerance=0.002),
+                length=montecarlo.MonteCarloParameter(0.195, tolerance=0.005),
                 spacing=montecarlo.MonteCarloParameter(0.010, tolerance=0.005),
             )
         )
     for _ in range(3):
         grain.add_segment(
             grain_geometries.BatesSegment(
-                outer_diameter=montecarlo.MonteCarloParameter(0.115, tolerance=0.001),
-                core_diameter=montecarlo.MonteCarloParameter(0.060, tolerance=0.001),
-                length=montecarlo.MonteCarloParameter(0.200, tolerance=0.001),
+                outer_diameter=montecarlo.MonteCarloParameter(0.117, tolerance=0.002),
+                core_diameter=montecarlo.MonteCarloParameter(0.060, tolerance=0.002),
+                length=montecarlo.MonteCarloParameter(0.195, tolerance=0.005),
                 spacing=montecarlo.MonteCarloParameter(0.010, tolerance=0.005),
             )
         )
@@ -69,7 +69,7 @@ def main():
 
     mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
-        100,
+        10_000,
         internal_ballistics.InternalBallistics,
     )
     mc.run()
