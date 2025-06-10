@@ -12,8 +12,8 @@ defaults:
     shell: bash
 
 jobs:
-  static-checks:
-    name: Static Checks
+  lint:
+    name: Ruff and Pyright Checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -37,7 +37,7 @@ jobs:
         run: poetry run pyright machwave
 
   test:
-    name: Testing
+    name: Pytest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
