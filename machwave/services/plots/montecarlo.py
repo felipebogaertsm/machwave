@@ -1,4 +1,4 @@
-# File: plot_service.py
+from collections.abc import Sequence
 
 import numpy as np
 import plotly.graph_objects as go
@@ -95,7 +95,7 @@ def plot_cdf(
     state_index: int,
     property_name: str,
     x_axes_title: str = "x",
-    percentiles: list[int] = (5, 25, 50, 75, 95),
+    percentiles: Sequence[int] = (5, 25, 50, 75, 95),
     **plotly_kwargs,
 ) -> None:
     """
