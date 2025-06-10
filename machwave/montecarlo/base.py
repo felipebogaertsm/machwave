@@ -4,6 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 
 import numpy as np
+import scipy.stats as scipy_stats
 
 from machwave.common.generic import obtain_attributes_from_object
 from machwave.montecarlo.random import get_random_generator
@@ -213,21 +214,46 @@ class MonteCarloSimulation:
         self, state_index: int, property_name: str
     ) -> dict[str, float]:
         """
-        Returns mean, median, variance, std_dev of a scalar property across all results.
+        Compute descriptive statistics for a scalar property across all results.
+
+        Metrics returned:
+        mean, median, variance, std_dev, mode, skew
+        (Fishers, unbiased), kurtosis (excess, unbiased),
+        p5 (5th percentile), p95 (95th percentile).
 
         Args:
             state_index: Index of the state in the simulation result.
-            property_name: Name of the property to retrieve from the results.
+            property_name: Name of the property to retrieve from the
+                results.
         Returns:
-            Dictionary containing the mean, median, variance, and standard deviation
-            of the specified property across all simulation results.
+            Dictionary containing the mean, median, variance, and
+            standard deviation of the specified property across all
+            simulation results.
         """
-        values = self.retrieve_values_from_result(state_index, property_name)
+        values = np.asarray(
+            self.retrieve_values_from_result(state_index, property_name)
+        )
+
+        mean_val = np.mean(values)
+        median_val = np.median(values)
+        var_val = np.var(values)
+        std_val = np.std(values)
+
+        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode[0])
+        skew_val = scipy_stats.skew(values, bias=False)  # unbiased Fisher skew
+        kurt_val = scipy_stats.kurtosis(values, fisher=True, bias=False)
+        p5, p95 = np.percentile(values, [5, 95])
+
         return {
-            "mean": float(np.mean(values)),
-            "median": float(np.median(values)),
-            "variance": float(np.var(values)),
-            "std_dev": float(np.std(values)),
+            "mean": float(mean_val),
+            "median": float(median_val),
+            "variance": float(var_val),
+            "std_dev": float(std_val),
+            "mode": float(mode_val),
+            "skew": float(skew_val),
+            "kurtosis": float(kurt_val),
+            "p5": float(p5),
+            "p95": float(p95),
         }
 
     def plot_histogram(
