@@ -2,6 +2,7 @@ name: "Setup Python and Poetry"
 description: "Sets up Python, installs Poetry, restores a cached .venv, and installs deps."
 inputs:
   python-version:
+    description: "The version of Python to set up"
     required: true
   install-flags:
     default: "--no-interaction --no-root"
