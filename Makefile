@@ -1,5 +1,7 @@
 test:
 	@poetry run pytest
+test-docker:
+	@docker compose -f compose.test.yaml up --build --exit-code-from test-machwave
 publish:
 	@twine upload dist/*
 check:
