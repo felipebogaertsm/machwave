@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.13"
+          python-version: "3.12"
       - run: poetry run ruff check .
       - run: poetry run pyright machwave
 
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.13"
+          python-version: "3.12"
       - run: poetry run pytest -q
 
   build-deploy-docs:
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.13"
+          python-version: "3.12"
           install-flags: "--no-interaction --only docs --with dev"
       - run: |
           chmod +x scripts/sphinx-docs.sh
