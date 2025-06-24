@@ -100,7 +100,9 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                 distances.append(dist)
 
                 # Count how many pixels remain above 'dist'
-                count = np.count_nonzero(np.logical_and(regression_map > dist, valid))
+                count = float(
+                    np.count_nonzero(np.logical_and(regression_map > dist, valid))
+                )
                 area = self.map_to_area(count)
                 face_area_values.append(area)
 
