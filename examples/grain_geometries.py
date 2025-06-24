@@ -10,7 +10,6 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from machwave.io import plot_exporters
 from machwave.models.propulsion.grain.fmm.services import (
     plot_2d_face_map,
     plot_2d_face_map_animated,
