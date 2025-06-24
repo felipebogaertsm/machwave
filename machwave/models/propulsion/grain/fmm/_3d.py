@@ -68,7 +68,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             z_index = max_index
 
         face_map_slice = face_map_3d[z_index]
-        face_area = self.map_to_area(np.count_nonzero(face_map_slice == 1))
+        face_area = self.map_to_area(float(np.count_nonzero(face_map_slice == 1)))
         return get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
