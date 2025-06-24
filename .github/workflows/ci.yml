@@ -7,80 +7,51 @@ permissions:
   pages: write
   id-token: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  static-checks:
-    name: Static Checks
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        run: pip install poetry
-
-      - name: Install Dependencies
-        run: poetry install --no-root --with dev
-
-      - name: Run Ruff checks
-        run: poetry run ruff check .
-
-      - name: Run Pyright
-        run: poetry run pyright machwave
+          python-version: "3.13"
+      - run: poetry run ruff check .
+      - run: poetry run pyright machwave
 
   test:
-    name: Testing
+    needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run Tests
-        run: docker compose -f compose.test.yaml up --build --exit-code-from test-machwave
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-poetry
+        with:
+          python-version: "3.13"
+      - run: poetry run pytest -q
 
   build-deploy-docs:
-    name: Build and deploy documentation
+    needs: [lint, test]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.10.x"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install sphinx sphinx_rtd_theme
-          pip install -r requirements.txt
-
-      - name: Build documentation
-        run: |
+          python-version: "3.13"
+          install-flags: "--no-interaction --with docs,dev"
+      - run: |
           chmod +x scripts/sphinx-docs.sh
-          sh scripts/sphinx-docs.sh apidoc
-          sh scripts/sphinx-docs.sh html
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+          poetry run ./scripts/sphinx-docs.sh apidoc
+          poetry run ./scripts/sphinx-docs.sh html
+      - uses: actions/upload-pages-artifact@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          enablement: true
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "docs/_build/html/html"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
+          path: docs/_build/html
+      - id: deploy
         uses: actions/deploy-pages@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
