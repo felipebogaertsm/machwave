@@ -1,6 +1,6 @@
 [project]
 name = "machwave"
-version = "0.1.1"
+version = "0.1.2"
 description = "Rocket simulator"
 readme = "README.md"
 authors = [{ name = "Felipe Bogaerts de Mattos", email = "me@felipebm.com" }]
