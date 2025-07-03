@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TypeAlias, TypeVar
 
 import numpy as np
 
@@ -113,30 +115,52 @@ class UniformRandomGenerator(RandomGenerator):
         )
 
 
-def get_random_generator(
-    probability_distribution: str, *args, **kwargs
-) -> RandomGenerator:
+T = TypeVar("T", bound="RandomGenerator")
+FactoryFn: TypeAlias = Callable[..., T]
+
+_GENERATOR_REGISTRY: dict[str, FactoryFn] = {
+    "normal": NormalRandomGenerator,
+    "uniform": UniformRandomGenerator,
+}
+
+
+def register_random_generator(name: str, ctor: FactoryFn) -> None:
     """
-    Gets a random generator based on a probability distribution.
+    Adds a new random generator to the registry at runtime.
 
     Args:
-        probability_distribution (str): The probability distribution ("normal"
-            or "uniform").
-        *args: Additional arguments for the random generator constructor.
-        **kwargs: Additional keyword arguments for the random generator
-            constructor.
-
-    Returns:
-        RandomGenerator: An instance of the appropriate random generator.
-
+        name (str): Name of the generator (case-insensitive).
+        ctor (FactoryFn): Constructor function for the generator.
     Raises:
-        ValueError: If the specified probability distribution is not supported.
+        ValueError: If the name is already registered.
     """
-    if probability_distribution == "normal":
-        return NormalRandomGenerator(*args, **kwargs)
-    elif probability_distribution == "uniform":
-        return UniformRandomGenerator(*args, **kwargs)
+    _GENERATOR_REGISTRY[name.lower()] = ctor
 
-    raise ValueError(
-        f'Probability distribution "{probability_distribution}" not supported.'
-    )
+
+def get_random_generator(
+    probability_distribution: str,
+    *args,
+    **kwargs,
+) -> RandomGenerator:
+    """
+    Returns a random number generator based on the specified
+    probability distribution.
+
+    Args:
+        probability_distribution (str): Name of the probability
+            distribution (case-insensitive).
+        *args: Positional arguments for the generator constructor.
+        **kwargs: Keyword arguments for the generator constructor.
+    Returns:
+        RandomGenerator: An instance of the specified random generator.
+    """
+    try:
+        ctor = _GENERATOR_REGISTRY[probability_distribution.lower()]
+    except KeyError as exc:
+        available = ", ".join(sorted(_GENERATOR_REGISTRY))
+        raise ValueError(
+            f'Distribution "{probability_distribution}" not supported. '
+            f"Available: {available}."
+        ) from exc
+
+    return ctor(*args, **kwargs)
