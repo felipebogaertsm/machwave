@@ -10,26 +10,27 @@ class RandomGenerator(ABC):
     Abstract class for a random number generator.
 
     Attributes:
-        value: The main value of the random generator.
-        lower_tolerance: The lower bound of the parameter (default: 0).
-        upper_tolerance: The upper bound of the parameter (default: 0).
-        tolerance: The tolerance of the parameter (default: 0).
+        value (float): The nominal or mean value of the parameter.
+        spread (float | tuple[float, float]): The spread of the
+            parameter (default: 0).
 
     Methods:
-        get_value(): Gets a random value based on a probability distribution.
+        get_value(): Gets a random value based on a probability
+            distribution. Implemented in subclasses.
     """
 
     value: float
-    lower_tolerance: float = 0
-    upper_tolerance: float = 0
-    tolerance: float = 0
+    spread: float | tuple[float, float] = 0
 
     def __post_init__(self) -> None:
         """
-        Ensures non-negative tolerance values and valid inputs.
+        Ensures non-negative spread values and valid inputs.
         """
-        if self.lower_tolerance < 0 or self.upper_tolerance < 0 or self.tolerance < 0:
-            raise ValueError("Tolerances must be non-negative values.")
+        if isinstance(self.spread, tuple):
+            if len(self.spread) != 2 or self.spread[0] < 0 or self.spread[1] < 0:
+                raise ValueError("Spread must be a tuple of two non-negative values.")
+        elif self.spread < 0:
+            raise ValueError("Spread must be a non-negative value.")
 
     @abstractmethod
     def get_value(self) -> float:
@@ -47,44 +48,38 @@ class NormalRandomGenerator(RandomGenerator):
     """
     Random number generator based on a normal distribution.
 
-    - Uses `tolerance` as 3σ (99.7% confidence interval).
-    - Does **not** support `lower_tolerance` and `upper_tolerance`.
+    - Uses `spread` as 3 sigma (99.7% confidence interval).
 
     Raises:
-        ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
+        ValueError: If `spread` is specified as a tuple.
     """
 
     def __post_init__(self) -> None:
         """
-        Ensures `lower_tolerance` and `upper_tolerance` are not set.
+        Ensures `spread` is not set as a tuple.
 
         Raises:
-            ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
+            ValueError: If `spread` is specified as a tuple.
         """
         super().__post_init__()
 
-        if self.lower_tolerance != 0 or self.upper_tolerance != 0:
-            raise ValueError(
-                "NormalRandomGenerator does not support lower/upper tolerances."
-            )
+        if isinstance(self.spread, tuple):
+            raise ValueError("NormalRandomGenerator does not support tuple spreads.")
 
     def get_value(self) -> float:
         """
-        Gets a random value based on a normal probability distribution.
-
         In numpy.random, "scale" determines the standard deviation of the
-        normal distribution. In this case, the tolerance is defined as 3 times
+        normal distribution. In this case, the spread is defined as 3 times
         the standard deviation, so that ~99.7% of the generated values are
-        within tolerance.
+        within spread.
 
         Returns:
-            Random value.
+            Random value based on a normal probability distribution.
         """
+        sigma = self.spread / 3 if self.spread != 0 else 1e-6
         return np.random.normal(
             loc=self.value,
-            scale=(
-                self.tolerance / 3 if self.tolerance != 0 else 1e-6
-            ),  # Prevent division by zero
+            scale=sigma,
         )
 
 
@@ -93,39 +88,28 @@ class UniformRandomGenerator(RandomGenerator):
     """
     Random number generator based on a uniform distribution.
 
-    - Can use either `lower_tolerance` and `upper_tolerance` **or** `tolerance`, but not both.
+    - Uses `spread` as the total width of the distribution.
 
     Raises:
-        ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
+
     """
-
-    def __post_init__(self) -> None:
-        """
-        Ensures valid tolerances.
-
-        Raises:
-            ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
-        """
-        super().__post_init__()
-
-        if (
-            self.lower_tolerance != 0 or self.upper_tolerance != 0
-        ) and self.tolerance != 0:
-            raise ValueError(
-                "UniformRandomGenerator does not support lower/upper "
-                "tolerances and symmetrical tolerance simultaneously."
-            )
 
     def get_value(self) -> float:
         """
         Gets a random value based on a uniform probability distribution.
 
         Returns:
-            Random value.
+            Random value within the range defined by the value and spread.
         """
+        if isinstance(self.spread, tuple):
+            lower_bound, upper_bound = self.spread
+        else:
+            lower_bound = self.value - self.spread / 2
+            upper_bound = self.value + self.spread / 2
+
         return np.random.uniform(
-            low=self.value - self.lower_tolerance - self.tolerance,
-            high=self.value + self.upper_tolerance + self.tolerance,
+            low=lower_bound,
+            high=upper_bound,
         )
 
 
