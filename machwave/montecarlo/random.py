@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TypeAlias, TypeVar
 
 import numpy as np
@@ -56,6 +56,8 @@ class NormalRandomGenerator(RandomGenerator):
         ValueError: If `spread` is specified as a tuple.
     """
 
+    _sigma: float = field(init=False, repr=False)
+
     def __post_init__(self) -> None:
         """
         Ensures `spread` is not set as a tuple.
@@ -65,8 +67,11 @@ class NormalRandomGenerator(RandomGenerator):
         """
         super().__post_init__()
 
-        if isinstance(self.spread, tuple):
+        if not isinstance(self.spread, float):
             raise ValueError("NormalRandomGenerator does not support tuple spreads.")
+
+        sigma = self.spread / 3
+        object.__setattr__(self, "_sigma", sigma)
 
     def get_value(self) -> float:
         """
@@ -78,10 +83,9 @@ class NormalRandomGenerator(RandomGenerator):
         Returns:
             Random value based on a normal probability distribution.
         """
-        sigma = self.spread / 3 if self.spread != 0 else 1e-6
         return np.random.normal(
             loc=self.value,
-            scale=sigma,
+            scale=self._sigma,
         )
 
 
