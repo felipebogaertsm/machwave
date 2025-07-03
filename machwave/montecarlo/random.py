@@ -6,7 +6,7 @@ from typing import TypeAlias, TypeVar
 import numpy as np
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class RandomGenerator(ABC):
     """
     Abstract class for a random number generator.
@@ -45,7 +45,7 @@ class RandomGenerator(ABC):
         pass
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class NormalRandomGenerator(RandomGenerator):
     """
     Random number generator based on a normal distribution.
@@ -85,15 +85,12 @@ class NormalRandomGenerator(RandomGenerator):
         )
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class UniformRandomGenerator(RandomGenerator):
     """
     Random number generator based on a uniform distribution.
 
     - Uses `spread` as the total width of the distribution.
-
-    Raises:
-
     """
 
     def get_value(self) -> float:
@@ -105,6 +102,8 @@ class UniformRandomGenerator(RandomGenerator):
         """
         if isinstance(self.spread, tuple):
             lower_bound, upper_bound = self.spread
+            if lower_bound >= upper_bound:
+                raise ValueError("Spread tuple must be (low, high) with low < high.")
         else:
             lower_bound = self.value - self.spread / 2
             upper_bound = self.value + self.spread / 2
@@ -134,6 +133,9 @@ def register_random_generator(name: str, ctor: FactoryFn) -> None:
     Raises:
         ValueError: If the name is already registered.
     """
+    if name.lower() in _GENERATOR_REGISTRY:
+        raise ValueError(f'Generator "{name}" already registered.')
+
     _GENERATOR_REGISTRY[name.lower()] = ctor
 
 
