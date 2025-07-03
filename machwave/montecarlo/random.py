@@ -22,7 +22,7 @@ class RandomGenerator(ABC):
     """
 
     value: float
-    spread: float | tuple[float, float] = 0
+    spread: float | tuple[float, float] = 0.0
 
     def __post_init__(self) -> None:
         """
@@ -31,7 +31,7 @@ class RandomGenerator(ABC):
         if isinstance(self.spread, tuple):
             if len(self.spread) != 2 or self.spread[0] < 0 or self.spread[1] < 0:
                 raise ValueError("Spread must be a tuple of two non-negative values.")
-        elif self.spread < 0:
+        elif self.spread < 0.0:
             raise ValueError("Spread must be a non-negative value.")
 
     @abstractmethod
@@ -65,7 +65,7 @@ class NormalRandomGenerator(RandomGenerator):
         Raises:
             ValueError: If `spread` is specified as a tuple.
         """
-        super().__post_init__()
+        RandomGenerator.__post_init__(self)
 
         if not isinstance(self.spread, float):
             raise ValueError("NormalRandomGenerator does not support tuple spreads.")
