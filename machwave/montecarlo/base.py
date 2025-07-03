@@ -192,7 +192,7 @@ class MonteCarloSimulation:
         var_val = np.var(values)
         std_val = np.std(values)
 
-        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode[0])
+        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode)
         skew_val = scipy_stats.skew(values, bias=False)  # unbiased Fisher skew
         kurt_val = scipy_stats.kurtosis(values, fisher=True, bias=False)
         p5, p95 = np.percentile(values, [5, 95])
