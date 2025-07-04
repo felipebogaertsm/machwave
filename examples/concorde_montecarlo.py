@@ -20,16 +20,16 @@ def main():
     grain = grain_models.Grain()
 
     bates_segment_45 = grain_geometries.BatesSegment(
-        outer_diameter=montecarlo.MonteCarloParameter(value=115e-3, tolerance=1e-3),
-        core_diameter=montecarlo.MonteCarloParameter(value=45e-3, tolerance=1e-3),
-        length=montecarlo.MonteCarloParameter(value=200e-3, tolerance=1e-3),
-        spacing=montecarlo.MonteCarloParameter(value=10e-3, tolerance=5e-3),
+        outer_diameter=montecarlo.MonteCarloParameter(value=115e-3, spread=1e-3),
+        core_diameter=montecarlo.MonteCarloParameter(value=45e-3, spread=1e-3),
+        length=montecarlo.MonteCarloParameter(value=200e-3, spread=1e-3),
+        spacing=montecarlo.MonteCarloParameter(value=10e-3, spread=4e-3),
     )
     bates_segment_60 = grain_geometries.BatesSegment(
-        outer_diameter=montecarlo.MonteCarloParameter(value=115e-3, tolerance=1e-3),
-        core_diameter=montecarlo.MonteCarloParameter(value=60e-3, tolerance=1e-3),
-        length=montecarlo.MonteCarloParameter(value=200e-3, tolerance=1e-3),
-        spacing=montecarlo.MonteCarloParameter(value=10e-3, tolerance=5e-3),
+        outer_diameter=montecarlo.MonteCarloParameter(value=115e-3, spread=1e-3),
+        core_diameter=montecarlo.MonteCarloParameter(value=60e-3, spread=1e-3),
+        length=montecarlo.MonteCarloParameter(value=200e-3, spread=1e-3),
+        spacing=montecarlo.MonteCarloParameter(value=10e-3, spread=4e-3),
     )
 
     grain.add_segment(bates_segment_45)
@@ -42,7 +42,7 @@ def main():
 
     nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=80e-3,
-        throat_diameter=montecarlo.MonteCarloParameter(value=37e-3, tolerance=0.5e-3),
+        throat_diameter=montecarlo.MonteCarloParameter(value=37e-3, spread=0.5e-3),
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
@@ -51,10 +51,10 @@ def main():
 
     combustion_chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=montecarlo.MonteCarloParameter(
-            value=95.25e-3, tolerance=1e-3
+            value=95.25e-3, spread=1e-3
         ),
         casing_outer_diameter=montecarlo.MonteCarloParameter(
-            value=101.6e-3, tolerance=1e-3
+            value=101.6e-3, spread=1e-3
         ),
         thermal_liner_thickness=3e-3,
         internal_length=grain.total_length + 0.01,
