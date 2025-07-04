@@ -1,35 +1,38 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import TypeAlias, TypeVar
 
 import numpy as np
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class RandomGenerator(ABC):
     """
     Abstract class for a random number generator.
 
     Attributes:
-        value: The main value of the random generator.
-        lower_tolerance: The lower bound of the parameter (default: 0).
-        upper_tolerance: The upper bound of the parameter (default: 0).
-        tolerance: The tolerance of the parameter (default: 0).
+        value (float): The nominal or mean value of the parameter.
+        spread (float | tuple[float, float]): The spread of the
+            parameter (default: 0).
 
     Methods:
-        get_value(): Gets a random value based on a probability distribution.
+        get_value(): Gets a random value based on a probability
+            distribution. Implemented in subclasses.
     """
 
     value: float
-    lower_tolerance: float = 0
-    upper_tolerance: float = 0
-    tolerance: float = 0
+    spread: float | tuple[float, float] = 0.0
 
     def __post_init__(self) -> None:
         """
-        Ensures non-negative tolerance values and valid inputs.
+        Ensures non-negative spread values and valid inputs.
         """
-        if self.lower_tolerance < 0 or self.upper_tolerance < 0 or self.tolerance < 0:
-            raise ValueError("Tolerances must be non-negative values.")
+        if isinstance(self.spread, tuple):
+            if len(self.spread) != 2 or self.spread[0] < 0 or self.spread[1] < 0:
+                raise ValueError("Spread must be a tuple of two non-negative values.")
+        elif self.spread < 0.0:
+            raise ValueError("Spread must be a non-negative value.")
 
     @abstractmethod
     def get_value(self) -> float:
@@ -42,117 +45,128 @@ class RandomGenerator(ABC):
         pass
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class NormalRandomGenerator(RandomGenerator):
     """
     Random number generator based on a normal distribution.
 
-    - Uses `tolerance` as 3σ (99.7% confidence interval).
-    - Does **not** support `lower_tolerance` and `upper_tolerance`.
+    - Uses `spread` as 3 sigma (99.7% confidence interval).
 
     Raises:
-        ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
+        ValueError: If `spread` is specified as a tuple.
     """
+
+    _sigma: float = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         """
-        Ensures `lower_tolerance` and `upper_tolerance` are not set.
+        Ensures `spread` is not set as a tuple.
 
         Raises:
-            ValueError: If `lower_tolerance` or `upper_tolerance` is specified.
+            ValueError: If `spread` is specified as a tuple.
         """
-        super().__post_init__()
+        RandomGenerator.__post_init__(self)
 
-        if self.lower_tolerance != 0 or self.upper_tolerance != 0:
-            raise ValueError(
-                "NormalRandomGenerator does not support lower/upper tolerances."
-            )
+        if not isinstance(self.spread, float):
+            raise ValueError("NormalRandomGenerator does not support tuple spreads.")
+
+        sigma = self.spread / 3
+        object.__setattr__(self, "_sigma", sigma)
 
     def get_value(self) -> float:
         """
-        Gets a random value based on a normal probability distribution.
-
         In numpy.random, "scale" determines the standard deviation of the
-        normal distribution. In this case, the tolerance is defined as 3 times
+        normal distribution. In this case, the spread is defined as 3 times
         the standard deviation, so that ~99.7% of the generated values are
-        within tolerance.
+        within spread.
 
         Returns:
-            Random value.
+            Random value based on a normal probability distribution.
         """
         return np.random.normal(
             loc=self.value,
-            scale=(
-                self.tolerance / 3 if self.tolerance != 0 else 1e-6
-            ),  # Prevent division by zero
+            scale=self._sigma,
         )
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class UniformRandomGenerator(RandomGenerator):
     """
     Random number generator based on a uniform distribution.
 
-    - Can use either `lower_tolerance` and `upper_tolerance` **or** `tolerance`, but not both.
-
-    Raises:
-        ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
+    - Uses `spread` as the total width of the distribution.
     """
-
-    def __post_init__(self) -> None:
-        """
-        Ensures valid tolerances.
-
-        Raises:
-            ValueError: If both `tolerance` and `lower_tolerance`/`upper_tolerance` are set.
-        """
-        super().__post_init__()
-
-        if (
-            self.lower_tolerance != 0 or self.upper_tolerance != 0
-        ) and self.tolerance != 0:
-            raise ValueError(
-                "UniformRandomGenerator does not support lower/upper "
-                "tolerances and symmetrical tolerance simultaneously."
-            )
 
     def get_value(self) -> float:
         """
         Gets a random value based on a uniform probability distribution.
 
         Returns:
-            Random value.
+            Random value within the range defined by the value and spread.
         """
+        if isinstance(self.spread, tuple):
+            lower_bound, upper_bound = self.spread
+            if lower_bound >= upper_bound:
+                raise ValueError("Spread tuple must be (low, high) with low < high.")
+        else:
+            lower_bound = self.value - self.spread / 2
+            upper_bound = self.value + self.spread / 2
+
         return np.random.uniform(
-            low=self.value - self.lower_tolerance - self.tolerance,
-            high=self.value + self.upper_tolerance + self.tolerance,
+            low=lower_bound,
+            high=upper_bound,
         )
 
 
-def get_random_generator(
-    probability_distribution: str, *args, **kwargs
-) -> RandomGenerator:
+T = TypeVar("T", bound="RandomGenerator")
+FactoryFn: TypeAlias = Callable[..., T]
+
+_GENERATOR_REGISTRY: dict[str, FactoryFn] = {
+    "normal": NormalRandomGenerator,
+    "uniform": UniformRandomGenerator,
+}
+
+
+def register_random_generator(name: str, ctor: FactoryFn) -> None:
     """
-    Gets a random generator based on a probability distribution.
+    Adds a new random generator to the registry at runtime.
 
     Args:
-        probability_distribution (str): The probability distribution ("normal"
-            or "uniform").
-        *args: Additional arguments for the random generator constructor.
-        **kwargs: Additional keyword arguments for the random generator
-            constructor.
-
-    Returns:
-        RandomGenerator: An instance of the appropriate random generator.
-
+        name (str): Name of the generator (case-insensitive).
+        ctor (FactoryFn): Constructor function for the generator.
     Raises:
-        ValueError: If the specified probability distribution is not supported.
+        ValueError: If the name is already registered.
     """
-    if probability_distribution == "normal":
-        return NormalRandomGenerator(*args, **kwargs)
-    elif probability_distribution == "uniform":
-        return UniformRandomGenerator(*args, **kwargs)
+    if name.lower() in _GENERATOR_REGISTRY:
+        raise ValueError(f'Generator "{name}" already registered.')
 
-    raise ValueError(
-        f'Probability distribution "{probability_distribution}" not supported.'
-    )
+    _GENERATOR_REGISTRY[name.lower()] = ctor
+
+
+def get_random_generator(
+    probability_distribution: str,
+    *args,
+    **kwargs,
+) -> RandomGenerator:
+    """
+    Returns a random number generator based on the specified
+    probability distribution.
+
+    Args:
+        probability_distribution (str): Name of the probability
+            distribution (case-insensitive).
+        *args: Positional arguments for the generator constructor.
+        **kwargs: Keyword arguments for the generator constructor.
+    Returns:
+        RandomGenerator: An instance of the specified random generator.
+    """
+    try:
+        ctor = _GENERATOR_REGISTRY[probability_distribution.lower()]
+    except KeyError as exc:
+        available = ", ".join(sorted(_GENERATOR_REGISTRY))
+        raise ValueError(
+            f'Distribution "{probability_distribution}" not supported. '
+            f"Available: {available}."
+        ) from exc
+
+    return ctor(*args, **kwargs)

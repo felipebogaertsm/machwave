@@ -7,85 +7,38 @@ import numpy as np
 import scipy.stats as scipy_stats
 
 from machwave.common.generic import obtain_attributes_from_object
-from machwave.montecarlo.random import get_random_generator
+from machwave.montecarlo import random
 from machwave.services.plots import montecarlo as plot_service
 from machwave.simulations import Simulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
 
 
-@dataclass
-class MonteCarloParameter:
-    """
-    Stores a Monte Carlo parameter alongside its upper/lower bound.
+@dataclass(init=False, slots=True)
+class MonteCarloParameter(float):
+    _spread: float | tuple[float, float]
+    _distribution: str
 
-    Args:
-        value: Parameter main value
-        lower_tolerance: Lower bound of the parameter
-        upper_tolerance: Upper bound of the parameter
-        tolerance: Tolerance of the parameter
-        probability_distribution: Probability distribution of the random
-            values. It can be set to 'uniform', 'normal' or any other
-            distribution supported by the numpy.random module.
-    """
+    def __new__(cls, value: float, *, spread=0.0, distribution="normal"):
+        obj = float.__new__(cls, value)
+        obj._spread = spread
+        obj._distribution = distribution
+        return obj
 
-    value: float | int
-    lower_tolerance: float | int = 0
-    upper_tolerance: float | int = 0
-    tolerance: float | int = 0
-    probability_distribution: str = "normal"
-
-    def __post_init__(self) -> None:
-        self.probability_distribution_class = get_random_generator(
-            probability_distribution=self.probability_distribution,
-            value=self.value,
-            lower_tolerance=self.lower_tolerance,
-            upper_tolerance=self.upper_tolerance,
-            tolerance=self.tolerance,
+    @property
+    def random_generator(self) -> random.RandomGenerator:
+        return random.get_random_generator(
+            self._distribution, float(self), self._spread
         )
 
     def get_random_value(self) -> float:
-        """
-        Generates a random value for the parameter, according to the
-        probability distribution and tolerances.
+        return self.random_generator.get_value()
 
-        Returns:
-            Random value
-        """
-        return self.probability_distribution_class.get_value()
-
-    def __lt__(self, other: typing.Any) -> bool:
-        return self.value < other
-
-    def __gt__(self, other: typing.Any) -> bool:
-        return self.value > other
-
-    def __ge__(self, other: typing.Any) -> bool:
-        return self.value >= other
-
-    def __le__(self, other: typing.Any) -> bool:
-        return self.value <= other
-
-    def __add__(self, other: typing.Any) -> float:
-        try:
-            return self.value + other.value
-        except AttributeError:
-            return self.value + other
-
-    def __sub__(self, other: typing.Any) -> float:
-        try:
-            return self.value - other.value
-        except AttributeError:
-            return self.value - other
-
-    def __pow__(self, other: typing.Any) -> float:
-        return self.value**other
-
-    def __truediv__(self, other: typing.Any) -> float:
-        return self.value / other
-
-    def __rmul__(self, other: typing.Any) -> float:
-        return self.value * other
+    def __repr__(self) -> str:
+        return (
+            f"MonteCarloParameter({float(self):.6g}, spread={self._spread}, "
+            f"dist='{self._distribution}')"
+        )
 
 
 class MonteCarloSimulation:
@@ -239,7 +192,7 @@ class MonteCarloSimulation:
         var_val = np.var(values)
         std_val = np.std(values)
 
-        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode[0])
+        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode)
         skew_val = scipy_stats.skew(values, bias=False)  # unbiased Fisher skew
         kurt_val = scipy_stats.kurtosis(values, fisher=True, bias=False)
         p5, p95 = np.percentile(values, [5, 95])
