@@ -1,0 +1,204 @@
+@startuml machwave.models.propulsion
+!pragma useIntermediatePackages false
+
+abstract class machwave.models.propulsion.feed_systems.base.FeedSystem {
+  fuel_tank: Tank
+  oxidizer_tank: Tank
+}
+class machwave.models.propulsion.feed_systems.tanks.base.Tank {
+  fluid_name: None
+  volume: None
+  temperature: None
+  initial_fluid_mass: None
+  fluid_mass: None
+}
+class machwave.models.propulsion.feed_systems.pressure_fed.StackedTankPressureFedFeedSystem {
+  oxidizer_line_diameter: float
+  oxidizer_line_length: float
+  fuel_line_diameter: float
+  fuel_line_length: float
+  piston_loss: float
+  fuel_tank: Tank
+  oxidizer_tank: Tank
+}
+class machwave.models.propulsion.grain.base.Grain {
+  segments: list[GrainSegment]
+}
+class machwave.models.propulsion.grain.base.GrainGeometryError {
+  message: str
+}
+abstract class machwave.models.propulsion.grain.base.GrainSegment {
+  length: float
+  outer_diameter: float
+  spacing: float
+  inhibited_ends: int
+}
+abstract class machwave.models.propulsion.grain.base.GrainSegment2D {
+}
+abstract class machwave.models.propulsion.grain.base.GrainSegment3D {
+}
+abstract class machwave.models.propulsion.grain.fmm.base.FMMGrainSegment {
+  map_dim: int
+  maps: None
+  mask: None
+  masked_face: None
+  regression_map: None
+}
+abstract class machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D {
+  face_area_interp_func: Optional[Callable[[float], float]]
+}
+abstract class machwave.models.propulsion.grain.fmm._3d.FMMGrainSegment3D {
+}
+class machwave.models.propulsion.grain.fmm.stl.FMMSTLGrainSegment {
+  file_path: str
+  outer_diameter: float
+  length: float
+  face_area_interp_func: None
+}
+class machwave.models.propulsion.grain.geometries.bates.BatesSegment {
+  core_diameter: float
+}
+class machwave.models.propulsion.grain.geometries.conical.ConicalGrainSegment {
+  upper_core_diameter: float
+  lower_core_diameter: float
+}
+class machwave.models.propulsion.grain.geometries.d_grain.DGrainSegment {
+  slot_offset: float
+}
+class machwave.models.propulsion.grain.geometries.multi_port.MultiPortGrainSegment {
+  port_diameter: float
+  port_radial_count: None
+  port_level_count: None
+}
+class machwave.models.propulsion.grain.geometries.rod_and_tube.RodAndTubeGrainSegment {
+  rod_outer_diameter: float
+  tube_inner_diameter: float
+}
+class machwave.models.propulsion.grain.geometries.star.StarGrainSegment {
+  number_of_points: None
+  point_length: float
+  point_width: float
+}
+class machwave.models.propulsion.grain.geometries.wagon_wheel.WagonWheelGrainSegment {
+  core_diameter: float
+  number_of_ports: None
+  port_inner_diameter: float
+  port_outer_diameter: float
+  port_angular_width: float
+}
+abstract class machwave.models.propulsion.motors.base.Motor {
+  propellant: P
+  thrust_chamber: T
+  other_losses: float
+}
+class machwave.models.propulsion.propellants.base.Propellant {
+}
+class machwave.models.propulsion.thrust_chamber.base.ThrustChamber {
+  nozzle: Nozzle
+  combustion_chamber: CombustionChamber
+  dry_mass: float
+}
+class machwave.models.propulsion.propellants.biliquid.BiliquidPropellant {
+  oxidizer_name: str
+  fuel_name: str
+  of_ratio: float
+  combustion_efficiency: float
+  combustion_temperature_ideal: None
+  combustion_temperature: None
+  chamber_density: None
+  chamber_molecular_weight: None
+  exit_molecular_weight: None
+  chamber_gamma: None
+  exit_gamma: None
+  R_chamber: None
+  R_exit: None
+  cea_obj: None
+}
+abstract class machwave.models.propulsion.motors.liquid.LiquidEngine {
+  feed_system: FeedSystem
+}
+class machwave.models.propulsion.thrust_chamber.base.LiquidEngineThrustChamber {
+  injector: BipropellantInjector
+}
+class machwave.models.propulsion.motors.solid.SolidMotor {
+  grain: Grain
+  propellant: SolidPropellant
+  cf_ideal: None
+  cf_real: None
+}
+class machwave.models.propulsion.thrust_chamber.base.SolidMotorThrustChamber {
+}
+class machwave.models.propulsion.propellants.solid.SolidPropellant {
+  burn_rate: list[dict[str, float | int]]
+  combustion_efficiency: float
+  density: float
+  k_mix: float
+  k_ex: float
+  T0_ideal: float
+  M_ch: float
+  M_ex: float
+  Isp_frozen: float
+  Isp_shifting: float
+  qsi_ch: float
+  qsi_ex: float
+}
+class machwave.models.propulsion.propellants.solid.BurnRateOutOfBoundsError {
+  value: float
+  message: None
+}
+class machwave.models.propulsion.thrust_chamber.injector.BipropellantInjector {
+  discharge_coefficient_fuel: float
+  discharge_coefficient_oxidizer: float
+  area_fuel: float
+  area_ox: float
+}
+class machwave.models.propulsion.thrust_chamber.combustion_chamber.CombustionChamber {
+  casing_inner_diameter: float
+  casing_outer_diameter: float
+  internal_length: float
+  thermal_liner_thickness: float
+}
+class machwave.models.propulsion.thrust_chamber.nozzle.Nozzle {
+  inlet_diameter: None
+  throat_diameter: None
+  divergent_angle: None
+  convergent_angle: None
+  expansion_ratio: None
+  material: None
+}
+machwave.models.propulsion.feed_systems.base.FeedSystem *-- machwave.models.propulsion.feed_systems.tanks.base.Tank
+machwave.models.propulsion.feed_systems.pressure_fed.StackedTankPressureFedFeedSystem *-- machwave.models.propulsion.feed_systems.tanks.base.Tank
+machwave.models.propulsion.feed_systems.base.FeedSystem <|-- machwave.models.propulsion.feed_systems.pressure_fed.StackedTankPressureFedFeedSystem
+machwave.models.propulsion.grain.base.Grain *-- machwave.models.propulsion.grain.base.GrainSegment
+machwave.models.propulsion.grain.base.GrainSegment <|-- machwave.models.propulsion.grain.base.GrainSegment2D
+machwave.models.propulsion.grain.base.GrainSegment <|-- machwave.models.propulsion.grain.base.GrainSegment3D
+machwave.models.propulsion.grain.base.GrainSegment <|-- machwave.models.propulsion.grain.fmm.base.FMMGrainSegment
+machwave.models.propulsion.grain.fmm.base.FMMGrainSegment <|-- machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D
+machwave.models.propulsion.grain.base.GrainSegment2D <|-- machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D
+machwave.models.propulsion.grain.fmm.base.FMMGrainSegment <|-- machwave.models.propulsion.grain.fmm._3d.FMMGrainSegment3D
+machwave.models.propulsion.grain.base.GrainSegment3D <|-- machwave.models.propulsion.grain.fmm._3d.FMMGrainSegment3D
+machwave.models.propulsion.grain.fmm._3d.FMMGrainSegment3D <|-- machwave.models.propulsion.grain.fmm.stl.FMMSTLGrainSegment
+machwave.models.propulsion.grain.base.GrainSegment2D <|-- machwave.models.propulsion.grain.geometries.bates.BatesSegment
+machwave.models.propulsion.grain.fmm._3d.FMMGrainSegment3D <|-- machwave.models.propulsion.grain.geometries.conical.ConicalGrainSegment
+machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D <|-- machwave.models.propulsion.grain.geometries.d_grain.DGrainSegment
+machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D <|-- machwave.models.propulsion.grain.geometries.multi_port.MultiPortGrainSegment
+machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D <|-- machwave.models.propulsion.grain.geometries.rod_and_tube.RodAndTubeGrainSegment
+machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D <|-- machwave.models.propulsion.grain.geometries.star.StarGrainSegment
+machwave.models.propulsion.grain.fmm._2d.FMMGrainSegment2D <|-- machwave.models.propulsion.grain.geometries.wagon_wheel.WagonWheelGrainSegment
+machwave.models.propulsion.motors.base.Motor *-- machwave.models.propulsion.motors.base.P
+machwave.models.propulsion.motors.base.Motor *-- machwave.models.propulsion.motors.base.T
+machwave.models.propulsion.thrust_chamber.base.ThrustChamber *-- machwave.models.propulsion.thrust_chamber.nozzle.Nozzle
+machwave.models.propulsion.thrust_chamber.base.ThrustChamber *-- machwave.models.propulsion.thrust_chamber.combustion_chamber.CombustionChamber
+machwave.models.propulsion.propellants.base.Propellant <|-- machwave.models.propulsion.propellants.biliquid.BiliquidPropellant
+machwave.models.propulsion.motors.liquid.LiquidEngine *-- machwave.models.propulsion.feed_systems.base.FeedSystem
+machwave.models.propulsion.motors.base.Motor <|-- machwave.models.propulsion.motors.liquid.LiquidEngine
+machwave.models.propulsion.thrust_chamber.base.LiquidEngineThrustChamber *-- machwave.models.propulsion.thrust_chamber.injector.BipropellantInjector
+machwave.models.propulsion.thrust_chamber.base.ThrustChamber <|-- machwave.models.propulsion.thrust_chamber.base.LiquidEngineThrustChamber
+machwave.models.propulsion.motors.solid.SolidMotor *-- machwave.models.propulsion.grain.base.Grain
+machwave.models.propulsion.motors.solid.SolidMotor *-- machwave.models.propulsion.propellants.solid.SolidPropellant
+machwave.models.propulsion.motors.base.Motor <|-- machwave.models.propulsion.motors.solid.SolidMotor
+machwave.models.propulsion.thrust_chamber.base.ThrustChamber <|-- machwave.models.propulsion.thrust_chamber.base.SolidMotorThrustChamber
+machwave.models.propulsion.propellants.base.Propellant <|-- machwave.models.propulsion.propellants.solid.SolidPropellant
+footer Generated by //py2puml//
+@enduml
+
