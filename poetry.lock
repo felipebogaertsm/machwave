@@ -1156,6 +1156,18 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "py2puml"
+version = "0.10.0"
+description = "Generate PlantUML class diagrams to document your Python application."
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["dev"]
+files = [
+    {file = "py2puml-0.10.0-py3-none-any.whl", hash = "sha256:a41076cd910490b61ed7ae80ad918ef66b3d82ddfbd489e8ec2fa0dc65f63bb6"},
+    {file = "py2puml-0.10.0.tar.gz", hash = "sha256:1180392f0c2274eeba9d65cef07a7daf45d1c4c115014b5c2fcc56ce59a2204b"},
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.1"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -1801,4 +1813,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<=3.14"
-content-hash = "175cb6b64a1521a1c24c45f1f4de70d3aefa989698f884701e38bebbf6fcd911"
+content-hash = "84476499703991cd6edfafbeb116fad0c7b5f04fed442442366469211b202a5f"
