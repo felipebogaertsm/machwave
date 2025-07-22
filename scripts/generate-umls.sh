@@ -6,7 +6,11 @@ MODULES=(
   machwave
   machwave.models.propulsion
   machwave.models.propulsion.grain
-  machwave.montecarlo
+  machwave.models.propulsion.thrust_chamber
+  machwave.models.propulsion.motors
+  machwave.models.propulsion.propellants
+  machwave.simulations
+  machwave.states
 )
 
 OUT_DIR=docs/umls
