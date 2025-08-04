@@ -10,3 +10,5 @@ check:
 	@poetry run pyright machwave
 generate-umls:
 	@zsh ./scripts/generate-umls.sh
+coverage:
+	@poetry run pytest --cov=machwave --cov-branch --cov-report=term-missing --cov-report=html tests/
