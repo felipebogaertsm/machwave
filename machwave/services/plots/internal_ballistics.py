@@ -155,3 +155,76 @@ def plot_bipropellant_tank_profiles(
     )
 
     return fig
+
+
+def thrust_coefficient_plot(
+    time: np.ndarray,
+    cf_ideal: np.ndarray,
+    cf_real: np.ndarray,
+    show_efficiency: bool = True,
+) -> go.Figure:
+    """
+    Plot ideal and real thrust coefficients over time, with optional efficiency.
+
+    Args:
+        time: Time array [s].
+        cf_ideal: Ideal thrust coefficient array [-].
+        cf_real: Real thrust coefficient array [-].
+        show_efficiency: If True, adds η = Cf_real / Cf_ideal on a secondary Y axis.
+
+    Returns:
+        Plotly Figure.
+    """
+    if show_efficiency:
+        fig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
+    else:
+        fig = go.Figure()
+
+    (
+        fig.add_trace
+        if not show_efficiency
+        else lambda *a, **k: fig.add_trace(*a, **k, secondary_y=False)
+    )(
+        go.Scatter(
+            x=time,
+            y=cf_ideal,
+            mode="lines",
+            name="Cf (ideal)",
+        )
+    )
+
+    (
+        fig.add_trace
+        if not show_efficiency
+        else lambda *a, **k: fig.add_trace(*a, **k, secondary_y=False)
+    )(
+        go.Scatter(
+            x=time,
+            y=cf_real,
+            mode="lines",
+            name="Cf (real)",
+        )
+    )
+
+    if show_efficiency:
+        eta = np.divide(
+            cf_real, cf_ideal, out=np.full_like(cf_real, np.nan), where=cf_ideal != 0
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=time,
+                y=eta,
+                mode="lines",
+                name="η = Cf_real / Cf_ideal",
+                line=dict(dash="dash"),
+            ),
+            secondary_y=True,
+        )
+
+        fig.update_yaxes(title_text="Efficiency η [-]", secondary_y=True)
+
+    fig.update_layout(title_text="<b>Thrust Coefficient vs Time</b>")
+    fig.update_xaxes(title_text="Time (s)")
+    fig.update_yaxes(title_text="Thrust Coefficient Cf [-]", secondary_y=False)
+
+    return fig
