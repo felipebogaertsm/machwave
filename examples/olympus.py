@@ -6,18 +6,14 @@ at the time, it was the largest experimental motor ever built in Latin America.
 """
 
 from machwave.common.decorators import timing
-from machwave.models import atmosphere, materials
-from machwave.models import recovery as recovery_models
-from machwave.models import rocket as rocket_models
+from machwave.models import materials
 from machwave.models.propulsion import grain as grain_models
 from machwave.models.propulsion import motors
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.propellants import solid as solid_propellants
-from machwave.models.recovery import events, parachutes
-from machwave.services.plots import ballistics as ballistics_plots
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave.simulations import internal_balistics_coupled
+from machwave.simulations import internal_ballistics
 
 
 @timing
@@ -26,13 +22,13 @@ def main():
 
     grain = grain_models.Grain()
     bates_segment_45 = grain_geometries.BatesSegment(
-        outer_diameter=0.117,
+        outer_diameter=0.116,
         core_diameter=0.045,
         length=0.200,
         spacing=0.01,
     )
     bates_segment_60 = grain_geometries.BatesSegment(
-        outer_diameter=0.117,
+        outer_diameter=0.116,
         core_diameter=0.060,
         length=0.200,
         spacing=0.01,
@@ -51,7 +47,7 @@ def main():
         throat_diameter=0.037,
         divergent_angle=12,
         convergent_angle=45,
-        expansion_ratio=8,
+        expansion_ratio=9.11,
         material=materials.Steel(),
     )
 
@@ -74,56 +70,22 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    recovery = recovery_models.Recovery()
-    recovery.add_event(
-        events.ApogeeBasedEvent(
-            trigger_value=1.0,
-            parachute=parachutes.HemisphericalParachute(diameter=1.5),
-        )
-    )
-    recovery.add_event(
-        events.AltitudeBasedEvent(
-            trigger_value=400.0,
-            parachute=parachutes.HemisphericalParachute(diameter=3.0),
-        )
-    )
-
-    fuselage = rocket_models.Fuselage(
-        length=3.0, drag_coefficient=0.5, outer_diameter=0.15
-    )
-
-    rocket = rocket_models.Rocket(
-        propulsion=motor,
-        recovery=recovery,
-        fuselage=fuselage,
-        mass_without_motor=25,
-    )
-
-    params = internal_balistics_coupled.InternalBallisticsCoupledParams(
-        atmosphere=atmosphere.Atmosphere1976(),
-        d_t=0.01,
-        dd_t=10,
-        initial_elevation_amsl=0,
+    params = internal_ballistics.InternalBallisticsParams(
+        d_t=0.001,
         igniter_pressure=1e6,
-        rail_length=5.0,
+        external_pressure=1.013e5,
     )
 
-    simulation = internal_balistics_coupled.InternalBallisticsCoupled(
-        rocket=rocket, params=params
-    )
-    ib_state, ballistic_state = simulation.run()
+    simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
+    t, ib_state = simulation.run()
 
     simulation.print_results()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        ib_state.t, ib_state.thrust, ib_state.P_0
+        t, ib_state.thrust, ib_state.P_0
     ).show()
-
-    ballistics_plots.ballistics_plots(
-        ballistic_state.t,
-        ballistic_state.acceleration,
-        ballistic_state.v,
-        ballistic_state.y,
+    internal_ballistics_plots.thrust_coefficient_plot(
+        t, ib_state.C_f_ideal, ib_state.C_f, show_efficiency=True
     ).show()
 
 
