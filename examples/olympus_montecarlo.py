@@ -17,25 +17,25 @@ def main():
     for _ in range(4):
         grain.add_segment(
             grain_geometries.BatesSegment(
-                outer_diameter=montecarlo.MonteCarloParameter(0.117, spread=0.002),
+                outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.045, spread=0.002),
-                length=montecarlo.MonteCarloParameter(0.195, spread=0.005),
+                length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
                 spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
     for _ in range(3):
         grain.add_segment(
             grain_geometries.BatesSegment(
-                outer_diameter=montecarlo.MonteCarloParameter(0.117, spread=0.002),
+                outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.060, spread=0.002),
-                length=montecarlo.MonteCarloParameter(0.195, spread=0.005),
+                length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
                 spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
 
     nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.080,
-        throat_diameter=montecarlo.MonteCarloParameter(0.037, spread=0.0005),
+        throat_diameter=0.037,
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
@@ -69,7 +69,7 @@ def main():
 
     mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
-        10,
+        1_000,
         internal_ballistics.InternalBallistics,
     )
     mc.run()
@@ -87,7 +87,13 @@ def main():
         1,
         "t",
         series_property="P_0",
-        title="Thrust Time Series",
+        title="Pressão de Câmara (MPa)",
+    )
+    mc.plot_time_series_extremes(
+        1,
+        "t",
+        series_property="thrust",
+        title="Força de Empuxo (N)",
     )
 
 
