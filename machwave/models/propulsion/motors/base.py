@@ -10,7 +10,7 @@ from machwave.models.propulsion.thrust_chamber import ThrustChamber
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
 
-DEFAULT_OTHER_MOTOR_LOSSES = 12.0  # percent
+DEFAULT_OTHER_MOTOR_LOSSES = 10.0  # percent
 
 
 class Motor(Generic[P, T], ABC):
