@@ -271,9 +271,4 @@ def get_overall_nozzle_efficiency(
     Returns:
         float: The overall nozzle efficiency.
     """
-    losses = (eta_div, eta_kin, eta_bl, eta_2p, other_losses)
-    eta = 1.0
-    for L in losses:
-        eta *= 1.0 - L / 100.0
-
-    return eta
+    return (100 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses)) / 100
