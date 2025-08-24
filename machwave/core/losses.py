@@ -16,7 +16,7 @@ import numpy as np
 from machwave.common import decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
-OTHER_LOSSES_DEFAULT = 12.0
+OTHER_LOSSES_DEFAULT = 10.0
 
 """
 AD-A015 140 cites typical ranges for the correction factors.
