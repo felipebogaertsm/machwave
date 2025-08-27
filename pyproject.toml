@@ -32,6 +32,8 @@ ruff = "*"
 pyright = "*"
 pytest = "*"
 pylint = "^3.3.5"
+py2puml = "^0.10.0"
+pytest-cov = "^6.2.1"
 
 
 [tool.poetry.group.docs.dependencies]
