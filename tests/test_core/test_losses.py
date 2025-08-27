@@ -224,3 +224,42 @@ def test_get_overall_nozzle_efficiency_out_of_bounds():
         losses.get_overall_nozzle_efficiency(
             eta_div=40, eta_kin=30, eta_bl=20, eta_2p=20
         )
+
+
+@pytest.mark.parametrize(
+    (
+        "loss_bl_pct",
+        "loss_div_pct",
+        "loss_kin_pct",
+        "loss_tp_pct",
+        "expected_eta_cf",  # nozzle Cf efficiency (fraction)
+    ),
+    [
+        # --- Table 4-5 columns (transcribed) ---
+        (1.5, 1.7, 0.2, 2.1, 0.945),  # A Bates
+        (2.0, 1.7, 0.2, 2.0, 0.941),  # B Bates
+        (1.7, 1.7, 0.2, 1.2, 0.952),  # A Bates (NF)
+        (0.4, 1.7, 0.3, 0.3, 0.973),  # Antares 1
+        (0.9, 3.0, 0.3, 2.1, 0.937),  # Spartan 2
+    ],
+)
+def test_table_4_5_simplified_method(
+    loss_bl_pct,
+    loss_div_pct,
+    loss_kin_pct,
+    loss_tp_pct,
+    expected_eta_cf,
+):
+    """
+    Tests the simplified method implementation matches
+    JANNAF/AFRPL-TR-75-36 Table 4-5.
+    """
+    eta_cf = losses.get_overall_nozzle_efficiency(
+        eta_div=loss_div_pct,
+        eta_kin=loss_kin_pct,
+        eta_bl=loss_bl_pct,
+        eta_2p=loss_tp_pct,
+        other_losses=0,
+    )
+
+    assert eta_cf == pytest.approx(expected_eta_cf, abs=1e-3)

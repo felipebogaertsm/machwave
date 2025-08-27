@@ -16,7 +16,7 @@ import numpy as np
 from machwave.common import decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
-OTHER_LOSSES_DEFAULT = 12.0
+OTHER_LOSSES_DEFAULT = 10.0
 
 """
 AD-A015 140 cites typical ranges for the correction factors.
@@ -250,7 +250,7 @@ def get_two_phase_flow_percentage_loss(
     return c_3 * numerator / denominator
 
 
-@decorators.check_bounds(lower=0.0, upper=100.0)
+@decorators.check_bounds(lower=0.0, upper=1.0)
 def get_overall_nozzle_efficiency(
     eta_div: float,
     eta_kin: float,
@@ -271,4 +271,4 @@ def get_overall_nozzle_efficiency(
     Returns:
         float: The overall nozzle efficiency.
     """
-    return (100 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses)) / 100
+    return 1 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses) / 100
