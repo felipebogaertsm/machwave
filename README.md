@@ -2,6 +2,52 @@
 
 Machwave is a Python library for modelling solid rocket motors, liquid rocket engines, and whole vehicles, then running high-fidelity internal-ballistics and point-mass flight simulations—all with a clean, layered architecture.
 
+## Getting Started
+
+### Installation
+
+Install Machwave using pip:
+
+```bash
+pip install machwave
+```
+
+### Development Setup
+
+If you're contributing to Machwave, you'll need [Poetry](https://python-poetry.org/) for dependency management.
+
+#### Installing Poetry
+
+**macOS / Linux / Ubuntu:**
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+**Windows (PowerShell):**
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+```
+
+After installation, verify it worked:
+
+```bash
+poetry --version
+```
+
+For more details, visit the [official Poetry installation guide](https://python-poetry.org/docs/#installation).
+
+#### Clone and Install
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/felipebogaertsm/machwave.git
+cd machwave
+make install
+```
+
 # Main features
 
 - Transient Solid Rocket Motor simulation
@@ -18,36 +64,6 @@ Machwave is a Python library for modelling solid rocket motors, liquid rocket en
   - Any parameter can be randomized
   - Simulation analysis tooling built-in
 
-# Modules
-
-| Topic | Path | Purpose |
-| -------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Core math & physics**    | `machwave.core`        | Pure, side-effect-free formulas & algorithms (`flow`, `math`, `structural`, `conversions`, `des`). |
-| **Domain models**          | `machwave.models`      | Data-rich objects that describe reality—materials, propellants, motors, grain geometry, rockets, atmosphere, recovery. |
-| **Simulation states**        | `machwave.states`  | Immutable records of simulation state (internal-ballistics steps, flight 1-DoF states, etc.). |
-| **Simulation engines**     | `machwave.simulations` | Time-loop drivers that orchestrate models & produce state streams; includes factory helpers. |
-| **Monte-Carlo strategies** | `machwave.montecarlo`  | Runs Monte Carlos simulations. |
-| **File I/O**               | `machwave.io`          | Gateways for external formats (e.g., `eng.py` to export RASP *.eng* thrust files). |
-| **User-facing services**   | `machwave.services`    | Presentation & convenience: plotting helpers under `services.plots`. |
-| **Utility helpers**        | `machwave.common`      | Small, generic helpers (array ops, decorators, misc generics) used by any layer. |
-
-An **import permission matrix** describes which modules can import from one another inside the application. Rules of thumb:
-
-- Arrows always point outward; a layer may only import the ones marked ✓ in its row.
-- No layer ever imports inward (up the column).
-- services is the outer facade - everything can be used there; common is the innermost helper layer - nothing else is imported by it.
-
-| *From / To*     | common | core | models | states | simulations | montecarlo |  io | services |
-| --------------- | :----: | :--: | :----: | :--------: | :---------: | :--------: | :-: | :------: |
-| **common**      |    ✗   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
-| **core**        |    ✓   |   ✗  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
-| **models**      |    ✓   |   ✓  |    ✗   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
-| **states**  |    ✓   |   ✓  |    ✓   |      ✗     |      ✗      |      ✗     |  ✗  |     ✗    |
-| **simulations** |    ✓   |   ✓  |    ✓   |      ✓     |      ✗      |      ✗     |  ✓  |     ✗    |
-| **montecarlo**  |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✗     |  ✓  |     ✗    |
-| **io**          |    ✓   |   ✓  | (rare) |   (rare)   |      ✗      |      ✗     |  ✗  |     ✗    |
-| **services**    |    ✓   |   ✓  |    ✓   |      ✓     |      ✓      |      ✓     |  ✓  |     ✗    |
-
 # Main components
 
 ## Models
@@ -60,6 +76,7 @@ Machwave currently supports internal ballistics simulations for solid motors and
 
 A simulation class is the engine that drives the time loop.
 It receives:
+
 - the models to be simulated (rocket, motor/engine, etc.);
 - a SimulationParams instance tailored to that simulation type.
 

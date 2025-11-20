@@ -1,3 +1,7 @@
+.PHONY: install test test-docker publish check generate-umls coverage
+
+install:
+	@poetry install
 test:
 	@poetry run pytest
 test-docker:
