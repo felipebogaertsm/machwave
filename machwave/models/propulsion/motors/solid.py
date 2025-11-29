@@ -3,7 +3,7 @@ import numpy as np
 from machwave.core import losses
 from machwave.core.flow.isentropic import get_thrust_coefficients
 from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.propellants.solid import SolidPropellant
+from machwave.models.propulsion.propellants import SolidPropellant
 from machwave.models.propulsion.thrust_chamber import SolidMotorThrustChamber
 
 from .base import Motor
