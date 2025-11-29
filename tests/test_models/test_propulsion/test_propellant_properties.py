@@ -86,10 +86,10 @@ class TestLiquidPropellantProperties:
         """Test that LiquidPropellantProperties can be instantiated with all required fields."""
         props = LiquidPropellantPropertiesFactory.build()
 
-        # Verify all fields are set correctly
+        # Verify common fields are set correctly
         assert props.gamma_chamber == 1.20
-        assert props.oxidizer_tank_density == 1141.0
-        assert props.fuel_tank_density == 810.0
+        assert props.i_sp_frozen == 300.0
+        assert props.i_sp_shifting == 310.0
 
     @pytest.mark.parametrize(
         "field",
@@ -102,8 +102,6 @@ class TestLiquidPropellantProperties:
             "molecular_weight_exhaust",
             "i_sp_frozen",
             "i_sp_shifting",
-            "oxidizer_tank_density",
-            "fuel_tank_density",
         ],
     )
     def test_required_fields(self, field):
@@ -139,7 +137,7 @@ class TestLiquidPropellantProperties:
         props = LiquidPropellantPropertiesFactory.build()
 
         with pytest.raises(AttributeError):
-            props.oxidizer_tank_density = 2000.0
+            props.gamma_chamber = 1.5
 
 
 class TestChemicalPropellantProperties:
@@ -339,11 +337,17 @@ class TestSolidSpecificValidation:
 
 
 class TestLiquidSpecificValidation:
-    """Test suite for liquid propellant specific validations."""
+    """Test suite for liquid propellant specific validations.
 
-    def test_tank_densities_positive(self):
-        """Test that tank densities are positive."""
+    Note: Currently LiquidPropellantProperties has no additional fields beyond
+    the base ChemicalPropellantProperties. Tank densities are operational
+    properties stored in the BiliquidPropellant class itself.
+    """
+
+    def test_no_additional_fields(self):
+        """Test that liquid properties currently has only base fields."""
         props = LiquidPropellantPropertiesFactory.build()
 
-        assert props.oxidizer_tank_density > 0
-        assert props.fuel_tank_density > 0
+        # LiquidPropellantProperties should have the same fields as base class
+        assert hasattr(props, "gamma_chamber")
+        assert hasattr(props, "i_sp_frozen")

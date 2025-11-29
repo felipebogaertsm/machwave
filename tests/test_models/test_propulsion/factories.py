@@ -103,7 +103,7 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantPropert
         # Override specific fields
         props = LiquidPropellantPropertiesFactory.build(
             gamma_chamber=1.25,
-            oxidizer_tank_density=1200.0
+            i_sp_frozen=320.0
         )
 
         # Create multiple instances
@@ -151,13 +151,3 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantPropert
     def i_sp_shifting(cls) -> float:
         """Typical shifting equilibrium Isp in seconds."""
         return 310.0
-
-    @classmethod
-    def oxidizer_tank_density(cls) -> float:
-        """Typical oxidizer tank density in kg/m³ (e.g., LOX)."""
-        return 1141.0
-
-    @classmethod
-    def fuel_tank_density(cls) -> float:
-        """Typical fuel tank density in kg/m³ (e.g., RP-1)."""
-        return 810.0
