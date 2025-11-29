@@ -47,3 +47,6 @@ build-backend = "poetry.core.masonry.api"
 
 [project.urls]
 Homepage = "https://github.com/felipebogaertsm/machwave"
+
+[tool.ruff]
+line-length = 88
