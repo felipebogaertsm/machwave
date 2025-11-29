@@ -24,12 +24,8 @@ from .solid import (
     RNX_57,
     RNX_71V,
 )
-from ..types import CEASolidPropellant, FixedSolidPropellant
 
 __all__ = [
-    # Solid propellant classes
-    "FixedSolidPropellant",
-    "CEASolidPropellant",
     # Empirical solid propellants
     "KNDX",
     "KNSB",
