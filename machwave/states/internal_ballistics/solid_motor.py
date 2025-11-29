@@ -108,10 +108,13 @@ class SolidMotorState(MotorState):
     def _update_chamber_volume_and_mass(self) -> None:
         free_vol = self.motor.get_free_chamber_volume(self.propellant_volume[-1])
         self.V_0 = np.append(self.V_0, free_vol)
-        m_prop = self.propellant_volume[-1] * self.motor.propellant.density
+        assert self.motor.propellant.properties is not None
+        m_prop = self.propellant_volume[-1] * self.motor.propellant.properties.density
         self.m_prop = np.append(self.m_prop, m_prop)
 
     def _compute_pressure(self, d_t: float, P_ext: float) -> None:
+        props = self.motor.propellant.properties
+        assert props is not None
         new_P = rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
             equation=compute_chamber_pressure_mass_balance_srm,
@@ -120,15 +123,15 @@ class SolidMotorState(MotorState):
             Ab=self.burn_area[-1],
             V0=self.V_0[-1],
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
-            pp=self.motor.propellant.density,
-            k=self.motor.propellant.k_mix,
-            R=self.motor.propellant.R_ch,
-            T0=self.motor.propellant.T0,
+            pp=props.density,
+            k=props.gamma_chamber,
+            R=props.R_chamber,
+            T0=props.adiabatic_flame_temperature,
             r=self.burn_rate[-1],
         )[0]
         self.P_0 = np.append(self.P_0, new_P)
         exit_P = get_exit_pressure(
-            self.motor.propellant.k_ex,
+            props.gamma_exhaust,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             new_P,
         )
@@ -144,9 +147,11 @@ class SolidMotorState(MotorState):
         eta_div = losses.get_nozzle_divergent_percentage_loss(
             divergent_angle=self.motor.thrust_chamber.nozzle.divergent_angle,
         )
+        props = self.motor.propellant.properties
+        assert props is not None
         eta_kin = losses.get_kinetics_percentage_loss(
-            i_sp_th_frozen=self.motor.propellant.Isp_frozen,
-            i_sp_th_shifting=self.motor.propellant.Isp_shifting,
+            i_sp_th_frozen=props.i_sp_frozen,
+            i_sp_th_shifting=props.i_sp_shifting,
             chamber_pressure_psi=chamber_pressure_psi,
         )
         eta_bl = losses.get_boundary_layer_percentage_loss(
@@ -159,7 +164,7 @@ class SolidMotorState(MotorState):
         )
         eta_2p = losses.get_two_phase_flow_percentage_loss(
             chamber_pressure_psi=chamber_pressure_psi,
-            mole_fraction_of_condensed_phase=self.motor.propellant.qsi_ch,
+            mole_fraction_of_condensed_phase=props.qsi_chamber,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
             throat_diameter_inch=throat_diameter_inch,
             characteristic_length_inch=convert_meter_to_inch(
@@ -185,7 +190,7 @@ class SolidMotorState(MotorState):
             self.P_exit[-1],
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
-            self.motor.propellant.k_ex,
+            props.gamma_exhaust,
             overall_efficiency,
         )
         self.C_f = np.append(self.C_f, cf)
@@ -201,10 +206,11 @@ class SolidMotorState(MotorState):
             self.end_burn = True
 
     def _check_thrust_end(self, P_ext: float) -> None:
+        assert self.motor.propellant.properties is not None
         if not is_flow_choked(
             self.P_0[-1],
             P_ext,
-            get_critical_pressure_ratio(self.motor.propellant.k_mix),
+            get_critical_pressure_ratio(self.motor.propellant.properties.gamma_chamber),
         ):
             self._thrust_time = self.t[-1]
             self.end_thrust = True
@@ -329,9 +335,10 @@ class SolidMotorState(MotorState):
         Returns:
             np.ndarray: The grain mass flux.
         """
+        assert self.motor.propellant.properties is not None
         return self.motor.grain.get_mass_flux_per_segment(
             self.burn_rate,
-            self.motor.propellant.density,
+            self.motor.propellant.properties.density,
             self.web,
         )
 

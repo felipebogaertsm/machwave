@@ -43,8 +43,10 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         Returns:
             Initial propellant mass, in kg
         """
+        assert self.propellant.properties is not None
         return (
-            self.grain.get_propellant_volume(web_distance=0) * self.propellant.density
+            self.grain.get_propellant_volume(web_distance=0)
+            * self.propellant.properties.density
         )
 
     def get_thrust_coefficient_correction_factor(

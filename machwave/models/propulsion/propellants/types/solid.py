@@ -8,10 +8,10 @@ from machwave.core.conversions import (
 )
 
 from ..properties import SolidPropellantProperties
-from .base import BurnRateOutOfBoundsError
+from .base import BurnRateOutOfBoundsError, Propellant
 
 
-class SolidPropellant:
+class SolidPropellant(Propellant):
     """Base class for solid propellants.
 
     Provides common interface for solid propellant burn rate calculations.
@@ -24,7 +24,9 @@ class SolidPropellant:
     def __init__(
         self,
         burn_rate: list[dict[str, float | int]],
+        combustion_efficiency: float = 0.95,
     ):
+        super().__init__(combustion_efficiency)
         self.burn_rate = burn_rate
 
     def get_burn_rate(self, chamber_pressure: float) -> float:
@@ -60,6 +62,7 @@ class FixedSolidPropellant(SolidPropellant):
         name: Propellant name for identification.
         burn_rate: Burn rate parameters (St. Robert's law).
         properties: Thermochemical properties.
+        combustion_efficiency: Combustion efficiency (0 to 1).
     """
 
     def __init__(
@@ -67,10 +70,25 @@ class FixedSolidPropellant(SolidPropellant):
         name: str,
         burn_rate: list[dict[str, float | int]],
         properties: SolidPropellantProperties,
+        combustion_efficiency: float = 0.95,
     ):
-        super().__init__(burn_rate)
+        super().__init__(burn_rate, combustion_efficiency)
         self.name = name
         self.properties = properties
+
+    def evaluate(
+        self, chamber_pressure: float, expansion_ratio: float = 8.0
+    ) -> SolidPropellantProperties:
+        """Return pre-defined properties (no calculation needed).
+
+        Args:
+            chamber_pressure: Chamber pressure [Pa] (unused for fixed propellants).
+            expansion_ratio: Nozzle area ratio (unused for fixed propellants).
+
+        Returns:
+            SolidPropellantProperties: Pre-defined thermochemical properties.
+        """
+        return self.properties
 
 
 class CEASolidPropellant(SolidPropellant):
@@ -95,12 +113,10 @@ class CEASolidPropellant(SolidPropellant):
         density_percentage: float = 98.0,
         combustion_efficiency: float = 0.95,
     ):
-        super().__init__(burn_rate)
+        super().__init__(burn_rate, combustion_efficiency)
         self.cea_name = cea_name
         self.ideal_density = ideal_density
         self.density_percentage = density_percentage
-        self.combustion_efficiency = combustion_efficiency
-        self.properties = None
 
     def real_density(self) -> float:
         """Calculate actual propellant density accounting for manufacturing imperfections.

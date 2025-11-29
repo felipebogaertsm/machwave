@@ -1,6 +1,10 @@
 """Base propellant type classes."""
 
 import abc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..properties import ChemicalPropellantProperties
 
 
 class Propellant(abc.ABC):
@@ -22,7 +26,9 @@ class Propellant(abc.ABC):
         self.properties = None
 
     @abc.abstractmethod
-    def evaluate(self, chamber_pressure: float, expansion_ratio: float = 8.0):
+    def evaluate(
+        self, chamber_pressure: float, expansion_ratio: float = 8.0
+    ) -> "ChemicalPropellantProperties":
         """Calculate propellant properties given chamber conditions.
 
         Args:
@@ -30,9 +36,9 @@ class Propellant(abc.ABC):
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
 
         Returns:
-            SolidPropellantProperties or LiquidPropellantProperties: Calculated properties.
+            ChemicalPropellantProperties: Calculated properties.
         """
-        pass
+        ...
 
 
 class BurnRateOutOfBoundsError(Exception):

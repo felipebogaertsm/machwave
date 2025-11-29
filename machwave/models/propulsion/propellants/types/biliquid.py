@@ -77,7 +77,7 @@ class BiliquidPropellant(Propellant):
 
         # Get propellant liquid densities (operational/storage properties)
         oxidizer_tank_density_lbft3, fuel_tank_density_lbft3 = (
-            self.cea_obj.get_OxFuelDensities()
+            self.cea_obj.get_OxFuelDensities()  # type: ignore[attr-defined]
         )
         self.oxidizer_tank_density = convert_lbft3_to_kgm3(oxidizer_tank_density_lbft3)
         self.fuel_tank_density = convert_lbft3_to_kgm3(fuel_tank_density_lbft3)
@@ -159,6 +159,7 @@ class BiliquidPropellant(Propellant):
             float: Characteristic velocity [m/s].
         """
         # Use the chamber conditions from properties
+        assert self.properties is not None
         T_c = self.properties.adiabatic_flame_temperature
         R_ch = scipy.constants.R / self.properties.molecular_weight_chamber
         gamma = self.properties.gamma_chamber
