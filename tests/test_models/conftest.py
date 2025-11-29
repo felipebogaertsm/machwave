@@ -1,7 +1,7 @@
 import pytest
 
 from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.propulsion.propellants.solid import (
+from machwave.models.propulsion.propellants import (
     KNDX,
     KNER,
     KNSB,
