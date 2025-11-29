@@ -1,13 +1,13 @@
 """Biliquid propellant type class."""
 
 import scipy.constants
+from rocketcea.cea_obj import CEA_Obj
 
 from machwave.core.conversions import (
     convert_lbft3_to_kgm3,
     convert_pa_to_psi,
     convert_rankine_to_kelvin,
 )
-from rocketcea.cea_obj import CEA_Obj
 
 from ..properties import LiquidPropellantProperties
 from .base import Propellant

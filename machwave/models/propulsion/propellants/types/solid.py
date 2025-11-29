@@ -2,13 +2,13 @@
 
 from rocketcea.cea_obj import CEA_Obj
 
-from .base import BurnRateOutOfBoundsError
 from machwave.core.conversions import (
     convert_pa_to_psi,
     convert_rankine_to_kelvin,
 )
 
 from ..properties import SolidPropellantProperties
+from .base import BurnRateOutOfBoundsError
 
 
 class SolidPropellant:

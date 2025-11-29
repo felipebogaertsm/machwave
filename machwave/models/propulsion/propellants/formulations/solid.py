@@ -169,6 +169,7 @@ MIT_CHERRY_LIMEADE = FixedSolidPropellant(
 APCP_GENERIC = CEASolidPropellant(
     cea_name="HTPB",
     burn_rate=[{"min": 0, "max": 20e6, "a": 4.0, "n": 0.35}],
-    density=1750.0,
+    ideal_density=1750.0,
+    density_percentage=98.0,
     combustion_efficiency=0.96,
 )

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from machwave.models.propulsion.propellants import (
+from machwave.models.propulsion.propellants.formulations import (
     KNDX,
     KNER,
     KNSB,
