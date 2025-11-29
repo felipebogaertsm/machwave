@@ -148,7 +148,7 @@ class LiquidEngineState(MotorState):
             variables={"P0": self.P_0[-1]},
             equation=compute_chamber_pressure_mass_balance_lre,
             d_t=d_t,
-            R=self.motor.propellant.R_chamber,
+            R=self.motor.propellant.properties.R_chamber,
             T0=self.motor.propellant.combustion_temperature,
             V0=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
