@@ -13,9 +13,8 @@ class ChemicalPropellantProperties(abc.ABC):
     Args:
         gamma_chamber (float): Isentropic exponent in chamber (dimensionless).
         gamma_exhaust (float): Isentropic exponent at nozzle exit (dimensionless).
-        adiabatic_flame_temperature (float): Effective combustion temperature [K].
-        adiabatic_flame_temperature_ideal (float): Theoretical combustion
-            temperature [K].
+        adiabatic_flame_temperature (float): Ideal combustion temperature [K].
+        combustion_efficiency (float): Combustion efficiency
         molecular_weight_chamber (float): Average molecular weight in chamber [kg/mol].
         molecular_weight_exhaust (float): Average molecular weight at exit [kg/mol].
         i_sp_frozen (float): Frozen flow specific impulse [s].
@@ -25,11 +24,21 @@ class ChemicalPropellantProperties(abc.ABC):
     gamma_chamber: float
     gamma_exhaust: float
     adiabatic_flame_temperature: float
-    adiabatic_flame_temperature_ideal: float
+    combustion_efficiency: float
     molecular_weight_chamber: float
     molecular_weight_exhaust: float
     i_sp_frozen: float
     i_sp_shifting: float
+
+    @property
+    def combustion_temperature(self) -> float:
+        """Real combustion temperature, determined by the adiabatic flame temperature
+        multiplied by the combustion efficiency.
+
+        Returns:
+            float: Real combustion temperature [K].
+        """
+        return self.adiabatic_flame_temperature * self.combustion_efficiency
 
     @property
     def R_chamber(self) -> float:
