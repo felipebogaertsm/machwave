@@ -3,7 +3,7 @@ Commonly used liquid propellant formulations with their characteristic
 properties.
 """
 
-from machwave.models.propulsion.propellants.types import BiliquidPropellant
+from machwave.models.propulsion.propellants.categories import BiliquidPropellant
 
 LOX_RP1_2_5 = BiliquidPropellant(
     oxidizer_name="LOX",

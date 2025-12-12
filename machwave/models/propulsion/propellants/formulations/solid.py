@@ -1,7 +1,7 @@
 """Solid propellant formulation instances."""
 
+from ..categories import CEASolidPropellant, FixedSolidPropellant
 from ..properties import SolidPropellantProperties
-from ..types import CEASolidPropellant, FixedSolidPropellant
 
 KNDX = FixedSolidPropellant(
     name="KN-Dextrose",

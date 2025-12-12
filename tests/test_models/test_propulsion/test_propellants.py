@@ -1,6 +1,11 @@
 import numpy as np
 import pytest
 
+from machwave.models.propulsion.propellants.categories import (
+    BurnRateOutOfBoundsError,
+    CEASolidPropellant,
+    FixedSolidPropellant,
+)
 from machwave.models.propulsion.propellants.formulations import (
     KNDX,
     KNER,
@@ -10,11 +15,6 @@ from machwave.models.propulsion.propellants.formulations import (
     MIT_CHERRY_LIMEADE,
     RNX_57,
     RNX_71V,
-)
-from machwave.models.propulsion.propellants.types import (
-    BurnRateOutOfBoundsError,
-    CEASolidPropellant,
-    FixedSolidPropellant,
 )
 
 ALL_PROPELLANTS_TO_TEST = [

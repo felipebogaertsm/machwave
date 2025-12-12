@@ -8,12 +8,14 @@ to the module will automatically be tested.
 import pytest
 
 import machwave.models.propulsion.propellants.formulations.solid as solid_formulations
-from machwave.models.propulsion.propellants.types import (
+from machwave.models.propulsion.propellants.categories import (
     CEASolidPropellant,
     FixedSolidPropellant,
     SolidPropellant,
 )
-from machwave.models.propulsion.propellants.types.base import BurnRateOutOfBoundsError
+from machwave.models.propulsion.propellants.categories.base import (
+    BurnRateOutOfBoundsError,
+)
 
 
 def get_all_solid_propellants():
