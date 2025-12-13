@@ -19,6 +19,11 @@ class ChemicalPropellantProperties(abc.ABC):
         molecular_weight_exhaust (float): Average molecular weight at exit [kg/mol].
         i_sp_frozen (float): Frozen flow specific impulse [s].
         i_sp_shifting (float): Shifting equilibrium specific impulse [s].
+
+    Properties:
+        combustion_temperature (float): Real combustion temperature [K].
+        R_chamber (float): Specific gas constant for chamber [J/(kg·K)].
+        R_exhaust (float): Specific gas constant for nozzle exit [J/(kg·K)].
     """
 
     gamma_chamber: float
