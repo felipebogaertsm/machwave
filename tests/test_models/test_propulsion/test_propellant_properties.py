@@ -154,7 +154,7 @@ class TestChemicalPropellantProperties:
             "gamma_chamber",
             "gamma_exhaust",
             "adiabatic_flame_temperature",
-            "adiabatic_flame_temperature_ideal",
+            "combustion_efficiency",
             "molecular_weight_chamber",
             "molecular_weight_exhaust",
             "i_sp_frozen",
@@ -171,7 +171,7 @@ class TestChemicalPropellantProperties:
 
     @pytest.mark.parametrize(
         "method",
-        ["R_chamber", "R_exhaust"],
+        ["R_chamber", "R_exhaust", "combustion_temperature"],
     )
     def test_common_methods_exist(self, method):
         """Test that all subclasses have the common property methods from base class."""
@@ -254,13 +254,11 @@ class TestPropertyValidation:
             LiquidPropellantPropertiesFactory,
         ],
     )
-    def test_effective_temperature_less_than_or_equal_ideal(self, props_factory):
-        """Test that effective temperature is <= ideal temperature."""
+    def test_combustion_temperature_less_than_or_equal_adiabatic(self, props_factory):
+        """Test that combustion temperature is <= adiabatic flame temperature."""
         props = props_factory.build()
 
-        assert (
-            props.adiabatic_flame_temperature <= props.adiabatic_flame_temperature_ideal
-        )
+        assert props.combustion_temperature <= props.adiabatic_flame_temperature
 
     @pytest.mark.parametrize(
         "props_factory",
@@ -302,7 +300,7 @@ class TestPropertyValidation:
         props = props_factory.build()
 
         assert props.adiabatic_flame_temperature > 0
-        assert props.adiabatic_flame_temperature_ideal > 0
+        assert props.combustion_temperature > 0
 
     @pytest.mark.parametrize(
         "props_factory",

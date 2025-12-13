@@ -13,8 +13,8 @@ class ChemicalPropellantProperties(abc.ABC):
     Args:
         gamma_chamber (float): Isentropic exponent in chamber (dimensionless).
         gamma_exhaust (float): Isentropic exponent at nozzle exit (dimensionless).
-        adiabatic_flame_temperature (float): Ideal combustion temperature [K].
-        combustion_efficiency (float): Combustion efficiency
+        adiabatic_flame_temperature (float): Ideal adiabatic flame temperature [K].
+        combustion_efficiency (float): Combustion efficiency (0 to 1).
         molecular_weight_chamber (float): Average molecular weight in chamber [kg/mol].
         molecular_weight_exhaust (float): Average molecular weight at exit [kg/mol].
         i_sp_frozen (float): Frozen flow specific impulse [s].

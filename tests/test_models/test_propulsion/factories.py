@@ -46,13 +46,13 @@ class SolidPropellantPropertiesFactory(DataclassFactory[SolidPropellantPropertie
 
     @classmethod
     def adiabatic_flame_temperature(cls) -> float:
-        """Typical effective flame temperature in Kelvin."""
-        return 3000.0
+        """Typical ideal adiabatic flame temperature in Kelvin."""
+        return 3200.0
 
     @classmethod
-    def adiabatic_flame_temperature_ideal(cls) -> float:
-        """Typical ideal flame temperature in Kelvin (higher than effective)."""
-        return 3200.0
+    def combustion_efficiency(cls) -> float:
+        """Typical combustion efficiency (0-1)."""
+        return 0.95
 
     @classmethod
     def molecular_weight_chamber(cls) -> float:
@@ -124,13 +124,13 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantPropert
 
     @classmethod
     def adiabatic_flame_temperature(cls) -> float:
-        """Typical effective flame temperature in Kelvin."""
-        return 3500.0
+        """Typical ideal adiabatic flame temperature in Kelvin."""
+        return 3600.0
 
     @classmethod
-    def adiabatic_flame_temperature_ideal(cls) -> float:
-        """Typical ideal flame temperature in Kelvin."""
-        return 3600.0
+    def combustion_efficiency(cls) -> float:
+        """Typical combustion efficiency (0-1)."""
+        return 0.95
 
     @classmethod
     def molecular_weight_chamber(cls) -> float:
