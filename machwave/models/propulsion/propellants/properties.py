@@ -64,7 +64,7 @@ class SolidPropellantProperties(ChemicalPropellantProperties):
     """Solid propellant properties.
 
     Args:
-        density (float): Propellant density [kg/m³].
+        density (float): Solid propellant density [kg/m³].
         qsi_chamber (float): Condensed-phase species content in chamber [mol/(100g)].
         qsi_exhaust (float): Condensed-phase species content in exhaust [mol/(100g)].
     """
