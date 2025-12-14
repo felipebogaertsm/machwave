@@ -1,6 +1,6 @@
 """Solid propellant formulation instances."""
 
-from ..categories import CEASolidPropellant, FixedSolidPropellant
+from ..categories import FixedSolidPropellant, FormulationBasedSolidPropellant
 from ..properties import SolidPropellantProperties
 
 KNDX = FixedSolidPropellant(
@@ -15,16 +15,15 @@ KNDX = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.1308,
         gamma_exhaust=1.0430,
-        adiabatic_flame_temperature=1712 * 0.95,
-        adiabatic_flame_temperature_ideal=1712,
+        adiabatic_flame_temperature=1712,
         molecular_weight_chamber=42.391 * 1e-3,
         molecular_weight_exhaust=42.882 * 1e-3,
         i_sp_frozen=152.4,
         i_sp_shifting=154.1,
-        density=1795.0,
         qsi_chamber=0.307,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 KNSB = FixedSolidPropellant(
@@ -35,16 +34,15 @@ KNSB = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.1361,
         gamma_exhaust=1.0420,
-        adiabatic_flame_temperature=1603 * 0.95,
-        adiabatic_flame_temperature_ideal=1603,
+        adiabatic_flame_temperature=1603,
         molecular_weight_chamber=39.857 * 1e-3,
         molecular_weight_exhaust=40.048 * 1e-3,
         i_sp_frozen=151.4,
         i_sp_shifting=153.5,
-        density=1837.3 * 0.95,
         qsi_chamber=0.316,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 KNSB_NAKKA = FixedSolidPropellant(
@@ -59,16 +57,15 @@ KNSB_NAKKA = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.1361,
         gamma_exhaust=1.0420,
-        adiabatic_flame_temperature=1603 * 0.95,
-        adiabatic_flame_temperature_ideal=1603,
+        adiabatic_flame_temperature=1603,
         molecular_weight_chamber=39.857 * 1e-3,
         molecular_weight_exhaust=40.048 * 1e-3,
         i_sp_frozen=151.4,
         i_sp_shifting=153.5,
-        density=1837.3 * 0.95,
         qsi_chamber=0.316,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 KNSU = FixedSolidPropellant(
@@ -77,16 +74,15 @@ KNSU = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.1330,
         gamma_exhaust=1.1044,
-        adiabatic_flame_temperature=1722 * 0.95,
-        adiabatic_flame_temperature_ideal=1722,
+        adiabatic_flame_temperature=1722,
         molecular_weight_chamber=41.964 * 1e-3,
         molecular_weight_exhaust=41.517 * 1e-3,
         i_sp_frozen=153.3,
         i_sp_shifting=155.1,
-        density=1899.5 * 0.95,
         qsi_chamber=0.306,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 KNER = FixedSolidPropellant(
@@ -95,16 +91,15 @@ KNER = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.1390,
         gamma_exhaust=1.0426,
-        adiabatic_flame_temperature=1608 * 0.94,
-        adiabatic_flame_temperature_ideal=1608,
+        adiabatic_flame_temperature=1608,
         molecular_weight_chamber=38.570 * 1e-3,
         molecular_weight_exhaust=38.779 * 1e-3,
         i_sp_frozen=153.8,
         i_sp_shifting=156.0,
-        density=1820.0 * 0.95,
         qsi_chamber=0.315,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.94,
 )
 
 # NOTE: Data for both RNXs still needs to be revised and updated according
@@ -116,16 +111,15 @@ RNX_57 = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.159,
         gamma_exhaust=1.026,
-        adiabatic_flame_temperature=1644 * 0.95,
-        adiabatic_flame_temperature_ideal=1644,
+        adiabatic_flame_temperature=1644,
         molecular_weight_chamber=45.19 * 1e-3,
         molecular_weight_exhaust=45.19 * 1e-3,
         i_sp_frozen=158.1,
         i_sp_shifting=158.1,
-        density=1844.5 * 0.95,
         qsi_chamber=0.306,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 RNX_71V = FixedSolidPropellant(
@@ -134,16 +128,15 @@ RNX_71V = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.180,
         gamma_exhaust=1.027,
-        adiabatic_flame_temperature=1434 * 0.95,
-        adiabatic_flame_temperature_ideal=1434,
+        adiabatic_flame_temperature=1434,
         molecular_weight_chamber=41.83 * 1e-3,
         molecular_weight_exhaust=41.83 * 1e-3,
         i_sp_frozen=153.6,
         i_sp_shifting=153.6,
-        density=1816.1 * 0.95,
         qsi_chamber=0.306,
         qsi_exhaust=0.321,
     ),
+    combustion_efficiency=0.95,
 )
 
 MIT_CHERRY_LIMEADE = FixedSolidPropellant(
@@ -152,24 +145,44 @@ MIT_CHERRY_LIMEADE = FixedSolidPropellant(
     properties=SolidPropellantProperties(
         gamma_chamber=1.2100,
         gamma_exhaust=1.2501,
-        adiabatic_flame_temperature=2800 * 0.95,
-        adiabatic_flame_temperature_ideal=2800,
+        adiabatic_flame_temperature=2800,
         molecular_weight_chamber=23.724 * 1e-3,
         molecular_weight_exhaust=23.811 * 1e-3,
         i_sp_frozen=241.3,
         i_sp_shifting=245.1,
-        density=1670.0,
         qsi_chamber=0.138,
         qsi_exhaust=0.139,
     ),
+    combustion_efficiency=0.95,
 )
 
 # APCP - Ammonium Perchlorate Composite Propellant
-# Generic HTPB/AP formulation with typical burn rate
-APCP_GENERIC = CEASolidPropellant(
-    cea_name="HTPB",
+# Generic HTPB/AP formulation (68% AP, 18% HTPB, 14% Aluminum)
+APCP_GENERIC = FormulationBasedSolidPropellant(
+    name="APCP Generic",
     burn_rate=[{"min": 0, "max": 20e6, "a": 4.0, "n": 0.35}],
     ideal_density=1750.0,
-    density_percentage=98.0,
     combustion_efficiency=0.96,
+)
+# Add components: 68% AP, 18% HTPB, 14% Aluminum
+APCP_GENERIC.add_component(
+    name="AP",
+    formula={"H": 4.0, "N": 1.0, "Cl": 1.0, "O": 4.0},
+    weight_percent=68.0,
+    heat_of_formation=-70800.0,  # cal/mol
+    density=1.95,  # g/cc
+)
+APCP_GENERIC.add_component(
+    name="HTPB",
+    formula={"C": 8.0, "H": 14.0},  # Approximate formula for HTPB monomer
+    weight_percent=18.0,
+    heat_of_formation=-20000.0,  # cal/mol (approximate)
+    density=0.92,  # g/cc
+)
+APCP_GENERIC.add_component(
+    name="Aluminum",
+    formula={"Al": 1.0},
+    weight_percent=14.0,
+    heat_of_formation=0.0,  # cal/mol (element in standard state)
+    density=2.70,  # g/cc
 )
