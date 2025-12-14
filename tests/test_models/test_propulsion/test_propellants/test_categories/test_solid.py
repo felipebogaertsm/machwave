@@ -11,9 +11,7 @@ from machwave.models.propulsion.propellants.categories import (
 )
 from machwave.models.propulsion.propellants.formulations.solid import (
     KNDX,
-    KNER,
     KNSB,
-    KNSB_NAKKA,
     KNSU,
 )
 
