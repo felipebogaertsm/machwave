@@ -15,8 +15,8 @@ the solid propellant KNSB, or the liquid propellants LH2/LOX.
 from machwave.models.propulsion.propellants.categories import (
     BiliquidPropellant,
     BurnRateOutOfBoundsError,
-    CEASolidPropellant,
     FixedSolidPropellant,
+    FormulationBasedSolidPropellant,
     Propellant,
     SolidPropellant,
 )
@@ -38,5 +38,5 @@ __all__ = [
     "BiliquidPropellant",
     "SolidPropellant",
     "FixedSolidPropellant",
-    "CEASolidPropellant",
+    "FormulationBasedSolidPropellant",
 ]

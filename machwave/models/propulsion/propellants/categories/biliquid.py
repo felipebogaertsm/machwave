@@ -1,13 +1,11 @@
 """Biliquid propellant type class."""
 
-import scipy.constants
-from rocketcea.cea_obj import CEA_Obj
+from typing import TYPE_CHECKING
 
-from machwave.core.conversions import (
-    convert_lbft3_to_kgm3,
-    convert_pa_to_psi,
-    convert_rankine_to_kelvin,
-)
+import scipy.constants
+
+if TYPE_CHECKING:
+    from machwave.services import RocketCEAService
 
 from ..properties import LiquidPropellantProperties
 from .base import Propellant
@@ -34,6 +32,7 @@ class BiliquidPropellant(Propellant):
         fuel_name: str,
         of_ratio: float,
         combustion_efficiency: float = 0.98,
+        thermochem_service: "RocketCEAService | None" = None,
     ):
         """Initialize the BiliquidPropellant composition.
 
@@ -42,17 +41,19 @@ class BiliquidPropellant(Propellant):
             fuel_name: Fuel name recognized by RocketCEA.
             of_ratio: Oxidizer-to-fuel mass ratio.
             combustion_efficiency: Scaling factor (0 to 1) applied to ideal temperature.
+            thermochem_service: Thermochemical service for calculations (default: RocketCEAService).
         """
         super().__init__(combustion_efficiency)
         self.oxidizer_name = oxidizer_name
         self.fuel_name = fuel_name
         self.of_ratio = of_ratio
         self.properties = None
+        self.thermochem_service = thermochem_service
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
     ) -> LiquidPropellantProperties:
-        """Calculate propellant properties using RocketCEA.
+        """Calculate propellant properties using thermochemical service.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -61,60 +62,36 @@ class BiliquidPropellant(Propellant):
         Returns:
             LiquidPropellantProperties: Calculated propellant properties.
         """
-        # Create CEA object for this propellant combination
-        self.cea_obj = CEA_Obj(oxName=self.oxidizer_name, fuelName=self.fuel_name)
+        # Create service instance for this propellant
+        if self.thermochem_service is None:
+            from machwave.services import create_cea_service
 
-        # Convert pressure to psi for RocketCEA
-        chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
-
-        # Combustion temperature
-        adiabatic_flame_temperature_ideal = convert_rankine_to_kelvin(
-            self.cea_obj.get_Tcomb(Pc=chamber_pressure_psi, MR=self.of_ratio)
-        )
-        adiabatic_flame_temperature = (
-            adiabatic_flame_temperature_ideal * self.combustion_efficiency
-        )
-
-        # Get propellant liquid densities (operational/storage properties)
-        oxidizer_tank_density_lbft3, fuel_tank_density_lbft3 = (
-            self.cea_obj.get_OxFuelDensities()  # type: ignore[attr-defined]
-        )
-        self.oxidizer_tank_density = convert_lbft3_to_kgm3(oxidizer_tank_density_lbft3)
-        self.fuel_tank_density = convert_lbft3_to_kgm3(fuel_tank_density_lbft3)
-
-        # Chamber properties
-        molecular_weight_chamber_g, gamma_chamber = (
-            self.cea_obj.get_Chamber_MolWt_gamma(
-                Pc=chamber_pressure_psi, MR=self.of_ratio, eps=expansion_ratio
+            service = create_cea_service(
+                oxidizer_name=self.oxidizer_name,
+                fuel_name=self.fuel_name,
+                oxidizer_to_fuel_ratio=self.of_ratio,
             )
-        )
-        molecular_weight_chamber = (
-            molecular_weight_chamber_g / 1000.0
-        )  # g/mol -> kg/mol
+        else:
+            service = self.thermochem_service
 
-        # Exit properties (frozen flow)
-        molecular_weight_exhaust_g, gamma_exhaust = self.cea_obj.get_exit_MolWt_gamma(
-            Pc=chamber_pressure_psi, MR=self.of_ratio, eps=expansion_ratio, frozen=1
-        )
-        molecular_weight_exhaust = (
-            molecular_weight_exhaust_g / 1000.0
-        )  # g/mol -> kg/mol
-
-        # Specific impulse
-        i_sp_frozen = self.cea_obj.get_Isp(
-            Pc=chamber_pressure_psi,
-            MR=self.of_ratio,
-            eps=expansion_ratio,
-            frozen=1,
-        )
-        i_sp_shifting = self.cea_obj.get_Isp(
-            Pc=chamber_pressure_psi,
-            MR=self.of_ratio,
-            eps=expansion_ratio,
-            frozen=0,
+        # Get thermochemical properties
+        adiabatic_flame_temperature = service.get_adiabatic_flame_temperature(
+            chamber_pressure=chamber_pressure
         )
 
-        # Create and store properties object
+        molecular_weight_chamber, gamma_chamber = service.get_chamber_properties(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        molecular_weight_exhaust, gamma_exhaust = service.get_exhaust_properties(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        i_sp_frozen, i_sp_shifting = service.get_specific_impulse(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        # Construct liquid propellant properties
         self.properties = LiquidPropellantProperties(
             gamma_chamber=gamma_chamber,
             gamma_exhaust=gamma_exhaust,
@@ -123,8 +100,12 @@ class BiliquidPropellant(Propellant):
             molecular_weight_exhaust=molecular_weight_exhaust,
             i_sp_frozen=i_sp_frozen,
             i_sp_shifting=i_sp_shifting,
-            adiabatic_flame_temperature_ideal=adiabatic_flame_temperature_ideal,
         )
+
+        # Get tank densities
+        oxidizer_density, fuel_density = service.get_tank_densities()
+        self.oxidizer_tank_density = oxidizer_density
+        self.fuel_tank_density = fuel_density
 
         return self.properties
 
@@ -146,6 +127,21 @@ class BiliquidPropellant(Propellant):
         """
         return self.evaluate(chamber_pressure=chamber_pressure, expansion_ratio=eps)
 
+    def combustion_temperature(self) -> float:
+        """Calculate real combustion temperature applying combustion efficiency.
+
+        Returns:
+            float: Real combustion temperature [K].
+
+        Raises:
+            ValueError: If properties have not been evaluated yet.
+        """
+        if self.properties is None:
+            raise ValueError(
+                "Must call evaluate() before accessing combustion_temperature"
+            )
+        return self.properties.adiabatic_flame_temperature * self.combustion_efficiency
+
     def get_c_star(self) -> float:
         """Compute characteristic velocity (c*) of the propellant.
 
@@ -160,7 +156,7 @@ class BiliquidPropellant(Propellant):
         """
         # Use the chamber conditions from properties
         assert self.properties is not None
-        T_c = self.properties.adiabatic_flame_temperature
+        T_c = self.combustion_temperature()  # Apply combustion efficiency
         R_ch = scipy.constants.R / self.properties.molecular_weight_chamber
         gamma = self.properties.gamma_chamber
 

@@ -1,10 +1,8 @@
 """Base propellant type classes."""
 
 import abc
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..properties import ChemicalPropellantProperties
+from ..properties import ChemicalPropellantProperties
 
 
 class Propellant(abc.ABC):
@@ -20,9 +18,8 @@ class Propellant(abc.ABC):
         properties: Calculated propellant properties (populated by evaluate).
     """
 
-    def __init__(self, combustion_efficiency: float = 0.95):
+    def __init__(self, combustion_efficiency: float):
         self.combustion_efficiency = combustion_efficiency
-        self.cea_obj = None
         self.properties = None
 
     @abc.abstractmethod

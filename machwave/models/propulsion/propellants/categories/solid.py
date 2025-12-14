@@ -1,11 +1,9 @@
 """Solid propellant type classes."""
 
-from rocketcea.cea_obj import CEA_Obj
+from typing import TYPE_CHECKING
 
-from machwave.core.conversions import (
-    convert_pa_to_psi,
-    convert_rankine_to_kelvin,
-)
+if TYPE_CHECKING:
+    from machwave.services import RocketCEAService
 
 from ..properties import SolidPropellantProperties
 from .base import BurnRateOutOfBoundsError, Propellant
@@ -24,7 +22,7 @@ class SolidPropellant(Propellant):
     def __init__(
         self,
         burn_rate: list[dict[str, float | int]],
-        combustion_efficiency: float = 0.95,
+        combustion_efficiency: float,
     ):
         super().__init__(combustion_efficiency)
         self.burn_rate = burn_rate
@@ -70,7 +68,7 @@ class FixedSolidPropellant(SolidPropellant):
         name: str,
         burn_rate: list[dict[str, float | int]],
         properties: SolidPropellantProperties,
-        combustion_efficiency: float = 0.95,
+        combustion_efficiency: float,
     ):
         super().__init__(burn_rate, combustion_efficiency)
         self.name = name
@@ -91,45 +89,119 @@ class FixedSolidPropellant(SolidPropellant):
         return self.properties
 
 
-class CEASolidPropellant(SolidPropellant):
-    """Solid propellant with CEA-calculated thermochemical properties.
+class FormulationBasedSolidPropellant(SolidPropellant):
+    """Solid propellant built from modular chemical components with CEA calculation.
 
-    Dynamically calculates properties using RocketCEA at specified operating conditions.
+    Allows building custom propellant formulations by adding components with their
+    chemical formulas, percentages, and thermochemical properties. Uses CEA to
+    calculate thermochemical properties from the composition.
 
     Args:
-        cea_name: Propellant name as recognized by RocketCEA.
+        name: Propellant formulation name for identification.
         burn_rate: Burn rate parameters (St. Robert's law).
         ideal_density: Theoretical propellant density [kg/m³].
-        density_percentage: Percentage of theoretical density achieved (0-100).
-            Accounts for manufacturing imperfections and voids.
         combustion_efficiency: Combustion efficiency (0 to 1).
+
+    Example:
+        >>> propellant = FormulationBasedSolidPropellant(
+        ...     name="KNSU",
+        ...     burn_rate=[{"min": 0, "max": 100e6, "a": 8.26, "n": 0.319}],
+        ...     ideal_density=1899.5,
+        ...     combustion_efficiency=0.95
+        ... )
+        >>> propellant.add_component(
+        ...     name="KNO3",
+        ...     formula={"K": 1.0, "N": 1.0, "O": 3.0},
+        ...     weight_percent=65.0,
+        ...     heat_of_formation=-118200.0,
+        ...     density=2.109
+        ... )
+        >>> propellant.add_component(
+        ...     name="Sucrose",
+        ...     formula={"C": 12.0, "H": 22.0, "O": 11.0},
+        ...     weight_percent=35.0,
+        ...     heat_of_formation=-532000.0,
+        ...     density=1.5879
+        ... )
+        >>> props = propellant.evaluate(chamber_pressure=7e6, expansion_ratio=8.0)
     """
 
     def __init__(
         self,
-        cea_name: str,
+        name: str,
         burn_rate: list[dict[str, float | int]],
         ideal_density: float,
-        density_percentage: float = 98.0,
         combustion_efficiency: float = 0.95,
+        thermochem_service: "RocketCEAService | None" = None,
     ):
         super().__init__(burn_rate, combustion_efficiency)
-        self.cea_name = cea_name
+        self.name = name
         self.ideal_density = ideal_density
-        self.density_percentage = density_percentage
+        self.components = []
+        self._cea_propellant_name = None
+        self.thermochem_service = thermochem_service
 
-    def real_density(self) -> float:
-        """Calculate actual propellant density accounting for manufacturing imperfections.
+    def add_component(
+        self,
+        name: str,
+        formula: dict[str, float],
+        weight_percent: float,
+        heat_of_formation: float,
+        density: float,
+        temperature: float = 298.15,
+    ) -> None:
+        """Add a chemical component to the propellant formulation.
+
+        Args:
+            name: Component name (e.g., "KNO3", "HTPB", "AL").
+            formula: Chemical formula as dict (e.g., {"K": 1.0, "N": 1.0, "O": 3.0}).
+            weight_percent: Weight percentage in formulation (0-100).
+            heat_of_formation: Standard heat of formation [cal/mol].
+            density: Component density [g/cc].
+            temperature: Reference temperature [K] (default: 298.15).
+        """
+        component = {
+            "name": name,
+            "formula": formula,
+            "weight_percent": weight_percent,
+            "heat_of_formation": heat_of_formation,
+            "density": density,
+            "temperature": temperature,
+        }
+        self.components.append(component)
+
+    def generate_cea_card_string(self) -> str:
+        """Generate CEA card string from components.
 
         Returns:
-            float: Real density [kg/m³] calculated as ideal_density * (density_percentage/100).
+            str: CEA-formatted card string for the formulation.
+
+        Raises:
+            ValueError: If no components have been added.
         """
-        return self.ideal_density * (self.density_percentage / 100.0)
+        from machwave.services.cea import generate_card_string
+
+        return generate_card_string(self.components)
+
+    def combustion_temperature(self) -> float:
+        """Calculate real combustion temperature applying combustion efficiency.
+
+        Returns:
+            float: Real combustion temperature [K].
+
+        Raises:
+            ValueError: If properties have not been evaluated yet.
+        """
+        if self.properties is None:
+            raise ValueError(
+                "Must call evaluate() before accessing combustion_temperature"
+            )
+        return self.properties.adiabatic_flame_temperature * self.combustion_efficiency
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
     ) -> SolidPropellantProperties:
-        """Calculate thermochemical properties using RocketCEA.
+        """Calculate thermochemical properties using CEA from component formulation.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -137,54 +209,67 @@ class CEASolidPropellant(SolidPropellant):
 
         Returns:
             SolidPropellantProperties: Calculated thermochemical properties.
+
+        Raises:
+            ValueError: If no components added or weight percentages don't sum to 100%.
         """
-        cea_obj = CEA_Obj(propName=self.cea_name)
-        chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
+        if not self.components:
+            raise ValueError("No components added to formulation")
 
-        # Combustion temperature
-        adiabatic_flame_temperature_ideal = convert_rankine_to_kelvin(
-            cea_obj.get_Tcomb(Pc=chamber_pressure_psi)
-        )
-        adiabatic_flame_temperature = (
-            adiabatic_flame_temperature_ideal * self.combustion_efficiency
-        )
+        # Validate weight percentages
+        total_weight = sum(comp["weight_percent"] for comp in self.components)
+        if abs(total_weight - 100.0) > 0.1:
+            raise ValueError(
+                f"Component weight percentages must sum to 100%, got {total_weight:.2f}%"
+            )
 
-        # Chamber properties
-        molecular_weight_chamber_g, gamma_chamber = cea_obj.get_Chamber_MolWt_gamma(
-            Pc=chamber_pressure_psi, eps=expansion_ratio
-        )
-        molecular_weight_chamber = (
-            molecular_weight_chamber_g / 1000.0
-        )  # g/mol -> kg/mol
+        # Generate CEA card string and register with CEA
+        card_str = self.generate_cea_card_string()
+        self._cea_propellant_name = f"{self.name}_CEA"
 
-        # Exit properties (frozen flow)
-        molecular_weight_exhaust_g, gamma_exhaust = cea_obj.get_exit_MolWt_gamma(
-            Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=1
-        )
-        molecular_weight_exhaust = (
-            molecular_weight_exhaust_g / 1000.0
-        )  # g/mol -> kg/mol
+        # Create service instance for this propellant
+        if self.thermochem_service is None:
+            from machwave.services import create_cea_service
 
-        # Specific impulse
-        i_sp_frozen = cea_obj.get_Isp(
-            Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=1
-        )
-        i_sp_shifting = cea_obj.get_Isp(
-            Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=0
+            service = create_cea_service(
+                propellant_name=self._cea_propellant_name, card_string=card_str
+            )
+        else:
+            service = self.thermochem_service
+
+        # Get thermochemical properties
+        adiabatic_flame_temperature = service.get_adiabatic_flame_temperature(
+            chamber_pressure=chamber_pressure
         )
 
+        molecular_weight_chamber, gamma_chamber = service.get_chamber_properties(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        molecular_weight_exhaust, gamma_exhaust = service.get_exhaust_properties(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        i_sp_frozen, i_sp_shifting = service.get_specific_impulse(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        # Get condensed phase fractions
+        qsi_chamber, qsi_exhaust = service.get_condensed_phase_fractions(
+            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+        )
+
+        # Construct solid propellant properties
         self.properties = SolidPropellantProperties(
             gamma_chamber=gamma_chamber,
             gamma_exhaust=gamma_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,
-            adiabatic_flame_temperature_ideal=adiabatic_flame_temperature_ideal,
             molecular_weight_chamber=molecular_weight_chamber,
             molecular_weight_exhaust=molecular_weight_exhaust,
             i_sp_frozen=i_sp_frozen,
             i_sp_shifting=i_sp_shifting,
-            density=self.real_density(),
-            qsi_chamber=0.0,  # CEA doesn't provide condensed phase data directly
-            qsi_exhaust=0.0,
+            qsi_chamber=qsi_chamber,
+            qsi_exhaust=qsi_exhaust,
         )
 
         return self.properties

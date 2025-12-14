@@ -2,7 +2,11 @@
 
 from .base import BurnRateOutOfBoundsError, Propellant
 from .biliquid import BiliquidPropellant
-from .solid import CEASolidPropellant, FixedSolidPropellant, SolidPropellant
+from .solid import (
+    FixedSolidPropellant,
+    FormulationBasedSolidPropellant,
+    SolidPropellant,
+)
 
 __all__ = [
     "Propellant",
@@ -10,5 +14,5 @@ __all__ = [
     "SolidPropellant",
     "BiliquidPropellant",
     "FixedSolidPropellant",
-    "CEASolidPropellant",
+    "FormulationBasedSolidPropellant",
 ]
