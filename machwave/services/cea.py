@@ -17,6 +17,29 @@ from machwave.core.conversions import (
 )
 
 
+def generate_card_string(components: list[dict]) -> str:
+    """Generate CEA card string from component list."""
+    if not components:
+        raise ValueError("No components provided")
+
+    card_lines = []
+    for comp in components:
+        formula_str = " ".join(
+            f"{elem} {count}" for elem, count in comp["formula"].items()
+        )
+        line = f"name {comp['name']}  {formula_str}  wt%={comp['weight_percent']:.1f}"
+        card_lines.append(line)
+
+        thermo_line = (
+            f"h,cal={comp['heat_of_formation']:.1f}  "
+            f"t(k)={comp['temperature']:.2f}  "
+            f"rho,g/cc={comp['density']:.4f}"
+        )
+        card_lines.append(thermo_line)
+
+    return "\n".join(card_lines)
+
+
 def create_cea_service(
     propellant_name: str | None = None,
     card_string: str | None = None,
@@ -224,26 +247,3 @@ class RocketCEAService:
             convert_lbft3_to_kgm3(densities_lb_per_ft3[0]),
             convert_lbft3_to_kgm3(densities_lb_per_ft3[1]),
         )
-
-
-def generate_card_string(components: list[dict]) -> str:
-    """Generate CEA card string from component list."""
-    if not components:
-        raise ValueError("No components provided")
-
-    card_lines = []
-    for comp in components:
-        formula_str = " ".join(
-            f"{elem} {count}" for elem, count in comp["formula"].items()
-        )
-        line = f"name {comp['name']}  {formula_str}  wt%={comp['weight_percent']:.1f}"
-        card_lines.append(line)
-
-        thermo_line = (
-            f"h,cal={comp['heat_of_formation']:.1f}  "
-            f"t(k)={comp['temperature']:.2f}  "
-            f"rho,g/cc={comp['density']:.4f}"
-        )
-        card_lines.append(thermo_line)
-
-    return "\n".join(card_lines)
