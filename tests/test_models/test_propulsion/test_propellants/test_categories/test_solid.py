@@ -9,11 +9,7 @@ import pytest
 from machwave.models.propulsion.propellants.categories import (
     FormulationBasedSolidPropellant,
 )
-from machwave.models.propulsion.propellants.formulations.solid import (
-    KNDX,
-    KNSB,
-    KNSU,
-)
+from machwave.models.propulsion.propellants.formulations.solid import KNER, KNSU
 
 
 class TestFormulationBasedSolidPropellant:
