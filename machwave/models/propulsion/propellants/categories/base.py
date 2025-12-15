@@ -2,7 +2,7 @@
 
 import abc
 
-from ..properties import ChemicalPropellantProperties
+from ..properties import ThermochemicalProperties
 
 
 class Propellant(abc.ABC):
@@ -25,7 +25,7 @@ class Propellant(abc.ABC):
     @abc.abstractmethod
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
-    ) -> "ChemicalPropellantProperties":
+    ) -> "ThermochemicalProperties":
         """Calculate propellant properties given chamber conditions.
 
         Args:
@@ -33,7 +33,7 @@ class Propellant(abc.ABC):
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
 
         Returns:
-            ChemicalPropellantProperties: Calculated properties.
+            ThermochemicalProperties: Calculated properties.
         """
         ...
 

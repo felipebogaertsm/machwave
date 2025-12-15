@@ -7,7 +7,7 @@ import scipy.constants
 if TYPE_CHECKING:
     from machwave.services import RocketCEAService
 
-from ..properties import LiquidPropellantProperties
+from ..properties import ThermochemicalProperties
 from .base import Propellant
 
 
@@ -52,7 +52,7 @@ class BiliquidPropellant(Propellant):
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
-    ) -> LiquidPropellantProperties:
+    ) -> ThermochemicalProperties:
         """Calculate propellant properties using thermochemical service.
 
         Args:
@@ -60,7 +60,7 @@ class BiliquidPropellant(Propellant):
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
 
         Returns:
-            LiquidPropellantProperties: Calculated propellant properties.
+            ThermochemicalProperties: Calculated propellant properties.
         """
         # Create service instance for this propellant
         if self.thermochem_service is None:
@@ -92,7 +92,7 @@ class BiliquidPropellant(Propellant):
         )
 
         # Construct liquid propellant properties
-        self.properties = LiquidPropellantProperties(
+        self.properties = ThermochemicalProperties(
             gamma_chamber=gamma_chamber,
             gamma_exhaust=gamma_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,
@@ -100,6 +100,8 @@ class BiliquidPropellant(Propellant):
             molecular_weight_exhaust=molecular_weight_exhaust,
             i_sp_frozen=i_sp_frozen,
             i_sp_shifting=i_sp_shifting,
+            qsi_chamber=0.0,  # Liquid propellants produce gas-only combustion
+            qsi_exhaust=0.0,
         )
 
         # Get tank densities
@@ -111,7 +113,7 @@ class BiliquidPropellant(Propellant):
 
     def update_properties(
         self, chamber_pressure: float, eps: float = 8.0, frozen: int = 0
-    ) -> LiquidPropellantProperties:
+    ) -> ThermochemicalProperties:
         """Backward compatibility method for updating properties.
 
         This method calls evaluate() internally. The 'frozen' parameter is ignored
@@ -123,7 +125,7 @@ class BiliquidPropellant(Propellant):
             frozen: Ignored for backward compatibility.
 
         Returns:
-            LiquidPropellantProperties: Calculated propellant properties.
+            ThermochemicalProperties: Calculated propellant properties.
         """
         return self.evaluate(chamber_pressure=chamber_pressure, expansion_ratio=eps)
 

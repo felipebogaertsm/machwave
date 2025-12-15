@@ -21,9 +21,7 @@ from machwave.models.propulsion.propellants.categories import (
     SolidPropellant,
 )
 from machwave.models.propulsion.propellants.properties import (
-    ChemicalPropellantProperties,
-    LiquidPropellantProperties,
-    SolidPropellantProperties,
+    ThermochemicalProperties,
 )
 
 __all__ = [
@@ -31,9 +29,7 @@ __all__ = [
     "Propellant",
     "BurnRateOutOfBoundsError",
     # Properties
-    "ChemicalPropellantProperties",
-    "SolidPropellantProperties",
-    "LiquidPropellantProperties",
+    "ThermochemicalProperties",
     # Categories
     "BiliquidPropellant",
     "SolidPropellant",

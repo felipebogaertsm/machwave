@@ -1,7 +1,7 @@
 """Solid propellant formulation instances."""
 
 from ..categories import FixedSolidPropellant, FormulationBasedSolidPropellant
-from ..properties import SolidPropellantProperties
+from ..properties import ThermochemicalProperties
 
 KNDX = FixedSolidPropellant(
     name="KN-Dextrose",
@@ -12,7 +12,7 @@ KNDX = FixedSolidPropellant(
         {"min": 5.930e6, "max": 8.502e6, "a": 17.20, "n": -0.148},
         {"min": 8.502e6, "max": 11.20e6, "a": 4.775, "n": 0.442},
     ],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.1308,
         gamma_exhaust=1.0430,
         adiabatic_flame_temperature=1712,
@@ -31,7 +31,7 @@ KNSB = FixedSolidPropellant(
     burn_rate=[
         {"min": 0, "max": 11e6, "a": 5.13, "n": 0.222},
     ],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.1361,
         gamma_exhaust=1.0420,
         adiabatic_flame_temperature=1603,
@@ -54,7 +54,7 @@ KNSB_NAKKA = FixedSolidPropellant(
         {"min": 3.792e6, "max": 7.033e6, "a": 3.907, "n": 0.535},
         {"min": 7.033e6, "max": 10.67e6, "a": 9.653, "n": 0.064},
     ],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.1361,
         gamma_exhaust=1.0420,
         adiabatic_flame_temperature=1603,
@@ -71,7 +71,7 @@ KNSB_NAKKA = FixedSolidPropellant(
 KNSU = FixedSolidPropellant(
     name="KN-Sucrose",
     burn_rate=[{"min": 0, "max": 100e6, "a": 8.260, "n": 0.319}],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.1330,
         gamma_exhaust=1.1044,
         adiabatic_flame_temperature=1722,
@@ -88,7 +88,7 @@ KNSU = FixedSolidPropellant(
 KNER = FixedSolidPropellant(
     name="KN-Erythritol",
     burn_rate=[{"min": 0, "max": 100e6, "a": 2.903, "n": 0.395}],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.1390,
         gamma_exhaust=1.0426,
         adiabatic_flame_temperature=1608,
@@ -108,7 +108,7 @@ KNER = FixedSolidPropellant(
 RNX_57 = FixedSolidPropellant(
     name="RNX-57",
     burn_rate=[{"min": 0, "max": 100e6, "a": 1.95, "n": 0.477}],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.159,
         gamma_exhaust=1.026,
         adiabatic_flame_temperature=1644,
@@ -125,7 +125,7 @@ RNX_57 = FixedSolidPropellant(
 RNX_71V = FixedSolidPropellant(
     name="RNX-71",
     burn_rate=[{"min": 0, "max": 100e6, "a": 2.57, "n": 0.371}],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.180,
         gamma_exhaust=1.027,
         adiabatic_flame_temperature=1434,
@@ -142,7 +142,7 @@ RNX_71V = FixedSolidPropellant(
 MIT_CHERRY_LIMEADE = FixedSolidPropellant(
     name="MIT Cherry Limeade",
     burn_rate=[{"min": 0, "max": 6.35e6, "a": 3.2373, "n": 0.3273}],
-    properties=SolidPropellantProperties(
+    properties=ThermochemicalProperties(
         gamma_chamber=1.2100,
         gamma_exhaust=1.2501,
         adiabatic_flame_temperature=2800,

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from machwave.services import RocketCEAService
 
-from ..properties import SolidPropellantProperties
+from ..properties import ThermochemicalProperties
 from .base import BurnRateOutOfBoundsError, Propellant
 
 
@@ -67,7 +67,7 @@ class FixedSolidPropellant(SolidPropellant):
         self,
         name: str,
         burn_rate: list[dict[str, float | int]],
-        properties: SolidPropellantProperties,
+        properties: ThermochemicalProperties,
         combustion_efficiency: float,
     ):
         super().__init__(burn_rate, combustion_efficiency)
@@ -76,7 +76,7 @@ class FixedSolidPropellant(SolidPropellant):
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
-    ) -> SolidPropellantProperties:
+    ) -> ThermochemicalProperties:
         """Return pre-defined properties (no calculation needed).
 
         Args:
@@ -84,7 +84,7 @@ class FixedSolidPropellant(SolidPropellant):
             expansion_ratio: Nozzle area ratio (unused for fixed propellants).
 
         Returns:
-            SolidPropellantProperties: Pre-defined thermochemical properties.
+            ThermochemicalProperties: Pre-defined thermochemical properties.
         """
         return self.properties
 
@@ -200,7 +200,7 @@ class FormulationBasedSolidPropellant(SolidPropellant):
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
-    ) -> SolidPropellantProperties:
+    ) -> ThermochemicalProperties:
         """Calculate thermochemical properties using CEA from component formulation.
 
         Args:
@@ -208,7 +208,7 @@ class FormulationBasedSolidPropellant(SolidPropellant):
             expansion_ratio: Nozzle area ratio (Ae/At).
 
         Returns:
-            SolidPropellantProperties: Calculated thermochemical properties.
+            ThermochemicalProperties: Calculated thermochemical properties.
 
         Raises:
             ValueError: If no components added or weight percentages don't sum to 100%.
@@ -260,7 +260,7 @@ class FormulationBasedSolidPropellant(SolidPropellant):
         )
 
         # Construct solid propellant properties
-        self.properties = SolidPropellantProperties(
+        self.properties = ThermochemicalProperties(
             gamma_chamber=gamma_chamber,
             gamma_exhaust=gamma_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,
