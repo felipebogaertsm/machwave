@@ -7,13 +7,12 @@ of propellant property dataclasses with realistic default values.
 from polyfactory.factories import DataclassFactory
 
 from machwave.models.propulsion.propellants.properties import (
-    LiquidPropellantProperties,
-    SolidPropellantProperties,
+    ThermochemicalProperties,
 )
 
 
-class SolidPropellantPropertiesFactory(DataclassFactory[SolidPropellantProperties]):
-    """Factory for creating SolidPropellantProperties test instances.
+class SolidPropellantPropertiesFactory(DataclassFactory[ThermochemicalProperties]):
+    """Factory for creating ThermochemicalProperties test instances for solid propellants.
 
     Uses polyfactory to generate realistic test data with sensible defaults.
     All fields can be overridden by passing them to build() or batch().
@@ -32,7 +31,7 @@ class SolidPropellantPropertiesFactory(DataclassFactory[SolidPropellantPropertie
         props_list = SolidPropellantPropertiesFactory.batch(size=10)
     """
 
-    __model__ = SolidPropellantProperties
+    __model__ = ThermochemicalProperties
 
     @classmethod
     def gamma_chamber(cls) -> float:
@@ -90,8 +89,8 @@ class SolidPropellantPropertiesFactory(DataclassFactory[SolidPropellantPropertie
         return 0.32
 
 
-class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantProperties]):
-    """Factory for creating LiquidPropellantProperties test instances.
+class LiquidPropellantPropertiesFactory(DataclassFactory[ThermochemicalProperties]):
+    """Factory for creating ThermochemicalProperties test instances for liquid propellants.
 
     Uses polyfactory to generate realistic test data with sensible defaults.
     All fields can be overridden by passing them to build() or batch().
@@ -110,7 +109,7 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantPropert
         props_list = LiquidPropellantPropertiesFactory.batch(size=10)
     """
 
-    __model__ = LiquidPropellantProperties
+    __model__ = ThermochemicalProperties
 
     @classmethod
     def gamma_chamber(cls) -> float:
@@ -151,3 +150,13 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[LiquidPropellantPropert
     def i_sp_shifting(cls) -> float:
         """Typical shifting equilibrium Isp in seconds."""
         return 310.0
+
+    @classmethod
+    def qsi_chamber(cls) -> float:
+        """Liquid propellants produce gas-only combustion (no condensed phase)."""
+        return 0.0
+
+    @classmethod
+    def qsi_exhaust(cls) -> float:
+        """Liquid propellants produce gas-only combustion (no condensed phase)."""
+        return 0.0
