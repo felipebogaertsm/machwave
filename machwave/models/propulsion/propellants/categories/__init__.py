@@ -1,18 +1,14 @@
-"""Propellant type classes."""
+"""Propellant categories or mixture types."""
 
-from .base import BurnRateOutOfBoundsError, Propellant
+from .base import MixtureType, Propellant, PropellantValidationError
 from .biliquid import BiliquidPropellant
-from .solid import (
-    FixedSolidPropellant,
-    FormulationBasedSolidPropellant,
-    SolidPropellant,
-)
+from .solid import BurnRateOutOfBoundsError, SolidPropellant
 
 __all__ = [
-    "Propellant",
-    "BurnRateOutOfBoundsError",
-    "SolidPropellant",
     "BiliquidPropellant",
-    "FixedSolidPropellant",
-    "FormulationBasedSolidPropellant",
+    "BurnRateOutOfBoundsError",
+    "MixtureType",
+    "Propellant",
+    "PropellantValidationError",
+    "SolidPropellant",
 ]
