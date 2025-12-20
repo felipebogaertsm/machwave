@@ -1,32 +1,32 @@
 """
 This module contains classes representing the chemical components of a propellant
-mixture, including their roles and properties.
+formulation, including their roles and properties.
 """
 
-from dataclasses import dataclass
-from enum import Enum
+import dataclasses
+import enum
 
 
-class ComponentRole(str, Enum):
-    """Role of a chemical component in the propellant mixture."""
+class ComponentRole(str, enum.Enum):
+    """Role of a chemical component in the propellant formulation."""
 
     OXIDIZER = "oxidizer"
     FUEL = "fuel"  # Includes binders (HTPB, PBAN, etc.)
     ADDITIVE = "additive"
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class PropellantComponent:
-    """Chemical component of a propellant mixture.
+    """Chemical component of a propellant formulation.
 
     Attributes:
-        name: Chemical name (e.g., "KNO3", "LOX", "HTPB").
-        mass_fraction: Mass fraction in mixture (0-1).
+        name: Component name (i.e., "KNO3", "LOX", "HTPB").
+        mass_fraction: Mass fraction in formulation.
         role: Component role (oxidizer, fuel, additive).
         density: Component density [kg/m³].
-        chemical_formula: Element symbols to atom counts (e.g., {"H": 2, "O": 1}).
+        chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
         enthalpy: Standard enthalpy of formation [J/mol].
-        temperature: Initial component temperature before combustion [K].
+        initial_temperature: Initial component temperature before combustion [K].
     """
 
     name: str
@@ -35,7 +35,7 @@ class PropellantComponent:
     density: float
     chemical_formula: dict[str, int]
     enthalpy: float
-    temperature: float = 298.15
+    initial_temperature: float = 298.15
 
     def to_cea_dict(self) -> dict:
         """Convert component to CEA-compatible dictionary format.
@@ -49,6 +49,6 @@ class PropellantComponent:
             "formula": self.chemical_formula,
             "weight_percent": self.mass_fraction * 100,
             "heat_of_formation": self.enthalpy,
-            "temperature": self.temperature,
+            "temperature": self.initial_temperature,
             "density": self.density,
         }
