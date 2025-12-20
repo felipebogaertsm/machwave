@@ -1,15 +1,14 @@
 """Thermochemical properties of the combustion products of chemical propellants."""
 
-from __future__ import annotations
-
 import dataclasses
-from functools import cached_property
-from typing import Final
+import functools
 
 import scipy.constants
 
 # Validation bounds (field_name: (min_value, max_value))
-VALIDATION_BOUNDS: Final[dict[str, tuple[float, float]]] = {
+# NOTE 1: field_name must match the dataclass' ThermochemicalProperties attributes
+# NOTE 2: bounds are inclusive on both ends
+VALIDATION_BOUNDS: dict[str, tuple[float, float]] = {
     "gamma_chamber": (1.0, 2.0),
     "gamma_exhaust": (1.0, 2.0),
     "adiabatic_flame_temperature": (0.0, 5000.0),
@@ -19,7 +18,7 @@ VALIDATION_BOUNDS: Final[dict[str, tuple[float, float]]] = {
     "i_sp_shifting": (0.0, 600.0),
     "qsi_chamber": (0.0, 1.0),
     "qsi_exhaust": (0.0, 1.0),
-}  # NOTE: field_name must match dataclass attributes
+}
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -27,27 +26,19 @@ class ThermochemicalProperties:
     """Thermochemical properties for the combustion products of chemical rocket
     propellants.
 
-    Immutable data structure containing theoretical properties from equilibrium
-    calculations. All values are validated on construction.
-
-    Args:
-        gamma_chamber (float): Isentropic exponent in chamber (dimensionless).
-        gamma_exhaust (float): Isentropic exponent at nozzle exit (dimensionless).
-        adiabatic_flame_temperature (float): Adiabatic flame temperature [K].
-        molecular_weight_chamber (float): Molecular weight in chamber [kg/mol].
-        molecular_weight_exhaust (float): Molecular weight at exit [kg/mol].
-        i_sp_frozen (float): Frozen flow specific impulse [s].
-        i_sp_shifting (float): Shifting equilibrium specific impulse [s].
-        qsi_chamber (float): Condensed-phase species content in chamber [mol/(100g)].
-        qsi_exhaust (float): Condensed-phase species content at exit [mol/(100g)].
-
-    Properties:
-        R_chamber (float): Specific gas constant for chamber [J/(kg·K)].
-        R_exhaust (float): Specific gas constant for exhaust [J/(kg·K)].
-        is_two_phase_flow (bool): True if combustion produces condensed-phase species.
+    Attributes:
+        gamma_chamber: Isentropic exponent in chamber (dimensionless).
+        gamma_exhaust: Isentropic exponent at nozzle exit (dimensionless).
+        adiabatic_flame_temperature: Ideal combustion temperature [K].
+        molecular_weight_chamber: Molecular weight in chamber [kg/mol].
+        molecular_weight_exhaust: Molecular weight at exit [kg/mol].
+        i_sp_frozen: Frozen flow specific impulse [s].
+        i_sp_shifting: Shifting equilibrium specific impulse [s].
+        qsi_chamber: Condensed phase species content in chamber [mol/(100g)].
+        qsi_exhaust: Condensed phase species content at exit [mol/(100g)].
 
     Raises:
-        ValueError: If any parameter is outside valid physical range.
+        ValueError: If any parameter is outside a valid range.
     """
 
     gamma_chamber: float
@@ -62,22 +53,15 @@ class ThermochemicalProperties:
 
     def __post_init__(self) -> None:
         """Validate all properties are within physical bounds."""
+        # Typical bounds in VALIDATION_BOUNDS
         for field_name, value in self.__dict__.items():
             if field_name in VALIDATION_BOUNDS:
                 min_val, max_val = VALIDATION_BOUNDS[field_name]
-                # Allow qsi to be exactly 0.0 (liquid propellants)
-                if field_name in ("qsi_chamber", "qsi_exhaust"):
-                    if not (min_val <= value <= max_val):
-                        raise ValueError(
-                            f"{field_name}={value} outside valid range "
-                            f"[{min_val}, {max_val}]"
-                        )
-                else:
-                    if not (min_val < value <= max_val):
-                        raise ValueError(
-                            f"{field_name}={value} outside valid range "
-                            f"({min_val}, {max_val}]"
-                        )
+                if not (min_val <= value <= max_val):
+                    raise ValueError(
+                        f"{field_name}={value} outside valid range "
+                        f"({min_val}, {max_val}]"
+                    )
 
         # Cross-property validation
         if self.i_sp_shifting < self.i_sp_frozen:
@@ -86,29 +70,29 @@ class ThermochemicalProperties:
                 f"i_sp_frozen ({self.i_sp_frozen})"
             )
 
-    @cached_property
+    @functools.cached_property
     def R_chamber(self) -> float:
         """Specific gas constant for chamber.
 
         Returns:
-            float: Specific gas constant [J/(kg·K)].
+            float: Specific gas constant [J/(kg-K)].
         """
         return scipy.constants.R / self.molecular_weight_chamber
 
-    @cached_property
+    @functools.cached_property
     def R_exhaust(self) -> float:
         """Specific gas constant for exhaust.
 
         Returns:
-            float: Specific gas constant [J/(kg·K)].
+            float: Specific gas constant [J/(kg-K)].
         """
         return scipy.constants.R / self.molecular_weight_exhaust
 
-    @property
+    @functools.cached_property
     def is_two_phase_flow(self) -> bool:
-        """Check if combustion produces condensed-phase species.
+        """Checks if combustion products have condensed phase species.
 
         Returns:
-            bool: True if qsi_chamber > 0, False otherwise.
+            bool: True if qsi_chamber > 0 or qsi_exhaust > 0.
         """
-        return self.qsi_chamber > 0.0
+        return self.qsi_chamber > 0.0 or self.qsi_exhaust > 0.0
