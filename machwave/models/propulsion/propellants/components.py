@@ -12,7 +12,7 @@ from machwave.core.conversions import (
 )
 
 
-class ComponentRole(str, enum.Enum):
+class ComponentRole(enum.StrEnum):
     """Role of a chemical component in the propellant formulation."""
 
     OXIDIZER = "oxidizer"
