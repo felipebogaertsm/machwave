@@ -6,6 +6,11 @@ formulation, including their roles and properties.
 import dataclasses
 import enum
 
+from machwave.core.conversions import (
+    convert_joules_per_mol_to_cal_per_mol,
+    convert_kgm3_to_gcc,
+)
+
 
 class ComponentRole(str, enum.Enum):
     """Role of a chemical component in the propellant formulation."""
@@ -41,14 +46,17 @@ class PropellantComponent:
         """Convert component to CEA-compatible dictionary format.
 
         Returns:
-            dict: CEA format with name, formula, weight_percent, heat_of_formation,
-                  temperature, and density.
+            dict: CEA format with name, formula, weight_percent, heat_of_formation (cal/mol),
+                  temperature (K), and density (g/cc).
         """
+        heat_of_formation_cal = convert_joules_per_mol_to_cal_per_mol(self.enthalpy)
+        density_gcc = convert_kgm3_to_gcc(self.density)
+
         return {
             "name": self.name,
             "formula": self.chemical_formula,
             "weight_percent": self.mass_fraction * 100,
-            "heat_of_formation": self.enthalpy,
+            "heat_of_formation": heat_of_formation_cal,
             "temperature": self.initial_temperature,
-            "density": self.density,
+            "density": density_gcc,
         }
