@@ -1,8 +1,8 @@
 import numpy as np
 
 from machwave.common.decorators import timing
-from machwave.models.propulsion.propellants import components as propellant_components
 from machwave.models.propulsion.propellants import categories as propellant_categories
+from machwave.models.propulsion.propellants import components as propellant_components
 
 
 @timing
