@@ -87,7 +87,7 @@ class LiquidEngineState(MotorState):
         self.t = np.append(self.t, self.t[-1] + d_t)
 
     def _update_propellant_properties(self) -> None:
-        self.motor.propellant.evaluate(
+        self.motor.propellant.properties = self.motor.propellant.evaluate(
             chamber_pressure=self.P_0[-1],
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
         )

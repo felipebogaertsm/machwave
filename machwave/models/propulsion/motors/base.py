@@ -72,7 +72,6 @@ class Motor(Generic[P, T], ABC):
         """
         pass
 
-    @abstractmethod
     def get_thrust_coefficient_correction_factor(self, *args, **kwargs) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
@@ -82,7 +81,9 @@ class Motor(Generic[P, T], ABC):
         Returns:
             Thrust coefficient correction factor
         """
-        pass
+        return (
+            (100.0 - self.other_losses) / 100.0
+        ) * self.propellant.combustion_efficiency
 
     @abstractmethod
     def get_thrust_coefficient(self, *args, **kwargs) -> float:
