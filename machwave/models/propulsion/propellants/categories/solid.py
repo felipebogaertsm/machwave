@@ -1,12 +1,12 @@
 """Solid propellant category."""
 
-from dataclasses import dataclass, field
-
 from machwave.services.cea import create_cea_service, generate_card_string
 
-from ..components import ComponentRole
+from ..components import ComponentRole, PropellantComponent
 from ..properties import ThermochemicalProperties
 from .base import MixtureType, Propellant, PropellantValidationError
+
+MASS_FRACTION_SUM_TOLERANCE = 1e-6
 
 
 class BurnRateOutOfBoundsError(Exception):
@@ -23,18 +23,42 @@ class BurnRateOutOfBoundsError(Exception):
         )
 
 
-@dataclass
 class SolidPropellant(Propellant):
-    """Solid propellant with burn rate model.
+    """Solid propellant with burn rate model."""
 
-    Attributes:
-        properties: Pre-defined thermochemical properties (optional).
-        burn_rate: St. Robert's law coefficients by pressure range.
-    """
+    def __init__(
+        self,
+        name: str,
+        components: list[PropellantComponent] | None = None,
+        mass_fractions: list[float] | None = None,
+        combustion_efficiency: float = 0.95,
+        properties: ThermochemicalProperties | None = None,
+        burn_rate_map: list[dict[str, float | int]] | None = None,
+    ):
+        """Initialize solid propellant. If components are not provided,
+        properties must be defined and vice-versa.
 
-    mixture_type: MixtureType = MixtureType.SOLID
-    properties: ThermochemicalProperties | None = None
-    burn_rate: list[dict[str, float | int]] = field(default_factory=list)
+        Args:
+            name: Propellant name.
+            components: Chemical components (optional).
+            combustion_efficiency: Efficiency factor (0-1).
+            properties: Pre-defined thermochemical properties (optional).
+            burn_rate: St. Robert's law coefficients by pressure range.
+        """
+        super().__init__(
+            name=name,
+            mixture_type=MixtureType.SOLID,
+            components=components,
+            combustion_efficiency=combustion_efficiency,
+        )
+        self._properties = properties
+        self.burn_rate_map = burn_rate_map if burn_rate_map is not None else []
+        self.mass_fractions = mass_fractions if mass_fractions is not None else []
+
+    @property
+    def properties(self) -> ThermochemicalProperties | None:
+        """Expose pre-defined thermochemical properties when present."""
+        return self._properties
 
     def _validate_components(self):
         """Validate solid propellant has oxidizer and fuel.
@@ -44,18 +68,41 @@ class SolidPropellant(Propellant):
         """
         # Allow empty components if properties are pre-defined (for formulations)
         if not self.components:
-            if self.properties is None:
+            if self._properties is None:
                 raise PropellantValidationError(
-                    f"Solid propellant '{self.name}' has no components or pre-defined properties"
+                    f"Solid propellant '{self.name}' has no components or pre-defined "
+                    "properties"
                 )
             return
+
+        if not self.mass_fractions:
+            raise PropellantValidationError(
+                f"Solid propellant '{self.name}' requires mass_fractions for its "
+                "components"
+            )
+        if len(self.mass_fractions) != len(self.components):
+            raise PropellantValidationError(
+                f"Solid propellant '{self.name}' mass_fractions length must match "
+                "components length"
+            )
+        if any(mf < 0 for mf in self.mass_fractions):
+            raise PropellantValidationError(
+                f"Solid propellant '{self.name}' mass_fractions must be non-negative"
+            )
+        mf_sum = sum(self.mass_fractions)
+        if abs(mf_sum - 1.0) > MASS_FRACTION_SUM_TOLERANCE:
+            raise PropellantValidationError(
+                f"Solid propellant '{self.name}' mass_fractions must sum to 1.0 (got "
+                f"{mf_sum:.6f})"
+            )
 
         has_oxidizer = any(c.role == ComponentRole.OXIDIZER for c in self.components)
         has_fuel = any(c.role == ComponentRole.FUEL for c in self.components)
 
         if not has_oxidizer:
             raise PropellantValidationError(
-                f"Solid propellant '{self.name}' requires at least one oxidizer component"
+                f"Solid propellant '{self.name}' requires at least one oxidizer "
+                "component"
             )
         if not has_fuel:
             raise PropellantValidationError(
@@ -69,8 +116,12 @@ class SolidPropellant(Propellant):
             RocketCEAService instance.
         """
         if self.components:
+            self._validate_components()
             # Convert components to CEA format
-            components_data = [comp.to_cea_dict() for comp in self.components]
+            components_data = [
+                comp.to_cea_dict(weight_percent=mf * 100.0)
+                for comp, mf in zip(self.components, self.mass_fractions)
+            ]
             card_string = generate_card_string(components_data)
             return create_cea_service(
                 propellant_name=self.name.replace(" ", "_").upper(),
@@ -100,9 +151,21 @@ class SolidPropellant(Propellant):
         Raises:
             PropellantValidationError: If evaluation fails.
         """
-        if self.properties is not None:
-            return self.properties
+        if self._properties is not None:
+            return self._properties
         return super().evaluate(chamber_pressure, expansion_ratio)
+
+    @property
+    def ideal_density(self) -> float:
+        """Calculate ideal propellant density [kg/m³] for solid mixtures.
+
+        Uses harmonic mean based on solid mixture mass fractions.
+        """
+        self._validate_components()
+        reciprocal_sum = sum(
+            mf / comp.density for comp, mf in zip(self.components, self.mass_fractions)
+        )
+        return 1.0 / reciprocal_sum
 
     def get_burn_rate(self, chamber_pressure: float) -> float:
         """Calculate instantaneous burn rate for solid propellants.
@@ -120,12 +183,12 @@ class SolidPropellant(Propellant):
             BurnRateOutOfBoundsError: If pressure is outside valid range.
             ValueError: If burn_rate model is not defined.
         """
-        if not self.burn_rate:
+        if not self.burn_rate_map:
             raise PropellantValidationError(
                 f"Burn rate model not defined for propellant '{self.name}'"
             )
 
-        for item in self.burn_rate:
+        for item in self.burn_rate_map:
             if item["min"] <= chamber_pressure <= item["max"]:
                 a = item["a"]
                 n = item["n"]
@@ -134,19 +197,3 @@ class SolidPropellant(Propellant):
                 return (a * (chamber_pressure * 1e-6) ** n) * 1e-3
 
         raise BurnRateOutOfBoundsError(chamber_pressure)
-
-    def real_density(self, porosity: float = 0.0) -> float:
-        """Get real propellant density accounting for porosity.
-
-        Args:
-            porosity: Porosity fraction (0.0 to 1.0). Default is 0.0 (no porosity).
-
-        Returns:
-            float: Real density [kg/m³] = ideal_density * (1 - porosity).
-
-        Raises:
-            ValueError: If porosity is outside valid range [0, 1).
-        """
-        if not (0.0 <= porosity < 1.0):
-            raise ValueError(f"Porosity must be in range [0, 1), got {porosity}")
-        return self.ideal_density * (1.0 - porosity)

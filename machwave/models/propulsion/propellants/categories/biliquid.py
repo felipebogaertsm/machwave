@@ -1,7 +1,5 @@
 """Liquid propellant categories (biliquid)."""
 
-from dataclasses import dataclass, field
-
 from machwave.services.cea import create_cea_service
 
 from ..components import ComponentRole, PropellantComponent
@@ -9,22 +7,36 @@ from ..properties import ThermochemicalProperties
 from .base import MixtureType, Propellant, PropellantValidationError
 
 
-@dataclass
 class BiliquidPropellant(Propellant):
-    """Biliquid propellant with separate oxidizer and fuel.
+    """Biliquid propellant with separate oxidizer and fuel."""
 
-    Attributes:
-        properties: Pre-defined thermochemical properties (optional).
-        of_ratio: Oxidizer-to-fuel mass ratio.
-        oxidizer_tank_density: Oxidizer density [kg/m³].
-        fuel_tank_density: Fuel density [kg/m³].
-    """
+    def __init__(
+        self,
+        name: str,
+        components: list[PropellantComponent] | None = None,
+        combustion_efficiency: float = 0.95,
+        properties: ThermochemicalProperties | None = None,
+        of_ratio: float | None = None,
+    ):
+        """Initialize biliquid propellant.
 
-    mixture_type: MixtureType = MixtureType.BILIQUID
-    properties: ThermochemicalProperties | None = None
-    of_ratio: float | None = None
-    oxidizer_tank_density: float = field(default=0.0, init=False)
-    fuel_tank_density: float = field(default=0.0, init=False)
+        Args:
+            name: Propellant name.
+            components: Chemical components (should be exactly 2: oxidizer and fuel).
+            combustion_efficiency: Efficiency factor (0-1).
+            properties: Pre-defined thermochemical properties (optional).
+            of_ratio: Oxidizer-to-fuel mass ratio.
+        """
+        super().__init__(
+            name=name,
+            mixture_type=MixtureType.BILIQUID,
+            components=components,
+            combustion_efficiency=combustion_efficiency,
+        )
+        self.properties = properties
+        self.of_ratio = of_ratio
+        self.oxidizer_tank_density: float = 0.0
+        self.fuel_tank_density: float = 0.0
 
     def _validate_components(self):
         """Validate biliquid has exactly 2 components: oxidizer and fuel.
@@ -72,25 +84,3 @@ class BiliquidPropellant(Propellant):
             fuel_name=fuel.name,
             oxidizer_to_fuel_ratio=self.of_ratio,
         )
-
-    def evaluate(
-        self, chamber_pressure: float, expansion_ratio: float = 8.0
-    ) -> ThermochemicalProperties:
-        """Evaluate thermochemical properties.
-
-        If properties are pre-defined, returns them directly.
-        Otherwise, evaluates using the thermochemical service via parent class.
-
-        Args:
-            chamber_pressure: Chamber pressure [Pa].
-            expansion_ratio: Nozzle area expansion ratio (Ae/At).
-
-        Returns:
-            ThermochemicalProperties: Pre-defined or calculated properties.
-
-        Raises:
-            PropellantValidationError: If evaluation fails.
-        """
-        if self.properties is not None:
-            return self.properties
-        return super().evaluate(chamber_pressure, expansion_ratio)

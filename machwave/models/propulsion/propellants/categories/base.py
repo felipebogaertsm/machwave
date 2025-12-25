@@ -1,10 +1,10 @@
 """Base propellant class with shared functionality."""
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from enum import Enum
+import abc
+import enum
+import functools
 
-from machwave.services.cea import RocketCEAService
+from machwave.services import cea as cea_service
 
 from ..components import PropellantComponent
 from ..properties import ThermochemicalProperties
@@ -13,43 +13,50 @@ from ..properties import ThermochemicalProperties
 class PropellantValidationError(Exception):
     """Raised when propellant validation fails."""
 
-    pass
+    def __init__(self, message: str):
+        """
+        Args:
+            message: Description of the validation error.
+        """
+        super().__init__(f"Propellant validation error: {message}")
 
 
-class MixtureType(str, Enum):
+class MixtureType(enum.StrEnum):
     """Type of propellant mixture."""
 
     SOLID = "solid"
     BILIQUID = "biliquid"
 
 
-@dataclass
-class Propellant(ABC):
-    """Base class for propellant formulations.
+class Propellant(abc.ABC):
+    """Base class for propellant formulations."""
 
-    Attributes:
-        name: Propellant name.
-        components: Chemical components.
-        combustion_efficiency: Efficiency factor (0-1).
-        mixture_type: Mixture type (solid, biliquid).
-    """
+    def __init__(
+        self,
+        name: str,
+        mixture_type: MixtureType,
+        components: list[PropellantComponent] | None = None,
+        combustion_efficiency: float = 0.95,
+    ):
+        """Initialize propellant.
 
-    name: str
-    components: list[PropellantComponent] = field(default_factory=list)
-    combustion_efficiency: float = 0.95
-    mixture_type: MixtureType = field(init=False)
-    _thermochemical_service: RocketCEAService | None = field(
-        init=False, repr=False, default=None
-    )
+        Args:
+            name: Propellant name.
+            mixture_type: Type of propellant mixture.
+            components: Chemical components. If None, defaults to empty list.
+            combustion_efficiency: Efficiency factor (0-1).
+        """
+        self.name = name
+        self.mixture_type = mixture_type
+        self.components = list(components) if components is not None else []
+        self.combustion_efficiency = combustion_efficiency
 
-    @property
-    def thermochemical_service(self) -> RocketCEAService:
-        """Get thermochemical service, creating it lazily if needed."""
-        if self._thermochemical_service is None:
-            self._thermochemical_service = self._get_thermochemical_service()
-        return self._thermochemical_service
+    @functools.cached_property
+    def thermochemical_service(self) -> cea_service.RocketCEAService:
+        """Get thermochemical service, cached."""
+        return self._get_thermochemical_service()
 
-    @abstractmethod
+    @abc.abstractmethod
     def _validate_components(self):
         """Validate components meet propellant type requirements.
 
@@ -58,9 +65,12 @@ class Propellant(ABC):
         """
         pass
 
-    @abstractmethod
-    def _get_thermochemical_service(self) -> RocketCEAService:
+    @abc.abstractmethod
+    def _get_thermochemical_service(self) -> cea_service.RocketCEAService:
         """Create thermochemical service for this propellant.
+
+        Implemented for every subclass of propellant category, based on how the CEA
+        object is constructed (from components, from properties, others).
 
         Returns:
             RocketCEAService instance.
@@ -69,35 +79,6 @@ class Propellant(ABC):
             PropellantValidationError: If service creation fails.
         """
         pass
-
-    @property
-    def ideal_density(self) -> float:
-        """Ideal propellant density (no porosity) [kg/m³].
-
-        Computed as harmonic mean: 1 / sum(mass_fraction_i / density_i).
-        For real density with porosity, use real_density(porosity) method.
-
-        Raises:
-            PropellantValidationError: If components missing or invalid.
-        """
-        if not self.components:
-            raise PropellantValidationError(
-                f"Cannot compute density without components for propellant '{self.name}'"
-            )
-
-        # Check all components have density defined
-        for comp in self.components:
-            if comp.density is None or comp.density <= 0:
-                raise PropellantValidationError(
-                    f"Component '{comp.name}' has invalid density: {comp.density}"
-                )
-
-        # Harmonic mean: 1 / sum(mass_fraction_i / density_i)
-        reciprocal_sum: float = sum(
-            comp.mass_fraction / comp.density  # type: ignore[operator]
-            for comp in self.components
-        )
-        return 1.0 / reciprocal_sum
 
     def evaluate(
         self, chamber_pressure: float, expansion_ratio: float = 8.0
