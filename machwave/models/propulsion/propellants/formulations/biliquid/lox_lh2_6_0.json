@@ -1,0 +1,26 @@
+{
+  "mixture_type": "biliquid",
+  "name": "LOX/LH2 (O/F=6.0)",
+  "components": [
+    {
+      "name": "LOX",
+      "mass_fraction": 0.857,
+      "role": "oxidizer",
+      "density": 1141.0,
+      "chemical_formula": {"O": 2},
+      "enthalpy": 0.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "LH2",
+      "mass_fraction": 0.143,
+      "role": "fuel",
+      "density": 70.8,
+      "chemical_formula": {"H": 2},
+      "enthalpy": 0.0,
+      "temperature": 298.15
+    }
+  ],
+  "of_ratio": 6.0,
+  "combustion_efficiency": 0.98
+}

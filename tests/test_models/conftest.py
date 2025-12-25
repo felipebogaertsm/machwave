@@ -1,41 +1,48 @@
+from pathlib import Path
+
 import pytest
 
 from machwave.models.atmosphere import Atmosphere1976
-from machwave.models.propulsion.propellants.solid import (
-    KNDX,
-    KNER,
-    KNSB,
-    KNSB_NAKKA,
-    KNSU,
-)
+from machwave.models.propulsion.propellants.formulations import get_propellant_from_json
 from machwave.models.propulsion.thrust_chamber import (
     CombustionChamber,
+)
+
+# Get the formulations directory
+FORMULATIONS_DIR = (
+    Path(__file__).parent.parent.parent
+    / "machwave"
+    / "models"
+    / "propulsion"
+    / "propellants"
+    / "formulations"
+    / "solid"
 )
 
 
 @pytest.fixture
 def propellant_KNDX():
-    return KNDX
+    return get_propellant_from_json(FORMULATIONS_DIR / "kndx.json")
 
 
 @pytest.fixture
 def propellant_KNER():
-    return KNER
+    return get_propellant_from_json(FORMULATIONS_DIR / "kner.json")
 
 
 @pytest.fixture
 def propellant_KNSB():
-    return KNSB
+    return get_propellant_from_json(FORMULATIONS_DIR / "knsb.json")
 
 
 @pytest.fixture
 def propellant_KNSB_NAKKA():
-    return KNSB_NAKKA
+    return get_propellant_from_json(FORMULATIONS_DIR / "knsb_nakka.json")
 
 
 @pytest.fixture
 def propellant_KNSU():
-    return KNSU
+    return get_propellant_from_json(FORMULATIONS_DIR / "knsu.json")
 
 
 @pytest.fixture

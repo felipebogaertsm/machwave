@@ -87,9 +87,9 @@ class LiquidEngineState(MotorState):
         self.t = np.append(self.t, self.t[-1] + d_t)
 
     def _update_propellant_properties(self) -> None:
-        self.motor.propellant.update_properties(
+        self.motor.propellant.properties = self.motor.propellant.evaluate(
             chamber_pressure=self.P_0[-1],
-            eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
         )
 
     def _compute_nominal_mass_flows(self) -> tuple[float, float]:
@@ -144,15 +144,17 @@ class LiquidEngineState(MotorState):
         m_dot_fuel: float,
         m_dot_ox: float,
     ) -> float:
+        props = self.motor.propellant.properties
+        assert props is not None
         return rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
             equation=compute_chamber_pressure_mass_balance_lre,
             d_t=d_t,
-            R=self.motor.propellant.R_chamber,
-            T0=self.motor.propellant.combustion_temperature,
+            R=props.R_chamber,
+            T0=props.adiabatic_flame_temperature,
             V0=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
-            k=self.motor.propellant.chamber_gamma,
+            k=props.gamma_chamber,
             m_dot_ox=m_dot_ox,
             m_dot_fuel=m_dot_fuel,
         )[0]
@@ -161,8 +163,9 @@ class LiquidEngineState(MotorState):
         self.P_0 = np.append(self.P_0, pressure)
 
     def _compute_exit_pressure(self) -> float:
+        assert self.motor.propellant.properties is not None
         return get_exit_pressure(
-            self.motor.propellant.exit_gamma,
+            self.motor.propellant.properties.gamma_exhaust,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             self.P_0[-1],
         )
@@ -178,12 +181,13 @@ class LiquidEngineState(MotorState):
         exit_pressure: float,
         P_ext: float,
     ) -> tuple[float, float]:
+        assert self.motor.propellant.properties is not None
         return get_thrust_coefficients(
             self.P_0[-1],
             exit_pressure,
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
-            self.motor.propellant.exit_gamma,
+            self.motor.propellant.properties.gamma_exhaust,
             self.n_cf[-1],
         )
 
@@ -231,10 +235,11 @@ class LiquidEngineState(MotorState):
             self.burn_time = self.t[-1]
 
     def _check_thrust_end(self, P_ext: float) -> None:
+        assert self.motor.propellant.properties is not None
         if not is_flow_choked(
             self.P_0[-1],
             P_ext,
-            get_critical_pressure_ratio(self.motor.propellant.chamber_gamma),
+            get_critical_pressure_ratio(self.motor.propellant.properties.gamma_chamber),
         ):
             self._thrust_time = self.t[-1]
             self.end_thrust = True

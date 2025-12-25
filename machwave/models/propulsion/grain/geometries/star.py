@@ -15,6 +15,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         point_width: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.number_of_points = int(number_of_points)
         self.point_length = point_length
@@ -25,6 +26,7 @@ class StarGrainSegment(FMMGrainSegment2D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)

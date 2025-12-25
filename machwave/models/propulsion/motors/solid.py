@@ -1,25 +1,29 @@
 import numpy as np
 
-from machwave.core import losses
-from machwave.core.flow.isentropic import get_thrust_coefficients
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.propellants.solid import SolidPropellant
-from machwave.models.propulsion.thrust_chamber import SolidMotorThrustChamber
+import machwave.core.flow.isentropic as isentropic
+import machwave.core.losses as losses
+import machwave.models.propulsion.grain as grain
+import machwave.models.propulsion.propellants as propellants
+import machwave.models.propulsion.thrust_chamber as thrust_chamber
 
-from .base import Motor
+from . import base as motor_base
 
 
-class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
+class SolidMotor(
+    motor_base.Motor[
+        propellants.SolidPropellant, thrust_chamber.SolidMotorThrustChamber
+    ]
+):
     def __init__(
         self,
-        grain: Grain,
-        propellant: SolidPropellant,
-        thrust_chamber: SolidMotorThrustChamber,
+        grain: grain.Grain,
+        propellant: propellants.SolidPropellant,
+        thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
     ) -> None:
         self.grain = grain
         super().__init__(propellant, thrust_chamber)
 
-        self.propellant: SolidPropellant = propellant
+        self.propellant: propellants.SolidPropellant = propellant
         self.cf_ideal = None  # ideal thrust coefficient
         self.cf_real = None  # real thrust coefficient
 
@@ -43,8 +47,8 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         Returns:
             Initial propellant mass, in kg
         """
-        return (
-            self.grain.get_propellant_volume(web_distance=0) * self.propellant.density
+        return self.grain.get_propellant_mass(
+            web_distance=0, ideal_density=self.propellant.ideal_density
         )
 
     def get_thrust_coefficient_correction_factor(
@@ -89,7 +93,7 @@ class SolidMotor(Motor[SolidPropellant, SolidMotorThrustChamber]):
         Returns:
             Instanteneous thrust coefficient, adimensional
         """
-        self.cf_ideal, self.cf_real = get_thrust_coefficients(
+        self.cf_ideal, self.cf_real = isentropic.get_thrust_coefficients(
             chamber_pressure,
             exit_pressure,
             external_pressure,

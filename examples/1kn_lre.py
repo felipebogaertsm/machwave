@@ -20,8 +20,28 @@ OXIDIZER_NAME = "N2O"
 
 
 def main():
+    oxidizer = propellants.PropellantComponent(
+        name=OXIDIZER_NAME,
+        role=propellants.ComponentRole.OXIDIZER,
+        density=745.0,
+        chemical_formula={"N": 2, "O": 1},
+        enthalpy=0.0,
+        initial_temperature=300.0,
+    )
+    fuel = propellants.PropellantComponent(
+        name=FUEL_NAME,
+        role=propellants.ComponentRole.FUEL,
+        density=789.0,
+        chemical_formula={"C": 2, "H": 6, "O": 1},
+        enthalpy=0.0,
+        initial_temperature=300.0,
+    )
+
     propellant = propellants.BiliquidPropellant(
-        oxidizer_name=OXIDIZER_NAME, fuel_name=FUEL_NAME, of_ratio=1.9495
+        name=f"{OXIDIZER_NAME}/{FUEL_NAME}",
+        components=[oxidizer, fuel],
+        combustion_efficiency=0.98,
+        of_ratio=1.9495,
     )
 
     fuel_tank = tanks.Tank(
@@ -72,7 +92,7 @@ def main():
     )
 
     sim_params = InternalBallisticsParams(
-        d_t=1e-3, igniter_pressure=1e6, external_pressure=1e5
+        d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5
     )
     simulation = InternalBallistics(motor=lre, params=sim_params)
 

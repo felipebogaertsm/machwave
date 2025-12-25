@@ -30,6 +30,5 @@ runs:
         restore-keys: |
           venv-${{ runner.os }}-${{ inputs.python-version }}-
 
-    - if: steps.cache.outputs.cache-hit != 'true'
-      run: poetry install ${{ inputs.install-flags }}
+    - run: poetry install ${{ inputs.install-flags }}
       shell: bash

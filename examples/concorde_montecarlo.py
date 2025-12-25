@@ -7,9 +7,13 @@ from machwave.models.propulsion import grain as grain_models
 from machwave.models.propulsion import motors
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 from machwave.models.propulsion.grain import geometries as grain_geometries
-from machwave.models.propulsion.propellants import solid as solid_propellants
+from machwave.models.propulsion.propellants.formulations import (
+    solid as solid_propellants,
+)
 from machwave.models.recovery import events, parachutes
 from machwave.simulations import internal_balistics_coupled
+
+MC_SAMPLES = 100
 
 
 @timing
@@ -111,7 +115,7 @@ def main():
 
     montecarlo_sim = montecarlo.MonteCarloSimulation(
         [rocket, params],
-        100,
+        MC_SAMPLES,
         internal_balistics_coupled.InternalBallisticsCoupled,
     )
 

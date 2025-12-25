@@ -1,0 +1,48 @@
+{
+  "mixture_type": "solid",
+  "name": "MIT Cherry Limeade",
+  "components": [
+    {
+      "name": "AP",
+      "mass_fraction": 0.68,
+      "role": "oxidizer",
+      "density": 1950.0,
+      "chemical_formula": {"H": 4, "Cl": 1, "N": 1, "O": 4},
+      "enthalpy": -296200.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "HTPB",
+      "mass_fraction": 0.18,
+      "role": "fuel",
+      "density": 920.0,
+      "chemical_formula": {"C": 8, "H": 14},
+      "enthalpy": -83700.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "Aluminum",
+      "mass_fraction": 0.14,
+      "role": "additive",
+      "density": 2700.0,
+      "chemical_formula": {"Al": 1},
+      "enthalpy": 0.0,
+      "temperature": 298.15
+    }
+  ],
+  "burn_rate_map": [
+    {"min": 0, "max": 6350000, "a": 3.2373, "n": 0.3273}
+  ],
+  "properties": {
+    "gamma_chamber": 1.2100,
+    "gamma_exhaust": 1.2501,
+    "adiabatic_flame_temperature": 2800,
+    "molecular_weight_chamber": 0.023724,
+    "molecular_weight_exhaust": 0.023811,
+    "i_sp_frozen": 241.3,
+    "i_sp_shifting": 245.1,
+    "qsi_chamber": 0.138,
+    "qsi_exhaust": 0.139
+  },
+  "combustion_efficiency": 0.95
+}

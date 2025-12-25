@@ -32,6 +32,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         spacing: float,
         inhibited_ends: int = 0,
         map_dim: int = 1000,
+        density_ratio: float = 1.0,
     ) -> None:
         self.face_area_interp_func: Optional[Callable[[float], float]] = None
         super().__init__(
@@ -40,6 +41,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             spacing=spacing,
             inhibited_ends=inhibited_ends,
             map_dim=map_dim,
+            density_ratio=density_ratio,
         )
 
     def get_maps(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:

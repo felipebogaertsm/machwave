@@ -14,6 +14,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         lower_core_diameter: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.upper_core_diameter = upper_core_diameter
         self.lower_core_diameter = lower_core_diameter
@@ -23,6 +24,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)
