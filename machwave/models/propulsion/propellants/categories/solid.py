@@ -1,6 +1,10 @@
 """Solid propellant category."""
 
-from machwave.services.cea import create_cea_service, generate_card_string
+from machwave.services.cea import (
+    create_cea_service,
+    generate_card_string,
+    normalize_custom_propellant_name,
+)
 
 from ..components import ComponentRole, PropellantComponent
 from ..properties import ThermochemicalProperties
@@ -124,7 +128,7 @@ class SolidPropellant(Propellant):
             ]
             card_string = generate_card_string(components_data)
             return create_cea_service(
-                propellant_name=self.name.replace(" ", "_").upper(),
+                propellant_name=normalize_custom_propellant_name(self.name),
                 card_string=card_string,
             )
         else:

@@ -3,6 +3,8 @@ It uses that uses the rocketcea package to perform Chemical Equilibrium calculat
 for solid propellants, based on the widely accepted NASA's CEA code.
 """
 
+import re
+
 from rocketcea.cea_obj import (
     CEA_Obj,
     add_new_fuel,
@@ -15,6 +17,26 @@ from machwave.core.conversions import (
     convert_pa_to_psi,
     convert_rankine_to_kelvin,
 )
+
+
+def normalize_custom_propellant_name(name: str) -> str:
+    """Normalize a *custom* propellant name for RocketCEA registration.
+
+    RocketCEA internally sanitizes propellant identifiers; if we register a
+    propellant with a name containing characters like '-' or '(', the lookup can
+    fail later if RocketCEA normalizes it differently.
+
+    Notes:
+        This should be used for custom propellant registration (propName), not for
+        built-in oxidizer/fuel names (oxName/fuelName), which can be case-sensitive.
+    """
+    normalized = name.strip().upper()
+    normalized = re.sub(r"\s+", "_", normalized)
+    normalized = re.sub(r"[^A-Z0-9_]", "_", normalized)
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    if not normalized:
+        raise ValueError("Propellant name cannot be empty")
+    return normalized
 
 
 def generate_card_string(components: list[dict]) -> str:
