@@ -1,0 +1,43 @@
+{
+  "mixture_type": "solid",
+  "name": "KN-Dextrose",
+  "components": [
+    {
+      "name": "KNO3",
+      "mass_fraction": 0.65,
+      "role": "oxidizer",
+      "density": 2110.0,
+      "chemical_formula": {"K": 1, "N": 1, "O": 3},
+      "enthalpy": -494600.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "Dextrose",
+      "mass_fraction": 0.35,
+      "role": "fuel",
+      "density": 1540.0,
+      "chemical_formula": {"C": 6, "H": 12, "O": 6},
+      "enthalpy": -1274500.0,
+      "temperature": 298.15
+    }
+  ],
+  "burn_rate_map": [
+    {"min": 0, "max": 779000, "a": 8.875, "n": 0.619},
+    {"min": 779000, "max": 2572000, "a": 7.553, "n": -0.009},
+    {"min": 2572000, "max": 5930000, "a": 3.841, "n": 0.688},
+    {"min": 5930000, "max": 8502000, "a": 17.20, "n": -0.148},
+    {"min": 8502000, "max": 11200000, "a": 4.775, "n": 0.442}
+  ],
+  "properties": {
+    "gamma_chamber": 1.1308,
+    "gamma_exhaust": 1.0430,
+    "adiabatic_flame_temperature": 1712,
+    "molecular_weight_chamber": 0.042391,
+    "molecular_weight_exhaust": 0.042882,
+    "i_sp_frozen": 152.4,
+    "i_sp_shifting": 154.1,
+    "qsi_chamber": 0.307,
+    "qsi_exhaust": 0.321
+  },
+  "combustion_efficiency": 0.95
+}

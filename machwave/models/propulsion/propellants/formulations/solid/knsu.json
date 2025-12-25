@@ -1,0 +1,39 @@
+{
+  "mixture_type": "solid",
+  "name": "KN-Sucrose",
+  "components": [
+    {
+      "name": "KNO3",
+      "mass_fraction": 0.65,
+      "role": "oxidizer",
+      "density": 2110.0,
+      "chemical_formula": {"K": 1, "N": 1, "O": 3},
+      "enthalpy": -494600.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "Sucrose",
+      "mass_fraction": 0.35,
+      "role": "fuel",
+      "density": 1587.0,
+      "chemical_formula": {"C": 12, "H": 22, "O": 11},
+      "enthalpy": -2226100.0,
+      "temperature": 298.15
+    }
+  ],
+  "burn_rate_map": [
+    {"min": 0, "max": 100000000, "a": 8.260, "n": 0.319}
+  ],
+  "properties": {
+    "gamma_chamber": 1.1330,
+    "gamma_exhaust": 1.1044,
+    "adiabatic_flame_temperature": 1722,
+    "molecular_weight_chamber": 0.041964,
+    "molecular_weight_exhaust": 0.041517,
+    "i_sp_frozen": 153.3,
+    "i_sp_shifting": 155.1,
+    "qsi_chamber": 0.306,
+    "qsi_exhaust": 0.321
+  },
+  "combustion_efficiency": 0.95
+}

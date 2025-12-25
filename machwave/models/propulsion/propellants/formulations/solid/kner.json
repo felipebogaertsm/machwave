@@ -1,0 +1,39 @@
+{
+  "mixture_type": "solid",
+  "name": "KN-Erythritol",
+  "components": [
+    {
+      "name": "KNO3",
+      "mass_fraction": 0.65,
+      "role": "oxidizer",
+      "density": 2110.0,
+      "chemical_formula": {"K": 1, "N": 1, "O": 3},
+      "enthalpy": -494600.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "Erythritol",
+      "mass_fraction": 0.35,
+      "role": "fuel",
+      "density": 1450.0,
+      "chemical_formula": {"C": 4, "H": 10, "O": 4},
+      "enthalpy": -763000.0,
+      "temperature": 298.15
+    }
+  ],
+  "burn_rate_map": [
+    {"min": 0, "max": 100000000, "a": 2.903, "n": 0.395}
+  ],
+  "properties": {
+    "gamma_chamber": 1.1390,
+    "gamma_exhaust": 1.0426,
+    "adiabatic_flame_temperature": 1608,
+    "molecular_weight_chamber": 0.038570,
+    "molecular_weight_exhaust": 0.038779,
+    "i_sp_frozen": 153.8,
+    "i_sp_shifting": 156.0,
+    "qsi_chamber": 0.315,
+    "qsi_exhaust": 0.321
+  },
+  "combustion_efficiency": 0.94
+}
