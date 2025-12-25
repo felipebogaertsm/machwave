@@ -62,11 +62,13 @@ class Tank:
                 self.fluid_mass, self.volume, self.temperature
             )
 
-    def get_density(self) -> float:
+    def get_density(self, pressure: float | None = None) -> float:
         """
         Returns the fluid density [kg/m^3] at the current tank pressure and
-        temperature, using CoolProp.  In two-phase situations (P ≃ P_sat),
-        computes the mixture density based on vapor quality.
+        temperature, using CoolProp.
+
+        If ``pressure`` is provided, it is used as the tank pressure override
+        (e.g., a piston-pressurized stacked-tank system).
 
         Returns:
             float: Fluid density [kg/m^3].
@@ -75,8 +77,8 @@ class Tank:
         if self.fluid_mass <= 0:
             return 0.0
 
-        # 1) Current pressure
-        p = self.get_pressure()
+        # 1) Current pressure (or override)
+        p = self.get_pressure() if pressure is None else pressure
 
         try:
             # 2a) Single‐phase (or off‐saturation) density
@@ -87,9 +89,9 @@ class Tank:
             #    via quality:  x = m_vapor / m_total
             #    ρ_mix = 1 / ( x/ρ_v + (1−x)/ρ_l )
 
-            # saturation pressure & max vapor mass
-            p_sat = CP.PropsSI("P", "T", self.temperature, "Q", 0, self.fluid_name)
-            m_vap_max = self._mass_if_all_vapor(p_sat)
+            # If we're exactly at saturation, infer quality by comparing against
+            # max vapor mass at this pressure.
+            m_vap_max = self._mass_if_all_vapor(p)
 
             if self.fluid_mass > m_vap_max:
                 x = m_vap_max / self.fluid_mass
@@ -97,7 +99,7 @@ class Tank:
                 rho_l = CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
                 return 1.0 / (x / rho_v + (1 - x) / rho_l)
 
-            # If mass ≤ m_vap_max but still hit a weird error, fallback to ideal‐gas bulk
+            # Fallback: idealized bulk density
             return self.fluid_mass / self.volume
 
     def remove_propellant(self, mass: float) -> None:

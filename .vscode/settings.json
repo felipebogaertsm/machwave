@@ -1,7 +1,7 @@
 {
     "makefile.extensionOutputFolder": "./.vscode",
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "python.formatting.provider": "none"
 }

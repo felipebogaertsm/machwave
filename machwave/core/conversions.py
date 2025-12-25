@@ -113,3 +113,29 @@ def convert_meter_to_micrometer(measure: float) -> float:
         float: Length in micrometers.
     """
     return measure * 1e6
+
+
+def convert_joules_per_mol_to_cal_per_mol(enthalpy_j_per_mol: float) -> float:
+    """
+    Converts enthalpy from J/mol to cal/mol.
+
+    Args:
+        enthalpy_j_per_mol (float): Enthalpy in J/mol.
+
+    Returns:
+        float: Enthalpy in cal/mol.
+    """
+    return enthalpy_j_per_mol / 4.184
+
+
+def convert_kgm3_to_gcc(density_kgm3: float) -> float:
+    """
+    Converts density from kg/m³ to g/cc.
+
+    Args:
+        density_kgm3 (float): Density in kg/m³.
+
+    Returns:
+        float: Density in g/cc.
+    """
+    return density_kgm3 / 1000.0

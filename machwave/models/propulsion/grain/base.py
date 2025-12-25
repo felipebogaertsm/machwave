@@ -23,11 +23,13 @@ class GrainSegment(ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.length = length
         self.outer_diameter = outer_diameter
         self.spacing = spacing
         self.inhibited_ends = inhibited_ends
+        self.density_ratio = density_ratio
 
         self.validate()
 
@@ -108,6 +110,7 @@ class GrainSegment(ABC):
         assert self.inhibited_ends in [0, 1, 2]
         assert self.length > 0
         assert self.outer_diameter > 0
+        assert 0.0 <= self.density_ratio <= 1.0
 
 
 class GrainSegment2D(GrainSegment, ABC):
@@ -129,12 +132,14 @@ class GrainSegment2D(GrainSegment, ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @abstractmethod
@@ -205,12 +210,14 @@ class GrainSegment3D(GrainSegment, ABC):
         outer_diameter: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @abstractmethod
@@ -253,6 +260,47 @@ class Grain:
             self.segments.append(new_segment)
         else:
             raise Exception("Argument is not a GrainSegment class instance")
+
+    def get_effective_density_ratio(self, *, web_distance: float) -> float:
+        r"""Return an effective (burn-area weighted) density ratio.
+
+        Used for gas generation terms where $\dot{m} \propto A_b r \rho_p$.
+        """
+        burn_areas = np.asarray(
+            [seg.get_burn_area(web_distance) for seg in self.segments],
+            dtype=np.float64,
+        )
+        total_burn_area = float(np.sum(burn_areas))
+        if total_burn_area <= 0:
+            return 0.0
+
+        density_ratios = np.asarray(
+            [seg.density_ratio for seg in self.segments], dtype=np.float64
+        )
+        return float(np.sum(burn_areas * density_ratios) / total_burn_area)
+
+    def get_real_density(self, *, web_distance: float, ideal_density: float) -> float:
+        """Return grain *effective real* propellant density [kg/m^3]."""
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+        return ideal_density * self.get_effective_density_ratio(
+            web_distance=web_distance
+        )
+
+    def get_propellant_mass(
+        self, *, web_distance: float, ideal_density: float
+    ) -> float:
+        """Return remaining propellant mass [kg] at a given web distance."""
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+
+        volumes = np.asarray(
+            [seg.get_volume(web_distance) for seg in self.segments], dtype=np.float64
+        )
+        density_ratios = np.asarray(
+            [seg.density_ratio for seg in self.segments], dtype=np.float64
+        )
+        return float(np.sum(volumes * density_ratios) * ideal_density)
 
     @property
     def total_length(self) -> float:
@@ -319,7 +367,7 @@ class Grain:
     def get_mass_flux_per_segment(
         self,
         burn_rate: np.ndarray,
-        propellant_density: float,
+        ideal_density: float,
         web_distance: np.ndarray,
     ) -> np.ndarray:
         """
@@ -328,18 +376,22 @@ class Grain:
         """
         segment_mass_flux = np.zeros((self.segment_count, np.size(web_distance)))
 
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+
         for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):
                 core_area = self.segments[j].get_port_area(web_distance[i])
                 burn_area = 0
 
                 for k in range(j + 1):
-                    burn_area = burn_area + self.segments[j - k].get_burn_area(
-                        web_distance[i]
+                    burn_area = burn_area + (
+                        self.segments[j - k].get_burn_area(web_distance[i])
+                        * self.segments[j - k].density_ratio
                     )
 
-                segment_mass_flux[j, i] = (
-                    burn_area * propellant_density * burn_rate[i]
-                ) / (core_area)
+                segment_mass_flux[j, i] = (burn_area * ideal_density * burn_rate[i]) / (
+                    core_area
+                )
 
         return segment_mass_flux

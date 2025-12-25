@@ -30,6 +30,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         spacing: float,
         inhibited_ends: int = 0,
         map_dim: int = 100,
+        density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
@@ -37,6 +38,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             spacing=spacing,
             inhibited_ends=inhibited_ends,
             map_dim=map_dim,
+            density_ratio=density_ratio,
         )
 
     def get_port_area(self, web_distance: float, z: float) -> float:

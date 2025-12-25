@@ -19,6 +19,7 @@ jobs:
       - uses: ./.github/actions/setup-poetry
         with:
           python-version: "3.13"
+          install-flags: "--no-interaction --no-root --with dev"
       - run: poetry run ruff check .
       - run: poetry run pyright machwave
 
@@ -30,6 +31,7 @@ jobs:
       - uses: ./.github/actions/setup-poetry
         with:
           python-version: "3.13"
+          install-flags: "--no-interaction --no-root --with dev"
       - run: poetry run pytest -q
 
   build-deploy-docs:

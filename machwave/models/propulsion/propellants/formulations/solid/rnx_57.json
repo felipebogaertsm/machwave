@@ -1,0 +1,48 @@
+{
+  "mixture_type": "solid",
+  "name": "RNX-57",
+  "components": [
+    {
+      "name": "KNO3",
+      "mass_fraction": 0.7,
+      "role": "oxidizer",
+      "density": 2110.0,
+      "chemical_formula": {"K": 1, "N": 1, "O": 3},
+      "enthalpy": -494600.0,
+      "temperature": 298.15
+    },
+    {
+      "name": "Epoxy",
+      "mass_fraction": 0.22,
+      "role": "fuel",
+      "density": 1118.2681502922062,
+      "chemical_formula": {"C": 16, "H": 24, "O": 4},
+      "enthalpy": -775368.57464064,
+      "temperature": 298.15
+    },
+    {
+      "name": "Fe2O3",
+      "mass_fraction": 0.08,
+      "role": "additive",
+      "density": 5093.102466677375,
+      "chemical_formula": {"Fe": 2, "O": 3},
+      "enthalpy": -821806.577424,
+      "temperature": 298.15
+    }
+  ],
+  "burn_rate_map": [
+    {"min": 0, "max": 100000000, "a": 1.95, "n": 0.477}
+  ],
+  "properties": {
+    "gamma_chamber": 1.1279,
+    "gamma_exhaust": 1.1279,
+    "adiabatic_flame_temperature": 1644,
+    "molecular_weight_chamber": 0.04554,
+    "molecular_weight_exhaust": 0.04554,
+    "i_sp_frozen": 158.1,
+    "i_sp_shifting": 158.1,
+    "qsi_chamber": 0.306,
+    "qsi_exhaust": 0.321
+  },
+  "combustion_efficiency": 0.85
+}
