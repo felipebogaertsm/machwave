@@ -1,25 +1,15 @@
 import numpy as np
 
-from machwave.core import losses
-from machwave.core.conversions import (
-    convert_mass_flux_metric_to_imperial,
-    convert_meter_to_inch,
-    convert_pa_to_psi,
-)
-from machwave.core.des import compute_chamber_pressure_mass_balance_srm
-from machwave.core.flow.isentropic import (
-    get_critical_pressure_ratio,
-    get_exit_pressure,
-    get_thrust_coefficients,
-    get_thrust_from_cf,
-    is_flow_choked,
-)
-from machwave.core.mathematics.rk4 import rk4th_ode_solver
-from machwave.models.propulsion.motors import SolidMotor
-from machwave.states.internal_ballistics.base import MotorState
+import machwave.core.conversions as conversions
+import machwave.core.des as des
+import machwave.core.flow.isentropic as isentropic
+import machwave.core.losses as losses
+import machwave.core.mathematics.rk4 as rk4
+import machwave.models.propulsion.motors as motors
+import machwave.states.internal_ballistics.base as ib_base
 
 
-class SolidMotorState(MotorState):
+class SolidMotorState(ib_base.MotorState):
     """
     State for a Solid Rocket Motor.
 
@@ -31,7 +21,7 @@ class SolidMotorState(MotorState):
 
     def __init__(
         self,
-        motor: SolidMotor,
+        motor: motors.SolidMotor,
         initial_pressure: float,
         initial_atmospheric_pressure: float,
     ) -> None:
@@ -44,7 +34,7 @@ class SolidMotorState(MotorState):
             initial_atmospheric_pressure=initial_atmospheric_pressure,
         )
 
-        self.motor: SolidMotor = motor
+        self.motor: motors.SolidMotor = motor
 
         # Grain and propellant parameters:
         self.V_0 = np.array(
@@ -108,29 +98,34 @@ class SolidMotorState(MotorState):
     def _update_chamber_volume_and_mass(self) -> None:
         free_vol = self.motor.get_free_chamber_volume(self.propellant_volume[-1])
         self.V_0 = np.append(self.V_0, free_vol)
-        assert self.motor.propellant.properties is not None
-        m_prop = self.propellant_volume[-1] * self.motor.propellant.properties.density
+        m_prop = self.motor.grain.get_propellant_mass(
+            web_distance=self.web[-1],
+            ideal_density=self.motor.propellant.ideal_density,
+        )
         self.m_prop = np.append(self.m_prop, m_prop)
 
     def _compute_pressure(self, d_t: float, P_ext: float) -> None:
         props = self.motor.propellant.properties
         assert props is not None
-        new_P = rk4th_ode_solver(
+        new_P = rk4.rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
-            equation=compute_chamber_pressure_mass_balance_srm,
+            equation=des.compute_chamber_pressure_mass_balance_srm,
             d_t=d_t,
             Pe=P_ext,
             Ab=self.burn_area[-1],
             V0=self.V_0[-1],
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
-            pp=props.density,
+            pp=self.motor.grain.get_real_density(
+                web_distance=self.web[-1],
+                ideal_density=self.motor.propellant.ideal_density,
+            ),
             k=props.gamma_chamber,
             R=props.R_chamber,
             T0=props.adiabatic_flame_temperature,
             r=self.burn_rate[-1],
         )[0]
         self.P_0 = np.append(self.P_0, new_P)
-        exit_P = get_exit_pressure(
+        exit_P = isentropic.get_exit_pressure(
             props.gamma_exhaust,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             new_P,
@@ -139,8 +134,8 @@ class SolidMotorState(MotorState):
 
     def _compute_flow(self, P_ext: float) -> None:
         P0 = self.P_0[-1]
-        chamber_pressure_psi = convert_pa_to_psi(P0)
-        throat_diameter_inch = convert_meter_to_inch(
+        chamber_pressure_psi = conversions.convert_pa_to_psi(P0)
+        throat_diameter_inch = conversions.convert_meter_to_inch(
             self.motor.thrust_chamber.nozzle.throat_diameter
         )
 
@@ -167,7 +162,7 @@ class SolidMotorState(MotorState):
             mole_fraction_of_condensed_phase=props.qsi_chamber,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
             throat_diameter_inch=throat_diameter_inch,
-            characteristic_length_inch=convert_meter_to_inch(
+            characteristic_length_inch=conversions.convert_meter_to_inch(
                 self.V_0[-1] / self.motor.thrust_chamber.nozzle.get_throat_area()
             ),
         )
@@ -185,7 +180,7 @@ class SolidMotorState(MotorState):
         self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
         self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
 
-        cf, cf_ideal = get_thrust_coefficients(
+        cf, cf_ideal = isentropic.get_thrust_coefficients(
             P0,
             self.P_exit[-1],
             P_ext,
@@ -195,7 +190,7 @@ class SolidMotorState(MotorState):
         )
         self.C_f = np.append(self.C_f, cf)
         self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
-        thrust = get_thrust_from_cf(
+        thrust = isentropic.get_thrust_from_cf(
             cf, P0, self.motor.thrust_chamber.nozzle.get_throat_area()
         )
         self.thrust = np.append(self.thrust, thrust)
@@ -207,10 +202,12 @@ class SolidMotorState(MotorState):
 
     def _check_thrust_end(self, P_ext: float) -> None:
         assert self.motor.propellant.properties is not None
-        if not is_flow_choked(
+        if not isentropic.is_flow_choked(
             self.P_0[-1],
             P_ext,
-            get_critical_pressure_ratio(self.motor.propellant.properties.gamma_chamber),
+            isentropic.get_critical_pressure_ratio(
+                self.motor.propellant.properties.gamma_chamber
+            ),
         ):
             self._thrust_time = self.t[-1]
             self.end_thrust = True
@@ -231,7 +228,7 @@ class SolidMotorState(MotorState):
         print(" Burn profile: " + self.burn_profile)
         print(
             f" Max initial mass flux: {self.max_mass_flux:.3f} kg/s-m-m or "
-            f"{convert_mass_flux_metric_to_imperial(self.max_mass_flux):.3f} "
+            f"{conversions.convert_mass_flux_metric_to_imperial(self.max_mass_flux):.3f} "
             "lb/s-in-in"
         )
 
@@ -335,10 +332,9 @@ class SolidMotorState(MotorState):
         Returns:
             np.ndarray: The grain mass flux.
         """
-        assert self.motor.propellant.properties is not None
         return self.motor.grain.get_mass_flux_per_segment(
             self.burn_rate,
-            self.motor.propellant.properties.density,
+            self.motor.propellant.ideal_density,
             self.web,
         )
 

@@ -87,9 +87,9 @@ class LiquidEngineState(MotorState):
         self.t = np.append(self.t, self.t[-1] + d_t)
 
     def _update_propellant_properties(self) -> None:
-        self.motor.propellant.update_properties(
+        self.motor.propellant.evaluate(
             chamber_pressure=self.P_0[-1],
-            eps=self.motor.thrust_chamber.nozzle.expansion_ratio,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
         )
 
     def _compute_nominal_mass_flows(self) -> tuple[float, float]:

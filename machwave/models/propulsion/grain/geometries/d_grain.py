@@ -13,6 +13,7 @@ class DGrainSegment(FMMGrainSegment2D):
         spacing: float,
         slot_offset: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.slot_offset = slot_offset
 
@@ -21,6 +22,7 @@ class DGrainSegment(FMMGrainSegment2D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)

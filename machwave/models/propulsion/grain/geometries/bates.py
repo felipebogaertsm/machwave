@@ -15,6 +15,7 @@ class BatesSegment(GrainSegment2D):
         core_diameter: float,
         length: float,
         spacing: float,
+        density_ratio: float = 1.0,
     ) -> None:
         self.core_diameter = core_diameter
 
@@ -23,6 +24,7 @@ class BatesSegment(GrainSegment2D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=0,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)

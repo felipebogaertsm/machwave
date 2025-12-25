@@ -17,6 +17,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_angular_width: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.core_diameter = core_diameter
         self.number_of_ports = int(number_of_ports)
@@ -29,6 +30,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)

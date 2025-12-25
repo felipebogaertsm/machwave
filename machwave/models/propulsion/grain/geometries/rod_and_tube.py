@@ -14,6 +14,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         tube_inner_diameter: float,
         spacing: float,
         inhibited_ends: int = 0,
+        density_ratio: float = 1.0,
     ) -> None:
         self.rod_outer_diameter = rod_outer_diameter
         self.tube_inner_diameter = tube_inner_diameter
@@ -23,6 +24,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
             outer_diameter=outer_diameter,
             spacing=spacing,
             inhibited_ends=inhibited_ends,
+            density_ratio=density_ratio,
         )
 
     @validate_assertions(exception=GrainGeometryError)
