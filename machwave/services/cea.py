@@ -197,6 +197,7 @@ class RocketCEAService:
     ) -> tuple[float, float]:
         """Get exhaust molecular weight [kg/mol] and gamma (frozen flow)."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
+
         if self.oxidizer_to_fuel_ratio is not None:
             mw_g, gamma = self.cea_obj.get_exit_MolWt_gamma(
                 Pc=chamber_pressure_psi,
@@ -208,6 +209,34 @@ class RocketCEAService:
             mw_g, gamma = self.cea_obj.get_exit_MolWt_gamma(
                 Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=1
             )
+
+        # RocketCEA can occasionally return gamma=0.0 for custom propellants when
+        # requesting frozen exit gamma. Fall back to equilibrium exit gamma, and
+        # if that is still invalid, fall back to throat gamma.
+        if gamma <= 1.0:
+            if self.oxidizer_to_fuel_ratio is not None:
+                mw_g, gamma = self.cea_obj.get_exit_MolWt_gamma(
+                    Pc=chamber_pressure_psi,
+                    MR=self.oxidizer_to_fuel_ratio,
+                    eps=expansion_ratio,
+                    frozen=0,
+                )
+            else:
+                mw_g, gamma = self.cea_obj.get_exit_MolWt_gamma(
+                    Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=0
+                )
+        if gamma <= 1.0:
+            if self.oxidizer_to_fuel_ratio is not None:
+                mw_g, gamma = self.cea_obj.get_Throat_MolWt_gamma(
+                    Pc=chamber_pressure_psi,
+                    MR=self.oxidizer_to_fuel_ratio,
+                    eps=expansion_ratio,
+                )
+            else:
+                mw_g, gamma = self.cea_obj.get_Throat_MolWt_gamma(
+                    Pc=chamber_pressure_psi, eps=expansion_ratio
+                )
+
         return mw_g / 1000.0, gamma
 
     def get_specific_impulse(
