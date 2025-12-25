@@ -26,7 +26,6 @@ class PropellantComponent:
 
     Attributes:
         name: Component name (i.e., "KNO3", "LOX", "HTPB").
-        mass_fraction: Mass fraction in formulation.
         role: Component role (oxidizer, fuel, additive).
         density: Component density [kg/m³].
         chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
@@ -35,15 +34,17 @@ class PropellantComponent:
     """
 
     name: str
-    mass_fraction: float
     role: ComponentRole
     density: float
     chemical_formula: dict[str, int]
     enthalpy: float
     initial_temperature: float = 298.15
 
-    def to_cea_dict(self) -> dict:
+    def to_cea_dict(self, *, weight_percent: float) -> dict:
         """Convert component to CEA-compatible dictionary format.
+
+        Args:
+            weight_percent: Component weight percent in the mixture [%].
 
         Returns:
             dict: CEA format with name, formula, weight_percent, heat_of_formation (cal/mol),
@@ -55,7 +56,7 @@ class PropellantComponent:
         return {
             "name": self.name,
             "formula": self.chemical_formula,
-            "weight_percent": self.mass_fraction * 100,
+            "weight_percent": weight_percent,
             "heat_of_formation": heat_of_formation_cal,
             "temperature": self.initial_temperature,
             "density": density_gcc,
