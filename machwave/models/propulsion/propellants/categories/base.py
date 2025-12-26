@@ -31,10 +31,11 @@ class MixtureType(enum.StrEnum):
 class Propellant(abc.ABC):
     """Base class for propellant formulations."""
 
+    mixture_type: MixtureType
+
     def __init__(
         self,
         name: str,
-        mixture_type: MixtureType,
         components: list[PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
     ):
@@ -42,12 +43,10 @@ class Propellant(abc.ABC):
 
         Args:
             name: Propellant name.
-            mixture_type: Type of propellant mixture.
             components: Chemical components. If None, defaults to empty list.
             combustion_efficiency: Efficiency factor (0-1).
         """
         self.name = name
-        self.mixture_type = mixture_type
         self.components = list(components) if components is not None else []
         self.combustion_efficiency = combustion_efficiency
 

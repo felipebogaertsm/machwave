@@ -30,6 +30,8 @@ class BurnRateOutOfBoundsError(Exception):
 class SolidPropellant(Propellant):
     """Solid propellant with burn rate model."""
 
+    mixture_type = MixtureType.SOLID
+
     def __init__(
         self,
         name: str,
@@ -51,7 +53,6 @@ class SolidPropellant(Propellant):
         """
         super().__init__(
             name=name,
-            mixture_type=MixtureType.SOLID,
             components=components,
             combustion_efficiency=combustion_efficiency,
         )

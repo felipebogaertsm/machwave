@@ -10,6 +10,8 @@ from .base import MixtureType, Propellant, PropellantValidationError
 class BiliquidPropellant(Propellant):
     """Biliquid propellant with separate oxidizer and fuel."""
 
+    mixture_type = MixtureType.BILIQUID
+
     def __init__(
         self,
         name: str,
@@ -29,7 +31,6 @@ class BiliquidPropellant(Propellant):
         """
         super().__init__(
             name=name,
-            mixture_type=MixtureType.BILIQUID,
             components=components,
             combustion_efficiency=combustion_efficiency,
         )
