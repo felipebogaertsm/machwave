@@ -7,6 +7,8 @@ from numpy.typing import NDArray
 from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment
 
+MINIMUM_MAP_DIMENSION = 100
+
 
 class FMMGrainSegment(GrainSegment, ABC):
     """
@@ -34,6 +36,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         self.mask = None
         self.masked_face = None
         self.regression_map = None
+        self.web_thickness = None
 
         super().__init__(
             length=length,
@@ -78,7 +81,7 @@ class FMMGrainSegment(GrainSegment, ABC):
             GrainGeometryError: If the grain map dimension is below the valid threshold.
         """
         super().validate()
-        assert self.map_dim >= 100
+        assert self.map_dim >= MINIMUM_MAP_DIMENSION
 
     def normalize(self, value: int | float) -> float:
         """
@@ -94,7 +97,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return value / (0.5 * self.outer_diameter)
 
-    def denormalize(self, value: int | float) -> float:
+    def denormalize(
+        self, value: int | float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Converts a normalized input value into an actual dimension based on the
         object's outer diameter.
@@ -108,7 +113,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return (value / 2) * (self.outer_diameter)
 
-    def map_to_area(self, value: float):
+    def map_to_area(
+        self, value: float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Convert a pixel-area value into square meters.
 
@@ -123,7 +130,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
-    def map_to_length(self, value: float) -> float:
+    def map_to_length(
+        self, value: float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Convert a pixel-distance value into meters.
 
@@ -190,7 +199,11 @@ class FMMGrainSegment(GrainSegment, ABC):
         grain segment, derived from the distance map and converted to a
         real-world measurement.
         """
-        return self.denormalize(np.amax(self.get_regression_map()))
+        if self.web_thickness is None:
+            self.web_thickness = float(
+                self.denormalize(float(np.amax(self.get_regression_map())))
+            )
+        return float(self.web_thickness)
 
     @abstractmethod
     def get_contours(
