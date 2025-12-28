@@ -7,6 +7,8 @@ from numpy.typing import NDArray
 from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment
 
+MINIMUM_MAP_DIMENSION = 100
+
 
 class FMMGrainSegment(GrainSegment, ABC):
     """
@@ -79,7 +81,7 @@ class FMMGrainSegment(GrainSegment, ABC):
             GrainGeometryError: If the grain map dimension is below the valid threshold.
         """
         super().validate()
-        assert self.map_dim >= 100
+        assert self.map_dim >= MINIMUM_MAP_DIMENSION
 
     def normalize(self, value: int | float) -> float:
         """
