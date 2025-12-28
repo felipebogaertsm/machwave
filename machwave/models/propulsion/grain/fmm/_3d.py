@@ -1,7 +1,9 @@
 from abc import ABC
+from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.interpolate import interp1d
 
 from machwave.core.mathematics.geometric import (
     get_circle_area,
@@ -32,6 +34,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
+        self.burn_area_interp_func: Callable[[float], float] | None = None
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -58,19 +61,16 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         Returns:
             A float representing the port area at the specified z slice, in m².
         """
-        face_map_3d = self.get_face_map(web_distance=web_distance)  # 3D face map
+        map_dist = self.normalize(web_distance)
+        valid = np.logical_not(self.get_mask())
+        solid = np.logical_and(self.get_regression_map() > map_dist, valid)
 
         normalized_z = z / self.length
-        max_index = self.get_normalized_length() - 1  # last valid slice index
+        max_index = self.get_normalized_length() - 1
         z_index = int(round(normalized_z * max_index))
+        z_index = 0 if z_index < 0 else (max_index if z_index > max_index else z_index)
 
-        if z_index < 0:
-            z_index = 0
-        elif z_index > max_index:
-            z_index = max_index
-
-        face_map_slice = face_map_3d[z_index]
-        face_area = self.map_to_area(float(np.count_nonzero(face_map_slice == 1)))
+        face_area = float(self.map_to_area(float(np.count_nonzero(solid[z_index]))))
         return get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
@@ -94,7 +94,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.maps
 
-    def get_mask(self) -> np.ndarray:
+    def get_mask(self) -> NDArray[np.bool_]:
         if self.mask is None:
             map_x, map_y, _ = self.get_maps()
             self.mask = (map_x**2 + map_y**2) > 1
@@ -103,7 +103,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_contours(
         self, web_distance: float, length_normalized: float
-    ) -> list[np.typing.NDArray[np.float64]]:
+    ) -> list[NDArray[np.float64]]:
         map_dist = self.normalize(web_distance)
         valid = np.logical_not(self.get_mask())
         boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
@@ -116,34 +116,74 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             map_dist,
         )
 
+    def _get_burn_area_uncached(self, *, map_dist: float) -> float:
+        valid = np.logical_not(self.get_mask())
+        boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
+
+        web_distance = float(self.denormalize(map_dist))
+        length_factor = self.get_length(web_distance=web_distance) / self.map_dim
+
+        total = 0.0
+        for z_index in range(self.get_normalized_length()):
+            boolean_slice_2d = boolean_3d[z_index]
+            contours = get_contours(boolean_slice_2d, map_dist)
+            perimeter = sum(
+                self.map_to_length(get_length(contour, self.map_dim))
+                for contour in contours
+            )
+            total += float(perimeter) * float(length_factor)
+
+        return float(total)
+
+    def get_burn_area_interp_func(self) -> Callable[[float], float]:
+        """Return a cached interpolator for burn area [m^2] vs normalized web."""
+
+        if self.burn_area_interp_func is None:
+            regression_map = self.get_regression_map()
+            valid = np.logical_not(self.get_mask())
+
+            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
+            if values.size == 0:
+                self.burn_area_interp_func = interp1d(
+                    np.asarray([0.0], dtype=np.float64),
+                    np.asarray([0.0], dtype=np.float64),
+                    bounds_error=False,
+                    fill_value=0.0,
+                    assume_sorted=True,
+                )
+                return self.burn_area_interp_func
+
+            values.sort()
+            max_dist = float(values[-1])
+            oversample = 3
+            denom = float(self.map_dim * oversample)
+            step_count = int(max_dist * denom) + 2
+            distances = np.arange(step_count, dtype=np.float64) / denom
+
+            burn_area_values = np.empty_like(distances, dtype=np.float64)
+            for i, dist in enumerate(distances):
+                burn_area_values[i] = self._get_burn_area_uncached(map_dist=float(dist))
+
+            burn_area_values = np.asarray(burn_area_values, dtype=np.float64)
+            self.burn_area_interp_func = interp1d(
+                distances,
+                burn_area_values,
+                bounds_error=False,
+                fill_value=(float(burn_area_values[0]), float(burn_area_values[-1])),  # type: ignore[arg-type]
+                assume_sorted=True,
+            )
+
+        return self.burn_area_interp_func
+
     def get_burn_area(self, web_distance: float) -> float:
-        """
-        NOTE 1: Still needs to be validated.
-        NOTE 2: Refactor to use only numpy arrays.
-        """
         if web_distance > self.get_web_thickness():
-            return 0
-
-        burn_area_array = np.array([])
-
-        for i in range(self.get_normalized_length()):
-            contours = self.get_contours(web_distance=web_distance, length_normalized=i)
-            perimeter = np.sum(
-                [
-                    self.map_to_length(get_length(contour, self.map_dim))
-                    for contour in contours
-                ]
-            )
-
-            burn_area_array = np.append(
-                burn_area_array,
-                perimeter * self.get_length(web_distance=web_distance) / self.map_dim,
-            )
-
-        return np.sum(burn_area_array)
+            return 0.0
+        map_distance = self.normalize(web_distance)
+        value = float(self.get_burn_area_interp_func()(map_distance))
+        return max(0.0, value)
 
     def get_volume_per_element(self) -> float:
-        return (self.denormalize(self.get_cell_size()) * 2) ** 3
+        return (float(self.denormalize(self.get_cell_size())) * 2) ** 3
 
     def get_volume(self, web_distance: float) -> float:
         face_map = self.get_face_map(web_distance=web_distance)

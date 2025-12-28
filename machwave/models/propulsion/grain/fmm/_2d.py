@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -34,7 +34,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         map_dim: int = 1000,
         density_ratio: float = 1.0,
     ) -> None:
-        self.face_area_interp_func: Optional[Callable[[float], float]] = None
+        self.face_area_interp_func: Callable[[float], float] | None = None
+        self.burn_area_interp_func: Callable[[float], float] | None = None
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -57,7 +58,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             self.maps = (map_x, map_y)
         return self.maps
 
-    def get_mask(self) -> NDArray[np.bool]:
+    def get_mask(self) -> NDArray[np.bool_]:
         """
         Return a boolean mask indicating which points lie outside the unit circle.
         """
@@ -71,8 +72,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Return a list of contour arrays for the given web distance.
         Each contour is typically an (N,2) array of (row, col) points.
         """
-        map_dist = self.normalize(web_distance)
         # get_contours is imported from machwave.core.math.geometric
+        map_dist = self.normalize(web_distance)
         return get_contours(self.get_regression_map(), map_dist)
 
     def get_port_area(self, web_distance: float) -> float:
@@ -90,27 +91,38 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         if self.face_area_interp_func is None:
             regression_map = self.get_regression_map()
-            max_dist = np.amax(regression_map)
-
-            face_area_values = []
-            distances = []
             valid = np.logical_not(self.get_mask())
 
-            # Compute face area vs. distance in discrete steps
-            for i in range(int(max_dist * self.map_dim) + 2):
-                dist = i / self.map_dim
-                distances.append(dist)
+            # Build face-area curve without per-step full-map scans
+            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
+            values.sort()
+            max_dist = float(values[-1]) if values.size else 0.0
 
-                # Count how many pixels remain above 'dist'
-                count = float(
-                    np.count_nonzero(np.logical_and(regression_map > dist, valid))
-                )
-                area = self.map_to_area(count)
-                face_area_values.append(area)
+            step_count = int(max_dist * self.map_dim) + 2
+            distances = np.arange(step_count, dtype=np.float64) / self.map_dim
 
-            # Smooth and interpolate
-            smoothed = savgol_filter(face_area_values, 31, 5)
-            self.face_area_interp_func = interp1d(distances, smoothed)
+            n_le = np.searchsorted(values, distances, side="right")
+            counts = float(values.size) - n_le.astype(np.float64)
+            face_area_values = np.asarray(self.map_to_area(counts), dtype=np.float64)
+
+            # Smooth + interpolate (adapt for small arrays)
+            smoothed = face_area_values
+            if face_area_values.size >= 7:
+                window_length = min(31, int(face_area_values.size))
+                if window_length % 2 == 0:
+                    window_length -= 1
+                polyorder = min(5, window_length - 2)
+                if window_length >= 3 and polyorder >= 1:
+                    smoothed = savgol_filter(face_area_values, window_length, polyorder)
+
+            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
+            self.face_area_interp_func = interp1d(
+                distances,
+                smoothed_arr,
+                bounds_error=False,
+                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
+                assume_sorted=True,
+            )
 
         return self.face_area_interp_func
 
@@ -121,15 +133,89 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         map_distance = self.normalize(web_distance)
         return float(self.get_face_area_interp_func()(map_distance))
 
+    def get_burn_area_interp_func(self) -> Callable[[float], float]:
+        """Return a cached interpolator for burn area [m^2] vs normalized web."""
+
+        if self.burn_area_interp_func is None:
+            regression_map = self.get_regression_map()
+            valid = np.logical_not(self.get_mask())
+            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
+            if values.size == 0:
+                self.burn_area_interp_func = interp1d(
+                    np.asarray([0.0], dtype=np.float64),
+                    np.asarray([0.0], dtype=np.float64),
+                    bounds_error=False,
+                    fill_value=0.0,
+                    assume_sorted=True,
+                )
+                return self.burn_area_interp_func
+
+            values.sort()
+            max_dist = float(values[-1])
+            step_count = int(max_dist * self.map_dim) + 2
+            distances = np.arange(step_count, dtype=np.float64) / self.map_dim
+
+            n_le = np.searchsorted(values, distances, side="right")
+            counts = float(values.size) - n_le.astype(np.float64)
+            face_area_values = np.asarray(self.map_to_area(counts), dtype=np.float64)
+
+            perimeter_values = np.empty_like(distances, dtype=np.float64)
+            for i, dist in enumerate(distances):
+                contours = get_contours(regression_map, float(dist))
+                perimeter_values[i] = float(
+                    sum(
+                        self.map_to_length(get_length(contour, self.map_dim))
+                        for contour in contours
+                    )
+                )
+
+            web_distances = np.asarray(self.denormalize(distances), dtype=np.float64)
+            length_values = np.asarray(
+                [self.get_length(float(wd)) for wd in web_distances], dtype=np.float64
+            )
+            core_area_values = perimeter_values * length_values
+            total_face_area_values = (2 - self.inhibited_ends) * face_area_values
+            burn_area_values = core_area_values + total_face_area_values
+
+            smoothed = burn_area_values
+            if burn_area_values.size >= 7:
+                window_length = min(31, int(burn_area_values.size))
+                if window_length % 2 == 0:
+                    window_length -= 1
+                polyorder = min(5, window_length - 2)
+                if window_length >= 3 and polyorder >= 1:
+                    smoothed = savgol_filter(burn_area_values, window_length, polyorder)
+
+            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
+            self.burn_area_interp_func = interp1d(
+                distances,
+                smoothed_arr,
+                bounds_error=False,
+                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
+                assume_sorted=True,
+            )
+
+        return self.burn_area_interp_func
+
+    def get_burn_area(self, web_distance: float) -> float:
+        """Return burn area [m^2] at a given web distance."""
+        if web_distance > self.get_web_thickness():
+            return 0.0
+        map_distance = self.normalize(web_distance)
+        value = float(self.get_burn_area_interp_func()(map_distance))
+        return max(0.0, value)
+
     def get_core_perimeter(self, web_distance: float) -> float:
         """
         Return the perimeter of the open core at the given web distance.
         """
         contours = self.get_contours(web_distance)
         # Sum the lengths of all contour segments
-        return sum(
-            self.map_to_length(get_length(contour, self.map_dim))
-            for contour in contours
+        return float(
+            sum(
+                self.map_to_length(get_length(contour, self.map_dim))
+                for contour in contours
+            )
         )
 
     def get_core_area(self, web_distance: float) -> float:
