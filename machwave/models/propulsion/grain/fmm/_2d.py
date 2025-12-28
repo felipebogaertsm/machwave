@@ -131,6 +131,78 @@ valid = np.logical_not(self.get_mask())
         map_distance = self.normalize(web_distance)
         return float(self.get_face_area_interp_func()(map_distance))
 
+    def get_burn_area_interp_func(self) -> Callable[[float], float]:
+        """Return a cached interpolator for burn area [m^2] vs normalized web."""
+
+        if self.burn_area_interp_func is None:
+            regression_map = self.get_regression_map()
+            valid = np.logical_not(self.get_mask())
+            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
+            if values.size == 0:
+                self.burn_area_interp_func = interp1d(
+                    np.asarray([0.0], dtype=np.float64),
+                    np.asarray([0.0], dtype=np.float64),
+                    bounds_error=False,
+                    fill_value=(0.0, 0.0),
+                    assume_sorted=True,
+                )
+                return self.burn_area_interp_func
+
+            values.sort()
+            max_dist = float(values[-1])
+            step_count = int(max_dist * self.map_dim) + 2
+            distances = np.arange(step_count, dtype=np.float64) / self.map_dim
+
+            n_le = np.searchsorted(values, distances, side="right")
+            counts = float(values.size) - n_le.astype(np.float64)
+            face_area_values = self.map_to_area(counts)
+
+            perimeter_values = np.empty_like(distances, dtype=np.float64)
+            for i, dist in enumerate(distances):
+                contours = get_contours(regression_map, float(dist))
+                perimeter_values[i] = float(
+                    sum(
+                        self.map_to_length(get_length(contour, self.map_dim))
+                        for contour in contours
+                    )
+                )
+
+            web_distances = self.denormalize(distances)
+            length_values = np.asarray(
+                [self.get_length(float(wd)) for wd in web_distances], dtype=np.float64
+            )
+            core_area_values = perimeter_values * length_values
+            total_face_area_values = (2 - self.inhibited_ends) * face_area_values
+            burn_area_values = core_area_values + total_face_area_values
+
+            smoothed = burn_area_values
+            if burn_area_values.size >= 7:
+                window_length = min(31, int(burn_area_values.size))
+                if window_length % 2 == 0:
+                    window_length -= 1
+                polyorder = min(5, window_length - 2)
+                if window_length >= 3 and polyorder >= 1:
+                    smoothed = savgol_filter(burn_area_values, window_length, polyorder)
+
+            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
+            self.burn_area_interp_func = interp1d(
+                distances,
+                smoothed_arr,
+                bounds_error=False,
+                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),
+                assume_sorted=True,
+            )
+
+        return self.burn_area_interp_func
+
+    def get_burn_area(self, web_distance: float) -> float:
+        """Return burn area [m^2] at a given web distance."""
+        if web_distance > self.get_web_thickness():
+            return 0.0
+        map_distance = self.normalize(web_distance)
+        value = float(self.get_burn_area_interp_func()(map_distance))
+        return max(0.0, value)
+
     def get_core_perimeter(self, web_distance: float) -> float:
         """
         Return the perimeter of the open core at the given web distance.
