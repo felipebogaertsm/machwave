@@ -35,6 +35,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         density_ratio: float = 1.0,
     ) -> None:
         self.face_area_interp_func: Callable[[float], float] | None = None
+        self.burn_area_interp_func: Callable[[float], float] | None = None
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -71,7 +72,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Return a list of contour arrays for the given web distance.
         Each contour is typically an (N,2) array of (row, col) points.
         """
-        map_dist = self.normalize(web_distance)
         # get_contours is imported from machwave.core.math.geometric
         return get_contours(self.get_regression_map(), map_dist)
 
@@ -91,27 +91,37 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         if self.face_area_interp_func is None:
             regression_map = self.get_regression_map()
             max_dist = np.amax(regression_map)
+valid = np.logical_not(self.get_mask())
 
-            face_area_values = []
-            distances = []
-            valid = np.logical_not(self.get_mask())
+            # Build face-area curve without per-step full-map scans
+            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
+            values.sort()
+            max_dist = float(values[-1]) if values.size else 0.0
 
-            # Compute face area vs. distance in discrete steps
-            for i in range(int(max_dist * self.map_dim) + 2):
-                dist = i / self.map_dim
-                distances.append(dist)
+            step_count = int(max_dist * self.map_dim) + 2
+            distances = np.arange(step_count, dtype=np.float64) / self.map_dim
 
-                # Count how many pixels remain above 'dist'
-                count = float(
-                    np.count_nonzero(np.logical_and(regression_map > dist, valid))
-                )
-                area = self.map_to_area(count)
-                face_area_values.append(area)
+            n_le = np.searchsorted(values, distances, side="right")
+            counts = float(values.size) - n_le.astype(np.float64)
+            face_area_values = self.map_to_area(counts)
 
-            # Smooth and interpolate
-            smoothed = savgol_filter(face_area_values, 31, 5)
-            self.face_area_interp_func = interp1d(distances, smoothed)
+            # Smooth + interpolate (adapt for small arrays)
+            smoothed = face_area_values
+            if face_area_values.size >= 7:
+                window_length = min(31, int(face_area_values.size))
+                if window_length % 2 == 0:
+                    window_length -= 1
+                polyorder = min(5, window_length - 2)
+                if window_length >= 3 and polyorder >= 1:
+                    smoothed = savgol_filter(face_area_values, window_length, polyorder)
 
+            self.face_area_interp_func = interp1d(
+                distances,
+                np.asarray(smoothed, dtype=np.float64),
+                bounds_error=False,
+                fill_value=(float(smoothed[0]), float(smoothed[-1])),
+                assume_sorted=True,
+            
         return self.face_area_interp_func
 
     def get_face_area(self, web_distance: float) -> float:
