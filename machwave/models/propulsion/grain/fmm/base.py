@@ -34,6 +34,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         self.mask = None
         self.masked_face = None
         self.regression_map = None
+        self.web_thickness = None
 
         super().__init__(
             length=length,
@@ -190,7 +191,11 @@ class FMMGrainSegment(GrainSegment, ABC):
         grain segment, derived from the distance map and converted to a
         real-world measurement.
         """
-        return self.denormalize(np.amax(self.get_regression_map()))
+        if self.web_thickness is None:
+            self.web_thickness = float(
+                self.denormalize(float(np.amax(self.get_regression_map())))
+            )
+        return float(self.web_thickness)
 
     @abstractmethod
     def get_contours(
