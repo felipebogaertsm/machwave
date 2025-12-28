@@ -70,7 +70,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         z_index = int(round(normalized_z * max_index))
         z_index = 0 if z_index < 0 else (max_index if z_index > max_index else z_index)
 
-        face_area = self.map_to_area(float(np.count_nonzero(solid[z_index])))
+        face_area = float(self.map_to_area(float(np.count_nonzero(solid[z_index]))))
         return get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
@@ -120,7 +120,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         valid = np.logical_not(self.get_mask())
         boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
 
-        web_distance = self.denormalize(map_dist)
+        web_distance = float(self.denormalize(map_dist))
         length_factor = self.get_length(web_distance=web_distance) / self.map_dim
 
         total = 0.0
@@ -148,7 +148,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
                     np.asarray([0.0], dtype=np.float64),
                     np.asarray([0.0], dtype=np.float64),
                     bounds_error=False,
-                    fill_value=(0.0, 0.0),
+                    fill_value=0.0,
                     assume_sorted=True,
                 )
                 return self.burn_area_interp_func
@@ -169,7 +169,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
                 distances,
                 burn_area_values,
                 bounds_error=False,
-                fill_value=(float(burn_area_values[0]), float(burn_area_values[-1])),
+                fill_value=(float(burn_area_values[0]), float(burn_area_values[-1])),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
@@ -183,7 +183,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         return max(0.0, value)
 
     def get_volume_per_element(self) -> float:
-        return (self.denormalize(self.get_cell_size()) * 2) ** 3
+        return (float(self.denormalize(self.get_cell_size())) * 2) ** 3
 
     def get_volume(self, web_distance: float) -> float:
         face_map = self.get_face_map(web_distance=web_distance)

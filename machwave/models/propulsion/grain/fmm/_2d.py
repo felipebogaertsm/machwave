@@ -73,6 +73,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Each contour is typically an (N,2) array of (row, col) points.
         """
         # get_contours is imported from machwave.core.math.geometric
+        map_dist = self.normalize(web_distance)
         return get_contours(self.get_regression_map(), map_dist)
 
     def get_port_area(self, web_distance: float) -> float:
@@ -102,7 +103,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
             n_le = np.searchsorted(values, distances, side="right")
             counts = float(values.size) - n_le.astype(np.float64)
-            face_area_values = self.map_to_area(counts)
+            face_area_values = np.asarray(self.map_to_area(counts), dtype=np.float64)
 
             # Smooth + interpolate (adapt for small arrays)
             smoothed = face_area_values
@@ -114,11 +115,12 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                 if window_length >= 3 and polyorder >= 1:
                     smoothed = savgol_filter(face_area_values, window_length, polyorder)
 
+            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
             self.face_area_interp_func = interp1d(
                 distances,
-                np.asarray(smoothed, dtype=np.float64),
+                smoothed_arr,
                 bounds_error=False,
-                fill_value=(float(smoothed[0]), float(smoothed[-1])),
+                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
@@ -143,7 +145,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                     np.asarray([0.0], dtype=np.float64),
                     np.asarray([0.0], dtype=np.float64),
                     bounds_error=False,
-                    fill_value=(0.0, 0.0),
+                    fill_value=0.0,
                     assume_sorted=True,
                 )
                 return self.burn_area_interp_func
@@ -155,7 +157,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
             n_le = np.searchsorted(values, distances, side="right")
             counts = float(values.size) - n_le.astype(np.float64)
-            face_area_values = self.map_to_area(counts)
+            face_area_values = np.asarray(self.map_to_area(counts), dtype=np.float64)
 
             perimeter_values = np.empty_like(distances, dtype=np.float64)
             for i, dist in enumerate(distances):
@@ -167,7 +169,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                     )
                 )
 
-            web_distances = self.denormalize(distances)
+            web_distances = np.asarray(self.denormalize(distances), dtype=np.float64)
             length_values = np.asarray(
                 [self.get_length(float(wd)) for wd in web_distances], dtype=np.float64
             )
@@ -189,7 +191,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                 distances,
                 smoothed_arr,
                 bounds_error=False,
-                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),
+                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
@@ -209,9 +211,11 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         contours = self.get_contours(web_distance)
         # Sum the lengths of all contour segments
-        return sum(
-            self.map_to_length(get_length(contour, self.map_dim))
-            for contour in contours
+        return float(
+            sum(
+                self.map_to_length(get_length(contour, self.map_dim))
+                for contour in contours
+            )
         )
 
     def get_core_area(self, web_distance: float) -> float:

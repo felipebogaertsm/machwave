@@ -97,7 +97,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return value / (0.5 * self.outer_diameter)
 
-    def denormalize(self, value: int | float) -> float:
+    def denormalize(
+        self, value: int | float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Converts a normalized input value into an actual dimension based on the
         object's outer diameter.
@@ -111,7 +113,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return (value / 2) * (self.outer_diameter)
 
-    def map_to_area(self, value: float):
+    def map_to_area(
+        self, value: float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Convert a pixel-area value into square meters.
 
@@ -126,7 +130,9 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
-    def map_to_length(self, value: float) -> float:
+    def map_to_length(
+        self, value: float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
         """
         Convert a pixel-distance value into meters.
 
