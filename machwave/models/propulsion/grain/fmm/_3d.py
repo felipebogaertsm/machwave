@@ -1,4 +1,5 @@
 from abc import ABC
+from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -94,7 +95,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
         return self.maps
 
-    def get_mask(self) -> np.ndarray:
+    def get_mask(self) -> NDArray[np.bool_]:
         if self.mask is None:
             map_x, map_y, _ = self.get_maps()
             self.mask = (map_x**2 + map_y**2) > 1
@@ -103,7 +104,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_contours(
         self, web_distance: float, length_normalized: float
-    ) -> list[np.typing.NDArray[np.float64]]:
+    ) -> list[NDArray[np.float64]]:
         map_dist = self.normalize(web_distance)
         valid = np.logical_not(self.get_mask())
         boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)

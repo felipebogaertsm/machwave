@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -34,7 +34,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         map_dim: int = 1000,
         density_ratio: float = 1.0,
     ) -> None:
-        self.face_area_interp_func: Optional[Callable[[float], float]] = None
+        self.face_area_interp_func: Callable[[float], float] | None = None
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -57,7 +57,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             self.maps = (map_x, map_y)
         return self.maps
 
-    def get_mask(self) -> NDArray[np.bool]:
+    def get_mask(self) -> NDArray[np.bool_]:
         """
         Return a boolean mask indicating which points lie outside the unit circle.
         """
