@@ -116,10 +116,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             map_dist,
         )
 
-    def get_burn_area(self, web_distance: float) -> float:
-        """
-        NOTE 1: Still needs to be validated.
-        _get_burn_area_uncached(self, *, map_dist: float) -> float:
+    def _get_burn_area_uncached(self, *, map_dist: float) -> float:
         valid = np.logical_not(self.get_mask())
         boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
 
@@ -183,7 +180,10 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             return 0.0
         map_distance = self.normalize(web_distance)
         value = float(self.get_burn_area_interp_func()(map_distance))
-        return max(0.0, value.get_cell_size()) * 2) ** 3
+        return max(0.0, value)
+
+    def get_volume_per_element(self) -> float:
+        return (self.denormalize(self.get_cell_size()) * 2) ** 3
 
     def get_volume(self, web_distance: float) -> float:
         face_map = self.get_face_map(web_distance=web_distance)

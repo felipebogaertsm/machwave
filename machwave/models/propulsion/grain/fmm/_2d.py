@@ -90,8 +90,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         if self.face_area_interp_func is None:
             regression_map = self.get_regression_map()
-            max_dist = np.amax(regression_map)
-valid = np.logical_not(self.get_mask())
+            valid = np.logical_not(self.get_mask())
 
             # Build face-area curve without per-step full-map scans
             values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
@@ -121,7 +120,8 @@ valid = np.logical_not(self.get_mask())
                 bounds_error=False,
                 fill_value=(float(smoothed[0]), float(smoothed[-1])),
                 assume_sorted=True,
-            
+            )
+
         return self.face_area_interp_func
 
     def get_face_area(self, web_distance: float) -> float:
