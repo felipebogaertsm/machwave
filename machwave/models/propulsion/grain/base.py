@@ -21,13 +21,11 @@ class GrainSegment(ABC):
         self,
         length: float,
         outer_diameter: float,
-        spacing: float,
         inhibited_ends: int = 0,
         density_ratio: float = 1.0,
     ) -> None:
         self.length = length
         self.outer_diameter = outer_diameter
-        self.spacing = spacing
         self.inhibited_ends = inhibited_ends
         self.density_ratio = density_ratio
 
@@ -106,7 +104,6 @@ class GrainSegment(ABC):
 
         :rtype: None
         """
-        assert self.spacing >= 0
         assert self.inhibited_ends in [0, 1, 2]
         assert self.length > 0
         assert self.outer_diameter > 0
@@ -130,14 +127,12 @@ class GrainSegment2D(GrainSegment, ABC):
         self,
         length: float,
         outer_diameter: float,
-        spacing: float,
         inhibited_ends: int = 0,
         density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            spacing=spacing,
             inhibited_ends=inhibited_ends,
             density_ratio=density_ratio,
         )
@@ -208,14 +203,12 @@ class GrainSegment3D(GrainSegment, ABC):
         self,
         length: float,
         outer_diameter: float,
-        spacing: float,
         inhibited_ends: int = 0,
         density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            spacing=spacing,
             inhibited_ends=inhibited_ends,
             density_ratio=density_ratio,
         )
@@ -245,8 +238,15 @@ class GrainSegment3D(GrainSegment, ABC):
 
 
 class Grain:
-    def __init__(self) -> None:
+    def __init__(self, spacing: float = 0.0) -> None:
+        """
+        Initialize a grain assembly.
+
+        Args:
+            spacing: Distance between segments in meters. Default is 0.0 (no spacing).
+        """
         self.segments: list[GrainSegment] = []
+        self.spacing = spacing
 
     def add_segment(self, new_segment: GrainSegment) -> None:
         """
@@ -307,9 +307,17 @@ class Grain:
         """
         Calculates total length of the grain.
 
+        Example:
+        - 1 segment of 0.5 m length -> total length = 0.5 m
+        - 2 segments of 0.5 m length with 0.1 m spacing -> total length = 1.1 m
+        - 3 segments of 0.5 m length with 0.1 m spacing -> total length = 1.7 m
+
         :rtype: float
         """
-        return np.sum([grain.length + grain.spacing for grain in self.segments])
+        total_segment_length = np.sum([grain.length for grain in self.segments])
+        if len(self.segments) > 1:  # add spacing between segments
+            total_segment_length += self.spacing * (len(self.segments) - 1)
+        return total_segment_length
 
     @property
     def segment_count(self) -> int:
