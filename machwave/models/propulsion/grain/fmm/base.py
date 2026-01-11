@@ -25,7 +25,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         map_dim: int,
         length: float,
         outer_diameter: float,
-        spacing: float,
         inhibited_ends: int = 0,
         density_ratio: float = 1.0,
     ) -> None:
@@ -41,7 +40,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            spacing=spacing,
             inhibited_ends=inhibited_ends,
             density_ratio=density_ratio,
         )

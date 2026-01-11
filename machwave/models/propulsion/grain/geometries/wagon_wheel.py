@@ -15,7 +15,6 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_inner_diameter: float,
         port_outer_diameter: float,
         port_angular_width: float,
-        spacing: float,
         inhibited_ends: int = 0,
         density_ratio: float = 1.0,
     ) -> None:
@@ -28,7 +27,6 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            spacing=spacing,
             inhibited_ends=inhibited_ends,
             density_ratio=density_ratio,
         )

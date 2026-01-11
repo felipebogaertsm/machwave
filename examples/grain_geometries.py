@@ -25,13 +25,11 @@ def main():
         length=68e-3,
         outer_diameter=41e-3,
         core_diameter=15e-3,
-        spacing=0.01,
     )
 
     multiport_segment = MultiPortGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
-        spacing=0.01,
         port_diameter=3e-3,
         port_radial_count=6,
         port_level_count=4,
@@ -40,7 +38,6 @@ def main():
     dgrain_segment = DGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
-        spacing=0.01,
         slot_offset=10e-3,
     )
 
@@ -49,7 +46,6 @@ def main():
         outer_diameter=41e-3,
         upper_core_diameter=35e-3,
         lower_core_diameter=5e-3,
-        spacing=0.01,
     )
 
     star_segment = StarGrainSegment(
