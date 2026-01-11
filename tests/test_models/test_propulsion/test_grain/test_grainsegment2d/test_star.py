@@ -12,7 +12,6 @@ def test_star_segment_geometry_validation():
         number_of_points=5,
         point_length=15e-3,
         point_width=10e-3,
-        spacing=10e-3,
     )
 
     # Negative number of points:
@@ -23,7 +22,6 @@ def test_star_segment_geometry_validation():
             number_of_points=-5,
             point_length=15e-3,
             point_width=10e-3,
-            spacing=10e-3,
         )
 
     # Too many points:
@@ -34,7 +32,6 @@ def test_star_segment_geometry_validation():
             number_of_points=13,
             point_length=15e-3,
             point_width=10e-3,
-            spacing=10e-3,
         )
 
     # Negative point length:
@@ -45,7 +42,6 @@ def test_star_segment_geometry_validation():
             number_of_points=5,
             point_length=-15e-3,
             point_width=10e-3,
-            spacing=10e-3,
         )
 
     # Negative point width:
@@ -56,5 +52,4 @@ def test_star_segment_geometry_validation():
             number_of_points=5,
             point_length=15e-3,
             point_width=-10e-3,
-            spacing=10e-3,
         )

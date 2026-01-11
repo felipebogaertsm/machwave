@@ -10,7 +10,6 @@ def test_dgrain_segment_geometry_validation():
         outer_diameter=100e-3,
         slot_offset=30e-3,
         length=120e-3,
-        spacing=10e-3,
     )
 
     # Negative slot offset:
@@ -19,7 +18,6 @@ def test_dgrain_segment_geometry_validation():
             outer_diameter=100e-3,
             slot_offset=-30e-3,
             length=120e-3,
-            spacing=10e-3,
         )
 
     # Slot offset larget than segment radius:
@@ -28,5 +26,4 @@ def test_dgrain_segment_geometry_validation():
             outer_diameter=100e-3,
             slot_offset=55e-3,
             length=120e-3,
-            spacing=10e-3,
         )

@@ -16,7 +16,6 @@ def test_star_segment_geometry_validation():
         port_inner_diameter=15e-3,
         port_outer_diameter=35e-3,
         port_angular_width=45,
-        spacing=10e-3,
     )
 
     # Negative core diameter:
@@ -29,7 +28,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=35e-3,
             port_angular_width=45,
-            spacing=10e-3,
         )
 
     # Port inner diameter smaller than core diameter:
@@ -42,7 +40,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=7e-3,
             port_outer_diameter=35e-3,
             port_angular_width=45,
-            spacing=10e-3,
         )
 
     # Port outer diameter smaller than inner diameter:
@@ -55,7 +52,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=12e-3,
             port_angular_width=45,
-            spacing=10e-3,
         )
 
     # Negative number of ports:
@@ -68,7 +64,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=35e-3,
             port_angular_width=45,
-            spacing=10e-3,
         )
 
     # Too many points:
@@ -81,7 +76,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=35e-3,
             port_angular_width=45,
-            spacing=10e-3,
         )
 
     # Negative port angle:
@@ -94,7 +88,6 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=35e-3,
             port_angular_width=-1,
-            spacing=10e-3,
         )
 
     # Port angle too large:
@@ -107,5 +100,4 @@ def test_star_segment_geometry_validation():
             port_inner_diameter=15e-3,
             port_outer_diameter=35e-3,
             port_angular_width=61,
-            spacing=10e-3,
         )

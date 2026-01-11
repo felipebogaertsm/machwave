@@ -10,7 +10,6 @@ def test_bates_segment_geometry_validation():
         outer_diameter=100e-3,
         core_diameter=30e-3,
         length=120e-3,
-        spacing=10e-3,
     )
 
     # Larger core diameter than outer diameter:
@@ -19,7 +18,6 @@ def test_bates_segment_geometry_validation():
             outer_diameter=100e-3,
             core_diameter=300e-3,
             length=120e-3,
-            spacing=10e-3,
         )
 
     # Negative core diameter:
@@ -28,7 +26,6 @@ def test_bates_segment_geometry_validation():
             outer_diameter=100e-3,
             core_diameter=-30e-3,
             length=120e-3,
-            spacing=10e-3,
         )
 
     # Negative length:
@@ -37,28 +34,19 @@ def test_bates_segment_geometry_validation():
             outer_diameter=100e-3,
             core_diameter=30e-3,
             length=-120e-3,
-            spacing=10e-3,
-        )
-
-    # Negative spacing:
-    with pytest.raises(GrainGeometryError):
-        _ = BatesSegment(
-            outer_diameter=100e-3,
-            core_diameter=30e-3,
-            length=120e-3,
-            spacing=-10e-3,
         )
 
 
 def test_olympus_grain_total_length_property(bates_grain_olympus):
     grain = bates_grain_olympus
-    total_length = 0
+    total_length = (
+        sum(s.length for s in grain.segments)
+        + (grain.segment_count - 1) * grain.spacing
+    )
 
-    for segment in grain.segments:
-        total_length += segment.length + segment.spacing
-
-    assert grain.total_length == total_length
-    assert grain.total_length == 1470e-3
+    assert grain.total_length == pytest.approx(total_length)
+    # 7 segments * 200mm + 6 gaps * 10mm = 1400mm + 60mm = 1460mm
+    assert grain.total_length == pytest.approx(1460e-3)
 
 
 def test_olympus_grain_segment_count(bates_grain_olympus):
