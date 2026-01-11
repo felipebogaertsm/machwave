@@ -20,12 +20,11 @@ from machwave.simulations import internal_ballistics
 def main():
     propellant = solid_propellants.KNDX
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(spacing=5e-3)
     bates_segment = grain_geometries.BatesSegment(
         outer_diameter=55e-3,
         core_diameter=19e-3,
         length=101.6e-3,
-        spacing=5e-3,
     )
 
     grain.add_segment(bates_segment)

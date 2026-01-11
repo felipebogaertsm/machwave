@@ -29,7 +29,6 @@ def conical_grain_segment_1():
         outer_diameter=41e-3,
         upper_core_diameter=15e-3,
         lower_core_diameter=15e-3,
-        spacing=0.01,
     )
 
 
@@ -39,7 +38,6 @@ def bates_equivalent_1():
         length=68e-3,
         outer_diameter=41e-3,
         core_diameter=15e-3,
-        spacing=0.01,
     )
 
 

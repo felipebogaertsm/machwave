@@ -19,7 +19,6 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         file_path: str,
         outer_diameter: float,
         length: float,
-        spacing: float,
         inhibited_ends: int = 0,
         map_dim: int = 50,
     ) -> None:
@@ -33,7 +32,6 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            spacing=spacing,
             inhibited_ends=inhibited_ends,
             map_dim=map_dim,
         )

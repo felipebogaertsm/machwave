@@ -24,20 +24,18 @@ def main():
     # Motor:
     propellant = solid_propellants.KNSB_NAKKA
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(spacing=0.01)
 
     bates_segment_1 = grain_geometries.BatesSegment(
         outer_diameter=0.086,
         core_diameter=0.032,
         length=0.150,
-        spacing=0.01,
     )
 
     bates_segment_2 = grain_geometries.BatesSegment(
         outer_diameter=0.086,
         core_diameter=0.046,
         length=0.150,
-        spacing=0.01,
     )
 
     grain.add_segment(bates_segment_1)
