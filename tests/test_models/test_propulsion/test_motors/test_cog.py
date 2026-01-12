@@ -251,25 +251,25 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with default position estimates.
         """
+        from machwave.models.materials import Steel
+        from machwave.models.propulsion.feed_systems.pressure_fed import (
+            StackedTankPressureFedFeedSystem,
+        )
+        from machwave.models.propulsion.feed_systems.tanks import Tank
         from machwave.models.propulsion.motors.liquid import LiquidEngine
         from machwave.models.propulsion.propellants import (
             BiliquidPropellant,
-            PropellantComponent,
             ComponentRole,
+            PropellantComponent,
         )
         from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
         from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
             CombustionChamber,
         )
-        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
         from machwave.models.propulsion.thrust_chamber.injector import (
             BipropellantInjector,
         )
-        from machwave.models.propulsion.feed_systems.tanks import Tank
-        from machwave.models.propulsion.feed_systems.pressure_fed import (
-            StackedTankPressureFedFeedSystem,
-        )
-        from machwave.models.materials import Steel
+        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 
         # Create tanks
         ox_tank = Tank(
@@ -377,25 +377,25 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with user-provided positions for dry mass and tanks.
         """
+        from machwave.models.materials import Steel
+        from machwave.models.propulsion.feed_systems.pressure_fed import (
+            StackedTankPressureFedFeedSystem,
+        )
+        from machwave.models.propulsion.feed_systems.tanks import Tank
         from machwave.models.propulsion.motors.liquid import LiquidEngine
         from machwave.models.propulsion.propellants import (
             BiliquidPropellant,
-            PropellantComponent,
             ComponentRole,
+            PropellantComponent,
         )
         from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
         from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
             CombustionChamber,
         )
-        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
         from machwave.models.propulsion.thrust_chamber.injector import (
             BipropellantInjector,
         )
-        from machwave.models.propulsion.feed_systems.tanks import Tank
-        from machwave.models.propulsion.feed_systems.pressure_fed import (
-            StackedTankPressureFedFeedSystem,
-        )
-        from machwave.models.materials import Steel
+        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
 
         # Create tanks
         ox_tank = Tank(
