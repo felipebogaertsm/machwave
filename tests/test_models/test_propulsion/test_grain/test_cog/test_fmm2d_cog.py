@@ -1,18 +1,21 @@
 import numpy as np
 
 from machwave.models.propulsion.grain import Grain
+from tests.test_models.test_propulsion.test_grain.test_cog.conftest import (
+    fmm2d_geometries,
+)
 
 
+@fmm2d_geometries
 class TestFMM2DSegmentCoG:
     """Test suite for single 2D FMM grain segment CoG calculation (parametrized)."""
 
-    def test_segment_cog_at_ignition(self, fmm2d_segment_factory):
+    def test_segment_cog_at_ignition(self, segment_factory, geometry_name):
         """Test CoG of a 2D segment at ignition (web_distance=0)."""
-        geometry_name, factory = fmm2d_segment_factory
         outer_diameter = 0.1
         length = 0.2
 
-        segment = factory(length=length, outer_diameter=outer_diameter)
+        segment = segment_factory(length=length, outer_diameter=outer_diameter)
         cog = segment.get_center_of_gravity(web_distance=0.0)
 
         # For symmetric grain, CoG should be near center
@@ -24,10 +27,9 @@ class TestFMM2DSegmentCoG:
     def test_segment_cog_during_burn(self, segment_factory, geometry_name):
         """Test that 2D segment CoG remains relatively stable during burn."""
         segment = segment_factory(length=0.2, outer_diameter=0.1)
-        web_thickness = segment.get_web_thifmm2d_segment_factory):
-        """Test that 2D segment CoG remains relatively stable during burn."""
-        geometry_name, factory = fmm2d_segment_factory
-        segment = t burn stages
+        web_thickness = segment.get_web_thickness()
+
+        # Test at different burn stages
         cog_initial = segment.get_center_of_gravity(web_distance=0.0)
         cog_half = segment.get_center_of_gravity(web_distance=web_thickness * 0.5)
 
@@ -37,21 +39,20 @@ class TestFMM2DSegmentCoG:
 
     def test_segment_cog_coordinate_system(self, segment_factory, geometry_name):
         """Verify that 2D FMM uses port-origin coordinate system."""
-        length = 0.3fmm2d_segment_factory):
-        """Verify that 2D FMM uses port-origin coordinate system."""
-        geometry_name, factory = fmm2d_segment_factory
         length = 0.3
-        segment = 
+        segment = segment_factory(length=length, outer_diameter=0.12)
+        cog = segment.get_center_of_gravity(web_distance=0.0)
+
         # First coordinate (axial) should be between 0 (aft) and length (forward)
         assert 0 < cog[0] < length
+
+
+@fmm2d_geometries
 class TestFMM2DGrainMultiSegmentCoG:
     """Test CoG calculations for multi-segment 2D FMM grains (parametrized)."""
 
-    def test_single_segment_cog_position(self, fmm2d_segment_factory):
+    def test_single_segment_cog_position(self, segment_factory, geometry_name):
         """Test CoG with a single 2D segment of length 1.0m."""
-        geometry_name, factory = fmm2d_segment_factory
-        grain = Grain(spacing=0.1)
-        segment =  single 2D segment of length 1.0m."""
         grain = Grain(spacing=0.1)
         segment = segment_factory(length=1.0, outer_diameter=0.1)
         grain.add_segment(segment)
@@ -60,13 +61,14 @@ class TestFMM2DGrainMultiSegmentCoG:
 
         # Single segment: CoG should be at its center (0.5m from port)
         expected_cog = np.array([0.5, 0.0, 0.0])
-        np.testing.assert_array_almost_equal(cog, exself, fmm2d_segment_factory):
+        np.testing.assert_array_almost_equal(cog, expected_cog, decimal=2)
+
+    def test_two_segments_equal_length_with_spacing(
+        self, segment_factory, geometry_name
+    ):
         """Test CoG with 2 2D segments of length 1.0m each with 0.1m spacing."""
-        geometry_name, factory = fmm2d_segment_factory
         grain = Grain(spacing=0.1)
 
-        segment1 = factory(length=1.0, outer_diameter=0.1)
-        segment2 = 
         segment1 = segment_factory(length=1.0, outer_diameter=0.1)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1)
 
@@ -79,13 +81,12 @@ class TestFMM2DGrainMultiSegmentCoG:
         # Expected CoG at center: 1.05m
         expected_cog = np.array([1.05, 0.0, 0.0])
         np.testing.assert_array_almost_equal(cog, expected_cog, decimal=2)
-fmm2d_segment_factory):
+
+    def test_two_segments_zero_spacing(self, segment_factory, geometry_name):
         """Test CoG with 2 2D segments with zero spacing (touching)."""
-        geometry_name, factory = fmm2d_segment_factory
         grain = Grain(spacing=0.0)
 
-        segment1 = factory(length=1.0, outer_diameter=0.1)
-        segment2 = factory(length=1.0, outer_diameter=0.1)
+        segment1 = segment_factory(length=1.0, outer_diameter=0.1)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1)
 
         grain.add_segment(segment1)
@@ -96,14 +97,15 @@ fmm2d_segment_factory):
         # Total length: 2.0m, CoG at center: 1.0m
         expected_cog = np.array([1.0, 0.0, 0.0])
         np.testing.assert_array_almost_equal(cog, expected_cog, decimal=2)
-self, fmm2d_segment_factory):
+
+    def test_three_segments_burn_progression_constant_cog(
+        self, segment_factory, geometry_name
+    ):
         """Test that CoG remains relatively constant during burn for 3 identical 2D segments."""
-        geometry_name, factory = fmm2d_segment_factory
         grain = Grain(spacing=0.1)
 
-        segment1 = factory(length=1.0, outer_diameter=0.1)
-        segment2 = factory(length=1.0, outer_diameter=0.1)
-        segment3 = factory(length=1.0, outer_diameter=0.1)
+        segment1 = segment_factory(length=1.0, outer_diameter=0.1)
+        segment2 = segment_factory(length=1.0, outer_diameter=0.1)
         segment3 = segment_factory(length=1.0, outer_diameter=0.1)
 
         grain.add_segment(segment1)
@@ -126,13 +128,12 @@ self, fmm2d_segment_factory):
         expected_cog = np.array([1.6, 0.0, 0.0])
         np.testing.assert_array_almost_equal(cog_initial, expected_cog, decimal=2)
 
-    def test_two_segments_different_densities(self, fmm2d_segment_factory):
+    def test_two_segments_different_densities(self, segment_factory, geometry_name):
         """Test CoG with 2 2D segments of same geometry but different densities."""
-        geometry_name, factory = fmm2d_segment_factory
         grain = Grain(spacing=0.1)
 
-        segment1 = factory(length=1.0, outer_diameter=0.1, density_ratio=1.0)
-        segment2 = factory(length=1.0, outer_diameter=0.1, density_ratio=0.7)
+        segment1 = segment_factory(length=1.0, outer_diameter=0.1, density_ratio=1.0)
+        segment2 = segment_factory(length=1.0, outer_diameter=0.1, density_ratio=0.7)
 
         grain.add_segment(segment1)
         grain.add_segment(segment2)
