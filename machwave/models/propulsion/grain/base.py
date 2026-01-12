@@ -358,28 +358,24 @@ class Grain:
             raise ValueError("No segments found, cannot compute CoG.")
 
         weighted_cogs = []
-        # Start from aft end (port), track distance going backward toward bulkhead
-        axial_position_from_aft = self.total_length
+        # Start from port (aft end), track distance going forward toward bulkhead
+        # Iterate segments in reverse order (last added is closest to port)
+        axial_position = 0.0
 
-        for segment in self.segments:
-            # Get segment's local CoG (relative to its own aft end)
+        for segment in reversed(self.segments):
+            # Get segment's local CoG (relative to its own port/aft end)
             local_cog = segment.get_center_of_gravity(web_distance=web_distance)
 
-            # Calculate segment's aft end position from grain's aft end
-            segment_aft_from_grain_aft = (
-                axial_position_from_aft - segment.length - self.spacing
-            )
-
-            # Global CoG position from grain's aft end
+            # Global CoG position from grain's port
             global_cog = local_cog.copy()
-            global_cog[0] = segment_aft_from_grain_aft + local_cog[0]
+            global_cog[0] = axial_position + local_cog[0]
 
             # Weight by mass (volume × density_ratio)
             mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
             weighted_cogs.append(global_cog * mass)
 
-            # Update axial position (moving toward bulkhead)
-            axial_position_from_aft = segment_aft_from_grain_aft
+            # Move to next segment (add segment length and spacing)
+            axial_position += segment.length + self.spacing
 
         total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
             axis=0, dtype=np.float64
