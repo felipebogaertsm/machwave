@@ -60,15 +60,16 @@ class Motor(Generic[P, T], ABC):
         pass
 
     @abstractmethod
-    def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
+    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
         Calculate the center of gravity of the propulsion system.
 
-        The coordinate system is defined such that the origin (0, 0, 0) corresponds
-        to the nozzle exit area on the combustion chamber axis.
+        The coordinate system is defined such that the origin (0, 0, 0)
+        corresponds to the nozzle exit area on the combustion chamber axis.
 
         Returns:
-            A 1D array of shape (3,) representing the [x, y, z] coordinates of the center of gravity, in meters.
+            A 1D array of shape (3,) representing the [x, y, z] coordinates of
+            the center of gravity, in meters.
         """
         pass
 
