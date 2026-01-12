@@ -19,11 +19,31 @@ class SolidMotor(
         grain: grain.Grain,
         propellant: propellants.SolidPropellant,
         thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
+        throat_to_grain_port_distance: float = 0.01,
+        dry_mass_cog: float | None = None,
+        other_losses: float = motor_base.DEFAULT_OTHER_MOTOR_LOSSES,
     ) -> None:
-        self.grain = grain
-        super().__init__(propellant, thrust_chamber)
+        """
+        Initialize a solid rocket motor.
 
+        Args:
+            grain: Grain geometry configuration.
+            propellant: Solid propellant properties.
+            thrust_chamber: Thrust chamber model.
+            throat_to_grain_port_distance: Axial distance from nozzle throat to
+                the grain port (aft end), in meters. Defaults to 0.01m (10mm).
+            dry_mass_cog: Axial position of the dry mass (hardware) center of gravity,
+                measured from the nozzle throat, in meters. Positive values point toward
+                the bulkhead. If None, will be estimated from chamber geometry.
+            other_losses: Additional motor losses not accounted for by specific
+                loss mechanisms (0-1), defaults to 0.12 (12%).
+        """
+        super().__init__(propellant, thrust_chamber, other_losses)
+
+        self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant
+        self.throat_to_grain_port_distance = throat_to_grain_port_distance
+        self.dry_mass_cog = dry_mass_cog
         self.cf_ideal = None  # ideal thrust coefficient
         self.cf_real = None  # real thrust coefficient
 
@@ -55,16 +75,19 @@ class SolidMotor(
         self, n_kin: float, n_bl: float, n_tp: float
     ) -> float:
         """
+        Calculates the thrust coefficient correction factor including all
+        losses.
+
         Args:
-            n_kin: Kinematic correction factor, adimensional
-            n_bl: Boundary layer correction factor, adimensional
-            n_tp: Two-phase correction factor, adimensional
+            n_kin: Kinematic correction factor, adimensional, in percent
+            n_bl: Boundary layer correction factor, adimensional, in percent
+            n_tp: Two-phase correction factor, adimensional, in percent
 
         Returns:
-            float: Thrust coefficient correction factor, adimensional
+            Thrust coefficient correction factor, adimensional
         """
         return (
-            (100 - (n_kin + n_bl + n_tp))
+            (100 - (n_kin + n_bl + n_tp + self.other_losses))
             * losses.get_nozzle_divergent_percentage_loss(
                 self.thrust_chamber.nozzle.throat_diameter
             )
@@ -109,13 +132,76 @@ class SolidMotor(
     def get_dry_mass(self) -> float:
         return self.thrust_chamber.dry_mass
 
-    def get_center_of_gravity(self) -> np.typing.NDArray[np.float64]:
+    def get_center_of_gravity(
+        self, web_distance: float = 0.0
+    ) -> np.typing.NDArray[np.float64]:
         """
-        Constant CG throughout the operation. Half the chamber length.
+        Calculates the center of gravity of the solid motor including
+        propellant grain (wet mass) and dry mass.
 
-        TODO: implement grain CG calculation.
+        The calculation uses a mass-weighted average of:
+        1. Propellant grain CoG;
+        2. Thrust chamber dry mass CoG, considered constant.
+
+        Args:
+            web_distance: Current web distance burned, in meters.
+                Defaults to 0.0 (ignition state).
+
+        Returns:
+            Center of gravity in 3D space [x, y, z], in meters.
+            Origin is at the nozzle throat on the chamber axis.
+            Positive x-direction points forward (toward bulkhead/away from nozzle exit).
+
+        Note:
+            This implementation assumes the thrust chamber (hardware) CoG is at the
+            geometric center of the combustion chamber. For more accurate results,
+            individual component masses and positions should be considered.
         """
-        return np.array(
-            [self.thrust_chamber.combustion_chamber.internal_length / 2, 0.0, 0.0],
-            dtype=np.float64,
+        # Get grain center of gravity (native reference: port/aft end of grain)
+        # The grain's coordinate system has origin at the port (aft end, closest to nozzle),
+        # with positive x pointing forward toward the bulkhead
+        grain_cog_port = self.grain.get_center_of_gravity(web_distance=web_distance)
+        propellant_mass = self.grain.get_propellant_mass(
+            web_distance=web_distance, ideal_density=self.propellant.ideal_density
         )
+
+        # Distance from throat to grain port (aft end, closest to nozzle)
+        throat_to_port = self.throat_to_grain_port_distance
+
+        # Transform grain CoG from port-origin to throat-origin:
+        # grain_cog_port[0] is already the distance from port to grain CoG
+        # Simply add throat_to_port to get position relative to throat
+        grain_cog = grain_cog_port.copy()
+        grain_cog[0] = throat_to_port + grain_cog_port[0]
+
+        # Thrust chamber (hardware) CoG
+        hardware_mass = self.thrust_chamber.dry_mass
+
+        if self.dry_mass_cog is not None:
+            # User-provided dry mass CoG (already in throat-origin coordinates)
+            hardware_cog = np.array([self.dry_mass_cog, 0.0, 0.0], dtype=np.float64)
+        else:
+            # Estimate hardware CoG from chamber geometry
+            # Assume it's at the geometric center of the combustion chamber
+            chamber_length = self.thrust_chamber.combustion_chamber.internal_length
+            grain_total_length = self.grain.total_length
+            # Distance from port to chamber center
+            chamber_center_from_port = grain_total_length - (
+                chamber_length / 2 - (chamber_length - grain_total_length)
+            )
+            hardware_cog = np.array(
+                [throat_to_port + chamber_center_from_port, 0.0, 0.0], dtype=np.float64
+            )
+
+        # Calculate total mass and weighted CoG
+        total_mass = propellant_mass + hardware_mass
+
+        if total_mass <= 0:
+            # Fallback to hardware CoG if calculation fails
+            return hardware_cog
+
+        weighted_cog = (
+            grain_cog * propellant_mass + hardware_cog * hardware_mass
+        ) / total_mass
+
+        return weighted_cog.astype(np.float64)
