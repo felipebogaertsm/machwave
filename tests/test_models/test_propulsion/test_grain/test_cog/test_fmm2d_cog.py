@@ -146,8 +146,5 @@ class TestFMM2DGrainMultiSegmentCoG:
         # Volumes should be equal
         np.testing.assert_almost_equal(vol1, vol2, decimal=5)
 
-        mass1 = vol1 * 1.0
-        mass2 = vol2 * 0.7
-
         # CoG should be closer to segment 1 (denser)
         assert cog[0] > 1.05, "CoG should be pulled toward the denser segment"
