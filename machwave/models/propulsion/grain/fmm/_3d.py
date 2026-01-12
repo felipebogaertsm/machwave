@@ -194,6 +194,15 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         Calculates the center of gravity of a 3D grain segment in 3D space
         at a specific web distance.
 
+        The coordinate system origin is at the aft end of the segment (port, closest
+        to nozzle), with positive x pointing forward toward the bulkhead.
+
+        Args:
+            web_distance: Web distance traveled, in meters.
+
+        Returns:
+            Center of gravity [x, y, z] in meters from the aft end of the segment.
+
         Raises:
             GrainGeometryError: If the web distance traveled is greater than
                 the grain segment's web thickness.
@@ -204,7 +213,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
                 "segment's web thickness."
             )
 
-        # Get the 2D face map at the given web distance
+        # Get the 3D volume map at the given web distance
         face_map = self.get_face_map(web_distance)
 
         # Mask the regions where the face map has active material (equal to 1)
@@ -213,7 +222,12 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         # Get the non-masked elements
         z_indices, y_indices, x_indices = np.where(mask)
 
-        # Point of reference is segment's top center
+        if len(x_indices) == 0:
+            raise GrainGeometryError(
+                "No active material found at the given web distance."
+            )
+
+        # Origin at aft end: z_indices represent axial position from aft end
         center_shift = self.map_dim / 2
         x_coords = x_indices - center_shift
         y_coords = y_indices - center_shift
@@ -229,4 +243,5 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         y_cog = self.map_to_length(y_cog_normalized)
         z_cog = self.map_to_length(z_cog_normalized)
 
-        return np.array([x_cog, y_cog, z_cog], dtype=np.float64)
+        # Return [axial from aft, radial_x, radial_y]
+        return np.array([z_cog, x_cog, y_cog], dtype=np.float64)
