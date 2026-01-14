@@ -59,6 +59,8 @@ def simple_bates_motor():
         dry_mass=0.85,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
+        nozzle_exit_to_grain_port_distance=0.01,
+        center_of_gravity_coordinate=(0.04, 0.0, 0.0),
     )
 
     motor = solid_motors.SolidMotor(
@@ -115,6 +117,8 @@ def multi_segment_bates_motor():
         dry_mass=2.5,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
+        nozzle_exit_to_grain_port_distance=0.01,
+        center_of_gravity_coordinate=(0.5, 0.0, 0.0),
     )
 
     motor = solid_motors.SolidMotor(
@@ -222,15 +226,15 @@ class TestSolidMotorCoG:
             dry_mass=0.85,
             nozzle=nozzle,
             combustion_chamber=combustion_chamber,
+            nozzle_exit_to_grain_port_distance=0.01,
+            center_of_gravity_coordinate=(0.05, 0.0, 0.0),
         )
 
-        # Create motor with custom dry mass CoG at 0.05m from throat
-        custom_dry_cog = 0.05
+        # Create motor with custom dry mass CoG at 0.05m from nozzle exit
         motor = solid_motors.SolidMotor(
             grain=grain,
             propellant=propellant,
             thrust_chamber=thrust_chamber,
-            dry_mass_cog=custom_dry_cog,
         )
 
         cog = motor.get_center_of_gravity(web_distance=0.0)
@@ -239,8 +243,8 @@ class TestSolidMotorCoG:
         assert isinstance(cog, np.ndarray)
         assert cog.shape == (3,)
 
-        # With very light propellant compared to hardware, CoG should be close to dry_mass_cog
-        # But since we have propellant, it won't be exactly at custom_dry_cog
+        # With very light propellant compared to hardware, CoG should be close to center_of_gravity_coordinate
+        # But since we have propellant, it won't be exactly at 0.05
         assert cog[0] > 0
 
 
@@ -451,6 +455,7 @@ class TestLiquidEngineCoG:
             nozzle=nozzle,
             injector=injector,
             combustion_chamber=combustion_chamber,
+            center_of_gravity_coordinate=(0.15, 0.0, 0.0),
         )
 
         # Create propellant components
@@ -479,15 +484,14 @@ class TestLiquidEngineCoG:
         )
 
         # Create engine with custom CoG positions
-        dry_cog = 0.15  # 150mm from throat
-        ox_cog = 0.8  # 800mm from throat
-        fuel_cog = 0.75  # 750mm from throat
+        # dry_cog is now at 0.15 (150mm from nozzle exit)
+        ox_cog = 0.8  # 800mm from nozzle exit
+        fuel_cog = 0.75  # 750mm from nozzle exit
 
         engine = LiquidEngine(
             propellant=propellant,
             thrust_chamber=thrust_chamber,
             feed_system=feed_system,
-            dry_mass_cog=dry_cog,
             oxidizer_tank_cog=ox_cog,
             fuel_tank_cog=fuel_cog,
         )
@@ -500,12 +504,13 @@ class TestLiquidEngineCoG:
 
         # With full tanks, CoG should be between dry mass and tank positions
         # (weighted by masses)
-        assert cog[0] > dry_cog  # Should be pulled toward tanks by propellant mass
+        dry_cog_value = 0.15
+        assert cog[0] > dry_cog_value  # Should be pulled toward tanks by propellant mass
         assert cog[0] < max(ox_cog, fuel_cog)
 
         # Test with empty tanks - should approach dry mass CoG
         cog_empty = engine.get_center_of_gravity(propellant_fraction=1.0)
-        assert abs(cog_empty[0] - dry_cog) < 0.01  # Should be very close to dry_cog
+        assert abs(cog_empty[0] - dry_cog_value) < 0.01  # Should be very close to dry_cog
 
 
 if __name__ == "__main__":
