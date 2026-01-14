@@ -19,7 +19,6 @@ class SolidMotor(
         grain: grain.Grain,
         propellant: propellants.SolidPropellant,
         thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
-        dry_mass_cog: float | None = None,
         other_losses: float = motor_base.DEFAULT_OTHER_MOTOR_LOSSES,
     ) -> None:
         """
@@ -29,9 +28,6 @@ class SolidMotor(
             grain: Grain geometry configuration.
             propellant: Solid propellant properties.
             thrust_chamber: Thrust chamber model.
-            dry_mass_cog: Axial position of the dry mass (hardware) center of gravity,
-                measured from the nozzle throat, in meters. Positive values point toward
-                the bulkhead. If None, will be estimated from chamber geometry.
             other_losses: Additional motor losses not accounted for by specific
                 loss mechanisms (0-1), defaults to 0.12 (12%).
         """
@@ -39,7 +35,6 @@ class SolidMotor(
 
         self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant
-        self.dry_mass_cog = dry_mass_cog
         self.cf_ideal = None  # ideal thrust coefficient
         self.cf_real = None  # real thrust coefficient
 
@@ -141,10 +136,14 @@ class SolidMotor(
 
         Args:
             web_distance: Web distance traveled [m].
-                Defaults to 0.0 (ignition state).
+                Defaults to ignition state.
 
         Returns:
             Center of gravity in 3D space (x, y, z) [m].
+
+        Raises:
+            ValueError: If thrust chamber dry mass CoG is not defined or if
+                total mass is less than or equal to zero.
         """
         grain_cog_port = self.grain.get_center_of_gravity(web_distance=web_distance)
         propellant_mass = self.grain.get_propellant_mass(
@@ -152,38 +151,22 @@ class SolidMotor(
         )
 
         dry_mass = self.thrust_chamber.dry_mass
+        dry_mass_cog = self.thrust_chamber.center_of_gravity_coordinate
         nozzle_exit_to_port = self.thrust_chamber.nozzle_exit_to_grain_port_distance
 
         # Transform grain CoG from port origin to nozzle exit origin
         grain_cog = grain_cog_port.copy()
         grain_cog[0] = nozzle_exit_to_port + grain_cog_port[0]
 
-        if self.dry_mass_cog is not None:
-            # User-provided dry mass CoG (already in throat-origin coordinates)
-            hardware_cog = np.array([self.dry_mass_cog, 0.0, 0.0], dtype=np.float64)
-        else:
-            # Estimate hardware CoG from chamber geometry
-            # Assume it's at the geometric center of the combustion chamber
-            chamber_length = self.thrust_chamber.combustion_chamber.internal_length
-            grain_total_length = self.grain.total_length
-            # Distance from port to chamber center
-            chamber_center_from_port = grain_total_length - (
-                chamber_length / 2 - (chamber_length - grain_total_length)
-            )
-            hardware_cog = np.array(
-                [nozzle_exit_to_port + chamber_center_from_port, 0.0, 0.0],
-                dtype=np.float64,
-            )
+        if dry_mass_cog is None:
+            raise ValueError("Dry mass center of gravity coordinate is not defined.")
 
-        # Calculate total mass and weighted CoG
         total_mass = propellant_mass + dry_mass
-
         if total_mass <= 0:
-            # Fallback to hardware CoG if calculation fails
-            return hardware_cog
+            raise ValueError("Total mass must be greater than zero to calculate CoG.")
 
         weighted_cog = (
-            grain_cog * propellant_mass + hardware_cog * dry_mass
+            grain_cog * propellant_mass + dry_mass_cog * dry_mass
         ) / total_mass
 
         return weighted_cog.astype(np.float64)
