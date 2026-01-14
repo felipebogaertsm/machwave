@@ -329,6 +329,7 @@ class TestLiquidEngineCoG:
             nozzle=nozzle,
             injector=injector,
             combustion_chamber=combustion_chamber,
+            center_of_gravity_coordinate=(0.15, 0.0, 0.0),
         )
 
         # Create propellant components
@@ -356,11 +357,13 @@ class TestLiquidEngineCoG:
             of_ratio=2.0,
         )
 
-        # Create engine
+        # Create engine with CoG positions
         engine = LiquidEngine(
             propellant=propellant,
             thrust_chamber=thrust_chamber,
             feed_system=feed_system,
+            oxidizer_tank_cog=0.5,
+            fuel_tank_cog=0.6,
         )
 
         # Test CoG at full tanks
@@ -505,12 +508,16 @@ class TestLiquidEngineCoG:
         # With full tanks, CoG should be between dry mass and tank positions
         # (weighted by masses)
         dry_cog_value = 0.15
-        assert cog[0] > dry_cog_value  # Should be pulled toward tanks by propellant mass
+        assert (
+            cog[0] > dry_cog_value
+        )  # Should be pulled toward tanks by propellant mass
         assert cog[0] < max(ox_cog, fuel_cog)
 
         # Test with empty tanks - should approach dry mass CoG
         cog_empty = engine.get_center_of_gravity(propellant_fraction=1.0)
-        assert abs(cog_empty[0] - dry_cog_value) < 0.01  # Should be very close to dry_cog
+        assert (
+            abs(cog_empty[0] - dry_cog_value) < 0.01
+        )  # Should be very close to dry_cog
 
 
 if __name__ == "__main__":

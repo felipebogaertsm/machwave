@@ -14,7 +14,6 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         propellant: BiliquidPropellant,
         thrust_chamber: LiquidEngineThrustChamber,
         feed_system: FeedSystem,
-        dry_mass_cog: float | None = None,
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
         other_losses: float = 12.0,
@@ -26,19 +25,15 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             propellant: Bi-liquid propellant properties (oxidizer + fuel).
             thrust_chamber: Thrust chamber assembly (nozzle + combustion chamber + injector).
             feed_system: Propellant feed system (tanks, lines, pumps/pressurization).
-            dry_mass_cog: Axial position of the structural dry mass (hardware) center of gravity,
-                measured from the nozzle throat, in meters. Positive values point toward
-                the bulkhead. If None, will be estimated from chamber geometry.
             oxidizer_tank_cog: Axial position of the oxidizer tank center (where propellant CoG is),
-                measured from the nozzle throat, in meters. If None, uses a default estimate.
+                measured from the nozzle exit, in meters. If None, uses a default estimate.
             fuel_tank_cog: Axial position of the fuel tank center (where propellant CoG is),
-                measured from the nozzle throat, in meters. If None, uses a default estimate.
+                measured from the nozzle exit, in meters. If None, uses a default estimate.
             other_losses: Additional engine losses not accounted for by specific
                 loss mechanisms, in percent. Defaults to 12%.
         """
         super().__init__(propellant, thrust_chamber, other_losses)
         self.feed_system = feed_system
-        self.dry_mass_cog = dry_mass_cog
         self.oxidizer_tank_cog = oxidizer_tank_cog
         self.fuel_tank_cog = fuel_tank_cog
 
@@ -72,12 +67,12 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
 
         Returns:
             Center of gravity in 3D space [x, y, z], in meters.
-            Origin is at the nozzle throat on the chamber axis.
+            Origin is at the nozzle exit on the chamber axis.
             Positive x-direction points forward (toward bulkhead/away from nozzle exit).
 
-        Note:
-            For accurate results, provide dry_mass_cog, oxidizer_tank_cog, and
-            fuel_tank_cog during initialization. Otherwise, default estimates are used.
+        Raises:
+            ValueError: If thrust_chamber.center_of_gravity_coordinate, oxidizer_tank_cog,
+                or fuel_tank_cog is not defined.
         """
         # Get current propellant masses
         initial_ox_mass = self.feed_system.oxidizer_tank.initial_fluid_mass
@@ -89,27 +84,24 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         # Structural dry mass (thrust chamber, tank structure, feed lines, etc.)
         dry_mass = self.thrust_chamber.dry_mass
 
-        if self.dry_mass_cog is not None:
-            # User-provided dry mass CoG (already in throat-origin coordinates)
-            dry_cog = np.array([self.dry_mass_cog, 0.0, 0.0], dtype=np.float64)
-        else:
-            # Estimate: assume dry mass CoG is at chamber center
-            chamber_length = self.thrust_chamber.combustion_chamber.internal_length
-            dry_cog = np.array([chamber_length / 2, 0.0, 0.0], dtype=np.float64)
+        if self.thrust_chamber.center_of_gravity_coordinate is None:
+            raise ValueError(
+                "Thrust chamber center of gravity coordinate is not defined."
+            )
+
+        dry_cog = self.thrust_chamber.center_of_gravity_coordinate
 
         # Oxidizer tank CoG
-        if self.oxidizer_tank_cog is not None:
-            ox_cog = np.array([self.oxidizer_tank_cog, 0.0, 0.0], dtype=np.float64)
-        else:
-            # Default estimate: assume tank is above/forward of chamber
-            ox_cog = np.array([0.5, 0.0, 0.0], dtype=np.float64)
+        if self.oxidizer_tank_cog is None:
+            raise ValueError("Oxidizer tank center of gravity is not defined.")
+
+        ox_cog = np.array([self.oxidizer_tank_cog, 0.0, 0.0], dtype=np.float64)
 
         # Fuel tank CoG
-        if self.fuel_tank_cog is not None:
-            fuel_cog = np.array([self.fuel_tank_cog, 0.0, 0.0], dtype=np.float64)
-        else:
-            # Default estimate: assume tank is above/forward of chamber
-            fuel_cog = np.array([0.6, 0.0, 0.0], dtype=np.float64)
+        if self.fuel_tank_cog is None:
+            raise ValueError("Fuel tank center of gravity is not defined.")
+
+        fuel_cog = np.array([self.fuel_tank_cog, 0.0, 0.0], dtype=np.float64)
 
         # Calculate total mass and weighted CoG
         total_mass = dry_mass + ox_mass + fuel_mass
