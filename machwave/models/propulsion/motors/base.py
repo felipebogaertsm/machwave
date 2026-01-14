@@ -64,8 +64,8 @@ class Motor(Generic[P, T], ABC):
         """
         Calculate the center of gravity of the propulsion system.
 
-        The coordinate system is defined such that the origin (0, 0, 0)
-        corresponds to the nozzle exit area on the combustion chamber axis.
+        The coordinate system origin corresponds to the combustion chamber axis
+        at the nozzle exit plane, with positive x pointing toward the bulkhead.
 
         Returns:
             A 1D array of shape (3,) representing the [x, y, z] coordinates of
