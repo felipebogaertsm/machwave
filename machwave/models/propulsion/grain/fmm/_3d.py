@@ -191,21 +191,18 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
-        Calculates the center of gravity of a 3D grain segment in 3D space
-        at a specific web distance.
-
-        The coordinate system origin is at the aft end of the segment (port, closest
-        to nozzle), with positive x pointing forward toward the bulkhead.
+        Calculates the center of gravity of a 2D FMM grain segment at a web
+        distance.
 
         Args:
-            web_distance: Web distance traveled, in meters.
+            web_distance: Web distance traveled [m].
 
         Returns:
-            Center of gravity [x, y, z] in meters from the aft end of the segment.
+            Center of gravity [x, y, z] in meters from the port of the segment.
 
         Raises:
-            GrainGeometryError: If the web distance traveled is greater than
-                the grain segment's web thickness.
+            GrainGeometryError: If web distance exceeds the web thickness, or
+                if no active material is found.
         """
         if web_distance > self.get_web_thickness():
             raise GrainGeometryError(
