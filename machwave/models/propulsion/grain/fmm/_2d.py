@@ -225,19 +225,18 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
-        Return the center of gravity of the 2D grain segment at a specific web distance.
-
-        The coordinate system origin is at the aft end of the segment (port, closest
-        to nozzle), with positive x pointing forward toward the bulkhead.
+        Calculates the center of gravity of a 2D FMM grain segment at a web
+        distance.
 
         Args:
-            web_distance: Web distance traveled, in meters.
+            web_distance: Web distance traveled [m].
 
         Returns:
-            Center of gravity [x, y, z] in meters from the aft end of the segment.
+            Center of gravity [x, y, z] in meters from the port of the segment.
 
         Raises:
-            GrainGeometryError: If web distance exceeds the web thickness, or if no active material is found.
+            GrainGeometryError: If web distance exceeds the web thickness, or
+                if no active material is found.
         """
         if web_distance > self.get_web_thickness():
             raise GrainGeometryError(
@@ -265,6 +264,5 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         # Z-axis (axial): CoG is at segment center, which is length/2 from aft end
         z_cog = self.length / 2
 
-        # Return as a float64 NumPy array: [axial (from aft), radial_x, radial_y]
-        # Note: For consistency with grain coordinate system, return [z, x, y]
+        # NOTE: For consistency with grain coordinate system, return [z, x, y]
         return np.array([z_cog, x_cog, y_cog], dtype=np.float64)

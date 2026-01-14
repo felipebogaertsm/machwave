@@ -341,7 +341,7 @@ class Grain:
         accounting for varying density ratios and spacing between segments.
 
         Args:
-            web_distance: Web distance burned [m].
+            web_distance: Web distance traveled [m].
 
         Returns:
             A 1D array of shape (3,) representing the [x, y, z] coordinates
