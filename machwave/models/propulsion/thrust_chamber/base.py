@@ -41,8 +41,23 @@ class SolidMotorThrustChamber(ThrustChamber):
         nozzle: Nozzle,
         combustion_chamber: CombustionChamber,
         dry_mass: float,
+        nozzle_exit_to_grain_port_distance: float,
     ):
+        """
+        Initialize the SolidMotorThrustChamber.
+
+        Args:
+            nozzle:
+                An instance of a Nozzle class.
+            combustion_chamber:
+                An instance of a CombustionChamber class.
+            dry_mass:
+                The dry mass of the thrust chamber assembly in kg.
+            nozzle_exit_to_grain_port_distance:
+                Axial distance from nozzle exit plane to the grain port [m].
+        """
         super().__init__(nozzle, combustion_chamber, dry_mass)
+        self.nozzle_exit_to_grain_port_distance = nozzle_exit_to_grain_port_distance
 
 
 class LiquidEngineThrustChamber(ThrustChamber):
