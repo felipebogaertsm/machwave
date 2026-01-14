@@ -5,7 +5,7 @@ geometries within Machwave.
 
 import numpy as np
 
-from machwave.models.propulsion.grain.fmm.services import (
+from machwave.services.plots.fmm import (
     plot_2d_face_map,
     plot_2d_face_map_animated,
 )
