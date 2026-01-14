@@ -84,11 +84,19 @@ def main():
         thermal_liner_thickness=2e-3,
     )
     thrust_chamber = thrust_chamber_models.LiquidEngineThrustChamber(
-        nozzle=nozzle, injector=injector, combustion_chamber=chamber, dry_mass=2
+        nozzle=nozzle,
+        injector=injector,
+        combustion_chamber=chamber,
+        dry_mass=2,
+        center_of_gravity_coordinate=(0.02, 0.0, 0.0),
     )
 
     lre = motors.LiquidEngine(
-        propellant=propellant, feed_system=feed_system, thrust_chamber=thrust_chamber
+        propellant=propellant,
+        feed_system=feed_system,
+        thrust_chamber=thrust_chamber,
+        oxidizer_tank_cog=0.5,
+        fuel_tank_cog=0.4,
     )
 
     sim_params = InternalBallisticsParams(
