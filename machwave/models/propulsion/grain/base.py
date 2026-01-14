@@ -91,7 +91,7 @@ class GrainSegment(ABC):
         Calculates the center of gravity of the segment.
 
         The coordinate system origin is at the port, closest to the nozzle,
-        with positive x-direction pointing forward toward the bulkhead.
+        with positive x-direction pointing toward the bulkhead.
 
         :return: The center of gravity of the segment [x, y, z] in meters
         :rtype: np.typing.NDArray[np.float64]
@@ -337,13 +337,11 @@ class Grain:
         """
         Calculates the center of gravity of the grain.
 
-        This method computes the overall grain center of gravity by taking the
-        mass-weighted average of all segment centers of gravity. The
-        calculation accounts for varying density ratios between segments and
-        their positions in the stack, including spacing between segments.
+        Takes the mass-weighted average of all segment centers of gravity,
+        accounting for varying density ratios and spacing between segments.
 
         Args:
-            web_distance: Current web distance burned [m].
+            web_distance: Web distance burned [m].
 
         Returns:
             A 1D array of shape (3,) representing the [x, y, z] coordinates
@@ -353,35 +351,30 @@ class Grain:
         Raises:
             ValueError: If no segments are found in the grain.
         """
-        # If segments are empty, raise error:
         if not self.segments:
             raise ValueError("No segments found, cannot compute CoG.")
 
         weighted_cogs = []
-        # Start from port (aft end), track distance going forward toward bulkhead
         # Iterate segments in reverse order (last added is closest to port)
         axial_position = 0.0
 
         for segment in reversed(self.segments):
-            # Get segment's local CoG (relative to its own port/aft end)
+            # Segment's local CoG, relative to its own port
             local_cog = segment.get_center_of_gravity(web_distance=web_distance)
 
             # Global CoG position from grain's port
             global_cog = local_cog.copy()
             global_cog[0] = axial_position + local_cog[0]
 
-            # Weight by mass (volume × density_ratio)
             mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
             weighted_cogs.append(global_cog * mass)
 
-            # Move to next segment (add segment length and spacing)
+            # Move to next segment
             axial_position += segment.length + self.spacing
 
         total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
             axis=0, dtype=np.float64
-        )  # sum along segments to get CoG vector
-
-        # Total mass = total volume * density_ratio (normalized to ideal_density)
+        )
         volumes = np.asarray(
             [seg.get_volume(web_distance) for seg in self.segments], dtype=np.float64
         )
