@@ -88,11 +88,13 @@ class GrainSegment(ABC):
     @abstractmethod
     def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
-        Calculates the center of gravity of the segments in relation to the
-        upper end of the segment (closest to the bulkhead).
+        Calculates the center of gravity of the segment.
 
-        :return: The center of gravity of the segment
-        :rtype: float
+        The coordinate system origin is at the port, closest to the nozzle,
+        with positive x-direction pointing toward the bulkhead.
+
+        :return: The center of gravity of the segment [x, y, z] in meters
+        :rtype: np.typing.NDArray[np.float64]
         """
         pass
 
@@ -243,7 +245,8 @@ class Grain:
         Initialize a grain assembly.
 
         Args:
-            spacing: Distance between segments in meters. Default is 0.0 (no spacing).
+            spacing: Distance between segments in meters. Default is 0.0
+                (no spacing).
         """
         self.segments: list[GrainSegment] = []
         self.spacing = spacing
@@ -331,24 +334,56 @@ class Grain:
     def get_center_of_gravity(
         self, web_distance: float
     ) -> np.typing.NDArray[np.float64]:
-        weighted_cogs = [
-            segment.get_center_of_gravity(web_distance=web_distance)
-            * segment.get_volume(web_distance=web_distance)
-            for segment in self.segments
-        ]
-        # If there's a chance segments is empty, handle that:
-        if not weighted_cogs:
-            # raise an error or return a zero vector
+        """
+        Calculates the center of gravity of the grain.
+
+        Takes the mass-weighted average of all segment centers of gravity,
+        accounting for varying density ratios and spacing between segments.
+
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            A 1D array of shape (3,) representing the [x, y, z] coordinates
+            of the center of gravity [m]. Origin is at the port of the grain
+            (closest to nozzle), with positive x pointing toward bulkhead.
+
+        Raises:
+            ValueError: If no segments are found in the grain.
+        """
+        if not self.segments:
             raise ValueError("No segments found, cannot compute CoG.")
 
-        # Stack into shape (N, 3) and sum along axis=0 => guaranteed shape (3,)
+        weighted_cogs = []
+        # Iterate segments in reverse order (last added is closest to port)
+        axial_position = 0.0
+
+        for segment in reversed(self.segments):
+            # Segment's local CoG, relative to its own port
+            local_cog = segment.get_center_of_gravity(web_distance=web_distance)
+
+            # Global CoG position from grain's port
+            global_cog = local_cog.copy()
+            global_cog[0] = axial_position + local_cog[0]
+
+            mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
+            weighted_cogs.append(global_cog * mass)
+
+            # Move to next segment
+            axial_position += segment.length + self.spacing
+
         total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
             axis=0, dtype=np.float64
         )
+        volumes = np.asarray(
+            [seg.get_volume(web_distance) for seg in self.segments], dtype=np.float64
+        )
+        density_ratios = np.asarray(
+            [seg.density_ratio for seg in self.segments], dtype=np.float64
+        )
+        total_mass_normalized = float(np.sum(volumes * density_ratios))
 
-        propellant_vol = self.get_propellant_volume(web_distance=web_distance)
-
-        return (total_weighted_cogs / propellant_vol).astype(np.float64)
+        return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
 
     def get_burn_area(self, web_distance: float) -> float:
         """
