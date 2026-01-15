@@ -68,6 +68,8 @@ def main():
         dry_mass=21.013,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
+        nozzle_exit_to_grain_port_distance=0.01,
+        center_of_gravity_coordinate=(0.5, 0.0, 0.0),
     )
 
     motor = motors.SolidMotor(

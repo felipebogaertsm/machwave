@@ -65,12 +65,26 @@ class BatesSegment(GrainSegment2D):
         """
         return 1e3 * 0.5 * (3 * self.outer_diameter + self.core_diameter)
 
-    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
+    def get_center_of_gravity(
+        self, web_distance: float = 0.0
+    ) -> np.typing.NDArray[np.float64]:
         """
-        BATES is a symmetrical 2D geometry, so the center of gravity is always
-        at the middle of the segment along the axial (length) direction.
+        Calculate the center of gravity of the BATES grain segment.
+
+        BATES is a symmetrical 2D geometry that burns radially. Due to its
+        cylindrical symmetry, the center of gravity remains constant at the
+        geometric center regardless of web distance burned.
+
+        Args:
+            web_distance: Web distance traveled (unused for BATES due to symmetry),
+                         in meters. Included for API consistency.
 
         Returns:
-            Center of gravity in 3D space [x, y, z].
+            Center of gravity in 3D space [x, y, z], in meters, measured from
+            the aft end (port, closest to nozzle). Always returns [length/2, 0, 0]
+            for symmetric BATES grains.
         """
+        # For symmetric BATES grains, CoG doesn't change with burn
+        # The grain burns radially inward, maintaining axial symmetry
+        # CoG is at geometric center, which is length/2 from the aft end (port)
         return np.array([self.length / 2, 0.0, 0.0], dtype=np.float64)

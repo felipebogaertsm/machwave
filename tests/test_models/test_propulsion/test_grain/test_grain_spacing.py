@@ -125,7 +125,6 @@ class TestGrainSpacing:
         expected_length = 2 * 0.150 + 1 * spacing
         assert grain.total_length == pytest.approx(expected_length)
 
-    @pytest.mark.skip(reason="Center of gravity calculation not yet implemented.")
     def test_spacing_affects_cog_calculation(self):
         """Test that spacing is properly used in center of gravity calculations."""
         from machwave.models.propulsion.grain.geometries.bates import BatesSegment
