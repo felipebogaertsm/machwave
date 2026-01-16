@@ -30,8 +30,7 @@ def timing(f: F) -> F:
 
 def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
     """
-    Ensure a correction-factor routine returns a single number in
-    [lower, upper].
+    Ensure a correction-factor routine returns a single number in [lower, upper].
 
     Args:
         lower: Inclusive lower bound (default 0.0).
@@ -71,8 +70,8 @@ def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
 
 def warn_if_outside_range(lower: float, upper: float) -> typing.Callable:
     """
-    Emit a warning if the decorated function's return value is outside
-    the specified range.
+    Emit a warning if the decorated function's return value is outside the specified
+    range.
 
     Args:
         lower: The inclusive lower bound.

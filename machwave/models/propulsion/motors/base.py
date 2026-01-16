@@ -3,7 +3,7 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-from machwave.core.flow.isentropic import get_thrust_from_cf
+from machwave.core.flow.isentropic import get_thrust_from_thrust_coefficient
 from machwave.models.propulsion.propellants import Propellant
 from machwave.models.propulsion.thrust_chamber import ThrustChamber
 
@@ -119,7 +119,7 @@ class Motor(Generic[P, T], ABC):
         Returns:
             Instantaneous thrust, in Newtons
         """
-        return get_thrust_from_cf(
+        return get_thrust_from_thrust_coefficient(
             cf,
             chamber_pressure,
             self.thrust_chamber.nozzle.get_throat_area(),

@@ -50,7 +50,7 @@ def compute_chamber_pressure_mass_balance_srm(
         tuple[float]: Derivative of chamber pressure with respect to time.
 
     """
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix=k)
+    critical_pressure_ratio = get_critical_pressure_ratio(k=k)
     Pr = Pe / P0
 
     if Pr <= critical_pressure_ratio:  # choked

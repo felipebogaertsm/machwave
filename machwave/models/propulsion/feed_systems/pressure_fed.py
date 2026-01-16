@@ -69,11 +69,11 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         oxidizer_density = self.oxidizer_tank.get_density()
 
         return mass_flow_orifice(
-            C_d=discharge_coefficient,
-            A=injector_area,
-            rho=oxidizer_density,
-            p_up=p_up,
-            p_down=p_down,
+            discharge_coefficient=discharge_coefficient,
+            area=injector_area,
+            density=oxidizer_density,
+            pressure_upstream=p_up,
+            pressure_downstream=p_down,
         )
 
     def get_mass_flow_fuel(
@@ -99,11 +99,11 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         fuel_density = self.fuel_tank.get_density()
 
         return mass_flow_orifice(
-            C_d=discharge_coefficient,
-            A=injector_area,
-            rho=fuel_density,
-            p_up=p_up,
-            p_down=p_down,
+            discharge_coefficient=discharge_coefficient,
+            area=injector_area,
+            density=fuel_density,
+            pressure_upstream=p_up,
+            pressure_downstream=p_down,
         )
 
     def get_oxidizer_tank_pressure(self) -> float:

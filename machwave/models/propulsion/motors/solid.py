@@ -107,13 +107,15 @@ class SolidMotor(
         Returns:
             Instanteneous thrust coefficient, adimensional
         """
-        self.cf_ideal, self.cf_real = isentropic.get_thrust_coefficients(
+        self.cf_ideal = isentropic.get_ideal_thrust_coefficient(
             chamber_pressure,
             exit_pressure,
             external_pressure,
             expansion_ratio,
             k_ex,
-            n_cf,
+        )
+        self.cf_real = isentropic.apply_thrust_coefficient_correction(
+            self.cf_ideal, n_cf
         )
         return self.cf_real
 

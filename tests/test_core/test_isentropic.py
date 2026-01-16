@@ -2,31 +2,32 @@ import numpy as np
 from pytest import approx
 
 from machwave.core.flow.isentropic import (
+    apply_thrust_coefficient_correction,
     get_critical_pressure_ratio,
     get_exit_mach,
     get_exit_pressure,
     get_expansion_ratio,
-    get_opt_expansion_ratio,
+    get_ideal_thrust_coefficient,
+    get_optimal_expansion_ratio,
     get_specific_impulse,
-    get_thrust_coefficients,
-    get_thrust_from_cf,
+    get_thrust_from_thrust_coefficient,
     get_total_impulse,
     is_flow_choked,
 )
 
 
 def test_get_critical_pressure_ratio():
-    k_mix = 1.4
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix)
+    k = 1.4
+    critical_pressure_ratio = get_critical_pressure_ratio(k)
 
     assert critical_pressure_ratio == approx(0.528282)
 
 
-def test_get_opt_expansion_ratio():
+def test_get_optimal_expansion_ratio():
     k = 1.15
     P_0 = 6.4e6
     P_ext = 1e5
-    exp_opt = get_opt_expansion_ratio(k, P_0, P_ext)
+    exp_opt = get_optimal_expansion_ratio(k, P_0, P_ext)
 
     assert exp_opt == approx(9.37, rel=1e-2)
 
@@ -48,24 +49,25 @@ def test_get_exit_pressure():
     assert P_exit == approx(71545.88, rel=1e-2)
 
 
-def test_get_thrust_coefficients():
+def test_get_thrust_coefficient():
     P_0 = 7e6
     P_exit = 1.2e5
     P_external = 1e5
     E = 8
     k = 1.4
     n_cf = 0.8
-    Cf, Cf_ideal = get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf)
+    Cf_ideal = get_ideal_thrust_coefficient(P_0, P_exit, P_external, E, k)
+    Cf = apply_thrust_coefficient_correction(Cf_ideal, n_cf)
 
     assert Cf == approx(1.219605)
     assert Cf_ideal == approx(1.524507)
 
 
-def test_get_thrust_from_cf():
+def test_get_thrust_from_thrust_coefficient():
     C_f = 1.6
     P_0 = 7e6
     nozzle_throat_area = 0.01
-    thrust = get_thrust_from_cf(C_f, P_0, nozzle_throat_area)
+    thrust = get_thrust_from_thrust_coefficient(C_f, P_0, nozzle_throat_area)
 
     assert thrust == approx(112000, rel=1e-2)
 

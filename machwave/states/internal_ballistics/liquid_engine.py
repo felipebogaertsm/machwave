@@ -2,10 +2,11 @@ import numpy as np
 
 from machwave.core.des import compute_chamber_pressure_mass_balance_lre
 from machwave.core.flow.isentropic import (
+    apply_thrust_coefficient_correction,
     get_critical_pressure_ratio,
     get_exit_pressure,
-    get_thrust_coefficients,
-    get_thrust_from_cf,
+    get_ideal_thrust_coefficient,
+    get_thrust_from_thrust_coefficient,
     is_flow_choked,
 )
 from machwave.core.mathematics.rk4 import rk4th_ode_solver
@@ -182,17 +183,18 @@ class LiquidEngineState(MotorState):
         P_ext: float,
     ) -> tuple[float, float]:
         assert self.motor.propellant.properties is not None
-        return get_thrust_coefficients(
+        cf_ideal = get_ideal_thrust_coefficient(
             self.P_0[-1],
             exit_pressure,
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             self.motor.propellant.properties.gamma_exhaust,
-            self.n_cf[-1],
         )
+        cf = apply_thrust_coefficient_correction(cf_ideal, self.n_cf[-1])
+        return cf, cf_ideal
 
     def _append_thrust(self, cf: float, cf_ideal: float) -> None:
-        thrust_val = get_thrust_from_cf(
+        thrust_val = get_thrust_from_thrust_coefficient(
             cf,
             self.P_0[-1],
             self.motor.thrust_chamber.nozzle.get_throat_area(),

@@ -180,17 +180,19 @@ class SolidMotorState(ib_base.MotorState):
         self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
         self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
 
-        cf, cf_ideal = isentropic.get_thrust_coefficients(
+        cf_ideal = isentropic.get_ideal_thrust_coefficient(
             P0,
             self.P_exit[-1],
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             props.gamma_exhaust,
-            overall_efficiency,
+        )
+        cf = isentropic.apply_thrust_coefficient_correction(
+            cf_ideal, overall_efficiency
         )
         self.C_f = np.append(self.C_f, cf)
         self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
-        thrust = isentropic.get_thrust_from_cf(
+        thrust = isentropic.get_thrust_from_thrust_coefficient(
             cf, P0, self.motor.thrust_chamber.nozzle.get_throat_area()
         )
         self.thrust = np.append(self.thrust, thrust)
