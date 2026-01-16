@@ -25,7 +25,7 @@ def timing(f: F) -> F:
         print(f"\nExecution time: {end_time - start_time:.4f} seconds")
         return result
 
-    return wrapper
+    return typing.cast(F, wrapper)
 
 
 def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
