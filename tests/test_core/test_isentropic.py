@@ -1,4 +1,3 @@
-import numpy as np
 from pytest import approx
 
 from machwave.core.flow.isentropic import (
@@ -6,7 +5,6 @@ from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_mach,
     get_exit_pressure,
-    get_expansion_ratio,
     get_ideal_thrust_coefficient,
     get_optimal_expansion_ratio,
     get_specific_impulse,
@@ -99,13 +97,3 @@ def test_get_specific_impulse():
     initial_propellant_mass = 100
     specific_impulse = get_specific_impulse(total_impulse, initial_propellant_mass)
     assert specific_impulse == approx(2.542, rel=1e-2)
-
-
-def test_get_expansion_ratio():
-    P_e = np.array([5000, 6000])
-    P_0 = np.array([100000, 150000])
-    k = 1.4
-    critical_pressure_ratio = 0.5
-    expansion_ratio = get_expansion_ratio(P_e, P_0, k, critical_pressure_ratio)
-
-    assert expansion_ratio == approx(3.11, rel=1e-2)

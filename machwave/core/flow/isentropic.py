@@ -1,6 +1,6 @@
 import numpy as np
-import scipy.optimize
 import scipy.constants
+import scipy.optimize
 
 
 def get_critical_pressure_ratio(k: float) -> float:
@@ -221,39 +221,3 @@ def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -
         The specific impulse [s].
     """
     return total_impulse / initial_propellant_mass / scipy.constants.g
-
-
-def get_expansion_ratio(
-    atmospheric_pressure: np.ndarray,
-    chamber_pressure: np.ndarray,
-    k: float,
-    critical_pressure_ratio: float,
-) -> float:
-    """
-    Calculates the mean expansion ratio based on the pressure ratios.
-
-    Args:
-        atmospheric_pressure (np.ndarray): The pressure ratios.
-        chamber_pressure (np.ndarray): The chamber stagnation pressures.
-        k (float): The isentropic exponent.
-        critical_pressure_ratio (float): The critical pressure ratio.
-
-    Returns:
-        float: The mean expansion ratio.
-
-    Example:
-        expansion_ratio = get_expansion_ratio([5000, 6000], [100000, 150000], 1.4, 0.5)
-    """
-    expansion_ratio = np.zeros(np.size(chamber_pressure))
-
-    for i in range(np.size(chamber_pressure)):
-        if atmospheric_pressure[i] / chamber_pressure[i] <= critical_pressure_ratio:
-            pressure_ratio = atmospheric_pressure[i] / chamber_pressure[i]
-            expansion_ratio[i] = (
-                ((k + 1) / 2) ** (1 / (k - 1))
-                * pressure_ratio ** (1 / k)
-                * ((k + 1) / (k - 1) * (1 - pressure_ratio ** ((k - 1) / k))) ** 0.5
-            ) ** -1
-        else:
-            expansion_ratio[i] = 1
-    return np.mean(expansion_ratio)
