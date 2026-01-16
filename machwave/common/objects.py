@@ -1,15 +1,9 @@
-"""Generic utility functions for object introspection and manipulation."""
-
-from typing import Any
+import typing
 
 
-def get_object_dict(obj: Any) -> dict[str, Any]:
+def get_object_dict(obj: typing.Any) -> dict[str, typing.Any]:
     """
     Extract the attribute dictionary from an object.
-
-    Attempts to retrieve the object's __dict__ using vars(). If the object
-    doesn't support __dict__ (e.g., built-in types, slotted classes without
-    __dict__), returns an empty dictionary.
 
     Args:
         obj: Any Python object to inspect.
@@ -25,8 +19,6 @@ def get_object_dict(obj: Any) -> dict[str, Any]:
         ...         self.y = 2
         >>> get_object_dict(Example())
         {'x': 1, 'y': 2}
-        >>> get_object_dict(42)
-        {}
     """
     try:
         return vars(obj)

@@ -6,35 +6,6 @@ import warnings
 F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
-def validate_assertions(
-    exception: typing.Type[Exception],
-) -> typing.Callable[[typing.Callable[..., None]], typing.Callable[..., None]]:
-    """
-    Decorator that validates assertions in a function and raises a specified
-    exception if an assertion fails.
-
-    Args:
-        exception: The exception class to raise if an assertion fails.
-
-    Returns:
-        The decorated function.
-    """
-
-    def decorator(function: typing.Callable[..., None]) -> typing.Callable[..., None]:
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs) -> None:
-            try:
-                function(*args, **kwargs)
-            except AssertionError as e:
-                print(e)
-                print("\n\n\n")
-                raise exception("Error") from e
-
-        return wrapper
-
-    return decorator
-
-
 def timing(f: F) -> F:
     """
     Decorator to print the execution time of a function.
@@ -47,14 +18,14 @@ def timing(f: F) -> F:
     """
 
     @functools.wraps(f)
-    def wrap(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+    def wrapper(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
         start_time = time.time()
         result = f(*args, **kwargs)
         end_time = time.time()
         print(f"\nExecution time: {end_time - start_time:.4f} seconds")
         return result
 
-    return wrap
+    return wrapper
 
 
 def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
@@ -98,26 +69,29 @@ def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
     return decorator
 
 
-def warn_if_outside_range(lower: float, upper: float):
+def warn_if_outside_range(lower: float, upper: float) -> typing.Callable:
     """
-    Throws a warning if the decorated function's return value is outside
+    Emit a warning if the decorated function's return value is outside
     the specified range.
 
     Args:
         lower: The inclusive lower bound.
         upper: The inclusive upper bound.
+
     Returns:
         The decorated function.
     """
 
-    def _decorator(f):
-        @functools.wraps(f)
-        def _wrapper(*args, **kw):
-            value = f(*args, **kw)
+    def decorator(func: typing.Callable) -> typing.Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            value = func(*args, **kwargs)
             if not lower <= value <= upper:
-                warnings.warn(f"{f.__name__} result {value} outside [{lower}, {upper}]")
+                warnings.warn(
+                    f"{func.__name__} result {value} outside [{lower}, {upper}]"
+                )
             return value
 
-        return _wrapper
+        return wrapper
 
-    return _decorator
+    return decorator

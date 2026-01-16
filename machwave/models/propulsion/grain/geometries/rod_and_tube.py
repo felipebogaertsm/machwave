@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 
@@ -25,13 +24,23 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.rod_outer_diameter > 0
-        assert self.tube_inner_diameter > self.rod_outer_diameter
-        assert self.tube_inner_diameter < self.outer_diameter
+        if not self.rod_outer_diameter > 0:
+            raise GrainGeometryError(
+                f"Rod outer diameter must be positive, got {self.rod_outer_diameter}"
+            )
+        if not self.tube_inner_diameter > self.rod_outer_diameter:
+            raise GrainGeometryError(
+                f"Tube inner diameter ({self.tube_inner_diameter}) must be greater than "
+                f"rod outer diameter ({self.rod_outer_diameter})"
+            )
+        if not self.tube_inner_diameter < self.outer_diameter:
+            raise GrainGeometryError(
+                f"Tube inner diameter ({self.tube_inner_diameter}) must be less than "
+                f"outer diameter ({self.outer_diameter})"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """

@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment3D
 
@@ -25,15 +24,27 @@ class ConicalGrainSegment(FMMGrainSegment3D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.upper_core_diameter > 0
-        assert self.upper_core_diameter < self.outer_diameter
-
-        assert self.lower_core_diameter > 0
-        assert self.lower_core_diameter < self.outer_diameter
+        if not self.upper_core_diameter > 0:
+            raise GrainGeometryError(
+                f"Upper core diameter must be positive, got {self.upper_core_diameter}"
+            )
+        if not self.upper_core_diameter < self.outer_diameter:
+            raise GrainGeometryError(
+                f"Upper core diameter ({self.upper_core_diameter}) must be less than "
+                f"outer diameter ({self.outer_diameter})"
+            )
+        if not self.lower_core_diameter > 0:
+            raise GrainGeometryError(
+                f"Lower core diameter must be positive, got {self.lower_core_diameter}"
+            )
+        if not self.lower_core_diameter < self.outer_diameter:
+            raise GrainGeometryError(
+                f"Lower core diameter ({self.lower_core_diameter}) must be less than "
+                f"outer diameter ({self.outer_diameter})"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         map_x, map_y, map_z = self.get_maps()

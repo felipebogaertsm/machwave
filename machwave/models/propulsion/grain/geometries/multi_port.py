@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 
@@ -27,15 +26,28 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.port_diameter > 0
-        assert self.port_level_count > 0
-        assert self.port_level_count * self.port_diameter < self.outer_diameter / 2
-
-        assert self.port_radial_count > 0
+        if not self.port_diameter > 0:
+            raise GrainGeometryError(
+                f"Port diameter must be positive, got {self.port_diameter}"
+            )
+        if not self.port_level_count > 0:
+            raise GrainGeometryError(
+                f"Port level count must be positive, got {self.port_level_count}"
+            )
+        max_port_size = self.outer_diameter / 2
+        total_port_size = self.port_level_count * self.port_diameter
+        if not total_port_size < max_port_size:
+            raise GrainGeometryError(
+                f"Total port size ({total_port_size}) must be less than "
+                f"half the outer diameter ({max_port_size})"
+            )
+        if not self.port_radial_count > 0:
+            raise GrainGeometryError(
+                f"Port radial count must be positive, got {self.port_radial_count}"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """

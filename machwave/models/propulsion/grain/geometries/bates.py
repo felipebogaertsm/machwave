@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.core.mathematics.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
@@ -25,12 +24,18 @@ class BatesSegment(GrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.outer_diameter > self.core_diameter
-        assert self.core_diameter > 0
+        if not self.outer_diameter > self.core_diameter:
+            raise GrainGeometryError(
+                f"Outer diameter ({self.outer_diameter}) must be greater than "
+                f"core diameter ({self.core_diameter})"
+            )
+        if not self.core_diameter > 0:
+            raise GrainGeometryError(
+                f"Core diameter must be positive, got {self.core_diameter}"
+            )
 
     def get_core_diameter(self, web_distance: float) -> float:
         return self.core_diameter + 2 * web_distance
