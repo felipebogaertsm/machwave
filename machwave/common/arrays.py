@@ -3,10 +3,10 @@ import numpy.typing as npt
 
 
 def replace_array_values(
-    arr: npt.NDArray[np.float_ | np.int_],
+    arr: npt.NDArray[np.number],
     to_replace: int | float,
     value: int | float,
-) -> npt.NDArray[np.float_ | np.int_]:
+) -> npt.NDArray[np.number]:
     """
     Replaces values in a NumPy array with another value.
 
