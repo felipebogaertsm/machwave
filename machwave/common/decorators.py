@@ -1,15 +1,15 @@
 import functools
 import time
+import typing
 import warnings
-from typing import Any, Callable, Type, TypeVar
 
-F = TypeVar("F", bound=Callable[..., Any])
+F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 Number = int | float
 
 
 def validate_assertions(
-    exception: Type[Exception],
-) -> Callable[[Callable[..., None]], Callable[..., None]]:
+    exception: typing.Type[Exception],
+) -> typing.Callable[[typing.Callable[..., None]], typing.Callable[..., None]]:
     """
     Decorator that validates assertions in a function and raises a specified
     exception if an assertion fails.
@@ -21,7 +21,7 @@ def validate_assertions(
         Callable: The decorated function.
     """
 
-    def decorator(function: Callable[..., None]) -> Callable[..., None]:
+    def decorator(function: typing.Callable[..., None]) -> typing.Callable[..., None]:
         @functools.wraps(function)
         def wrapper(*args, **kwargs) -> None:
             try:
@@ -48,7 +48,7 @@ def timing(f: F) -> F:
     """
 
     @functools.wraps(f)
-    def wrap(*args: Any, **kwargs: Any) -> Any:
+    def wrap(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
         start_time = time.time()
         result = f(*args, **kwargs)
         end_time = time.time()
@@ -58,7 +58,7 @@ def timing(f: F) -> F:
     return wrap  # type: ignore
 
 
-def check_bounds(lower: Number = 0.0, upper: Number = 1.0) -> Callable:
+def check_bounds(lower: Number = 0.0, upper: Number = 1.0) -> typing.Callable:
     """
     Ensure a correction-factor routine returns a single number in
     [lower, upper].
@@ -74,7 +74,7 @@ def check_bounds(lower: Number = 0.0, upper: Number = 1.0) -> Callable:
     if lower > upper:
         raise ValueError("lower bound must be ≤ upper bound")
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: typing.Callable) -> typing.Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
