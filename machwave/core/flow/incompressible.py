@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def mass_flow_orifice(
+def get_mass_flow_orifice(
     discharge_coefficient: float,
     area: float,
     density: float,

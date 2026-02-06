@@ -1,4 +1,4 @@
-from machwave.core.flow.incompressible import mass_flow_orifice
+from machwave.core.flow.incompressible import get_mass_flow_orifice
 from machwave.models.propulsion.feed_systems.tanks import Tank
 
 from .base import FeedSystem
@@ -54,7 +54,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         injector_area: float,
     ) -> float:
         """
-        Compute the current oxidizer mass flow rate via mass_flow_orifice().
+        Compute the current oxidizer mass flow rate via get_mass_flow_orifice().
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -68,7 +68,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         p_down = chamber_pressure
         oxidizer_density = self.oxidizer_tank.get_density()
 
-        return mass_flow_orifice(
+        return get_mass_flow_orifice(
             discharge_coefficient=discharge_coefficient,
             area=injector_area,
             density=oxidizer_density,
@@ -83,7 +83,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         injector_area: float,
     ) -> float:
         """
-        Compute the current fuel mass flow rate via mass_flow_orifice().
+        Compute the current fuel mass flow rate via get_mass_flow_orifice().
         The pressure upstream will be the same as the oxidizer tank pressure, since this is a model for a stacked tank.
 
         Args:
@@ -98,7 +98,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         p_down = chamber_pressure
         fuel_density = self.fuel_tank.get_density()
 
-        return mass_flow_orifice(
+        return get_mass_flow_orifice(
             discharge_coefficient=discharge_coefficient,
             area=injector_area,
             density=fuel_density,
