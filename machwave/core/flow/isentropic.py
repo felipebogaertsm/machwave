@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import scipy.constants
 import scipy.optimize
@@ -40,30 +42,50 @@ def get_optimal_expansion_ratio(
     ) ** -1
 
 
-def get_exit_mach(k: float, expansion_ratio: float, initial_guess: float = 10) -> float:
+def get_expansion_ratio_from_mach(mach: float, k: float) -> float:
+    """
+    Calculates the expansion ratio from Mach number.
+
+    Args:
+        mach: Mach number.
+        k: Isentropic exponent.
+
+    Returns:
+        The expansion ratio.
+    """
+    term1 = (2 / (k + 1)) * (1 + 0.5 * (k - 1) * mach**2)
+    term2 = (k + 1) / (2 * (k - 1))
+    return (1 / mach) * (term1**term2)
+
+
+def get_exit_mach(k: float, expansion_ratio: float) -> float:
     """
     Calculates the exit Mach number for a DeLaval nozzle.
-
-    Uses a numerical solver to find the root.
 
     Args:
         k: The isentropic exponent.
         expansion_ratio: The expansion ratio.
-        initial_guess: Initial guess for the exit Mach number.
 
     Returns:
         The exit Mach number.
+
+    Raises:
+        ValueError: If the solver fails to converge.
     """
-    exit_mach_no = scipy.optimize.fsolve(
-        lambda x: (
-            ((1 + 0.5 * (k - 1) * x**2) / (1 + 0.5 * (k - 1)))
-            ** ((k + 1) / (2 * (k - 1)))
+    try:
+        exit_mach = cast(
+            float,
+            scipy.optimize.brentq(
+                lambda m: get_expansion_ratio_from_mach(m, k) - expansion_ratio,
+                a=1.001,  # Just above sonic
+                b=20.0,  # High supersonic
+            ),
         )
-        / x
-        - expansion_ratio,
-        [initial_guess],
-    )
-    return exit_mach_no[0]
+        return exit_mach
+    except ValueError as e:
+        raise ValueError(
+            f"Failed to converge for expansion_ratio={expansion_ratio}, k={k}"
+        ) from e
 
 
 def get_exit_pressure(

@@ -5,6 +5,7 @@ from machwave.core.flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_mach,
     get_exit_pressure,
+    get_expansion_ratio_from_mach,
     get_ideal_thrust_coefficient,
     get_optimal_expansion_ratio,
     get_specific_impulse,
@@ -28,6 +29,14 @@ def test_get_optimal_expansion_ratio():
     exp_opt = get_optimal_expansion_ratio(k, P_0, P_ext)
 
     assert exp_opt == approx(9.37, rel=1e-2)
+
+
+def test_get_expansion_ratio_from_mach():
+    k = 1.4
+    mach = 3.677229
+    expansion_ratio = get_expansion_ratio_from_mach(mach, k)
+
+    assert expansion_ratio == approx(8, rel=1e-4)
 
 
 def test_get_exit_mach():
