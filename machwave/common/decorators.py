@@ -30,7 +30,7 @@ def timing(f: F) -> F:
 
 def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
     """
-    Ensure a correction-factor routine returns a single number in [lower, upper].
+    Ensure a correction factor routine returns a single number in [lower, upper].
 
     Args:
         lower: Inclusive lower bound (default 0.0).

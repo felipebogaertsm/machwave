@@ -9,8 +9,8 @@ def get_object_dict(obj: typing.Any) -> dict[str, typing.Any]:
         obj: Any Python object to inspect.
 
     Returns:
-        A dictionary mapping attribute names to their values, or an empty
-        dictionary if the object has no __dict__.
+        A dictionary mapping attribute names to their values, or an empty dictionary
+        if the object has no __dict__.
 
     Examples:
         >>> class Example:
