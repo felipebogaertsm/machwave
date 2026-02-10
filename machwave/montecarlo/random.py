@@ -8,13 +8,11 @@ import numpy as np
 
 @dataclass(slots=True, frozen=True)
 class RandomGenerator(ABC):
-    """
-    Abstract class for a random number generator.
+    """Abstract class for a random number generator.
 
     Attributes:
-        value (float): The nominal or mean value of the parameter.
-        spread (float | tuple[float, float]): The spread of the
-            parameter (default: 0).
+        value: Nominal or mean value of the parameter.
+        spread: Spread of the parameter (default: 0).
 
     Methods:
         get_value(): Gets a random value based on a probability
@@ -128,12 +126,12 @@ _GENERATOR_REGISTRY: dict[str, FactoryFn] = {
 
 
 def register_random_generator(name: str, ctor: FactoryFn) -> None:
-    """
-    Adds a new random generator to the registry at runtime.
+    """Add a new random generator to the registry at runtime.
 
     Args:
-        name (str): Name of the generator (case-insensitive).
-        ctor (FactoryFn): Constructor function for the generator.
+        name: Name of the generator (case-insensitive).
+        ctor: Constructor function for the generator.
+
     Raises:
         ValueError: If the name is already registered.
     """
@@ -148,17 +146,16 @@ def get_random_generator(
     *args,
     **kwargs,
 ) -> RandomGenerator:
-    """
-    Returns a random number generator based on the specified
-    probability distribution.
+    """Return a random number generator based on probability distribution.
 
     Args:
-        probability_distribution (str): Name of the probability
-            distribution (case-insensitive).
+        probability_distribution: Name of the probability distribution
+            (case-insensitive).
         *args: Positional arguments for the generator constructor.
         **kwargs: Keyword arguments for the generator constructor.
+
     Returns:
-        RandomGenerator: An instance of the specified random generator.
+        Instance of the specified random generator.
     """
     try:
         ctor = _GENERATOR_REGISTRY[probability_distribution.lower()]

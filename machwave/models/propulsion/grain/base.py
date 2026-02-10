@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
-
 
 class GrainGeometryError(Exception):
     def __init__(self, message: str) -> None:
@@ -98,7 +96,6 @@ class GrainSegment(ABC):
         """
         pass
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         """
         Validates grain geometry.
@@ -106,10 +103,20 @@ class GrainSegment(ABC):
 
         :rtype: None
         """
-        assert self.inhibited_ends in [0, 1, 2]
-        assert self.length > 0
-        assert self.outer_diameter > 0
-        assert 0.0 <= self.density_ratio <= 1.0
+        if self.inhibited_ends not in [0, 1, 2]:
+            raise GrainGeometryError(
+                f"Inhibited ends must be 0, 1, or 2, got {self.inhibited_ends}"
+            )
+        if not self.length > 0:
+            raise GrainGeometryError(f"Length must be positive, got {self.length}")
+        if not self.outer_diameter > 0:
+            raise GrainGeometryError(
+                f"Outer diameter must be positive, got {self.outer_diameter}"
+            )
+        if not (0.0 <= self.density_ratio <= 1.0):
+            raise GrainGeometryError(
+                f"Density ratio must be between 0.0 and 1.0, got {self.density_ratio}"
+            )
 
 
 class GrainSegment2D(GrainSegment, ABC):

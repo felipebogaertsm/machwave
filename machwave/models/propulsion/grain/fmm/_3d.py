@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
-from machwave.core.mathematics.geometric import (
+from machwave.core.geometric import (
     get_circle_area,
     get_contours,
     get_length,

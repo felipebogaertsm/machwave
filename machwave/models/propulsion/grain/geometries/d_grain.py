@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 
@@ -23,12 +22,19 @@ class DGrainSegment(FMMGrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.slot_offset >= 0
-        assert self.slot_offset < self.outer_diameter / 2
+        if not self.slot_offset >= 0:
+            raise GrainGeometryError(
+                f"Slot offset must be non-negative, got {self.slot_offset}"
+            )
+        max_slot_offset = self.outer_diameter / 2
+        if not self.slot_offset < max_slot_offset:
+            raise GrainGeometryError(
+                f"Slot offset ({self.slot_offset}) must be less than "
+                f"half the outer diameter ({max_slot_offset})"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         slot_offset_normalized = self.normalize(self.slot_offset)

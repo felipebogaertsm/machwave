@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 
@@ -27,15 +26,29 @@ class StarGrainSegment(FMMGrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.number_of_points > 0
-        assert self.number_of_points < 12
-        assert isinstance(self.number_of_points, int)
-        assert self.point_length > 0
-        assert self.point_width > 0
+        if not self.number_of_points > 0:
+            raise GrainGeometryError(
+                f"Number of points must be positive, got {self.number_of_points}"
+            )
+        if not self.number_of_points < 12:
+            raise GrainGeometryError(
+                f"Number of points must be less than 12, got {self.number_of_points}"
+            )
+        if not isinstance(self.number_of_points, int):
+            raise GrainGeometryError(
+                f"Number of points must be an integer, got {type(self.number_of_points).__name__}"
+            )
+        if not self.point_length > 0:
+            raise GrainGeometryError(
+                f"Point length must be positive, got {self.point_length}"
+            )
+        if not self.point_width > 0:
+            raise GrainGeometryError(
+                f"Point width must be positive, got {self.point_width}"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """

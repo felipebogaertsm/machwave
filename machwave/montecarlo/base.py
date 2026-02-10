@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.stats as scipy_stats
 
-from machwave.common.generic import obtain_attributes_from_object
+from machwave.common.objects import get_object_dict
 from machwave.montecarlo import random
 from machwave.services.plots import montecarlo as plot_service
 from machwave.simulations import Simulation
@@ -101,7 +101,7 @@ class MonteCarloSimulation:
         """
         parameter_uuid = uuid.uuid4()
         self._object_store[parameter_uuid] = parameter
-        search_tree = {parameter_uuid: obtain_attributes_from_object(parameter)}
+        search_tree = {parameter_uuid: get_object_dict(parameter)}
 
         i = 0
         while search_tree and i < SEARCH_TREE_DEPTH_LIMIT:
@@ -119,15 +119,11 @@ class MonteCarloSimulation:
                             if isinstance(item, dict):
                                 continue
                             self._object_store[object_uuid] = item
-                            new_search_tree[object_uuid] = (
-                                obtain_attributes_from_object(item)
-                            )
+                            new_search_tree[object_uuid] = get_object_dict(item)
                     else:
                         object_uuid = uuid.uuid4()
                         self._object_store[object_uuid] = attr
-                        new_search_tree[object_uuid] = obtain_attributes_from_object(
-                            attr
-                        )
+                        new_search_tree[object_uuid] = get_object_dict(attr)
 
             search_tree = new_search_tree
 

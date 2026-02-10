@@ -1,6 +1,5 @@
 import numpy as np
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment2D
 
@@ -31,18 +30,45 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
             density_ratio=density_ratio,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         super().validate()
 
-        assert self.number_of_ports > 0
-        assert self.number_of_ports < 12
-        assert self.number_of_ports % 2 == 0
-        assert isinstance(self.number_of_ports, int)
-        assert self.port_inner_diameter > self.core_diameter
-        assert self.port_outer_diameter > self.port_inner_diameter
-        assert self.port_angular_width > 0
-        assert self.port_angular_width < 360 / self.number_of_ports
+        if not self.number_of_ports > 0:
+            raise GrainGeometryError(
+                f"Number of ports must be positive, got {self.number_of_ports}"
+            )
+        if not self.number_of_ports < 12:
+            raise GrainGeometryError(
+                f"Number of ports must be less than 12, got {self.number_of_ports}"
+            )
+        if not self.number_of_ports % 2 == 0:
+            raise GrainGeometryError(
+                f"Number of ports must be even, got {self.number_of_ports}"
+            )
+        if not isinstance(self.number_of_ports, int):
+            raise GrainGeometryError(
+                f"Number of ports must be an integer, got {type(self.number_of_ports).__name__}"
+            )
+        if not self.port_inner_diameter > self.core_diameter:
+            raise GrainGeometryError(
+                f"Port inner diameter ({self.port_inner_diameter}) must be greater than "
+                f"core diameter ({self.core_diameter})"
+            )
+        if not self.port_outer_diameter > self.port_inner_diameter:
+            raise GrainGeometryError(
+                f"Port outer diameter ({self.port_outer_diameter}) must be greater than "
+                f"port inner diameter ({self.port_inner_diameter})"
+            )
+        if not self.port_angular_width > 0:
+            raise GrainGeometryError(
+                f"Port angular width must be positive, got {self.port_angular_width}"
+            )
+        max_angular_width = 360 / self.number_of_ports
+        if not self.port_angular_width < max_angular_width:
+            raise GrainGeometryError(
+                f"Port angular width ({self.port_angular_width}) must be less than "
+                f"{max_angular_width} (360 / {self.number_of_ports})"
+            )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """

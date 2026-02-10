@@ -1,7 +1,7 @@
 import numpy as np
 
-import machwave.core.flow.isentropic as isentropic
-import machwave.core.losses as losses
+import machwave.core.compressible_flow.delaval_nozzle as delaval_nozzle
+import machwave.core.compressible_flow.losses as losses
 import machwave.models.propulsion.grain as grain
 import machwave.models.propulsion.propellants as propellants
 import machwave.models.propulsion.thrust_chamber as thrust_chamber
@@ -107,13 +107,15 @@ class SolidMotor(
         Returns:
             Instanteneous thrust coefficient, adimensional
         """
-        self.cf_ideal, self.cf_real = isentropic.get_thrust_coefficients(
+        self.cf_ideal = delaval_nozzle.get_ideal_thrust_coefficient(
             chamber_pressure,
             exit_pressure,
             external_pressure,
             expansion_ratio,
             k_ex,
-            n_cf,
+        )
+        self.cf_real = delaval_nozzle.apply_thrust_coefficient_correction(
+            self.cf_ideal, n_cf
         )
         return self.cf_real
 

@@ -7,7 +7,9 @@ from textwrap import dedent
 
 import pandas as pd
 
-from machwave.core.losses import get_nozzle_divergent_percentage_loss
+from machwave.core.compressible_flow.losses import (
+    get_nozzle_divergent_percentage_loss,
+)
 
 DIVERGENT_ANGLES = (
     0.0,

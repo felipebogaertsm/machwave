@@ -1,34 +1,27 @@
-import numpy as np
 from pytest import approx
 
-from machwave.core.flow.isentropic import (
+from machwave.core.compressible_flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_mach,
     get_exit_pressure,
-    get_expansion_ratio,
-    get_opt_expansion_ratio,
-    get_specific_impulse,
-    get_thrust_coefficients,
-    get_thrust_from_cf,
-    get_total_impulse,
+    get_expansion_ratio_from_mach,
     is_flow_choked,
 )
 
 
 def test_get_critical_pressure_ratio():
-    k_mix = 1.4
-    critical_pressure_ratio = get_critical_pressure_ratio(k_mix)
+    k = 1.4
+    critical_pressure_ratio = get_critical_pressure_ratio(k)
 
     assert critical_pressure_ratio == approx(0.528282)
 
 
-def test_get_opt_expansion_ratio():
-    k = 1.15
-    P_0 = 6.4e6
-    P_ext = 1e5
-    exp_opt = get_opt_expansion_ratio(k, P_0, P_ext)
+def test_get_expansion_ratio_from_mach():
+    k = 1.4
+    mach = 3.677229
+    expansion_ratio = get_expansion_ratio_from_mach(mach, k)
 
-    assert exp_opt == approx(9.37, rel=1e-2)
+    assert expansion_ratio == approx(8, rel=1e-4)
 
 
 def test_get_exit_mach():
@@ -48,28 +41,6 @@ def test_get_exit_pressure():
     assert P_exit == approx(71545.88, rel=1e-2)
 
 
-def test_get_thrust_coefficients():
-    P_0 = 7e6
-    P_exit = 1.2e5
-    P_external = 1e5
-    E = 8
-    k = 1.4
-    n_cf = 0.8
-    Cf, Cf_ideal = get_thrust_coefficients(P_0, P_exit, P_external, E, k, n_cf)
-
-    assert Cf == approx(1.219605)
-    assert Cf_ideal == approx(1.524507)
-
-
-def test_get_thrust_from_cf():
-    C_f = 1.6
-    P_0 = 7e6
-    nozzle_throat_area = 0.01
-    thrust = get_thrust_from_cf(C_f, P_0, nozzle_throat_area)
-
-    assert thrust == approx(112000, rel=1e-2)
-
-
 def test_is_flow_choked():
     chamber_pressure = 7e6
     external_pressure = 1e5
@@ -83,27 +54,3 @@ def test_is_flow_choked():
 
     # Flow is NOT choked
     assert is_flow_choked(external_pressure * 1.1, external_pressure, 0.5) is False
-
-
-def test_get_total_impulse():
-    average_thrust = 1000
-    thrust_time = 2.5
-    total_impulse = get_total_impulse(average_thrust, thrust_time)
-    assert total_impulse == approx(2500)
-
-
-def test_get_specific_impulse():
-    total_impulse = 2500
-    initial_propellant_mass = 100
-    specific_impulse = get_specific_impulse(total_impulse, initial_propellant_mass)
-    assert specific_impulse == approx(2.542, rel=1e-2)
-
-
-def test_get_expansion_ratio():
-    P_e = np.array([5000, 6000])
-    P_0 = np.array([100000, 150000])
-    k = 1.4
-    critical_pressure_ratio = 0.5
-    expansion_ratio = get_expansion_ratio(P_e, P_0, k, critical_pressure_ratio)
-
-    assert expansion_ratio == approx(3.11, rel=1e-2)

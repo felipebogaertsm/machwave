@@ -7,17 +7,16 @@ from machwave.states.ballistics._1dof import Ballistic1DState
 
 
 class BallisticSimulationParameters(SimulationParameters):
-    """
-    Parameters for a ballistic simulation.
+    """Parameters for a ballistic simulation.
 
     Attributes:
-        thrust (np.ndarray): Array of thrust values.
-        motor_dry_mass (float): Dry mass of the motor.
-        initial_propellant_mass (float): Initial mass of the propellant.
-        time (np.ndarray): Array of time values.
-        d_t (float): Time step.
-        initial_elevation_amsl (float): Initial elevation above mean sea level.
-        rail_length (float): Length of the launch rail.
+        thrust: Array of thrust values.
+        motor_dry_mass: Dry mass of the motor.
+        initial_propellant_mass: Initial mass of the propellant.
+        time: Array of time values.
+        d_t: Time step.
+        initial_elevation_amsl: Initial elevation above mean sea level.
+        rail_length: Length of the launch rail.
     """
 
     def __init__(
@@ -40,15 +39,14 @@ class BallisticSimulationParameters(SimulationParameters):
 
 
 class BallisticSimulation(Simulation):
-    """
-    Ballistic simulation class.
+    """Ballistic simulation class.
 
     Attributes:
-        rocket (Rocket): The rocket object.
-        atmosphere (Atmosphere): The atmosphere object.
-        params (BallisticSimulationParameters): The simulation parameters.
-        t (np.ndarray): Array of time values.
-        ballistic_state (Ballistic1DState): The ballistic state object.
+        rocket: Rocket object.
+        atmosphere: Atmosphere object.
+        params: Simulation parameters.
+        t: Array of time values.
+        ballistic_state: Ballistic state object.
     """
 
     def __init__(
@@ -57,13 +55,12 @@ class BallisticSimulation(Simulation):
         atmosphere: Atmosphere,
         params: BallisticSimulationParameters,
     ) -> None:
-        """
-        Initializes the BallisticSimulation instance.
+        """Initialize the BallisticSimulation instance.
 
         Args:
-            rocket (Rocket): The rocket object.
-            atmosphere (Atmosphere): The atmosphere object.
-            params (BallisticSimulationParameters): The simulation parameters.
+            rocket: Rocket object.
+            atmosphere: Atmosphere object.
+            params: Simulation parameters.
         """
         super().__init__(params=params)
 
@@ -77,11 +74,10 @@ class BallisticSimulation(Simulation):
         self.ballistic_state = None
 
     def get_propellant_mass(self) -> np.ndarray:
-        """
-        Computes the propellant mass at each time step.
+        """Compute the propellant mass at each time step.
 
         Returns:
-            np.ndarray: Array of propellant mass values.
+            Array of propellant mass values.
         """
         initial_propellant_mass = self.params.initial_propellant_mass
         prop_mass = np.array([])

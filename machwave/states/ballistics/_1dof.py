@@ -1,7 +1,7 @@
 import numpy as np
 
-from machwave.core.des import compute_point_mass_trajectory
-from machwave.core.mathematics.rk4 import rk4th_ode_solver
+from machwave.core.equations import compute_point_mass_trajectory
+from machwave.core.solvers import rk4th_ode_solver
 from machwave.models.atmosphere import Atmosphere
 from machwave.models.rocket import Rocket
 from machwave.states.ballistics.base import BallisticState
@@ -19,16 +19,16 @@ class Ballistic1DState(BallisticState):
         initial_vehicle_mass: float,
         initial_elevation_amsl: float = 0,
     ) -> None:
-        """
-        Initialize the attributes for the ballistics state.
+        """Initialize the attributes for the ballistics state.
 
         Args:
-            rocket (Rocket): The rocket used for the operation.
-            atmosphere (Atmosphere): The atmospheric conditions.
-            rail_length (float): The length of the rail for launch.
-            motor_dry_mass (float): The dry mass of the motor.
-            initial_vehicle_mass (float): The initial mass of the vehicle.
-            initial_elevation_amsl (float, optional): The initial elevation above mean sea level (AMSL). Defaults to 0.
+            rocket: Rocket used for the operation.
+            atmosphere: Atmospheric conditions.
+            rail_length: Length of the rail for launch [m].
+            motor_dry_mass: Dry mass of the motor [kg].
+            initial_vehicle_mass: Initial mass of the vehicle [kg].
+            initial_elevation_amsl: Initial elevation above mean sea level
+                [m]. Defaults to 0.
         """
         self.rocket = rocket
         self.atmosphere = atmosphere
@@ -80,13 +80,12 @@ class Ballistic1DState(BallisticState):
         return self.t[np.argmax(self.v)]
 
     def run_timestep(self, propellant_mass: float, thrust: float, d_t: float) -> None:
-        """
-        Perform an iteration of the ballistics operation.
+        """Perform an iteration of the ballistics operation.
 
         Args:
-            propellant_mass (float): The mass of the propellant.
-            thrust (float): The thrust force.
-            d_t (float): The time step.
+            propellant_mass: Mass of the propellant [kg].
+            thrust: Thrust force [N].
+            d_t: Time step [s].
         """
         altitude = self.y[-1] + self.initial_elevation_amsl
 
