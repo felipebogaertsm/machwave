@@ -261,7 +261,7 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def klemmung(self) -> np.ndarray:
-        """Get the klemmung values.\"\"\"
+        """Get the klemmung values."""
         return (
             self.burn_area[self.burn_area > 0]
             / self.motor.thrust_chamber.nozzle.get_throat_area()
