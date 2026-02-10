@@ -3,7 +3,9 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-from machwave.core.flow.isentropic import get_thrust_from_thrust_coefficient
+from machwave.core.compressible_flow.thrust import (
+    get_thrust_from_thrust_coefficient,
+)
 from machwave.models.propulsion.propellants import Propellant
 from machwave.models.propulsion.thrust_chamber import ThrustChamber
 

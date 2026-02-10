@@ -8,22 +8,20 @@ def get_mass_flow_orifice(
     pressure_upstream: float,
     pressure_downstream: float,
 ) -> float:
-    """
-    Calculates the mass flow rate through an orifice under the assumption of
-    incompressible flow.
+    """Get mass flow rate through an orifice.
 
     Args:
         discharge_coefficient: Discharge coefficient.
-        area: Effective flow area of the orifice [m^2].
-        density: Density of the fluid [kg/m^3].
+        area: Effective flow area [m^2].
+        density: Fluid density [kg/m^3].
         pressure_upstream: Upstream pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
 
     Returns:
-        The mass flow rate through the orifice [kg/s].
+        Mass flow rate [kg/s].
 
     Raises:
-        ValueError: If the downstream pressure is greater than the upstream pressure.
+        ValueError: If downstream pressure exceeds upstream pressure.
     """
     delta_p = pressure_upstream - pressure_downstream
     if delta_p < 0:

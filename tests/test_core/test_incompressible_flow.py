@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core.flow.incompressible import get_mass_flow_orifice
+from machwave.core.incompressible_flow import get_mass_flow_orifice
 
 
 @pytest.mark.parametrize(

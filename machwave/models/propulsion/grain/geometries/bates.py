@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.core.mathematics.geometric import (
+from machwave.core.geometric import (
     get_circle_area,
     get_cylinder_surface_area,
 )

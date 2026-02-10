@@ -81,3 +81,77 @@ def test_convert_meter_to_micrometer(meters, expected_micrometres):
     assert conversions.convert_meter_to_micrometer(meters) == pytest.approx(
         expected_micrometres, rel=1e-12
     )
+
+
+@pytest.mark.parametrize(
+    "a_imperial, n, expected_a_metric",
+    [
+        (0.2, 0.35, 730.43),  # Typical APCP burn rate coefficient
+        (0.0, 0.5, 0.0),
+        (0.1, 0.3, 474.35),
+    ],
+)
+def test_convert_burn_rate_coefficient_to_metric(a_imperial, n, expected_a_metric):
+    assert conversions.convert_burn_rate_coefficient_to_metric(
+        a_imperial, n
+    ) == pytest.approx(expected_a_metric, rel=1e-2)
+
+
+@pytest.mark.parametrize(
+    "rankine, expected_kelvin",
+    [
+        (0.0, 0.0),
+        (491.67, 273.15),  # Water freezing point
+        (671.67, 373.15),  # Water boiling point
+        (1000.0, 555.56),
+    ],
+)
+def test_convert_rankine_to_kelvin(rankine, expected_kelvin):
+    assert conversions.convert_rankine_to_kelvin(rankine) == pytest.approx(
+        expected_kelvin, rel=1e-2
+    )
+
+
+@pytest.mark.parametrize(
+    "lbft3, expected_kgm3",
+    [
+        (0.0, 0.0),
+        (62.428, 1000.0),  # Water density
+        (1.0, 16.01846337),
+        (100.0, 1601.846337),
+    ],
+)
+def test_convert_lbft3_to_kgm3(lbft3, expected_kgm3):
+    assert conversions.convert_lbft3_to_kgm3(lbft3) == pytest.approx(
+        expected_kgm3, rel=1e-2
+    )
+
+
+@pytest.mark.parametrize(
+    "j_per_mol, expected_cal_per_mol",
+    [
+        (0.0, 0.0),
+        (4.184, 1.0),
+        (41840.0, 10000.0),
+        (-8368.0, -2000.0),
+    ],
+)
+def test_convert_joules_per_mol_to_cal_per_mol(j_per_mol, expected_cal_per_mol):
+    assert conversions.convert_joules_per_mol_to_cal_per_mol(
+        j_per_mol
+    ) == pytest.approx(expected_cal_per_mol, rel=1e-2)
+
+
+@pytest.mark.parametrize(
+    "kgm3, expected_gcc",
+    [
+        (0.0, 0.0),
+        (1000.0, 1.0),  # Water density
+        (2700.0, 2.7),  # Aluminum density
+        (7850.0, 7.85),  # Steel density
+    ],
+)
+def test_convert_kgm3_to_gcc(kgm3, expected_gcc):
+    assert conversions.convert_kgm3_to_gcc(kgm3) == pytest.approx(
+        expected_gcc, rel=1e-2
+    )

@@ -20,8 +20,8 @@ OTHER_LOSSES_DEFAULT = 10.0
 
 """
 AD-A015 140 cites typical ranges for the correction factors.
-Some of these ranges were adjusted based on the experience of the
-authors and the typical outcomes for validation cases.
+Some of these ranges were adjusted based on the experience of the authors and the
+typical outcomes for validation cases.
 """
 
 TYPICAL_RANGES = {
@@ -40,13 +40,10 @@ def get_nozzle_divergent_percentage_loss(divergent_angle: float) -> float:
     NOTE: only applicable for a conical convergent-divergent nozzle.
 
     Args:
-        divergent_angle (float): The half angle of the divergent nozzle.
+        divergent_angle: The half angle of the divergent nozzle.
 
     Returns:
-        float: The divergent correction factor.
-
-    Example:
-        correction_factor = get_divergent_correction_factor(15.0)
+        The divergent correction factor.
     """
     return 50 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
@@ -57,27 +54,22 @@ def get_kinetics_percentage_loss(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
 ) -> float:
     """
-    The kinetics correction factor accounts for the decrement in
-    performance due to incomplete heat transfer of latent heat to
-    sensible heat caused by the finite time required for the
-    gas phase chemical reactions to occur.
+    The kinetics correction factor accounts for the decrement in performance due to
+    incomplete heat transfer of latent heat to sensible heat caused by the finite time
+    required for the gas phase chemical reactions to occur.
 
     Valid for liquid, solid, and hybrid propellants.
-    The expansion ratio of the i_sp_th_frozen and i_sp_th_shifting
-    should be the same.
+    The expansion ratio of the i_sp_th_frozen and i_sp_th_shifting should be the same.
 
-    Pressure correction is applied for chamber pressures
-    above 1.379 MPa (200 psi), in order to dampen the effect of
-    the kinetics correction factor.
+    Pressure correction is applied for chamber pressures above 1.379 MPa (200 psi), in
+    order to dampen the effect of the kinetics correction factor.
 
     Args:
-        i_sp_th_frozen (float): The specific impulse of the frozen
-            flow.
-        i_sp_th_shifting (float): The specific impulse of the shifting
-            flow.
-        chamber_pressure_psi (float): The chamber pressure in psi.
+        i_sp_th_frozen: The specific impulse of the frozen flow [s].
+        i_sp_th_shifting: The specific impulse of the shifting flow [s].
+        chamber_pressure_psi: The chamber pressure [psi].
     Returns:
-        float: The kinetics correction factor.
+        The kinetics correction factor.
     """
     i_sp_th_ratio = i_sp_th_frozen / i_sp_th_shifting
 
@@ -102,22 +94,19 @@ def get_boundary_layer_percentage_loss(
     c_2: float,
 ) -> float:
     """
-    Boundary layer correction factor accounts for the decrement in
-    performance due to the viscous and heat transfer effects in the
-    nozzle walls. It is time dependent.
+    Boundary layer correction factor accounts for the decrement in performance due to
+    the viscous and heat transfer effects in the nozzle walls. It is time dependent.
 
     Valid for liquid, solid, and hybrid propellants.
 
-    The time depencence is exponential due to the transient heat up,
-    important in motors with short burn durations (less than 4
-    seconds). Dependence on expansion ratio represents the effect of
-    a the amount of nozzle surface area.
+    The time dependence is exponential due to the transient heat up, important in
+    motors with short burn durations (less than 4 seconds). Dependence on expansion
+    ratio represents the effect of a the amount of nozzle surface area.
 
-    Time constant C2 comes from analysis of a the transient heating of
-    a BATES motor.
+    Time constant C2 comes from analysis of a the transient heating of a BATES motor.
 
-    Time constant C1 was obtained from a direct measurement of the heat
-    loss in a BATES motor, among other things.
+    Time constant C1 was obtained from a direct measurement of the heat loss in a BATES
+    motor, among other things.
 
     Ordinary nozzle:
     C1 = 0.003650
@@ -128,14 +117,14 @@ def get_boundary_layer_percentage_loss(
     C2 = 0.000000
 
     Args:
-        chamber_pressure_psi (float): The chamber pressure in psi.
-        throat_diameter_inch (float): The throat diameter in inches.
-        expansion_ratio (float): The expansion ratio of the nozzle.
-        time (float): The time in seconds.
-        c_1 (float): Coefficient for the boundary layer correction factor.
-        c_2 (float): Coefficient for the boundary layer correction factor.
+        chamber_pressure_psi: The chamber pressure [psi].
+        throat_diameter_inch: The throat diameter [in].
+        expansion_ratio: The expansion ratio of the nozzle.
+        time: The time in seconds [s].
+        c_1: Coefficient for the boundary layer correction factor.
+        c_2: Coefficient for the boundary layer correction factor.
     Returns:
-        float: The boundary layer correction factor.
+        The boundary layer correction factor.
     """
     term_1 = c_1 * (chamber_pressure_psi**0.8) / (throat_diameter_inch**0.2)
     term_2 = 1 + 2 * np.exp(
@@ -153,21 +142,19 @@ def _get_two_phase_phase_loss_particle_size(
     characteristic_length_inch: float,
 ) -> float:
     """
-    Helper function to calculate the two-phase flow loss due to
-    particle size.
+    Helper function to calculate the two-phase flow loss due to particle size.
 
-    Combines theories of particle growth by condensation in the chamber
-    and collisions in the nozzle.
+    Combines theories of particle growth by condensation in the chamber and collisions
+    in the nozzle.
 
     Args:
-        chamber_pressure_psi (float): The chamber pressure in psi.
-        xi (float): The mole fraction of the condensed phase.
-        throat_diameter_inch (float): The throat diameter in inches.
-        characteristic_length_inch (float): The characteristic length
-            in inches.
+        chamber_pressure_psi: The chamber pressure [psi].
+        xi: The mole fraction of the condensed phase.
+        throat_diameter_inch: The throat diameter [in].
+        characteristic_length_inch: The characteristic length [in].
 
     Returns:
-        float: The two-phase flow average particle size in micrometers.
+        The two-phase flow average particle size in micrometers.
     """
     return (
         0.454
@@ -188,22 +175,20 @@ def get_two_phase_flow_percentage_loss(
     characteristic_length_inch: float,
 ) -> float:
     """
-    Two-phase flow correction factor accounts for the decrement in
-    performance due to the presence of a condensed phase in the
-    combustion products.
+    Two-phase flow correction factor accounts for the decrement in performance due to
+    the presence of a condensed phase in the combustion products.
 
     Valid for solid, and hybrid propellants.
 
     Args:
-        chamber_pressure_psi (float): The chamber pressure in psi.
-        mole_fraction_of_condensed_phase (float): The mole fraction of
-            the condensed phase in moles / 100 gm.
-        expansion_ratio (float): The expansion ratio of the nozzle.
-        throat_diameter_inch (float): The throat diameter in inches.
-        characteristic_length_inch (float): The characteristic length
-            in inches.
+        chamber_pressure_psi: The chamber pressure [psi].
+        mole_fraction_of_condensed_phase: The mole fraction of the condensed phase
+            [moles/100g].
+        expansion_ratio: The expansion ratio of the nozzle.
+        throat_diameter_inch: The throat diameter [in].
+        characteristic_length_inch: The characteristic length [in].
     Returns:
-        float: The two-phase flow correction factor.
+        The two-phase flow correction factor.
     """
     particle_size_um: float = _get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi,
@@ -211,7 +196,7 @@ def get_two_phase_flow_percentage_loss(
         throat_diameter_inch,
         characteristic_length_inch,
     )
-    xi: float = mole_fraction_of_condensed_phase  # rename for brevity
+    xi: float = mole_fraction_of_condensed_phase
 
     if xi >= 0.09:
         c_4 = 0.5
@@ -259,16 +244,15 @@ def get_overall_nozzle_efficiency(
     other_losses: float = OTHER_LOSSES_DEFAULT,
 ) -> float:
     """
-    Overall nozzle efficiency is the sum of the individual correction
-    factors.
+    Calculates the overall nozzle efficiency by combining the correction factors.
 
     Args:
-        eta_div (float): The divergent nozzle correction factor.
-        eta_kin (float): The kinetics correction factor.
-        eta_bl (float): The boundary layer correction factor.
-        eta_2p (float): The two-phase flow correction factor.
+        eta_div: The divergent nozzle correction factor.
+        eta_kin: The kinetics correction factor.
+        eta_bl: The boundary layer correction factor.
+        eta_2p: The two-phase flow correction factor.
 
     Returns:
-        float: The overall nozzle efficiency.
+        The overall nozzle efficiency.
     """
     return 1 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses) / 100

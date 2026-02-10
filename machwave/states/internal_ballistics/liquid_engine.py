@@ -1,15 +1,19 @@
 import numpy as np
 
-from machwave.core.des import compute_chamber_pressure_mass_balance_lre
-from machwave.core.flow.isentropic import (
+from machwave.core.compressible_flow.delaval_nozzle import (
     apply_thrust_coefficient_correction,
+    get_ideal_thrust_coefficient,
+)
+from machwave.core.compressible_flow.isentropic import (
     get_critical_pressure_ratio,
     get_exit_pressure,
-    get_ideal_thrust_coefficient,
-    get_thrust_from_thrust_coefficient,
     is_flow_choked,
 )
-from machwave.core.mathematics.rk4 import rk4th_ode_solver
+from machwave.core.compressible_flow.thrust import (
+    get_thrust_from_thrust_coefficient,
+)
+from machwave.core.equations import compute_chamber_pressure_mass_balance_lre
+from machwave.core.solvers import rk4th_ode_solver
 from machwave.models.propulsion.motors import LiquidEngine
 from machwave.states.internal_ballistics.base import MotorState
 
