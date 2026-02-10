@@ -7,14 +7,13 @@ from machwave.states.internal_ballistics import (
 
 
 def get_motor_state_class(motor: Motor) -> type[MotorState]:
-    """
-    Returns the appropriate motor state class based on the type of motor.
+    """Return the appropriate motor state class based on the motor type.
 
     Args:
-        motor (Motor): The motor object.
+        motor: Motor object.
 
     Returns:
-        MotorState: The motor state class.
+        Motor state class.
 
     Raises:
         ValueError: If the motor type is not supported.

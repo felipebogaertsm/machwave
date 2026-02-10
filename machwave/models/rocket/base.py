@@ -18,10 +18,10 @@ class Rocket:
     ) -> None:
         """
         Args:
-            propulsion (Motor): the rocket motor or propulsion system.
-            recovery (Recovery): the recovery system (parachute, etc.).
-            fuselage (Fuselage): the rocket body.
-            mass_without_motor (float): structure + avionics + recovery + fuselage mass [kg].
+            propulsion: Rocket motor or propulsion system.
+            recovery: Recovery system (parachute, etc.).
+            fuselage: Rocket body.
+            mass_without_motor: Structure + avionics + recovery + fuselage mass [kg].
         """
         self.propulsion = propulsion
         self.recovery = recovery

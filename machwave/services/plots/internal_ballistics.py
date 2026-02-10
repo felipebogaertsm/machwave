@@ -6,16 +6,15 @@ import plotly.subplots
 def thrust_pressure_plot(
     time: np.ndarray, thrust: np.ndarray, chamber_pressure: np.ndarray
 ) -> go.Figure:
-    """
-    Generates an interactive plot with thrust and chamber pressure over time.
+    """Generate an interactive plot with thrust and chamber pressure.
 
     Args:
-        time (np.ndarray): Time array.
-        thrust (np.ndarray): Thrust array.
-        chamber_pressure (np.ndarray): Chamber pressure array.
+        time: Time array.
+        thrust: Thrust array.
+        chamber_pressure: Chamber pressure array.
 
     Returns:
-        go.Figure: A Plotly figure with thrust and pressure data over time.
+        Plotly figure with thrust and pressure data over time.
     """
     figure = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -57,15 +56,15 @@ def thrust_pressure_plot(
 
 
 def mass_flux_plot(time: np.ndarray, mass_flux: np.ndarray) -> go.Figure:
-    """
-    Generates an interactive plot for mass flux across multiple segments.
+    """Generate an interactive plot for mass flux across multiple segments.
 
     Args:
-        time (np.ndarray): Time array.
-        mass_flux (np.ndarray): A 2D array where each row represents mass flux data for a segment.
+        time: Time array.
+        mass_flux: 2D array where each row represents mass flux data for a
+            segment.
 
     Returns:
-        go.Figure: A Plotly figure with mass flux data for each segment.
+        Plotly figure with mass flux data for each segment.
     """
     figure = go.Figure()
 

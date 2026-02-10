@@ -47,8 +47,8 @@ class PropellantComponent:
             weight_percent: Component weight percent in the mixture [%].
 
         Returns:
-            dict: CEA format with name, formula, weight_percent, heat_of_formation (cal/mol),
-                  temperature (K), and density (g/cc).
+            CEA format with name, formula, weight_percent,
+            heat_of_formation (cal/mol), temperature [K], and density [g/cc].
         """
         heat_of_formation_cal = convert_joules_per_mol_to_cal_per_mol(self.enthalpy)
         density_gcc = convert_kgm3_to_gcc(self.density)

@@ -62,13 +62,11 @@ class SolidMotorState(ib_base.MotorState):
         d_t: float,
         P_ext: float,
     ) -> None:
-        """
-        Iterate the motor operation by calculating and storing operational
-        parameters in the corresponding vectors.
+        """Iterate the motor operation by calculating operational parameters.
 
         Args:
-            d_t (float): The time increment.
-            P_ext (float): The external pressure.
+            d_t: Time increment [s].
+            P_ext: External pressure [Pa].
         """
         if self.end_thrust:
             return
@@ -263,12 +261,7 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def klemmung(self) -> np.ndarray:
-        """
-        Get the klemmung values.
-
-        Returns:
-            np.ndarray: The klemmung values.
-        """
+        """Get the klemmung values.\"\"\"
         return (
             self.burn_area[self.burn_area > 0]
             / self.motor.thrust_chamber.nozzle.get_throat_area()
@@ -276,22 +269,12 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def initial_to_final_klemmung_ratio(self) -> float:
-        """
-        Get the ratio of the initial to final klemmung.
-
-        Returns:
-            float: The ratio of the initial to final klemmung.
-        """
+        """Get the ratio of the initial to final klemmung."""
         return self.klemmung[0] / self.klemmung[-1]
 
     @property
     def volumetric_efficiency(self) -> float:
-        """
-        Get the volumetric efficiency.
-
-        Returns:
-            float: The volumetric efficiency.
-        """
+        """Get the volumetric efficiency."""
         return (
             self.propellant_volume[0]
             / self.motor.thrust_chamber.combustion_chamber.internal_volume
@@ -299,15 +282,14 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def burn_profile(self, deviancy: float = 0.02) -> str:
-        """
-        Get the burn profile.
+        """Get the burn profile.
 
         Args:
-            deviancy (float, optional): The deviancy threshold for determining the burn profile.
+            deviancy: Deviancy threshold for determining burn profile.
                 Defaults to 0.02.
 
         Returns:
-            str: The burn profile ("regressive", "progressive", or "neutral").
+            Burn profile: "regressive", "progressive", or "neutral".
         """
         burn_area = self.burn_area[self.burn_area > 0]
 
@@ -320,22 +302,12 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def max_mass_flux(self) -> float:
-        """
-        Get the maximum mass flux.
-
-        Returns:
-            float: The maximum mass flux.
-        """
+        """Get the maximum mass flux."""
         return np.max(self.grain_mass_flux)
 
     @property
     def grain_mass_flux(self) -> np.ndarray:
-        """
-        Get the grain mass flux.
-
-        Returns:
-            np.ndarray: The grain mass flux.
-        """
+        """Get the grain mass flux."""
         return self.motor.grain.get_mass_flux_per_segment(
             self.burn_rate,
             self.motor.propellant.ideal_density,
@@ -344,20 +316,10 @@ class SolidMotorState(ib_base.MotorState):
 
     @property
     def total_impulse(self) -> float:
-        """
-        Get the total impulse.
-
-        Returns:
-            float: The total impulse.
-        """
+        """Get the total impulse [N-s]."""
         return np.mean(self.thrust) * self.t[-1]
 
     @property
     def specific_impulse(self) -> float:
-        """
-        Get the specific impulse.
-
-        Returns:
-            float: The specific impulse.
-        """
+        """Get the specific impulse [s]."""
         return self.total_impulse / self.m_prop[0] / 9.81

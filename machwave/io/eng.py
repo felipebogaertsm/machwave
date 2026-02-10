@@ -13,26 +13,22 @@ def generate_eng_file_content(
     name: str,
     eng_res: int = 25,
 ) -> str:
-    """
-    Generates a string containing the content of an .eng file for use in rocket
-    simulation software.
+    """Generate .eng file content for rocket simulation software.
 
     Args:
-        time (np.ndarray): Time array (in seconds).
-        thrust (np.ndarray): Thrust array (in Newtons).
-        propellant_mass (np.ndarray): Propellant mass array at different times
-            (in kg).
-        burn_time (float): Total burn time (in seconds).
-        chamber_length (float): Length of the chamber (in meters).
-        outer_diameter (float): Outer diameter of the motor (in meters).
-        motor_mass (float): Mass of the motor (in kg).
-        manufacturer (str): Manufacturer name.
-        name (str): Name of the motor.
-        eng_res (int): Resolution of the .eng file (number of time steps to
-            output). Default is 25.
+        time: Time array [s].
+        thrust: Thrust array [N].
+        propellant_mass: Propellant mass array [kg].
+        burn_time: Total burn time [s].
+        chamber_length: Chamber length [m].
+        outer_diameter: Motor outer diameter [m].
+        motor_mass: Motor mass [kg].
+        manufacturer: Manufacturer name.
+        name: Motor name.
+        eng_res: Number of time steps in output file. Default is 25.
 
     Returns:
-        str: The content of the .eng file as a string.
+        Content of the .eng file as a string.
     """
     # Trim data to burn time
     burn_index = np.where(time <= burn_time)[0]

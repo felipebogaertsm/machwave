@@ -19,16 +19,15 @@ from machwave.states.internal_ballistics import MotorState
 
 
 class InternalBallisticsCoupledParams(SimulationParameters):
-    """
-    Parameters for a coupled internal ballistics simulation.
+    """Parameters for a coupled internal ballistics simulation.
 
     Attributes:
-        atmosphere (Atmosphere): The atmosphere object.
-        d_t (float): Time step for the ballistic simulation.
-        dd_t (float): Time step factor for the motor simulation.
-        initial_elevation_amsl (float): Initial elevation above mean sea level.
-        igniter_pressure (float): Igniter pressure.
-        rail_length (float): Length of the launch rail.
+        atmosphere: Atmosphere object.
+        d_t: Time step for the ballistic simulation.
+        dd_t: Time step factor for the motor simulation.
+        initial_elevation_amsl: Initial elevation above mean sea level.
+        igniter_pressure: Igniter pressure.
+        rail_length: Length of the launch rail.
     """
 
     def __init__(
@@ -50,15 +49,14 @@ class InternalBallisticsCoupledParams(SimulationParameters):
 
 
 class InternalBallisticsCoupled(Simulation):
-    """
-    Coupled internal ballistics simulation class.
+    """Coupled internal ballistics simulation class.
 
     Attributes:
-        rocket (Rocket): The rocket object.
-        params (InternalBallisticsCoupledParams): The simulation parameters.
-        t (np.ndarray): Array of time values.
-        motor_state (MotorState): The motor state object.
-        ballistic_state (Ballistic1DState): The ballistic state object.
+        rocket: Rocket object.
+        params: Simulation parameters.
+        t: Array of time values.
+        motor_state: Motor state object.
+        ballistic_state: Ballistic state object.
     """
 
     def __init__(
@@ -66,12 +64,11 @@ class InternalBallisticsCoupled(Simulation):
         rocket: Rocket,
         params: InternalBallisticsCoupledParams,
     ) -> None:
-        """
-        Initializes the InternalBallisticsCoupled instance.
+        """Initialize the InternalBallisticsCoupled instance.
 
         Args:
-            rocket (Rocket): The rocket object.
-            params (InternalBallisticsCoupledParams): The simulation parameters.
+            rocket: Rocket object.
+            params: Simulation parameters.
         """
         super().__init__(params=params)
 
@@ -85,12 +82,7 @@ class InternalBallisticsCoupled(Simulation):
         self.ballistic_state = None
 
     def get_motor_state(self) -> MotorState:
-        """
-        Returns the motor state object based on the type of the motor.
-
-        Returns:
-            MotorState: The motor state object.
-        """
+        """Return the motor state object based on the type of the motor."""
         motor_state_class = get_motor_state_class(self.rocket.propulsion)
         return motor_state_class(
             motor=self.rocket.propulsion,
@@ -101,12 +93,10 @@ class InternalBallisticsCoupled(Simulation):
         )
 
     def run(self) -> tuple:
-        """
-        Runs the main loop of the simulation, returning the motor state
-        and ballistic state objects as a list.
+        """Run the main loop of the simulation.
 
         Returns:
-            A list containing the motor state object and the ballistic state object.
+            List containing motor state object and ballistic state object.
         """
         self.motor_state = self.get_motor_state()
         self.ballistic_state = Ballistic1DState(
