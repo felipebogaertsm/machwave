@@ -86,9 +86,9 @@ def test_convert_meter_to_micrometer(meters, expected_micrometres):
 @pytest.mark.parametrize(
     "a_imperial, n, expected_a_metric",
     [
-        (0.2, 0.35, 730.43),  # Typical APCP burn rate coefficient
+        (0.019, 0.625, 10.82),  # KN-Sorbitol 15-117 psia
         (0.0, 0.5, 0.0),
-        (0.1, 0.3, 474.35),
+        (1.648, -0.314, 8.77),  # KN-Sorbitol 117-218 psia
     ],
 )
 def test_convert_burn_rate_coefficient_to_metric(a_imperial, n, expected_a_metric):
