@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core import losses
+from machwave.core.compressible_flow import losses
 
 pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 

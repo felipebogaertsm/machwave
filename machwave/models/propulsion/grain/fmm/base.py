@@ -4,7 +4,6 @@ import numpy as np
 import skfmm
 from numpy.typing import NDArray
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment
 
 MINIMUM_MAP_DIMENSION = 100
@@ -67,7 +66,6 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         pass
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
         """
         Validates the internal geometry of the grain.
@@ -79,7 +77,11 @@ class FMMGrainSegment(GrainSegment, ABC):
             GrainGeometryError: If the grain map dimension is below the valid threshold.
         """
         super().validate()
-        assert self.map_dim >= MINIMUM_MAP_DIMENSION
+        if not self.map_dim >= MINIMUM_MAP_DIMENSION:
+            raise GrainGeometryError(
+                f"Map dimension must be at least {MINIMUM_MAP_DIMENSION}, "
+                f"got {self.map_dim}"
+            )
 
     def normalize(self, value: int | float) -> float:
         """

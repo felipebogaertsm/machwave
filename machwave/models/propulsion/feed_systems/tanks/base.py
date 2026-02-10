@@ -14,19 +14,14 @@ class Tank:
     """
 
     def __init__(self, fluid_name, volume, temperature, initial_fluid_mass):
-        """
-        Initialize a two-phase tank model.
+        """Initialize a two-phase tank model.
 
         Args:
-            fluid_name:
-                Name of the fluid in the CoolProp database (e.g. 'N2O', 'Oxygen',
-                'Hydrogen', 'Ethanol', etc.).
-            volume:
-                Internal volume of the tank [m^3].
-            temperature:
-                Absolute temperature [K], assumed constant (isothermal).
-            initial_fluid_mass:
-                Initial total mass of fluid [kg].
+            fluid_name: Name of the fluid in the CoolProp database
+                (e.g. 'N2O', 'Oxygen', 'Hydrogen', 'Ethanol', etc.).
+            volume: Internal volume of the tank [m^3].
+            temperature: Absolute temperature [K], assumed constant.
+            initial_fluid_mass: Initial total mass of fluid [kg].
         """
         self.fluid_name = fluid_name
         self.volume = volume
@@ -35,16 +30,16 @@ class Tank:
         self.fluid_mass = initial_fluid_mass
 
     def get_pressure(self) -> float:
-        """
-        Returns the current tank pressure [Pa], using two-phase logic:
+        """Return the current tank pressure [Pa] using two-phase logic.
 
         1) Compute the saturation pressure at the given temperature.
-        2) If fluid_mass > mass_if_all_vapor(p_sat), the tank is partially liquid
-           and the pressure is pinned at saturation.
-        3) Otherwise, the tank is all vapor (ideal gas), and we use P = (m / M) * R * T / V.
+        2) If fluid_mass > mass_if_all_vapor(p_sat), the tank is partially
+           liquid and the pressure is pinned at saturation.
+        3) Otherwise, the tank is all vapor (ideal gas), and we use
+           P = (m / M) * R * T / V.
 
         Returns:
-            float: Tank pressure [Pa].
+            Tank pressure [Pa].
         """
         # 1) Saturation pressure at the given T (if subcritical and property is defined).
         #    For cryogenics or other fluids, ensure T is within valid range for saturation data.
@@ -63,15 +58,13 @@ class Tank:
             )
 
     def get_density(self, pressure: float | None = None) -> float:
-        """
-        Returns the fluid density [kg/m^3] at the current tank pressure and
-        temperature, using CoolProp.
+        """Return fluid density [kg/m^3] at tank pressure and temperature.
 
-        If ``pressure`` is provided, it is used as the tank pressure override
-        (e.g., a piston-pressurized stacked-tank system).
+        Uses CoolProp. If pressure is provided, it is used as the tank
+        pressure override (e.g., a piston-pressurized stacked-tank system).
 
         Returns:
-            float: Fluid density [kg/m^3].
+            Fluid density [kg/m^3].
         """
         # Empty tank?
         if self.fluid_mass <= 0:
@@ -116,14 +109,16 @@ class Tank:
             self.fluid_mass = 0.0
 
     def _mass_if_all_vapor(self, p_vapor: float) -> float:
-        """
-        Returns how many kg of fluid we would have if the tank were entirely vapor
-        at pressure p_vapor (Pa) and temperature self.temperature, using the ideal gas law.
+        """Return mass if tank were entirely vapor at given pressure.
+
+        Uses ideal gas law at pressure p_vapor [Pa] and
+        temperature self.temperature.
 
         Args:
             p_vapor: Pressure of the vapor [Pa].
+
         Returns:
-            float: Mass of vapor [kg].
+            Mass of vapor [kg].
         """
         # Ideal gas:  m = (P * V * M) / (R_universal * T)
         molar_mass = CP.PropsSI("M", self.fluid_name)  # kg/mol

@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.core.mathematics.geometric import get_circle_area
+from machwave.core.geometric import get_circle_area
 
 
 class DragCoefficientTypeError(Exception):
@@ -20,18 +20,14 @@ class Fuselage:
         drag_coefficient: np.ndarray | float | int,
         frontal_area: float | None = None,
     ) -> None:
-        """
-        Initialize the Fuselage object.
+        """Initialize the Fuselage object.
 
         Args:
-            length (float): Length of the fuselage.
-            outer_diameter (float): Outer diameter of the fuselage.
-            drag_coefficient (np.ndarray | float | int): Drag coefficient value(s).
-                It can be a single value, or a 2D array with the first column being velocity
-                and the second column being the corresponding drag coefficient.
-
-        Returns:
-            None
+            length: Fuselage length [m].
+            outer_diameter: Fuselage outer diameter [m].
+            drag_coefficient: Drag coefficient value(s). Can be single value,
+                or 2D array with first column as velocity and second column
+                as corresponding drag coefficient.
         """
         self.length = length
         self.outer_diameter = outer_diameter
@@ -40,12 +36,7 @@ class Fuselage:
 
     @property
     def frontal_area(self) -> float:
-        """
-        Frontal area of the fuselage.
-
-        Returns:
-            float: Frontal area in square meters.
-        """
+        """Frontal area of the fuselage [m^2]."""
         if self._frontal_area is not None:
             return self._frontal_area
 
@@ -55,17 +46,15 @@ class Fuselage:
         """Get the drag coefficient of the fuselage.
 
         Args:
-            velocity (float, optional): Velocity at which to calculate the
-                drag coefficient. If not provided, the default value is None.
+            velocity: Velocity at which to calculate drag coefficient.
 
         Returns:
-            float: Drag coefficient value.
+            Drag coefficient value.
 
         Raises:
-            DragCoefficientTypeError: If the type of `drag_coefficient` is
-                not recognized.
-            ValueError: If `velocity` is None and `drag_coefficient` is a list.
-
+            DragCoefficientTypeError: If type of drag_coefficient is not
+                recognized.
+            ValueError: If velocity is None and drag_coefficient is a list.
         """
         if isinstance(self._drag_coefficient, np.ndarray):
             if velocity is None:

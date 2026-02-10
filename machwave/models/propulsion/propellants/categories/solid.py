@@ -144,14 +144,15 @@ class SolidPropellant(Propellant):
         """Evaluate thermochemical properties.
 
         If properties are pre-defined, returns them directly.
-        Otherwise, evaluates using the thermochemical service via parent class.
+        Otherwise, evaluates using the thermochemical service via parent
+        class.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
 
         Returns:
-            ThermochemicalProperties: Pre-defined or calculated properties.
+            Pre-defined or calculated properties.
 
         Raises:
             PropellantValidationError: If evaluation fails.
@@ -162,7 +163,7 @@ class SolidPropellant(Propellant):
 
     @property
     def ideal_density(self) -> float:
-        """Calculate ideal propellant density [kg/m³] for solid mixtures.
+        """Calculate ideal propellant density [kg/m^3] for solid mixtures.
 
         Uses harmonic mean based on solid mixture mass fractions.
         """
@@ -182,7 +183,7 @@ class SolidPropellant(Propellant):
             chamber_pressure: Chamber pressure [Pa].
 
         Returns:
-            float: Burn rate [m/s].
+            Burn rate [m/s].
 
         Raises:
             BurnRateOutOfBoundsError: If pressure is outside valid range.

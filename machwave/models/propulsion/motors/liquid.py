@@ -1,6 +1,8 @@
 import numpy as np
 
-from machwave.core.flow.isentropic import get_ideal_thrust_coefficient
+from machwave.core.compressible_flow.delaval_nozzle import (
+    get_ideal_thrust_coefficient,
+)
 from machwave.models.propulsion.feed_systems.base import FeedSystem
 from machwave.models.propulsion.propellants import BiliquidPropellant
 from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
@@ -125,14 +127,15 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         k_ex: float,
         n_cf: float,
     ) -> float:
-        """
+        """Get thrust coefficient.
+
         Args:
-            chamber_pressure (float): Chamber pressure in Pa.
-            exit_pressure (float): Exit pressure in Pa.
-            external_pressure (float): External pressure in Pa.
-            expansion_ratio (float): Expansion ratio, adimensional.
-            k_ex (float): Two-phase isentropic coefficient, adimensional.
-            n_cf (float): Thrust coefficient correction factor, adimensional.
+            chamber_pressure: Chamber pressure [Pa].
+            exit_pressure: Exit pressure [Pa].
+            external_pressure: External pressure [Pa].
+            expansion_ratio: Expansion ratio.
+            k_ex: Two-phase isentropic coefficient.
+            n_cf: Thrust coefficient correction factor.
 
         Returns:
             Instantaneous thrust coefficient.

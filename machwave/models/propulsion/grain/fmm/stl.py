@@ -3,7 +3,6 @@ from abc import ABC
 import numpy as np
 import trimesh
 
-from machwave.common.decorators import validate_assertions
 from machwave.models.propulsion.grain import GrainGeometryError
 from machwave.models.propulsion.grain.fmm import FMMGrainSegment3D
 
@@ -36,9 +35,11 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
             map_dim=map_dim,
         )
 
-    @validate_assertions(exception=GrainGeometryError)
     def validate(self) -> None:
-        assert self.map_dim >= 20
+        if not self.map_dim >= 20:
+            raise GrainGeometryError(
+                f"Map dimension must be at least 20 for STL grains, got {self.map_dim}"
+            )
 
     def get_voxel_size(self) -> float:
         """

@@ -7,13 +7,12 @@ from machwave.states.internal_ballistics import MotorState
 
 
 class InternalBallisticsParams(SimulationParameters):
-    """
-    Parameters for an internal ballistics simulation.
+    """Parameters for an internal ballistics simulation.
 
     Attributes:
-        d_t (float): Time step.
-        igniter_pressure (float): Igniter pressure.
-        external_pressure (float): External pressure.
+        d_t: Time step.
+        igniter_pressure: Igniter pressure.
+        external_pressure: External pressure.
     """
 
     def __init__(
@@ -29,14 +28,13 @@ class InternalBallisticsParams(SimulationParameters):
 
 
 class InternalBallistics(Simulation):
-    """
-    Internal ballistics simulation class.
+    """Internal ballistics simulation class.
 
     Attributes:
-        motor (Motor): The motor object.
-        params (InternalBallisticsParams): The simulation parameters.
-        t (np.ndarray): Array of time values.
-        motor_state (MotorState | None): The motor state object.
+        motor: Motor object.
+        params: Simulation parameters.
+        t: Array of time values.
+        motor_state: Motor state object.
     """
 
     def __init__(

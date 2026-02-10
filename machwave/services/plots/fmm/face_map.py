@@ -7,14 +7,13 @@ from machwave.common.arrays import replace_array_values
 def _create_plot_2d_frame(
     face_map: np.ndarray,
 ) -> tuple[go.Heatmap, go.Contour, go.Contour]:
-    """
-    Creates a 2D frame with a heatmap and contour lines of a segment face.
+    """Create a 2D frame with a heatmap and contour lines of a segment face.
 
     Args:
-        face_map (np.ndarray): A 2D NumPy array representing the face map.
+        face_map: 2D NumPy array representing the face map.
 
     Returns:
-        tuple[go.Heatmap, go.Contour, go.Contour]: A list of Plotly traces.
+        List of Plotly traces.
     """
     return (
         go.Heatmap(
@@ -66,14 +65,13 @@ def _create_plot_2d_frame(
 def plot_2d_face_map(
     face_map: np.ndarray,
 ) -> go.Figure:
-    """
-    Plots a 2D face map with a heatmap and contour lines.
+    """Plot a 2D face map with a heatmap and contour lines.
 
     Args:
-        face_map (np.ndarray): A 2D NumPy array representing the face map.
+        face_map: 2D NumPy array representing the face map.
 
     Returns:
-        go.Figure: A Plotly Figure object.
+        Plotly Figure object.
     """
     fig = go.Figure()
 

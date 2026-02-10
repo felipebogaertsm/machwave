@@ -72,27 +72,19 @@ class ThermochemicalProperties:
 
     @functools.cached_property
     def R_chamber(self) -> float:
-        """Specific gas constant for chamber.
-
-        Returns:
-            float: Specific gas constant [J/(kg-K)].
-        """
+        """Specific gas constant for chamber [J/(kg-K)]."""
         return scipy.constants.R / self.molecular_weight_chamber
 
     @functools.cached_property
     def R_exhaust(self) -> float:
-        """Specific gas constant for exhaust.
-
-        Returns:
-            float: Specific gas constant [J/(kg-K)].
-        """
+        """Specific gas constant for exhaust [J/(kg-K)]."""
         return scipy.constants.R / self.molecular_weight_exhaust
 
     @functools.cached_property
     def is_two_phase_flow(self) -> bool:
-        """Checks if combustion products have condensed phase species.
+        """Check if combustion products have condensed phase species.
 
         Returns:
-            bool: True if qsi_chamber > 0 or qsi_exhaust > 0.
+            True if qsi_chamber > 0 or qsi_exhaust > 0.
         """
         return self.qsi_chamber > 0.0 or self.qsi_exhaust > 0.0

@@ -71,22 +71,12 @@ class MotorState(State):
 
     @property
     def initial_propellant_mass(self) -> float:
-        """
-        Get the initial propellant mass.
-
-        Returns:
-            float: The initial propellant mass.
-        """
+        """Get the initial propellant mass [kg]."""
         return self.motor.initial_propellant_mass
 
     @property
     def thrust_time(self) -> float:
-        """
-        Total time of thrust production.
-
-        Returns:
-            float: The thrust time.
-        """
+        """Total time of thrust production [s]."""
         if self._thrust_time is None:
             raise ValueError("Thrust time has not been set, run the simulation.")
 
