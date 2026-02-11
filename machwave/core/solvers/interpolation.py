@@ -3,10 +3,10 @@ import numpy.typing as npt
 
 
 def interpolate_with_time(
-    time: npt.NDArray[np.number],
-    values: npt.NDArray[np.number],
-    new_time: float | npt.NDArray[np.number],
-) -> float | npt.NDArray[np.number]:
+    time: npt.NDArray[np.float64],
+    values: npt.NDArray[np.float64],
+    new_time: float | npt.NDArray[np.float64],
+) -> float | npt.NDArray[np.float64]:
     """Interpolate values at new time points.
 
     Args:
