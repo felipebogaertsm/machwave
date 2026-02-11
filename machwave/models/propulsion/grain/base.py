@@ -109,6 +109,20 @@ class GrainSegment(ABC):
         """
         pass
 
+    def get_mass(self, web_distance: float, ideal_density: float) -> float:
+        """
+        Calculates the mass of the segment at a given web distance.
+
+        :param float web_distance: Web distance traveled [m]
+        :param float ideal_density: Ideal propellant density [kg/m^3]
+        :return: Mass of the segment at the given web distance [kg]
+        :rtype: float
+        """
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+
+        return self.get_volume(web_distance) * ideal_density * self.density_ratio
+
     def validate(self) -> None:
         """
         Validates grain geometry.
