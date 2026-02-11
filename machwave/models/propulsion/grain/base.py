@@ -96,6 +96,19 @@ class GrainSegment(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_moment_of_inertia(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
+        """
+        Calculates the moment of inertia tensor of the segment at its center of gravity.
+
+        Returns:
+            A 3x3 array representing the inertia tensor [kg-m^2] with components:
+                [[Ixx, Ixy, Ixz],
+                 [Iyx, Iyy, Iyz],
+                 [Izx, Izy, Izz]]
+        """
+        pass
+
     def validate(self) -> None:
         """
         Validates grain geometry.
