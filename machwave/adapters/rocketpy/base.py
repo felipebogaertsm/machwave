@@ -3,8 +3,6 @@
 import abc
 import typing
 
-import numpy as np
-
 if typing.TYPE_CHECKING:
     import rocketpy.motors as rocketpy_motors
 
