@@ -93,3 +93,38 @@ class BatesSegment(GrainSegment2D):
         # The grain burns radially inward, maintaining axial symmetry
         # CoG is at geometric center, which is length/2 from the aft end (port)
         return np.array([self.length / 2, 0.0, 0.0], dtype=np.float64)
+
+    def get_moment_of_inertia(
+        self, ideal_density: float, web_distance: float = 0.0
+    ) -> np.typing.NDArray[np.float64]:
+        """
+        Calculate the moment of inertia tensor of the BATES grain segment (hollow
+        cylinder).
+
+        Args:
+            ideal_density: Propellant ideal density [kg/m^3].
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            A 3x3 inertia tensor [kg-m^2] about the center of gravity.
+        """
+        # Geometry at given web distance
+        r_inner = (self.core_diameter + 2 * web_distance) / 2
+        r_outer = self.outer_diameter / 2
+        current_length = self.get_length(web_distance)
+
+        volume = self.get_volume(web_distance)
+        mass = volume * ideal_density * self.density_ratio
+
+        r_sum_sq = r_inner**2 + r_outer**2
+
+        # Ixx: moment about axial axis
+        Ixx = mass * r_sum_sq / 2
+
+        # Iyy, Izz: moments about radial axes
+        Iyy = mass * (r_sum_sq / 4 + current_length**2 / 12)
+        Izz = Iyy
+
+        return np.array(
+            [[Ixx, 0.0, 0.0], [0.0, Iyy, 0.0], [0.0, 0.0, Izz]], dtype=np.float64
+        )
