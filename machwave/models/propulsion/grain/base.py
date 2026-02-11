@@ -420,15 +420,15 @@ class Grain:
         return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
 
     def get_moment_of_inertia(
-        self, web_distance: float, ideal_density: float = 1800.0
+        self, ideal_density: float, web_distance: float = 0.0
     ) -> np.typing.NDArray[np.float64]:
         """
         Combines the inertia tensors of all grain segments using the parallel axis
         theorem, accounting for varying density ratios and spacing between segments.
 
         Args:
-            web_distance: Web distance traveled [m].
             ideal_density: Propellant ideal density [kg/m^3].
+            web_distance: Web distance traveled [m].
 
         Returns:
             A 3x3 inertia tensor [kg-m^2] at the grain's center of gravity:
