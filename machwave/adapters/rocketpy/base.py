@@ -4,6 +4,7 @@ import abc
 import typing
 
 from machwave.core.solvers import interpolation
+from machwave.core import geometric
 
 if typing.TYPE_CHECKING:
     import rocketpy.motors as rocketpy_motors
@@ -20,6 +21,9 @@ class RocketPyAdapterError(Exception):
 M = typing.TypeVar("M", bound=ib_states.MotorState)  # Machwave motor state
 R = typing.TypeVar("R", bound=rocketpy_motors.Motor)  # RocketPy motor
 
+ROCKETPY_MOTOR_COORDINATE_SYSTEM = "nozzle_to_combustion_chamber"
+INTERPOLATION_METHOD = "linear"
+
 
 class RocketPyMotorAdapter(abc.ABC, typing.Generic[M, R]):
     """Abstract base class for RocketPy motor adapters."""
@@ -33,8 +37,8 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M, R]):
         self.motor_state = motor_state
         self.motor = motor_state.motor
 
-    def _get_time_series(self) -> dict[str, typing.Any]:
-        """Extract time series data from motor state."""
+    def _get_state_attributes(self) -> dict[str, typing.Any]:
+        """Extract data from the motor state, output of the simulation."""
         time = self.motor_state.t
         thrust = self.motor_state.thrust
 
@@ -42,17 +46,40 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M, R]):
             return interpolation.interpolate_with_time(time, thrust, new_time)  # type: ignore
 
         return {
-            "thrust": thrust_interpolation,
+            "total_mass": ...,
             "propellant_mass": self.motor_state.m_prop,
-            # TODO: add other time series
+            "center_of_mass": ...,
+            "center_of_propellant_mass": ...,
+            # TODO: add moment of inertia functions
+            "thrust": thrust_interpolation,
+            "vacuum_thrust": ...,
+            "total_impulse": ...,
+            "max_thrust": ...,
+            "max_thrust_time": ...,
+            "average_thrust": ...,
+            "burn_time": ...,
+            "burn_start_time": ...,
+            "burn_out_time": ...,
+            "burn_duration": ...,
+            "exhaust_velocity": ...,
+            "interpolate": INTERPOLATION_METHOD,
+            "reference_pressure": ...,
         }
 
     def _get_motor_attributes(self) -> dict[str, typing.Any]:
         """Extract motor attributes from motor model class."""
+        nozzle_outlet_diameter = self.motor.thrust_chamber.nozzle.outlet_diameter
+
         return {
-            "initial_mass": self.motor.get_launch_mass(),
+            "coordinate_system": ROCKETPY_MOTOR_COORDINATE_SYSTEM,
+            "nozzle_radius": nozzle_outlet_diameter / 2,
+            "nozzle_area": geometric.get_circle_area(nozzle_outlet_diameter),
+            "nozzle_position": (0, 0, 0),  # at origin in RocketPy coordinate system
             "dry_mass": self.motor.get_dry_mass(),
-            # TODO: add all base class attributes
+            "propellant_initial_mass": self.motor.initial_propellant_mass,
+            "propellant_mass": ...,
+            "structural_mass_ratio": ...,
+            "total_mass_flow_rate": ...,
         }
 
     @abc.abstractmethod
