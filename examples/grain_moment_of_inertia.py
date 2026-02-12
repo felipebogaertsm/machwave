@@ -11,6 +11,8 @@ import numpy as np
 
 from machwave.models.propulsion.grain import Grain
 from machwave.models.propulsion.grain.geometries.bates import BatesSegment
+from machwave.models.propulsion.grain.geometries.conical import ConicalGrainSegment
+from machwave.models.propulsion.grain.geometries.star import StarGrainSegment
 
 
 def print_inertia_tensor(moi: np.ndarray, title: str = "Moment of Inertia Tensor"):
@@ -188,6 +190,112 @@ def example_asymmetric_grain():
     )
 
 
+def example_2d_fmm_star_grain():
+    """Example 5: 2D FMM Star Grain Segment MOI."""
+    print("\n" + "=" * 60)
+    print("EXAMPLE 5: 2D FMM Star Grain Segment")
+    print("=" * 60)
+
+    # Create a star grain segment using FMM 2D
+    star_segment = StarGrainSegment(
+        length=0.250,  # 250 mm
+        outer_diameter=0.120,  # 120 mm
+        number_of_points=5,  # 5-point star
+        point_length=0.030,  # 30 mm radial point length
+        point_width=0.015,  # 15 mm point width
+        inhibited_ends=0,
+        density_ratio=1.0,
+    )
+
+    ideal_density = 1800.0  # kg/m³
+
+    # Calculate MOI at ignition
+    moi_ignition = star_segment.get_moment_of_inertia(
+        web_distance=0.0, ideal_density=ideal_density
+    )
+
+    print_inertia_tensor(moi_ignition, "Star Grain at Ignition")
+
+    # Calculate burn properties
+    web_thickness = star_segment.get_web_thickness()
+    print(f"\nWeb thickness: {web_thickness * 1000:.2f} mm")
+
+    mass = star_segment.get_mass(web_distance=0.0, ideal_density=ideal_density)
+    print(f"Initial propellant mass: {mass:.4f} kg")
+
+    # Calculate MOI at 50% burn
+    moi_half_burn = star_segment.get_moment_of_inertia(
+        web_distance=web_thickness * 0.5, ideal_density=ideal_density
+    )
+
+    print_inertia_tensor(moi_half_burn, "Star Grain at 50% Burn")
+
+    # Show comparative change
+    print("\nMOI reduction during burn:")
+    print(f"  Ixx (axial): {(1 - moi_half_burn[0, 0] / moi_ignition[0, 0]) * 100:.1f}%")
+    print(
+        f"  Iyy (radial): {(1 - moi_half_burn[1, 1] / moi_ignition[1, 1]) * 100:.1f}%"
+    )
+
+
+def example_3d_fmm_conical_grain():
+    """Example 6: 3D FMM Conical Grain Segment MOI."""
+    print("\n" + "=" * 60)
+    print("EXAMPLE 6: 3D FMM Conical Grain Segment")
+    print("=" * 60)
+
+    # Create a conical grain segment using FMM 3D
+    conical_segment = ConicalGrainSegment(
+        length=0.300,  # 300 mm
+        outer_diameter=0.130,  # 130 mm
+        upper_core_diameter=0.040,  # 40 mm at top
+        lower_core_diameter=0.060,  # 60 mm at bottom (tapering)
+        inhibited_ends=0,
+        density_ratio=1.0,
+    )
+
+    ideal_density = 1800.0  # kg/m³
+
+    # Calculate MOI at ignition
+    moi_ignition = conical_segment.get_moment_of_inertia(
+        web_distance=0.0, ideal_density=ideal_density
+    )
+
+    print_inertia_tensor(moi_ignition, "Conical Grain at Ignition")
+
+    # Calculate properties
+    web_thickness = conical_segment.get_web_thickness()
+    print(f"\nWeb thickness: {web_thickness * 1000:.2f} mm")
+
+    mass = conical_segment.get_mass(web_distance=0.0, ideal_density=ideal_density)
+    print(f"Initial propellant mass: {mass:.4f} kg")
+
+    # Calculate MOI evolution
+    print("\nMOI Evolution During Burn:")
+    print("Burn % | Ixx [kg⋅m²] | Iyy [kg⋅m²] | Izz [kg⋅m²] | Mass [kg]")
+    print("-" * 70)
+
+    for fraction in [0.0, 0.25, 0.50, 0.75, 0.95]:
+        web_distance = web_thickness * fraction
+        moi = conical_segment.get_moment_of_inertia(
+            web_distance=web_distance, ideal_density=ideal_density
+        )
+        mass = conical_segment.get_mass(
+            web_distance=web_distance, ideal_density=ideal_density
+        )
+
+        print(
+            f" {fraction * 100:5.0f}% | {moi[0, 0]:11.8f} | {moi[1, 1]:11.8f} | "
+            f"{moi[2, 2]:11.8f} | {mass:8.4f}"
+        )
+
+    # Note on 3D grain characteristics
+    print(
+        "\nNote: The conical geometry creates a variable burn rate profile"
+        "\nalong the grain length, with different port areas at each slice."
+    )
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("GRAIN MOMENT OF INERTIA EXAMPLES")
@@ -197,6 +305,8 @@ if __name__ == "__main__":
     example_multi_segment()
     example_burn_progression()
     example_asymmetric_grain()
+    example_2d_fmm_star_grain()
+    example_3d_fmm_conical_grain()
 
     print("\n" + "=" * 60)
     print("Examples completed!")
