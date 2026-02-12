@@ -22,7 +22,7 @@ def print_inertia_tensor(moi: np.ndarray, title: str = "Moment of Inertia Tensor
     print(f"  [[{moi[0, 0]:9.6f}, {moi[0, 1]:9.6f}, {moi[0, 2]:9.6f}]")
     print(f"   [{moi[1, 0]:9.6f}, {moi[1, 1]:9.6f}, {moi[1, 2]:9.6f}]")
     print(f"   [{moi[2, 0]:9.6f}, {moi[2, 1]:9.6f}, {moi[2, 2]:9.6f}]]")
-    print(f"\nPrincipal moments:")
+    print("\nPrincipal moments:")
     print(f"  Ixx (axial/roll):    {moi[0, 0]:.6f} kg⋅m²")
     print(f"  Iyy (radial/pitch):  {moi[1, 1]:.6f} kg⋅m²")
     print(f"  Izz (radial/yaw):    {moi[2, 2]:.6f} kg⋅m²")
