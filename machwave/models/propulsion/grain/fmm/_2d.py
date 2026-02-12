@@ -11,6 +11,10 @@ from machwave.core.geometric import (
     get_contours,
     get_length,
 )
+from machwave.core.mechanics import (
+    get_center_of_gravity,
+    get_moment_of_inertia_tensor,
+)
 from machwave.models.propulsion.grain import GrainGeometryError, GrainSegment2D
 
 from .base import FMMGrainSegment
@@ -223,6 +227,59 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         """
         return self.get_core_perimeter(web_distance) * self.get_length(web_distance)
 
+    def _validate_web_distance(self, web_distance: float) -> None:
+        """Validate that web distance does not exceed web thickness.
+
+        Raises:
+            GrainGeometryError: If web distance exceeds web thickness.
+        """
+        if web_distance > self.get_web_thickness():
+            raise GrainGeometryError(
+                "The web distance traveled is greater than the grain segment's web thickness."
+            )
+
+    def _get_active_material_indices(
+        self, web_distance: float
+    ) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
+        """Get indices of active material at given web distance.
+
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Tuple of (y_indices, x_indices) for active material.
+
+        Raises:
+            GrainGeometryError: If no active material is found.
+        """
+        face_map = self.get_face_map(web_distance)
+        mask = face_map == 1  # active material only
+        y_indices, x_indices = np.where(mask)
+
+        if len(x_indices) == 0 or len(y_indices) == 0:
+            raise GrainGeometryError(
+                "No active material found at the given web distance."
+            )
+
+        return y_indices, x_indices
+
+    def _indices_to_normalized_coords(
+        self, y_indices: NDArray[np.int_], x_indices: NDArray[np.int_]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """Convert indices to normalized coordinates centered at origin.
+
+        Args:
+            y_indices: Y-axis indices from face map.
+            x_indices: X-axis indices from face map.
+
+        Returns:
+            Tuple of (x_coords, y_coords) in normalized units.
+        """
+        center_shift = self.map_dim / 2
+        x_coords = (x_indices - center_shift).astype(np.float64)
+        y_coords = (y_indices - center_shift).astype(np.float64)
+        return x_coords, y_coords
+
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
         Calculates the center of gravity of a 2D FMM grain segment at a web
@@ -233,84 +290,39 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         Returns:
             Center of gravity [x, y, z] in meters from the port of the segment.
-
-        Raises:
-            GrainGeometryError: If web distance exceeds the web thickness, or
-                if no active material is found.
         """
-        if web_distance > self.get_web_thickness():
-            raise GrainGeometryError(
-                "The web distance traveled is greater than the grain segment's web thickness."
-            )
+        self._validate_web_distance(web_distance)
+        y_indices, x_indices = self._get_active_material_indices(web_distance)
+        x_coords, y_coords = self._indices_to_normalized_coords(y_indices, x_indices)
 
-        face_map = self.get_face_map(web_distance)
-        mask = face_map == 1  # active material only
+        # Convert to physical coordinates
+        x_phys = np.asarray(self.map_to_length(x_coords), dtype=np.float64)
+        y_phys = np.asarray(self.map_to_length(y_coords), dtype=np.float64)
+        # For 2D grain, axial position is constant at segment center
+        z_phys = np.full_like(x_phys, self.length / 2)
 
-        y_indices, x_indices = np.where(mask)
-        if len(x_indices) == 0 or len(y_indices) == 0:
-            raise GrainGeometryError(
-                "No active material found at the given web distance."
-            )
-
-        center_shift = self.map_dim / 2
-        x_coords = x_indices - center_shift
-        y_coords = y_indices - center_shift
-
-        x_cog_normalized = np.mean(x_coords)
-        y_cog_normalized = np.mean(y_coords)
-
-        x_cog = self.map_to_length(x_cog_normalized)
-        y_cog = self.map_to_length(y_cog_normalized)
-        # Z-axis (axial): CoG is at segment center, which is length/2 from aft end
-        z_cog = self.length / 2
-
-        # NOTE: For consistency with grain coordinate system, return [z, x, y]
-        return np.array([z_cog, x_cog, y_cog], dtype=np.float64)
+        return get_center_of_gravity(x_phys, y_phys, z_phys)
 
     def get_moment_of_inertia(
         self, ideal_density: float, web_distance: float = 0.0
     ) -> NDArray[np.float64]:
         """
-        Calculate the moment of inertia tensor of a 2D FMM grain segment at its center
-        of gravity.
+        Calculate the moment of inertia tensor at the segment's its center of gravity.
 
         Args:
             web_distance: Web distance traveled [m].
             ideal_density: Propellant ideal density [kg/m³].
 
         Returns:
-            A 3x3 inertia tensor [kg-m^2] at the center of gravity:
-                [[Ixx, Ixy, Ixz],
-                 [Ixy, Iyy, Iyz],
-                 [Ixz, Iyz, Izz]]
-
-        Raises:
-            GrainGeometryError: If web distance exceeds web thickness or
-                if no active material is found.
+            A 3x3 inertia tensor [kg-m^2].
         """
-        if web_distance > self.get_web_thickness():
-            raise GrainGeometryError(
-                "The web distance traveled is greater than the grain "
-                "segment's web thickness."
-            )
-
-        face_map = self.get_face_map(web_distance)
-        mask = face_map == 1  # active material only
-
-        y_indices, x_indices = np.where(mask)
-        if len(x_indices) == 0 or len(y_indices) == 0:
-            raise GrainGeometryError(
-                "No active material found at the given web distance."
-            )
+        self._validate_web_distance(web_distance)
+        y_indices, x_indices = self._get_active_material_indices(web_distance)
+        x_coords, y_coords = self._indices_to_normalized_coords(y_indices, x_indices)
 
         # Get the center of gravity to use as reference point
         cog = self.get_center_of_gravity(web_distance)
         current_length = self.get_length(web_distance)
-
-        # Convert indices to physical coordinates
-        center_shift = self.map_dim / 2
-        x_coords = (x_indices - center_shift).astype(np.float64)
-        y_coords = (y_indices - center_shift).astype(np.float64)
 
         # Convert to meters
         x_phys = self.map_to_length(x_coords)
@@ -319,49 +331,25 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         # Shift to CoG frame
         x_rel = x_phys - cog[1]
         y_rel = y_phys - cog[2]
-
-        n_elements = len(x_indices)  # elements in cross section
+        z_rel = np.zeros_like(x_rel)  # 2D grain, no z variation in elements
 
         # Total mass
         total_volume = self.get_volume(web_distance)
         total_mass = total_volume * ideal_density * self.density_ratio
 
         # Mass per cross-sectional element
-        dm = total_mass / n_elements
+        n_elements = len(x_indices)
+        element_mass = total_mass / n_elements
 
-        # For axial integration: grain extends along z from 0 to current_length
-        # CoG is at cog[0], so points range from -cog[0] to (current_length - cog[0])
-        # For uniform density along length, we can use the formula for a rod
+        # Get base inertia from point masses (radial only)
+        moi = get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)
 
-        # Inertia contributions:
-        # Ixx (about axial axis): sum of (y² + 0²) * dm for each radial point
-        # Iyy (about y-axis): sum of (x² + z²) * dm
-        # Izz (about z-axis): sum of (x² + y²) * dm
-
-        # Radial contributions (from the 2D map)
-        x_sq = x_rel**2
-        y_sq = y_rel**2
-
-        # Ixx: moment about axial axis (only radial distances matter)
-        Ixx = dm * np.sum(x_sq + y_sq)
-
-        # For Iyy and Izz, we need to add the axial contribution
-        # For a uniform rod from 0 to L with CoG at z_cog:
-        # I_axial = M * L² / 12 (about CoG)
+        # For 2D grain (uniform along axial direction), add axial contribution
+        # For a uniform rod of length L with mass M: I_axial = M*L²/12 (about CoG)
         I_axial = total_mass * current_length**2 / 12
 
-        # Iyy: moment about y-axis = sum(x² + z²) dm
-        Iyy = dm * np.sum(x_sq) + I_axial
+        # Add axial contribution to radial axes (indices 1 and 2 in [z,x,y] system)
+        moi[1, 1] += I_axial  # Ixx (moment about x-axis)
+        moi[2, 2] += I_axial  # Iyy (moment about y-axis)
 
-        # Izz: moment about z-axis = sum(y² + z²) dm
-        Izz = dm * np.sum(y_sq) + I_axial
-
-        # Products of inertia
-        Ixy = -dm * np.sum(x_rel * y_rel)
-        Ixz = 0.0  # Due to symmetry along axial direction
-        Iyz = 0.0  # Due to symmetry along axial direction
-
-        # Return symmetric 3x3 tensor
-        return np.array(
-            [[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]], dtype=np.float64
-        )
+        return moi
