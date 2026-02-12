@@ -96,6 +96,33 @@ class GrainSegment(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_moment_of_inertia(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
+        """
+        Calculates the moment of inertia tensor of the segment at its center of gravity.
+
+        Returns:
+            A 3x3 array representing the inertia tensor [kg-m^2] with components:
+                [[Ixx, Ixy, Ixz],
+                 [Iyx, Iyy, Iyz],
+                 [Izx, Izy, Izz]]
+        """
+        pass
+
+    def get_mass(self, web_distance: float, ideal_density: float) -> float:
+        """
+        Calculates the mass of the segment at a given web distance.
+
+        :param float web_distance: Web distance traveled [m]
+        :param float ideal_density: Ideal propellant density [kg/m^3]
+        :return: Mass of the segment at the given web distance [kg]
+        :rtype: float
+        """
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+
+        return self.get_volume(web_distance) * ideal_density * self.density_ratio
+
     def validate(self) -> None:
         """
         Validates grain geometry.
@@ -391,6 +418,71 @@ class Grain:
         total_mass_normalized = float(np.sum(volumes * density_ratios))
 
         return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
+
+    def get_moment_of_inertia(
+        self, ideal_density: float, web_distance: float = 0.0
+    ) -> np.typing.NDArray[np.float64]:
+        """
+        Combines the inertia tensors of all grain segments using the parallel axis
+        theorem, accounting for varying density ratios and spacing between segments.
+
+        Args:
+            ideal_density: Propellant ideal density [kg/m^3].
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            A 3x3 inertia tensor [kg-m^2] at the grain's center of gravity:
+                [[Ixx, Ixy, Ixz],
+                 [Ixy, Iyy, Iyz],
+                 [Ixz, Iyz, Izz]]
+
+            Coordinate system: Origin at grain's center of gravity, with:
+            - x-axis: axial direction (toward bulkhead)
+            - y-axis: radial direction
+            - z-axis: radial direction
+
+        Raises:
+            ValueError: If no segments are found in the grain.
+        """
+        if not self.segments:
+            raise ValueError("No segments found, cannot compute moment of inertia.")
+
+        grain_cog = self.get_center_of_gravity(web_distance)
+        total_inertia = np.zeros((3, 3), dtype=np.float64)
+
+        axial_position = 0.0
+        for segment in reversed(self.segments):  # last added is closest to port
+            # From segment's own port
+            local_cog = segment.get_center_of_gravity(web_distance=web_distance)
+
+            global_cog = local_cog.copy()  # from grain's port
+            global_cog[0] = axial_position + local_cog[0]
+
+            segment_mass = segment.get_mass(
+                web_distance=web_distance, ideal_density=ideal_density
+            )
+            segment_moi = segment.get_moment_of_inertia(
+                web_distance=web_distance, ideal_density=ideal_density
+            )
+
+            # Vector from grain CoG to segment CoG
+            r = global_cog - grain_cog
+
+            # Apply parallel axis theorem
+            r_squared = float(np.dot(r, r))
+            identity = np.eye(3, dtype=np.float64)
+            outer_product = np.outer(r, r)
+            parallel_axis_correction = segment_mass * (
+                r_squared * identity - outer_product
+            )
+
+            # Add this segment's contribution to total inertia
+            total_inertia += segment_moi + parallel_axis_correction
+
+            # Move to next segment
+            axial_position += segment.length + self.spacing
+
+        return total_inertia.astype(np.float64)
 
     def get_burn_area(self, web_distance: float) -> float:
         """
