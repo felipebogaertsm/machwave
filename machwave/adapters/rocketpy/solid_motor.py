@@ -5,6 +5,7 @@ import typing
 from machwave.adapters.rocketpy.base import RocketPyMotorAdapter
 
 if typing.TYPE_CHECKING:
+    from machwave.models.propulsion.motors import SolidMotor
     from machwave.states.internal_ballistics.solid_motor import SolidMotorState
 
 
@@ -25,7 +26,7 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidMotorState"]):
         # Get base motor attributes
         base_attrs = super()._get_rocketpy_attributes()
 
-        motor = self.motor
+        motor = typing.cast("SolidMotor", self.motor)
         grain = motor.grain
 
         if not grain.segments:
@@ -47,7 +48,7 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidMotorState"]):
         grain_density = motor.propellant.ideal_density
 
         if hasattr(first_segment, "core_diameter"):
-            grain_initial_inner_radius = first_segment.core_diameter / 2
+            grain_initial_inner_radius = first_segment.core_diameter / 2  # type: ignore[attr-defined]
         else:  # Some geometries might not have core_diameter, use 0 as default
             grain_initial_inner_radius = 0.0
 

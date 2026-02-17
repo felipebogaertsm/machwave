@@ -135,8 +135,9 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """
         from rocketpy import Function
 
-        v_exh = self.motor_state.total_impulse / self.propellant_initial_mass
-        return Function(v_exh).set_discrete_based_on_model(self.thrust)
+        total_impulse = float(np.mean(self.motor_state.thrust) * self.motor_state.t[-1])
+        v_exh = total_impulse / self.propellant_initial_mass
+        return Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
 
     @property
     def propellant_initial_mass(self) -> float:
@@ -161,8 +162,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         from rocketpy import Function
 
         time = self.motor_state.t
-        # Extract x-coordinate from stored COG values
-        center_positions = np.array([cog[0] for cog in self.motor_state.propellant_cog])
+        center_positions = np.array([cog[0] for cog in self.motor_state.propellant_cog])  # type: ignore[attr-defined]
         data = np.column_stack((time, center_positions))
         return Function(data)
 
@@ -172,7 +172,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         Returns:
             Array of shape (n_timesteps, 3, 3) containing inertia tensors.
         """
-        return np.array(self.motor_state.propellant_moi, dtype=np.float64)
+        return np.array(self.motor_state.propellant_moi, dtype=np.float64)  # type: ignore[attr-defined]
 
     def _get_propellant_inertia_component(self, i: int, j: int) -> "Function":
         """Get a specific component of the propellant inertia tensor.
