@@ -19,6 +19,7 @@ from machwave.models.propulsion.propellants.formulations import (
     solid as solid_propellants,
 )
 from machwave.simulations import internal_ballistics
+from rocketpy import Environment, Flight, Rocket
 
 
 @decorators.timing
@@ -26,12 +27,8 @@ def main():
     # ============================================================================
     # 1. MOTOR SETUP
     # ============================================================================
-    print("Setting up motor...")
-
-    # Use KNSB propellant
     propellant = solid_propellants.KNSB_NAKKA
 
-    # Create grain with 4 BATES segments
     grain = grain_models.Grain(spacing=0.01)
     bates_segment = grain_geometries.BatesSegment(
         outer_diameter=0.085,
@@ -41,7 +38,6 @@ def main():
     for _ in range(4):
         grain.add_segment(bates_segment)
 
-    # Define nozzle geometry
     nozzle = thrust_chamber_models.Nozzle(
         inlet_diameter=0.080,
         throat_diameter=0.022,
@@ -51,7 +47,6 @@ def main():
         material=materials.Steel(),
     )
 
-    # Define combustion chamber
     combustion_chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=95.25e-3,
         casing_outer_diameter=101.6e-3,
@@ -59,7 +54,6 @@ def main():
         internal_length=grain.total_length + 0.01,
     )
 
-    # Create thrust chamber assembly
     thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
         dry_mass=6.0,
         nozzle=nozzle,
@@ -68,7 +62,6 @@ def main():
         center_of_gravity_coordinate=(0.35, 0.0, 0.0),
     )
 
-    # Assemble complete motor
     motor = motors.SolidMotor(
         grain=grain,
         propellant=propellant,
@@ -78,8 +71,6 @@ def main():
     # ============================================================================
     # 2. RUN MACHWAVE INTERNAL BALLISTICS SIMULATION
     # ============================================================================
-    print("Running internal ballistics simulation...")
-
     params = internal_ballistics.InternalBallisticsParams(
         d_t=0.01,
         igniter_pressure=1e6,
@@ -94,27 +85,15 @@ def main():
     # ============================================================================
     # 3. CREATE ROCKETPY ADAPTER
     # ============================================================================
-    print("\nCreating RocketPy motor adapter...")
-
-    try:
-        rocketpy_motor = RocketPySolidMotorAdapter(motor_state)
-        print("✓ Motor adapted successfully")
-        print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
-        print(f"  - Average thrust: {rocketpy_motor.average_thrust:.1f} N")
-        print(f"  - Max thrust: {rocketpy_motor.max_thrust:.1f} N")
-        print(f"  - Burn time: {rocketpy_motor.burn_time[1]:.2f} s")
-    except ImportError:
-        print("⚠ RocketPy not installed. Install with: pip install rocketpy")
-        print("Stopping here - cannot continue to flight simulation.")
-        return
+    rocketpy_motor = RocketPySolidMotorAdapter(motor_state)
+    print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
+    print(f"  - Average thrust: {rocketpy_motor.average_thrust:.1f} N")
+    print(f"  - Max thrust: {rocketpy_motor.max_thrust:.1f} N")
+    print(f"  - Burn time: {rocketpy_motor.burn_time[1]:.2f} s")
 
     # ============================================================================
     # 4. SETUP ROCKETPY ROCKET
     # ============================================================================
-    print("\nSetting up RocketPy rocket...")
-
-    from rocketpy import Rocket
-
     rocket = Rocket(
         radius=0.0508,  # 101.6mm outer diameter / 2
         mass=15.0,  # Dry mass without motor (kg)
@@ -124,17 +103,14 @@ def main():
         center_of_mass_without_motor=0.0,  # Center of mass without motor
     )
 
-    # Add motor to rocket
     rocket.add_motor(rocketpy_motor, position=-0.6)  # Motor position relative to nose
 
-    # Add rail buttons
     rocket.set_rail_buttons(
         upper_button_position=0.082,
         lower_button_position=-0.618,
         angular_position=45,
     )
 
-    # Add aerodynamic surfaces
     _ = rocket.add_nose(
         length=0.55,
         kind="vonKarman",
@@ -156,7 +132,6 @@ def main():
         position=-0.194,
     )
 
-    # Add parachute
     _ = rocket.add_parachute(
         name="Main",
         cd_s=1.5,  # Drag coefficient * area
@@ -166,38 +141,24 @@ def main():
         noise=(0, 8.3, 0.5),
     )
 
-    print("✓ Rocket configured")
     print(f"  - Total mass: {rocket.total_mass(0):.2f} kg")
     print(f"  - Static margin: {rocket.static_margin(0):.2f} calibers")
 
     # ============================================================================
     # 5. SETUP ENVIRONMENT
     # ============================================================================
-    print("\nSetting up environment...")
-
-    from rocketpy import Environment
-
     env = Environment(
         latitude=32.99,  # Spaceport America, NM
         longitude=-106.975,
         elevation=1400,
     )
 
-    # Set atmospheric model
     env.set_atmospheric_model(type="standard_atmosphere")
-
-    # Set date and time for wind conditions (optional)
     env.set_date((2023, 6, 15, 12))  # Year, month, day, hour (UTC)
-
-    print("✓ Environment configured")
 
     # ============================================================================
     # 6. RUN FLIGHT SIMULATION
     # ============================================================================
-    print("\nRunning 6DOF flight simulation...")
-
-    from rocketpy import Flight
-
     flight = Flight(
         rocket=rocket,
         environment=env,
@@ -219,8 +180,6 @@ def main():
     # ============================================================================
     # 7. PLOT RESULTS
     # ============================================================================
-    print("Generating plots...")
-
     # Flight trajectory plots
     flight.plots.trajectory_3d()
 
