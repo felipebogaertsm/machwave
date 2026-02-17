@@ -51,10 +51,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
             ) from e
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        """
-        Dynamically inherit from specified RocketPy Motor class when subclass is
-        created.
-        """
+        """Dynamically inherit from specified RocketPy Motor class when subclass is created."""
         super().__init_subclass__(**kwargs)
 
         cls._require_rocketpy()
@@ -74,7 +71,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
             isinstance(base, type) and issubclass(base, motor_class)
             for base in cls.__bases__
         ):
-            cls.__bases__ = (motor_class,) + cls.__bases__
+            cls.__bases__ = cls.__bases__ + (motor_class,)
 
     def __init__(self, motor_state: M) -> None:
         """Initialize the adapter with a Machwave motor state.
@@ -111,7 +108,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
 
         return {
             "thrust_source": thrust_source,
-            "dry_inertia": ...,  # TODO: dry mass MoI at center_of_dry_mass_position
+            "dry_inertia": (0.0, 0.0, 0.0),  # TODO: Calculate dry mass inertia tensor
             "nozzle_radius": nozzle.outlet_diameter / 2,
             "center_of_dry_mass_position": center_of_dry_mass_position,
             "dry_mass": self.motor.get_dry_mass(),
@@ -163,6 +160,13 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
 
         time = self.motor_state.t
         center_positions = np.array([cog[0] for cog in self.motor_state.propellant_cog])  # type: ignore[attr-defined]
+
+        # Replace NaN/Inf values with last valid value (propellant burned out)
+        mask = np.isfinite(center_positions)
+        if not mask.all():
+            last_valid_idx = np.where(mask)[0][-1] if mask.any() else 0
+            center_positions[~mask] = center_positions[last_valid_idx]
+
         data = np.column_stack((time, center_positions))
         return Function(data)
 
@@ -172,7 +176,17 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         Returns:
             Array of shape (n_timesteps, 3, 3) containing inertia tensors.
         """
-        return np.array(self.motor_state.propellant_moi, dtype=np.float64)  # type: ignore[attr-defined]
+        tensors = np.array(self.motor_state.propellant_moi, dtype=np.float64)  # type: ignore[attr-defined]
+
+        # Replace NaN/Inf values with last valid tensor (propellant burned out)
+        for i in range(tensors.shape[0]):
+            if not np.isfinite(tensors[i]).all():
+                if i > 0:
+                    tensors[i] = tensors[i - 1]
+                else:
+                    tensors[i] = np.zeros((3, 3))
+
+        return tensors
 
     def _get_propellant_inertia_component(self, i: int, j: int) -> "Function":
         """Get a specific component of the propellant inertia tensor.
