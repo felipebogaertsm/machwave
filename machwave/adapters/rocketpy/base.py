@@ -85,7 +85,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         self._require_rocketpy()
 
         self.motor_state = motor_state
-        self.machwave_motor = motor_state.motor
+        self.motor = motor_state.motor
 
         attrs = self._get_rocketpy_attributes()
         super().__init__(**attrs)
@@ -95,7 +95,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         time = self.motor_state.t
         thrust = self.motor_state.thrust
 
-        thrust_chamber = self.machwave_motor.thrust_chamber
+        thrust_chamber = self.motor.thrust_chamber
         nozzle = thrust_chamber.nozzle
 
         thrust_source = np.column_stack((time, thrust))
@@ -114,7 +114,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
             "dry_inertia": ...,  # TODO: dry mass MoI at center_of_dry_mass_position
             "nozzle_radius": nozzle.outlet_diameter / 2,
             "center_of_dry_mass_position": center_of_dry_mass_position,
-            "dry_mass": self.machwave_motor.get_dry_mass(),
+            "dry_mass": self.motor.get_dry_mass(),
             "nozzle_position": 0.0,
             "burn_time": (time[0], self.motor_state.thrust_time),
             "reshape_thrust_curve": RESHAPE_THRUST_CURVE,
