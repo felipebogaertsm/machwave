@@ -27,6 +27,9 @@ dependencies = [
     "coolprop (>=6.7.0,<7.0.0)",
 ]
 
+[project.optional-dependencies]
+rocketpy = ["rocketpy>=1.0.0,<2.0.0"]
+
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
 pyright = "*"
@@ -35,7 +38,7 @@ pylint = "^3.3.5"
 py2puml = "^0.10.0"
 pytest-cov = "^6.2.1"
 polyfactory = "^3.1.0"
-
+rocketpy = "^1.11.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.2.3"
