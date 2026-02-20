@@ -49,6 +49,18 @@ class SolidMotorState(ib_base.MotorState):
         )
         self.burn_rate = np.array([0])  # burn rate
 
+        # Center of gravity and moment of inertia:
+        initial_cog = motor.grain.get_center_of_gravity(
+            web_distance=0.0,
+        )
+        initial_moi = motor.grain.get_moment_of_inertia(
+            ideal_density=motor.propellant.ideal_density,
+            web_distance=0.0,
+        )
+        # Store as lists of 3D arrays (COG) and 3x3 arrays (MOI)
+        self.propellant_cog = [initial_cog]  # center of gravity [x, y, z] in meters
+        self.propellant_moi = [initial_moi]  # moment of inertia tensor 3x3 in kg-m²
+
         # Correction factors:
         self.eta_div = np.array([0])  # divergent nozzle correction factor
         self.eta_kin = np.array([0])  # kinetics correction factor
@@ -74,6 +86,7 @@ class SolidMotorState(ib_base.MotorState):
         self._append_time(d_t)
         self._update_grain_geometry()
         self._update_chamber_volume_and_mass()
+        self._update_cog_and_moi()
         self._compute_pressure(d_t, P_ext)
         self._compute_flow(P_ext)
         self._check_burn_end()
@@ -103,6 +116,18 @@ class SolidMotorState(ib_base.MotorState):
             ideal_density=self.motor.propellant.ideal_density,
         )
         self.m_prop = np.append(self.m_prop, m_prop)
+
+    def _update_cog_and_moi(self) -> None:
+        # Update center of gravity and moment of inertia
+        cog = self.motor.grain.get_center_of_gravity(
+            web_distance=self.web[-1],
+        )
+        moi = self.motor.grain.get_moment_of_inertia(
+            ideal_density=self.motor.propellant.ideal_density,
+            web_distance=self.web[-1],
+        )
+        self.propellant_cog.append(cog)
+        self.propellant_moi.append(moi)
 
     def _compute_pressure(self, d_t: float, P_ext: float) -> None:
         props = self.motor.propellant.properties

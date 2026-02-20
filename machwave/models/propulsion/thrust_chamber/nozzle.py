@@ -20,6 +20,10 @@ class Nozzle:
         self.expansion_ratio = expansion_ratio
         self.material = material
 
+    @property
+    def outlet_diameter(self):
+        return self.inlet_diameter * np.sqrt(self.expansion_ratio)
+
     def get_throat_area(self):
         return get_circle_area(self.throat_diameter)
 
