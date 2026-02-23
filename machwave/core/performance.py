@@ -1,5 +1,5 @@
 """
-Propulsion performance metrics and calculations.
+Performance metrics and calculations.
 """
 
 import scipy.constants
@@ -29,6 +29,3 @@ def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -
         Specific impulse [s].
     """
     return total_impulse / initial_propellant_mass / scipy.constants.g
-
-
-__all__ = ["get_total_impulse", "get_specific_impulse"]

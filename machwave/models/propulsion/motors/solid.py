@@ -1,6 +1,6 @@
 import numpy as np
 
-import machwave.core.compressible_flow.delaval_nozzle as delaval_nozzle
+import machwave.core.compressible_flow.nozzle as nozzle
 import machwave.core.compressible_flow.losses as losses
 import machwave.models.propulsion.grain as grain
 import machwave.models.propulsion.propellants as propellants
@@ -107,16 +107,14 @@ class SolidMotor(
         Returns:
             Instanteneous thrust coefficient, adimensional
         """
-        self.cf_ideal = delaval_nozzle.get_ideal_thrust_coefficient(
+        self.cf_ideal = nozzle.get_ideal_thrust_coefficient(
             chamber_pressure,
             exit_pressure,
             external_pressure,
             expansion_ratio,
             k_ex,
         )
-        self.cf_real = delaval_nozzle.apply_thrust_coefficient_correction(
-            self.cf_ideal, n_cf
-        )
+        self.cf_real = nozzle.apply_thrust_coefficient_correction(self.cf_ideal, n_cf)
         return self.cf_real
 
     def get_launch_mass(self) -> float:

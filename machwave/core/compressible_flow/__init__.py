@@ -2,16 +2,17 @@
 Compressible flow theory and analysis.
 """
 
-from .delaval_nozzle import (
+from .nozzle import (
     apply_thrust_coefficient_correction,
     get_ideal_thrust_coefficient,
     get_optimal_expansion_ratio,
+    get_thrust_from_thrust_coefficient,
 )
 from .isentropic import (
     get_critical_pressure_ratio,
-    get_exit_mach,
+    get_exit_mach_from_expansion_ratio,
     get_exit_pressure,
-    get_expansion_ratio_from_mach,
+    get_expansion_ratio_from_exit_mach,
     is_flow_choked,
 )
 from .losses import (
@@ -21,20 +22,17 @@ from .losses import (
     get_overall_nozzle_efficiency,
     get_two_phase_flow_percentage_loss,
 )
-from .thrust import (
-    get_thrust_coefficient_from_thrust,
-    get_thrust_from_thrust_coefficient,
-)
 
 __all__ = [
-    # delaval_nozzle
+    # nozzle
     "get_optimal_expansion_ratio",
     "get_ideal_thrust_coefficient",
     "apply_thrust_coefficient_correction",
+    "get_thrust_from_thrust_coefficient",
     # isentropic
     "get_critical_pressure_ratio",
-    "get_expansion_ratio_from_mach",
-    "get_exit_mach",
+    "get_expansion_ratio_from_exit_mach",
+    "get_exit_mach_from_expansion_ratio",
     "get_exit_pressure",
     "is_flow_choked",
     # losses
@@ -43,7 +41,4 @@ __all__ = [
     "get_boundary_layer_percentage_loss",
     "get_two_phase_flow_percentage_loss",
     "get_overall_nozzle_efficiency",
-    # thrust
-    "get_thrust_from_thrust_coefficient",
-    "get_thrust_coefficient_from_thrust",
 ]

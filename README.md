@@ -81,3 +81,26 @@ It receives:
 - a SimulationParams instance tailored to that simulation type.
 
 During execution the solver instantiates one or more SimulationState objects that hold the evolving state arrays - chamber pressure, thrust, altitude, and so on, providing a clean, immutable record of the run.
+
+## Publishing a New Release
+
+1. **Bump the version** with Poetry:
+
+   ```bash
+   poetry version patch   # or minor / major
+   ```
+
+2. **Commit and push** the version bump:
+
+   ```bash
+   git add pyproject.toml
+   git commit -m "chore: bump version to $(poetry version -s)"
+   git push
+   ```
+
+   This triggers the CI pipeline (lint > test > docs deploy). Ensure it passes.
+
+3. **Trigger the publish workflow** on GitHub:
+   Go to **Actions → "Publish Machwave to PyPI" → Run workflow**.
+
+   The workflow builds the package with `poetry build` and publishes it to PyPI using the `MACHWAVE_PUBLISHING_TOKEN` secret stored in the `publish` GitHub environment.
