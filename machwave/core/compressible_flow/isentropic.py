@@ -15,8 +15,8 @@ def get_critical_pressure_ratio(k: float) -> float:
     return (2 / (k + 1)) ** (k / (k - 1))
 
 
-def get_expansion_ratio_from_mach(mach: float, k: float) -> float:
-    """Get expansion ratio from Mach number.
+def get_expansion_ratio_from_exit_mach(mach: float, k: float) -> float:
+    """Get expansion ratio from exit Mach number.
 
     Args:
         mach: Mach number.
@@ -30,7 +30,7 @@ def get_expansion_ratio_from_mach(mach: float, k: float) -> float:
     return (1 / mach) * (term1**term2)
 
 
-def get_exit_mach(k: float, expansion_ratio: float) -> float:
+def get_exit_mach_from_expansion_ratio(k: float, expansion_ratio: float) -> float:
     """Get exit Mach number from expansion ratio.
 
     Args:
@@ -47,7 +47,7 @@ def get_exit_mach(k: float, expansion_ratio: float) -> float:
         exit_mach = cast(
             float,
             scipy.optimize.brentq(
-                lambda m: get_expansion_ratio_from_mach(m, k) - expansion_ratio,
+                lambda m: get_expansion_ratio_from_exit_mach(m, k) - expansion_ratio,
                 a=1.001,  # Just above sonic
                 b=20.0,  # High supersonic
             ),
@@ -72,7 +72,7 @@ def get_exit_pressure(
     Returns:
         Exit pressure [Pa].
     """
-    exit_mach = get_exit_mach(k_ex, expansion_ratio)
+    exit_mach = get_exit_mach_from_expansion_ratio(k_ex, expansion_ratio)
     return chamber_pressure * (1 + 0.5 * (k_ex - 1) * exit_mach**2) ** (
         -k_ex / (k_ex - 1)
     )
