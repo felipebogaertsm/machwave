@@ -3,7 +3,7 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-from machwave.core.compressible_flow.thrust import (
+from machwave.core.compressible_flow.nozzle import (
     get_thrust_from_thrust_coefficient,
 )
 from machwave.models.propulsion.propellants import Propellant

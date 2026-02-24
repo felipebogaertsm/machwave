@@ -1,9 +1,8 @@
 import numpy as np
 
-import machwave.core.compressible_flow.delaval_nozzle as delaval_nozzle
+import machwave.core.compressible_flow.nozzle as nozzle
 import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.compressible_flow.losses as losses
-import machwave.core.compressible_flow.thrust as thrust_module
 import machwave.core.conversions as conversions
 import machwave.core.equations.srm_mass_balance as des
 import machwave.core.solvers.rk4 as rk4
@@ -205,19 +204,17 @@ class SolidMotorState(ib_base.MotorState):
         self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
         self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
 
-        cf_ideal = delaval_nozzle.get_ideal_thrust_coefficient(
+        cf_ideal = nozzle.get_ideal_thrust_coefficient(
             P0,
             self.P_exit[-1],
             P_ext,
             self.motor.thrust_chamber.nozzle.expansion_ratio,
             props.gamma_exhaust,
         )
-        cf = delaval_nozzle.apply_thrust_coefficient_correction(
-            cf_ideal, overall_efficiency
-        )
+        cf = nozzle.apply_thrust_coefficient_correction(cf_ideal, overall_efficiency)
         self.C_f = np.append(self.C_f, cf)
         self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
-        thrust = thrust_module.get_thrust_from_thrust_coefficient(
+        thrust = nozzle.get_thrust_from_thrust_coefficient(
             cf, P0, self.motor.thrust_chamber.nozzle.get_throat_area()
         )
         self.thrust = np.append(self.thrust, thrust)

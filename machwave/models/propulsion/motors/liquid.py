@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.core.compressible_flow.delaval_nozzle import (
+from machwave.core.compressible_flow.nozzle import (
     get_ideal_thrust_coefficient,
 )
 from machwave.models.propulsion.feed_systems.base import FeedSystem
