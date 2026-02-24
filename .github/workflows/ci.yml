@@ -46,13 +46,10 @@ jobs:
         with:
           python-version: "3.13"
           install-flags: "--no-interaction --with docs,dev"
-      - run: |
-          chmod +x scripts/sphinx-docs.sh
-          poetry run ./scripts/sphinx-docs.sh apidoc
-          poetry run ./scripts/sphinx-docs.sh html
+      - run: poetry run mkdocs build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/_build/html
+          path: site
       - id: deploy
         uses: actions/deploy-pages@v4
         env:

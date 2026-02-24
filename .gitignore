@@ -62,3 +62,7 @@ var/
 # Example file:
 example*.py
 misc/
+
+# Docs build output
+site/
+docs/_build/
