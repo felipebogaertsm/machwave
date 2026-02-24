@@ -1,4 +1,4 @@
-.PHONY: install test test-docker publish check generate-umls coverage
+.PHONY: install test test-docker publish check generate-umls coverage docs docs-serve docs-deploy
 
 install:
 	@poetry install
@@ -16,3 +16,9 @@ generate-umls:
 	@zsh ./scripts/generate-umls.sh
 coverage:
 	@poetry run pytest --cov=machwave --cov-branch --cov-report=term-missing --cov-report=html tests/
+docs:
+	@poetry run mkdocs build
+docs-serve:
+	@poetry run mkdocs serve --watch machwave
+docs-deploy:
+	@poetry run mkdocs build --strict
