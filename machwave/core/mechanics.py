@@ -3,15 +3,15 @@ Mechanics calculations.
 """
 
 import numpy as np
-from numpy.typing import NDArray
+import numpy.typing as npt
 
 
 def get_center_of_gravity(
-    x_coords: NDArray[np.float64],
-    y_coords: NDArray[np.float64],
-    z_coords: NDArray[np.float64],
-    masses: NDArray[np.float64] | None = None,
-) -> NDArray[np.float64]:
+    x_coords: npt.NDArray[np.float64],
+    y_coords: npt.NDArray[np.float64],
+    z_coords: npt.NDArray[np.float64],
+    masses: npt.NDArray[np.float64] | None = None,
+) -> npt.NDArray[np.float64]:
     """Calculate center of gravity from point mass elements.
 
     Computes the center of gravity (centroid) of a collection of point masses.
@@ -27,8 +27,8 @@ def get_center_of_gravity(
         Center of gravity as [z, x, y] in meters.
 
     Raises:
-        ValueError: If coordinate arrays have different lengths or if masses array
-            length doesn't match coordinates.
+        ValueError: If coordinate arrays have different lengths, if masses array
+            length doesn't match coordinates or if total mass is zero.
     """
     if not (len(x_coords) == len(y_coords) == len(z_coords)):
         raise ValueError("All coordinate arrays must have the same length")
@@ -43,7 +43,7 @@ def get_center_of_gravity(
         y_cog = np.sum(y_coords * masses) / total_mass
         z_cog = np.sum(z_coords * masses) / total_mass
     else:
-        # Equal mass for all elements - simple arithmetic mean
+        # Equal mass for all elements
         x_cog = np.mean(x_coords)
         y_cog = np.mean(y_coords)
         z_cog = np.mean(z_coords)
@@ -52,11 +52,11 @@ def get_center_of_gravity(
 
 
 def get_moment_of_inertia_tensor(
-    x_coords: NDArray[np.float64],
-    y_coords: NDArray[np.float64],
-    z_coords: NDArray[np.float64],
+    x_coords: npt.NDArray[np.float64],
+    y_coords: npt.NDArray[np.float64],
+    z_coords: npt.NDArray[np.float64],
     element_mass: float,
-) -> NDArray[np.float64]:
+) -> npt.NDArray[np.float64]:
     """Calculate moment of inertia tensor from point mass elements.
 
     Computes the 3x3 inertia tensor for a collection of point masses at given
@@ -96,6 +96,3 @@ def get_moment_of_inertia_tensor(
     return np.array(
         [[Izz, Ixz, Iyz], [Ixz, Ixx, Ixy], [Iyz, Ixy, Iyy]], dtype=np.float64
     )
-
-
-__all__ = ["get_center_of_gravity", "get_moment_of_inertia_tensor"]
