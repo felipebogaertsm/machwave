@@ -21,4 +21,4 @@ docs:
 docs-serve:
 	@poetry run mkdocs serve --watch machwave
 docs-deploy:
-	@poetry run mkdocs gh-deploy --force
+	@poetry run mkdocs build --strict
