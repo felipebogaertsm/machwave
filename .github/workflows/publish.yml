@@ -1,34 +1,47 @@
 name: Publish Machwave to PyPI
 
-on: 
-  workflow_dispatch
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  publish_package:
-    name: Publishing to PyPI
+  publish:
+    name: Build and publish to PyPI
     runs-on: ubuntu-latest
     environment: publish
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH  # Ensure Poetry is in PATH
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Configure Poetry
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.MACHWAVE_PUBLISHING_TOKEN }}
-
-      - name: Install dependencies
-        run: |
-          poetry install --no-interaction --no-root
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
 
       - name: Build the package
+        run: uv build
+
+      - name: Verify tag matches package version
         run: |
-          poetry build
+          PKG_VERSION=$(uv run python -c "from machwave._version import __version__; print(__version__)")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match package version ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "Version verified: $PKG_VERSION"
 
       - name: Publish to PyPI
-        run: |
-          poetry publish --no-interaction
+        uses: pypa/gh-action-pypi-publish@release/v1

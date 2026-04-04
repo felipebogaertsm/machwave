@@ -1,6 +1,6 @@
 [project]
 name = "machwave"
-version = "1.1.0"
+dynamic = ["version"]
 description = "Rocket simulator"
 readme = "README.md"
 authors = [{ name = "Felipe Bogaerts de Mattos", email = "me@felipebm.com" }]
@@ -14,40 +14,48 @@ classifiers = [
 keywords = ["python", "rocket", "srm", "engine", "propulsion"]
 requires-python = ">=3.11,<=3.14"
 dependencies = [
-    "numpy (>=2.0.0,<3.0.0)",
-    "fluids (>=1.1.0,<2.0.0)",
-    "matplotlib (>=3.10.0,<4.0.0)",
-    "plotly (>=6.0.0,<7.0.0)",
-    "scipy (>=1.15.2,<2.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
-    "scikit-image (>=0.25.2,<0.26.0)",
-    "scikit-fmm ==2025.6.23",
-    "trimesh (>=4.6.4,<5.0.0)",
-    "rocketcea (>=1.2.1,<2.0.0)",
-    "coolprop (>=6.7.0,<7.0.0)",
+    "numpy>=2.0.0,<3.0.0",
+    "fluids>=1.1.0,<2.0.0",
+    "matplotlib>=3.10.0,<4.0.0",
+    "plotly>=6.0.0,<7.0.0",
+    "scipy>=1.15.2,<2.0.0",
+    "pandas>=2.2.3,<3.0.0",
+    "scikit-image>=0.25.2,<0.26.0",
+    "scikit-fmm==2025.6.23",
+    "trimesh>=4.6.4,<5.0.0",
+    "rocketcea>=1.2.1,<2.0.0",
+    "coolprop>=6.7.0,<7.0.0",
 ]
 
 [project.optional-dependencies]
 rocketpy = ["rocketpy>=1.0.0,<2.0.0"]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pyright = "*"
-pytest = "*"
-pylint = "^3.3.5"
-py2puml = "^0.10.0"
-pytest-cov = "^6.2.1"
-polyfactory = "^3.1.0"
-rocketpy = "^1.11.0"
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.6.0"
-mkdocs-material = "^9.5.0"
-mkdocstrings = {version = "^0.27.0", extras = ["python"]}
+[dependency-groups]
+dev = [
+    "ruff",
+    "pyright",
+    "pytest",
+    "pylint>=3.3.5,<4.0.0",
+    "py2puml>=0.10.0,<0.11.0",
+    "pytest-cov>=6.2.1,<7.0.0",
+    "polyfactory>=3.1.0,<4.0.0",
+    "rocketpy>=1.11.0,<2.0.0",
+]
+docs = [
+    "mkdocs>=1.6.0,<2.0.0",
+    "mkdocs-material>=9.5.0,<10.0.0",
+    "mkdocstrings[python]>=0.27.0,<0.28.0",
+]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "machwave/_version.py"
 
 [project.urls]
 Homepage = "https://github.com/felipebogaertsm/machwave"

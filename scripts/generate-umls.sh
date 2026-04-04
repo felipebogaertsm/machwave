@@ -19,7 +19,7 @@ mkdir -p "$OUT_DIR"
 for module in "${MODULES[@]}"; do
   out="$OUT_DIR/${module//./_}.puml"
   echo "Generating $out …"
-  poetry run py2puml ${module//.//} $module > $out
+  uv run py2puml ${module//.//} $module > $out
 done
 
 echo "UML diagrams generated"
