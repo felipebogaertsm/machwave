@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.grain.geometries import BatesSegment
+from machwave.models.grain import Grain
+from machwave.models.grain.geometries import BatesSegment
 
 
 class TestBatesSegmentMomentOfInertia:

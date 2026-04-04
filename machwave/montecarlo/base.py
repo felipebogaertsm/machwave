@@ -9,7 +9,7 @@ import scipy.stats as scipy_stats
 from machwave.common.objects import get_object_dict
 from machwave.montecarlo import random
 from machwave.services.plots import montecarlo as plot_service
-from machwave.simulations import Simulation
+from machwave.simulation import InternalBallisticsSimulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
 
@@ -53,7 +53,7 @@ class MonteCarloSimulation:
         self,
         parameters: list[typing.Any],
         number_of_scenarios: int,
-        simulation: type[Simulation],
+        simulation: type[InternalBallisticsSimulation],
     ) -> None:
         """
         Initializes a MonteCarloSimulation object.

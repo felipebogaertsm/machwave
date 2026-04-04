@@ -6,7 +6,7 @@ of propellant property dataclasses with realistic default values.
 
 from polyfactory.factories import DataclassFactory
 
-from machwave.models.propulsion.propellants.properties import (
+from machwave.models.propellants.properties import (
     ThermochemicalProperties,
 )
 

@@ -1,14 +1,13 @@
 from machwave import montecarlo
 from machwave.common.decorators import timing
-from machwave.models import materials
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion import motors
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models import grain as grain_models
+from machwave.models import motors
+from machwave.models import thrust_chamber as thrust_chamber_models
+from machwave.models.grain import geometries as grain_geometries
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
 MC_SAMPLES = 1000
 
@@ -43,7 +42,6 @@ def main():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
-        material=materials.Steel(),
     )
 
     combustion_chamber = thrust_chamber_models.CombustionChamber(
@@ -67,7 +65,7 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    ib_params = internal_ballistics.InternalBallisticsParams(
+    ib_params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         external_pressure=1e5,
         igniter_pressure=1e6,
@@ -76,7 +74,7 @@ def main():
     mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
         MC_SAMPLES,
-        internal_ballistics.InternalBallistics,
+        simulation.InternalBallisticsSimulation,
     )
     mc.run()
 

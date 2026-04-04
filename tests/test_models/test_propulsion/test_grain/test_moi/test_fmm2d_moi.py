@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from machwave.models.propulsion.grain import Grain
+from machwave.models.grain import Grain
 from tests.test_models.test_propulsion.test_grain.test_moi.conftest import (
     fmm2d_geometries,
 )

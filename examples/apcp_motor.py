@@ -5,16 +5,15 @@ internal ballistics and atmospheric flight.
 """
 
 from machwave.common.decorators import timing
-from machwave.models import materials
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion import motors
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models import grain as grain_models
+from machwave.models import motors
+from machwave.models import thrust_chamber as thrust_chamber_models
+from machwave.models.grain import geometries as grain_geometries
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
 
 @timing
@@ -40,7 +39,6 @@ def main():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
-        material=materials.Steel(),
     )
     combustion_chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=95.25e-3,
@@ -61,20 +59,20 @@ def main():
         grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 
-    params = internal_ballistics.InternalBallisticsParams(
+    params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
     )
 
-    simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
-    (time, ib_state) = simulation.run()
+    sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
+    (time, ib_state) = sim.run()
 
     internal_ballistics_plots.thrust_pressure_plot(
         time, ib_state.thrust, ib_state.P_0
     ).show()
 
-    simulation.print_results()
+    sim.print_results()
 
 
 if __name__ == "__main__":

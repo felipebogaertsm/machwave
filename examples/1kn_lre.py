@@ -2,17 +2,16 @@
 Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 """
 
-from machwave.models import materials
-from machwave.models.propulsion import feed_systems, motors, propellants
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
-from machwave.models.propulsion.feed_systems import tanks
+from machwave.models import feed_systems, motors, propellants
+from machwave.models import thrust_chamber as thrust_chamber_models
+from machwave.models.feed_systems import tanks
 from machwave.services.plots.internal_ballistics import (
     plot_bipropellant_tank_profiles,
     thrust_pressure_plot,
 )
-from machwave.simulations.internal_ballistics import (
-    InternalBallistics,
-    InternalBallisticsParams,
+from machwave.simulation import (
+    InternalBallisticsSimulation,
+    InternalBallisticsSimulationParams,
 )
 
 FUEL_NAME = "Ethanol"
@@ -67,7 +66,6 @@ def main():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=4,
-        material=materials.Steel(),
     )
 
     injector = thrust_chamber_models.BipropellantInjector(
@@ -99,10 +97,10 @@ def main():
         fuel_tank_cog=0.4,
     )
 
-    sim_params = InternalBallisticsParams(
+    sim_params = InternalBallisticsSimulationParams(
         d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5
     )
-    simulation = InternalBallistics(motor=lre, params=sim_params)
+    simulation = InternalBallisticsSimulation(motor=lre, params=sim_params)
 
     (time, ib_state) = simulation.run()
 

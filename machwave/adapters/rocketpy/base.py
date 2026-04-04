@@ -9,7 +9,7 @@ import numpy.typing as npt
 if typing.TYPE_CHECKING:
     from rocketpy import Function
 
-    import machwave.states.internal_ballistics as ib_states
+    import machwave.states as ib_states
 
 
 class RocketPyAdapterError(Exception):

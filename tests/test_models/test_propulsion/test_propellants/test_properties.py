@@ -5,7 +5,7 @@ import math
 import pytest
 import scipy.constants
 
-from machwave.models.propulsion.propellants.properties import (
+from machwave.models.propellants.properties import (
     ThermochemicalProperties,
 )
 from tests.test_models.test_propulsion.factories import (
