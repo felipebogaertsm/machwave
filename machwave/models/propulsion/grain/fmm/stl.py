@@ -56,10 +56,13 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
 
         NOTE: Still needs to convert boolean matrix to masked array.
         """
-        mesh: trimesh.Trimesh = trimesh.load_mesh(self.file_path)
+        mesh = trimesh.load_mesh(self.file_path)
+        assert isinstance(mesh, trimesh.Trimesh), "Expected a single Trimesh"
         assert mesh.is_watertight, "Mesh must be watertight"
 
-        volume = mesh.voxelized(pitch=self.get_voxel_size()).fill()
+        voxels = mesh.voxelized(pitch=self.get_voxel_size())
+        assert voxels is not None, "Voxelization failed"
+        volume = voxels.fill()
         voxel_map: np.typing.NDArray[np.int_] = (
             volume.matrix.view(np.ndarray).transpose().astype(np.int_)
         )

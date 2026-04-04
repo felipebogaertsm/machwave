@@ -274,7 +274,7 @@ class LiquidEngineState(MotorState):
         print(f"  Mean: {np.mean(self.thrust):.4f}")
 
         # Impulse
-        impulse = np.trapz(self.thrust, self.t)
+        impulse = np.trapezoid(self.thrust, self.t)
         isp = impulse / (self.m_prop[0] * 9.81)
         print("\nIMPULSE AND I_SP")
         print(f"  Total impulse: {impulse:.4f} N·s")
