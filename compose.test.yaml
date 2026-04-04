@@ -1,9 +1,0 @@
-services:
-  test-machwave:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    container_name: test_machwave
-    entrypoint: bash -c "poetry run pytest"
-    volumes:
-      - ./:/usr/app/

@@ -66,3 +66,12 @@ misc/
 # Docs build output
 site/
 docs/_build/
+
+# Generated version file
+machwave/_version.py
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
