@@ -66,3 +66,6 @@ misc/
 # Docs build output
 site/
 docs/_build/
+
+# Generated version file
+machwave/_version.py
