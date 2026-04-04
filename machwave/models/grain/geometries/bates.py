@@ -5,9 +5,17 @@ from machwave.core.geometric import (
     get_cylinder_surface_area,
 )
 from machwave.models.grain import GrainGeometryError, GrainSegment2D
+from machwave.models.grain.base import InhibitedSurfaces
 
 
 class BatesSegment(GrainSegment2D):
+    INHIBITED_SURFACES = InhibitedSurfaces(
+        outer_surface=True,
+        inner_surface=False,
+        upper_end=False,
+        lower_end=False,
+    )
+
     def __init__(
         self,
         outer_diameter: float,
@@ -20,7 +28,7 @@ class BatesSegment(GrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=0,
+            inhibited_surfaces=self.INHIBITED_SURFACES,
             density_ratio=density_ratio,
         )
 
