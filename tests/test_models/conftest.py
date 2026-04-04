@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from machwave.models.propulsion.propellants.formulations import get_propellant_from_json
-from machwave.models.propulsion.thrust_chamber import (
+from machwave.models.propellants.formulations import get_propellant_from_json
+from machwave.models.thrust_chamber import (
     CombustionChamber,
 )
 

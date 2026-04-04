@@ -6,16 +6,16 @@ Reuses fixtures from CoG tests for parametrization.
 
 import pytest
 
-from machwave.models.propulsion.grain.geometries.conical import ConicalGrainSegment
-from machwave.models.propulsion.grain.geometries.d_grain import DGrainSegment
-from machwave.models.propulsion.grain.geometries.multi_port import (
+from machwave.models.grain.geometries.conical import ConicalGrainSegment
+from machwave.models.grain.geometries.d_grain import DGrainSegment
+from machwave.models.grain.geometries.multi_port import (
     MultiPortGrainSegment,
 )
-from machwave.models.propulsion.grain.geometries.rod_and_tube import (
+from machwave.models.grain.geometries.rod_and_tube import (
     RodAndTubeGrainSegment,
 )
-from machwave.models.propulsion.grain.geometries.star import StarGrainSegment
-from machwave.models.propulsion.grain.geometries.wagon_wheel import (
+from machwave.models.grain.geometries.star import StarGrainSegment
+from machwave.models.grain.geometries.wagon_wheel import (
     WagonWheelGrainSegment,
 )
 

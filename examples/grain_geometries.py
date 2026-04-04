@@ -5,7 +5,7 @@ geometries within Machwave.
 
 import numpy as np
 
-from machwave.models.propulsion.grain.geometries import (
+from machwave.models.grain.geometries import (
     BatesSegment,
     ConicalGrainSegment,
     DGrainSegment,

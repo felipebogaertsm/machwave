@@ -1,3 +1,3 @@
 # models.propulsion
 
-::: machwave.models.propulsion
+::: machwave.models

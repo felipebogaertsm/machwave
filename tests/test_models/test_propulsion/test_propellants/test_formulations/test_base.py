@@ -2,9 +2,9 @@
 
 import pytest
 
-from machwave.models.propulsion.propellants.categories import MixtureType
-from machwave.models.propulsion.propellants.components import ComponentRole
-from machwave.models.propulsion.propellants.formulations.base import (
+from machwave.models.propellants.categories import MixtureType
+from machwave.models.propellants.components import ComponentRole
+from machwave.models.propellants.formulations.base import (
     _create_propellant,
     _parse_component,
     _parse_components,
@@ -247,7 +247,7 @@ class TestCreatePropellant:
     """Tests for _create_propellant function."""
 
     def test_create_solid_propellant(self):
-        from machwave.models.propulsion.propellants.categories import SolidPropellant
+        from machwave.models.propellants.categories import SolidPropellant
 
         data = {
             "name": "Test Solid",
@@ -268,7 +268,7 @@ class TestCreatePropellant:
         assert len(result.burn_rate_map) == 1
 
     def test_create_biliquid_propellant(self):
-        from machwave.models.propulsion.propellants.categories import BiliquidPropellant
+        from machwave.models.propellants.categories import BiliquidPropellant
 
         data = {
             "name": "Test Biliquid",
@@ -289,7 +289,7 @@ class TestCreatePropellant:
         assert result.of_ratio == 2.5
 
     def test_create_solid_with_default_efficiency(self):
-        from machwave.models.propulsion.propellants.categories import SolidPropellant
+        from machwave.models.propellants.categories import SolidPropellant
 
         data = {"name": "Test"}
         result = _create_propellant(MixtureType.SOLID, data, [], [], None)
@@ -298,7 +298,7 @@ class TestCreatePropellant:
         assert result.combustion_efficiency == 0.95
 
     def test_create_biliquid_with_default_efficiency(self):
-        from machwave.models.propulsion.propellants.categories import BiliquidPropellant
+        from machwave.models.propellants.categories import BiliquidPropellant
 
         data = {"name": "Test"}
         result = _create_propellant(MixtureType.BILIQUID, data, [], None, None)

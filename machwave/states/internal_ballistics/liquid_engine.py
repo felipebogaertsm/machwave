@@ -12,7 +12,7 @@ from machwave.core.compressible_flow.isentropic import (
 )
 from machwave.core.equations import compute_chamber_pressure_mass_balance_lre
 from machwave.core.solvers import rk4th_ode_solver
-from machwave.models.propulsion.motors import LiquidEngine
+from machwave.models.motors import LiquidEngine
 from machwave.states.internal_ballistics.base import MotorState
 
 

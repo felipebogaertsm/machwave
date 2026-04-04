@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from machwave.models.propulsion.motors import Motor
+from machwave.models.motors import Motor
 
 
 class MotorState(ABC):

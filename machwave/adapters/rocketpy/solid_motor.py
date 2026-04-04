@@ -5,7 +5,7 @@ import typing
 from machwave.adapters.rocketpy.base import RocketPyMotorAdapter
 
 if typing.TYPE_CHECKING:
-    from machwave.models.propulsion.motors import SolidMotor
+    from machwave.models.motors import SolidMotor
     from machwave.states.internal_ballistics.solid_motor import (
         SolidMotorState,  # noqa: F401
     )

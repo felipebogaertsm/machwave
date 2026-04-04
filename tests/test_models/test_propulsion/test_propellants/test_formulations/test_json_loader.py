@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from machwave.models.propulsion.propellants.categories import (
+from machwave.models.propellants.categories import (
     BiliquidPropellant,
     MixtureType,
     SolidPropellant,
 )
-from machwave.models.propulsion.propellants.components import ComponentRole
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models.propellants.components import ComponentRole
+from machwave.models.propellants.formulations import (
     get_propellant_from_json,
 )
 

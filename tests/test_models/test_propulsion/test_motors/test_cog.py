@@ -12,13 +12,13 @@ For grain-specific CoG tests, see:
 import numpy as np
 import pytest
 
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
-from machwave.models.propulsion.motors import solid as solid_motors
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models import grain as grain_models
+from machwave.models.grain import geometries as grain_geometries
+from machwave.models.motors import solid as solid_motors
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
-from machwave.models.propulsion.thrust_chamber import (
+from machwave.models.thrust_chamber import (
     CombustionChamber,
     Nozzle,
     SolidMotorThrustChamber,
@@ -251,24 +251,24 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with default position estimates.
         """
-        from machwave.models.propulsion.feed_systems.pressure_fed import (
+        from machwave.models.feed_systems.pressure_fed import (
             StackedTankPressureFedFeedSystem,
         )
-        from machwave.models.propulsion.feed_systems.tanks import Tank
-        from machwave.models.propulsion.motors.liquid import LiquidEngine
-        from machwave.models.propulsion.propellants import (
+        from machwave.models.feed_systems.tanks import Tank
+        from machwave.models.motors.liquid import LiquidEngine
+        from machwave.models.propellants import (
             BiliquidPropellant,
             ComponentRole,
             PropellantComponent,
         )
-        from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
-        from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
+        from machwave.models.thrust_chamber import LiquidEngineThrustChamber
+        from machwave.models.thrust_chamber.combustion_chamber import (
             CombustionChamber,
         )
-        from machwave.models.propulsion.thrust_chamber.injector import (
+        from machwave.models.thrust_chamber.injector import (
             BipropellantInjector,
         )
-        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+        from machwave.models.thrust_chamber.nozzle import Nozzle
 
         # Create tanks
         ox_tank = Tank(
@@ -378,24 +378,24 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with user-provided positions for dry mass and tanks.
         """
-        from machwave.models.propulsion.feed_systems.pressure_fed import (
+        from machwave.models.feed_systems.pressure_fed import (
             StackedTankPressureFedFeedSystem,
         )
-        from machwave.models.propulsion.feed_systems.tanks import Tank
-        from machwave.models.propulsion.motors.liquid import LiquidEngine
-        from machwave.models.propulsion.propellants import (
+        from machwave.models.feed_systems.tanks import Tank
+        from machwave.models.motors.liquid import LiquidEngine
+        from machwave.models.propellants import (
             BiliquidPropellant,
             ComponentRole,
             PropellantComponent,
         )
-        from machwave.models.propulsion.thrust_chamber import LiquidEngineThrustChamber
-        from machwave.models.propulsion.thrust_chamber.combustion_chamber import (
+        from machwave.models.thrust_chamber import LiquidEngineThrustChamber
+        from machwave.models.thrust_chamber.combustion_chamber import (
             CombustionChamber,
         )
-        from machwave.models.propulsion.thrust_chamber.injector import (
+        from machwave.models.thrust_chamber.injector import (
             BipropellantInjector,
         )
-        from machwave.models.propulsion.thrust_chamber.nozzle import Nozzle
+        from machwave.models.thrust_chamber.nozzle import Nozzle
 
         # Create tanks
         ox_tank = Tank(

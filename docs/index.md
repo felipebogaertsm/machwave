@@ -47,7 +47,7 @@ Machwave ships with several pre-defined solid propellant formulations. Here we
 use KNDX (potassium nitrate / dextrose):
 
 ```python
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
 
@@ -62,8 +62,8 @@ For a full list of available solid propellants, see the
 Create a `Grain` and add one or more segments.
 
 ```python
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
+from machwave.models import grain as grain_models
+from machwave.models.grain import geometries as grain_geometries
 
 grain = grain_models.Grain(spacing=10e-3)  # 10 mm spacing between segments
 
@@ -82,7 +82,7 @@ for _ in range(4):
 The thrust chamber is composed of a **nozzle** and a **combustion chamber**:
 
 ```python
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
+from machwave.models import thrust_chamber as thrust_chamber_models
 
 nozzle = thrust_chamber_models.Nozzle(
     inlet_diameter=43e-3,
@@ -112,7 +112,7 @@ thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
 Combine the grain, propellant, and thrust chamber into a `SolidMotor`:
 
 ```python
-from machwave.models.propulsion import motors
+from machwave.models import motors
 
 motor = motors.SolidMotor(
     grain=grain,

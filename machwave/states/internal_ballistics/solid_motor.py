@@ -6,7 +6,7 @@ import machwave.core.compressible_flow.losses as losses
 import machwave.core.conversions as conversions
 import machwave.core.equations.srm_mass_balance as des
 import machwave.core.solvers.rk4 as rk4
-import machwave.models.propulsion.motors as motors
+import machwave.models.motors as motors
 import machwave.states.internal_ballistics.base as ib_base
 
 
