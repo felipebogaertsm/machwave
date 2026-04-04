@@ -1,7 +1,7 @@
 import numpy as np
 
 from machwave.models.motors import LiquidEngine, Motor, SolidMotor
-from machwave.states.internal_ballistics import (
+from machwave.states import (
     LiquidEngineState,
     MotorState,
     SolidMotorState,

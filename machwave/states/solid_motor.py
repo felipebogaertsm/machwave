@@ -7,10 +7,10 @@ import machwave.core.conversions as conversions
 import machwave.core.equations.srm_mass_balance as des
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
-import machwave.states.internal_ballistics.base as ib_base
+import machwave.states.base as states_base
 
 
-class SolidMotorState(ib_base.MotorState):
+class SolidMotorState(states_base.MotorState):
     """
     State for a Solid Rocket Motor.
 
