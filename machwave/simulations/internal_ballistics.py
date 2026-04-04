@@ -1,12 +1,14 @@
 import numpy as np
 
-from machwave.models.propulsion.motors import Motor
-from machwave.simulations import Simulation, SimulationParameters
-from machwave.simulations.factories import get_motor_state_class
-from machwave.states.internal_ballistics import MotorState
+from machwave.models.propulsion.motors import LiquidEngine, Motor, SolidMotor
+from machwave.states.internal_ballistics import (
+    LiquidEngineState,
+    MotorState,
+    SolidMotorState,
+)
 
 
-class InternalBallisticsParams(SimulationParameters):
+class InternalBallisticsParams:
     """Parameters for an internal ballistics simulation.
 
     Attributes:
@@ -21,13 +23,31 @@ class InternalBallisticsParams(SimulationParameters):
         igniter_pressure: float,
         external_pressure: float,
     ) -> None:
-        super().__init__()
         self.d_t = d_t
         self.igniter_pressure = igniter_pressure
         self.external_pressure = external_pressure
 
 
-class InternalBallistics(Simulation):
+def _get_motor_state_class(motor: Motor) -> type[MotorState]:
+    """Return the appropriate motor state class based on the motor type.
+
+    Args:
+        motor: Motor object.
+
+    Returns:
+        Motor state class.
+
+    Raises:
+        ValueError: If the motor type is not supported.
+    """
+    if isinstance(motor, SolidMotor):
+        return SolidMotorState
+    if isinstance(motor, LiquidEngine):
+        return LiquidEngineState
+    raise ValueError("Unsupported motor type.")
+
+
+class InternalBallistics:
     """Internal ballistics simulation class.
 
     Attributes:
@@ -42,7 +62,6 @@ class InternalBallistics(Simulation):
         motor: Motor,
         params: InternalBallisticsParams,
     ) -> None:
-        super().__init__(params=params)
         self.motor: Motor = motor
         self.params: InternalBallisticsParams = params
         self.t: np.ndarray = np.array([0])
@@ -52,7 +71,7 @@ class InternalBallistics(Simulation):
         """
         Returns the motor state object based on the type of the motor.
         """
-        motor_state_class = get_motor_state_class(self.motor)
+        motor_state_class = _get_motor_state_class(self.motor)
         return motor_state_class(
             motor=self.motor,
             initial_pressure=self.params.igniter_pressure,

@@ -1,12 +1,11 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 from machwave.models.propulsion.motors import Motor
-from machwave.states import State
 
 
-class MotorState(State):
+class MotorState(ABC):
     """
     Defines a particular motor operation. Stores and processes all attributes
     obtained from the simulation.
