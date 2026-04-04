@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
@@ -10,7 +11,7 @@ class DGrainSegment(FMMGrainSegment2D):
         length: float,
         outer_diameter: float,
         slot_offset: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.slot_offset = slot_offset
@@ -18,7 +19,7 @@ class DGrainSegment(FMMGrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 
