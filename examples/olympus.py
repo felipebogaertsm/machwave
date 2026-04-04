@@ -72,13 +72,13 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    params = simulation.InternalBallisticsParams(
+    params = simulation.InternalBallisticsSimulationParams(
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
     )
 
-    sim = simulation.InternalBallistics(motor=motor, params=params)
+    sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
     t, ib_state = sim.run()
 
     sim.print_results()

@@ -10,8 +10,8 @@ from machwave.services.plots.internal_ballistics import (
     thrust_pressure_plot,
 )
 from machwave.simulation import (
-    InternalBallistics,
-    InternalBallisticsParams,
+    InternalBallisticsSimulation,
+    InternalBallisticsSimulationParams,
 )
 
 FUEL_NAME = "Ethanol"
@@ -97,10 +97,10 @@ def main():
         fuel_tank_cog=0.4,
     )
 
-    sim_params = InternalBallisticsParams(
+    sim_params = InternalBallisticsSimulationParams(
         d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5
     )
-    simulation = InternalBallistics(motor=lre, params=sim_params)
+    simulation = InternalBallisticsSimulation(motor=lre, params=sim_params)
 
     (time, ib_state) = simulation.run()
 

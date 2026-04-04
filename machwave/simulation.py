@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import numpy as np
 
 from machwave.models.motors import LiquidEngine, Motor, SolidMotor
@@ -8,7 +10,8 @@ from machwave.states import (
 )
 
 
-class InternalBallisticsParams:
+@dataclass
+class InternalBallisticsSimulationParams:
     """Parameters for an internal ballistics simulation.
 
     Attributes:
@@ -17,15 +20,9 @@ class InternalBallisticsParams:
         external_pressure: External pressure.
     """
 
-    def __init__(
-        self,
-        d_t: float,
-        igniter_pressure: float,
-        external_pressure: float,
-    ) -> None:
-        self.d_t = d_t
-        self.igniter_pressure = igniter_pressure
-        self.external_pressure = external_pressure
+    d_t: float
+    igniter_pressure: float
+    external_pressure: float
 
 
 def _get_motor_state_class(motor: Motor) -> type[MotorState]:
@@ -47,7 +44,7 @@ def _get_motor_state_class(motor: Motor) -> type[MotorState]:
     raise ValueError("Unsupported motor type.")
 
 
-class InternalBallistics:
+class InternalBallisticsSimulation:
     """Internal ballistics simulation class.
 
     Attributes:
@@ -60,10 +57,10 @@ class InternalBallistics:
     def __init__(
         self,
         motor: Motor,
-        params: InternalBallisticsParams,
+        params: InternalBallisticsSimulationParams,
     ) -> None:
         self.motor: Motor = motor
-        self.params: InternalBallisticsParams = params
+        self.params: InternalBallisticsSimulationParams = params
         self.t: np.ndarray = np.array([0])
         self.motor_state: MotorState | None = None
 

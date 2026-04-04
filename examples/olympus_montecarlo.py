@@ -65,7 +65,7 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    ib_params = simulation.InternalBallisticsParams(
+    ib_params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         external_pressure=1e5,
         igniter_pressure=1e6,
@@ -74,7 +74,7 @@ def main():
     mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
         MC_SAMPLES,
-        simulation.InternalBallistics,
+        simulation.InternalBallisticsSimulation,
     )
     mc.run()
 

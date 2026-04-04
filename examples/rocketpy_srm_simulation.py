@@ -69,13 +69,13 @@ def main():
     # ============================================================================
     # 2. RUN MACHWAVE INTERNAL BALLISTICS SIMULATION
     # ============================================================================
-    params = simulation.InternalBallisticsParams(
+    params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
     )
 
-    sim = simulation.InternalBallistics(motor=motor, params=params)
+    sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
     time, motor_state = sim.run()
 
     sim.print_results()

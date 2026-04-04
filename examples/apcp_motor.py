@@ -59,13 +59,13 @@ def main():
         grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 
-    params = simulation.InternalBallisticsParams(
+    params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
     )
 
-    sim = simulation.InternalBallistics(motor=motor, params=params)
+    sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
     (time, ib_state) = sim.run()
 
     internal_ballistics_plots.thrust_pressure_plot(

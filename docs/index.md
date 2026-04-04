@@ -129,13 +129,13 @@ state object containing all ballistic data:
 ```python
 from machwave import simulation
 
-params = simulation.InternalBallisticsParams(
+params = simulation.InternalBallisticsSimulationParams(
     d_t=0.01,                # time step [s]
     igniter_pressure=1e6,    # 1 MPa
     external_pressure=1e5,   # 1 atm
 )
 
-sim = simulation.InternalBallistics(motor=motor, params=params)
+sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
 time, state = sim.run()
 ```
 
