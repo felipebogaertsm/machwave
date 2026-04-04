@@ -166,12 +166,12 @@ Carlo analyses - see the
 
 ## Development Setup
 
-If you're contributing to Machwave, you'll need [Poetry](https://python-poetry.org/) for dependency management.
+If you're contributing to Machwave, you'll need [uv](https://docs.astral.sh/uv/) for dependency management.
 
 ```bash
 git clone https://github.com/felipebogaertsm/machwave.git
 cd machwave
-poetry install
+uv sync
 ```
 
 ## License
