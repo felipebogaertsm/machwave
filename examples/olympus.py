@@ -78,10 +78,10 @@ def main():
         external_pressure=1.013e5,
     )
 
-    simulation = simulation.InternalBallistics(motor=motor, params=params)
-    t, ib_state = simulation.run()
+    sim = simulation.InternalBallistics(motor=motor, params=params)
+    t, ib_state = sim.run()
 
-    simulation.print_results()
+    sim.print_results()
 
     internal_ballistics_plots.thrust_pressure_plot(
         t, ib_state.thrust, ib_state.P_0

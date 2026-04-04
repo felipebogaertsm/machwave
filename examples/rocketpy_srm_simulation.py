@@ -75,10 +75,10 @@ def main():
         external_pressure=1.013e5,
     )
 
-    simulation = simulation.InternalBallistics(motor=motor, params=params)
-    time, motor_state = simulation.run()
+    sim = simulation.InternalBallistics(motor=motor, params=params)
+    time, motor_state = sim.run()
 
-    simulation.print_results()
+    sim.print_results()
 
     # ============================================================================
     # 3. CREATE ROCKETPY ADAPTER
