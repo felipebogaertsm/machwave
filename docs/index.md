@@ -47,7 +47,7 @@ Machwave ships with several pre-defined solid propellant formulations. Here we
 use KNDX (potassium nitrate / dextrose):
 
 ```python
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
 
@@ -62,8 +62,8 @@ For a full list of available solid propellants, see the
 Create a `Grain` and add one or more segments.
 
 ```python
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
+from machwave.models import grain as grain_models
+from machwave.models.grain import geometries as grain_geometries
 
 grain = grain_models.Grain(spacing=10e-3)  # 10 mm spacing between segments
 
@@ -82,8 +82,7 @@ for _ in range(4):
 The thrust chamber is composed of a **nozzle** and a **combustion chamber**:
 
 ```python
-from machwave.models import materials
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
+from machwave.models import thrust_chamber as thrust_chamber_models
 
 nozzle = thrust_chamber_models.Nozzle(
     inlet_diameter=43e-3,
@@ -91,7 +90,6 @@ nozzle = thrust_chamber_models.Nozzle(
     divergent_angle=12,     # degrees
     convergent_angle=40,    # degrees
     expansion_ratio=8,
-    material=materials.Steel(),
 )
 
 combustion_chamber = thrust_chamber_models.CombustionChamber(
@@ -114,7 +112,7 @@ thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
 Combine the grain, propellant, and thrust chamber into a `SolidMotor`:
 
 ```python
-from machwave.models.propulsion import motors
+from machwave.models import motors
 
 motor = motors.SolidMotor(
     grain=grain,
@@ -129,16 +127,16 @@ Set up the simulation parameters and run it. `run()` returns a time array and a
 state object containing all ballistic data:
 
 ```python
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
-params = internal_ballistics.InternalBallisticsParams(
+params = simulation.InternalBallisticsSimulationParams(
     d_t=0.01,                # time step [s]
     igniter_pressure=1e6,    # 1 MPa
     external_pressure=1e5,   # 1 atm
 )
 
-simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
-time, state = simulation.run()
+sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
+time, state = sim.run()
 ```
 
 ### 6. View results
@@ -149,7 +147,7 @@ pressure curves:
 ```python
 from machwave.services.plots import internal_ballistics as ib_plots
 
-simulation.print_results()
+sim.print_results()
 
 ib_plots.thrust_pressure_plot(time, state.thrust, state.P_0).show()
 ```

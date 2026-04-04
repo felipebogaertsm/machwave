@@ -9,10 +9,10 @@ trajectory modeling.
 
 import numpy as np
 
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.grain.geometries.bates import BatesSegment
-from machwave.models.propulsion.grain.geometries.conical import ConicalGrainSegment
-from machwave.models.propulsion.grain.geometries.star import StarGrainSegment
+from machwave.models.grain import Grain
+from machwave.models.grain.geometries.bates import BatesSegment
+from machwave.models.grain.geometries.conical import ConicalGrainSegment
+from machwave.models.grain.geometries.star import StarGrainSegment
 
 
 def print_inertia_tensor(moi: np.ndarray, title: str = "Moment of Inertia Tensor"):

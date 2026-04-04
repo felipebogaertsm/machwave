@@ -1,7 +1,7 @@
 import pytest
 
-from machwave.models.propulsion.grain import GrainGeometryError
-from machwave.models.propulsion.grain.geometries import DGrainSegment
+from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.geometries import DGrainSegment
 
 
 def test_dgrain_segment_geometry_validation():

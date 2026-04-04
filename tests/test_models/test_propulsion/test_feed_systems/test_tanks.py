@@ -3,7 +3,7 @@ import CoolProp.CoolProp as CP
 import pytest
 import scipy.constants
 
-from machwave.models.propulsion.feed_systems.tanks import Tank
+from machwave.models.feed_systems.tanks import Tank
 
 # A few (fluid, temperature) pairs for running tests.
 # Adjust temperatures to ensure we stay within valid ranges for each fluid in CoolProp.

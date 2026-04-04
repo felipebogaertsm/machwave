@@ -56,34 +56,25 @@ nav:
       - io: api/io.md
       - models:
           - Overview: api/models.md
-          - atmosphere: api/models/atmosphere.md
-          - materials: api/models/materials.md
-          - propulsion:
-              - Overview: api/models/propulsion.md
-              - feed_systems:
-                  - Overview: api/models/propulsion/feed_systems.md
-                  - tanks: api/models/propulsion/feed_systems/tanks.md
-              - grain:
-                  - Overview: api/models/propulsion/grain.md
-                  - fmm: api/models/propulsion/grain/fmm.md
-                  - geometries: api/models/propulsion/grain/geometries.md
-              - motors: api/models/propulsion/motors.md
-              - propellants:
-                  - Overview: api/models/propulsion/propellants.md
-                  - categories: api/models/propulsion/propellants/categories.md
-                  - formulations: api/models/propulsion/propellants/formulations.md
-              - thrust_chamber: api/models/propulsion/thrust_chamber.md
-          - recovery: api/models/recovery.md
-          - rocket: api/models/rocket.md
+          - feed_systems:
+              - Overview: api/models/feed_systems.md
+              - tanks: api/models/feed_systems/tanks.md
+          - grain:
+              - Overview: api/models/grain.md
+              - fmm: api/models/grain/fmm.md
+              - geometries: api/models/grain/geometries.md
+          - motors: api/models/motors.md
+          - propellants:
+              - Overview: api/models/propellants.md
+              - categories: api/models/propellants/categories.md
+              - formulations: api/models/propellants/formulations.md
+          - thrust_chamber: api/models/thrust_chamber.md
       - montecarlo: api/montecarlo.md
       - services:
           - Overview: api/services.md
           - plots: api/services/plots.md
-      - simulations: api/simulations.md
-      - states:
-          - Overview: api/states.md
-          - ballistics: api/states/ballistics.md
-          - internal_ballistics: api/states/internal_ballistics.md
+      - simulation: api/simulation.md
+      - states: api/states.md
 
 extra_css:
   - stylesheets/extra.css

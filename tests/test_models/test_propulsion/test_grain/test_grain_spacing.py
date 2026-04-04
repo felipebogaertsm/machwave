@@ -7,8 +7,8 @@ attribute and not as a GrainSegment attribute.
 
 import pytest
 
-from machwave.models.propulsion.grain import Grain
-from machwave.models.propulsion.grain.geometries.bates import BatesSegment
+from machwave.models.grain import Grain
+from machwave.models.grain.geometries.bates import BatesSegment
 
 
 class TestGrainSpacing:
@@ -127,7 +127,7 @@ class TestGrainSpacing:
 
     def test_spacing_affects_cog_calculation(self):
         """Test that spacing is properly used in center of gravity calculations."""
-        from machwave.models.propulsion.grain.geometries.bates import BatesSegment
+        from machwave.models.grain.geometries.bates import BatesSegment
 
         spacing = 0.01
         grain = Grain(spacing=spacing)

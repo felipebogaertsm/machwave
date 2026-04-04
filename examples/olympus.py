@@ -6,16 +6,15 @@ at the time, it was the largest experimental motor ever built in Latin America.
 """
 
 from machwave.common.decorators import timing
-from machwave.models import materials
-from machwave.models.propulsion import grain as grain_models
-from machwave.models.propulsion import motors
-from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
-from machwave.models.propulsion.grain import geometries as grain_geometries
-from machwave.models.propulsion.propellants.formulations import (
+from machwave.models import grain as grain_models
+from machwave.models import motors
+from machwave.models import thrust_chamber as thrust_chamber_models
+from machwave.models.grain import geometries as grain_geometries
+from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
 
 @timing
@@ -50,7 +49,6 @@ def main():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=9.11,
-        material=materials.Steel(),
     )
 
     combustion_chamber = thrust_chamber_models.CombustionChamber(
@@ -74,16 +72,16 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    params = internal_ballistics.InternalBallisticsParams(
+    params = simulation.InternalBallisticsSimulationParams(
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
     )
 
-    simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
-    t, ib_state = simulation.run()
+    sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
+    t, ib_state = sim.run()
 
-    simulation.print_results()
+    sim.print_results()
 
     internal_ballistics_plots.thrust_pressure_plot(
         t, ib_state.thrust, ib_state.P_0
