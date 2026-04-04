@@ -20,7 +20,6 @@ FORMULATIONS_DIR = (
     Path(__file__).parent.parent.parent.parent.parent.parent
     / "machwave"
     / "models"
-    / "propulsion"
     / "propellants"
     / "formulations"
 )
