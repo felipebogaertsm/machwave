@@ -9,7 +9,7 @@ import scipy.stats as scipy_stats
 from machwave.common.objects import get_object_dict
 from machwave.montecarlo import random
 from machwave.services.plots import montecarlo as plot_service
-from machwave.simulations import InternalBallistics
+from machwave.simulation import InternalBallistics
 
 SEARCH_TREE_DEPTH_LIMIT = 20
 

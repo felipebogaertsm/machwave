@@ -127,16 +127,16 @@ Set up the simulation parameters and run it. `run()` returns a time array and a
 state object containing all ballistic data:
 
 ```python
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
-params = internal_ballistics.InternalBallisticsParams(
+params = simulation.InternalBallisticsParams(
     d_t=0.01,                # time step [s]
     igniter_pressure=1e6,    # 1 MPa
     external_pressure=1e5,   # 1 atm
 )
 
-simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
-time, state = simulation.run()
+sim = simulation.InternalBallistics(motor=motor, params=params)
+time, state = sim.run()
 ```
 
 ### 6. View results
@@ -147,7 +147,7 @@ pressure curves:
 ```python
 from machwave.services.plots import internal_ballistics as ib_plots
 
-simulation.print_results()
+sim.print_results()
 
 ib_plots.thrust_pressure_plot(time, state.thrust, state.P_0).show()
 ```

@@ -4,12 +4,11 @@ set -euo pipefail
 # Packages you want diagrams for
 MODULES=(
   machwave
-  machwave.models.propulsion
-  machwave.models.propulsion.grain
-  machwave.models.propulsion.thrust_chamber
-  machwave.models.propulsion.motors
-  machwave.models.propulsion.propellants
-  machwave.simulations
+  machwave.models.grain
+  machwave.models.thrust_chamber
+  machwave.models.motors
+  machwave.models.propellants
+  machwave.simulation
   machwave.states
 )
 

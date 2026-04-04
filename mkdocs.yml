@@ -73,7 +73,7 @@ nav:
       - services:
           - Overview: api/services.md
           - plots: api/services/plots.md
-      - simulations: api/simulations.md
+      - simulation: api/simulation.md
       - states: api/states.md
 
 extra_css:

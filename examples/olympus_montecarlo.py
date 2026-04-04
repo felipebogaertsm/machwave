@@ -7,7 +7,7 @@ from machwave.models.grain import geometries as grain_geometries
 from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
 MC_SAMPLES = 1000
 
@@ -65,7 +65,7 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    ib_params = internal_ballistics.InternalBallisticsParams(
+    ib_params = simulation.InternalBallisticsParams(
         d_t=0.01,
         external_pressure=1e5,
         igniter_pressure=1e6,
@@ -74,7 +74,7 @@ def main():
     mc = montecarlo.MonteCarloSimulation(
         [motor, ib_params],
         MC_SAMPLES,
-        internal_ballistics.InternalBallistics,
+        simulation.InternalBallistics,
     )
     mc.run()
 

@@ -1,3 +1,0 @@
-# Simulations
-
-::: machwave.simulations

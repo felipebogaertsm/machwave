@@ -17,7 +17,7 @@ from machwave.models.grain import geometries as grain_geometries
 from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 from rocketpy import Environment, Flight, Rocket
 
 
@@ -69,13 +69,13 @@ def main():
     # ============================================================================
     # 2. RUN MACHWAVE INTERNAL BALLISTICS SIMULATION
     # ============================================================================
-    params = internal_ballistics.InternalBallisticsParams(
+    params = simulation.InternalBallisticsParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
     )
 
-    simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
+    simulation = simulation.InternalBallistics(motor=motor, params=params)
     time, motor_state = simulation.run()
 
     simulation.print_results()

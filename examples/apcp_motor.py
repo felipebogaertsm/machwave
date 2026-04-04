@@ -13,7 +13,7 @@ from machwave.models.propellants.formulations import (
     solid as solid_propellants,
 )
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave.simulations import internal_ballistics
+from machwave import simulation
 
 
 @timing
@@ -59,13 +59,13 @@ def main():
         grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 
-    params = internal_ballistics.InternalBallisticsParams(
+    params = simulation.InternalBallisticsParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
     )
 
-    simulation = internal_ballistics.InternalBallistics(motor=motor, params=params)
+    simulation = simulation.InternalBallistics(motor=motor, params=params)
     (time, ib_state) = simulation.run()
 
     internal_ballistics_plots.thrust_pressure_plot(

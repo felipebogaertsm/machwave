@@ -9,7 +9,7 @@ from machwave.services.plots.internal_ballistics import (
     plot_bipropellant_tank_profiles,
     thrust_pressure_plot,
 )
-from machwave.simulations.internal_ballistics import (
+from machwave.simulation import (
     InternalBallistics,
     InternalBallisticsParams,
 )
