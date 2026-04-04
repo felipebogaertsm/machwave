@@ -21,29 +21,23 @@ The full documentation is available at
 
 ### Development Setup
 
-If you're contributing to Machwave, you'll need [Poetry](https://python-poetry.org/) for dependency management.
+If you're contributing to Machwave, you'll need [uv](https://docs.astral.sh/uv/) for dependency management.
 
-#### Installing Poetry
+#### Installing uv
 
-**macOS / Linux / Ubuntu:**
+**macOS / Linux:**
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-After installation, verify it worked:
-
-```bash
-poetry --version
-```
-
-For more details, visit the [official Poetry installation guide](https://python-poetry.org/docs/#installation).
+For more details, visit the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
 #### Clone and Install
 
@@ -57,23 +51,7 @@ make install
 
 #### Publishing a New Release
 
-1. **Bump the version** with Poetry:
+1. **Create a release** on GitHub with a tag matching `vX.Y.Z` (e.g. `v1.2.0`).
+   The version is derived automatically from the git tag.
 
-   ```bash
-   poetry version patch   # or minor / major
-   ```
-
-2. **Commit and push** the version bump:
-
-   ```bash
-   git add pyproject.toml
-   git commit -m "chore: bump version to $(poetry version -s)"
-   git push
-   ```
-
-   This triggers the CI pipeline (lint > test > docs deploy). Ensure it passes.
-
-3. **Trigger the publish workflow** on GitHub:
-   Go to **Actions → "Publish Machwave to PyPI" → Run workflow**.
-
-   The workflow builds the package with `poetry build` and publishes it to PyPI using the `MACHWAVE_PUBLISHING_TOKEN` secret stored in the `publish` GitHub environment.
+2. The publish workflow builds the package and publishes it to PyPI via trusted publishing (OIDC).
