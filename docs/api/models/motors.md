@@ -1,3 +1,3 @@
-# models.propulsion.motors
+# models.motors
 
 ::: machwave.models.motors

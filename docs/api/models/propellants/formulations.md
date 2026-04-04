@@ -1,3 +1,3 @@
-# models.propulsion.propellants.formulations
+# models.propellants.formulations
 
 ::: machwave.models.propellants.formulations

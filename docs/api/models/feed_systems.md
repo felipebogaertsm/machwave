@@ -1,3 +1,3 @@
-# models.propulsion.feed_systems
+# models.feed_systems
 
 ::: machwave.models.feed_systems

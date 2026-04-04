@@ -1,3 +1,3 @@
-# models.propulsion.grain
+# models.grain
 
 ::: machwave.models.grain

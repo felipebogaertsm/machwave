@@ -1,3 +1,3 @@
-# models.propulsion.grain.fmm
+# models.grain.fmm
 
 ::: machwave.models.grain.fmm

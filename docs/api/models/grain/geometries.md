@@ -1,3 +1,3 @@
-# models.propulsion.grain.geometries
+# models.grain.geometries
 
 ::: machwave.models.grain.geometries
