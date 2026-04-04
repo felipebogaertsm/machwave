@@ -178,8 +178,8 @@ class SolidMotorState(ib_base.MotorState):
             throat_diameter_inch=throat_diameter_inch,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
             time=self.t[-1],
-            c_1=self.motor.thrust_chamber.nozzle.material.c_1,
-            c_2=self.motor.thrust_chamber.nozzle.material.c_2,
+            c_1=self.motor.thrust_chamber.nozzle.c_1,
+            c_2=self.motor.thrust_chamber.nozzle.c_2,
         )
         eta_2p = losses.get_two_phase_flow_percentage_loss(
             chamber_pressure_psi=chamber_pressure_psi,

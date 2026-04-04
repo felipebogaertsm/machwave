@@ -12,7 +12,6 @@ For grain-specific CoG tests, see:
 import numpy as np
 import pytest
 
-from machwave.models.materials import Steel
 from machwave.models.propulsion import grain as grain_models
 from machwave.models.propulsion.grain import geometries as grain_geometries
 from machwave.models.propulsion.motors import solid as solid_motors
@@ -45,7 +44,6 @@ def simple_bates_motor():
         divergent_angle=12,
         convergent_angle=40,
         expansion_ratio=8,
-        material=Steel(),
     )
 
     combustion_chamber = CombustionChamber(
@@ -103,7 +101,6 @@ def multi_segment_bates_motor():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
-        material=Steel(),
     )
 
     combustion_chamber = CombustionChamber(
@@ -212,7 +209,6 @@ class TestSolidMotorCoG:
             divergent_angle=12,
             convergent_angle=40,
             expansion_ratio=8,
-            material=Steel(),
         )
 
         combustion_chamber = CombustionChamber(
@@ -255,7 +251,6 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with default position estimates.
         """
-        from machwave.models.materials import Steel
         from machwave.models.propulsion.feed_systems.pressure_fed import (
             StackedTankPressureFedFeedSystem,
         )
@@ -307,7 +302,6 @@ class TestLiquidEngineCoG:
             divergent_angle=15,
             convergent_angle=45,
             expansion_ratio=10,
-            material=Steel(),
         )
 
         injector = BipropellantInjector(
@@ -384,7 +378,6 @@ class TestLiquidEngineCoG:
         """
         Liquid engine CoG with user-provided positions for dry mass and tanks.
         """
-        from machwave.models.materials import Steel
         from machwave.models.propulsion.feed_systems.pressure_fed import (
             StackedTankPressureFedFeedSystem,
         )
@@ -436,7 +429,6 @@ class TestLiquidEngineCoG:
             divergent_angle=15,
             convergent_angle=45,
             expansion_ratio=10,
-            material=Steel(),
         )
 
         injector = BipropellantInjector(

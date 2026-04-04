@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-from machwave.models.atmosphere import Atmosphere1976
 from machwave.models.propulsion.propellants.formulations import get_propellant_from_json
 from machwave.models.propulsion.thrust_chamber import (
     CombustionChamber,
@@ -43,11 +42,6 @@ def propellant_KNSB_NAKKA():
 @pytest.fixture
 def propellant_KNSU():
     return get_propellant_from_json(FORMULATIONS_DIR / "knsu.json")
-
-
-@pytest.fixture
-def atmosphere_1976():
-    return Atmosphere1976()
 
 
 @pytest.fixture

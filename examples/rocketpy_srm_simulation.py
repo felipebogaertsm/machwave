@@ -10,7 +10,6 @@ This example demonstrates how to:
 
 from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
 from machwave.common import decorators
-from machwave.models import materials
 from machwave.models.propulsion import grain as grain_models
 from machwave.models.propulsion import motors
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
@@ -44,7 +43,6 @@ def main():
         divergent_angle=12,
         convergent_angle=45,
         expansion_ratio=8,
-        material=materials.Steel(),
     )
 
     combustion_chamber = thrust_chamber_models.CombustionChamber(

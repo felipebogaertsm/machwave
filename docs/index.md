@@ -82,7 +82,6 @@ for _ in range(4):
 The thrust chamber is composed of a **nozzle** and a **combustion chamber**:
 
 ```python
-from machwave.models import materials
 from machwave.models.propulsion import thrust_chamber as thrust_chamber_models
 
 nozzle = thrust_chamber_models.Nozzle(
@@ -91,7 +90,6 @@ nozzle = thrust_chamber_models.Nozzle(
     divergent_angle=12,     # degrees
     convergent_angle=40,    # degrees
     expansion_ratio=8,
-    material=materials.Steel(),
 )
 
 combustion_chamber = thrust_chamber_models.CombustionChamber(

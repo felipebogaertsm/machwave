@@ -11,14 +11,22 @@ class Nozzle:
         divergent_angle,
         convergent_angle,
         expansion_ratio,
-        material,
+        c_1: float = 0.00506,
+        c_2: float = 0.0,
     ) -> None:
         self.inlet_diameter = inlet_diameter
         self.throat_diameter = throat_diameter
         self.divergent_angle = divergent_angle
         self.convergent_angle = convergent_angle
         self.expansion_ratio = expansion_ratio
-        self.material = material
+
+        # Boundary layer loss correction coefficients (ref. a015140).
+        # Used in the boundary layer percentage loss calculation to account
+        # for viscous and heat transfer effects in the nozzle walls.
+        # Ordinary nozzle:                 c_1 = 0.003650, c_2 = 0.000937
+        # Thick-walled solid steel nozzle: c_1 = 0.005060, c_2 = 0.000000
+        self.c_1 = c_1
+        self.c_2 = c_2
 
     @property
     def outlet_diameter(self):
@@ -26,42 +34,3 @@ class Nozzle:
 
     def get_throat_area(self):
         return get_circle_area(self.throat_diameter)
-
-    def get_nozzle_wall_thickness(
-        self,
-        chamber_pressure: float,
-        safety_factor: float,
-        chamber_inner_diameter: float,
-        wall_angle: float,
-    ) -> float:
-        """
-        Considers thin wall approximation.
-        """
-        return (chamber_pressure * chamber_inner_diameter / 2) / (
-            self.material.yield_strength / safety_factor
-            - 0.6 * chamber_pressure * (np.cos(np.deg2rad(wall_angle)))
-        )
-
-    def get_nozzle_thickness(
-        self,
-        chamber_pressure: float,
-        safety_factor: float,
-    ):
-        """
-        Returns nozzle convergent and divergent thickness.
-        """
-        nozzle_conv_thickness = self.get_nozzle_wall_thickness(
-            chamber_pressure,
-            safety_factor,
-            self.inlet_diameter,
-            self.convergent_angle,
-        )
-
-        nozzle_div_thickness = self.get_nozzle_wall_thickness(
-            chamber_pressure,
-            safety_factor,
-            self.inlet_diameter,
-            self.divergent_angle,
-        )
-
-        return nozzle_conv_thickness, nozzle_div_thickness
