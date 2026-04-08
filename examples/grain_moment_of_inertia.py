@@ -203,7 +203,6 @@ def example_2d_fmm_star_grain():
         number_of_points=5,  # 5-point star
         point_length=0.030,  # 30 mm radial point length
         point_width=0.015,  # 15 mm point width
-        inhibited_ends=0,
         density_ratio=1.0,
     )
 
@@ -250,7 +249,6 @@ def example_3d_fmm_conical_grain():
         outer_diameter=0.130,  # 130 mm
         upper_core_diameter=0.040,  # 40 mm at top
         lower_core_diameter=0.060,  # 60 mm at bottom (tapering)
-        inhibited_ends=0,
         density_ratio=1.0,
     )
 

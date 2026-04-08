@@ -2,9 +2,11 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import skfmm
+from scipy.ndimage import binary_erosion
 from numpy.typing import NDArray
 
 from machwave.models.grain import GrainGeometryError, GrainSegment
+from machwave.models.grain.base import InhibitedSurfaces
 
 MINIMUM_MAP_DIMENSION = 100
 
@@ -24,7 +26,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         map_dim: int,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.map_dim = map_dim
@@ -39,7 +41,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 
@@ -155,6 +157,32 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return np.ones_like(self.get_maps()[0])
 
+    def _apply_inhibition(
+        self,
+        face_map: NDArray[np.int_],
+        outside: NDArray[np.bool_],
+    ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
+        """Apply surface-inhibition adjustments to the face map and mask.
+
+        This base implementation handles outer surface inhibition.
+        2D and 3D subclasses add their own logic to apply other inhibited surfaces as
+        needed.
+
+        Args:
+            face_map: Mutable copy of the initial face map.
+            outside: Mutable copy of the circular boundary mask.
+
+        Returns:
+            The face_map and outside mask with inhibition applied.
+        """
+        if not self.inhibited_surfaces.outer_surface:
+            inside = ~outside  # Invert the mask
+            eroded = binary_erosion(inside)  # Erode the inside to find the boundary
+            boundary_ring = inside & np.logical_not(eroded)
+            face_map[boundary_ring] = 0
+
+        return face_map, outside
+
     def get_masked_face(self) -> np.ndarray:
         """
         Return a masked representation of the face map.
@@ -164,9 +192,12 @@ class FMMGrainSegment(GrainSegment, ABC):
         map with the circular mask.
         """
         if self.masked_face is None:
-            self.masked_face = np.ma.MaskedArray(
-                self.get_initial_face_map(), self.get_mask()
-            )
+            face_map = self.get_initial_face_map().copy()
+            outside = self.get_mask().copy()
+
+            face_map, outside = self._apply_inhibition(face_map, outside)
+
+            self.masked_face = np.ma.MaskedArray(face_map, outside)
         return self.masked_face
 
     def get_cell_size(self) -> float:
@@ -177,6 +208,17 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return 1 / self.map_dim
 
+    @property
+    def has_cross_section_regression(self) -> bool:
+        """Whether the cross-section has any burning surface.
+
+        Inspects the masked face map for zero-valued (burning) cells.
+        False when no burning front exists for the FMM to propagate from.
+        """
+        masked_face = self.get_masked_face()
+        unmasked = ~np.ma.getmaskarray(masked_face)
+        return bool(np.any(masked_face.data[np.asarray(unmasked, dtype=bool)] == 0))
+
     def get_regression_map(self):
         """
         Calculate and return the distance map for grain regression.
@@ -184,11 +226,23 @@ class FMMGrainSegment(GrainSegment, ABC):
         This uses the fast marching method (scikit-fmm) on the masked face.
         Each value represents the distance from the initial face along the
         cross-section of the grain.
+
+        When the cross-section has no burning surface (end burner), a
+        static map is returned.
         """
         if self.regression_map is None:
-            self.regression_map = (
-                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
-            )
+            masked_face = self.get_masked_face()
+
+            if self.has_cross_section_regression:
+                self.regression_map = (
+                    skfmm.distance(masked_face, dx=self.get_cell_size()) * 2
+                )
+            else:
+                unmasked = ~np.ma.getmaskarray(masked_face)
+                self.regression_map = np.ma.MaskedArray(
+                    np.where(unmasked, self.get_cell_size(), 0.0),
+                    mask=~unmasked,
+                )
         return self.regression_map
 
     def get_web_thickness(self) -> float:
@@ -242,11 +296,12 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         web_distance_normalized = self.normalize(web_distance)
         regression_map = self.get_regression_map()
-        valid = np.logical_not(self.get_mask())
+        invalid = np.ma.getmaskarray(regression_map)
 
-        # Create a masked array, where ~valid cells are masked out
+        # Create a masked array, where invalid cells are masked out
         maskarr = np.ma.MaskedArray(
-            (regression_map > web_distance_normalized).astype(np.int64), mask=~valid
+            (regression_map > web_distance_normalized).astype(np.int64),
+            mask=invalid,
         )
 
         # Fill masked entries with -1, valid/true entries remain 1 or 0

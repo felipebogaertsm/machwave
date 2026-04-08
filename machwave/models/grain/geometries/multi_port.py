@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
@@ -12,7 +13,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         port_diameter: float,
         port_radial_count: float,
         port_level_count: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.port_diameter = port_diameter
@@ -22,7 +23,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 

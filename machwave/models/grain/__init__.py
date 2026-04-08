@@ -4,6 +4,7 @@ from machwave.models.grain.base import (
     GrainSegment,
     GrainSegment2D,
     GrainSegment3D,
+    InhibitedSurfaces,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "GrainSegment",
     "GrainSegment2D",
     "GrainSegment3D",
+    "InhibitedSurfaces",
 ]

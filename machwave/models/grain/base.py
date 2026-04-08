@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -10,21 +11,53 @@ class GrainGeometryError(Exception):
         super().__init__(self.message)
 
 
+@dataclass(frozen=True, slots=True)
+class InhibitedSurfaces:
+    """Describes which surfaces of a grain segment are inhibited.
+
+    Attributes:
+        outer_surface: If True, the outer cylindrical surface is inhibited.
+        inner_surface: If True, the inner surface is inhibited.
+        upper_end: If True, the upper end (towards bulkhead) face is inhibited.
+        lower_end: If True, the lower end (towards nozzle) face is inhibited.
+    """
+
+    outer_surface: bool = True
+    inner_surface: bool = False
+    upper_end: bool = False
+    lower_end: bool = False
+
+    def __post_init__(self) -> None:
+        if (
+            self.outer_surface
+            and self.inner_surface
+            and self.upper_end
+            and self.lower_end
+        ):
+            raise GrainGeometryError(
+                "All surfaces cannot be inhibited at the same time."
+            )
+
+
 class GrainSegment(ABC):
     """
-    Class that represents a grain segment.
+    Represents a grain segment.
     """
 
     def __init__(
         self,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.length = length
         self.outer_diameter = outer_diameter
-        self.inhibited_ends = inhibited_ends
+        self.inhibited_surfaces = (
+            inhibited_surfaces
+            if inhibited_surfaces is not None
+            else InhibitedSurfaces()
+        )
         self.density_ratio = density_ratio
 
         self.validate()
@@ -127,12 +160,10 @@ class GrainSegment(ABC):
         """
         Validates grain geometry.
         For every attribute that a child class adds, it must be validated here.
-
-        :rtype: None
         """
-        if self.inhibited_ends not in [0, 1, 2]:
+        if not isinstance(self.inhibited_surfaces, InhibitedSurfaces):
             raise GrainGeometryError(
-                f"Inhibited ends must be 0, 1, or 2, got {self.inhibited_ends}"
+                "inhibited_surfaces must be an InhibitedSurfaces instance"
             )
         if not self.length > 0:
             raise GrainGeometryError(f"Length must be positive, got {self.length}")
@@ -163,13 +194,13 @@ class GrainSegment2D(GrainSegment, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 
@@ -206,15 +237,25 @@ class GrainSegment2D(GrainSegment, ABC):
         pass
 
     def get_length(self, web_distance: float) -> float:
-        return self.length - web_distance * (2 - self.inhibited_ends)
+        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+            not self.inhibited_surfaces.lower_end
+        )
+        return self.length - web_distance * exposed_ends
 
     def get_burn_area(self, web_distance: float) -> float:
         if web_distance > self.get_web_thickness():
             return 0
 
-        core_area = self.get_core_area(web_distance=web_distance)
+        core_area = (
+            0.0
+            if self.inhibited_surfaces.inner_surface
+            else self.get_core_area(web_distance=web_distance)
+        )
         single_face_area = self.get_face_area(web_distance=web_distance)
-        total_face_area = (2 - self.inhibited_ends) * single_face_area
+        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+            not self.inhibited_surfaces.lower_end
+        )
+        total_face_area = exposed_ends * single_face_area
         return core_area + total_face_area
 
     def get_volume(self, web_distance: float) -> float:
@@ -239,13 +280,13 @@ class GrainSegment3D(GrainSegment, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 
@@ -270,7 +311,10 @@ class GrainSegment3D(GrainSegment, ABC):
         """
         NOTE: Modify later.
         """
-        return self.length - web_distance * (2 - self.inhibited_ends)
+        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+            not self.inhibited_surfaces.lower_end
+        )
+        return self.length - web_distance * exposed_ends
 
 
 class Grain:
