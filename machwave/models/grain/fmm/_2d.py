@@ -75,9 +75,11 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         face_map: NDArray[np.int_],
         outside: NDArray[np.bool_],
     ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
-        if self.inhibited_surfaces.inner_surface:
-            outside = outside | (face_map == 0)
-        return super()._apply_inhibition(face_map, outside)
+        bore_mask = (face_map == 0) if self.inhibited_surfaces.inner_surface else None
+        face_map, outside = super()._apply_inhibition(face_map, outside)
+        if bore_mask is not None:
+            outside = outside | bore_mask
+        return face_map, outside
 
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """

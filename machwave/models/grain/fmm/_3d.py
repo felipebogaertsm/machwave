@@ -125,10 +125,12 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             end_face_zeros = (face_map[0] == 0) & ~bore_mask[0]
             face_map[0][end_face_zeros] = 1
 
+        face_map, outside = super()._apply_inhibition(face_map, outside)
+
         if self.inhibited_surfaces.inner_surface:
             outside = outside | bore_mask
 
-        return super()._apply_inhibition(face_map, outside)
+        return face_map, outside
 
     def get_contours(
         self, web_distance: float, length_normalized: float

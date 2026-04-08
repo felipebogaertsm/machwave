@@ -211,12 +211,13 @@ class FMMGrainSegment(GrainSegment, ABC):
     @property
     def has_cross_section_regression(self) -> bool:
         """Whether the cross-section has any burning surface.
-        False if the FMM has no front to propagate from.
+
+        Inspects the masked face map for zero-valued (burning) cells.
+        False when no burning front exists for the FMM to propagate from.
         """
-        return not (
-            self.inhibited_surfaces.outer_surface
-            and self.inhibited_surfaces.inner_surface
-        )
+        masked_face = self.get_masked_face()
+        unmasked = ~np.ma.getmaskarray(masked_face)
+        return bool(np.any(masked_face.data[unmasked] == 0))
 
     def get_regression_map(self):
         """
