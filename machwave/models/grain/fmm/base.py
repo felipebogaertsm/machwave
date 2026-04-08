@@ -178,7 +178,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         if not self.inhibited_surfaces.outer_surface:
             inside = ~outside  # Invert the mask
             eroded = binary_erosion(inside)  # Erode the inside to find the boundary
-            boundary_ring = inside & ~eroded
+            boundary_ring = inside & np.logical_not(eroded)
             face_map[boundary_ring] = 0
 
         return face_map, outside
@@ -217,7 +217,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         masked_face = self.get_masked_face()
         unmasked = ~np.ma.getmaskarray(masked_face)
-        return bool(np.any(masked_face.data[unmasked] == 0))
+        return bool(np.any(masked_face.data[np.asarray(unmasked, dtype=bool)] == 0))
 
     def get_regression_map(self):
         """
