@@ -208,6 +208,16 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         return 1 / self.map_dim
 
+    @property
+    def has_cross_section_regression(self) -> bool:
+        """Whether the cross-section has any burning surface.
+        False if the FMM has no front to propagate from.
+        """
+        return not (
+            self.inhibited_surfaces.outer_surface
+            and self.inhibited_surfaces.inner_surface
+        )
+
     def get_regression_map(self):
         """
         Calculate and return the distance map for grain regression.
@@ -215,11 +225,23 @@ class FMMGrainSegment(GrainSegment, ABC):
         This uses the fast marching method (scikit-fmm) on the masked face.
         Each value represents the distance from the initial face along the
         cross-section of the grain.
+
+        When the cross-section has no burning surface (end-burner), a
+        static map is returned so downstream code works without changes.
         """
         if self.regression_map is None:
-            self.regression_map = (
-                skfmm.distance(self.get_masked_face(), dx=self.get_cell_size()) * 2
-            )
+            masked_face = self.get_masked_face()
+
+            if self.has_cross_section_regression:
+                self.regression_map = (
+                    skfmm.distance(masked_face, dx=self.get_cell_size()) * 2
+                )
+            else:
+                unmasked = ~np.ma.getmaskarray(masked_face)
+                self.regression_map = np.ma.MaskedArray(
+                    np.where(unmasked, self.get_cell_size(), 0.0),
+                    mask=~unmasked,
+                )
         return self.regression_map
 
     def get_web_thickness(self) -> float:
