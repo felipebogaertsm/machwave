@@ -1,5 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from machwave.common.arrays import replace_array_values
 
@@ -215,6 +216,172 @@ def plot_2d_face_map_animated(
         ),
         template="none",
         title="Axial Plane Cross-Sectional View",
+    )
+
+    return fig
+
+
+def plot_3d_face_map_animated(
+    face_maps: np.ndarray,
+    web_distances: np.typing.NDArray[np.float64],
+) -> go.Figure:
+    """Plot an animated 3D face map with longitudinal and axial views.
+
+    Displays two side-by-side subplots animated over web distance:
+
+    - **Longitudinal cross-section** (left): a center-cut along the grain
+      axis, showing how regression progresses along the grain length.
+      Useful for inspecting inhibited-end effects.
+    - **Axial cross-section** (right): the face view at the grain midpoint,
+      showing the port geometry.
+
+    Args:
+        face_maps: 4D array of shape
+            ``(n_steps, normalized_length, map_dim, map_dim)`` with values
+            -1 (outside), 0 (burned), 1 (propellant).
+        web_distances: 1D array of web distances [m] for each step.
+
+    Returns:
+        Plotly Figure with animation slider and play/pause controls.
+
+    Raises:
+        ValueError: If the first dimension of *face_maps* does not match
+            the length of *web_distances*.
+    """
+    n_steps = web_distances.shape[0]
+    if n_steps != face_maps.shape[0]:
+        raise ValueError("The number of frames must match the number of face maps.")
+
+    n_z = face_maps.shape[1]
+    map_dim = face_maps.shape[2]
+    mid_z = n_z // 2
+    mid_y = map_dim // 2
+
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=[
+            "Longitudinal Cross-Section",
+            "Axial Cross-Section (mid-length)",
+        ],
+    )
+
+    # --- initial traces ---
+    longitudinal_0 = face_maps[0, :, mid_y, :]
+    face_0 = face_maps[0, mid_z, :, :]
+
+    for trace in _create_plot_2d_frame(longitudinal_0):
+        fig.add_trace(trace, row=1, col=1)
+
+    for trace in _create_plot_2d_frame(face_0):
+        fig.add_trace(trace, row=1, col=2)
+
+    n_traces = 6  # 3 per subplot
+
+    # --- frames ---
+    frames = []
+    steps = []
+    for i in range(n_steps):
+        longitudinal = face_maps[i, :, mid_y, :]
+        face = face_maps[i, mid_z, :, :]
+
+        data = list(_create_plot_2d_frame(longitudinal))
+        data.extend(_create_plot_2d_frame(face))
+
+        frames.append(
+            go.Frame(
+                data=data,
+                traces=list(range(n_traces)),
+                name=str(i),
+            )
+        )
+
+        steps.append(
+            dict(
+                args=[
+                    [str(i)],
+                    dict(
+                        mode="immediate",
+                        frame=dict(duration=500, redraw=True),
+                        transition=dict(duration=0),
+                    ),
+                ],
+                label=f"{web_distances[i]:.1e}",
+                method="animate",
+            )
+        )
+
+    fig.frames = frames
+
+    fig.update_layout(
+        sliders=[
+            dict(
+                active=0,
+                steps=steps,
+                currentvalue=dict(
+                    prefix="Web Distance (m): ",
+                    visible=True,
+                    xanchor="right",
+                ),
+                pad=dict(t=50),
+            )
+        ],
+        updatemenus=[
+            dict(
+                type="buttons",
+                buttons=[
+                    dict(
+                        label="Play",
+                        method="animate",
+                        args=[
+                            None,
+                            dict(
+                                frame=dict(duration=500, redraw=True),
+                                fromcurrent=True,
+                                transition=dict(duration=100),
+                            ),
+                        ],
+                    ),
+                    dict(
+                        label="Pause",
+                        method="animate",
+                        args=[
+                            [None],
+                            dict(
+                                frame=dict(duration=0, redraw=False),
+                                mode="immediate",
+                                transition=dict(duration=0),
+                            ),
+                        ],
+                    ),
+                ],
+                direction="right",
+                showactive=False,
+                x=0.1,
+                xanchor="left",
+                y=1,
+                yanchor="top",
+            )
+        ],
+        template="none",
+        title="Grain Regression - 3D View",
+    )
+
+    fig.update_xaxes(showgrid=False, zeroline=False, row=1, col=1)
+    fig.update_yaxes(showgrid=False, zeroline=False, row=1, col=1)
+    fig.update_xaxes(
+        showgrid=False,
+        zeroline=False,
+        scaleanchor="y2",
+        scaleratio=1,
+        row=1,
+        col=2,
+    )
+    fig.update_yaxes(
+        showgrid=False,
+        zeroline=False,
+        row=1,
+        col=2,
     )
 
     return fig

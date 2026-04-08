@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
@@ -12,7 +13,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         number_of_points: int,
         point_length: float,
         point_width: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.number_of_points = int(number_of_points)
@@ -22,7 +23,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 

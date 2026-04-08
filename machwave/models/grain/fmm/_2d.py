@@ -16,6 +16,7 @@ from machwave.core.mechanics import (
     get_moment_of_inertia_tensor,
 )
 from machwave.models.grain import GrainGeometryError, GrainSegment2D
+from machwave.models.grain.base import InhibitedSurfaces
 
 from .base import FMMGrainSegment
 
@@ -33,8 +34,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
-        map_dim: int = 1000,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         self.face_area_interp_func: Callable[[float], float] | None = None
@@ -42,7 +43,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             map_dim=map_dim,
             density_ratio=density_ratio,
         )
@@ -68,6 +69,17 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             map_x, map_y = self.get_maps()
             self.mask = (map_x**2 + map_y**2) > 1
         return self.mask
+
+    def _apply_inhibition(
+        self,
+        face_map: NDArray[np.int_],
+        outside: NDArray[np.bool_],
+    ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
+        bore_mask = (face_map == 0) if self.inhibited_surfaces.inner_surface else None
+        face_map, outside = super()._apply_inhibition(face_map, outside)
+        if bore_mask is not None:
+            outside = outside | bore_mask
+        return face_map, outside
 
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """
@@ -176,7 +188,10 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
                 [self.get_length(float(wd)) for wd in web_distances], dtype=np.float64
             )
             core_area_values = perimeter_values * length_values
-            total_face_area_values = (2 - self.inhibited_ends) * face_area_values
+            exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+                not self.inhibited_surfaces.lower_end
+            )
+            total_face_area_values = exposed_ends * face_area_values
             burn_area_values = core_area_values + total_face_area_values
 
             smoothed = burn_area_values
@@ -298,8 +313,13 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         # Convert to physical coordinates
         x_phys = np.asarray(self.map_to_length(x_coords), dtype=np.float64)
         y_phys = np.asarray(self.map_to_length(y_coords), dtype=np.float64)
-        # For 2D grain, axial position is constant at segment center
-        z_phys = np.full_like(x_phys, self.length / 2)
+
+        # Axial bounds accounting for end face inhibition
+        lower_recession = web_distance if not self.inhibited_surfaces.lower_end else 0.0
+        upper_recession = web_distance if not self.inhibited_surfaces.upper_end else 0.0
+        axial_cog = (lower_recession + (self.length - upper_recession)) / 2.0
+
+        z_phys = np.full_like(x_phys, axial_cog)
 
         return get_center_of_gravity(x_phys, y_phys, z_phys)
 

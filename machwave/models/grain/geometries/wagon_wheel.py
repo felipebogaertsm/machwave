@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
@@ -14,7 +15,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_inner_diameter: float,
         port_outer_diameter: float,
         port_angular_width: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.core_diameter = core_diameter
@@ -26,7 +27,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 

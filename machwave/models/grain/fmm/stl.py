@@ -4,6 +4,7 @@ import numpy as np
 import trimesh
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment3D
 
 
@@ -18,7 +19,7 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         file_path: str,
         outer_diameter: float,
         length: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         map_dim: int = 50,
     ) -> None:
         self.file_path = file_path
@@ -31,7 +32,7 @@ class FMMSTLGrainSegment(FMMGrainSegment3D, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             map_dim=map_dim,
         )
 

@@ -1,6 +1,7 @@
 import numpy as np
 
 from machwave.models.grain import GrainGeometryError
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.fmm import FMMGrainSegment3D
 
 
@@ -11,7 +12,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         outer_diameter: float,
         upper_core_diameter: float,
         lower_core_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         self.upper_core_diameter = upper_core_diameter
@@ -20,7 +21,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             density_ratio=density_ratio,
         )
 
