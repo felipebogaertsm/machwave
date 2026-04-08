@@ -54,7 +54,6 @@ def main():
         number_of_points=5,
         point_length=12e-3,
         point_width=6e-3,
-        spacing=0.01,
     )
 
     web_distance = 0
