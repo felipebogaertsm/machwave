@@ -117,6 +117,11 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         bore_mask[0] = bore_mask[1]
         bore_mask[-1] = bore_mask[-2]
 
+        # super() runs binary_erosion on the full 3D volume, which includes the
+        # end-face layers in the boundary_ring. Apply end inhibition AFTER so
+        # those cells are not overwritten back to 0 by the outer-surface logic.
+        face_map, outside = super()._apply_inhibition(face_map, outside)
+
         if self.inhibited_surfaces.upper_end:
             end_face_zeros = (face_map[-1] == 0) & ~bore_mask[-1]
             face_map[-1][end_face_zeros] = 1
@@ -124,8 +129,6 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         if self.inhibited_surfaces.lower_end:
             end_face_zeros = (face_map[0] == 0) & ~bore_mask[0]
             face_map[0][end_face_zeros] = 1
-
-        face_map, outside = super()._apply_inhibition(face_map, outside)
 
         if self.inhibited_surfaces.inner_surface:
             outside = outside | bore_mask
