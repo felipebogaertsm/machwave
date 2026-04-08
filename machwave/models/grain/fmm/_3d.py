@@ -15,6 +15,7 @@ from machwave.core.mechanics import (
     get_moment_of_inertia_tensor,
 )
 from machwave.models.grain import GrainGeometryError, GrainSegment3D
+from machwave.models.grain.base import InhibitedSurfaces
 
 from .base import FMMGrainSegment
 
@@ -33,7 +34,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_ends: int = 0,
+        inhibited_surfaces: InhibitedSurfaces | None = None,
         map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
@@ -41,7 +42,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
-            inhibited_ends=inhibited_ends,
+            inhibited_surfaces=inhibited_surfaces,
             map_dim=map_dim,
             density_ratio=density_ratio,
         )
@@ -102,6 +103,32 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             self.mask = (map_x**2 + map_y**2) > 1
 
         return self.mask
+
+    def _apply_inhibition(
+        self,
+        face_map: NDArray[np.int_],
+        outside: NDArray[np.bool_],
+    ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
+        if face_map.shape[0] <= 2:
+            return face_map, outside
+
+        bore_mask = np.zeros_like(face_map, dtype=bool)
+        bore_mask[1:-1] = face_map[1:-1] == 0
+        bore_mask[0] = bore_mask[1]
+        bore_mask[-1] = bore_mask[-2]
+
+        if self.inhibited_surfaces.upper_end:
+            end_face_zeros = (face_map[-1] == 0) & ~bore_mask[-1]
+            face_map[-1][end_face_zeros] = 1
+
+        if self.inhibited_surfaces.lower_end:
+            end_face_zeros = (face_map[0] == 0) & ~bore_mask[0]
+            face_map[0][end_face_zeros] = 1
+
+        if self.inhibited_surfaces.inner_surface:
+            outside = outside | bore_mask
+
+        return super()._apply_inhibition(face_map, outside)
 
     def get_contours(
         self, web_distance: float, length_normalized: float
