@@ -13,7 +13,7 @@ class GrainGeometryError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class InhibitedSurfaces:
-    """Describes which surfaces of a grain segment are inhibited (won't burn).
+    """Describes which surfaces of a grain segment are inhibited.
 
     Attributes:
         outer_surface: If True, the outer cylindrical surface is inhibited.
