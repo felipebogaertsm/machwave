@@ -90,7 +90,9 @@ def test_2d_outer_surface_inhibited_by_default():
 
 def test_2d_outer_surface_exposed():
     """OD=F → outer boundary ring must contain burning cells."""
-    seg = StarGrainSegment(**STAR_PARAMS, inhibited_surfaces=InhibitedSurfaces(outer_surface=False))
+    seg = StarGrainSegment(
+        **STAR_PARAMS, inhibited_surfaces=InhibitedSurfaces(outer_surface=False)
+    )
     mf = seg.get_masked_face()
 
     from scipy.ndimage import binary_erosion
@@ -142,9 +144,7 @@ def test_2d_outer_exposed_inner_inhibited():
     boundary = inside & ~binary_erosion(inside)
 
     # Outer boundary must be burning
-    assert np.any((mf.data == 0) & boundary), (
-        "OD=F: outer boundary should be burning."
-    )
+    assert np.any((mf.data == 0) & boundary), "OD=F: outer boundary should be burning."
     # No masked cell should appear inside the boundary (bore masked → outside mask)
     # Bore is masked, so all unmasked burning cells come from the outer ring, not the bore
     assert _burning_cells(mf) > 0, "There should be burning cells on the outer ring."
@@ -160,9 +160,7 @@ def test_3d_upper_end_exposed_by_default():
         inhibited_surfaces=InhibitedSurfaces(outer_surface=False),
     )
     mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, -1) > 0, (
-        "Upper end should be burning by default."
-    )
+    assert _end_burning_cells(mf, -1) > 0, "Upper end should be burning by default."
 
 
 def test_3d_upper_end_inhibited():
@@ -184,9 +182,7 @@ def test_3d_lower_end_exposed_by_default():
         inhibited_surfaces=InhibitedSurfaces(outer_surface=False),
     )
     mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, 0) > 0, (
-        "Lower end should be burning by default."
-    )
+    assert _end_burning_cells(mf, 0) > 0, "Lower end should be burning by default."
 
 
 def test_3d_lower_end_inhibited():
@@ -235,9 +231,7 @@ def test_3d_outer_exposed_upper_end_inhibited():
     assert np.any((sl.data == 0) & boundary), (
         "OD=F: outer boundary at mid-slice should be burning."
     )
-    assert _end_burning_cells(mf, -1) == 0, (
-        "UE=T: upper end should not be burning."
-    )
+    assert _end_burning_cells(mf, -1) == 0, "UE=T: upper end should not be burning."
 
 
 def test_3d_outer_exposed_lower_end_inhibited():
@@ -258,6 +252,4 @@ def test_3d_outer_exposed_lower_end_inhibited():
     assert np.any((sl.data == 0) & boundary), (
         "OD=F: outer boundary at mid-slice should be burning."
     )
-    assert _end_burning_cells(mf, 0) == 0, (
-        "LE=T: lower end should not be burning."
-    )
+    assert _end_burning_cells(mf, 0) == 0, "LE=T: lower end should not be burning."
