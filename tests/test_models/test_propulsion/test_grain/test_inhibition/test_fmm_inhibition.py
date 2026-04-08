@@ -1,7 +1,6 @@
 """Tests that FMM face-map inhibition is applied correctly for 2D and 3D grains."""
 
 import numpy as np
-import pytest
 
 from machwave.models.grain import InhibitedSurfaces
 from machwave.models.grain.geometries import ConicalGrainSegment, StarGrainSegment
