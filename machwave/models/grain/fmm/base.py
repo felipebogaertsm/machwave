@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from machwave.models.grain import GrainGeometryError, GrainSegment
 from machwave.models.grain.base import InhibitedSurfaces
 
-MINIMUM_MAP_DIMENSION = 20
+MINIMUM_MAP_DIMENSION = 100
 
 
 class FMMGrainSegment(GrainSegment, ABC):
