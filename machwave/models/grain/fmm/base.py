@@ -226,8 +226,8 @@ class FMMGrainSegment(GrainSegment, ABC):
         Each value represents the distance from the initial face along the
         cross-section of the grain.
 
-        When the cross-section has no burning surface (end-burner), a
-        static map is returned so downstream code works without changes.
+        When the cross-section has no burning surface (end burner), a
+        static map is returned.
         """
         if self.regression_map is None:
             masked_face = self.get_masked_face()
