@@ -1,4 +1,4 @@
-.PHONY: install test publish check format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install test publish check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
@@ -7,9 +7,12 @@ test:
 publish:
 	@uv build
 	@twine upload dist/*
-check:
+check: format-check lint typecheck
+format-check:
 	@uv run ruff format --check
+lint:
 	@uv run ruff check .
+typecheck:
 	@uv run pyright machwave
 format:
 	@uv run ruff format
