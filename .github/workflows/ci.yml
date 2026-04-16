@@ -15,6 +15,19 @@ defaults:
     shell: bash
 
 jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: uv sync --group dev
+      - run: uv run ruff format --check
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -27,10 +40,22 @@ jobs:
           python-version: "3.13"
       - run: uv sync --group dev
       - run: uv run ruff check .
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: uv sync --group dev
       - run: uv run pyright machwave
 
   test:
-    needs: lint
+    needs: [format-check, lint, typecheck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +69,7 @@ jobs:
       - run: uv run pytest -q
 
   build-deploy-docs:
-    needs: [lint, test]
+    needs: [format-check, lint, typecheck, test]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
