@@ -42,6 +42,7 @@ plugins:
 
 nav:
   - Home: index.md
+  - Quick Start: quickstart.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
