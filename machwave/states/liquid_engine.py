@@ -1,5 +1,11 @@
 import numpy as np
 
+import machwave.core.conversions as conversions
+from machwave.core.compressible_flow.losses import (
+    get_kinetics_percentage_loss,
+    get_nozzle_divergent_percentage_loss,
+    get_overall_nozzle_efficiency,
+)
 from machwave.core.compressible_flow.nozzle import (
     apply_thrust_coefficient_correction,
     get_ideal_thrust_coefficient,
@@ -79,7 +85,8 @@ class LiquidEngineState(MotorState):
         self._append_chamber_pressure(new_P)
         P_exit = self._compute_exit_pressure()
         self._append_exit_pressure(P_exit)
-        self._append_cf_correction(1.0)
+        n_cf = self._compute_cf_correction()
+        self._append_cf_correction(n_cf)
         cf, cf_ideal = self._compute_thrust_coefficients(P_exit, P_ext)
         self._append_thrust(cf, cf_ideal)
 
@@ -177,6 +184,34 @@ class LiquidEngineState(MotorState):
 
     def _append_exit_pressure(self, pressure: float) -> None:
         self.P_exit = np.append(self.P_exit, pressure)
+
+    def _compute_cf_correction(self) -> float:
+        """Compute the overall thrust coefficient correction factor.
+
+        Applies divergent nozzle loss, kinetics loss (frozen vs shifting Isp), and
+        combustion efficiency. Boundary layer and two-phase losses are omitted for
+        liquid propellants (gas-only combustion, no condensed phase).
+
+        Returns:
+            Overall nozzle correction factor (0–1).
+        """
+        assert self.motor.propellant.properties is not None
+        props = self.motor.propellant.properties
+        nozzle = self.motor.thrust_chamber.nozzle
+        chamber_pressure_psi = conversions.convert_pa_to_psi(self.P_0[-1])
+
+        eta_div = get_nozzle_divergent_percentage_loss(
+            divergent_angle=nozzle.divergent_angle,
+        )
+        eta_kin = get_kinetics_percentage_loss(
+            i_sp_th_frozen=props.i_sp_frozen,
+            i_sp_th_shifting=props.i_sp_shifting,
+            chamber_pressure_psi=chamber_pressure_psi,
+        )
+        nozzle_efficiency = get_overall_nozzle_efficiency(
+            eta_div, eta_kin, 0.0, 0.0, other_losses=self.other_losses
+        )
+        return nozzle_efficiency * self.motor.propellant.combustion_efficiency
 
     def _append_cf_correction(self, value: float) -> None:
         self.n_cf = np.append(self.n_cf, value)
