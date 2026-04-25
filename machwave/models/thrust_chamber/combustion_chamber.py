@@ -44,7 +44,7 @@ class CombustionChamber:
     @property
     def outer_radius(self) -> float:
         """Outer radius of the combustion chamber [m]."""
-        return 0.5 * self.outer_radius
+        return 0.5 * self.outer_diameter
 
     @property
     def internal_volume(self) -> float:
