@@ -12,6 +12,7 @@ from machwave.models.thrust_chamber import ThrustChamber
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
 
+
 class Motor(Generic[P, T], ABC):
     """
     Abstract rocket motor/engine class. Can be used to model any chemical
@@ -80,9 +81,7 @@ class Motor(Generic[P, T], ABC):
         Returns:
             Thrust coefficient correction factor
         """
-        return (
-            (100.0 - other_losses) / 100.0
-        ) * self.propellant.combustion_efficiency
+        return ((100.0 - other_losses) / 100.0) * self.propellant.combustion_efficiency
 
     @abstractmethod
     def get_thrust_coefficient(self, *args, **kwargs) -> float:
