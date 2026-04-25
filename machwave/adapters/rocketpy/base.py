@@ -132,7 +132,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """
         from rocketpy import Function
 
-        total_impulse = float(np.mean(self.motor_state.thrust) * self.motor_state.t[-1])
+        total_impulse = float(np.trapezoid(self.motor_state.thrust, self.motor_state.t))
         v_exh = total_impulse / self.propellant_initial_mass
         return Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
 
