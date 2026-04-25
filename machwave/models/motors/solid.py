@@ -1,7 +1,6 @@
 import numpy as np
 
 import machwave.core.compressible_flow.nozzle as nozzle
-import machwave.core.compressible_flow.losses as losses
 import machwave.models.grain as grain
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber
@@ -57,31 +56,6 @@ class SolidMotor(
         """
         return self.grain.get_propellant_mass(
             web_distance=0, ideal_density=self.propellant.ideal_density
-        )
-
-    def get_thrust_coefficient_correction_factor(
-        self, n_kin: float, n_bl: float, n_tp: float, other_losses: float
-    ) -> float:
-        """
-        Calculates the thrust coefficient correction factor including all
-        losses.
-
-        Args:
-            n_kin: Kinematic correction factor, adimensional, in percent
-            n_bl: Boundary layer correction factor, adimensional, in percent
-            n_tp: Two-phase correction factor, adimensional, in percent
-            other_losses: Additional losses not covered by specific mechanisms [%].
-
-        Returns:
-            Thrust coefficient correction factor, adimensional
-        """
-        return (
-            (100 - (n_kin + n_bl + n_tp + other_losses))
-            * losses.get_nozzle_divergent_percentage_loss(
-                self.thrust_chamber.nozzle.throat_diameter
-            )
-            / 100
-            * self.propellant.combustion_efficiency
         )
 
     def get_thrust_coefficient(
