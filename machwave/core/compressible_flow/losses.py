@@ -39,7 +39,7 @@ def get_nozzle_divergent_percentage_loss(divergent_angle: float) -> float:
     NOTE: only applicable for a conical convergent-divergent nozzle.
 
     Args:
-        divergent_angle: The half angle of the divergent nozzle.
+        divergent_angle: The half angle of the divergent nozzle [degrees].
 
     Returns:
         The divergent correction factor.
@@ -148,7 +148,7 @@ def _get_two_phase_phase_loss_particle_size(
 
     Args:
         chamber_pressure_psi: The chamber pressure [psi].
-        xi: The mole fraction of the condensed phase.
+        xi: The mass fraction of the condensed phase.
         throat_diameter_inch: The throat diameter [in].
         characteristic_length_inch: The characteristic length [in].
 
@@ -168,7 +168,7 @@ def _get_two_phase_phase_loss_particle_size(
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["two_phase_flow_loss"])
 def get_two_phase_flow_percentage_loss(
     chamber_pressure_psi: float,
-    mole_fraction_of_condensed_phase: float,
+    mass_fraction_of_condensed_phase: float,
     expansion_ratio: float,
     throat_diameter_inch: float,
     characteristic_length_inch: float,
@@ -181,8 +181,7 @@ def get_two_phase_flow_percentage_loss(
 
     Args:
         chamber_pressure_psi: The chamber pressure [psi].
-        mole_fraction_of_condensed_phase: The mole fraction of the condensed phase
-            [moles/100g].
+        mass_fraction_of_condensed_phase: The mass fraction of the condensed phase.
         expansion_ratio: The expansion ratio of the nozzle.
         throat_diameter_inch: The throat diameter [in].
         characteristic_length_inch: The characteristic length [in].
@@ -191,11 +190,11 @@ def get_two_phase_flow_percentage_loss(
     """
     particle_size_um: float = _get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi,
-        mole_fraction_of_condensed_phase,
+        mass_fraction_of_condensed_phase,
         throat_diameter_inch,
         characteristic_length_inch,
     )
-    xi: float = mole_fraction_of_condensed_phase
+    xi: float = mass_fraction_of_condensed_phase
 
     if xi >= 0.09:
         c_4 = 0.5

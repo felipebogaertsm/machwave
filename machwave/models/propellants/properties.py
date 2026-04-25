@@ -27,15 +27,15 @@ class ThermochemicalProperties:
     propellants.
 
     Attributes:
-        gamma_chamber: Isentropic exponent in chamber (dimensionless).
-        gamma_exhaust: Isentropic exponent at nozzle exit (dimensionless).
+        gamma_chamber: Isentropic exponent in chamber.
+        gamma_exhaust: Isentropic exponent at nozzle exit.
         adiabatic_flame_temperature: Ideal combustion temperature [K].
         molecular_weight_chamber: Molecular weight in chamber [kg/mol].
         molecular_weight_exhaust: Molecular weight at exit [kg/mol].
         i_sp_frozen: Frozen flow specific impulse [s].
         i_sp_shifting: Shifting equilibrium specific impulse [s].
-        qsi_chamber: Condensed phase species content in chamber [mol/(100g)].
-        qsi_exhaust: Condensed phase species content at exit [mol/(100g)].
+        qsi_chamber: Condensed phase species content in chamber.
+        qsi_exhaust: Condensed phase species content at exit.
 
     Raises:
         ValueError: If any parameter is outside a valid range.
