@@ -33,17 +33,10 @@ jobs:
           python-version: "3.13"
 
       - name: Build the package
-        run: uv build
+        run: make build
 
       - name: Verify tag matches package version
-        run: |
-          PKG_VERSION=$(uv run python -c "from machwave._version import __version__; print(__version__)")
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match package version ($PKG_VERSION)"
-            exit 1
-          fi
-          echo "Version verified: $PKG_VERSION"
+        run: make verify-version
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -62,8 +55,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: uv sync --group docs --group dev
-      - run: uv run mkdocs build
+      - run: make install-docs
+      - run: make docs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
