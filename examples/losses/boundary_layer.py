@@ -44,56 +44,50 @@ C1_C2_VALUES = (
     (0.005060, 0.000000),
 )
 
+records: list[dict[str, float]] = []
 
-def main() -> None:
-    records: list[dict[str, float]] = []
-
-    for (
-        P_ch,
-        d_t,
-        eps,
-        t,
-        (c1, c2),
-    ) in product(
-        CHAMBER_PRESSURES,
-        THROAT_DIAMETERS,
-        EXPANSION_RATIOS,
-        TIMES,
-        C1_C2_VALUES,
-    ):
-        eta_bl = losses.get_boundary_layer_percentage_loss(
-            chamber_pressure_psi=P_ch,
-            throat_diameter_inch=d_t,
-            expansion_ratio=eps,
-            time=t,
-            c_1=c1,
-            c_2=c2,
-        )
-
-        records.append(
-            {
-                "P_ch (psi)": P_ch,
-                "d_t (in)": d_t,
-                "ε": eps,
-                "time (s)": t,
-                "C1": c1,
-                "C2": c2,
-                "η_bl (%)": round(eta_bl, 3),
-            }
-        )
-
-    df = pd.DataFrame(records)
-
-    print(
-        dedent(
-            """
-            Boundary-layer percentage losses
-            --------------------------------
-            """
-        ).strip()
+for (
+    P_ch,
+    d_t,
+    eps,
+    t,
+    (c1, c2),
+) in product(
+    CHAMBER_PRESSURES,
+    THROAT_DIAMETERS,
+    EXPANSION_RATIOS,
+    TIMES,
+    C1_C2_VALUES,
+):
+    eta_bl = losses.get_boundary_layer_percentage_loss(
+        chamber_pressure_psi=P_ch,
+        throat_diameter_inch=d_t,
+        expansion_ratio=eps,
+        time=t,
+        c_1=c1,
+        c_2=c2,
     )
-    print(df.to_string(index=False, justify="center"))
 
+    records.append(
+        {
+            "P_ch (psi)": P_ch,
+            "d_t (in)": d_t,
+            "ε": eps,
+            "time (s)": t,
+            "C1": c1,
+            "C2": c2,
+            "η_bl (%)": round(eta_bl, 3),
+        }
+    )
 
-if __name__ == "__main__":
-    main()
+df = pd.DataFrame(records)
+
+print(
+    dedent(
+        """
+        Boundary-layer percentage losses
+        --------------------------------
+        """
+    ).strip()
+)
+print(df.to_string(index=False, justify="center"))
