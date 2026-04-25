@@ -215,7 +215,7 @@ def test_get_overall_nozzle_efficiency_out_of_bounds():
     with pytest.raises((ValueError, AssertionError)):
         # Sum = 1.10, outside allowed range.
         losses.get_overall_nozzle_efficiency(
-            eta_div=40, eta_kin=30, eta_bl=20, eta_2p=20
+            eta_div=40, eta_kin=30, eta_bl=20, eta_2p=20, other_losses=0
         )
 
 
