@@ -1,11 +1,29 @@
-.PHONY: install test publish check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install install-dev install-docs test publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
+
+install-dev:
+	@uv sync --group dev
+
+install-docs:
+	@uv sync --group docs --group dev
+
+build:
+	@uv build
+
+verify-version:
+	@PKG_VERSION=$$(uv run python -c "from machwave._version import __version__; print(__version__)"); \
+	TAG_VERSION=$${GITHUB_REF_NAME#v}; \
+	if [ "$$PKG_VERSION" != "$$TAG_VERSION" ]; then \
+		echo "::error::Tag version ($$TAG_VERSION) does not match package version ($$PKG_VERSION)"; \
+		exit 1; \
+	fi; \
+	echo "Version verified: $$PKG_VERSION"
 test:
 	@uv run pytest
 publish:
-	@uv build
+	@$(MAKE) build
 	@twine upload dist/*
 check: format-check lint typecheck
 format-check:
