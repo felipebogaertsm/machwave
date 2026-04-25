@@ -267,3 +267,10 @@ or equivalently in closed form:
 
 Implemented in
 [`get_optimal_expansion_ratio`][machwave.core.compressible_flow.nozzle.get_optimal_expansion_ratio].
+
+---
+
+## References
+
+1. Anderson, J. D. (2003). *Modern Compressible Flow: With Historical Perspective* (3rd ed.). McGraw-Hill.
+2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Ch. 3.
