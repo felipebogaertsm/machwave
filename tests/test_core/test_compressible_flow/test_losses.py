@@ -173,7 +173,7 @@ def test_get_two_phase_flow_correction_factor(
 
     eta_tp = losses.get_two_phase_flow_percentage_loss(
         chamber_pressure_psi=chamber_psi,
-        mole_fraction_of_condensed_phase=xi,
+        mass_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,
         throat_diameter_inch=d_throat_in,
         characteristic_length_inch=l_char_in,  # value irrelevant after patch

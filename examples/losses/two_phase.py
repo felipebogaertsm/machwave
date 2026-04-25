@@ -21,11 +21,11 @@ THROAT_DIAMETERS = (
     2,
     3,
 )  # in inches
-MOLE_FRACTIONS_OF_CONDENSED_PHASE = (
+MASS_FRACTIONS_OF_CONDENSED_PHASE = (
     0.1,
     0.2,
     0.32,
-)  # moles/100g
+)  # dimensionless mass fraction
 EXPANSION_RATIOS = (
     4,
     6,
@@ -45,7 +45,7 @@ records: list[dict[str, float]] = []
 for P_ch, d_t, x_c, eps, l_star in product(
     CHAMBER_PRESSURES,
     THROAT_DIAMETERS,
-    MOLE_FRACTIONS_OF_CONDENSED_PHASE,
+    MASS_FRACTIONS_OF_CONDENSED_PHASE,
     EXPANSION_RATIOS,
     CHARACTERISTIC_LENGTHS,
 ):
@@ -58,7 +58,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
     eta_2p = 100 * (0.012 + 0.83 * eps**-0.35) * x_c
     eta_2p = losses.get_two_phase_flow_percentage_loss(
         chamber_pressure_psi=P_ch,
-        mole_fraction_of_condensed_phase=x_c,
+        mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,
         throat_diameter_inch=d_t,
         characteristic_length_inch=l_star,
@@ -68,7 +68,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
         {
             "P_ch (psi)": P_ch,
             "d_t (in)": d_t,
-            "x_c (mol/100 g)": x_c,
+            "x_c (mass fraction)": x_c,
             "ε": eps,
             "l* (in)": l_star,
             "d_p (µm)": round(d_p_um, 2),
