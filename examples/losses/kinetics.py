@@ -23,41 +23,35 @@ ISP_TH_PAIRS = (
     (270.0, 285.0),
 )  # seconds
 
+records: list[dict[str, float]] = []
 
-def main() -> None:
-    records: list[dict[str, float]] = []
-
-    for P_ch, (i_sp_frozen, i_sp_shifting) in product(
-        CHAMBER_PRESSURES_PSI,
-        ISP_TH_PAIRS,
-    ):
-        eta_kin = get_kinetics_percentage_loss(
-            i_sp_th_frozen=i_sp_frozen,
-            i_sp_th_shifting=i_sp_shifting,
-            chamber_pressure_psi=P_ch,
-        )
-
-        records.append(
-            {
-                "P_ch (psi)": P_ch,
-                "Isp_frozen (s)": i_sp_frozen,
-                "Isp_shifting (s)": i_sp_shifting,
-                "η_kin (%)": round(eta_kin, 3),
-            }
-        )
-
-    df = pd.DataFrame(records)
-
-    print(
-        dedent(
-            """
-            Kinetics percentage losses
-            --------------------------
-            """
-        ).strip()
+for P_ch, (i_sp_frozen, i_sp_shifting) in product(
+    CHAMBER_PRESSURES_PSI,
+    ISP_TH_PAIRS,
+):
+    eta_kin = get_kinetics_percentage_loss(
+        i_sp_th_frozen=i_sp_frozen,
+        i_sp_th_shifting=i_sp_shifting,
+        chamber_pressure_psi=P_ch,
     )
-    print(df.to_string(index=False, justify="center"))
 
+    records.append(
+        {
+            "P_ch (psi)": P_ch,
+            "Isp_frozen (s)": i_sp_frozen,
+            "Isp_shifting (s)": i_sp_shifting,
+            "η_kin (%)": round(eta_kin, 3),
+        }
+    )
 
-if __name__ == "__main__":
-    main()
+df = pd.DataFrame(records)
+
+print(
+    dedent(
+        """
+        Kinetics percentage losses
+        --------------------------
+        """
+    ).strip()
+)
+print(df.to_string(index=False, justify="center"))

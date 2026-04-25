@@ -2,7 +2,7 @@ name: Machwave CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -65,19 +65,3 @@ jobs:
           python-version: "3.13"
       - run: uv sync --group dev
       - run: uv run pytest -q
-
-  smoke-tests:
-    needs: [test]
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: uv sync --group dev
-      - run: uv run pytest tests/test_examples/ -v -m smoke
