@@ -19,7 +19,6 @@ class SolidMotor(
         grain: grain.Grain,
         propellant: propellants.SolidPropellant,
         thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
-        other_losses: float = motor_base.DEFAULT_OTHER_MOTOR_LOSSES,
     ) -> None:
         """
         Initialize a solid rocket motor.
@@ -28,10 +27,8 @@ class SolidMotor(
             grain: Grain geometry configuration.
             propellant: Solid propellant properties.
             thrust_chamber: Thrust chamber model.
-            other_losses: Additional motor losses not accounted for by specific
-                loss mechanisms (0-1), defaults to 0.12 (12%).
         """
-        super().__init__(propellant, thrust_chamber, other_losses)
+        super().__init__(propellant, thrust_chamber)
 
         self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant
@@ -63,7 +60,7 @@ class SolidMotor(
         )
 
     def get_thrust_coefficient_correction_factor(
-        self, n_kin: float, n_bl: float, n_tp: float
+        self, n_kin: float, n_bl: float, n_tp: float, other_losses: float
     ) -> float:
         """
         Calculates the thrust coefficient correction factor including all
@@ -73,12 +70,13 @@ class SolidMotor(
             n_kin: Kinematic correction factor, adimensional, in percent
             n_bl: Boundary layer correction factor, adimensional, in percent
             n_tp: Two-phase correction factor, adimensional, in percent
+            other_losses: Additional losses not covered by specific mechanisms [%].
 
         Returns:
             Thrust coefficient correction factor, adimensional
         """
         return (
-            (100 - (n_kin + n_bl + n_tp + self.other_losses))
+            (100 - (n_kin + n_bl + n_tp + other_losses))
             * losses.get_nozzle_divergent_percentage_loss(
                 self.thrust_chamber.nozzle.throat_diameter
             )

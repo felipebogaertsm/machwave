@@ -18,11 +18,13 @@ class InternalBallisticsSimulationParams:
         d_t: Time step.
         igniter_pressure: Igniter pressure.
         external_pressure: External pressure.
+        other_losses: Additional losses not covered by specific loss mechanisms [%].
     """
 
     d_t: float
     igniter_pressure: float
     external_pressure: float
+    other_losses: float = 12.0
 
 
 def _get_motor_state_class(motor: Motor) -> type[MotorState]:
@@ -73,6 +75,7 @@ class InternalBallisticsSimulation:
             motor=self.motor,
             initial_pressure=self.params.igniter_pressure,
             initial_atmospheric_pressure=self.params.external_pressure,
+            other_losses=self.params.other_losses,
         )
 
     def run(self) -> tuple[np.ndarray, MotorState]:

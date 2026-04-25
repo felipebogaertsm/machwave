@@ -25,6 +25,7 @@ class SolidMotorState(states_base.MotorState):
         motor: motors.SolidMotor,
         initial_pressure: float,
         initial_atmospheric_pressure: float,
+        other_losses: float,
     ) -> None:
         """
         Initial parameters for a SRM operation.
@@ -33,6 +34,7 @@ class SolidMotorState(states_base.MotorState):
             motor=motor,
             initial_pressure=initial_pressure,
             initial_atmospheric_pressure=initial_atmospheric_pressure,
+            other_losses=other_losses,
         )
 
         self.motor: motors.SolidMotor = motor
@@ -191,7 +193,7 @@ class SolidMotorState(states_base.MotorState):
             ),
         )
         nozzle_efficiency = losses.get_overall_nozzle_efficiency(
-            eta_div, eta_kin, eta_bl, eta_2p, other_losses=self.motor.other_losses
+            eta_div, eta_kin, eta_bl, eta_2p, other_losses=self.other_losses
         )
         overall_efficiency = (
             nozzle_efficiency * self.motor.propellant.combustion_efficiency

@@ -76,6 +76,7 @@ def main():
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
+        other_losses=12.0,
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
