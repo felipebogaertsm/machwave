@@ -69,6 +69,7 @@ def main():
         d_t=0.01,
         external_pressure=1e5,
         igniter_pressure=1e6,
+        other_losses=12.0,
     )
 
     mc = montecarlo.MonteCarloSimulation(

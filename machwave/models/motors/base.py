@@ -12,8 +12,6 @@ from machwave.models.thrust_chamber import ThrustChamber
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
 
-DEFAULT_OTHER_MOTOR_LOSSES = 12.0  # percent
-
 
 class Motor(Generic[P, T], ABC):
     """
@@ -25,7 +23,6 @@ class Motor(Generic[P, T], ABC):
         self,
         propellant: P,
         thrust_chamber: T,
-        other_losses: float = DEFAULT_OTHER_MOTOR_LOSSES,
     ) -> None:
         """
         Instantiates object attributes common to any motor/engine (Solid,
@@ -34,12 +31,9 @@ class Motor(Generic[P, T], ABC):
         Args:
             propellant: Object representing the propellant used in the motor.
             thrust_chamber: Object representing the thrust chamber of the motor.
-            other_losses: Other motor losses, in percent.
         """
         self.propellant = propellant
         self.thrust_chamber = thrust_chamber
-
-        self.other_losses = other_losses
 
     @abstractmethod
     def get_launch_mass(self) -> float:
@@ -75,18 +69,19 @@ class Motor(Generic[P, T], ABC):
         """
         pass
 
-    def get_thrust_coefficient_correction_factor(self, *args, **kwargs) -> float:
+    def get_thrust_coefficient_correction_factor(self, other_losses: float) -> float:
         """
         Calculates the thrust coefficient correction factor. This factor is
         adimensional and should be applied to the ideal thrust coefficient to
         get the real thrust coefficient.
 
+        Args:
+            other_losses: Additional losses not covered by specific mechanisms [%].
+
         Returns:
             Thrust coefficient correction factor
         """
-        return (
-            (100.0 - self.other_losses) / 100.0
-        ) * self.propellant.combustion_efficiency
+        return ((100.0 - other_losses) / 100.0) * self.propellant.combustion_efficiency
 
     @abstractmethod
     def get_thrust_coefficient(self, *args, **kwargs) -> float:

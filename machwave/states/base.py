@@ -16,12 +16,14 @@ class MotorState(ABC):
         motor: Motor,
         initial_pressure: float,
         initial_atmospheric_pressure: float,
+        other_losses: float,
     ) -> None:
         """
         Initializes attributes for the motor operation.
         Each motor category will contain a particular set of attributes.
         """
         self.motor = motor
+        self.other_losses = other_losses
 
         self.t = np.array([0])  # time vector
 
