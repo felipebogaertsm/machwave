@@ -21,18 +21,16 @@ from machwave import simulation
 def main():
     propellant = solid_propellants.KNSB_NAKKA
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(spacing=0.01)
     bates_segment_45 = grain_geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.045,
         length=0.200,
-        spacing=0.01,
     )
     bates_segment_60 = grain_geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.060,
         length=0.200,
-        spacing=0.01,
     )
 
     grain.add_segment(bates_segment_45)
