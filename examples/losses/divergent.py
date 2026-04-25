@@ -24,26 +24,32 @@ DIVERGENT_ANGLES = (
     24.0,
 )
 
-records: list[dict[str, float]] = []
 
-for angle in DIVERGENT_ANGLES:
-    eta_div = get_nozzle_divergent_percentage_loss(divergent_angle=angle)
+def main() -> None:
+    records: list[dict[str, float]] = []
 
-    records.append(
-        {
-            "θ_half (deg)": angle,
-            "η_div (%)": round(eta_div, 3),
-        }
+    for angle in DIVERGENT_ANGLES:
+        eta_div = get_nozzle_divergent_percentage_loss(divergent_angle=angle)
+
+        records.append(
+            {
+                "θ_half (deg)": angle,
+                "η_div (%)": round(eta_div, 3),
+            }
+        )
+
+    df = pd.DataFrame(records)
+
+    print(
+        dedent(
+            """
+            Nozzle Divergent Half-Angle vs. Percentage Loss
+            ---------------------------------------------
+            """
+        ).strip()
     )
+    print(df.to_string(index=False, justify="center"))
 
-df = pd.DataFrame(records)
 
-print(
-    dedent(
-        """
-        Nozzle Divergent Half-Angle vs. Percentage Loss
-        ---------------------------------------------
-        """
-    ).strip()
-)
-print(df.to_string(index=False, justify="center"))
+if __name__ == "__main__":
+    main()

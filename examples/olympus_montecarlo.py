@@ -16,14 +16,15 @@ MC_SAMPLES = 1000
 def main():
     propellant = solid_propellants.KNSB_NAKKA
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(
+        spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005)
+    )
     for _ in range(4):
         grain.add_segment(
             grain_geometries.BatesSegment(
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.045, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
-                spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
     for _ in range(3):
@@ -32,7 +33,6 @@ def main():
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.060, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
-                spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
 
