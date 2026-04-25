@@ -23,8 +23,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: uv sync --group dev
-      - run: uv run ruff format --check
+      - run: make install-dev
+      - run: make format-check
 
   lint:
     runs-on: ubuntu-latest
@@ -36,8 +36,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: uv sync --group dev
-      - run: uv run ruff check .
+      - run: make install-dev
+      - run: make lint
 
   typecheck:
     runs-on: ubuntu-latest
@@ -49,8 +49,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: uv sync --group dev
-      - run: uv run pyright machwave
+      - run: make install-dev
+      - run: make typecheck
 
   test:
     needs: [format-check, lint, typecheck]
@@ -63,5 +63,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: uv sync --group dev
-      - run: uv run pytest -q
+      - run: make install-dev
+      - run: make test
