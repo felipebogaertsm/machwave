@@ -31,6 +31,7 @@ class LiquidEngineState(MotorState):
         motor: LiquidEngine,
         initial_pressure: float,
         initial_atmospheric_pressure: float,
+        other_losses: float,
     ) -> None:
         """
         Initial parameters for a LRE operation.
@@ -39,6 +40,7 @@ class LiquidEngineState(MotorState):
             motor=motor,
             initial_pressure=initial_pressure,
             initial_atmospheric_pressure=initial_atmospheric_pressure,
+            other_losses=other_losses,
         )
 
         self.oxidizer_mass = np.array([motor.feed_system.oxidizer_tank.fluid_mass])
