@@ -79,4 +79,4 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --group dev
-      - run: uv run pytest tests/test_examples/ -v
+      - run: uv run pytest tests/test_examples/ -v -m smoke

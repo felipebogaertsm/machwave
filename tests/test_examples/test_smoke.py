@@ -24,6 +24,7 @@ def _script_id(script: Path) -> str:
     return str(script.relative_to(_EXAMPLES_DIR))
 
 
+@pytest.mark.smoke
 @pytest.mark.parametrize(
     "script", _ALL_SCRIPTS, ids=[_script_id(s) for s in _ALL_SCRIPTS]
 )
