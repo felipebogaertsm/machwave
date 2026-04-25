@@ -116,4 +116,4 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         """
         Returns the tank pressure [Pa].
         """
-        return self.oxidizer_tank.get_pressure()
+        return self.fuel_tank.get_pressure()
