@@ -18,7 +18,6 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         feed_system: FeedSystem,
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
-        other_losses: float = 12.0,
     ) -> None:
         """
         Initialize a liquid rocket engine.
@@ -31,10 +30,8 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
                 measured from the nozzle exit, in meters. If None, uses a default estimate.
             fuel_tank_cog: Axial position of the fuel tank center (where propellant CoG is),
                 measured from the nozzle exit, in meters. If None, uses a default estimate.
-            other_losses: Additional engine losses not accounted for by specific
-                loss mechanisms, in percent. Defaults to 12%.
         """
-        super().__init__(propellant, thrust_chamber, other_losses)
+        super().__init__(propellant, thrust_chamber)
         self.feed_system = feed_system
         self.oxidizer_tank_cog = oxidizer_tank_cog
         self.fuel_tank_cog = fuel_tank_cog
@@ -125,7 +122,7 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         external_pressure: float,
         expansion_ratio: float,
         k_ex: float,
-        n_cf: float,
+        other_losses: float,
     ) -> float:
         """Get thrust coefficient.
 
@@ -135,7 +132,7 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             external_pressure: External pressure [Pa].
             expansion_ratio: Expansion ratio.
             k_ex: Two-phase isentropic coefficient.
-            n_cf: Thrust coefficient correction factor.
+            other_losses: Additional losses not covered by specific mechanisms [%].
 
         Returns:
             Instantaneous thrust coefficient.
@@ -147,5 +144,5 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             expansion_ratio=expansion_ratio,
             k_ex=k_ex,
         )
-        n_cf = self.get_thrust_coefficient_correction_factor()
+        n_cf = self.get_thrust_coefficient_correction_factor(other_losses)
         return cf_ideal * n_cf
