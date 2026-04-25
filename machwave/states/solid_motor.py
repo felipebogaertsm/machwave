@@ -185,7 +185,7 @@ class SolidMotorState(states_base.MotorState):
         )
         eta_2p = losses.get_two_phase_flow_percentage_loss(
             chamber_pressure_psi=chamber_pressure_psi,
-            mole_fraction_of_condensed_phase=props.qsi_chamber,
+            mass_fraction_of_condensed_phase=props.qsi_chamber,
             expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
             throat_diameter_inch=throat_diameter_inch,
             characteristic_length_inch=conversions.convert_meter_to_inch(

@@ -270,7 +270,7 @@ class RocketCEAService:
     def get_condensed_phase_fractions(
         self, chamber_pressure: float, expansion_ratio: float
     ) -> tuple[float, float]:
-        """Get condensed phase fractions [mol/100g]: (chamber, exhaust)."""
+        """Get condensed phase mass fractions: (chamber, exhaust)."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
 
         qsi_chamber = 0.0
