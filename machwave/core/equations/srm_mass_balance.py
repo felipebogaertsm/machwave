@@ -46,8 +46,12 @@ def compute_chamber_pressure_mass_balance_srm(
 
     if Pr <= critical_pressure_ratio:  # choked
         H = (k**0.5) * (2 / (k + 1)) ** ((k + 1) / (2 * (k - 1)))
-    else:  # sub-critical
-        H = ((k / (k - 1)) ** 0.5) * Pr ** (1 / k) * (1 - Pr ** ((k - 1) / k)) ** 0.5
+    else:  # sub-critical (Seidel 1965, Eq. 35)
+        H = (
+            ((2 * k / (k - 1)) ** 0.5)
+            * Pr ** (1 / k)
+            * (1 - Pr ** ((k - 1) / k)) ** 0.5
+        )
 
     m_dot_gen = pp * r * Ab
     m_dot_exit = Cd * P0 * At * H / (R * T0) ** 0.5
