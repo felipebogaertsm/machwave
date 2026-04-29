@@ -102,12 +102,161 @@ Implemented in
 
 ## 2.3 Liquid Rocket Engine (LRE)
 
-!!! warning "To be completed"
-    This section is a work in progress.
+*References: Sutton & Biblarz (2017), Ch. 6; Huzel & Huang (1992), Ch. 1, 4, 7.*
+
+For an LRE the mass-generation term is no longer set by surface regression but by
+the **injector mass flow** of two independent propellant streams. Mass exits through
+the same choked throat as in §2.2.2.
+
+### 2.3.1 Mass Inflow Rate — Injector
+
+*References: Sutton & Biblarz (2017) Ch. 8 (Thrust Chambers — Injectors);
+Huzel & Huang (1992) Ch. 4 §4.5 (Injector Design).*
+
+Each propellant stream is treated as an **incompressible fluid** flowing through an
+orifice from the upstream feed pressure \(P_\text{up}\) to the chamber pressure
+\(P_0\). Combining Bernoulli with continuity through an effective orifice area
+\(A_\text{eff}\) and applying a discharge coefficient \(C_d\) to lump together
+contraction and viscous losses gives (Huzel & Huang §4.5; Sutton & Biblarz §8.2):
+
+\[
+\boxed{\dot{m} = C_d\,A_\text{eff}\,\sqrt{2\rho\,(P_\text{up} - P_0)}}
+\]
+
+The total inflow is the sum of the fuel and oxidiser streams:
+
+\[
+\dot{m}_{gen} = \dot{m}_{fuel} + \dot{m}_{ox},
+\qquad
+\dot{m}_{i} = C_{d,i}\,A_{\text{eff},i}\,\sqrt{2\rho_i\,(P_{\text{up},i} - P_0)},
+\quad i \in \{fuel, ox\}.
+\]
+
+Implemented in `get_mass_flow_orifice` (module
+[`machwave.core.incompressible_flow`](../api/core.md)) and called per stream by the
+feed system (see §2.3.2).
+
+### 2.3.2 Upstream Pressure — Pressurised Tank
+
+*References: Sutton & Biblarz (2017) Ch. 6 §6.3 (Propellant Feed Systems);
+Huzel & Huang (1992) Ch. 5 (Gas-Pressurized Feed Systems) and Ch. 8 (Propellant
+Tanks).*
+
+machwave currently models a **stacked-tank pressure-fed** architecture: a single
+pressurant volume above the oxidiser also drives the fuel via a piston, with a
+constant pressure drop \(\Delta P_\text{piston}\) accounting for friction and
+piston weight (Huzel & Huang §5.2; Sutton & Biblarz §6.3). The injector upstream
+pressures are therefore:
+
+\[
+P_{\text{up},ox} = P_{\text{tank},ox},
+\qquad
+P_{\text{up},fuel} = P_{\text{tank},ox} - \Delta P_\text{piston}.
+\]
+
+Each tank is modelled as a **two-phase isothermal vessel** (constant \(T\), saturation
+pinning when liquid is present, ideal-gas vapour when only vapour remains; cf. Huzel &
+Huang Ch. 8 for tank thermodynamics). Properties come from CoolProp; details in
+[`Tank`][machwave.models.feed_systems.tanks.base.Tank] and the orchestrating
+[`StackedTankPressureFedFeedSystem`][machwave.models.feed_systems.pressure_fed.StackedTankPressureFedFeedSystem].
+
+### 2.3.3 Stoichiometric Limiting-Reagent Adjustment
+
+*References: Sutton & Biblarz (2017) Ch. 6 §6.1 (Mixture Ratio); Huzel & Huang
+(1992) Ch. 1 §1.3 (Performance Parameters).*
+
+The injectors deliver fuel and oxidiser independently, so over a finite step \(\Delta t\)
+one tank can run dry while the other still has propellant. machwave clamps the surplus
+to preserve the design oxidiser–fuel ratio \(\mathrm{O\!/\!F} = \dot{m}_{ox}/\dot{m}_{fuel}\)
+(Sutton & Biblarz §6.1):
+
+\[
+\text{if } \dot{m}_{fuel}\Delta t \geq m_{fuel}: \;\;
+\dot{m}_{fuel} \leftarrow m_{fuel}/\Delta t,
+\;\;
+\dot{m}_{ox} \leftarrow \mathrm{O\!/\!F}\cdot\dot{m}_{fuel}
+\]
+
+(and symmetrically when oxidiser is the limiting reagent). This avoids unphysical
+post-burnout transients in which one stream continues for several steps after the
+other has been exhausted. Implemented in
+[`_adjust_flows_for_stoichiometry`][machwave.states.liquid_engine.LiquidEngineState].
+
+### 2.3.4 Mass Exit Rate — Choked Throat
+
+*References: Sutton & Biblarz (2017) Ch. 3 §3.3 (Isentropic Flow through Nozzles);
+Huzel & Huang (1992) Ch. 1 §1.4 (The Gas-Flow Processes).*
+
+The exit term is identical to §2.2.2 — the choked-flow expression derived in §1.7
+(Sutton & Biblarz §3.3). For LRE the implementation drops the throat discharge
+coefficient (\(C_d \equiv 1\)) and uses the chamber-state isentropic exponent
+\(k = \gamma_\text{chamber}\):
+
+\[
+\dot{m}_{out} = \frac{P_0\, A_t}{\sqrt{R T_0}}\,\sqrt{k}\left(\frac{2}{k+1}\right)^{(k+1)/[2(k-1)]}.
+\]
+
+### 2.3.5 LRE Chamber-Pressure ODE
+
+*References: Huzel & Huang (1992) Ch. 1 §1.4 and Ch. 4 §4.1 (Combustion-Chamber
+Processes); Sutton & Biblarz (2017) Ch. 8 §8.1 (Combustion Chamber Basic
+Configurations).*
+
+Substituting §2.3.1 and §2.3.4 into §2.1 yields the LRE form of the well-stirred
+reactor balance (Huzel & Huang §1.4; Sutton & Biblarz §8.1):
+
+\[
+\boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left[
+  \dot{m}_{fuel} + \dot{m}_{ox}
+  - \frac{P_0\,A_t}{\sqrt{R T_0}}\sqrt{k}\!\left(\frac{2}{k+1}\right)^{\!(k+1)/[2(k-1)]}
+\right]}
+\]
+
+Implemented in
+[`compute_chamber_pressure_mass_balance_lre`][machwave.core.equations.lre_mass_balance.compute_chamber_pressure_mass_balance_lre]
+and integrated with the same RK4 solver as §2.2.
+
+The thermochemical state \(\{T_0, R, k\}\) is evaluated by NASA-CEA at each step from
+the current \(P_0\) and the design expansion ratio, then held constant within the
+RK4 sub-stages — an explicit lag that is acceptable because chamber properties are
+only weakly pressure-dependent (cf. Sutton & Biblarz §5.4 on equilibrium
+thermochemistry).
+
+### 2.3.6 Modelling Assumptions and Limitations
+
+*References: Sutton & Biblarz (2017) Ch. 8-9; Huzel & Huang (1992) Ch. 1, 4, 8.*
+
+The LRE mass balance is built on a number of simplifying assumptions; users should
+keep these in mind when interpreting transient results:
+
+- **Well-stirred reactor / instantaneous combustion.** Cold liquid propellant is
+  assumed to burn to equilibrium products immediately upon entering the chamber.
+  Atomisation, vaporisation, and finite reaction times are not resolved
+  (Huzel & Huang Ch. 4 §4.1; Sutton & Biblarz Ch. 9 covers the real combustion
+  process and its instabilities).
+- **Uniform chamber state.** Pressure, temperature, and composition are spatially
+  uniform — there is no L\* effect, no residence-time penalty, and no chamber-cooling
+  energy loss (cf. Huzel & Huang §4.1 on \(L^*\) sizing).
+- **Constant \(T_0\), constant \(V_0\).** Flame temperature is treated as the CEA
+  equilibrium value at the *current* \(P_0\) and design \(\varepsilon\) (Sutton &
+  Biblarz Ch. 5); free volume is fixed (no regenerative cooling jacket displacement,
+  no throat erosion — see Huzel & Huang Ch. 4 for cooling-jacket geometry).
+- **Isothermal tank.** The two-phase model assumes constant tank temperature; the
+  energy of vaporisation that would normally cool a self-pressurised tank during
+  blowdown is **not** modelled (Huzel & Huang Ch. 8 covers tank thermodynamics in
+  more depth).
+- **Bulk fluid density at the injector.** When the tank is two-phase, the orifice
+  flow uses the bulk mixture density rather than the liquid saturation density —
+  acceptable while the tank is mostly liquid, less accurate as it empties
+  (Huzel & Huang §4.5 on injector hydraulics).
+- **Stoichiometric clamping.** When one tank empties first, the simulation drops
+  the surplus reagent rather than tracking the fuel-rich (or ox-rich) tail of a
+  real engine (Sutton & Biblarz §6.1).
 
 ---
 
 ## References
 
 1. Seidel, H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Air Force Rocket Propulsion Laboratory (AFRPL).
-2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Ch. 12.
+2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Ch. 6, 12.
+3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147. Ch. 1, 4, 7.

@@ -35,6 +35,8 @@ Applicable to **conical nozzles only**. Contoured (bell) nozzles can achieve nea
 divergence loss by design. Implemented in
 [`get_nozzle_divergent_percentage_loss`][machwave.core.compressible_flow.losses.get_nozzle_divergent_percentage_loss].
 
+*Applies to: solid and liquid motors.*
+
 ---
 
 ## 4.2 Kinetics Loss
@@ -61,6 +63,8 @@ f_P = \begin{cases} 1 & P_0 < 200\ \text{psi} \\ \dfrac{200}{P_0[\text{psi}]} & 
 Implemented in
 [`get_kinetics_percentage_loss`][machwave.core.compressible_flow.losses.get_kinetics_percentage_loss].
 
+*Applies to: solid and liquid motors.*
+
 ---
 
 ## 4.3 Boundary Layer Loss
@@ -84,6 +88,9 @@ with pressures in psi and diameter in inches. \(C_1\) and \(C_2\) are
 nozzle-material constants (e.g. \(C_1=0.003650\), \(C_2=0.000937\) for a
 standard graphite/phenolic nozzle). Implemented in
 [`get_boundary_layer_percentage_loss`][machwave.core.compressible_flow.losses.get_boundary_layer_percentage_loss].
+
+*Applies to: solid motors only* (the empirical constants \(C_1, C_2\) are
+calibrated against a BATES motor; the LRE state passes \(\eta_{BL} = 0\)).
 
 ---
 
@@ -114,6 +121,9 @@ chamber length [in], and \(D_t\) is the throat diameter [in].
 Coefficients \(C_3\)–\(C_6\) depend on \(\xi\), \(D_t\), and \(d_p\) ranges
 (tabulated in AFRPL-TR-75-36). Implemented in
 [`get_two_phase_flow_percentage_loss`][machwave.core.compressible_flow.losses.get_two_phase_flow_percentage_loss].
+
+*Applies to: solid motors only.* Liquid bipropellants typically produce gas-phase
+products with no condensed phase, so the LRE state passes \(\eta_{2p} = 0\).
 
 ---
 
