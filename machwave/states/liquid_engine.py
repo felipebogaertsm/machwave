@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.constants
 
 import machwave.core.conversions as conversions
 from machwave.core.compressible_flow.losses import (
@@ -312,7 +313,7 @@ class LiquidEngineState(MotorState):
 
         # Impulse
         impulse = np.trapezoid(self.thrust, self.t)
-        isp = impulse / (self.m_prop[0] * 9.81)
+        isp = impulse / (self.m_prop[0] * scipy.constants.g)
         print("\nIMPULSE AND I_SP")
         print(f"  Total impulse: {impulse:.4f} N·s")
         print(f"  Specific impulse: {isp:.4f} s")
