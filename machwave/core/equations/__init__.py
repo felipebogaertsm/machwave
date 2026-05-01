@@ -11,11 +11,9 @@ literature is preferred for readability.
 """
 
 from .lre_mass_balance import compute_chamber_pressure_mass_balance_lre
-from .point_mass_trajectory import compute_point_mass_trajectory
 from .srm_mass_balance import compute_chamber_pressure_mass_balance_srm
 
 __all__ = [
     "compute_chamber_pressure_mass_balance_srm",
     "compute_chamber_pressure_mass_balance_lre",
-    "compute_point_mass_trajectory",
 ]
