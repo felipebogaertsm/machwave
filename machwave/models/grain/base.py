@@ -1,3 +1,4 @@
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
@@ -409,6 +410,65 @@ class Grain:
         :rtype: int
         """
         return len(self.segments)
+
+    # Attributes whose divergence between segments breaks any consumer that
+    # treats the assembly as N copies of a single identical grain (e.g. the
+    # RocketPy SolidMotor export).
+    _HOMOGENEITY_ATTRS: tuple[str, ...] = (
+        "length",
+        "outer_diameter",
+        "density_ratio",
+        "inhibited_surfaces",
+        "core_diameter",
+    )
+
+    def get_segment_mismatches(self) -> list[str]:
+        """Return descriptions of attributes that diverge across segments.
+
+        Compares every segment past index 0 to ``segments[0]`` across class
+        type and a fixed set of geometric/physical attributes (length,
+        outer_diameter, density_ratio, inhibited_surfaces, and core_diameter
+        where present). Floats are compared with a small tolerance.
+
+        Returns:
+            One human-readable description per divergent (segment, attribute)
+            pair. An empty list means every segment is dimensionally
+            interchangeable.
+        """
+        if len(self.segments) < 2:
+            return []
+
+        first = self.segments[0]
+        mismatches: list[str] = []
+
+        for index, segment in enumerate(self.segments[1:], start=1):
+            if type(segment) is not type(first):
+                mismatches.append(
+                    f"segment[{index}] type={type(segment).__name__} "
+                    f"differs from segment[0] type={type(first).__name__}"
+                )
+                continue
+
+            for attr in self._HOMOGENEITY_ATTRS:
+                if not (hasattr(first, attr) and hasattr(segment, attr)):
+                    continue
+                value_first = getattr(first, attr)
+                value_other = getattr(segment, attr)
+
+                if isinstance(value_first, float) and isinstance(value_other, float):
+                    if math.isclose(
+                        value_first, value_other, rel_tol=1e-9, abs_tol=1e-12
+                    ):
+                        continue
+                elif value_first == value_other:
+                    continue
+
+                mismatches.append(
+                    f"segment[{index}].{attr}={value_other!r} "
+                    f"differs from segment[0].{attr}={value_first!r}"
+                )
+
+        return mismatches
 
     def get_center_of_gravity(
         self, web_distance: float
