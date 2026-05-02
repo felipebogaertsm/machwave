@@ -77,7 +77,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """Initialize the adapter with a Machwave motor state.
 
         Args:
-            The Machwave motor state to adapt.
+            motor_state: The Machwave motor state to adapt.
         """
         self._require_rocketpy()
 
