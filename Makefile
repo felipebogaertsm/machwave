@@ -1,4 +1,4 @@
-.PHONY: install install-dev install-docs test publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install install-dev install-docs install-hooks test publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
@@ -8,6 +8,9 @@ install-dev:
 
 install-docs:
 	@uv sync --group docs --group dev
+
+install-hooks:
+	@uv run pre-commit install
 
 build:
 	@uv build
