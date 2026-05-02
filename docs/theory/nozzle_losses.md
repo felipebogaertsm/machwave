@@ -5,7 +5,7 @@ expanded, single-phase, axially directed flow. Real nozzles deviate from this id
 due to four independent loss mechanisms. Each is expressed as a **percentage loss**
 and combined into an overall nozzle efficiency \(\eta_{nozzle}\).
 
-*All empirical correlations are from:*  
+*All empirical correlations are from:*
 *Coats et al. (1975). A Computer Program for the Prediction of Solid Propellant
 Rocket Motor Performance, Vol. I. AFRPL-TR-75-36 (DTIC AD-A015 140).*
 
