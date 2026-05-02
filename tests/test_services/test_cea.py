@@ -398,6 +398,106 @@ class TestServiceEdgeCases:
         assert isp_high > isp_low, "Higher expansion should give higher Isp"
 
 
+class TestRegistryIsolation:
+    """Repeated calls with the same user-facing propellant name but different
+    cards must not clobber each other in RocketCEA's process-global registry.
+
+    Without name-mangling the second registration silently wins and both
+    services return identical properties.
+    """
+
+    def _kno3_sucrose_card(self, kno3_pct: float) -> str:
+        return generate_card_string(
+            [
+                {
+                    "name": "KNO3",
+                    "formula": {"K": 1.0, "N": 1.0, "O": 3.0},
+                    "weight_percent": kno3_pct,
+                    "heat_of_formation": -118200.0,
+                    "temperature": 298.15,
+                    "density": 2.109,
+                },
+                {
+                    "name": "Sucrose",
+                    "formula": {"C": 12.0, "H": 22.0, "O": 11.0},
+                    "weight_percent": 100.0 - kno3_pct,
+                    "heat_of_formation": -531900.0,
+                    "temperature": 298.15,
+                    "density": 1.587,
+                },
+            ]
+        )
+
+    def test_same_name_different_cards_keep_distinct_properties(self):
+        shared_name = "REGISTRY_ISOLATION_PROBE"
+
+        service_a = create_cea_service(
+            propellant_name=shared_name, card_string=self._kno3_sucrose_card(65.0)
+        )
+        service_b = create_cea_service(
+            propellant_name=shared_name, card_string=self._kno3_sucrose_card(80.0)
+        )
+
+        chamber_pressure = 3e6
+        expansion_ratio = 8.0
+
+        temp_a = service_a.get_adiabatic_flame_temperature(chamber_pressure)
+        temp_b = service_b.get_adiabatic_flame_temperature(chamber_pressure)
+        isp_a, _ = service_a.get_specific_impulse(chamber_pressure, expansion_ratio)
+        isp_b, _ = service_b.get_specific_impulse(chamber_pressure, expansion_ratio)
+
+        assert abs(temp_a - temp_b) > 5.0, (
+            f"Adiabatic flame temperatures should differ between distinct "
+            f"compositions registered under the same name; got "
+            f"{temp_a:.2f} K vs {temp_b:.2f} K"
+        )
+        assert abs(isp_a - isp_b) > 0.5, (
+            f"Specific impulses should differ between distinct compositions "
+            f"registered under the same name; got {isp_a:.3f} s vs {isp_b:.3f} s"
+        )
+
+    def test_same_name_custom_oxidizer_keeps_distinct_properties(self):
+        shared_ox_name = "REGISTRY_ISOLATION_OX"
+        fuel_card = (
+            "name CustomMMH  C 1 H 6 N 2  wt%=100.0\n"
+            "h,cal=12800.0  t(k)=298.15  rho,g/cc=0.866"
+        )
+
+        ox_card_a = (
+            "name CustomOxA  N 2 O 4  wt%=100.0\n"
+            "h,cal=-4676.0  t(k)=298.15  rho,g/cc=1.443"
+        )
+        # Different heat of formation -> different combustion temperature.
+        ox_card_b = (
+            "name CustomOxB  N 2 O 4  wt%=100.0\n"
+            "h,cal=2000.0  t(k)=298.15  rho,g/cc=1.443"
+        )
+
+        service_a = create_cea_service(
+            oxidizer_name=shared_ox_name,
+            oxidizer_card_string=ox_card_a,
+            fuel_name="REGISTRY_ISOLATION_FUEL_A",
+            fuel_card_string=fuel_card,
+            oxidizer_to_fuel_ratio=1.65,
+        )
+        service_b = create_cea_service(
+            oxidizer_name=shared_ox_name,
+            oxidizer_card_string=ox_card_b,
+            fuel_name="REGISTRY_ISOLATION_FUEL_B",
+            fuel_card_string=fuel_card,
+            oxidizer_to_fuel_ratio=1.65,
+        )
+
+        temp_a = service_a.get_adiabatic_flame_temperature(3e6)
+        temp_b = service_b.get_adiabatic_flame_temperature(3e6)
+
+        assert abs(temp_a - temp_b) > 5.0, (
+            f"Adiabatic flame temperatures should differ between oxidizers with "
+            f"different heats of formation registered under the same name; got "
+            f"{temp_a:.2f} K vs {temp_b:.2f} K"
+        )
+
+
 def test_generate_card_string_utility():
     """Test the generate_card_string utility function."""
     components = [
