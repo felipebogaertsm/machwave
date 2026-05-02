@@ -11,6 +11,18 @@ class MotorState(ABC):
     obtained from the simulation.
     """
 
+    # Per-step accumulators built up as Python lists during the simulation
+    # loop (O(1) append) and converted to np.ndarray once via _finalize().
+    _ARRAY_ATTRS: tuple[str, ...] = (
+        "t",
+        "m_prop",
+        "P_0",
+        "P_exit",
+        "C_f",
+        "C_f_ideal",
+        "thrust",
+    )
+
     def __init__(
         self,
         motor: Motor,
@@ -25,16 +37,16 @@ class MotorState(ABC):
         self.motor = motor
         self.other_losses = other_losses
 
-        self.t = np.array([0])  # time vector
+        self.t: list[float] = [0.0]  # time vector
 
-        self.m_prop = np.array([motor.initial_propellant_mass])  # propellant mass
-        self.P_0 = np.array([initial_pressure])  # chamber stagnation pressure
-        self.P_exit = np.array([initial_atmospheric_pressure])  # exit pressure
+        self.m_prop: list[float] = [motor.initial_propellant_mass]
+        self.P_0: list[float] = [initial_pressure]
+        self.P_exit: list[float] = [initial_atmospheric_pressure]
 
         # Thrust coefficients and thrust:
-        self.C_f = np.array([0])  # thrust coefficient
-        self.C_f_ideal = np.array([0])  # ideal thrust coefficient
-        self.thrust = np.array([0])  # thrust force (N)
+        self.C_f: list[float] = [0.0]
+        self.C_f_ideal: list[float] = [0.0]
+        self.thrust: list[float] = [0.0]
 
         # Thrust time:
         self._thrust_time = None
@@ -47,6 +59,13 @@ class MotorState(ABC):
         # stops running.
         self.end_thrust = False
         self.end_burn = False
+
+    def _finalize(self) -> None:
+        """Convert accumulated lists into ndarrays for downstream consumers."""
+        for name in self._ARRAY_ATTRS:
+            value = getattr(self, name)
+            if not isinstance(value, np.ndarray):
+                setattr(self, name, np.asarray(value))
 
     @abstractmethod
     def get_m_dot_in(self) -> float:

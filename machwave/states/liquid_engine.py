@@ -33,6 +33,14 @@ class LiquidEngineState(MotorState):
 
     motor: LiquidEngine
 
+    _ARRAY_ATTRS = MotorState._ARRAY_ATTRS + (
+        "oxidizer_mass",
+        "fuel_mass",
+        "n_cf",
+        "fuel_tank_pressure",
+        "oxidizer_tank_pressure",
+    )
+
     def __init__(
         self,
         motor: LiquidEngine,
@@ -50,14 +58,16 @@ class LiquidEngineState(MotorState):
             other_losses=other_losses,
         )
 
-        self.oxidizer_mass = np.array([motor.feed_system.oxidizer_tank.fluid_mass])
-        self.fuel_mass = np.array([motor.feed_system.fuel_tank.fluid_mass])
-        self.n_cf = np.array([1.0])  # thrust coefficient correction factor
+        self.oxidizer_mass: list[float] = [motor.feed_system.oxidizer_tank.fluid_mass]
+        self.fuel_mass: list[float] = [motor.feed_system.fuel_tank.fluid_mass]
+        self.n_cf: list[float] = [1.0]
 
-        self.fuel_tank_pressure = np.array([motor.feed_system.fuel_tank.get_pressure()])
-        self.oxidizer_tank_pressure = np.array(
-            [motor.feed_system.oxidizer_tank.get_pressure()]
-        )
+        self.fuel_tank_pressure: list[float] = [
+            motor.feed_system.fuel_tank.get_pressure()
+        ]
+        self.oxidizer_tank_pressure: list[float] = [
+            motor.feed_system.oxidizer_tank.get_pressure()
+        ]
 
     def run_timestep(
         self,
@@ -99,7 +109,7 @@ class LiquidEngineState(MotorState):
         self._check_thrust_end(P_ext)
 
     def _append_time(self, d_t: float) -> None:
-        self.t = np.append(self.t, self.t[-1] + d_t)
+        self.t.append(self.t[-1] + d_t)
 
     def _update_propellant_properties(self) -> None:
         self.motor.propellant.properties = self.motor.propellant.evaluate(
@@ -134,6 +144,7 @@ class LiquidEngineState(MotorState):
         self, m_dot_fuel: float, m_dot_ox: float, d_t: float
     ) -> tuple[float, float]:
         of = self.motor.propellant.of_ratio
+        assert of is not None
         fuel_last = self.fuel_mass[-1]
         ox_last = self.oxidizer_mass[-1]
         # convert to consumed mass this step
@@ -173,7 +184,7 @@ class LiquidEngineState(MotorState):
         )[0]
 
     def _append_chamber_pressure(self, pressure: float) -> None:
-        self.P_0 = np.append(self.P_0, pressure)
+        self.P_0.append(pressure)
 
     def _compute_exit_pressure(self) -> float:
         assert self.motor.propellant.properties is not None
@@ -184,7 +195,7 @@ class LiquidEngineState(MotorState):
         )
 
     def _append_exit_pressure(self, pressure: float) -> None:
-        self.P_exit = np.append(self.P_exit, pressure)
+        self.P_exit.append(pressure)
 
     def _compute_cf_correction(self) -> float:
         """Compute the overall thrust coefficient correction factor.
@@ -215,7 +226,7 @@ class LiquidEngineState(MotorState):
         return nozzle_efficiency * self.motor.propellant.combustion_efficiency
 
     def _append_cf_correction(self, value: float) -> None:
-        self.n_cf = np.append(self.n_cf, value)
+        self.n_cf.append(value)
 
     def _compute_thrust_coefficients(
         self,
@@ -239,9 +250,9 @@ class LiquidEngineState(MotorState):
             self.P_0[-1],
             self.motor.thrust_chamber.nozzle.get_throat_area(),
         )
-        self.C_f = np.append(self.C_f, cf)
-        self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
-        self.thrust = np.append(self.thrust, thrust_val)
+        self.C_f.append(cf)
+        self.C_f_ideal.append(cf_ideal)
+        self.thrust.append(thrust_val)
 
     def _update_propellant_masses(
         self, m_dot_fuel: float, m_dot_ox: float, d_t: float
@@ -254,20 +265,16 @@ class LiquidEngineState(MotorState):
 
         new_fuel = self.fuel_mass[-1] - consumed_f
         new_ox = self.oxidizer_mass[-1] - consumed_o
-        self.fuel_mass = np.append(self.fuel_mass, new_fuel)
-        self.oxidizer_mass = np.append(self.oxidizer_mass, new_ox)
-        self.m_prop = np.append(self.m_prop, new_fuel + new_ox)
+        self.fuel_mass.append(new_fuel)
+        self.oxidizer_mass.append(new_ox)
+        self.m_prop.append(new_fuel + new_ox)
 
     def _update_tank_pressures(self) -> None:
         new_fuel_tank_pressure = self.motor.feed_system.get_fuel_tank_pressure()
         new_oxidizer_tank_pressure = self.motor.feed_system.get_oxidizer_tank_pressure()
 
-        self.fuel_tank_pressure = np.append(
-            self.fuel_tank_pressure, new_fuel_tank_pressure
-        )
-        self.oxidizer_tank_pressure = np.append(
-            self.oxidizer_tank_pressure, new_oxidizer_tank_pressure
-        )
+        self.fuel_tank_pressure.append(new_fuel_tank_pressure)
+        self.oxidizer_tank_pressure.append(new_oxidizer_tank_pressure)
 
     def _check_burn_end(self) -> None:
         if self.end_burn:

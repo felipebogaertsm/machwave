@@ -20,6 +20,20 @@ class SolidMotorState(states_base.MotorState):
     Therefore, PEP8's snake_case will not be followed rigorously.
     """
 
+    _ARRAY_ATTRS = states_base.MotorState._ARRAY_ATTRS + (
+        "V_0",
+        "web",
+        "burn_area",
+        "propellant_volume",
+        "burn_rate",
+        "eta_div",
+        "eta_kin",
+        "eta_bl",
+        "eta_2p",
+        "nozzle_efficiency",
+        "overall_efficiency",
+    )
+
     def __init__(
         self,
         motor: motors.SolidMotor,
@@ -40,15 +54,15 @@ class SolidMotorState(states_base.MotorState):
         self.motor: motors.SolidMotor = motor
 
         # Grain and propellant parameters:
-        self.V_0 = np.array(
-            [motor.thrust_chamber.combustion_chamber.internal_volume]
-        )  # empty chamber volume
-        self.web = np.array([0])  # instant web thickness
-        self.burn_area = np.array([self.motor.grain.get_burn_area(self.web[0])])
-        self.propellant_volume = np.array(
-            [self.motor.grain.get_propellant_volume(self.web[0])]
-        )
-        self.burn_rate = np.array([0])  # burn rate
+        self.V_0: list[float] = [
+            motor.thrust_chamber.combustion_chamber.internal_volume
+        ]
+        self.web: list[float] = [0.0]
+        self.burn_area: list[float] = [self.motor.grain.get_burn_area(0.0)]
+        self.propellant_volume: list[float] = [
+            self.motor.grain.get_propellant_volume(0.0)
+        ]
+        self.burn_rate: list[float] = [0.0]
 
         # Center of gravity and moment of inertia:
         initial_cog = motor.grain.get_center_of_gravity(
@@ -63,12 +77,12 @@ class SolidMotorState(states_base.MotorState):
         self.propellant_moi = [initial_moi]  # moment of inertia tensor 3x3 in kg-m²
 
         # Correction factors:
-        self.eta_div = np.array([0])  # divergent nozzle correction factor
-        self.eta_kin = np.array([0])  # kinetics correction factor
-        self.eta_bl = np.array([0])  # boundary layer correction factor
-        self.eta_2p = np.array([0])  # two-phase flow correction factor
-        self.nozzle_efficiency = np.array([0])  # overall nozzle efficiency
-        self.overall_efficiency = np.array([0])  # overall efficiency
+        self.eta_div: list[float] = [0.0]
+        self.eta_kin: list[float] = [0.0]
+        self.eta_bl: list[float] = [0.0]
+        self.eta_2p: list[float] = [0.0]
+        self.nozzle_efficiency: list[float] = [0.0]
+        self.overall_efficiency: list[float] = [0.0]
 
     def run_timestep(
         self,
@@ -94,29 +108,25 @@ class SolidMotorState(states_base.MotorState):
         self._check_thrust_end(P_ext)
 
     def _append_time(self, d_t: float) -> None:
-        self.t = np.append(self.t, self.t[-1] + d_t)
+        self.t.append(self.t[-1] + d_t)
 
     def _update_grain_geometry(self) -> None:
         web_last = self.web[-1]
-        area = self.motor.grain.get_burn_area(web_last)
-        vol = self.motor.grain.get_propellant_volume(web_last)
-        self.burn_area = np.append(self.burn_area, area)
-        self.propellant_volume = np.append(self.propellant_volume, vol)
-        self.burn_rate = np.append(
-            self.burn_rate,
-            self.motor.propellant.get_burn_rate(self.P_0[-1]),
-        )
-        dx = self.burn_rate[-1] * (self.t[-1] - self.t[-2])
-        self.web = np.append(self.web, web_last + dx)
+        self.burn_area.append(self.motor.grain.get_burn_area(web_last))
+        self.propellant_volume.append(self.motor.grain.get_propellant_volume(web_last))
+        burn_rate = self.motor.propellant.get_burn_rate(self.P_0[-1])
+        self.burn_rate.append(burn_rate)
+        dx = burn_rate * (self.t[-1] - self.t[-2])
+        self.web.append(web_last + dx)
 
     def _update_chamber_volume_and_mass(self) -> None:
-        free_vol = self.motor.get_free_chamber_volume(self.propellant_volume[-1])
-        self.V_0 = np.append(self.V_0, free_vol)
-        m_prop = self.motor.grain.get_propellant_mass(
-            web_distance=self.web[-1],
-            ideal_density=self.motor.propellant.ideal_density,
+        self.V_0.append(self.motor.get_free_chamber_volume(self.propellant_volume[-1]))
+        self.m_prop.append(
+            self.motor.grain.get_propellant_mass(
+                web_distance=self.web[-1],
+                ideal_density=self.motor.propellant.ideal_density,
+            )
         )
-        self.m_prop = np.append(self.m_prop, m_prop)
 
     def _update_cog_and_moi(self) -> None:
         # Update center of gravity and moment of inertia
@@ -152,13 +162,14 @@ class SolidMotorState(states_base.MotorState):
             R=props.R_chamber,
             T0=props.adiabatic_flame_temperature,
         )[0]
-        self.P_0 = np.append(self.P_0, new_P)
-        exit_P = isentropic.get_exit_pressure(
-            props.gamma_exhaust,
-            self.motor.thrust_chamber.nozzle.expansion_ratio,
-            new_P,
+        self.P_0.append(new_P)
+        self.P_exit.append(
+            isentropic.get_exit_pressure(
+                props.gamma_exhaust,
+                self.motor.thrust_chamber.nozzle.expansion_ratio,
+                new_P,
+            )
         )
-        self.P_exit = np.append(self.P_exit, exit_P)
 
     def _compute_flow(self, P_ext: float) -> None:
         P0 = self.P_0[-1]
@@ -201,12 +212,12 @@ class SolidMotorState(states_base.MotorState):
             nozzle_efficiency * self.motor.propellant.combustion_efficiency
         )
 
-        self.eta_div = np.append(self.eta_div, eta_div)
-        self.eta_kin = np.append(self.eta_kin, eta_kin)
-        self.eta_bl = np.append(self.eta_bl, eta_bl)
-        self.eta_2p = np.append(self.eta_2p, eta_2p)
-        self.nozzle_efficiency = np.append(self.nozzle_efficiency, nozzle_efficiency)
-        self.overall_efficiency = np.append(self.overall_efficiency, overall_efficiency)
+        self.eta_div.append(eta_div)
+        self.eta_kin.append(eta_kin)
+        self.eta_bl.append(eta_bl)
+        self.eta_2p.append(eta_2p)
+        self.nozzle_efficiency.append(nozzle_efficiency)
+        self.overall_efficiency.append(overall_efficiency)
 
         cf_ideal = nozzle.get_ideal_thrust_coefficient(
             P0,
@@ -216,12 +227,13 @@ class SolidMotorState(states_base.MotorState):
             props.gamma_exhaust,
         )
         cf = nozzle.apply_thrust_coefficient_correction(cf_ideal, overall_efficiency)
-        self.C_f = np.append(self.C_f, cf)
-        self.C_f_ideal = np.append(self.C_f_ideal, cf_ideal)
-        thrust = nozzle.get_thrust_from_thrust_coefficient(
-            cf, P0, self.motor.thrust_chamber.nozzle.get_throat_area()
+        self.C_f.append(cf)
+        self.C_f_ideal.append(cf_ideal)
+        self.thrust.append(
+            nozzle.get_thrust_from_thrust_coefficient(
+                cf, P0, self.motor.thrust_chamber.nozzle.get_throat_area()
+            )
         )
-        self.thrust = np.append(self.thrust, thrust)
 
     def _check_burn_end(self) -> None:
         if self.m_prop[-1] <= 0 and not self.end_burn:
@@ -288,8 +300,9 @@ class SolidMotorState(states_base.MotorState):
     @property
     def klemmung(self) -> np.ndarray:
         """Get the klemmung values."""
+        burn_area = np.asarray(self.burn_area)
         return (
-            self.burn_area[self.burn_area > 0]
+            burn_area[burn_area > 0]
             / self.motor.thrust_chamber.nozzle.get_throat_area()
         )
 
@@ -317,7 +330,8 @@ class SolidMotorState(states_base.MotorState):
         Returns:
             Burn profile: "regressive", "progressive", or "neutral".
         """
-        burn_area = self.burn_area[self.burn_area > 0]
+        burn_area_arr = np.asarray(self.burn_area)
+        burn_area = burn_area_arr[burn_area_arr > 0]
 
         if burn_area[0] / burn_area[-1] > 1 + deviancy:
             return "regressive"
@@ -335,15 +349,15 @@ class SolidMotorState(states_base.MotorState):
     def grain_mass_flux(self) -> np.ndarray:
         """Get the grain mass flux."""
         return self.motor.grain.get_mass_flux_per_segment(
-            self.burn_rate,
+            np.asarray(self.burn_rate),
             self.motor.propellant.ideal_density,
-            self.web,
+            np.asarray(self.web),
         )
 
     @property
     def total_impulse(self) -> float:
         """Get the total impulse [N-s]."""
-        return np.mean(self.thrust) * self.t[-1]
+        return float(np.mean(self.thrust) * self.t[-1])
 
     @property
     def specific_impulse(self) -> float:
