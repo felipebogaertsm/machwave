@@ -20,7 +20,7 @@ from machwave.core.compressible_flow.isentropic import (
 from machwave.core.mass_balance import compute_chamber_pressure_mass_balance
 from machwave.core.solvers import rk4th_ode_solver
 from machwave.models.motors import LiquidEngine
-from machwave.states.base import MotorState
+from machwave.states.base import MotorState, SimulationArray
 
 
 class LiquidEngineState(MotorState):
@@ -33,7 +33,7 @@ class LiquidEngineState(MotorState):
 
     motor: LiquidEngine
 
-    _ARRAY_ATTRS = MotorState._ARRAY_ATTRS + (
+    SIMULATION_ARRAY_ATTRIBUTE_NAMES = MotorState.SIMULATION_ARRAY_ATTRIBUTE_NAMES + (
         "oxidizer_mass",
         "fuel_mass",
         "n_cf",
@@ -58,14 +58,16 @@ class LiquidEngineState(MotorState):
             other_losses=other_losses,
         )
 
-        self.oxidizer_mass: list[float] = [motor.feed_system.oxidizer_tank.fluid_mass]
-        self.fuel_mass: list[float] = [motor.feed_system.fuel_tank.fluid_mass]
-        self.n_cf: list[float] = [1.0]
+        self.oxidizer_mass: SimulationArray = [
+            motor.feed_system.oxidizer_tank.fluid_mass
+        ]
+        self.fuel_mass: SimulationArray = [motor.feed_system.fuel_tank.fluid_mass]
+        self.n_cf: SimulationArray = [1.0]
 
-        self.fuel_tank_pressure: list[float] = [
+        self.fuel_tank_pressure: SimulationArray = [
             motor.feed_system.fuel_tank.get_pressure()
         ]
-        self.oxidizer_tank_pressure: list[float] = [
+        self.oxidizer_tank_pressure: SimulationArray = [
             motor.feed_system.oxidizer_tank.get_pressure()
         ]
 

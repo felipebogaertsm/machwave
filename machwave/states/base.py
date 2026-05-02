@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
+from typing import TypeAlias
 
 import numpy as np
 
 from machwave.models.motors import Motor
+
+# Python list during the simulation loop (O(1) appends), then converted to
+# np.ndarray by convert_simulation_arrays_to_numpy() once the loop ends.
+SimulationArray: TypeAlias = list[float]
 
 
 class MotorState(ABC):
@@ -12,8 +17,8 @@ class MotorState(ABC):
     """
 
     # Per-step accumulators built up as Python lists during the simulation
-    # loop (O(1) append) and converted to np.ndarray once via _finalize().
-    _ARRAY_ATTRS: tuple[str, ...] = (
+    # loop (O(1) append) and converted to np.ndarray once via convert_simulation_arrays_to_numpy().
+    SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
         "t",
         "m_prop",
         "P_0",
@@ -37,16 +42,16 @@ class MotorState(ABC):
         self.motor = motor
         self.other_losses = other_losses
 
-        self.t: list[float] = [0.0]  # time vector
+        self.t: SimulationArray = [0.0]  # time vector
 
-        self.m_prop: list[float] = [motor.initial_propellant_mass]
-        self.P_0: list[float] = [initial_pressure]
-        self.P_exit: list[float] = [initial_atmospheric_pressure]
+        self.m_prop: SimulationArray = [motor.initial_propellant_mass]
+        self.P_0: SimulationArray = [initial_pressure]
+        self.P_exit: SimulationArray = [initial_atmospheric_pressure]
 
         # Thrust coefficients and thrust:
-        self.C_f: list[float] = [0.0]
-        self.C_f_ideal: list[float] = [0.0]
-        self.thrust: list[float] = [0.0]
+        self.C_f: SimulationArray = [0.0]
+        self.C_f_ideal: SimulationArray = [0.0]
+        self.thrust: SimulationArray = [0.0]
 
         # Thrust time:
         self._thrust_time = None
@@ -60,9 +65,9 @@ class MotorState(ABC):
         self.end_thrust = False
         self.end_burn = False
 
-    def _finalize(self) -> None:
+    def convert_simulation_arrays_to_numpy(self) -> None:
         """Convert accumulated lists into ndarrays for downstream consumers."""
-        for name in self._ARRAY_ATTRS:
+        for name in self.SIMULATION_ARRAY_ATTRIBUTE_NAMES:
             value = getattr(self, name)
             if not isinstance(value, np.ndarray):
                 setattr(self, name, np.asarray(value))

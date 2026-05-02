@@ -94,7 +94,7 @@ class InternalBallisticsSimulation:
             self.motor_state.run_timestep(d_t, P_ext)
 
         self.t = np.asarray(t_values)
-        self.motor_state._finalize()
+        self.motor_state.convert_simulation_arrays_to_numpy()
 
         return (self.t, self.motor_state)
 

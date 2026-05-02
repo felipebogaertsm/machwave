@@ -20,18 +20,21 @@ class SolidMotorState(states_base.MotorState):
     Therefore, PEP8's snake_case will not be followed rigorously.
     """
 
-    _ARRAY_ATTRS = states_base.MotorState._ARRAY_ATTRS + (
-        "V_0",
-        "web",
-        "burn_area",
-        "propellant_volume",
-        "burn_rate",
-        "eta_div",
-        "eta_kin",
-        "eta_bl",
-        "eta_2p",
-        "nozzle_efficiency",
-        "overall_efficiency",
+    SIMULATION_ARRAY_ATTRIBUTE_NAMES = (
+        states_base.MotorState.SIMULATION_ARRAY_ATTRIBUTE_NAMES
+        + (
+            "V_0",
+            "web",
+            "burn_area",
+            "propellant_volume",
+            "burn_rate",
+            "eta_div",
+            "eta_kin",
+            "eta_bl",
+            "eta_2p",
+            "nozzle_efficiency",
+            "overall_efficiency",
+        )
     )
 
     def __init__(
@@ -54,15 +57,17 @@ class SolidMotorState(states_base.MotorState):
         self.motor: motors.SolidMotor = motor
 
         # Grain and propellant parameters:
-        self.V_0: list[float] = [
+        self.V_0: states_base.SimulationArray = [
             motor.thrust_chamber.combustion_chamber.internal_volume
         ]
-        self.web: list[float] = [0.0]
-        self.burn_area: list[float] = [self.motor.grain.get_burn_area(0.0)]
-        self.propellant_volume: list[float] = [
+        self.web: states_base.SimulationArray = [0.0]
+        self.burn_area: states_base.SimulationArray = [
+            self.motor.grain.get_burn_area(0.0)
+        ]
+        self.propellant_volume: states_base.SimulationArray = [
             self.motor.grain.get_propellant_volume(0.0)
         ]
-        self.burn_rate: list[float] = [0.0]
+        self.burn_rate: states_base.SimulationArray = [0.0]
 
         # Center of gravity and moment of inertia:
         initial_cog = motor.grain.get_center_of_gravity(
@@ -77,12 +82,12 @@ class SolidMotorState(states_base.MotorState):
         self.propellant_moi = [initial_moi]  # moment of inertia tensor 3x3 in kg-m²
 
         # Correction factors:
-        self.eta_div: list[float] = [0.0]
-        self.eta_kin: list[float] = [0.0]
-        self.eta_bl: list[float] = [0.0]
-        self.eta_2p: list[float] = [0.0]
-        self.nozzle_efficiency: list[float] = [0.0]
-        self.overall_efficiency: list[float] = [0.0]
+        self.eta_div: states_base.SimulationArray = [0.0]
+        self.eta_kin: states_base.SimulationArray = [0.0]
+        self.eta_bl: states_base.SimulationArray = [0.0]
+        self.eta_2p: states_base.SimulationArray = [0.0]
+        self.nozzle_efficiency: states_base.SimulationArray = [0.0]
+        self.overall_efficiency: states_base.SimulationArray = [0.0]
 
     def run_timestep(
         self,
