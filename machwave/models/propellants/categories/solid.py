@@ -47,9 +47,10 @@ class SolidPropellant(Propellant):
         Args:
             name: Propellant name.
             components: Chemical components (optional).
+            mass_fractions: Mass fractions for each component (optional).
             combustion_efficiency: Efficiency factor (0-1).
             properties: Pre-defined thermochemical properties (optional).
-            burn_rate: St. Robert's law coefficients by pressure range.
+            burn_rate_map: St. Robert's law coefficients by pressure range.
         """
         super().__init__(
             name=name,

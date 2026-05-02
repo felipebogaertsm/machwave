@@ -321,16 +321,13 @@ class SolidMotorState(states_base.MotorState):
         )
 
     @property
-    def burn_profile(self, deviancy: float = 0.02) -> str:
+    def burn_profile(self) -> str:
         """Get the burn profile.
-
-        Args:
-            deviancy: Deviancy threshold for determining burn profile.
-                Defaults to 0.02.
 
         Returns:
             Burn profile: "regressive", "progressive", or "neutral".
         """
+        deviancy = 0.02
         burn_area_arr = np.asarray(self.burn_area)
         burn_area = burn_area_arr[burn_area_arr > 0]
 
