@@ -50,8 +50,8 @@ mass generated per unit time is:
 \]
 
 where \(\rho_p\) is the solid propellant density and \(A_b\) is the instantaneous
-burn area. This is used directly in
-[`compute_chamber_pressure_mass_balance_srm`][machwave.core.equations.srm_mass_balance.compute_chamber_pressure_mass_balance_srm].
+burn area. This feeds the \(\dot{m}_{in}\) argument of the unified
+[`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance].
 
 ### 2.2.2 Mass Exit Rate — Choked Flow
 
@@ -95,8 +95,10 @@ Substituting into §2.1:
 \boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left(\rho_p r A_b - \frac{C_d P_0 A_t\, H}{\sqrt{R T_0}}\right)}
 \]
 
-Implemented in
-[`compute_chamber_pressure_mass_balance_srm`][machwave.core.equations.srm_mass_balance.compute_chamber_pressure_mass_balance_srm].
+Evaluated by
+[`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance]
+with \(\dot{m}_{in} = \rho_p r A_b\), as called from
+[`SolidMotorState`][machwave.states.solid_motor.SolidMotorState].
 
 ---
 
@@ -212,9 +214,10 @@ reactor balance (Huzel & Huang §1.4; Sutton & Biblarz §8.1):
 \right]}
 \]
 
-Implemented in
-[`compute_chamber_pressure_mass_balance_lre`][machwave.core.equations.lre_mass_balance.compute_chamber_pressure_mass_balance_lre]
-and integrated with the same RK4 solver as §2.2.
+Evaluated by the same
+[`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance]
+used in §2.2 — with \(\dot{m}_{in} = \dot{m}_{fuel} + \dot{m}_{ox}\), \(C_d = 1\),
+and chamber-state \(\{T_0, R, k\}\) — and integrated with the same RK4 solver as §2.2.
 
 The thermochemical state \(\{T_0, R, k\}\) is evaluated by NASA-CEA at each step from
 the current \(P_0\) and the design expansion ratio, then held constant within the
