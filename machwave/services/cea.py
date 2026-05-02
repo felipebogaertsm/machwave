@@ -128,6 +128,8 @@ def create_cea_service(
     # Create CEA object
     cea_obj: CEA_Obj
     if oxidizer_name and fuel_name:
+        assert effective_oxidizer_name is not None
+        assert effective_fuel_name is not None
         try:
             cea_obj = CEA_Obj(
                 oxName=effective_oxidizer_name, fuelName=effective_fuel_name
@@ -138,6 +140,7 @@ def create_cea_service(
                 f"and fuel '{fuel_name}'. Ensure they exist or provide card strings: {e}"
             ) from e
     elif propellant_name:
+        assert effective_propellant_name is not None
         try:
             cea_obj = CEA_Obj(propName=effective_propellant_name)
         except Exception as e:
