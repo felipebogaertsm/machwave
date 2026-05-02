@@ -56,7 +56,6 @@ class SolidMotorState(states_base.MotorState):
 
         self.motor: motors.SolidMotor = motor
 
-        # Grain and propellant parameters:
         self.V_0: states_base.SimulationArray = [
             motor.thrust_chamber.combustion_chamber.internal_volume
         ]
@@ -69,7 +68,6 @@ class SolidMotorState(states_base.MotorState):
         ]
         self.burn_rate: states_base.SimulationArray = [0.0]
 
-        # Center of gravity and moment of inertia:
         initial_cog = motor.grain.get_center_of_gravity(
             web_distance=0.0,
         )
@@ -77,11 +75,9 @@ class SolidMotorState(states_base.MotorState):
             ideal_density=motor.propellant.ideal_density,
             web_distance=0.0,
         )
-        # Store as lists of 3D arrays (COG) and 3x3 arrays (MOI)
-        self.propellant_cog = [initial_cog]  # center of gravity [x, y, z] in meters
-        self.propellant_moi = [initial_moi]  # moment of inertia tensor 3x3 in kg-m²
+        self.propellant_cog = [initial_cog]  # [x, y, z] in meters
+        self.propellant_moi = [initial_moi]  # 3x3 tensor in kg-m²
 
-        # Correction factors:
         self.eta_div: states_base.SimulationArray = [0.0]
         self.eta_kin: states_base.SimulationArray = [0.0]
         self.eta_bl: states_base.SimulationArray = [0.0]

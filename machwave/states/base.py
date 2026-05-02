@@ -16,8 +16,6 @@ class MotorState(ABC):
     obtained from the simulation.
     """
 
-    # Per-step accumulators built up as Python lists during the simulation
-    # loop (O(1) append) and converted to np.ndarray once via convert_simulation_arrays_to_numpy().
     SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
         "t",
         "m_prop",
@@ -42,26 +40,18 @@ class MotorState(ABC):
         self.motor = motor
         self.other_losses = other_losses
 
-        self.t: SimulationArray = [0.0]  # time vector
+        self.t: SimulationArray = [0.0]
 
         self.m_prop: SimulationArray = [motor.initial_propellant_mass]
         self.P_0: SimulationArray = [initial_pressure]
         self.P_exit: SimulationArray = [initial_atmospheric_pressure]
 
-        # Thrust coefficients and thrust:
         self.C_f: SimulationArray = [0.0]
         self.C_f_ideal: SimulationArray = [0.0]
         self.thrust: SimulationArray = [0.0]
 
-        # Thrust time:
         self._thrust_time = None
 
-        # If the propellant mass is non zero, 'end_thrust' must be False,
-        # since there is still thrust being produced.
-        # After the propellant has finished burning and the thrust chamber has
-        # stopped producing supersonic flow, 'end_thrust' is changed to True
-        # value and the internal ballistics section of the while loop below
-        # stops running.
         self.end_thrust = False
         self.end_burn = False
 
