@@ -7,16 +7,16 @@ are coming soon.
 ### Key Capabilities
 
 - **Propellant modeling** with pre-defined formulations or CEA custom propellants
-- **Propellant grain analysis** with FMM-based regression (BATES, star, finocyl, and 
+- **Propellant grain analysis** with FMM-based regression (BATES, star, finocyl, and
     more)
 - **Solid rocket motor modeling and simulation** (liquid and hybrid engines coming soon)
 - **Monte Carlo simulation**
-- **RocketPy trajectory simulation integration** (see [docs](api/adapters/rocketpy.md) 
+- **RocketPy trajectory simulation integration** (see [docs](api/adapters/rocketpy.md)
     for details)
 
 ## Why Machwave?
 
-Machwave provides a programmatic interface for modeling chemical propulsion systems, 
+Machwave provides a programmatic interface for modeling chemical propulsion systems,
 allowing users to have more control and flexibility over their designs and simulations.
 Other tools may offer similar capabilities, but they often come with limitations such as
 being closed source, lacking integration with trajectory simulations, or not being
