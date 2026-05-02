@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
+from typing import TypeAlias
 
 import numpy as np
 
 from machwave.models.motors import Motor
+
+# Python list during the simulation loop (O(1) appends), then converted to
+# np.ndarray by convert_simulation_arrays_to_numpy() once the loop ends.
+SimulationArray: TypeAlias = list[float]
 
 
 class MotorState(ABC):
@@ -10,6 +15,16 @@ class MotorState(ABC):
     Defines a particular motor operation. Stores and processes all attributes
     obtained from the simulation.
     """
+
+    SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
+        "t",
+        "m_prop",
+        "P_0",
+        "P_exit",
+        "C_f",
+        "C_f_ideal",
+        "thrust",
+    )
 
     def __init__(
         self,
@@ -25,28 +40,27 @@ class MotorState(ABC):
         self.motor = motor
         self.other_losses = other_losses
 
-        self.t = np.array([0])  # time vector
+        self.t: SimulationArray = [0.0]
 
-        self.m_prop = np.array([motor.initial_propellant_mass])  # propellant mass
-        self.P_0 = np.array([initial_pressure])  # chamber stagnation pressure
-        self.P_exit = np.array([initial_atmospheric_pressure])  # exit pressure
+        self.m_prop: SimulationArray = [motor.initial_propellant_mass]
+        self.P_0: SimulationArray = [initial_pressure]
+        self.P_exit: SimulationArray = [initial_atmospheric_pressure]
 
-        # Thrust coefficients and thrust:
-        self.C_f = np.array([0])  # thrust coefficient
-        self.C_f_ideal = np.array([0])  # ideal thrust coefficient
-        self.thrust = np.array([0])  # thrust force (N)
+        self.C_f: SimulationArray = [0.0]
+        self.C_f_ideal: SimulationArray = [0.0]
+        self.thrust: SimulationArray = [0.0]
 
-        # Thrust time:
         self._thrust_time = None
 
-        # If the propellant mass is non zero, 'end_thrust' must be False,
-        # since there is still thrust being produced.
-        # After the propellant has finished burning and the thrust chamber has
-        # stopped producing supersonic flow, 'end_thrust' is changed to True
-        # value and the internal ballistics section of the while loop below
-        # stops running.
         self.end_thrust = False
         self.end_burn = False
+
+    def convert_simulation_arrays_to_numpy(self) -> None:
+        """Convert accumulated lists into ndarrays for downstream consumers."""
+        for name in self.SIMULATION_ARRAY_ATTRIBUTE_NAMES:
+            value = getattr(self, name)
+            if not isinstance(value, np.ndarray):
+                setattr(self, name, np.asarray(value))
 
     @abstractmethod
     def get_m_dot_in(self) -> float:
