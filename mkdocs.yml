@@ -56,7 +56,7 @@ nav:
       - core:
           - Overview: api/core.md
           - compressible_flow: api/core/compressible_flow.md
-          - equations: api/core/equations.md
+          - mass_balance: api/core/mass_balance.md
           - solvers: api/core/solvers.md
           - structural: api/core/structural.md
       - io: api/io.md

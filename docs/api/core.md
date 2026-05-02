@@ -5,7 +5,7 @@ The engineering math layer. Contains unit conversions, geometric primitives (cir
 Submodules:
 
 - [compressible_flow](core/compressible_flow.md) — Isentropic relations, thrust coefficients, nozzle loss models
-- [equations](core/equations.md) — ODEs for chamber pressure mass balance (SRM and LRE)
+- [mass_balance](core/mass_balance.md) — Chamber-pressure ODE shared by SRM and LRE
 - [solvers](core/solvers.md) — RK4 ODE solver
 - [structural](core/structural.md) — Pressure vessels and bolted joint analysis
 
