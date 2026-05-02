@@ -1,11 +1,11 @@
-from typing import Callable
+from typing import Any, Callable
 
 
 def rk4th_ode_solver(
     variables: dict[str, float],
     equation: Callable,
     d_t: float,
-    **kwargs,
+    **kwargs: Any,
 ) -> tuple[float, ...]:
     """
     Solves a system of ordinary differential equations using the 4th order Runge-Kutta

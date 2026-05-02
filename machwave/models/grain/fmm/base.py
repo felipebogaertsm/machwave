@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 import skfmm
@@ -261,7 +262,7 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     @abstractmethod
     def get_contours(
-        self, web_distance: float, *args, **kwargs
+        self, web_distance: float, *args: Any, **kwargs: Any
     ) -> list[NDArray[np.float64]]:
         """
         Return the contours of the regression map after a specified web distance.

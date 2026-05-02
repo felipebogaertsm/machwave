@@ -13,7 +13,13 @@ class Tank:
       - Ignores temperature changes upon phase change (no thermal balance).
     """
 
-    def __init__(self, fluid_name, volume, temperature, initial_fluid_mass):
+    def __init__(
+        self,
+        fluid_name: str,
+        volume: float,
+        temperature: float,
+        initial_fluid_mass: float,
+    ) -> None:
         """Initialize a two-phase tank model.
 
         Args:
