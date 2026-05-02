@@ -49,6 +49,11 @@ class MotorState(ABC):
         self.end_burn = False
 
     @abstractmethod
+    def get_m_dot_in(self) -> float:
+        """Mass flow rate into the combustion chamber [kg/s]."""
+        pass
+
+    @abstractmethod
     def run_timestep(self, *args, **kwargs) -> None:
         """
         Calculates and stores operational parameters in the corresponding

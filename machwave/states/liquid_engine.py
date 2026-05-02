@@ -17,7 +17,7 @@ from machwave.core.compressible_flow.isentropic import (
     get_exit_pressure,
     is_flow_choked,
 )
-from machwave.core.equations import compute_chamber_pressure_mass_balance_lre
+from machwave.core.mass_balance import compute_chamber_pressure_mass_balance
 from machwave.core.solvers import rk4th_ode_solver
 from machwave.models.motors import LiquidEngine
 from machwave.states.base import MotorState
@@ -80,9 +80,11 @@ class LiquidEngineState(MotorState):
         m_dot_fuel, m_dot_ox = self._adjust_flows_for_stoichiometry(
             m_dot_fuel, m_dot_ox, d_t
         )
+        self._m_dot_fuel = m_dot_fuel
+        self._m_dot_ox = m_dot_ox
         self._update_propellant_properties()
 
-        new_P = self._compute_chamber_pressure(d_t, m_dot_fuel, m_dot_ox)
+        new_P = self._compute_chamber_pressure(d_t, P_ext)
         self._append_chamber_pressure(new_P)
         P_exit = self._compute_exit_pressure()
         self._append_exit_pressure(P_exit)
@@ -151,25 +153,23 @@ class LiquidEngineState(MotorState):
         # back to rates
         return cons_f / d_t, cons_o / d_t
 
-    def _compute_chamber_pressure(
-        self,
-        d_t: float,
-        m_dot_fuel: float,
-        m_dot_ox: float,
-    ) -> float:
+    def get_m_dot_in(self) -> float:
+        return self._m_dot_fuel + self._m_dot_ox
+
+    def _compute_chamber_pressure(self, d_t: float, P_ext: float) -> float:
         props = self.motor.propellant.properties
         assert props is not None
         return rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
-            equation=compute_chamber_pressure_mass_balance_lre,
+            equation=compute_chamber_pressure_mass_balance,
             d_t=d_t,
-            R=props.R_chamber,
-            T0=props.adiabatic_flame_temperature,
+            Pe=P_ext,
+            m_in=self.get_m_dot_in(),
             V0=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
             k=props.gamma_chamber,
-            m_dot_ox=m_dot_ox,
-            m_dot_fuel=m_dot_fuel,
+            R=props.R_chamber,
+            T0=props.adiabatic_flame_temperature,
         )[0]
 
     def _append_chamber_pressure(self, pressure: float) -> None:

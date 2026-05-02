@@ -4,7 +4,7 @@ import machwave.core.compressible_flow.nozzle as nozzle
 import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.compressible_flow.losses as losses
 import machwave.core.conversions as conversions
-import machwave.core.equations.srm_mass_balance as des
+import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
 import machwave.states.base as states_base
@@ -130,25 +130,27 @@ class SolidMotorState(states_base.MotorState):
         self.propellant_cog.append(cog)
         self.propellant_moi.append(moi)
 
+    def get_m_dot_in(self) -> float:
+        propellant_density = self.motor.grain.get_real_density(
+            web_distance=self.web[-1],
+            ideal_density=self.motor.propellant.ideal_density,
+        )
+        return propellant_density * self.burn_rate[-1] * self.burn_area[-1]
+
     def _compute_pressure(self, d_t: float, P_ext: float) -> None:
         props = self.motor.propellant.properties
         assert props is not None
         new_P = rk4.rk4th_ode_solver(
             variables={"P0": self.P_0[-1]},
-            equation=des.compute_chamber_pressure_mass_balance_srm,
+            equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,
             Pe=P_ext,
-            Ab=self.burn_area[-1],
+            m_in=self.get_m_dot_in(),
             V0=self.V_0[-1],
             At=self.motor.thrust_chamber.nozzle.get_throat_area(),
-            pp=self.motor.grain.get_real_density(
-                web_distance=self.web[-1],
-                ideal_density=self.motor.propellant.ideal_density,
-            ),
             k=props.gamma_chamber,
             R=props.R_chamber,
             T0=props.adiabatic_flame_temperature,
-            r=self.burn_rate[-1],
         )[0]
         self.P_0 = np.append(self.P_0, new_P)
         exit_P = isentropic.get_exit_pressure(
