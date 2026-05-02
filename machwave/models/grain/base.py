@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -77,7 +78,7 @@ class GrainSegment(ABC):
         pass
 
     @abstractmethod
-    def get_port_area(self, web_distance: float, *args, **kwargs) -> float:
+    def get_port_area(self, web_distance: float, *args: Any, **kwargs: Any) -> float:
         """
         Calculates the port area as a function of the web distance traveled.
 
