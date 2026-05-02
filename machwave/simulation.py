@@ -63,7 +63,7 @@ class InternalBallisticsSimulation:
     ) -> None:
         self.motor: Motor = motor
         self.params: InternalBallisticsSimulationParams = params
-        self.t: np.ndarray = np.array([0])
+        self.t: np.ndarray = np.array([0.0])
         self.motor_state: MotorState | None = None
 
     def get_motor_state(self) -> MotorState:
@@ -85,15 +85,16 @@ class InternalBallisticsSimulation:
         """
         self.motor_state = self.get_motor_state()
 
-        i = 0
-        while not self.motor_state.end_thrust:
-            self.t = np.append(self.t, self.t[i] + self.params.d_t)
+        d_t = self.params.d_t
+        P_ext = self.params.external_pressure
+        t_values: list[float] = [0.0]
 
-            self.motor_state.run_timestep(
-                self.params.d_t,
-                self.params.external_pressure,
-            )
-            i += 1
+        while not self.motor_state.end_thrust:
+            t_values.append(t_values[-1] + d_t)
+            self.motor_state.run_timestep(d_t, P_ext)
+
+        self.t = np.asarray(t_values)
+        self.motor_state.convert_simulation_arrays_to_numpy()
 
         return (self.t, self.motor_state)
 
