@@ -4,6 +4,7 @@ for solid propellants, based on the widely accepted NASA's CEA code.
 """
 
 import re
+from uuid import uuid4
 
 from rocketcea.cea_obj import (
     CEA_Obj,
@@ -96,44 +97,52 @@ def create_cea_service(
     Raises:
         ValueError: If configuration is invalid or registration/creation fails.
     """
-    # Register custom propellant (solid/monopropellant)
+    effective_propellant_name = propellant_name
     if card_string and propellant_name:
+        effective_propellant_name = f"{propellant_name}__{uuid4().hex[:8]}"
         try:
-            add_new_propellant(propellant_name, card_string)
+            add_new_propellant(effective_propellant_name, card_string)
         except Exception as e:
             raise ValueError(
                 f"Failed to register propellant '{propellant_name}': {e}"
             ) from e
 
-    # Register custom oxidizer
+    effective_oxidizer_name = oxidizer_name
     if oxidizer_card_string and oxidizer_name:
+        effective_oxidizer_name = f"{oxidizer_name}__{uuid4().hex[:8]}"
         try:
-            add_new_oxidizer(oxidizer_name, oxidizer_card_string)
+            add_new_oxidizer(effective_oxidizer_name, oxidizer_card_string)
         except Exception as e:
             raise ValueError(
                 f"Failed to register oxidizer '{oxidizer_name}': {e}"
             ) from e
 
-    # Register custom fuel
+    effective_fuel_name = fuel_name
     if fuel_card_string and fuel_name:
+        effective_fuel_name = f"{fuel_name}__{uuid4().hex[:8]}"
         try:
-            add_new_fuel(fuel_name, fuel_card_string)
+            add_new_fuel(effective_fuel_name, fuel_card_string)
         except Exception as e:
             raise ValueError(f"Failed to register fuel '{fuel_name}': {e}") from e
 
     # Create CEA object
     cea_obj: CEA_Obj
     if oxidizer_name and fuel_name:
+        assert effective_oxidizer_name is not None
+        assert effective_fuel_name is not None
         try:
-            cea_obj = CEA_Obj(oxName=oxidizer_name, fuelName=fuel_name)
+            cea_obj = CEA_Obj(
+                oxName=effective_oxidizer_name, fuelName=effective_fuel_name
+            )
         except Exception as e:
             raise ValueError(
                 f"Failed to create CEA object for oxidizer '{oxidizer_name}' "
                 f"and fuel '{fuel_name}'. Ensure they exist or provide card strings: {e}"
             ) from e
     elif propellant_name:
+        assert effective_propellant_name is not None
         try:
-            cea_obj = CEA_Obj(propName=propellant_name)
+            cea_obj = CEA_Obj(propName=effective_propellant_name)
         except Exception as e:
             raise ValueError(
                 f"Failed to create CEA object for propellant '{propellant_name}'. "
