@@ -97,11 +97,6 @@ def create_cea_service(
     Raises:
         ValueError: If configuration is invalid or registration/creation fails.
     """
-    # RocketCEA's add_new_* helpers mutate a process-global Fortran registry, so
-    # two registrations sharing the same name (e.g. Monte Carlo over composition,
-    # parametric trade studies, repeated test runs) silently clobber each other.
-    # When a card_string is supplied we mangle the registered identifier with a
-    # per-call UUID suffix; the user-facing name is unaffected.
     effective_propellant_name = propellant_name
     if card_string and propellant_name:
         effective_propellant_name = f"{propellant_name}__{uuid4().hex[:8]}"
