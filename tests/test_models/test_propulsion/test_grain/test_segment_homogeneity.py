@@ -1,13 +1,9 @@
-"""Tests for Grain.get_segment_mismatches.
-
-Consumers that treat the grain assembly as N copies of a single identical
-segment (e.g. the RocketPy SolidMotor adapter) need a way to verify that
-assumption. This test suite locks in the comparison rules.
-"""
+"""Tests for Grain.get_segment_mismatches."""
 
 import pytest
 
 from machwave.models.grain import Grain
+from machwave.models.grain.base import InhibitedSurfaces
 from machwave.models.grain.geometries import BatesSegment, StarGrainSegment
 
 
@@ -26,6 +22,27 @@ def _bates(
     )
 
 
+def _star(
+    *,
+    outer_diameter: float = 0.090,
+    length: float = 0.100,
+    number_of_points: int = 5,
+    point_length: float = 0.020,
+    point_width: float = 0.010,
+    inhibited_surfaces: InhibitedSurfaces | None = None,
+    density_ratio: float = 1.0,
+) -> StarGrainSegment:
+    return StarGrainSegment(
+        outer_diameter=outer_diameter,
+        length=length,
+        number_of_points=number_of_points,
+        point_length=point_length,
+        point_width=point_width,
+        inhibited_surfaces=inhibited_surfaces,
+        density_ratio=density_ratio,
+    )
+
+
 def _grain(*segments) -> Grain:
     grain = Grain()
     for segment in segments:
@@ -40,12 +57,45 @@ class TestGrainGetSegmentMismatches:
     def test_single_segment(self):
         assert _grain(_bates()).get_segment_mismatches() == []
 
-    def test_identical_bates_segments(self):
-        grain = _grain(_bates(), _bates(), _bates())
-        assert grain.get_segment_mismatches() == []
+    def test_identical_segments(self):
+        assert _grain(_bates(), _bates(), _bates()).get_segment_mismatches() == []
 
-    def test_olympus_style_mixed_lengths_flagged(self):
-        """Replicates the Olympus 4×45mm + 3×60mm BATES stack from issue #175."""
+    def test_differing_concrete_class_flagged(self):
+        mismatches = _grain(_bates(), _star()).get_segment_mismatches()
+
+        assert len(mismatches) == 1
+        assert "type=" in mismatches[0]
+
+    def test_differing_float_attribute_flagged(self):
+        mismatches = _grain(
+            _bates(length=0.100), _bates(length=0.110)
+        ).get_segment_mismatches()
+
+        assert len(mismatches) == 1
+        assert "length" in mismatches[0]
+
+    def test_differing_inhibited_surfaces_flagged(self):
+        # InhibitedSurfaces is a frozen dataclass compared by value through
+        # the non-float equality branch.
+        mismatches = _grain(
+            _star(),
+            _star(inhibited_surfaces=InhibitedSurfaces(outer_surface=False)),
+        ).get_segment_mismatches()
+
+        assert len(mismatches) == 1
+        assert "inhibited_surfaces" in mismatches[0]
+
+    def test_sub_ulp_float_drift_does_not_flag(self):
+        assert (
+            _grain(
+                _bates(length=0.100), _bates(length=0.100 + 1e-15)
+            ).get_segment_mismatches()
+            == []
+        )
+
+    def test_every_divergent_segment_is_reported(self):
+        # Olympus-style stack: 4×45 mm + 3×60 mm BATES — every 60 mm segment
+        # must be named, not just the first.
         grain = _grain(
             *[_bates(length=0.045) for _ in range(4)],
             *[_bates(length=0.060) for _ in range(3)],
@@ -53,50 +103,29 @@ class TestGrainGetSegmentMismatches:
 
         mismatches = grain.get_segment_mismatches()
 
-        assert mismatches, "Heterogeneous lengths should be flagged"
-        assert all("length" in m for m in mismatches)
-        # All three 60mm segments should be reported (indices 4, 5, 6).
         assert len(mismatches) == 3
+        for divergent_index in (4, 5, 6):
+            assert any(f"segment[{divergent_index}]" in m for m in mismatches)
 
-    def test_differing_outer_diameter_flagged(self):
-        grain = _grain(_bates(outer_diameter=0.090), _bates(outer_diameter=0.080))
-        mismatches = grain.get_segment_mismatches()
-        assert any("outer_diameter" in m for m in mismatches)
+    def test_every_divergent_attribute_on_a_segment_is_reported(self):
+        mismatches = _grain(
+            _bates(length=0.100, density_ratio=1.00),
+            _bates(length=0.110, density_ratio=0.95),
+        ).get_segment_mismatches()
 
-    def test_differing_core_diameter_flagged(self):
-        grain = _grain(_bates(core_diameter=0.030), _bates(core_diameter=0.025))
-        mismatches = grain.get_segment_mismatches()
-        assert any("core_diameter" in m for m in mismatches)
-
-    def test_differing_density_ratio_flagged(self):
-        grain = _grain(_bates(density_ratio=1.0), _bates(density_ratio=0.95))
-        mismatches = grain.get_segment_mismatches()
+        assert len(mismatches) == 2
+        assert any("length" in m for m in mismatches)
         assert any("density_ratio" in m for m in mismatches)
 
-    def test_differing_segment_class_flagged(self):
-        bates = _bates()
-        star = StarGrainSegment(
-            outer_diameter=0.090,
-            length=0.100,
-            number_of_points=5,
-            point_length=0.020,
-            point_width=0.010,
-        )
-        mismatches = _grain(bates, star).get_segment_mismatches()
-        assert mismatches
-        assert any("type=" in m for m in mismatches)
+    def test_lazy_fmm_cache_state_does_not_trigger_mismatch(self):
+        # FMM segments populate non-constructor attributes (regression_map,
+        # masked_face, …) on first burn-area query. Those caches must not
+        # leak into the comparison.
+        star_a = _star()
+        star_b = _star()
+        star_a.get_burn_area(0.001)
 
-    def test_float_tolerance(self):
-        """Tiny floating-point drift should not be flagged as a mismatch."""
-        grain = _grain(_bates(length=0.100), _bates(length=0.100 + 1e-15))
-        assert grain.get_segment_mismatches() == []
-
-    def test_inhibited_surfaces_compared_by_value(self):
-        """InhibitedSurfaces is a frozen dataclass — identical configs match."""
-        bates_a = _bates()
-        bates_b = _bates()
-        assert bates_a.inhibited_surfaces == bates_b.inhibited_surfaces
-        assert _grain(bates_a, bates_b).get_segment_mismatches() == []
+        assert _grain(star_a, star_b).get_segment_mismatches() == []
 
 
 if __name__ == "__main__":

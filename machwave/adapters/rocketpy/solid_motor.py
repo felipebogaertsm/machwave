@@ -34,9 +34,8 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidMotorState"]):
         if not grain.segments:
             raise ValueError("Grain must have at least one segment")
 
-        # RocketPy's SolidMotor assumes all segments are dimensionally identical;
-        # silently using segments[0] for a heterogeneous grain (e.g. mixed-length
-        # BATES stacks) yields a plausible-but-wrong motor. Fail loud instead.
+        # RocketPy's SolidMotor assumes all segments are identical; reject
+        # heterogeneous grains rather than silently using segments[0].
         mismatches = grain.get_segment_mismatches()
         if mismatches:
             raise ValueError(

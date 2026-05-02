@@ -1,3 +1,4 @@
+import inspect
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -411,35 +412,30 @@ class Grain:
         """
         return len(self.segments)
 
-    # Attributes whose divergence between segments breaks any consumer that
-    # treats the assembly as N copies of a single identical grain (e.g. the
-    # RocketPy SolidMotor export).
-    _HOMOGENEITY_ATTRS: tuple[str, ...] = (
-        "length",
-        "outer_diameter",
-        "density_ratio",
-        "inhibited_surfaces",
-        "core_diameter",
-    )
-
     def get_segment_mismatches(self) -> list[str]:
-        """Return descriptions of attributes that diverge across segments.
+        """Return per-attribute descriptions of where segments diverge.
 
-        Compares every segment past index 0 to ``segments[0]`` across class
-        type and a fixed set of geometric/physical attributes (length,
-        outer_diameter, density_ratio, inhibited_surfaces, and core_diameter
-        where present). Floats are compared with a small tolerance.
+        Segments are interchangeable when they share a concrete class and
+        every constructor parameter resolves to the same attribute value
+        on both instances. Constructor parameters are discovered via
+        ``inspect.signature(type(segments[0]).__init__)``, so each
+        subclass's own constructor drives the comparison.
+
+        Floats are compared with a small tolerance.
 
         Returns:
-            One human-readable description per divergent (segment, attribute)
-            pair. An empty list means every segment is dimensionally
-            interchangeable.
+            One description per divergent (segment, attribute) pair, or an
+            empty list when every segment is interchangeable.
         """
         if len(self.segments) < 2:
             return []
 
         first = self.segments[0]
         mismatches: list[str] = []
+        skipped_kinds = (
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        )
 
         for index, segment in enumerate(self.segments[1:], start=1):
             if type(segment) is not type(first):
@@ -449,11 +445,14 @@ class Grain:
                 )
                 continue
 
-            for attr in self._HOMOGENEITY_ATTRS:
-                if not (hasattr(first, attr) and hasattr(segment, attr)):
+            parameters = inspect.signature(type(first).__init__).parameters
+            for name, parameter in parameters.items():
+                if name == "self" or parameter.kind in skipped_kinds:
                     continue
-                value_first = getattr(first, attr)
-                value_other = getattr(segment, attr)
+                if not (hasattr(first, name) and hasattr(segment, name)):
+                    continue
+                value_first = getattr(first, name)
+                value_other = getattr(segment, name)
 
                 if isinstance(value_first, float) and isinstance(value_other, float):
                     if math.isclose(
@@ -464,8 +463,8 @@ class Grain:
                     continue
 
                 mismatches.append(
-                    f"segment[{index}].{attr}={value_other!r} "
-                    f"differs from segment[0].{attr}={value_first!r}"
+                    f"segment[{index}].{name}={value_other!r} "
+                    f"differs from segment[0].{name}={value_first!r}"
                 )
 
         return mismatches
