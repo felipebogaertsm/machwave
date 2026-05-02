@@ -20,7 +20,7 @@ dependencies = [
     "plotly>=6.0.0,<7.0.0",
     "scipy>=1.15.2,<2.0.0",
     "pandas>=2.2.3,<4.0.0",
-    "scikit-image>=0.25.2,<0.26.0",
+    "scikit-image>=0.25.2,<0.27.0",
     "scikit-fmm==2025.6.23",
     "trimesh>=4.6.4,<5.0.0",
     "rocketcea>=1.2.1,<2.0.0",
