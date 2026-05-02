@@ -41,7 +41,7 @@ format:
 generate-umls:
 	@zsh ./scripts/generate-umls.sh
 coverage:
-	@uv run pytest --cov=machwave --cov-branch --cov-report=term-missing --cov-report=html tests/
+	@uv run pytest --cov=machwave --cov-branch --cov-report=term-missing --cov-report=html --cov-report=xml tests/
 docs:
 	@uv run mkdocs build
 docs-serve:
