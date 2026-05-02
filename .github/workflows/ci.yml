@@ -71,8 +71,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install gfortran (macOS)
+      - name: Install Fortran compiler (macOS)
         if: runner.os == 'macOS'
-        run: brew install gcc
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
       - run: make install-dev
       - run: make test
