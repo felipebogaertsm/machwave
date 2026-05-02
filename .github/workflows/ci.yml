@@ -71,5 +71,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install gfortran (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gcc
       - run: make install-dev
       - run: make test
