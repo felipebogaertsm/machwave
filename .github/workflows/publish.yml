@@ -66,7 +66,16 @@ jobs:
 
       - name: Install gfortran (macOS)
         if: runner.os == 'macOS'
-        run: brew install gcc
+        run: |
+          brew install gcc
+          brew_prefix=$(brew --prefix)
+          gfortran_versioned=$(ls "$brew_prefix"/bin/gfortran-* 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$gfortran_versioned" ]; then
+            echo "::error::No gfortran-* binary found in $brew_prefix/bin after brew install gcc"
+            exit 1
+          fi
+          ln -sf "$gfortran_versioned" "$brew_prefix/bin/gfortran"
+          gfortran --version
 
       - name: Install built wheel
         run: python -m pip install dist/*.whl
