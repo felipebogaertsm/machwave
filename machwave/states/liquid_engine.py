@@ -28,8 +28,6 @@ class LiquidEngineState(MotorState):
     State for a Liquid Rocket Engine.
     """
 
-    MOTOR_MODEL = LiquidEngine
-
     motor: LiquidEngine
 
     SIMULATION_ARRAY_ATTRIBUTE_NAMES = MotorState.SIMULATION_ARRAY_ATTRIBUTE_NAMES + (

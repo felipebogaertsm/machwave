@@ -1,11 +1,10 @@
-"""Unit tests for MotorState dispatch.
+"""Unit tests for Motor.create_state.
 
-Each concrete MotorState subclass declares ``MOTOR_MODEL = SomeMotor``.
-``InternalBallisticsSimulation.get_motor_state`` walks
-``MotorState.__subclasses__()`` and picks the state whose ``MOTOR_MODEL``
-matches the motor at hand. These tests verify the right state class is
-returned for each motor type, that simulation parameters propagate into the
-state, and that an unpaired motor type raises ``TypeError``.
+Each concrete Motor subclass implements ``create_state(params) -> MotorState``
+that constructs the matching state. ``InternalBallisticsSimulation.get_motor_state``
+delegates to it. These tests cover both the direct call on the motor and the
+delegation path through the simulation, and verify the simulation parameters
+propagate into the state's initial values.
 """
 
 from __future__ import annotations
@@ -18,7 +17,7 @@ from machwave.models.feed_systems.pressure_fed import (
 )
 from machwave.models.feed_systems.tanks import Tank
 from machwave.models.grain import geometries as grain_geometries
-from machwave.models.motors import LiquidEngine, Motor, SolidMotor
+from machwave.models.motors import LiquidEngine, SolidMotor
 from machwave.models.propellants import (
     BiliquidPropellant,
     ComponentRole,
@@ -165,8 +164,54 @@ def liquid_engine() -> LiquidEngine:
     )
 
 
-class TestSolidMotorDispatch:
+class TestSolidMotorCreateState:
     def test_returns_solid_motor_state(
+        self,
+        solid_motor: SolidMotor,
+        params: InternalBallisticsSimulationParams,
+    ) -> None:
+        state = solid_motor.create_state(params)
+
+        assert isinstance(state, SolidMotorState)
+        assert state.motor is solid_motor
+
+    def test_propagates_simulation_parameters(
+        self,
+        solid_motor: SolidMotor,
+        params: InternalBallisticsSimulationParams,
+    ) -> None:
+        state = solid_motor.create_state(params)
+
+        assert state.chamber_pressure[0] == params.igniter_pressure
+        assert state.exit_pressure[0] == params.external_pressure
+        assert state.other_losses == params.other_losses
+
+
+class TestLiquidEngineCreateState:
+    def test_returns_liquid_engine_state(
+        self,
+        liquid_engine: LiquidEngine,
+        params: InternalBallisticsSimulationParams,
+    ) -> None:
+        state = liquid_engine.create_state(params)
+
+        assert isinstance(state, LiquidEngineState)
+        assert state.motor is liquid_engine
+
+    def test_propagates_simulation_parameters(
+        self,
+        liquid_engine: LiquidEngine,
+        params: InternalBallisticsSimulationParams,
+    ) -> None:
+        state = liquid_engine.create_state(params)
+
+        assert state.chamber_pressure[0] == params.igniter_pressure
+        assert state.exit_pressure[0] == params.external_pressure
+        assert state.other_losses == params.other_losses
+
+
+class TestSimulationDelegatesToCreateState:
+    def test_solid_motor_through_simulation(
         self,
         solid_motor: SolidMotor,
         params: InternalBallisticsSimulationParams,
@@ -178,22 +223,7 @@ class TestSolidMotorDispatch:
         assert isinstance(state, SolidMotorState)
         assert state.motor is solid_motor
 
-    def test_propagates_simulation_parameters(
-        self,
-        solid_motor: SolidMotor,
-        params: InternalBallisticsSimulationParams,
-    ) -> None:
-        state = InternalBallisticsSimulation(
-            motor=solid_motor, params=params
-        ).get_motor_state()
-
-        assert state.chamber_pressure[0] == params.igniter_pressure
-        assert state.exit_pressure[0] == params.external_pressure
-        assert state.other_losses == params.other_losses
-
-
-class TestLiquidEngineDispatch:
-    def test_returns_liquid_engine_state(
+    def test_liquid_engine_through_simulation(
         self,
         liquid_engine: LiquidEngine,
         params: InternalBallisticsSimulationParams,
@@ -204,45 +234,3 @@ class TestLiquidEngineDispatch:
 
         assert isinstance(state, LiquidEngineState)
         assert state.motor is liquid_engine
-
-    def test_propagates_simulation_parameters(
-        self,
-        liquid_engine: LiquidEngine,
-        params: InternalBallisticsSimulationParams,
-    ) -> None:
-        state = InternalBallisticsSimulation(
-            motor=liquid_engine, params=params
-        ).get_motor_state()
-
-        assert state.chamber_pressure[0] == params.igniter_pressure
-        assert state.exit_pressure[0] == params.external_pressure
-        assert state.other_losses == params.other_losses
-
-
-class TestUnpairedMotor:
-    def test_motor_without_paired_state_raises_type_error(
-        self, params: InternalBallisticsSimulationParams
-    ) -> None:
-        class MysteryMotor(Motor):
-            def __init__(self) -> None:
-                pass
-
-            def get_launch_mass(self) -> float:
-                return 0.0
-
-            def get_dry_mass(self) -> float:
-                return 0.0
-
-            def get_center_of_gravity(self, *args, **kwargs):  # type: ignore[override]
-                raise NotImplementedError
-
-            def get_thrust_coefficient(self, *args, **kwargs) -> float:
-                return 0.0
-
-            @property
-            def initial_propellant_mass(self) -> float:
-                return 0.0
-
-        sim = InternalBallisticsSimulation(motor=MysteryMotor(), params=params)
-        with pytest.raises(TypeError, match="No MotorState registered"):
-            sim.get_motor_state()

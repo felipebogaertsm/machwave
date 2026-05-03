@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, TypeAlias
+from typing import TypeAlias
 
 import numpy as np
 
@@ -15,14 +15,10 @@ class MotorState(ABC):
     Defines a particular motor operation. Stores and processes all attributes
     obtained from the simulation.
 
-    Concrete subclasses pair themselves with a ``Motor`` subclass by setting
-    ``MOTOR_MODEL = SomeMotor``. The simulation layer iterates
-    ``MotorState.__subclasses__()`` to find the state whose ``MOTOR_MODEL``
-    matches the motor at hand — adding a new motor category requires no
-    edits to the simulation layer.
+    Each motor category provides its own ``Motor.create_state`` that
+    constructs the matching ``MotorState``; the simulation layer never picks
+    a state class itself.
     """
-
-    MOTOR_MODEL: ClassVar[type[Motor] | None] = None
 
     SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
         "t",

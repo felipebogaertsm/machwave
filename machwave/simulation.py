@@ -45,20 +45,9 @@ class InternalBallisticsSimulation:
 
     def get_motor_state(self) -> MotorState:
         """
-        Returns the motor state object based on the type of the motor.
-
-        Picks the MotorState subclass whose MOTOR_MODEL matches self.motor.
+        Returns the motor state object for this simulation's motor.
         """
-        for state_cls in MotorState.__subclasses__():
-            motor_model = state_cls.MOTOR_MODEL
-            if motor_model is not None and isinstance(self.motor, motor_model):
-                return state_cls(
-                    motor=self.motor,
-                    initial_pressure=self.params.igniter_pressure,
-                    initial_atmospheric_pressure=self.params.external_pressure,
-                    other_losses=self.params.other_losses,
-                )
-        raise TypeError(f"No MotorState registered for {type(self.motor).__name__}.")
+        return self.motor.create_state(self.params)
 
     def run(self) -> tuple[np.ndarray, MotorState]:
         """

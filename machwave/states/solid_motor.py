@@ -15,8 +15,6 @@ class SolidMotorState(states_base.MotorState):
     State for a Solid Rocket Motor.
     """
 
-    MOTOR_MODEL = motors.SolidMotor
-
     SIMULATION_ARRAY_ATTRIBUTE_NAMES = (
         states_base.MotorState.SIMULATION_ARRAY_ATTRIBUTE_NAMES
         + (

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 import machwave.core.compressible_flow.nozzle as nozzle
@@ -6,6 +8,10 @@ import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber
 
 from . import base as motor_base
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
+    from machwave.states import SolidMotorState
 
 
 class SolidMotor(
@@ -144,3 +150,17 @@ class SolidMotor(
         ) / total_mass
 
         return weighted_cog.astype(np.float64)
+
+    def create_state(
+        self, params: "InternalBallisticsSimulationParams"
+    ) -> "SolidMotorState":
+        # Local import: machwave.states imports from machwave.models.motors,
+        # so importing it at module load time would form a cycle.
+        from machwave.states import SolidMotorState
+
+        return SolidMotorState(
+            motor=self,
+            initial_pressure=params.igniter_pressure,
+            initial_atmospheric_pressure=params.external_pressure,
+            other_losses=params.other_losses,
+        )

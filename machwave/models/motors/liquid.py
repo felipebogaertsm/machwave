@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from machwave.core.compressible_flow.nozzle import (
@@ -8,6 +10,10 @@ from machwave.models.propellants import BiliquidPropellant
 from machwave.models.thrust_chamber import LiquidEngineThrustChamber
 
 from .base import Motor
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
+    from machwave.states import LiquidEngineState
 
 
 class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
@@ -148,3 +154,17 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             other_losses
         )
         return thrust_coefficient_ideal * nozzle_correction_factor
+
+    def create_state(
+        self, params: "InternalBallisticsSimulationParams"
+    ) -> "LiquidEngineState":
+        # Local import: machwave.states imports from machwave.models.motors,
+        # so importing it at module load time would form a cycle.
+        from machwave.states import LiquidEngineState
+
+        return LiquidEngineState(
+            motor=self,
+            initial_pressure=params.igniter_pressure,
+            initial_atmospheric_pressure=params.external_pressure,
+            other_losses=params.other_losses,
+        )
