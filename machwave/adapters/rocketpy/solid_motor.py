@@ -34,7 +34,15 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidMotorState"]):
         if not grain.segments:
             raise ValueError("Grain must have at least one segment")
 
-        # RocketPy's SolidMotor assumes all segments are identical, use first one
+        # RocketPy's SolidMotor assumes all segments are identical
+        mismatches = grain.get_segment_mismatches()
+        if mismatches:
+            raise ValueError(
+                "RocketPy SolidMotor requires all grain segments to be "
+                "identical, but the following mismatches were found: "
+                + "; ".join(mismatches)
+            )
+
         first_segment = grain.segments[0]
 
         grain_number = grain.segment_count
