@@ -60,13 +60,13 @@ class TestGrainGetSegmentMismatches:
     def test_identical_segments(self):
         assert _grain(_bates(), _bates(), _bates()).get_segment_mismatches() == []
 
-    def test_differing_concrete_class_flagged(self):
+    def test_differing_concrete_class_is_reported(self):
         mismatches = _grain(_bates(), _star()).get_segment_mismatches()
 
         assert len(mismatches) == 1
-        assert "type=" in mismatches[0]
+        assert "'type'" in mismatches[0]
 
-    def test_differing_float_attribute_flagged(self):
+    def test_differing_float_attribute_is_reported(self):
         mismatches = _grain(
             _bates(length=0.100), _bates(length=0.110)
         ).get_segment_mismatches()
@@ -74,7 +74,7 @@ class TestGrainGetSegmentMismatches:
         assert len(mismatches) == 1
         assert "length" in mismatches[0]
 
-    def test_differing_inhibited_surfaces_flagged(self):
+    def test_differing_inhibited_surfaces_is_reported(self):
         # InhibitedSurfaces is a frozen dataclass compared by value through
         # the non-float equality branch.
         mismatches = _grain(
@@ -85,7 +85,7 @@ class TestGrainGetSegmentMismatches:
         assert len(mismatches) == 1
         assert "inhibited_surfaces" in mismatches[0]
 
-    def test_sub_ulp_float_drift_does_not_flag(self):
+    def test_sub_ulp_float_drift_is_not_reported(self):
         assert (
             _grain(
                 _bates(length=0.100), _bates(length=0.100 + 1e-15)
@@ -95,7 +95,7 @@ class TestGrainGetSegmentMismatches:
 
     def test_every_divergent_segment_is_reported(self):
         # Olympus-style stack: 4×45 mm + 3×60 mm BATES — every 60 mm segment
-        # must be named, not just the first.
+        # must be named, not just the first. Indices are 1-based.
         grain = _grain(
             *[_bates(length=0.045) for _ in range(4)],
             *[_bates(length=0.060) for _ in range(3)],
@@ -104,8 +104,8 @@ class TestGrainGetSegmentMismatches:
         mismatches = grain.get_segment_mismatches()
 
         assert len(mismatches) == 3
-        for divergent_index in (4, 5, 6):
-            assert any(f"segment[{divergent_index}]" in m for m in mismatches)
+        for divergent_index in (5, 6, 7):
+            assert any(f"Segment {divergent_index} " in m for m in mismatches)
 
     def test_every_divergent_attribute_on_a_segment_is_reported(self):
         mismatches = _grain(
@@ -117,7 +117,7 @@ class TestGrainGetSegmentMismatches:
         assert any("length" in m for m in mismatches)
         assert any("density_ratio" in m for m in mismatches)
 
-    def test_lazy_fmm_cache_state_does_not_trigger_mismatch(self):
+    def test_lazy_fmm_cache_state_is_not_reported(self):
         # FMM segments populate non-constructor attributes (regression_map,
         # masked_face, …) on first burn-area query. Those caches must not
         # leak into the comparison.
