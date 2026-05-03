@@ -69,7 +69,7 @@ def main():
     (time, ib_state) = sim.run()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        time, ib_state.thrust, ib_state.P_0
+        time, ib_state.thrust, ib_state.chamber_pressure
     ).show()
 
     sim.print_results()

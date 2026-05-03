@@ -111,7 +111,7 @@ from machwave.services.plots import internal_ballistics as ib_plots
 
 sim.print_results()
 
-ib_plots.thrust_pressure_plot(time, state.thrust, state.P_0).show()
+ib_plots.thrust_pressure_plot(time, state.thrust, state.chamber_pressure).show()
 ```
 
 `print_results()` outputs initial propellant mass, max/average chamber pressure,

@@ -29,7 +29,7 @@ def get_ideal_thrust_coefficient(
     exit_pressure: float,
     external_pressure: float,
     expansion_ratio: float,
-    k_ex: float,
+    k_exhaust: float,
 ) -> float:
     """Get ideal thrust coefficient for DeLaval nozzle.
 
@@ -38,7 +38,7 @@ def get_ideal_thrust_coefficient(
         exit_pressure: Exit pressure [Pa].
         external_pressure: External pressure [Pa].
         expansion_ratio: Expansion ratio.
-        k_ex: Isentropic exponent at exit.
+        k_exhaust: Isentropic exponent at exit.
 
     Returns:
         Ideal thrust coefficient.
@@ -49,9 +49,9 @@ def get_ideal_thrust_coefficient(
     pressure_ratio = exit_pressure / chamber_pressure
     return (
         np.sqrt(
-            (2 * (k_ex**2) / (k_ex - 1))
-            * ((2 / (k_ex + 1)) ** ((k_ex + 1) / (k_ex - 1)))
-            * (1 - (pressure_ratio ** ((k_ex - 1) / k_ex)))
+            (2 * (k_exhaust**2) / (k_exhaust - 1))
+            * ((2 / (k_exhaust + 1)) ** ((k_exhaust + 1) / (k_exhaust - 1)))
+            * (1 - (pressure_ratio ** ((k_exhaust - 1) / k_exhaust)))
         )
         + expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
     )

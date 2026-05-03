@@ -18,11 +18,11 @@ class MotorState(ABC):
 
     SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
         "t",
-        "m_prop",
-        "P_0",
-        "P_exit",
-        "C_f",
-        "C_f_ideal",
+        "propellant_mass",
+        "chamber_pressure",
+        "exit_pressure",
+        "thrust_coefficient",
+        "thrust_coefficient_ideal",
         "thrust",
     )
 
@@ -42,12 +42,12 @@ class MotorState(ABC):
 
         self.t: SimulationArray = [0.0]
 
-        self.m_prop: SimulationArray = [motor.initial_propellant_mass]
-        self.P_0: SimulationArray = [initial_pressure]
-        self.P_exit: SimulationArray = [initial_atmospheric_pressure]
+        self.propellant_mass: SimulationArray = [motor.initial_propellant_mass]
+        self.chamber_pressure: SimulationArray = [initial_pressure]
+        self.exit_pressure: SimulationArray = [initial_atmospheric_pressure]
 
-        self.C_f: SimulationArray = [0.0]
-        self.C_f_ideal: SimulationArray = [0.0]
+        self.thrust_coefficient: SimulationArray = [0.0]
+        self.thrust_coefficient_ideal: SimulationArray = [0.0]
         self.thrust: SimulationArray = [0.0]
 
         self._thrust_time = None

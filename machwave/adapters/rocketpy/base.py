@@ -117,7 +117,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
             "reshape_thrust_curve": RESHAPE_THRUST_CURVE,
             "interpolation_method": INTERPOLATION_METHOD,
             "coordinate_system_orientation": ROCKETPY_MOTOR_COORDINATE_SYSTEM,
-            "reference_pressure": self.motor_state.P_exit[0],
+            "reference_pressure": self.motor_state.exit_pressure[0],
         }
 
     @property

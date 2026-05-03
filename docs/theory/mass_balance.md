@@ -192,7 +192,7 @@ Huzel & Huang (1992) Ch. 1 §1.4 (The Gas-Flow Processes).*
 The exit term is identical to §2.2.2 — the choked-flow expression derived in §1.7
 (Sutton & Biblarz §3.3). For LRE the implementation drops the throat discharge
 coefficient (\(C_d \equiv 1\)) and uses the chamber-state isentropic exponent
-\(k = \gamma_\text{chamber}\):
+\(k = k_\text{chamber}\):
 
 \[
 \dot{m}_{out} = \frac{P_0\, A_t}{\sqrt{R T_0}}\,\sqrt{k}\left(\frac{2}{k+1}\right)^{(k+1)/[2(k-1)]}.

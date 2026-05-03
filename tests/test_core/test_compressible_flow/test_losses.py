@@ -26,10 +26,10 @@ def test_get_nozzle_divergent_correction_factor(
     """
     Parameters obtained from Sutton.
     """
-    eta_div = losses.get_nozzle_divergent_percentage_loss(
+    divergent_loss = losses.get_nozzle_divergent_percentage_loss(
         divergent_angle=divergent_angle
     )
-    assert eta_div == pytest.approx(expected_correction_factor, abs=1e-2)
+    assert divergent_loss == pytest.approx(expected_correction_factor, abs=1e-2)
 
 
 @pytest.mark.parametrize(
@@ -49,16 +49,16 @@ def test_get_nozzle_divergent_correction_factor(
 def test_get_kinetics_correction_factor(
     i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_correction_factor
 ):
-    eta_kin = losses.get_kinetics_percentage_loss(
+    kinetics_loss = losses.get_kinetics_percentage_loss(
         i_sp_th_frozen=i_sp_th_frozen,
         i_sp_th_shifting=i_sp_th_shifting,
         chamber_pressure_psi=chamber_pressure_psi,
     )
-    assert eta_kin == pytest.approx(expected_correction_factor, abs=1e-2)
+    assert kinetics_loss == pytest.approx(expected_correction_factor, abs=1e-2)
 
 
 @pytest.mark.parametrize(
-    "chamber_pressure_psi, throat_diam_in, expansion_ratio, time_s, c1, c2, expected_eta_bl",
+    "chamber_pressure_psi, throat_diam_in, expansion_ratio, time_s, c1, c2, expected_boundary_layer_loss",
     [
         # Ordinary nozzle, t = 0, maximal transient term
         (1000.0, 1.0, 9.0, 0.0, 0.00365, 0.000937, 2.75051564250),
@@ -79,9 +79,9 @@ def test_get_boundary_layer_correction_factor(
     time_s,
     c1,
     c2,
-    expected_eta_bl,
+    expected_boundary_layer_loss,
 ):
-    eta_bl = losses.get_boundary_layer_percentage_loss(
+    boundary_layer_loss = losses.get_boundary_layer_percentage_loss(
         chamber_pressure_psi=chamber_pressure_psi,
         throat_diameter_inch=throat_diam_in,
         expansion_ratio=expansion_ratio,
@@ -90,7 +90,7 @@ def test_get_boundary_layer_correction_factor(
         c_2=c2,
     )
 
-    assert eta_bl == pytest.approx(expected_eta_bl, abs=1e-9)
+    assert boundary_layer_loss == pytest.approx(expected_boundary_layer_loss, abs=1e-9)
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,7 @@ def test_get_two_phase_phase_loss_particle_size(
 ):
     size_um = losses._get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi=P_psi,
-        xi=xi,
+        mass_fraction_of_condensed_phase=xi,
         throat_diameter_inch=d_throat_in,
         characteristic_length_inch=L_c_in,
     )
@@ -183,7 +183,7 @@ def test_get_two_phase_flow_correction_factor(
 
 
 @pytest.mark.parametrize(
-    "eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz",
+    "divergent_loss, kinetics_loss, boundary_layer_loss, two_phase_loss, expected_efficiency",
     [
         (0.0, 0.0, 0.0, 0.0, 1.0),  # all zero, upper-bound edge case
         (2, 3, 4, 5, 0.86),  # typical values
@@ -191,21 +191,25 @@ def test_get_two_phase_flow_correction_factor(
     ],
 )
 def test_get_overall_nozzle_efficiency_valid(
-    eta_div, eta_kin, eta_bl, eta_2p, expected_eta_noz
+    divergent_loss,
+    kinetics_loss,
+    boundary_layer_loss,
+    two_phase_loss,
+    expected_efficiency,
 ):
     """
     Ensures the overall efficiency equals the arithmetic sum and
     respects decorator-enforced [0, 1] bounds.
     """
-    eta_total = losses.get_overall_nozzle_efficiency(
-        eta_div=eta_div,
-        eta_kin=eta_kin,
-        eta_bl=eta_bl,
-        eta_2p=eta_2p,
+    overall_efficiency = losses.get_overall_nozzle_efficiency(
+        divergent_loss=divergent_loss,
+        kinetics_loss=kinetics_loss,
+        boundary_layer_loss=boundary_layer_loss,
+        two_phase_loss=two_phase_loss,
         other_losses=0,
     )
 
-    assert eta_total == pytest.approx(expected_eta_noz, abs=1e-12)
+    assert overall_efficiency == pytest.approx(expected_efficiency, abs=1e-12)
 
 
 def test_get_overall_nozzle_efficiency_out_of_bounds():
@@ -215,7 +219,11 @@ def test_get_overall_nozzle_efficiency_out_of_bounds():
     with pytest.raises((ValueError, AssertionError)):
         # Sum = 1.10, outside allowed range.
         losses.get_overall_nozzle_efficiency(
-            eta_div=40, eta_kin=30, eta_bl=20, eta_2p=20, other_losses=0
+            divergent_loss=40,
+            kinetics_loss=30,
+            boundary_layer_loss=20,
+            two_phase_loss=20,
+            other_losses=0,
         )
 
 
@@ -248,10 +256,10 @@ def test_table_4_5_simplified_method(
     JANNAF/AFRPL-TR-75-36 Table 4-5.
     """
     eta_cf = losses.get_overall_nozzle_efficiency(
-        eta_div=loss_div_pct,
-        eta_kin=loss_kin_pct,
-        eta_bl=loss_bl_pct,
-        eta_2p=loss_tp_pct,
+        divergent_loss=loss_div_pct,
+        kinetics_loss=loss_kin_pct,
+        boundary_layer_loss=loss_bl_pct,
+        two_phase_loss=loss_tp_pct,
         other_losses=0,
     )
 

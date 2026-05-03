@@ -27,12 +27,14 @@ def test_get_exit_mach_from_expansion_ratio():
 
 
 def test_get_exit_pressure():
-    k_ex = 1.4
-    E = 8.0
-    P_0 = 7e6
-    P_exit = isentropic.get_exit_pressure(k_ex, E, P_0)
+    k_exhaust = 1.4
+    expansion_ratio = 8.0
+    chamber_pressure = 7e6
+    exit_pressure = isentropic.get_exit_pressure(
+        k_exhaust, expansion_ratio, chamber_pressure
+    )
 
-    assert P_exit == pytest.approx(71545.88, rel=1e-2)
+    assert exit_pressure == pytest.approx(71545.88, rel=1e-2)
 
 
 def test_is_flow_choked_true():
