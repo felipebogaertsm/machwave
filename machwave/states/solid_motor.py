@@ -344,7 +344,7 @@ class SolidMotorState(states_base.MotorState):
     @property
     def total_impulse(self) -> float:
         """Get the total impulse [N-s]."""
-        return performance.get_total_impulse_trapezoidal(
+        return performance.get_total_impulse(
             np.asarray(self.thrust), np.asarray(self.t)
         )
 

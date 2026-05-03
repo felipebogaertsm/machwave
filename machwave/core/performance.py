@@ -7,20 +7,7 @@ import numpy.typing as npt
 import scipy.constants
 
 
-def get_total_impulse(average_thrust: float, thrust_time: float) -> float:
-    """Get total impulse.
-
-    Args:
-        average_thrust: Average thrust [N].
-        thrust_time: Thrust time [s].
-
-    Returns:
-        Total impulse [N-s].
-    """
-    return average_thrust * thrust_time
-
-
-def get_total_impulse_trapezoidal(
+def get_total_impulse(
     thrust: npt.NDArray[np.float64],
     time: npt.NDArray[np.float64],
 ) -> float:
