@@ -18,7 +18,7 @@ FUEL_NAME = "Ethanol"
 OXIDIZER_NAME = "N2O"
 
 
-def main():
+def build() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationParams]:
     oxidizer = propellants.PropellantComponent(
         name=OXIDIZER_NAME,
         role=propellants.ComponentRole.OXIDIZER,
@@ -100,6 +100,12 @@ def main():
     sim_params = InternalBallisticsSimulationParams(
         d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5, other_losses=12.0
     )
+
+    return lre, sim_params
+
+
+def main():
+    lre, sim_params = build()
     simulation = InternalBallisticsSimulation(motor=lre, params=sim_params)
 
     (time, ib_state) = simulation.run()

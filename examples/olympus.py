@@ -17,22 +17,19 @@ from machwave.services.plots import internal_ballistics as internal_ballistics_p
 from machwave import simulation
 
 
-@timing
-def main():
+def build() -> tuple[motors.SolidMotor, simulation.InternalBallisticsSimulationParams]:
     propellant = solid_propellants.KNSB_NAKKA
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(spacing=0.01)
     bates_segment_45 = grain_geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.045,
         length=0.200,
-        spacing=0.01,
     )
     bates_segment_60 = grain_geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.060,
         length=0.200,
-        spacing=0.01,
     )
 
     grain.add_segment(bates_segment_45)
@@ -78,6 +75,13 @@ def main():
         external_pressure=1.013e5,
         other_losses=12.0,
     )
+
+    return motor, params
+
+
+@timing
+def main():
+    motor, params = build()
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
     t, ib_state = sim.run()
