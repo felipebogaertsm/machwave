@@ -64,6 +64,10 @@ jobs:
           name: dist
           path: dist
 
+      - name: Install gfortran (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gcc
+
       - name: Install built wheel
         run: python -m pip install dist/*.whl
 
