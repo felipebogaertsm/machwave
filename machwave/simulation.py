@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from machwave.models.motors import Motor
-from machwave.states import MotorState, create_motor_state
+from machwave.states import MotorState
 
 
 @dataclass
@@ -46,8 +46,19 @@ class InternalBallisticsSimulation:
     def get_motor_state(self) -> MotorState:
         """
         Returns the motor state object based on the type of the motor.
+
+        Picks the MotorState subclass whose MOTOR_MODEL matches self.motor.
         """
-        return create_motor_state(self.motor, self.params)
+        for state_cls in MotorState.__subclasses__():
+            motor_model = state_cls.MOTOR_MODEL
+            if motor_model is not None and isinstance(self.motor, motor_model):
+                return state_cls(
+                    motor=self.motor,
+                    initial_pressure=self.params.igniter_pressure,
+                    initial_atmospheric_pressure=self.params.external_pressure,
+                    other_losses=self.params.other_losses,
+                )
+        raise TypeError(f"No MotorState registered for {type(self.motor).__name__}.")
 
     def run(self) -> tuple[np.ndarray, MotorState]:
         """

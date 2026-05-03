@@ -1,10 +1,11 @@
-"""Unit tests for the create_motor_state singledispatch generic.
+"""Unit tests for MotorState dispatch.
 
-The factory lives in machwave/states/base.py with concrete registrations in
-machwave/states/solid_motor.py and machwave/states/liquid_engine.py. These
-tests verify that the right state class is returned for each motor type, that
-the simulation parameters propagate into the state's initial values, and that
-an unregistered motor type raises TypeError.
+Each concrete MotorState subclass declares ``MOTOR_MODEL = SomeMotor``.
+``InternalBallisticsSimulation.get_motor_state`` walks
+``MotorState.__subclasses__()`` and picks the state whose ``MOTOR_MODEL``
+matches the motor at hand. These tests verify the right state class is
+returned for each motor type, that simulation parameters propagate into the
+state, and that an unpaired motor type raises ``TypeError``.
 """
 
 from __future__ import annotations
@@ -31,12 +32,11 @@ from machwave.models.thrust_chamber import (
     SolidMotorThrustChamber,
 )
 from machwave.models.thrust_chamber.injector import BipropellantInjector
-from machwave.simulation import InternalBallisticsSimulationParams
-from machwave.states import (
-    LiquidEngineState,
-    SolidMotorState,
-    create_motor_state,
+from machwave.simulation import (
+    InternalBallisticsSimulation,
+    InternalBallisticsSimulationParams,
 )
+from machwave.states import LiquidEngineState, SolidMotorState
 
 
 @pytest.fixture
@@ -165,13 +165,15 @@ def liquid_engine() -> LiquidEngine:
     )
 
 
-class TestCreateMotorStateSolid:
+class TestSolidMotorDispatch:
     def test_returns_solid_motor_state(
         self,
         solid_motor: SolidMotor,
         params: InternalBallisticsSimulationParams,
     ) -> None:
-        state = create_motor_state(solid_motor, params)
+        state = InternalBallisticsSimulation(
+            motor=solid_motor, params=params
+        ).get_motor_state()
 
         assert isinstance(state, SolidMotorState)
         assert state.motor is solid_motor
@@ -181,20 +183,24 @@ class TestCreateMotorStateSolid:
         solid_motor: SolidMotor,
         params: InternalBallisticsSimulationParams,
     ) -> None:
-        state = create_motor_state(solid_motor, params)
+        state = InternalBallisticsSimulation(
+            motor=solid_motor, params=params
+        ).get_motor_state()
 
         assert state.chamber_pressure[0] == params.igniter_pressure
         assert state.exit_pressure[0] == params.external_pressure
         assert state.other_losses == params.other_losses
 
 
-class TestCreateMotorStateLiquid:
+class TestLiquidEngineDispatch:
     def test_returns_liquid_engine_state(
         self,
         liquid_engine: LiquidEngine,
         params: InternalBallisticsSimulationParams,
     ) -> None:
-        state = create_motor_state(liquid_engine, params)
+        state = InternalBallisticsSimulation(
+            motor=liquid_engine, params=params
+        ).get_motor_state()
 
         assert isinstance(state, LiquidEngineState)
         assert state.motor is liquid_engine
@@ -204,15 +210,17 @@ class TestCreateMotorStateLiquid:
         liquid_engine: LiquidEngine,
         params: InternalBallisticsSimulationParams,
     ) -> None:
-        state = create_motor_state(liquid_engine, params)
+        state = InternalBallisticsSimulation(
+            motor=liquid_engine, params=params
+        ).get_motor_state()
 
         assert state.chamber_pressure[0] == params.igniter_pressure
         assert state.exit_pressure[0] == params.external_pressure
         assert state.other_losses == params.other_losses
 
 
-class TestCreateMotorStateUnregistered:
-    def test_unregistered_motor_raises_type_error(
+class TestUnpairedMotor:
+    def test_motor_without_paired_state_raises_type_error(
         self, params: InternalBallisticsSimulationParams
     ) -> None:
         class MysteryMotor(Motor):
@@ -235,5 +243,6 @@ class TestCreateMotorStateUnregistered:
             def initial_propellant_mass(self) -> float:
                 return 0.0
 
-        with pytest.raises(TypeError, match="No motor state factory registered"):
-            create_motor_state(MysteryMotor(), params)
+        sim = InternalBallisticsSimulation(motor=MysteryMotor(), params=params)
+        with pytest.raises(TypeError, match="No MotorState registered"):
+            sim.get_motor_state()

@@ -1,13 +1,9 @@
 from abc import ABC, abstractmethod
-from functools import singledispatch
-from typing import TYPE_CHECKING, TypeAlias
+from typing import ClassVar, TypeAlias
 
 import numpy as np
 
 from machwave.models.motors import Motor
-
-if TYPE_CHECKING:
-    from machwave.simulation import InternalBallisticsSimulationParams
 
 # Python list during the simulation loop (O(1) appends), then converted to
 # np.ndarray by convert_simulation_arrays_to_numpy() once the loop ends.
@@ -18,7 +14,15 @@ class MotorState(ABC):
     """
     Defines a particular motor operation. Stores and processes all attributes
     obtained from the simulation.
+
+    Concrete subclasses pair themselves with a ``Motor`` subclass by setting
+    ``MOTOR_MODEL = SomeMotor``. The simulation layer iterates
+    ``MotorState.__subclasses__()`` to find the state whose ``MOTOR_MODEL``
+    matches the motor at hand — adding a new motor category requires no
+    edits to the simulation layer.
     """
+
+    MOTOR_MODEL: ClassVar[type[Motor] | None] = None
 
     SIMULATION_ARRAY_ATTRIBUTE_NAMES: tuple[str, ...] = (
         "t",
@@ -105,18 +109,3 @@ class MotorState(ABC):
             raise ValueError("Thrust time has not been set, run the simulation.")
 
         return self._thrust_time
-
-
-@singledispatch
-def create_motor_state(
-    motor: Motor, params: "InternalBallisticsSimulationParams"
-) -> MotorState:
-    """Construct the simulation state for a motor.
-
-    Concrete motor types register implementations alongside their state
-    classes (see machwave/states/solid_motor.py and
-    machwave/states/liquid_engine.py). Adding a new motor category means
-    writing the new state subclass plus one ``@create_motor_state.register``
-    line; no edits to the simulation layer or the motor classes are required.
-    """
-    raise TypeError(f"No motor state factory registered for {type(motor).__name__}.")
