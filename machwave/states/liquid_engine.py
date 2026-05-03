@@ -236,7 +236,9 @@ class LiquidEngineState(MotorState):
         print(f"  Mean: {np.mean(self.thrust):.4f}")
 
         # Impulse
-        impulse = performance.get_total_impulse_trapezoidal(self.thrust, self.t)
+        impulse = performance.get_total_impulse_trapezoidal(
+            np.asarray(self.thrust), np.asarray(self.t)
+        )
         isp = performance.get_specific_impulse(impulse, self.propellant_mass[0])
         print("\nIMPULSE AND I_SP")
         print(f"  Total impulse: {impulse:.4f} N·s")
