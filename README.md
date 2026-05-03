@@ -14,6 +14,22 @@ Install Machwave using pip:
 pip install machwave
 ```
 
+#### macOS prerequisite: gfortran
+
+Machwave depends on [rocketcea](https://pypi.org/project/RocketCEA/), which does
+not publish macOS wheels on PyPI. On macOS, pip therefore builds rocketcea from
+source and needs a Fortran compiler. Homebrew's `gcc` formula installs only
+versioned binaries (e.g. `gfortran-15`), so an unversioned `gfortran` symlink
+must be added to `PATH` before `pip install machwave`:
+
+```bash
+brew install gcc
+ln -sf "$(ls "$(brew --prefix)"/bin/gfortran-* | sort -V | tail -n 1)" "$(brew --prefix)/bin/gfortran"
+```
+
+Linux and Windows users do not need this step — rocketcea ships prebuilt wheels
+for those platforms.
+
 ### Documentation
 
 The full documentation is available at
