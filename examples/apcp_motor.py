@@ -16,7 +16,8 @@ from machwave.services.plots import internal_ballistics as internal_ballistics_p
 from machwave import simulation
 
 
-def build() -> tuple[motors.SolidMotor, simulation.InternalBallisticsSimulationParams]:
+@timing
+def main():
     propellant = solid_propellants.MIT_CHERRY_LIMEADE
 
     grain = grain_models.Grain(spacing=0.01)
@@ -64,13 +65,6 @@ def build() -> tuple[motors.SolidMotor, simulation.InternalBallisticsSimulationP
         external_pressure=1e5,
         other_losses=12.0,
     )
-
-    return motor, params
-
-
-@timing
-def main():
-    motor, params = build()
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
     (time, ib_state) = sim.run()

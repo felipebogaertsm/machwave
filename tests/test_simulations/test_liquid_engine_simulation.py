@@ -1,9 +1,9 @@
 """End-to-end integration tests for LiquidEngine internal ballistics
 simulations.
 
-Driven by the lone biliquid example (examples/lre_1kn.py). Like its solid
-counterpart, the example exposes a build() function returning (motor, params).
-The simulation is module-scoped so all assertions share a single run.
+The motor configuration below mirrors the one in examples/1kn_lre.py
+(the lone biliquid example) but is duplicated here so the tests stay
+independent of the example layer.
 """
 
 from __future__ import annotations
@@ -11,7 +11,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from examples.lre_1kn import build as build_1kn_lre
+from machwave.models import feed_systems, motors, propellants
+from machwave.models import thrust_chamber as thrust_chamber_models
+from machwave.models.feed_systems import tanks
+from machwave.simulation import InternalBallisticsSimulationParams
 from machwave.states import LiquidEngineState
 from tests.test_simulations.conftest import (
     SimulationResult,
@@ -20,9 +23,101 @@ from tests.test_simulations.conftest import (
 )
 
 
+def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationParams]:
+    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
+    oxidizer_name = "N2O"
+    fuel_name = "Ethanol"
+
+    oxidizer = propellants.PropellantComponent(
+        name=oxidizer_name,
+        role=propellants.ComponentRole.OXIDIZER,
+        density=745.0,
+        chemical_formula={"N": 2, "O": 1},
+        enthalpy=0.0,
+        initial_temperature=300.0,
+    )
+    fuel = propellants.PropellantComponent(
+        name=fuel_name,
+        role=propellants.ComponentRole.FUEL,
+        density=789.0,
+        chemical_formula={"C": 2, "H": 6, "O": 1},
+        enthalpy=0.0,
+        initial_temperature=300.0,
+    )
+    propellant = propellants.BiliquidPropellant(
+        name=f"{oxidizer_name}/{fuel_name}",
+        components=[oxidizer, fuel],
+        combustion_efficiency=0.98,
+        of_ratio=1.9495,
+    )
+
+    fuel_tank = tanks.Tank(
+        fuel_name.upper(),
+        volume=2.261e-4,
+        temperature=300,
+        initial_fluid_mass=1.55,
+    )
+    oxidizer_tank = tanks.Tank(
+        oxidizer_name,
+        volume=3.622e-3,
+        temperature=300,
+        initial_fluid_mass=2.78,
+    )
+    feed_system = feed_systems.StackedTankPressureFedFeedSystem(
+        oxidizer_line_diameter=7.925e-3,
+        oxidizer_line_length=0.5,
+        fuel_line_diameter=5.715e-3,
+        fuel_line_length=0.5,
+        oxidizer_tank=oxidizer_tank,
+        fuel_tank=fuel_tank,
+        piston_loss=1e5,
+    )
+
+    nozzle = thrust_chamber_models.Nozzle(
+        inlet_diameter=55e-3,
+        throat_diameter=25.4e-3,
+        divergent_angle=12,
+        convergent_angle=45,
+        expansion_ratio=4,
+    )
+    injector = thrust_chamber_models.BipropellantInjector(
+        discharge_coefficient_fuel=0.48,
+        discharge_coefficient_oxidizer=0.48,
+        area_fuel=8.2e-6 / 0.48,
+        area_ox=1.4e-5 / 0.48,
+    )
+    combustion_chamber = thrust_chamber_models.CombustionChamber(
+        casing_inner_diameter=70e-3,
+        casing_outer_diameter=76e-3,
+        internal_length=13e-3,
+        thermal_liner_thickness=2e-3,
+    )
+    thrust_chamber = thrust_chamber_models.LiquidEngineThrustChamber(
+        nozzle=nozzle,
+        injector=injector,
+        combustion_chamber=combustion_chamber,
+        dry_mass=2,
+        center_of_gravity_coordinate=(0.02, 0.0, 0.0),
+    )
+    motor = motors.LiquidEngine(
+        propellant=propellant,
+        feed_system=feed_system,
+        thrust_chamber=thrust_chamber,
+        oxidizer_tank_cog=0.5,
+        fuel_tank_cog=0.4,
+    )
+    params = InternalBallisticsSimulationParams(
+        d_t=1e-4,
+        igniter_pressure=1e6,
+        external_pressure=1e5,
+        other_losses=12.0,
+    )
+    return motor, params
+
+
 @pytest.fixture(scope="module")
 def simulation_result() -> SimulationResult:
-    motor, params = build_1kn_lre()
+    motor, params = _build_1kn_lre()
     return run_simulation(motor, params)
 
 
