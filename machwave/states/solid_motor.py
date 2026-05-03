@@ -5,6 +5,7 @@ import machwave.core.compressible_flow.losses as losses
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
+import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
 import machwave.states.base as states_base
@@ -343,9 +344,14 @@ class SolidMotorState(states_base.MotorState):
     @property
     def total_impulse(self) -> float:
         """Get the total impulse [N-s]."""
-        return float(np.mean(self.thrust) * self.t[-1])
+        return performance.get_total_impulse(
+            np.asarray(self.thrust), np.asarray(self.t)
+        )
 
     @property
     def specific_impulse(self) -> float:
         """Get the specific impulse [s]."""
-        return self.total_impulse / self.propellant_mass[0] / 9.81
+        return performance.get_specific_impulse(
+            total_impulse=self.total_impulse,
+            initial_propellant_mass=self.propellant_mass[0],
+        )
