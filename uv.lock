@@ -812,16 +812,16 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coolprop", specifier = ">=6.7.0,<7.0.0" },
+    { name = "coolprop", specifier = ">=6.7.0,<8.0.0" },
     { name = "fluids", specifier = ">=1.1.0,<2.0.0" },
     { name = "matplotlib", specifier = ">=3.10.0,<4.0.0" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pandas", specifier = ">=2.2.3,<3.0.0" },
+    { name = "pandas", specifier = ">=2.2.3,<4.0.0" },
     { name = "plotly", specifier = ">=6.0.0,<7.0.0" },
     { name = "rocketcea", specifier = ">=1.2.1,<2.0.0" },
     { name = "rocketpy", marker = "extra == 'rocketpy'", specifier = ">=1.0.0,<2.0.0" },
     { name = "scikit-fmm", specifier = "==2025.6.23" },
-    { name = "scikit-image", specifier = ">=0.25.2,<0.26.0" },
+    { name = "scikit-image", specifier = ">=0.25.2,<0.27.0" },
     { name = "scipy", specifier = ">=1.15.2,<2.0.0" },
     { name = "trimesh", specifier = ">=4.6.4,<5.0.0" },
 ]
@@ -831,18 +831,18 @@ provides-extras = ["rocketpy"]
 dev = [
     { name = "polyfactory", specifier = ">=3.1.0,<4.0.0" },
     { name = "pre-commit", specifier = ">=4.0.0,<5.0.0" },
-    { name = "py2puml", specifier = ">=0.10.0,<0.11.0" },
-    { name = "pylint", specifier = ">=3.3.5,<4.0.0" },
+    { name = "py2puml", specifier = ">=0.10.0,<0.12.0" },
+    { name = "pylint", specifier = ">=3.3.5,<5.0.0" },
     { name = "pyright" },
     { name = "pytest" },
-    { name = "pytest-cov", specifier = ">=6.2.1,<7.0.0" },
+    { name = "pytest-cov", specifier = ">=6.2.1,<8.0.0" },
     { name = "rocketpy", specifier = ">=1.11.0,<2.0.0" },
     { name = "ruff" },
 ]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.0,<2.0.0" },
     { name = "mkdocs-material", specifier = ">=9.5.0,<10.0.0" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.27.0,<0.28.0" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.27.0,<1.1.0" },
 ]
 
 [[package]]
