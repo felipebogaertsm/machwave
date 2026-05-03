@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import TypeAlias
+from functools import singledispatch
+from typing import TYPE_CHECKING, TypeAlias
 
 import numpy as np
 
 from machwave.models.motors import Motor
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
 
 # Python list during the simulation loop (O(1) appends), then converted to
 # np.ndarray by convert_simulation_arrays_to_numpy() once the loop ends.
@@ -101,3 +105,18 @@ class MotorState(ABC):
             raise ValueError("Thrust time has not been set, run the simulation.")
 
         return self._thrust_time
+
+
+@singledispatch
+def create_motor_state(
+    motor: Motor, params: "InternalBallisticsSimulationParams"
+) -> MotorState:
+    """Construct the simulation state for a motor.
+
+    Concrete motor types register implementations alongside their state
+    classes (see machwave/states/solid_motor.py and
+    machwave/states/liquid_engine.py). Adding a new motor category means
+    writing the new state subclass plus one ``@create_motor_state.register``
+    line; no edits to the simulation layer or the motor classes are required.
+    """
+    raise TypeError(f"No motor state factory registered for {type(motor).__name__}.")

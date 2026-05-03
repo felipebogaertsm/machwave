@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 import numpy as np
 
 from machwave.core.compressible_flow.nozzle import (
@@ -10,10 +8,6 @@ from machwave.models.propellants import BiliquidPropellant
 from machwave.models.thrust_chamber import LiquidEngineThrustChamber
 
 from .base import Motor
-
-if TYPE_CHECKING:
-    from machwave.simulation import InternalBallisticsSimulationParams
-    from machwave.states import LiquidEngineState
 
 
 class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
@@ -54,18 +48,6 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
 
     def get_dry_mass(self) -> float:
         return self.thrust_chamber.dry_mass
-
-    def create_state(
-        self, params: "InternalBallisticsSimulationParams"
-    ) -> "LiquidEngineState":
-        from machwave.states import LiquidEngineState
-
-        return LiquidEngineState(
-            motor=self,
-            initial_pressure=params.igniter_pressure,
-            initial_atmospheric_pressure=params.external_pressure,
-            other_losses=params.other_losses,
-        )
 
     def get_center_of_gravity(
         self, propellant_fraction: float = 0.0

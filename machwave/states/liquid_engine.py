@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 import scipy.constants
 
@@ -20,7 +22,10 @@ from machwave.core.compressible_flow.isentropic import (
 from machwave.core.mass_balance import compute_chamber_pressure_mass_balance
 from machwave.core.solvers import rk4th_ode_solver
 from machwave.models.motors import LiquidEngine
-from machwave.states.base import MotorState, SimulationArray
+from machwave.states.base import MotorState, SimulationArray, create_motor_state
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
 
 
 class LiquidEngineState(MotorState):
@@ -246,3 +251,16 @@ class LiquidEngineState(MotorState):
         print("\nPROPELLANT REMAINING (kg)")
         print(f"  Oxidizer: {self.oxidizer_mass[-1]:.4f}")
         print(f"  Fuel:     {self.fuel_mass[-1]:.4f}")
+
+
+@create_motor_state.register(LiquidEngine)
+def _(
+    motor: LiquidEngine,
+    params: "InternalBallisticsSimulationParams",
+) -> LiquidEngineState:
+    return LiquidEngineState(
+        motor=motor,
+        initial_pressure=params.igniter_pressure,
+        initial_atmospheric_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )

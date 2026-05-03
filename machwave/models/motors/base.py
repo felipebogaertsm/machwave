@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, TypeVar
 
 import numpy as np
 
@@ -8,10 +8,6 @@ from machwave.core.compressible_flow.nozzle import (
 )
 from machwave.models.propellants import Propellant
 from machwave.models.thrust_chamber import ThrustChamber
-
-if TYPE_CHECKING:
-    from machwave.simulation import InternalBallisticsSimulationParams
-    from machwave.states import MotorState
 
 P = TypeVar("P", bound=Propellant)
 T = TypeVar("T", bound=ThrustChamber)
@@ -103,21 +99,6 @@ class Motor(Generic[P, T], ABC):
         """
         Returns:
             Initial propellant mass, in kg
-        """
-        pass
-
-    @abstractmethod
-    def create_state(
-        self, params: "InternalBallisticsSimulationParams"
-    ) -> "MotorState":
-        """
-        Construct the simulation state object for this motor.
-
-        Args:
-            params: Internal ballistics simulation parameters.
-
-        Returns:
-            A MotorState instance appropriate for this motor's category.
         """
         pass
 

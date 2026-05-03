@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 import machwave.core.compressible_flow.isentropic as isentropic
@@ -8,6 +10,9 @@ import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
 import machwave.states.base as states_base
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
 
 
 class SolidMotorState(states_base.MotorState):
@@ -349,3 +354,16 @@ class SolidMotorState(states_base.MotorState):
     def specific_impulse(self) -> float:
         """Get the specific impulse [s]."""
         return self.total_impulse / self.propellant_mass[0] / 9.81
+
+
+@states_base.create_motor_state.register(motors.SolidMotor)
+def _(
+    motor: motors.SolidMotor,
+    params: "InternalBallisticsSimulationParams",
+) -> SolidMotorState:
+    return SolidMotorState(
+        motor=motor,
+        initial_pressure=params.igniter_pressure,
+        initial_atmospheric_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )
