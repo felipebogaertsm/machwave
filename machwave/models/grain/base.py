@@ -1,3 +1,5 @@
+import inspect
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
@@ -582,3 +584,67 @@ class Grain:
                 )
 
         return segment_mass_flux
+
+    def get_segment_mismatches(self) -> list[str]:
+        """Return per-attribute descriptions of where segments diverge. Uses
+        first segment as a reference.
+
+        Returns:
+            One description per divergent (segment, attribute) pair.
+        """
+        if len(self.segments) < 2:
+            return []
+
+        first_segment = self.segments[0]
+        mismatches: list[str] = []
+        base_message = (
+            "Segment {index} '{name}' value {value_other!r} differs from "
+            "segment 1 value {value_first!r}"
+        )
+        skipped_kinds = (
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        )  # skip *args and **kwargs
+
+        # Compare each segment to the first one
+        for index, segment in enumerate(self.segments[1:], start=1):
+            real_index = index + 1  # 1 based indexing
+
+            if type(segment) is not type(first_segment):
+                mismatches.append(
+                    base_message.format(
+                        index=real_index,
+                        name="type",
+                        value_other=type(segment).__name__,
+                        value_first=type(first_segment).__name__,
+                    )
+                )
+                continue
+
+            parameters = inspect.signature(type(first_segment).__init__).parameters
+            for name, parameter in parameters.items():
+                if name == "self" or parameter.kind in skipped_kinds:
+                    continue
+                if not (hasattr(first_segment, name) and hasattr(segment, name)):
+                    continue
+                value_first = getattr(first_segment, name)
+                value_other = getattr(segment, name)
+
+                if isinstance(value_first, float) and isinstance(value_other, float):
+                    if math.isclose(
+                        value_first, value_other, rel_tol=1e-9, abs_tol=1e-12
+                    ):
+                        continue
+                elif value_first == value_other:
+                    continue
+
+                mismatches.append(
+                    base_message.format(
+                        index=real_index,
+                        name=name,
+                        value_other=value_other,
+                        value_first=value_first,
+                    )
+                )
+
+        return mismatches
