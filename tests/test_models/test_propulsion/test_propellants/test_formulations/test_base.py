@@ -207,8 +207,8 @@ class TestParseProperties:
     def test_parse_properties_when_present(self):
         data = {
             "properties": {
-                "gamma_chamber": 1.24,
-                "gamma_exhaust": 1.23,
+                "k_chamber": 1.24,
+                "k_exhaust": 1.23,
                 "adiabatic_flame_temperature": 3580.0,
                 "molecular_weight_chamber": 0.0225,
                 "molecular_weight_exhaust": 0.0230,
@@ -221,8 +221,8 @@ class TestParseProperties:
         result = _parse_properties(data)
 
         assert result is not None
-        assert result.gamma_chamber == 1.24
-        assert result.gamma_exhaust == 1.23
+        assert result.k_chamber == 1.24
+        assert result.k_exhaust == 1.23
         assert result.adiabatic_flame_temperature == 3580.0
         assert result.i_sp_frozen == 325.0
         assert result.qsi_chamber == 0.0
@@ -235,7 +235,7 @@ class TestParseProperties:
     def test_missing_required_property_raises_error(self):
         data = {
             "properties": {
-                "gamma_chamber": 1.24,
+                "k_chamber": 1.24,
                 # Missing other required fields
             }
         }

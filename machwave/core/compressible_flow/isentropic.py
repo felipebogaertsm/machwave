@@ -60,21 +60,23 @@ def get_exit_mach_from_expansion_ratio(k: float, expansion_ratio: float) -> floa
 
 
 def get_exit_pressure(
-    k_ex: float, expansion_ratio: float, chamber_pressure: float
+    k_exhaust: float,
+    expansion_ratio: float,
+    chamber_pressure: float,
 ) -> float:
     """Get exit pressure from isentropic relations.
 
     Args:
-        k_ex: Isentropic exponent at exit.
+        k_exhaust: Isentropic exponent at exit.
         expansion_ratio: Expansion ratio.
         chamber_pressure: Chamber pressure [Pa].
 
     Returns:
         Exit pressure [Pa].
     """
-    exit_mach = get_exit_mach_from_expansion_ratio(k_ex, expansion_ratio)
-    return chamber_pressure * (1 + 0.5 * (k_ex - 1) * exit_mach**2) ** (
-        -k_ex / (k_ex - 1)
+    exit_mach = get_exit_mach_from_expansion_ratio(k_exhaust, expansion_ratio)
+    return chamber_pressure * (1 + 0.5 * (k_exhaust - 1) * exit_mach**2) ** (
+        -k_exhaust / (k_exhaust - 1)
     )
 
 

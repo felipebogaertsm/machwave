@@ -9,8 +9,8 @@ import scipy.constants
 # NOTE 1: field_name must match the dataclass' ThermochemicalProperties attributes
 # NOTE 2: bounds are inclusive on both ends
 VALIDATION_BOUNDS: dict[str, tuple[float, float]] = {
-    "gamma_chamber": (1.0, 2.0),
-    "gamma_exhaust": (1.0, 2.0),
+    "k_chamber": (1.0, 2.0),
+    "k_exhaust": (1.0, 2.0),
     "adiabatic_flame_temperature": (0.0, 5000.0),
     "molecular_weight_chamber": (0.001, 0.200),
     "molecular_weight_exhaust": (0.001, 0.200),
@@ -27,8 +27,8 @@ class ThermochemicalProperties:
     propellants.
 
     Attributes:
-        gamma_chamber: Isentropic exponent in chamber.
-        gamma_exhaust: Isentropic exponent at nozzle exit.
+        k_chamber: Isentropic exponent in chamber.
+        k_exhaust: Isentropic exponent at nozzle exit.
         adiabatic_flame_temperature: Ideal combustion temperature [K].
         molecular_weight_chamber: Molecular weight in chamber [kg/mol].
         molecular_weight_exhaust: Molecular weight at exit [kg/mol].
@@ -41,8 +41,8 @@ class ThermochemicalProperties:
         ValueError: If any parameter is outside a valid range.
     """
 
-    gamma_chamber: float
-    gamma_exhaust: float
+    k_chamber: float
+    k_exhaust: float
     adiabatic_flame_temperature: float
     molecular_weight_chamber: float
     molecular_weight_exhaust: float

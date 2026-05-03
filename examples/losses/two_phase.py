@@ -51,12 +51,11 @@ for P_ch, d_t, x_c, eps, l_star in product(
 ):
     d_p_um = losses._get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi=P_ch,
-        xi=x_c,
+        mass_fraction_of_condensed_phase=x_c,
         throat_diameter_inch=d_t,
         characteristic_length_inch=l_star,
     )
-    eta_2p = 100 * (0.012 + 0.83 * eps**-0.35) * x_c
-    eta_2p = losses.get_two_phase_flow_percentage_loss(
+    two_phase_loss = losses.get_two_phase_flow_percentage_loss(
         chamber_pressure_psi=P_ch,
         mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,
@@ -72,7 +71,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
             "ε": eps,
             "l* (in)": l_star,
             "d_p (µm)": round(d_p_um, 2),
-            "η_2φ (%)": round(eta_2p, 3),
+            "η_2φ (%)": round(two_phase_loss, 3),
         }
     )
 

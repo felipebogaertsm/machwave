@@ -136,7 +136,7 @@ def get_boundary_layer_percentage_loss(
 
 def _get_two_phase_phase_loss_particle_size(
     chamber_pressure_psi: float,
-    xi: float,
+    mass_fraction_of_condensed_phase: float,
     throat_diameter_inch: float,
     characteristic_length_inch: float,
 ) -> float:
@@ -148,7 +148,7 @@ def _get_two_phase_phase_loss_particle_size(
 
     Args:
         chamber_pressure_psi: The chamber pressure [psi].
-        xi: The mass fraction of the condensed phase.
+        mass_fraction_of_condensed_phase: The mass fraction of the condensed phase.
         throat_diameter_inch: The throat diameter [in].
         characteristic_length_inch: The characteristic length [in].
 
@@ -158,7 +158,7 @@ def _get_two_phase_phase_loss_particle_size(
     return (
         0.454
         * chamber_pressure_psi ** (1 / 3)
-        * xi ** (1 / 3)
+        * mass_fraction_of_condensed_phase ** (1 / 3)
         * (1 - np.exp(-0.004 * characteristic_length_inch))
         * (1 + 0.045 * throat_diameter_inch)
     )
@@ -194,9 +194,8 @@ def get_two_phase_flow_percentage_loss(
         throat_diameter_inch,
         characteristic_length_inch,
     )
-    xi: float = mass_fraction_of_condensed_phase
 
-    if xi >= 0.09:
+    if mass_fraction_of_condensed_phase >= 0.09:
         c_4 = 0.5
         if throat_diameter_inch < 1.0:
             c_3, c_5, c_6 = 9.0, 1.0, 1.0
@@ -209,7 +208,7 @@ def get_two_phase_flow_percentage_loss(
                 c_3, c_5, c_6 = 10.2, 0.8, 0.4
             else:
                 c_3, c_5, c_6 = 7.58, 0.8, 0.33
-    else:  # xi < 0.09
+    else:  # mass_fraction_of_condensed_phase < 0.09
         c_4 = 1.0
         if throat_diameter_inch < 1.0:
             c_3, c_5, c_6 = 30.0, 1.0, 1.0
@@ -223,7 +222,7 @@ def get_two_phase_flow_percentage_loss(
             else:
                 c_3, c_5, c_6 = 25.2, 0.8, 0.33
 
-    numerator = (xi**c_4) * (particle_size_um**c_5)
+    numerator = (mass_fraction_of_condensed_phase**c_4) * (particle_size_um**c_5)
     denominator = (
         (chamber_pressure_psi**0.15)
         * (expansion_ratio**0.08)
@@ -235,23 +234,33 @@ def get_two_phase_flow_percentage_loss(
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 def get_overall_nozzle_efficiency(
-    eta_div: float,
-    eta_kin: float,
-    eta_bl: float,
-    eta_2p: float,
+    divergent_loss: float,
+    kinetics_loss: float,
+    boundary_layer_loss: float,
+    two_phase_loss: float,
     other_losses: float,
 ) -> float:
     """
     Calculates the overall nozzle efficiency by combining the correction factors.
 
     Args:
-        eta_div: The divergent nozzle correction factor.
-        eta_kin: The kinetics correction factor.
-        eta_bl: The boundary layer correction factor.
-        eta_2p: The two-phase flow correction factor.
+        divergent_loss: The divergent nozzle correction factor.
+        kinetics_loss: The kinetics correction factor.
+        boundary_layer_loss: The boundary layer correction factor.
+        two_phase_loss: The two-phase flow correction factor.
         other_losses: Additional losses, in percent.
 
     Returns:
         The overall nozzle efficiency.
     """
-    return 1 - (eta_div + eta_kin + eta_bl + eta_2p + other_losses) / 100
+    return (
+        1
+        - (
+            divergent_loss
+            + kinetics_loss
+            + boundary_layer_loss
+            + two_phase_loss
+            + other_losses
+        )
+        / 100
+    )

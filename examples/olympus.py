@@ -85,10 +85,13 @@ def main():
     sim.print_results()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        t, ib_state.thrust, ib_state.P_0
+        t, ib_state.thrust, ib_state.chamber_pressure
     ).show()
     internal_ballistics_plots.thrust_coefficient_plot(
-        t, ib_state.C_f_ideal, ib_state.C_f, show_efficiency=True
+        t,
+        ib_state.thrust_coefficient_ideal,
+        ib_state.thrust_coefficient,
+        show_efficiency=True,
     ).show()
 
 

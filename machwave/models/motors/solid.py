@@ -31,8 +31,8 @@ class SolidMotor(
 
         self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant
-        self.cf_ideal = None  # ideal thrust coefficient
-        self.cf_real = None  # real thrust coefficient
+        self.thrust_coefficient_ideal = None
+        self.thrust_coefficient_real = None
 
     def get_free_chamber_volume(self, propellant_volume: float) -> float:
         """
@@ -64,8 +64,8 @@ class SolidMotor(
         exit_pressure: float,
         external_pressure: float,
         expansion_ratio: float,
-        k_ex: float,
-        n_cf: float,
+        k_exhaust: float,
+        nozzle_correction_factor: float,
     ) -> float:
         """
         Args:
@@ -73,21 +73,23 @@ class SolidMotor(
             exit_pressure: Exit pressure, in Pa
             external_pressure: External pressure, in Pa
             expansion_ratio: Expansion ratio, adimensional
-            k_ex: Two-phase isentropic coefficient, adimensional
-            n_cf: Thrust coefficient correction factor, adimensional
+            k_exhaust: Two-phase isentropic coefficient, adimensional
+            nozzle_correction_factor: Thrust coefficient correction factor, adimensional
 
         Returns:
             Instanteneous thrust coefficient, adimensional
         """
-        self.cf_ideal = nozzle.get_ideal_thrust_coefficient(
+        self.thrust_coefficient_ideal = nozzle.get_ideal_thrust_coefficient(
             chamber_pressure,
             exit_pressure,
             external_pressure,
             expansion_ratio,
-            k_ex,
+            k_exhaust,
         )
-        self.cf_real = nozzle.apply_thrust_coefficient_correction(self.cf_ideal, n_cf)
-        return self.cf_real
+        self.thrust_coefficient_real = nozzle.apply_thrust_coefficient_correction(
+            self.thrust_coefficient_ideal, nozzle_correction_factor
+        )
+        return self.thrust_coefficient_real
 
     def get_launch_mass(self) -> float:
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass

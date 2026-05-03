@@ -113,8 +113,8 @@ def _parse_properties(
 
     props_data = data["properties"]
     return propellant_properties.ThermochemicalProperties(
-        gamma_chamber=props_data["gamma_chamber"],
-        gamma_exhaust=props_data["gamma_exhaust"],
+        k_chamber=props_data["k_chamber"],
+        k_exhaust=props_data["k_exhaust"],
         adiabatic_flame_temperature=props_data["adiabatic_flame_temperature"],
         molecular_weight_chamber=props_data["molecular_weight_chamber"],
         molecular_weight_exhaust=props_data["molecular_weight_exhaust"],

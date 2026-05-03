@@ -2,15 +2,15 @@ from .compressible_flow.isentropic import get_critical_pressure_ratio
 
 
 def compute_chamber_pressure_mass_balance(
-    P0: float,
-    Pe: float,
-    m_in: float,
-    V0: float,
-    At: float,
+    chamber_pressure: float,
+    external_pressure: float,
+    mass_flow_in: float,
+    free_chamber_volume: float,
+    throat_area: float,
     k: float,
     R: float,
-    T0: float,
-    Cd: float = 1.0,
+    flame_temperature: float,
+    discharge_coefficient: float = 1.0,
 ) -> tuple[float]:
     """
     Right-hand side of the chamber pressure ODE from a control-volume mass balance.
@@ -18,32 +18,40 @@ def compute_chamber_pressure_mass_balance(
     Handles both choked and sub-critical nozzle flow (Seidel 1965, Eq. 35).
 
     Args:
-        P0: Chamber pressure [Pa].
-        Pe: External pressure [Pa].
-        m_in: Mass flow rate into the chamber [kg/s].
-        V0: Chamber free volume [m^3].
-        At: Nozzle throat area [m^2].
+        chamber_pressure: Chamber pressure [Pa].
+        external_pressure: External pressure [Pa].
+        mass_flow_in: Mass flow rate into the chamber [kg/s].
+        free_chamber_volume: Chamber free volume [m^3].
+        throat_area: Nozzle throat area [m^2].
         k: Isentropic exponent of the mix.
         R: Gas constant per molecular weight [J/(kg·K)].
-        T0: Flame temperature [K].
-        Cd: Discharge coefficient.
+        flame_temperature: Flame temperature [K].
+        discharge_coefficient: Discharge coefficient.
 
     Returns:
         Derivative of chamber pressure with respect to time, as a one-tuple.
     """
     critical_pressure_ratio = get_critical_pressure_ratio(k=k)
-    Pr = Pe / P0
+    pressure_ratio = external_pressure / chamber_pressure
 
-    if Pr <= critical_pressure_ratio:  # choked
+    if pressure_ratio <= critical_pressure_ratio:  # choked
         H = (k**0.5) * (2 / (k + 1)) ** ((k + 1) / (2 * (k - 1)))
     else:
         H = (
             ((2 * k / (k - 1)) ** 0.5)
-            * Pr ** (1 / k)
-            * (1 - Pr ** ((k - 1) / k)) ** 0.5
+            * pressure_ratio ** (1 / k)
+            * (1 - pressure_ratio ** ((k - 1) / k)) ** 0.5
         )
 
-    m_out = Cd * P0 * At * H / (R * T0) ** 0.5
+    mass_flow_out = (
+        discharge_coefficient
+        * chamber_pressure
+        * throat_area
+        * H
+        / (R * flame_temperature) ** 0.5
+    )
 
-    dP0_dt = (R * T0 / V0) * (m_in - m_out)
-    return (dP0_dt,)
+    chamber_pressure_derivative = (R * flame_temperature / free_chamber_volume) * (
+        mass_flow_in - mass_flow_out
+    )
+    return (chamber_pressure_derivative,)

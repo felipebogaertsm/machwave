@@ -145,7 +145,7 @@ def test_propellant_masses_are_monotone_non_increasing(
     simulation_result: SimulationResult,
 ) -> None:
     state = simulation_result.state
-    for series_name in ("fuel_mass", "oxidizer_mass", "m_prop"):
+    for series_name in ("fuel_mass", "oxidizer_mass", "propellant_mass"):
         series = np.asarray(getattr(state, series_name))
         diffs = np.diff(series)
         assert (diffs <= 1e-9).all(), (
@@ -158,7 +158,7 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
     simulation_result: SimulationResult,
 ) -> None:
     state = simulation_result.state
-    peak_pressure = float(np.max(state.P_0))
+    peak_pressure = float(np.max(state.chamber_pressure))
     peak_thrust = float(np.max(state.thrust))
     # A 1 kN-class biliquid engine should peak at 0.5 to 5 MPa chamber pressure
     # and produce on the order of 100 N to 10 kN of peak thrust.
@@ -176,15 +176,15 @@ def test_recorded_per_timestep_arrays_are_aligned(
     assert_recorded_arrays_aligned(
         simulation_result.state,
         attribute_names=(
-            "P_0",
-            "P_exit",
+            "chamber_pressure",
+            "exit_pressure",
             "thrust",
-            "C_f",
-            "C_f_ideal",
+            "thrust_coefficient",
+            "thrust_coefficient_ideal",
             "fuel_mass",
             "oxidizer_mass",
-            "m_prop",
-            "n_cf",
+            "propellant_mass",
+            "nozzle_correction_factor",
             "fuel_tank_pressure",
             "oxidizer_tank_pressure",
         ),

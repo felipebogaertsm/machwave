@@ -95,12 +95,8 @@ class TestAllSolidPropellants:
         assert propellant.properties is not None, f"{name} properties is None"
 
         # Check theoretical properties are present and valid
-        assert propellant.properties.gamma_chamber > 1.0, (
-            f"{name} gamma_chamber invalid"
-        )
-        assert propellant.properties.gamma_exhaust > 1.0, (
-            f"{name} gamma_exhaust invalid"
-        )
+        assert propellant.properties.k_chamber > 1.0, f"{name} k_chamber invalid"
+        assert propellant.properties.k_exhaust > 1.0, f"{name} k_exhaust invalid"
         assert propellant.properties.adiabatic_flame_temperature > 0, (
             f"{name} temperature invalid"
         )
@@ -187,17 +183,17 @@ class TestConsistency:
         ), f"{name} shifting Isp relationship violated"
 
     @pytest.mark.parametrize("name,propellant", ALL_SOLID_PROPELLANTS)
-    def test_gamma_reasonable_range(self, name, propellant):
-        """Verify gamma values are in reasonable range."""
+    def test_isentropic_exponent_reasonable_range(self, name, propellant):
+        """Verify isentropic exponent values are in reasonable range."""
         # Ensure properties exist
         if propellant.properties is None:
             propellant.evaluate(5e6, 8.0)
 
-        assert 1.0 < propellant.properties.gamma_chamber < 1.7, (
-            f"{name} chamber gamma out of range"
+        assert 1.0 < propellant.properties.k_chamber < 1.7, (
+            f"{name} chamber isentropic exponent out of range"
         )
-        assert 1.0 < propellant.properties.gamma_exhaust < 1.7, (
-            f"{name} exhaust gamma out of range"
+        assert 1.0 < propellant.properties.k_exhaust < 1.7, (
+            f"{name} exit isentropic exponent out of range"
         )
 
     @pytest.mark.parametrize("name,propellant", ALL_SOLID_PROPELLANTS)

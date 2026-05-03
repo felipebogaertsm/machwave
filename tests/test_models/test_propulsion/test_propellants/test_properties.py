@@ -24,7 +24,7 @@ class TestThermochemicalPropertiesBasics:
         assert isinstance(props, ThermochemicalProperties)
 
         with pytest.raises(AttributeError):
-            props.gamma_chamber = 1.5
+            props.k_chamber = 1.5
 
 
 class TestDerivedProperties:
@@ -64,10 +64,10 @@ class TestIsTwoPhaseFlow:
 class TestInputValidation:
     """Test suite for input validation using tuple-based bounds."""
 
-    def test_invalid_gamma_raises_error(self):
-        """Test that gamma outside valid range raises ValueError."""
+    def test_invalid_isentropic_exponent_raises_error(self):
+        """Test that isentropic exponent outside valid range raises ValueError."""
         base_data = SolidPropellantPropertiesFactory.build().__dict__
-        base_data["gamma_chamber"] = 0.9  # Below minimum
+        base_data["k_chamber"] = 0.9  # Below minimum
 
         with pytest.raises(ValueError, match="outside valid range"):
             ThermochemicalProperties(**base_data)

@@ -37,17 +37,13 @@ class TestCreateCEAServiceSolidPropellant:
         temp = service.get_adiabatic_flame_temperature(chamber_pressure)
         assert 2000 < temp < 4000, f"Unexpected temperature: {temp} K"
 
-        mw_c, gamma_c = service.get_chamber_properties(
-            chamber_pressure, expansion_ratio
-        )
+        mw_c, k_c = service.get_chamber_properties(chamber_pressure, expansion_ratio)
         assert 0.01 < mw_c < 0.1, f"Unexpected chamber MW: {mw_c} kg/mol"
-        assert 1.0 < gamma_c < 1.5, f"Unexpected chamber gamma: {gamma_c}"
+        assert 1.0 < k_c < 1.5, f"Unexpected chamber k: {k_c}"
 
-        mw_e, gamma_e = service.get_exhaust_properties(
-            chamber_pressure, expansion_ratio
-        )
+        mw_e, k_e = service.get_exhaust_properties(chamber_pressure, expansion_ratio)
         assert 0.01 < mw_e < 0.1, f"Unexpected exhaust MW: {mw_e} kg/mol"
-        assert 1.0 < gamma_e < 1.5, f"Unexpected exhaust gamma: {gamma_e}"
+        assert 1.0 < k_e < 1.5, f"Unexpected exit k: {k_e}"
 
         isp_f, isp_s = service.get_specific_impulse(chamber_pressure, expansion_ratio)
         assert 150 < isp_f < 400, f"Unexpected frozen Isp: {isp_f} s"
@@ -96,12 +92,10 @@ class TestCreateCEAServiceSolidPropellant:
         # KNSU typically 1600-1800 K
         assert 1500 < temp < 2000, f"KNSU temp out of range: {temp} K"
 
-        mw_c, gamma_c = service.get_chamber_properties(
-            chamber_pressure, expansion_ratio
-        )
+        mw_c, k_c = service.get_chamber_properties(chamber_pressure, expansion_ratio)
         # KNSU has relatively high MW due to condensed species
         assert 0.035 < mw_c < 0.045, f"KNSU MW out of range: {mw_c} kg/mol"
-        assert 1.1 < gamma_c < 1.2, f"KNSU gamma out of range: {gamma_c}"
+        assert 1.1 < k_c < 1.2, f"KNSU k out of range: {k_c}"
 
         isp_f, isp_s = service.get_specific_impulse(chamber_pressure, expansion_ratio)
         # KNSU typical Isp 150-170 s
@@ -134,12 +128,10 @@ class TestCreateCEAServiceBiliquidPropellant:
         # LOX/RP1 typically 3400-3700 K
         assert 3200 < temp < 3800, f"LOX/RP1 temp out of range: {temp} K"
 
-        mw_c, gamma_c = service.get_chamber_properties(
-            chamber_pressure, expansion_ratio
-        )
+        mw_c, k_c = service.get_chamber_properties(chamber_pressure, expansion_ratio)
         # LOX/RP1 MW around 22-24 g/mol
         assert 0.020 < mw_c < 0.030, f"LOX/RP1 MW out of range: {mw_c} kg/mol"
-        assert 1.1 < gamma_c < 1.2, f"LOX/RP1 gamma out of range: {gamma_c}"
+        assert 1.1 < k_c < 1.2, f"LOX/RP1 k out of range: {k_c}"
 
         isp_f, isp_s = service.get_specific_impulse(chamber_pressure, expansion_ratio)
         # LOX/RP1 typical Isp 280-320 s
@@ -168,12 +160,10 @@ class TestCreateCEAServiceBiliquidPropellant:
         # LOX/LH2 lower temp than LOX/RP1
         assert 2500 < temp < 3500, f"LOX/LH2 temp out of range: {temp} K"
 
-        mw_c, gamma_c = service.get_chamber_properties(
-            chamber_pressure, expansion_ratio
-        )
+        mw_c, k_c = service.get_chamber_properties(chamber_pressure, expansion_ratio)
         # LOX/LH2 has very low MW (mostly H2O)
         assert 0.010 < mw_c < 0.020, f"LOX/LH2 MW out of range: {mw_c} kg/mol"
-        assert 1.10 < gamma_c < 1.30, f"LOX/LH2 gamma out of range: {gamma_c}"
+        assert 1.10 < k_c < 1.30, f"LOX/LH2 k out of range: {k_c}"
 
         isp_f, isp_s = service.get_specific_impulse(chamber_pressure, expansion_ratio)
         # LOX/LH2 highest Isp of chemical propellants
@@ -328,10 +318,10 @@ class TestServiceParameterValidation:
         chamber_pressure = 3e6
         expansion_ratio = 8.0
 
-        mw_c, gamma_c = lox_rp1_service.get_chamber_properties(
+        mw_c, k_c = lox_rp1_service.get_chamber_properties(
             chamber_pressure, expansion_ratio
         )
-        mw_e, gamma_e = lox_rp1_service.get_exhaust_properties(
+        mw_e, k_e = lox_rp1_service.get_exhaust_properties(
             chamber_pressure, expansion_ratio
         )
 
@@ -339,8 +329,8 @@ class TestServiceParameterValidation:
         mw_diff_pct = abs(mw_e - mw_c) / mw_c * 100
         assert mw_diff_pct < 20, f"MW difference too large: {mw_diff_pct:.1f}%"
 
-        # Exhaust gamma typically higher due to frozen composition
-        assert gamma_e >= gamma_c * 0.95, "Exhaust gamma should be similar or higher"
+        # Exit k typically higher due to frozen composition
+        assert k_e >= k_c * 0.95, "Exit k should be similar or higher"
 
     def test_parameter_consistency_across_calls(self, lox_rp1_service):
         """Test that repeated calls return consistent values."""
@@ -369,9 +359,9 @@ class TestServiceEdgeCases:
         assert temp > 0, "Should handle low pressure"
 
         # Properties should still be reasonable
-        mw, gamma = service.get_chamber_properties(1e5, 8.0)
+        mw, k = service.get_chamber_properties(1e5, 8.0)
         assert 0.01 < mw < 0.05
-        assert 1.0 < gamma < 1.5
+        assert 1.0 < k < 1.5
 
     def test_very_high_pressure(self):
         """Test service at very high chamber pressure."""

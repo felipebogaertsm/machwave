@@ -112,8 +112,8 @@ class TestJSONFormulationLoading:
         # Verify properties if present
         if propellant.properties:
             props = propellant.properties
-            assert props.gamma_chamber > 1.0, f"{json_file.stem}: Invalid gamma_chamber"
-            assert props.gamma_exhaust > 1.0, f"{json_file.stem}: Invalid gamma_exhaust"
+            assert props.k_chamber > 1.0, f"{json_file.stem}: Invalid k_chamber"
+            assert props.k_exhaust > 1.0, f"{json_file.stem}: Invalid k_exhaust"
             assert props.adiabatic_flame_temperature > 0, (
                 f"{json_file.stem}: Invalid temperature"
             )
@@ -225,7 +225,7 @@ class TestJSONFormulationLoading:
 
         # Should return the pre-defined properties
         assert result == kndx.properties, "Should return pre-defined properties"
-        assert result.gamma_chamber == 1.1308
+        assert result.k_chamber == 1.1308
         assert result.i_sp_frozen == 152.4
 
     def test_component_to_cea_dict(self):
@@ -321,7 +321,7 @@ class TestJSONFormulationLoading:
         )
 
         props = cea_propellant.evaluate(5e6, 8.0)
-        assert 1.0 < props.gamma_chamber <= 2.0
+        assert 1.0 < props.k_chamber <= 2.0
         assert props.adiabatic_flame_temperature > 0
         assert props.molecular_weight_chamber > 0
         assert props.i_sp_frozen > 0
@@ -358,7 +358,7 @@ class TestJSONFormulationLoading:
         def rel_diff(a: float, b: float) -> float:
             return abs(a - b) / abs(b) if b else float("inf")
 
-        assert rel_diff(cea.gamma_chamber, fixed.gamma_chamber) < 0.10
+        assert rel_diff(cea.k_chamber, fixed.k_chamber) < 0.10
         assert (
             rel_diff(cea.adiabatic_flame_temperature, fixed.adiabatic_flame_temperature)
             < 0.10
