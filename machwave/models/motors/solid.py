@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 import machwave.core.compressible_flow.nozzle as nozzle
@@ -6,6 +8,10 @@ import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber
 
 from . import base as motor_base
+
+if TYPE_CHECKING:
+    from machwave.simulation import InternalBallisticsSimulationParams
+    from machwave.states import SolidMotorState
 
 
 class SolidMotor(
@@ -96,6 +102,18 @@ class SolidMotor(
 
     def get_dry_mass(self) -> float:
         return self.thrust_chamber.dry_mass
+
+    def create_state(
+        self, params: "InternalBallisticsSimulationParams"
+    ) -> "SolidMotorState":
+        import machwave.states as states
+
+        return states.SolidMotorState(
+            motor=self,
+            initial_pressure=params.igniter_pressure,
+            initial_atmospheric_pressure=params.external_pressure,
+            other_losses=params.other_losses,
+        )
 
     def get_center_of_gravity(
         self, web_distance: float = 0.0

@@ -2,12 +2,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from machwave.models.motors import LiquidEngine, Motor, SolidMotor
-from machwave.states import (
-    LiquidEngineState,
-    MotorState,
-    SolidMotorState,
-)
+from machwave.models.motors import Motor
+from machwave.states import MotorState
 
 
 @dataclass
@@ -25,25 +21,6 @@ class InternalBallisticsSimulationParams:
     igniter_pressure: float
     external_pressure: float
     other_losses: float = 12.0
-
-
-def _get_motor_state_class(motor: Motor) -> type[MotorState]:
-    """Return the appropriate motor state class based on the motor type.
-
-    Args:
-        motor: Motor object.
-
-    Returns:
-        Motor state class.
-
-    Raises:
-        ValueError: If the motor type is not supported.
-    """
-    if isinstance(motor, SolidMotor):
-        return SolidMotorState
-    if isinstance(motor, LiquidEngine):
-        return LiquidEngineState
-    raise ValueError("Unsupported motor type.")
 
 
 class InternalBallisticsSimulation:
@@ -70,13 +47,7 @@ class InternalBallisticsSimulation:
         """
         Returns the motor state object based on the type of the motor.
         """
-        motor_state_class = _get_motor_state_class(self.motor)
-        return motor_state_class(
-            motor=self.motor,
-            initial_pressure=self.params.igniter_pressure,
-            initial_atmospheric_pressure=self.params.external_pressure,
-            other_losses=self.params.other_losses,
-        )
+        return self.motor.create_state(self.params)
 
     def run(self) -> tuple[np.ndarray, MotorState]:
         """
