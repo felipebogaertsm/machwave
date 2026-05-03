@@ -10,6 +10,20 @@ def test_get_total_impulse():
     assert total_impulse == pytest.approx(2500)
 
 
+def test_get_total_impulse_trapezoidal_constant_thrust_matches_rectangular():
+    thrust = [500.0, 500.0, 500.0]
+    time = [0.0, 1.0, 2.0]
+    impulse = core_performance.get_total_impulse_trapezoidal(thrust, time)
+    assert impulse == pytest.approx(1000.0)
+
+
+def test_get_total_impulse_trapezoidal_linear_ramp():
+    thrust = [0.0, 1000.0]
+    time = [0.0, 2.0]
+    impulse = core_performance.get_total_impulse_trapezoidal(thrust, time)
+    assert impulse == pytest.approx(1000.0)
+
+
 def test_get_specific_impulse():
     total_impulse = 2500
     initial_propellant_mass = 100

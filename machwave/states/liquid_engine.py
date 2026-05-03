@@ -1,7 +1,7 @@
 import numpy as np
-import scipy.constants
 
 import machwave.core.conversions as conversions
+import machwave.core.performance as performance
 from machwave.core.compressible_flow.losses import (
     get_kinetics_percentage_loss,
     get_nozzle_divergent_percentage_loss,
@@ -236,8 +236,8 @@ class LiquidEngineState(MotorState):
         print(f"  Mean: {np.mean(self.thrust):.4f}")
 
         # Impulse
-        impulse = np.trapezoid(self.thrust, self.t)
-        isp = impulse / (self.propellant_mass[0] * scipy.constants.g)
+        impulse = performance.get_total_impulse_trapezoidal(self.thrust, self.t)
+        isp = performance.get_specific_impulse(impulse, self.propellant_mass[0])
         print("\nIMPULSE AND I_SP")
         print(f"  Total impulse: {impulse:.4f} N·s")
         print(f"  Specific impulse: {isp:.4f} s")
