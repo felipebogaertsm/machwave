@@ -214,20 +214,20 @@ def test_burn_time_and_thrust_time_are_finite_and_ordered(
 def test_propellant_mass_is_monotone_non_increasing(
     simulation_result: SimulationResult,
 ) -> None:
-    m_prop = np.asarray(simulation_result.state.m_prop)
-    diffs = np.diff(m_prop)
+    propellant_mass = np.asarray(simulation_result.state.propellant_mass)
+    diffs = np.diff(propellant_mass)
     # Allow tiny floating-point noise but no real growth between steps.
     assert (diffs <= 1e-9).all(), (
         f"propellant mass increased between steps; max delta={diffs.max():.3e}"
     )
-    assert m_prop[-1] <= m_prop[0]
+    assert propellant_mass[-1] <= propellant_mass[0]
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
     simulation_result: SimulationResult,
 ) -> None:
     state = simulation_result.state
-    peak_pressure = float(np.max(state.P_0))
+    peak_pressure = float(np.max(state.chamber_pressure))
     peak_thrust = float(np.max(state.thrust))
     # Hobbyist-to-experimental solid motors should peak between roughly 1 MPa
     # and 30 MPa chamber pressure, producing thrust in the 100 N to 100 kN range.
@@ -247,20 +247,20 @@ def test_recorded_per_timestep_arrays_are_aligned(
     assert_recorded_arrays_aligned(
         simulation_result.state,
         attribute_names=(
-            "P_0",
-            "P_exit",
+            "chamber_pressure",
+            "exit_pressure",
             "thrust",
-            "C_f",
-            "C_f_ideal",
+            "thrust_coefficient",
+            "thrust_coefficient_ideal",
             "burn_area",
             "burn_rate",
             "web",
-            "V_0",
-            "m_prop",
-            "eta_div",
-            "eta_kin",
-            "eta_bl",
-            "eta_2p",
+            "free_chamber_volume",
+            "propellant_mass",
+            "divergent_loss",
+            "kinetics_loss",
+            "boundary_layer_loss",
+            "two_phase_loss",
             "nozzle_efficiency",
             "overall_efficiency",
         ),

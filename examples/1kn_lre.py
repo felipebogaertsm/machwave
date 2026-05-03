@@ -105,7 +105,7 @@ def main():
     (time, ib_state) = simulation.run()
 
     simulation.print_results()
-    thrust_pressure_plot(time, ib_state.thrust, ib_state.P_0).show()
+    thrust_pressure_plot(time, ib_state.thrust, ib_state.chamber_pressure).show()
     plot_bipropellant_tank_profiles(
         time,
         ib_state.oxidizer_tank_pressure,

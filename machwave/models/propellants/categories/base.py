@@ -101,11 +101,11 @@ class Propellant(abc.ABC):
             chamber_pressure=chamber_pressure
         )
 
-        molecular_weight_chamber, gamma_chamber = service.get_chamber_properties(
+        molecular_weight_chamber, k_chamber = service.get_chamber_properties(
             chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
         )
 
-        molecular_weight_exhaust, gamma_exhaust = service.get_exhaust_properties(
+        molecular_weight_exhaust, k_exhaust = service.get_exhaust_properties(
             chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
         )
 
@@ -117,8 +117,8 @@ class Propellant(abc.ABC):
         )
 
         properties = ThermochemicalProperties(
-            gamma_chamber=gamma_chamber,
-            gamma_exhaust=gamma_exhaust,
+            k_chamber=k_chamber,
+            k_exhaust=k_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,
             molecular_weight_chamber=molecular_weight_chamber,
             molecular_weight_exhaust=molecular_weight_exhaust,

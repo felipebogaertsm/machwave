@@ -23,7 +23,7 @@ class SolidPropellantPropertiesFactory(DataclassFactory[ThermochemicalProperties
 
         # Override specific fields
         props = SolidPropellantPropertiesFactory.build(
-            gamma_chamber=1.20,
+            k_chamber=1.20,
             density=1850.0
         )
 
@@ -34,13 +34,13 @@ class SolidPropellantPropertiesFactory(DataclassFactory[ThermochemicalProperties
     __model__ = ThermochemicalProperties
 
     @classmethod
-    def gamma_chamber(cls) -> float:
-        """Typical gamma for combustion chamber (1.1-1.3 for solid propellants)."""
+    def k_chamber(cls) -> float:
+        """Typical isentropic exponent in chamber (1.1-1.3 for solid propellants)."""
         return 1.15
 
     @classmethod
-    def gamma_exhaust(cls) -> float:
-        """Typical gamma for exhaust (slightly lower than chamber)."""
+    def k_exhaust(cls) -> float:
+        """Typical isentropic exponent at exit (slightly lower than chamber)."""
         return 1.10
 
     @classmethod
@@ -101,7 +101,7 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[ThermochemicalPropertie
 
         # Override specific fields
         props = LiquidPropellantPropertiesFactory.build(
-            gamma_chamber=1.25,
+            k_chamber=1.25,
             i_sp_frozen=320.0
         )
 
@@ -112,13 +112,13 @@ class LiquidPropellantPropertiesFactory(DataclassFactory[ThermochemicalPropertie
     __model__ = ThermochemicalProperties
 
     @classmethod
-    def gamma_chamber(cls) -> float:
-        """Typical gamma for combustion chamber (1.15-1.25 for liquid propellants)."""
+    def k_chamber(cls) -> float:
+        """Typical isentropic exponent in chamber (1.15-1.25 for liquid propellants)."""
         return 1.20
 
     @classmethod
-    def gamma_exhaust(cls) -> float:
-        """Typical gamma for exhaust."""
+    def k_exhaust(cls) -> float:
+        """Typical isentropic exponent at exit."""
         return 1.15
 
     @classmethod

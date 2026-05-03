@@ -27,12 +27,12 @@ DIVERGENT_ANGLES = (
 records: list[dict[str, float]] = []
 
 for angle in DIVERGENT_ANGLES:
-    eta_div = get_nozzle_divergent_percentage_loss(divergent_angle=angle)
+    divergent_loss = get_nozzle_divergent_percentage_loss(divergent_angle=angle)
 
     records.append(
         {
             "θ_half (deg)": angle,
-            "η_div (%)": round(eta_div, 3),
+            "η_div (%)": round(divergent_loss, 3),
         }
     )
 

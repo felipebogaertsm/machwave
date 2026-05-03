@@ -91,7 +91,7 @@ def main():
     mc.plot_time_series_extremes(
         1,
         "t",
-        series_property="P_0",
+        series_property="chamber_pressure",
         title="Pressão de Câmara (MPa)",
     )
     mc.plot_time_series_extremes(

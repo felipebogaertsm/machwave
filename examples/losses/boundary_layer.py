@@ -59,7 +59,7 @@ for (
     TIMES,
     C1_C2_VALUES,
 ):
-    eta_bl = losses.get_boundary_layer_percentage_loss(
+    boundary_layer_loss = losses.get_boundary_layer_percentage_loss(
         chamber_pressure_psi=P_ch,
         throat_diameter_inch=d_t,
         expansion_ratio=eps,
@@ -76,7 +76,7 @@ for (
             "time (s)": t,
             "C1": c1,
             "C2": c2,
-            "η_bl (%)": round(eta_bl, 3),
+            "η_bl (%)": round(boundary_layer_loss, 3),
         }
     )
 

@@ -86,12 +86,12 @@ class InternalBallisticsSimulation:
         self.motor_state = self.get_motor_state()
 
         d_t = self.params.d_t
-        P_ext = self.params.external_pressure
+        external_pressure = self.params.external_pressure
         t_values: list[float] = [0.0]
 
         while not self.motor_state.end_thrust:
             t_values.append(t_values[-1] + d_t)
-            self.motor_state.run_timestep(d_t, P_ext)
+            self.motor_state.run_timestep(d_t, external_pressure)
 
         self.t = np.asarray(t_values)
         self.motor_state.convert_simulation_arrays_to_numpy()

@@ -34,8 +34,8 @@
     {"min": 0, "max": 6350000, "a": 3.2373, "n": 0.3273}
   ],
   "properties": {
-    "gamma_chamber": 1.2100,
-    "gamma_exhaust": 1.2501,
+    "k_chamber": 1.2100,
+    "k_exhaust": 1.2501,
     "adiabatic_flame_temperature": 2800,
     "molecular_weight_chamber": 0.023724,
     "molecular_weight_exhaust": 0.023811,

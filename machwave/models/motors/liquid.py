@@ -121,7 +121,7 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         exit_pressure: float,
         external_pressure: float,
         expansion_ratio: float,
-        k_ex: float,
+        k_exhaust: float,
         other_losses: float,
     ) -> float:
         """Get thrust coefficient.
@@ -131,18 +131,20 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             exit_pressure: Exit pressure [Pa].
             external_pressure: External pressure [Pa].
             expansion_ratio: Expansion ratio.
-            k_ex: Two-phase isentropic coefficient.
+            k_exhaust: Two-phase isentropic coefficient.
             other_losses: Additional losses not covered by specific mechanisms [%].
 
         Returns:
             Instantaneous thrust coefficient.
         """
-        cf_ideal = get_ideal_thrust_coefficient(
+        thrust_coefficient_ideal = get_ideal_thrust_coefficient(
             chamber_pressure=chamber_pressure,
             exit_pressure=exit_pressure,
             external_pressure=external_pressure,
             expansion_ratio=expansion_ratio,
-            k_ex=k_ex,
+            k_exhaust=k_exhaust,
         )
-        n_cf = self.get_thrust_coefficient_correction_factor(other_losses)
-        return cf_ideal * n_cf
+        nozzle_correction_factor = self.get_thrust_coefficient_correction_factor(
+            other_losses
+        )
+        return thrust_coefficient_ideal * nozzle_correction_factor
