@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from machwave.core.compressible_flow.losses import get_kinetics_percentage_loss
+from machwave.core.compressible_flow.losses import get_kinetics_loss_fraction
 
 CHAMBER_PRESSURES_PSI = (
     150,
@@ -29,7 +29,7 @@ for P_ch, (i_sp_frozen, i_sp_shifting) in product(
     CHAMBER_PRESSURES_PSI,
     ISP_TH_PAIRS,
 ):
-    kinetics_loss = get_kinetics_percentage_loss(
+    kinetics_loss = get_kinetics_loss_fraction(
         i_sp_th_frozen=i_sp_frozen,
         i_sp_th_shifting=i_sp_shifting,
         chamber_pressure_psi=P_ch,
@@ -40,7 +40,7 @@ for P_ch, (i_sp_frozen, i_sp_shifting) in product(
             "P_ch (psi)": P_ch,
             "Isp_frozen (s)": i_sp_frozen,
             "Isp_shifting (s)": i_sp_shifting,
-            "η_kin (%)": round(kinetics_loss, 3),
+            "η_kin (fraction)": round(kinetics_loss, 5),
         }
     )
 
@@ -49,8 +49,8 @@ df = pd.DataFrame(records)
 print(
     dedent(
         """
-        Kinetics percentage losses
-        --------------------------
+        Kinetics loss fractions
+        -----------------------
         """
     ).strip()
 )

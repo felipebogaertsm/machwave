@@ -3,8 +3,8 @@ import numpy as np
 import machwave.core.conversions as conversions
 import machwave.core.performance as performance
 from machwave.core.compressible_flow.losses import (
-    get_kinetics_percentage_loss,
-    get_nozzle_divergent_percentage_loss,
+    get_kinetics_loss_fraction,
+    get_nozzle_divergent_loss_fraction,
     get_overall_nozzle_efficiency,
 )
 from machwave.core.compressible_flow.nozzle import (
@@ -154,10 +154,10 @@ class LiquidEngineState(MotorState):
         self.exit_pressure.append(exit_pressure)
 
         chamber_pressure_psi = conversions.convert_pa_to_psi(new_chamber_pressure)
-        divergent_loss = get_nozzle_divergent_percentage_loss(
+        divergent_loss = get_nozzle_divergent_loss_fraction(
             divergent_angle=nz.divergent_angle,
         )
-        kinetics_loss = get_kinetics_percentage_loss(
+        kinetics_loss = get_kinetics_loss_fraction(
             i_sp_th_frozen=props.i_sp_frozen,
             i_sp_th_shifting=props.i_sp_shifting,
             chamber_pressure_psi=chamber_pressure_psi,

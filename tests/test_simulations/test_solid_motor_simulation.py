@@ -68,7 +68,7 @@ def _build_apcp_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulation
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=12.0,
+        other_losses=0.12,
     )
     return motor, params
 
@@ -115,7 +115,7 @@ def _build_kappa_rnakka_motor() -> tuple[
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=12.0,
+        other_losses=0.12,
     )
     return motor, params
 
@@ -160,7 +160,7 @@ def _build_nero_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulation
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=12.0,
+        other_losses=0.12,
     )
     return motor, params
 

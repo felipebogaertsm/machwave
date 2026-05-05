@@ -110,7 +110,7 @@ def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationP
         d_t=1e-4,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=12.0,
+        other_losses=0.12,
     )
     return motor, params
 
