@@ -62,10 +62,10 @@ class LiquidEngineState(MotorState):
         self.nozzle_correction_factor: SimulationArray = [1.0]
 
         self.fuel_tank_pressure: SimulationArray = [
-            motor.feed_system.fuel_tank.get_pressure()
+            motor.feed_system.get_fuel_tank_pressure()
         ]
         self.oxidizer_tank_pressure: SimulationArray = [
-            motor.feed_system.oxidizer_tank.get_pressure()
+            motor.feed_system.get_oxidizer_tank_pressure()
         ]
 
     def get_m_dot_in(self) -> float:
