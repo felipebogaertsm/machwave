@@ -76,12 +76,13 @@ class Motor(Generic[P, T], ABC):
         get the real thrust coefficient.
 
         Args:
-            other_losses: Additional losses not covered by specific mechanisms [%].
+            other_losses: Additional losses not covered by specific mechanisms,
+                as a fraction in [0, 1].
 
         Returns:
             Thrust coefficient correction factor
         """
-        return ((100.0 - other_losses) / 100.0) * self.propellant.combustion_efficiency
+        return (1.0 - other_losses) * self.propellant.combustion_efficiency
 
     @abstractmethod
     def get_thrust_coefficient(self, *args, **kwargs) -> float:

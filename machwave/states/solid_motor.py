@@ -164,15 +164,15 @@ class SolidMotorState(states_base.MotorState):
 
         chamber_pressure_psi = conversions.convert_pa_to_psi(new_chamber_pressure)
         throat_diameter_inch = conversions.convert_meter_to_inch(nozzle.throat_diameter)
-        divergent_loss = losses.get_nozzle_divergent_percentage_loss(
+        divergent_loss = losses.get_nozzle_divergent_loss_fraction(
             divergent_angle=nozzle.divergent_angle,
         )
-        kinetics_loss = losses.get_kinetics_percentage_loss(
+        kinetics_loss = losses.get_kinetics_loss_fraction(
             i_sp_th_frozen=propellant_properties.i_sp_frozen,
             i_sp_th_shifting=propellant_properties.i_sp_shifting,
             chamber_pressure_psi=chamber_pressure_psi,
         )
-        boundary_layer_loss = losses.get_boundary_layer_percentage_loss(
+        boundary_layer_loss = losses.get_boundary_layer_loss_fraction(
             chamber_pressure_psi=chamber_pressure_psi,
             throat_diameter_inch=throat_diameter_inch,
             expansion_ratio=nozzle.expansion_ratio,
@@ -180,7 +180,7 @@ class SolidMotorState(states_base.MotorState):
             c_1=nozzle.c_1,
             c_2=nozzle.c_2,
         )
-        two_phase_loss = losses.get_two_phase_flow_percentage_loss(
+        two_phase_loss = losses.get_two_phase_flow_loss_fraction(
             chamber_pressure_psi=chamber_pressure_psi,
             mass_fraction_of_condensed_phase=propellant_properties.qsi_chamber,
             expansion_ratio=nozzle.expansion_ratio,
@@ -275,17 +275,13 @@ class SolidMotorState(states_base.MotorState):
         print("\nNOZZLE DESIGN")
         print(f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}")
         print(f" Average overall efficiency: {np.mean(self.overall_efficiency):.3%}")
+        print(f" Divergent nozzle loss fraction: {np.mean(self.divergent_loss):.3%}")
+        print(f" Average kinetics loss fraction: {np.mean(self.kinetics_loss):.3%}")
         print(
-            f" Divergent nozzle correction factor: {np.mean(self.divergent_loss):.3f}%"
+            f" Average boundary layer loss fraction: {np.mean(self.boundary_layer_loss):.3%}"
         )
         print(
-            f" Average kinetics correction factor: {np.mean(self.kinetics_loss):.3f}%"
-        )
-        print(
-            f" Average boundary layer correction factor: {np.mean(self.boundary_layer_loss):.3f}%"
-        )
-        print(
-            f" Average two-phase flow correction factor: {np.mean(self.two_phase_loss):.3f}%"
+            f" Average two-phase flow loss fraction: {np.mean(self.two_phase_loss):.3%}"
         )
 
     @property

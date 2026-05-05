@@ -25,15 +25,15 @@ exit plane:
 = \frac{1 + \cos\alpha}{2}
 \]
 
-The divergence loss in percent is \(1 - \lambda\), expressed as a percentage:
+The divergence loss is \(1 - \lambda\), expressed as a fraction in [0, 1]:
 
 \[
-\boxed{\eta_{div} = 50\,(1-\cos\alpha) \quad [\%]}
+\boxed{\eta_{div} = \tfrac{1}{2}\,(1-\cos\alpha)}
 \]
 
 Applicable to **conical nozzles only**. Contoured (bell) nozzles can achieve near-zero
 divergence loss by design. Implemented in
-[`get_nozzle_divergent_percentage_loss`][machwave.core.compressible_flow.losses.get_nozzle_divergent_percentage_loss].
+[`get_nozzle_divergent_loss_fraction`][machwave.core.compressible_flow.losses.get_nozzle_divergent_loss_fraction].
 
 *Applies to: solid and liquid motors.*
 
@@ -50,7 +50,7 @@ The magnitude is proportional to the gap between CEA-predicted frozen and
 equilibrium (shifting) specific impulses:
 
 \[
-\eta_{kin} = 33.3\left(1 - \frac{I_{sp,frozen}}{I_{sp,shifting}}\right) \times f_P \quad [\%]
+\eta_{kin} = 0.333\left(1 - \frac{I_{sp,frozen}}{I_{sp,shifting}}\right) \times f_P
 \]
 
 where the pressure correction factor accounts for the fact that higher chamber
@@ -61,7 +61,7 @@ f_P = \begin{cases} 1 & P_0 < 200\ \text{psi} \\ \dfrac{200}{P_0[\text{psi}]} & 
 \]
 
 Implemented in
-[`get_kinetics_percentage_loss`][machwave.core.compressible_flow.losses.get_kinetics_percentage_loss].
+[`get_kinetics_loss_fraction`][machwave.core.compressible_flow.losses.get_kinetics_loss_fraction].
 
 *Applies to: solid and liquid motors.*
 
@@ -79,15 +79,16 @@ The loss is also time-dependent: the wall heats up during the burn, reducing the
 heat-flux driving force and therefore the loss:
 
 \[
-\eta_{BL} = C_1\frac{P_0^{0.8}}{D_t^{0.2}}
+\eta_{BL} = 0.01 \cdot C_1\frac{P_0^{0.8}}{D_t^{0.2}}
 \left[1 + 2\exp\!\left(-\frac{C_2\, P_0^{0.8}\, t}{D_t^{0.2}}\right)\right]
-\left[1 + 0.016\,(\varepsilon - 9)\right] \quad [\%]
+\left[1 + 0.016\,(\varepsilon - 9)\right]
 \]
 
-with pressures in psi and diameter in inches. \(C_1\) and \(C_2\) are
-nozzle-material constants (e.g. \(C_1=0.003650\), \(C_2=0.000937\) for a
-standard graphite/phenolic nozzle). Implemented in
-[`get_boundary_layer_percentage_loss`][machwave.core.compressible_flow.losses.get_boundary_layer_percentage_loss].
+with pressures in psi and diameter in inches. The 0.01 factor converts the
+classical percent-form expression to the fraction convention used here.
+\(C_1\) and \(C_2\) are nozzle-material constants (e.g. \(C_1=0.003650\),
+\(C_2=0.000937\) for a standard graphite/phenolic nozzle). Implemented in
+[`get_boundary_layer_loss_fraction`][machwave.core.compressible_flow.losses.get_boundary_layer_loss_fraction].
 
 *Applies to: solid motors only* (the empirical constants \(C_1, C_2\) are
 calibrated against a BATES motor; the LRE state passes \(\eta_{BL} = 0\)).
@@ -115,12 +116,13 @@ chamber length [in], and \(D_t\) is the throat diameter [in].
 **Step 2 — Two-phase loss** (tabulated power-law fit):
 
 \[
-\eta_{2p} = C_3\,\frac{\xi^{C_4}\,d_p^{C_5}}{P_0^{0.15}\,\varepsilon^{0.08}\,D_t^{C_6}} \quad [\%]
+\eta_{2p} = 0.01 \cdot C_3\,\frac{\xi^{C_4}\,d_p^{C_5}}{P_0^{0.15}\,\varepsilon^{0.08}\,D_t^{C_6}}
 \]
 
 Coefficients \(C_3\)–\(C_6\) depend on \(\xi\), \(D_t\), and \(d_p\) ranges
-(tabulated in AFRPL-TR-75-36). Implemented in
-[`get_two_phase_flow_percentage_loss`][machwave.core.compressible_flow.losses.get_two_phase_flow_percentage_loss].
+(tabulated in AFRPL-TR-75-36; the 0.01 factor converts the percent-form
+expression to the fraction convention used here). Implemented in
+[`get_two_phase_flow_loss_fraction`][machwave.core.compressible_flow.losses.get_two_phase_flow_loss_fraction].
 
 *Applies to: solid motors only.* Liquid bipropellants typically produce gas-phase
 products with no condensed phase, so the LRE state passes \(\eta_{2p} = 0\).
@@ -129,11 +131,11 @@ products with no condensed phase, so the LRE state passes \(\eta_{2p} = 0\).
 
 ## 4.5 Overall Nozzle Efficiency
 
-The four losses are additive in percentage, giving the overall efficiency applied
+The four loss fractions are additive, giving the overall efficiency applied
 to the ideal thrust coefficient:
 
 \[
-\boxed{\eta_{nozzle} = 1 - \frac{\eta_{div} + \eta_{kin} + \eta_{BL} + \eta_{2p} + \eta_{other}}{100}}
+\boxed{\eta_{nozzle} = 1 - \left(\eta_{div} + \eta_{kin} + \eta_{BL} + \eta_{2p} + \eta_{other}\right)}
 \]
 
 \[

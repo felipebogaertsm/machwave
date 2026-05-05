@@ -55,7 +55,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
         throat_diameter_inch=d_t,
         characteristic_length_inch=l_star,
     )
-    two_phase_loss = losses.get_two_phase_flow_percentage_loss(
+    two_phase_loss = losses.get_two_phase_flow_loss_fraction(
         chamber_pressure_psi=P_ch,
         mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,
@@ -71,7 +71,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
             "ε": eps,
             "l* (in)": l_star,
             "d_p (µm)": round(d_p_um, 2),
-            "η_2φ (%)": round(two_phase_loss, 3),
+            "η_2φ (fraction)": round(two_phase_loss, 5),
         }
     )
 
@@ -80,8 +80,8 @@ df = pd.DataFrame(records)
 print(
     dedent(
         """
-        Two-phase flow percentage losses & particle size
-        -----------------------------------------------
+        Two-phase flow loss fractions & particle size
+        ---------------------------------------------
         """
     ).strip()
 )

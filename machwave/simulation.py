@@ -18,13 +18,14 @@ class InternalBallisticsSimulationParams:
         d_t: Time step.
         igniter_pressure: Igniter pressure.
         external_pressure: External pressure.
-        other_losses: Additional losses not covered by specific loss mechanisms [%].
+        other_losses: Additional losses not covered by specific loss mechanisms,
+            as a fraction in [0, 1] (e.g. 0.12 for 12%).
     """
 
     d_t: float
     igniter_pressure: float
     external_pressure: float
-    other_losses: float = 12.0
+    other_losses: float = 0.12
 
 
 def _get_motor_state_class(motor: Motor) -> type[MotorState]:
