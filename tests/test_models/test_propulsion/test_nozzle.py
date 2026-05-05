@@ -79,3 +79,19 @@ class TestNozzleGeometry:
         n = Nozzle(50.8e-3, 25.4e-3, 15, 45, 4, c_1=0.003650, c_2=0.000937)
         assert n.c_1 == pytest.approx(0.003650, rel=1e-3)
         assert n.c_2 == pytest.approx(0.000937, rel=1e-3)
+
+    def test_default_discharge_coefficient(self, nozzle):
+        """Throat discharge coefficient defaults to 1.0 (ideal nozzle)."""
+        assert nozzle.discharge_coefficient == pytest.approx(1.0, rel=1e-9)
+
+    def test_custom_discharge_coefficient(self):
+        """Throat discharge coefficient can be overridden."""
+        n = Nozzle(
+            inlet_diameter=50.8e-3,
+            throat_diameter=25.4e-3,
+            divergent_angle=15,
+            convergent_angle=45,
+            expansion_ratio=4,
+            discharge_coefficient=0.95,
+        )
+        assert n.discharge_coefficient == pytest.approx(0.95, rel=1e-9)
