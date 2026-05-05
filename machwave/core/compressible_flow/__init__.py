@@ -16,11 +16,11 @@ from .isentropic import (
     is_flow_choked,
 )
 from .losses import (
-    get_boundary_layer_percentage_loss,
-    get_kinetics_percentage_loss,
-    get_nozzle_divergent_percentage_loss,
+    get_boundary_layer_loss_fraction,
+    get_kinetics_loss_fraction,
+    get_nozzle_divergent_loss_fraction,
     get_overall_nozzle_efficiency,
-    get_two_phase_flow_percentage_loss,
+    get_two_phase_flow_loss_fraction,
 )
 
 __all__ = [
@@ -36,9 +36,9 @@ __all__ = [
     "get_exit_pressure",
     "is_flow_choked",
     # losses
-    "get_nozzle_divergent_percentage_loss",
-    "get_kinetics_percentage_loss",
-    "get_boundary_layer_percentage_loss",
-    "get_two_phase_flow_percentage_loss",
+    "get_nozzle_divergent_loss_fraction",
+    "get_kinetics_loss_fraction",
+    "get_boundary_layer_loss_fraction",
+    "get_two_phase_flow_loss_fraction",
     "get_overall_nozzle_efficiency",
 ]

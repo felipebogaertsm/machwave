@@ -132,7 +132,8 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             external_pressure: External pressure [Pa].
             expansion_ratio: Expansion ratio.
             k_exhaust: Two-phase isentropic coefficient.
-            other_losses: Additional losses not covered by specific mechanisms [%].
+            other_losses: Additional losses not covered by specific mechanisms,
+                as a fraction in [0, 1].
 
         Returns:
             Instantaneous thrust coefficient.
