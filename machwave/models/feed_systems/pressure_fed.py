@@ -114,6 +114,10 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
 
     def get_fuel_tank_pressure(self) -> float:
         """
-        Returns the tank pressure [Pa].
+        Returns the fuel-side upstream pressure [Pa].
+
+        In a stacked-tank system the fuel is pressurized by the oxidizer
+        through the piston, so the fuel-side pressure is the oxidizer tank
+        pressure minus the piston pressure loss.
         """
-        return self.fuel_tank.get_pressure()
+        return self.get_oxidizer_tank_pressure() - self.piston_loss
