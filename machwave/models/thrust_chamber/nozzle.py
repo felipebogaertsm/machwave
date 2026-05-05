@@ -13,6 +13,7 @@ class Nozzle:
         expansion_ratio,
         c_1: float = 0.00506,
         c_2: float = 0.0,
+        discharge_coefficient: float = 1.0,
     ) -> None:
         self.inlet_diameter = inlet_diameter
         self.throat_diameter = throat_diameter
@@ -27,6 +28,7 @@ class Nozzle:
         # Thick-walled solid steel nozzle: c_1 = 0.005060, c_2 = 0.000000
         self.c_1 = c_1
         self.c_2 = c_2
+        self.discharge_coefficient = discharge_coefficient
 
     @property
     def outlet_diameter(self):

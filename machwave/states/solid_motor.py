@@ -151,6 +151,7 @@ class SolidMotorState(states_base.MotorState):
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
             flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            discharge_coefficient=nozzle.discharge_coefficient,
         )[0]
         self.chamber_pressure.append(new_chamber_pressure)
         self.exit_pressure.append(

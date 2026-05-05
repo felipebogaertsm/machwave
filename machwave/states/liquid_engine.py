@@ -146,6 +146,7 @@ class LiquidEngineState(MotorState):
             k=props.k_chamber,
             R=props.R_chamber,
             flame_temperature=props.adiabatic_flame_temperature,
+            discharge_coefficient=nz.discharge_coefficient,
         )[0]
         self.chamber_pressure.append(new_chamber_pressure)
         exit_pressure = get_exit_pressure(
