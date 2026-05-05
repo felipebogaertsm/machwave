@@ -1,3 +1,6 @@
+import scipy.constants
+
+
 def convert_pa_to_psi(pressure_pa: float) -> float:
     """
     Converts pressure in Pascal to psi.
@@ -8,7 +11,7 @@ def convert_pa_to_psi(pressure_pa: float) -> float:
     Returns:
         Pressure [psi].
     """
-    return pressure_pa * 1.45e-4
+    return pressure_pa / scipy.constants.psi
 
 
 def convert_pa_to_mpa(pressure_pa: float) -> float:
