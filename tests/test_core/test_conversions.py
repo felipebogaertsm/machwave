@@ -6,13 +6,13 @@ from machwave.core import conversions
 @pytest.mark.parametrize(
     "pa, expected_psi",
     [
-        (100_000, 14.5037735),
+        (100_000, 14.503773773020924),
         (0, 0.0),
-        (-50_000, -7.252642),
+        (-50_000, -7.251886886510462),
     ],
 )
 def test_convert_pa_to_psi(pa, expected_psi):
-    assert conversions.convert_pa_to_psi(pa) == pytest.approx(expected_psi, rel=1e-2)
+    assert conversions.convert_pa_to_psi(pa) == pytest.approx(expected_psi, rel=1e-9)
 
 
 @pytest.mark.parametrize(
