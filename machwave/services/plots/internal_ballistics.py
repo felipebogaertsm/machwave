@@ -174,35 +174,26 @@ def thrust_coefficient_plot(
     Returns:
         Plotly Figure.
     """
-    if show_efficiency:
-        fig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
-    else:
-        fig = go.Figure()
+    fig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
 
-    (
-        fig.add_trace
-        if not show_efficiency
-        else lambda *a, **k: fig.add_trace(*a, **k, secondary_y=False)
-    )(
+    fig.add_trace(
         go.Scatter(
             x=time,
             y=thrust_coefficient_ideal,
             mode="lines",
             name="Cf (ideal)",
-        )
+        ),
+        secondary_y=False,
     )
 
-    (
-        fig.add_trace
-        if not show_efficiency
-        else lambda *a, **k: fig.add_trace(*a, **k, secondary_y=False)
-    )(
+    fig.add_trace(
         go.Scatter(
             x=time,
             y=thrust_coefficient_real,
             mode="lines",
             name="Cf (real)",
-        )
+        ),
+        secondary_y=False,
     )
 
     if show_efficiency:
