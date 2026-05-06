@@ -4,24 +4,23 @@ an InternalBallisticsCoupled simulation that includes both
 internal ballistics and atmospheric flight.
 """
 
-from machwave.common.decorators import timing
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
 )
+from machwave.common.decorators import timing
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave import simulation
 
 
 @timing
 def main():
-    propellant = solid_propellants.MIT_CHERRY_LIMEADE
+    propellant = formulations.solid.MIT_CHERRY_LIMEADE
 
     grain = grain_models.Grain(spacing=0.01)
-    bates_segment = grain_geometries.BatesSegment(
+    bates_segment = grain_models.geometries.BatesSegment(
         outer_diameter=0.085,
         core_diameter=0.035,
         length=0.150,

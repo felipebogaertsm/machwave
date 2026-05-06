@@ -3,24 +3,23 @@ Example for the Kappa motor, developed by Richard Nakka.
 https://www.nakka-rocketry.net/kappa.html
 """
 
-from machwave.common.decorators import timing
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
 )
+from machwave.common.decorators import timing
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave import simulation
 
 
 @timing
 def main():
-    propellant = solid_propellants.KNDX
+    propellant = formulations.solid.KNDX
 
     grain = grain_models.Grain(spacing=5e-3)
-    bates_segment = grain_geometries.BatesSegment(
+    bates_segment = grain_models.geometries.BatesSegment(
         outer_diameter=55e-3,
         core_diameter=19e-3,
         length=101.6e-3,
