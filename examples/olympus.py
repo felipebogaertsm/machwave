@@ -5,30 +5,29 @@ never used in flight. The motor was successfully tested on July 2, 2022, and
 at the time, it was the largest experimental motor ever built in Latin America.
 """
 
-from machwave.common.decorators import timing
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
 )
+from machwave.common.decorators import timing
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave import simulation
 
 
 @timing
 def main():
-    propellant = solid_propellants.KNSB_NAKKA
+    propellant = formulations.solid.KNSB_NAKKA
 
     grain = grain_models.Grain()
-    bates_segment_45 = grain_geometries.BatesSegment(
+    bates_segment_45 = grain_models.geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.045,
         length=0.200,
         spacing=0.01,
     )
-    bates_segment_60 = grain_geometries.BatesSegment(
+    bates_segment_60 = grain_models.geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.060,
         length=0.200,

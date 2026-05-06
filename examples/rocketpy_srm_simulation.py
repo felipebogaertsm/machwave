@@ -8,16 +8,15 @@ This example demonstrates how to:
 3. Run a complete 6DOF flight simulation using RocketPy
 """
 
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
+)
 from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
 from machwave.common import decorators
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
-)
-from machwave import simulation
 from rocketpy import Environment, Flight, Rocket
 
 
@@ -26,10 +25,10 @@ def main():
     # ============================================================================
     # 1. MOTOR SETUP
     # ============================================================================
-    propellant = solid_propellants.KNSB_NAKKA
+    propellant = formulations.solid.KNSB_NAKKA
 
     grain = grain_models.Grain(spacing=0.01)
-    bates_segment = grain_geometries.BatesSegment(
+    bates_segment = grain_models.geometries.BatesSegment(
         outer_diameter=0.085,
         core_diameter=0.035,
         length=0.150,
