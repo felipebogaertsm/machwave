@@ -16,7 +16,7 @@ build:
 	@uv build
 
 verify-version:
-	@PKG_VERSION=$$(uv run python -c "from machwave._version import __version__; print(__version__)"); \
+	@PKG_VERSION=$$(uv run python -c "ns = {}; exec(open('machwave/_version.py').read(), ns); print(ns['__version__'])"); \
 	TAG_VERSION=$${GITHUB_REF_NAME#v}; \
 	if [ "$$PKG_VERSION" != "$$TAG_VERSION" ]; then \
 		echo "::error::Tag version ($$TAG_VERSION) does not match package version ($$PKG_VERSION)"; \
