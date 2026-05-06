@@ -1,25 +1,24 @@
-from machwave import montecarlo
-from machwave.common.decorators import timing
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
+from machwave import (
+    formulations,
+    grain as grain_models,
+    montecarlo,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
 )
-from machwave import simulation
+from machwave.common.decorators import timing
 
 MC_SAMPLES = 1000
 
 
 @timing
 def main():
-    propellant = solid_propellants.KNSB_NAKKA
+    propellant = formulations.solid.KNSB_NAKKA
 
     grain = grain_models.Grain()
     for _ in range(4):
         grain.add_segment(
-            grain_geometries.BatesSegment(
+            grain_models.geometries.BatesSegment(
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.045, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
@@ -28,7 +27,7 @@ def main():
         )
     for _ in range(3):
         grain.add_segment(
-            grain_geometries.BatesSegment(
+            grain_models.geometries.BatesSegment(
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.060, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),

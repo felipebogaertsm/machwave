@@ -25,19 +25,20 @@ The adapter sits after the internal ballistics simulation:
 ## Example
 
 ```python
-from machwave import simulation
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
+)
 from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import solid as solid_propellants
 from rocketpy import Environment, Flight, Rocket
 
-propellant = solid_propellants.KNSB_NAKKA
+propellant = formulations.solid.KNSB_NAKKA
 
 grain = grain_models.Grain(spacing=0.01)
-segment = grain_geometries.BatesSegment(
+segment = grain_models.geometries.BatesSegment(
 	outer_diameter=0.085,
 	core_diameter=0.035,
 	length=0.150,

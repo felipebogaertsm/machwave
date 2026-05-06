@@ -4,24 +4,23 @@ Supernova Rocketry UFJF in 2019. It is a class J KNDX motor with a
 maximum operating pressure of 7 MPa.
 """
 
-from machwave.common.decorators import timing
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.grain import geometries as grain_geometries
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
+from machwave import (
+    formulations,
+    grain as grain_models,
+    motors,
+    simulation,
+    thrust_chamber as thrust_chamber_models,
 )
+from machwave.common.decorators import timing
 from machwave.services.plots import internal_ballistics as internal_ballistics_plots
-from machwave import simulation
 
 
 @timing
 def main():
-    propellant = solid_propellants.KNDX
+    propellant = formulations.solid.KNDX
 
     grain = grain_models.Grain(spacing=10e-3)
-    bates_segment = grain_geometries.BatesSegment(
+    bates_segment = grain_models.geometries.BatesSegment(
         outer_diameter=41e-3,
         core_diameter=15e-3,
         length=67.5e-3,
