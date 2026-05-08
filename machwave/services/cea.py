@@ -173,26 +173,36 @@ class RocketCEAService:
         self.cea_obj = cea_obj
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
 
-    def get_adiabatic_flame_temperature(self, chamber_pressure: float) -> float:
+    def _resolve_mixture_ratio(self, mixture_ratio: float | None) -> float | None:
+        if mixture_ratio is not None:
+            return mixture_ratio
+        return self.oxidizer_to_fuel_ratio
+
+    def get_adiabatic_flame_temperature(
+        self, chamber_pressure: float, mixture_ratio: float | None = None
+    ) -> float:
         """Get adiabatic flame temperature [K]."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
-        if self.oxidizer_to_fuel_ratio is not None:
-            temp_rankine = self.cea_obj.get_Tcomb(
-                Pc=chamber_pressure_psi, MR=self.oxidizer_to_fuel_ratio
-            )
+        mr = self._resolve_mixture_ratio(mixture_ratio)
+        if mr is not None:
+            temp_rankine = self.cea_obj.get_Tcomb(Pc=chamber_pressure_psi, MR=mr)
         else:
             temp_rankine = self.cea_obj.get_Tcomb(Pc=chamber_pressure_psi)
         return convert_rankine_to_kelvin(temp_rankine)
 
     def get_chamber_properties(
-        self, chamber_pressure: float, expansion_ratio: float
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float,
+        mixture_ratio: float | None = None,
     ) -> tuple[float, float]:
         """Get chamber molecular weight [kg/mol] and isentropic exponent."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
-        if self.oxidizer_to_fuel_ratio is not None:
+        mr = self._resolve_mixture_ratio(mixture_ratio)
+        if mr is not None:
             mw_g, k = self.cea_obj.get_Chamber_MolWt_gamma(
                 Pc=chamber_pressure_psi,
-                MR=self.oxidizer_to_fuel_ratio,
+                MR=mr,
                 eps=expansion_ratio,
             )
         else:
@@ -202,15 +212,19 @@ class RocketCEAService:
         return mw_g / 1000.0, k
 
     def get_exhaust_properties(
-        self, chamber_pressure: float, expansion_ratio: float
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float,
+        mixture_ratio: float | None = None,
     ) -> tuple[float, float]:
         """Get exhaust molecular weight [kg/mol] and isentropic exponent (frozen flow)."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
+        mr = self._resolve_mixture_ratio(mixture_ratio)
 
-        if self.oxidizer_to_fuel_ratio is not None:
+        if mr is not None:
             mw_g, k = self.cea_obj.get_exit_MolWt_gamma(
                 Pc=chamber_pressure_psi,
-                MR=self.oxidizer_to_fuel_ratio,
+                MR=mr,
                 eps=expansion_ratio,
                 frozen=1,
             )
@@ -223,10 +237,10 @@ class RocketCEAService:
         # requesting frozen exit k. Fall back to equilibrium exit k, and
         # if that is still invalid, fall back to throat k.
         if k <= 1.0:
-            if self.oxidizer_to_fuel_ratio is not None:
+            if mr is not None:
                 mw_g, k = self.cea_obj.get_exit_MolWt_gamma(
                     Pc=chamber_pressure_psi,
-                    MR=self.oxidizer_to_fuel_ratio,
+                    MR=mr,
                     eps=expansion_ratio,
                     frozen=0,
                 )
@@ -235,10 +249,10 @@ class RocketCEAService:
                     Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=0
                 )
         if k <= 1.0:
-            if self.oxidizer_to_fuel_ratio is not None:
+            if mr is not None:
                 mw_g, k = self.cea_obj.get_Throat_MolWt_gamma(
                     Pc=chamber_pressure_psi,
-                    MR=self.oxidizer_to_fuel_ratio,
+                    MR=mr,
                     eps=expansion_ratio,
                 )
             else:
@@ -249,21 +263,25 @@ class RocketCEAService:
         return mw_g / 1000.0, k
 
     def get_specific_impulse(
-        self, chamber_pressure: float, expansion_ratio: float
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float,
+        mixture_ratio: float | None = None,
     ) -> tuple[float, float]:
         """Get specific impulse [s]: (frozen, shifting)."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
+        mr = self._resolve_mixture_ratio(mixture_ratio)
 
-        if self.oxidizer_to_fuel_ratio is not None:
+        if mr is not None:
             isp_frozen = self.cea_obj.get_Isp(
                 Pc=chamber_pressure_psi,
-                MR=self.oxidizer_to_fuel_ratio,
+                MR=mr,
                 eps=expansion_ratio,
                 frozen=1,
             )
             isp_shifting = self.cea_obj.get_Isp(
                 Pc=chamber_pressure_psi,
-                MR=self.oxidizer_to_fuel_ratio,
+                MR=mr,
                 eps=expansion_ratio,
                 frozen=0,
             )
@@ -277,17 +295,24 @@ class RocketCEAService:
         return isp_frozen, isp_shifting
 
     def get_condensed_phase_fractions(
-        self, chamber_pressure: float, expansion_ratio: float
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float,
+        mixture_ratio: float | None = None,
     ) -> tuple[float, float]:
         """Get condensed phase mass fractions: (chamber, exhaust)."""
         chamber_pressure_psi = convert_pa_to_psi(chamber_pressure)
+        mr = self._resolve_mixture_ratio(mixture_ratio)
 
         qsi_chamber = 0.0
         qsi_exhaust = 0.0
 
         try:
+            kwargs = {"Pc": chamber_pressure_psi, "eps": expansion_ratio, "frozen": 0}
+            if mr is not None:
+                kwargs["MR"] = mr
             species_dict, mass_fractions = self.cea_obj.get_SpeciesMassFractions(
-                Pc=chamber_pressure_psi, eps=expansion_ratio, frozen=0
+                **kwargs
             )
             for species_name, fractions in zip(
                 species_dict.keys(), mass_fractions.values()
