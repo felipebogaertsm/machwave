@@ -6,11 +6,7 @@ from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from machwave.core.geometric import (
-    get_circle_area,
-    get_contours,
-    get_length,
-)
+from machwave.core.geometric import get_circle_area
 from machwave.core.mechanics import (
     get_center_of_gravity,
     get_moment_of_inertia_tensor,
@@ -19,6 +15,7 @@ from machwave.models.grain import GrainGeometryError, GrainSegment2D
 from machwave.models.grain.base import InhibitedSurfaces
 
 from .base import FMMGrainSegment
+from .contours import get_contours, get_length
 
 
 class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
@@ -86,7 +83,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Return a list of contour arrays for the given web distance.
         Each contour is typically an (N,2) array of (row, col) points.
         """
-        # get_contours is imported from machwave.core.math.geometric
         map_dist = self.normalize(web_distance)
         return get_contours(self.get_regression_map(), map_dist)
 
