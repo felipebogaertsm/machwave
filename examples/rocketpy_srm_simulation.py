@@ -22,9 +22,7 @@ from rocketpy import Environment, Flight, Rocket
 
 @decorators.timing
 def main():
-    # ============================================================================
-    # 1. MOTOR SETUP
-    # ============================================================================
+    # 1. Motor setup
     propellant = formulations.solid.KNSB_NAKKA
 
     grain = grain_models.Grain(spacing=0.01)
@@ -65,9 +63,7 @@ def main():
         thrust_chamber=thrust_chamber,
     )
 
-    # ============================================================================
-    # 2. RUN MACHWAVE INTERNAL BALLISTICS SIMULATION
-    # ============================================================================
+    # 2. Run machwave internal ballistics simulation
     params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
@@ -80,18 +76,14 @@ def main():
 
     sim.print_results()
 
-    # ============================================================================
-    # 3. CREATE ROCKETPY ADAPTER
-    # ============================================================================
+    # 3. Create RocketPy adapter
     rocketpy_motor = RocketPySolidMotorAdapter(motor_state)
     print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
     print(f"  - Average thrust: {rocketpy_motor.average_thrust:.1f} N")
     print(f"  - Max thrust: {rocketpy_motor.max_thrust:.1f} N")
     print(f"  - Burn time: {rocketpy_motor.burn_time[1]:.2f} s")
 
-    # ============================================================================
-    # 4. SETUP ROCKETPY ROCKET
-    # ============================================================================
+    # 4. Setup RocketPy rocket
     rocket = Rocket(
         radius=0.0508,  # 101.6mm outer diameter / 2
         mass=15.0,  # Dry mass without motor (kg)
@@ -142,9 +134,7 @@ def main():
     print(f"  - Total mass: {rocket.total_mass(0):.2f} kg")
     print(f"  - Static margin: {rocket.static_margin(0):.2f} calibers")
 
-    # ============================================================================
-    # 5. SETUP ENVIRONMENT
-    # ============================================================================
+    # 5. Setup environment
     env = Environment(
         latitude=32.99,  # Spaceport America, NM
         longitude=-106.975,
@@ -154,9 +144,7 @@ def main():
     env.set_atmospheric_model(type="standard_atmosphere")
     env.set_date((2023, 6, 15, 12))  # Year, month, day, hour (UTC)
 
-    # ============================================================================
-    # 6. RUN FLIGHT SIMULATION
-    # ============================================================================
+    # 6. Run flight simulation
     flight = Flight(
         rocket=rocket,
         environment=env,
@@ -175,10 +163,7 @@ def main():
     print(f"Total flight time: {flight.t_final:.1f} s")
     print(f"{'=' * 60}\n")
 
-    # ============================================================================
-    # 7. PLOT RESULTS
-    # ============================================================================
-    # Flight trajectory plots
+    # 7. Plot results
     flight.plots.trajectory_3d()
 
 

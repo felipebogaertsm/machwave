@@ -55,7 +55,6 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
 
         radius = np.sqrt(map_x**2 + map_y**2)
 
-        # Create the ring:
         core_map[(radius > rod_od_norm / 2) & (radius < tube_id_norm / 2)] = 0
 
         return core_map

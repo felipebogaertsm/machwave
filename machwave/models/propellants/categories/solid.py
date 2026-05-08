@@ -123,7 +123,6 @@ class SolidPropellant(Propellant):
         """
         if self.components:
             self._validate_components()
-            # Convert components to CEA format
             components_data = [
                 comp.to_cea_dict(weight_percent=mf * 100.0)
                 for comp, mf in zip(self.components, self.mass_fractions)

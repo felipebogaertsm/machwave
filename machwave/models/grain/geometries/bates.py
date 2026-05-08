@@ -116,7 +116,6 @@ class BatesSegment(GrainSegment2D):
         Returns:
             A 3x3 inertia tensor [kg-m^2].
         """
-        # Geometry at given web distance
         r_inner = (self.core_diameter + 2 * web_distance) / 2
         r_outer = self.outer_diameter / 2
         current_length = self.get_length(web_distance)

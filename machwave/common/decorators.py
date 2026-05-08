@@ -48,14 +48,12 @@ def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
 
-            # Type check:
             if not isinstance(result, float):
                 raise TypeError(
                     f"{func.__name__} should return a float but "
                     f"got {type(result).__name__!s}"
                 )
 
-            # Range check:
             if not (lower <= result <= upper):
                 raise ValueError(
                     f"{func.__name__} returned {result}, "

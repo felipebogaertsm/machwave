@@ -450,7 +450,6 @@ class Grain:
             mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
             weighted_cogs.append(global_cog * mass)
 
-            # Move to next segment
             axial_position += segment.length + self.spacing
 
         total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
@@ -499,10 +498,9 @@ class Grain:
 
         axial_position = 0.0
         for segment in reversed(self.segments):  # last added is closest to port
-            # From segment's own port
             local_cog = segment.get_center_of_gravity(web_distance=web_distance)
 
-            global_cog = local_cog.copy()  # from grain's port
+            global_cog = local_cog.copy()
             global_cog[0] = axial_position + local_cog[0]
 
             segment_mass = segment.get_mass(
@@ -523,10 +521,8 @@ class Grain:
                 r_squared * identity - outer_product
             )
 
-            # Add this segment's contribution to total inertia
             total_inertia += segment_moi + parallel_axis_correction
 
-            # Move to next segment
             axial_position += segment.length + self.spacing
 
         return total_inertia.astype(np.float64)
@@ -606,7 +602,6 @@ class Grain:
             inspect.Parameter.VAR_KEYWORD,
         )  # skip *args and **kwargs
 
-        # Compare each segment to the first one
         for index, segment in enumerate(self.segments[1:], start=1):
             real_index = index + 1  # 1 based indexing
 

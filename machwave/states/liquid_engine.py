@@ -215,10 +215,8 @@ class LiquidEngineState(MotorState):
         """
         Prints the results obtained during the Liquid Rocket Engine operation.
         """
-        # HEADER
         print("\nLIQUID ENGINE OPERATION RESULTS")
 
-        # Propellant summary
         print(f"Initial propellant mass: {self.propellant_mass[0]:.4f} kg")
         try:
             print(f"Burnout time: {self.burn_time:.4f} s")
@@ -226,17 +224,14 @@ class LiquidEngineState(MotorState):
             print("Burnout time: (not reached)")
         print(f"Thrust time: {self.thrust_time:.4f} s")
 
-        # Chamber pressure
         print("\nCHAMBER PRESSURE (MPa)")
         print(f"  Max: {np.max(self.chamber_pressure) * 1e-6:.4f}")
         print(f"  Mean: {np.mean(self.chamber_pressure) * 1e-6:.4f}")
 
-        # Thrust
         print("\nTHRUST (N)")
         print(f"  Max: {np.max(self.thrust):.4f}")
         print(f"  Mean: {np.mean(self.thrust):.4f}")
 
-        # Impulse
         impulse = performance.get_total_impulse(
             np.asarray(self.thrust), np.asarray(self.t)
         )
@@ -245,7 +240,6 @@ class LiquidEngineState(MotorState):
         print(f"  Total impulse: {impulse:.4f} N·s")
         print(f"  Specific impulse: {isp:.4f} s")
 
-        # Remaining propellant masses
         print("\nPROPELLANT REMAINING (kg)")
         print(f"  Oxidizer: {self.oxidizer_mass[-1]:.4f}")
         print(f"  Fuel:     {self.fuel_mass[-1]:.4f}")

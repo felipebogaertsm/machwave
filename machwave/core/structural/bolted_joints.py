@@ -8,10 +8,6 @@ import numpy as np
 
 from ..geometric import get_circle_area
 
-"""
-Areas to calculate stress and load:
-"""
-
 
 def _bolt_cross_sectional_area(screw_diameter: float) -> float:
     """Calculates the cross sectional area for a bolt or screw.
@@ -79,14 +75,9 @@ def _arc_length(angle: float, diameter: float) -> float:
     Returns:
         Arc length on the cylinder wall.
     """
-    angle_radians = np.deg2rad(angle)  # Convert to radians
+    angle_radians = np.deg2rad(angle)
     radius = diameter / 2.0
     return radius * angle_radians
-
-
-"""
-Stress calculations:
-"""
 
 
 def get_shear_stress_per_bolt(
@@ -220,11 +211,6 @@ def get_net_section_tension_stress_cylinder(
         hole_diameter,
         n_bolts_in_row=n_bolts_in_row,
     )
-
-
-"""
-Load calculations:
-"""
 
 
 def get_max_shear_load(
