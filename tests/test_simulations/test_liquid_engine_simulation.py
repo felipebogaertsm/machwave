@@ -175,6 +175,7 @@ def test_live_mixture_ratio_drives_cea(
     simulation_result: SimulationResult,
 ) -> None:
     state = simulation_result.state
+    assert isinstance(state, LiquidEngineState)
     propellant = state.motor.propellant
 
     design_ratio = propellant.oxidizer_to_fuel_ratio
@@ -195,7 +196,7 @@ def test_live_mixture_ratio_drives_cea(
     design_props = propellant.evaluate(
         chamber_pressure=chamber_pressure,
         expansion_ratio=expansion_ratio,
-        oxidizer_to_fuel_ratio=design_ratio,
+        mixture_ratio=design_ratio,
     )
     live_props = propellant.properties
     assert live_props is not None

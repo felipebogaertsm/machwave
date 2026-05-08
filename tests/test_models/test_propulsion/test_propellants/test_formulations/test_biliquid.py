@@ -32,12 +32,12 @@ def lox_rp1_propellant() -> BiliquidPropellant:
     )
 
 
-class TestBiliquidEvaluateOverride:
+class TestBiliquidEvaluateMixtureRatio:
     def test_default_uses_design_ratio(self, lox_rp1_propellant):
         without_override = lox_rp1_propellant.evaluate(chamber_pressure=3e6)
         with_design_explicit = lox_rp1_propellant.evaluate(
             chamber_pressure=3e6,
-            oxidizer_to_fuel_ratio=2.5,
+            mixture_ratio=2.5,
         )
         assert without_override.adiabatic_flame_temperature == pytest.approx(
             with_design_explicit.adiabatic_flame_temperature
@@ -50,7 +50,7 @@ class TestBiliquidEvaluateOverride:
         design = lox_rp1_propellant.evaluate(chamber_pressure=3e6)
         off_design = lox_rp1_propellant.evaluate(
             chamber_pressure=3e6,
-            oxidizer_to_fuel_ratio=1.5,
+            mixture_ratio=1.5,
         )
         assert design.adiabatic_flame_temperature != pytest.approx(
             off_design.adiabatic_flame_temperature
@@ -61,5 +61,5 @@ class TestBiliquidEvaluateOverride:
         assert design.i_sp_shifting != pytest.approx(off_design.i_sp_shifting)
 
     def test_design_attribute_unchanged_after_evaluate(self, lox_rp1_propellant):
-        lox_rp1_propellant.evaluate(chamber_pressure=3e6, oxidizer_to_fuel_ratio=1.5)
+        lox_rp1_propellant.evaluate(chamber_pressure=3e6, mixture_ratio=1.5)
         assert lox_rp1_propellant.oxidizer_to_fuel_ratio == 2.5

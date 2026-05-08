@@ -136,7 +136,7 @@ class LiquidEngineState(MotorState):
             self.motor.propellant.properties = self.motor.propellant.evaluate(
                 chamber_pressure=self.chamber_pressure[-1],
                 expansion_ratio=nz.expansion_ratio,
-                oxidizer_to_fuel_ratio=instantaneous_oxidizer_to_fuel_ratio,
+                mixture_ratio=instantaneous_oxidizer_to_fuel_ratio,
             )
         props = self.motor.propellant.properties
         assert props is not None

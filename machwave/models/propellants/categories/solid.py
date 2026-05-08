@@ -139,7 +139,10 @@ class SolidPropellant(Propellant):
             )
 
     def evaluate(
-        self, chamber_pressure: float, expansion_ratio: float = 8.0
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float = 8.0,
+        mixture_ratio: float | None = None,
     ) -> ThermochemicalProperties:
         """Evaluate thermochemical properties.
 
@@ -150,6 +153,8 @@ class SolidPropellant(Propellant):
         Args:
             chamber_pressure: Chamber pressure [Pa].
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
+            mixture_ratio: Per-call mixture ratio override (unused for solid
+                formulations; accepted for parent-class compatibility).
 
         Returns:
             Pre-defined or calculated properties.
@@ -159,7 +164,7 @@ class SolidPropellant(Propellant):
         """
         if self._properties is not None:
             return self._properties
-        return super().evaluate(chamber_pressure, expansion_ratio)
+        return super().evaluate(chamber_pressure, expansion_ratio, mixture_ratio)
 
     @property
     def ideal_density(self) -> float:

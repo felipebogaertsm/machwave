@@ -28,8 +28,9 @@ class BiliquidPropellant(Propellant):
             combustion_efficiency: Efficiency factor (0-1).
             properties: Pre-defined thermochemical properties (optional).
             oxidizer_to_fuel_ratio: Oxidizer-to-fuel mass ratio for this
-                formulation. Callers may pass a different per-call value to
-                ``evaluate()`` to evaluate at a non-design operating point.
+                formulation. Used as the default mixture_ratio at the
+                thermochemical service layer; callers can override per-call
+                via ``evaluate(mixture_ratio=...)``.
         """
         super().__init__(
             name=name,
@@ -40,18 +41,6 @@ class BiliquidPropellant(Propellant):
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
         self.oxidizer_tank_density: float = 0.0
         self.fuel_tank_density: float = 0.0
-
-    def evaluate(
-        self,
-        chamber_pressure: float,
-        expansion_ratio: float = 8.0,
-        oxidizer_to_fuel_ratio: float | None = None,
-    ) -> ThermochemicalProperties:
-        return super().evaluate(
-            chamber_pressure=chamber_pressure,
-            expansion_ratio=expansion_ratio,
-            mixture_ratio=oxidizer_to_fuel_ratio,
-        )
 
     def _validate_components(self):
         """Validate biliquid has exactly 2 components: oxidizer and fuel.
