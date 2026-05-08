@@ -1,16 +1,15 @@
+"""Olympus fixtures are based on the 2022 version of the motor."""
+
 import pytest
 
 from machwave.models.grain import Grain
-from machwave.models.grain.geometries.bates import BatesSegment
 
-"""
-Olympus fixtures are based on the 2022 version of the motor.
-"""
+from tests.factories import BatesSegmentFactory
 
 
 @pytest.fixture
 def bates_segment_olympus_45():
-    return BatesSegment(
+    return BatesSegmentFactory.build(
         outer_diameter=117e-3,
         core_diameter=45e-3,
         length=200e-3,
@@ -19,7 +18,7 @@ def bates_segment_olympus_45():
 
 @pytest.fixture
 def bates_segment_olympus_60():
-    return BatesSegment(
+    return BatesSegmentFactory.build(
         outer_diameter=117e-3,
         core_diameter=60e-3,
         length=200e-3,
@@ -29,14 +28,8 @@ def bates_segment_olympus_60():
 @pytest.fixture
 def bates_grain_olympus(bates_segment_olympus_45, bates_segment_olympus_60):
     grain = Grain(spacing=10e-3)
-
-    # Adding 4 45 mm segments and 3 60mm segments:
-    grain.add_segment(bates_segment_olympus_45)
-    grain.add_segment(bates_segment_olympus_45)
-    grain.add_segment(bates_segment_olympus_45)
-    grain.add_segment(bates_segment_olympus_45)
-    grain.add_segment(bates_segment_olympus_60)
-    grain.add_segment(bates_segment_olympus_60)
-    grain.add_segment(bates_segment_olympus_60)
-
+    for _ in range(4):
+        grain.add_segment(bates_segment_olympus_45)
+    for _ in range(3):
+        grain.add_segment(bates_segment_olympus_60)
     return grain

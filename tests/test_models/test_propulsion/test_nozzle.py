@@ -1,13 +1,14 @@
 import pytest
 
 from machwave.core.geometric import get_circle_area
-from machwave.models.thrust_chamber.nozzle import Nozzle
+
+from tests.factories import NozzleFactory
 
 
 @pytest.fixture
 def nozzle():
     """1 inch throat, expansion ratio 4."""
-    return Nozzle(
+    return NozzleFactory.build(
         inlet_diameter=50.8e-3,
         throat_diameter=25.4e-3,
         divergent_angle=20,
@@ -38,27 +39,15 @@ class TestNozzleGeometry:
 
     def test_outlet_diameter_scales_with_expansion_ratio(self):
         """Doubling expansion ratio should increase exit diameter by √2."""
-        n1 = Nozzle(50.8e-3, 25.4e-3, 15, 45, expansion_ratio=4)
-        n2 = Nozzle(50.8e-3, 25.4e-3, 15, 45, expansion_ratio=8)
+        n1 = NozzleFactory.build(divergent_angle=15, expansion_ratio=4)
+        n2 = NozzleFactory.build(divergent_angle=15, expansion_ratio=8)
         assert n1.outlet_diameter == pytest.approx(50.8e-3, rel=1e-6)
         assert n2.outlet_diameter == pytest.approx(7.1842048969e-2, rel=1e-6)
 
     def test_outlet_diameter_independent_of_inlet_diameter(self):
         """Two nozzles with same throat but different inlets → same exit diameter."""
-        n1 = Nozzle(
-            inlet_diameter=50e-3,
-            throat_diameter=25.4e-3,
-            divergent_angle=15,
-            convergent_angle=45,
-            expansion_ratio=4,
-        )
-        n2 = Nozzle(
-            inlet_diameter=70e-3,
-            throat_diameter=25.4e-3,
-            divergent_angle=15,
-            convergent_angle=45,
-            expansion_ratio=4,
-        )
+        n1 = NozzleFactory.build(inlet_diameter=50e-3, divergent_angle=15)
+        n2 = NozzleFactory.build(inlet_diameter=70e-3, divergent_angle=15)
         assert n1.outlet_diameter == pytest.approx(50.8e-3, rel=1e-9)
         assert n2.outlet_diameter == pytest.approx(50.8e-3, rel=1e-9)
 
@@ -76,7 +65,7 @@ class TestNozzleGeometry:
 
     def test_custom_boundary_layer_coefficients(self):
         """Ordinary nozzle coefficients can be overridden."""
-        n = Nozzle(50.8e-3, 25.4e-3, 15, 45, 4, c_1=0.003650, c_2=0.000937)
+        n = NozzleFactory.build(c_1=0.003650, c_2=0.000937)
         assert n.c_1 == pytest.approx(0.003650, rel=1e-3)
         assert n.c_2 == pytest.approx(0.000937, rel=1e-3)
 
@@ -86,12 +75,5 @@ class TestNozzleGeometry:
 
     def test_custom_discharge_coefficient(self):
         """Throat discharge coefficient can be overridden."""
-        n = Nozzle(
-            inlet_diameter=50.8e-3,
-            throat_diameter=25.4e-3,
-            divergent_angle=15,
-            convergent_angle=45,
-            expansion_ratio=4,
-            discharge_coefficient=0.95,
-        )
+        n = NozzleFactory.build(discharge_coefficient=0.95)
         assert n.discharge_coefficient == pytest.approx(0.95, rel=1e-9)
