@@ -1,8 +1,3 @@
-"""Pytest configuration for FMM grain moment-of-inertia tests.
-
-Mirrors the fan-out used by the CoG suite — see test_cog/conftest.py.
-"""
-
 import pytest
 
 from tests.factories import (

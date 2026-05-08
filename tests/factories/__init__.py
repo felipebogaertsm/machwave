@@ -1,11 +1,6 @@
-"""Reusable factories for building model instances in tests.
-
-Each factory exposes a ``build(**overrides)`` classmethod that returns a model
-instance with sensible defaults; tests only specify the fields they actually
-care about. Composite factories (motors, thrust chambers, feed systems)
-delegate sub-component construction to lower-level factories so an override
-can be applied at any layer.
-"""
+"""Each factory exposes ``build(**overrides)``; composite factories delegate
+sub-component construction to lower-level factories so overrides apply at any
+layer."""
 
 from tests.factories.feed_systems import (
     StackedTankPressureFedFeedSystemFactory,

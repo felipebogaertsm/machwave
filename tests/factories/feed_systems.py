@@ -1,5 +1,3 @@
-"""Factories for feed-system model instances (Tank, pressure-fed feed system)."""
-
 from __future__ import annotations
 
 from typing import Any

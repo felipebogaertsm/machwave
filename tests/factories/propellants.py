@@ -1,11 +1,6 @@
-"""Factories for propellant model instances.
-
-The two ``ThermochemicalProperties`` factories use polyfactory's ``DataclassFactory``
-because the model is a frozen, kw_only dataclass with strict validation bounds.
-The propellant-component and biliquid-propellant factories are plain builders
-since those classes are not dataclasses (or, in the component case, need
-deterministic chemical formulas rather than randomly-generated ones).
-"""
+"""ThermochemicalProperties uses polyfactory's DataclassFactory (the model is a
+frozen, kw_only dataclass with strict validation bounds); the rest are plain
+builders so chemical formulas stay deterministic rather than randomized."""
 
 from __future__ import annotations
 
@@ -19,8 +14,6 @@ from machwave.models.propellants import categories, components, properties
 class SolidPropellantPropertiesFactory(
     DataclassFactory[properties.ThermochemicalProperties]
 ):
-    """ThermochemicalProperties with realistic solid-propellant defaults."""
-
     __model__ = properties.ThermochemicalProperties
 
     @classmethod
@@ -63,8 +56,7 @@ class SolidPropellantPropertiesFactory(
 class LiquidPropellantPropertiesFactory(
     DataclassFactory[properties.ThermochemicalProperties]
 ):
-    """ThermochemicalProperties with realistic liquid-propellant defaults
-    (no condensed phase, so qsi values are zero)."""
+    """qsi values are zero — liquid combustion has no condensed phase."""
 
     __model__ = properties.ThermochemicalProperties
 
@@ -106,7 +98,7 @@ class LiquidPropellantPropertiesFactory(
 
 
 class OxidizerComponentFactory:
-    """Defaults to N2O — a common storable oxidizer used in test fixtures."""
+    """Defaults to N2O."""
 
     @classmethod
     def build(cls, **overrides: Any) -> components.PropellantComponent:
@@ -123,7 +115,7 @@ class OxidizerComponentFactory:
 
 
 class FuelComponentFactory:
-    """Defaults to Ethanol — a common storable fuel used in test fixtures."""
+    """Defaults to Ethanol."""
 
     @classmethod
     def build(cls, **overrides: Any) -> components.PropellantComponent:
@@ -140,8 +132,6 @@ class FuelComponentFactory:
 
 
 class BiliquidPropellantFactory:
-    """Builds a BiliquidPropellant with one oxidizer and one fuel component."""
-
     @classmethod
     def build(cls, **overrides: Any) -> categories.BiliquidPropellant:
         component_list = overrides.pop("components", None)

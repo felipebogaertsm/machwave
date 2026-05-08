@@ -1,11 +1,3 @@
-"""Pytest configuration for FMM grain CoG tests.
-
-Defines parametrize markers that fan tests out across all FMM2D and FMM3D
-geometry factories. Each entry is the factory's ``build`` classmethod, which
-the test calls with whatever overrides it cares about (length, outer_diameter,
-density_ratio, ...).
-"""
-
 import pytest
 
 from tests.factories import (

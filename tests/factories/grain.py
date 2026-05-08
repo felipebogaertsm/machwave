@@ -1,5 +1,3 @@
-"""Factories for grain-segment model instances."""
-
 from __future__ import annotations
 
 from typing import Any

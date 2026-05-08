@@ -1,9 +1,3 @@
-"""Factories for motor model instances (SolidMotor, LiquidEngine).
-
-These compose grain, propellant, thrust-chamber, and feed-system factories so a
-test only needs to override the layers it cares about.
-"""
-
 from __future__ import annotations
 
 from typing import Any
@@ -22,7 +16,7 @@ from tests.factories.thrust_chamber import (
 
 
 class SolidMotorFactory:
-    """A small single-segment BATES SolidMotor with KNDX propellant."""
+    """Defaults to a single-segment BATES motor with KNDX propellant."""
 
     @classmethod
     def build(cls, **overrides: Any) -> motors.SolidMotor:
@@ -47,7 +41,7 @@ class SolidMotorFactory:
 
 
 class LiquidEngineFactory:
-    """A small N2O/Ethanol LiquidEngine wired to a pressure-fed feed system."""
+    """Defaults to an N2O/Ethanol engine on a pressure-fed feed system."""
 
     @classmethod
     def build(cls, **overrides: Any) -> motors.LiquidEngine:

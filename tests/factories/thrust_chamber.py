@@ -1,6 +1,3 @@
-"""Factories for thrust-chamber model instances (nozzle, combustion chamber,
-injector, and the assembled thrust-chamber wrappers)."""
-
 from __future__ import annotations
 
 from typing import Any
