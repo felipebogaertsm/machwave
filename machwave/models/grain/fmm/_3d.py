@@ -5,11 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
-from machwave.core.geometric import (
-    get_circle_area,
-    get_contours,
-    get_length,
-)
+from machwave.core.geometric import get_circle_area
 from machwave.core.mechanics import (
     get_center_of_gravity,
     get_moment_of_inertia_tensor,
@@ -18,6 +14,7 @@ from machwave.models.grain import GrainGeometryError, GrainSegment3D
 from machwave.models.grain.base import InhibitedSurfaces
 
 from .base import FMMGrainSegment
+from .contours import get_contours, get_length
 
 
 class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
