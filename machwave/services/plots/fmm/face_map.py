@@ -266,7 +266,6 @@ def plot_3d_face_map_animated(
         ],
     )
 
-    # --- initial traces ---
     longitudinal_0 = face_maps[0, :, mid_y, :]
     face_0 = face_maps[0, mid_z, :, :]
 
@@ -278,7 +277,6 @@ def plot_3d_face_map_animated(
 
     n_traces = 6  # 3 per subplot
 
-    # --- frames ---
     frames = []
     steps = []
     for i in range(n_steps):

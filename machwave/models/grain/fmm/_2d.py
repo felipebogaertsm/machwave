@@ -227,7 +227,6 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Return the perimeter of the open core at the given web distance.
         """
         contours = self.get_contours(web_distance)
-        # Sum the lengths of all contour segments
         return float(
             sum(
                 self.map_to_length(get_length(contour, self.map_dim))

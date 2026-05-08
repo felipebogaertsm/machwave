@@ -101,7 +101,6 @@ def plot_bipropellant_tank_profiles(
         oxidizer_tank_mass: Oxidizer tank mass array [kg].
         fuel_tank_mass: Fuel tank mass array [kg].
     """
-    # Create 1×2 layout
     fig = plotly.subplots.make_subplots(
         rows=1,
         cols=2,
@@ -109,7 +108,6 @@ def plot_bipropellant_tank_profiles(
         horizontal_spacing=0.1,
     )
 
-    # — Left: Pressures (converted to MPa) —
     fig.add_trace(
         go.Scatter(
             x=time,
@@ -128,7 +126,6 @@ def plot_bipropellant_tank_profiles(
         col=1,
     )
 
-    # — Right: Masses —
     fig.add_trace(
         go.Scatter(x=time, y=oxidizer_tank_mass, mode="lines", name="Oxidizer Mass"),
         row=1,
@@ -140,13 +137,11 @@ def plot_bipropellant_tank_profiles(
         col=2,
     )
 
-    # Axis labels
     fig.update_xaxes(title_text="Time (s)", row=1, col=1)
     fig.update_yaxes(title_text="Pressure (MPa)", row=1, col=1)
     fig.update_xaxes(title_text="Time (s)", row=1, col=2)
     fig.update_yaxes(title_text="Mass (kg)", row=1, col=2)
 
-    # Overall layout tweaks
     fig.update_layout(
         title_text="<b>Bipropellant Tank Profiles</b>",
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),

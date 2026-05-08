@@ -36,7 +36,6 @@ def example_single_segment():
     print("EXAMPLE 1: Single BATES Segment")
     print("=" * 60)
 
-    # Create a BATES grain segment
     segment = BatesSegment(
         outer_diameter=0.117,  # 117 mm
         core_diameter=0.045,  # 45 mm
@@ -44,17 +43,14 @@ def example_single_segment():
         density_ratio=1.0,
     )
 
-    # Propellant properties
     ideal_density = 1800.0  # kg/m³ (typical solid propellant)
 
-    # Calculate MOI at ignition
     moi_ignition = segment.get_moment_of_inertia(
         web_distance=0.0, ideal_density=ideal_density
     )
 
     print_inertia_tensor(moi_ignition, "At Ignition (web_distance = 0)")
 
-    # Calculate MOI at half burn
     web_thickness = segment.get_web_thickness()
     moi_half_burn = segment.get_moment_of_inertia(
         web_distance=web_thickness * 0.5, ideal_density=ideal_density
@@ -62,7 +58,6 @@ def example_single_segment():
 
     print_inertia_tensor(moi_half_burn, "At Half Burn (50% web consumed)")
 
-    # Show change in MOI
     print("\nChange in MOI during burn:")
     print(f"  Ixx change: {(1 - moi_half_burn[0, 0] / moi_ignition[0, 0]) * 100:.1f}%")
     print(f"  Iyy change: {(1 - moi_half_burn[1, 1] / moi_ignition[1, 1]) * 100:.1f}%")
@@ -74,37 +69,31 @@ def example_multi_segment():
     print("EXAMPLE 2: Three-Segment Grain Assembly")
     print("=" * 60)
 
-    # Create a grain with spacing between segments
     grain = Grain(spacing=0.010)  # 10 mm spacing
 
-    # Add three identical BATES segments
     for i in range(3):
         segment = BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
-            length=0.150,  # Shorter segments
+            length=0.150,
             density_ratio=1.0,
         )
         grain.add_segment(segment)
 
-    # Properties
     ideal_density = 1800.0  # kg/m³
 
-    # Calculate grain MOI
     grain_moi = grain.get_moment_of_inertia(
         web_distance=0.0, ideal_density=ideal_density
     )
 
     print_inertia_tensor(grain_moi, "Multi-Segment Grain at Ignition")
 
-    # Calculate total grain properties
     total_mass = grain.get_propellant_mass(
         web_distance=0.0, ideal_density=ideal_density
     )
     print(f"\nTotal propellant mass: {total_mass:.4f} kg")
     print(f"Grain total length:    {grain.total_length:.3f} m")
 
-    # CoG location
     grain_cog = grain.get_center_of_gravity(web_distance=0.0)
     print(f"Center of gravity:     {grain_cog[0]:.4f} m from aft end")
 
@@ -115,7 +104,6 @@ def example_burn_progression():
     print("EXAMPLE 3: MOI Evolution During Burn")
     print("=" * 60)
 
-    # Create grain
     grain = Grain(spacing=0.005)
 
     for _ in range(2):
@@ -130,7 +118,6 @@ def example_burn_progression():
     ideal_density = 1800.0
     web_thickness = grain.segments[0].get_web_thickness()
 
-    # Calculate MOI at different burn stages
     burn_stages = [0.0, 0.25, 0.50, 0.75, 0.95]
 
     print("\nBurn Stage | Ixx [kg⋅m²] | Iyy [kg⋅m²] | Mass [kg]")
@@ -182,7 +169,6 @@ def example_asymmetric_grain():
 
     print_inertia_tensor(moi, "Asymmetric Grain MOI")
 
-    # Show CoG shift due to density difference
     cog = grain.get_center_of_gravity(web_distance=0.0)
     print(
         f"\nCenter of gravity shifted to: {cog[0]:.4f} m"
@@ -196,11 +182,10 @@ def example_2d_fmm_star_grain():
     print("EXAMPLE 5: 2D FMM Star Grain Segment")
     print("=" * 60)
 
-    # Create a star grain segment using FMM 2D
     star_segment = StarGrainSegment(
         length=0.250,  # 250 mm
         outer_diameter=0.120,  # 120 mm
-        number_of_points=5,  # 5-point star
+        number_of_points=5,
         point_length=0.030,  # 30 mm radial point length
         point_width=0.015,  # 15 mm point width
         density_ratio=1.0,
@@ -208,28 +193,24 @@ def example_2d_fmm_star_grain():
 
     ideal_density = 1800.0  # kg/m³
 
-    # Calculate MOI at ignition
     moi_ignition = star_segment.get_moment_of_inertia(
         web_distance=0.0, ideal_density=ideal_density
     )
 
     print_inertia_tensor(moi_ignition, "Star Grain at Ignition")
 
-    # Calculate burn properties
     web_thickness = star_segment.get_web_thickness()
     print(f"\nWeb thickness: {web_thickness * 1000:.2f} mm")
 
     mass = star_segment.get_mass(web_distance=0.0, ideal_density=ideal_density)
     print(f"Initial propellant mass: {mass:.4f} kg")
 
-    # Calculate MOI at 50% burn
     moi_half_burn = star_segment.get_moment_of_inertia(
         web_distance=web_thickness * 0.5, ideal_density=ideal_density
     )
 
     print_inertia_tensor(moi_half_burn, "Star Grain at 50% Burn")
 
-    # Show comparative change
     print("\nMOI reduction during burn:")
     print(f"  Ixx (axial): {(1 - moi_half_burn[0, 0] / moi_ignition[0, 0]) * 100:.1f}%")
     print(
@@ -243,7 +224,6 @@ def example_3d_fmm_conical_grain():
     print("EXAMPLE 6: 3D FMM Conical Grain Segment")
     print("=" * 60)
 
-    # Create a conical grain segment using FMM 3D
     conical_segment = ConicalGrainSegment(
         length=0.300,  # 300 mm
         outer_diameter=0.130,  # 130 mm
@@ -254,21 +234,18 @@ def example_3d_fmm_conical_grain():
 
     ideal_density = 1800.0  # kg/m³
 
-    # Calculate MOI at ignition
     moi_ignition = conical_segment.get_moment_of_inertia(
         web_distance=0.0, ideal_density=ideal_density
     )
 
     print_inertia_tensor(moi_ignition, "Conical Grain at Ignition")
 
-    # Calculate properties
     web_thickness = conical_segment.get_web_thickness()
     print(f"\nWeb thickness: {web_thickness * 1000:.2f} mm")
 
     mass = conical_segment.get_mass(web_distance=0.0, ideal_density=ideal_density)
     print(f"Initial propellant mass: {mass:.4f} kg")
 
-    # Calculate MOI evolution
     print("\nMOI Evolution During Burn:")
     print("Burn % | Ixx [kg⋅m²] | Iyy [kg⋅m²] | Izz [kg⋅m²] | Mass [kg]")
     print("-" * 70)
@@ -287,7 +264,6 @@ def example_3d_fmm_conical_grain():
             f"{moi[2, 2]:11.8f} | {mass:8.4f}"
         )
 
-    # Note on 3D grain characteristics
     print(
         "\nNote: The conical geometry creates a variable burn rate profile"
         "\nalong the grain length, with different port areas at each slice."

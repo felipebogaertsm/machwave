@@ -84,10 +84,8 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
 
         radius = np.sqrt(map_x**2 + map_y**2)
 
-        # Create the core:
         core_map[radius < core_diameter_norm / 2] = 0
 
-        # Create the ports:
         for port_index in range(int(self.number_of_ports)):
             displacement_angle = 2 * np.pi / self.number_of_ports * (port_index)
 

@@ -43,7 +43,6 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
 
         self.piston_loss = piston_loss
 
-        # Tank objects
         self.fuel_tank = fuel_tank
         self.oxidizer_tank = oxidizer_tank
 

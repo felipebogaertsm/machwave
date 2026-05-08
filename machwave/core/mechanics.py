@@ -43,7 +43,6 @@ def get_center_of_gravity(
         y_cog = np.sum(y_coords * masses) / total_mass
         z_cog = np.sum(z_coords * masses) / total_mass
     else:
-        # Equal mass for all elements
         x_cog = np.mean(x_coords)
         y_cog = np.mean(y_coords)
         z_cog = np.mean(z_coords)
@@ -83,12 +82,10 @@ def get_moment_of_inertia_tensor(
     y_sq = y_coords**2
     z_sq = z_coords**2
 
-    # Diagonal terms of inertia tensor
     Ixx = element_mass * np.sum(y_sq + z_sq)
     Iyy = element_mass * np.sum(x_sq + z_sq)
     Izz = element_mass * np.sum(x_sq + y_sq)
 
-    # Products of inertia
     Ixy = -element_mass * np.sum(x_coords * y_coords)
     Ixz = -element_mass * np.sum(x_coords * z_coords)
     Iyz = -element_mass * np.sum(y_coords * z_coords)

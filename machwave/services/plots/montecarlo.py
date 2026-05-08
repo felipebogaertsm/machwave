@@ -24,7 +24,6 @@ def plot_histogram(
         x_axes_title: Label for the x-axis.
         **plotly_kwargs: Additional kwargs passed to go.Histogram (e.g. nbinsx=50).
     """
-    # Extract all values:
     values = np.array(
         [getattr(sim_result[state_index], property_name) for sim_result in results]
     )
@@ -60,13 +59,11 @@ def plot_histogram_with_kde(
         [getattr(sim_result[state_index], property_name) for sim_result in results]
     )
 
-    # Build KDE
     kde = scipy_stats.gaussian_kde(values)
     xs = np.linspace(values.min(), values.max(), kde_points)
     kde_vals = kde(xs)
 
     fig = go.Figure()
-    # Histogram (normalized to probability density)
     fig.add_trace(
         go.Histogram(
             x=values,
@@ -77,7 +74,6 @@ def plot_histogram_with_kde(
             **plotly_kwargs,
         )
     )
-    # KDE line
     fig.add_trace(
         go.Scatter(x=xs, y=kde_vals, mode="lines", name="KDE", line=dict(width=2))
     )
@@ -191,7 +187,6 @@ def plot_time_series_extremes(
     all_times = []
     all_series = []
 
-    # 1) Gather raw arrays
     for sim_result in results:
         state_obj = sim_result[state_index]
         t = np.asarray(getattr(state_obj, time_property))
@@ -199,13 +194,11 @@ def plot_time_series_extremes(
         all_times.append(t)
         all_series.append(y)
 
-    # 2) Identify longest time-array
     lengths = [len(t) for t in all_times]
     idx_longest = int(np.argmax(lengths))
     common_time = all_times[idx_longest]
     Nmax = len(common_time)
 
-    # 3) Pad each series out to Nmax with NaN
     padded_series = []
     for y in all_series:
         n = len(y)
@@ -216,25 +209,21 @@ def plot_time_series_extremes(
         else:
             padded_series.append(y.copy())
 
-    series_mat = np.vstack(padded_series)  # shape = (n_scenarios, Nmax)
+    series_mat = np.vstack(padded_series)
 
-    # 4) Compute each scenario’s mean (ignore NaN)
     means = np.nanmean(series_mat, axis=1)
 
-    # 5) Find indices of min-mean, max-mean, and closest-to-median
     i_min = int(np.nanargmin(means))
     i_max = int(np.nanargmax(means))
     median_of_means = np.median(means)
     i_med = int(np.nanargmin(np.abs(means - median_of_means)))
 
-    y_min = series_mat[i_min]  # length = Nmax, NaN beyond real data
+    y_min = series_mat[i_min]
     y_med = series_mat[i_med]
     y_max = series_mat[i_max]
 
-    # 6) Build Plotly figure
     fig = go.Figure()
 
-    # Lowest-mean (plotted first, no fill)
     fig.add_trace(
         go.Scatter(
             x=common_time,
@@ -245,19 +234,17 @@ def plot_time_series_extremes(
         )
     )
 
-    # Highest-mean (plotted second, fill down to the previous trace)
     fig.add_trace(
         go.Scatter(
             x=common_time,
             y=y_max,
             name="Highest-mean scenario",
             line=dict(color="red"),
-            fill="tonexty",  # shades between y_max and y_min where both are real
+            fill="tonexty",
             **plotly_kwargs,
         )
     )
 
-    # Median-mean (plotted last, on top)
     fig.add_trace(
         go.Scatter(
             x=common_time,

@@ -73,14 +73,12 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
             ValueError: If thrust_chamber.center_of_gravity_coordinate, oxidizer_tank_cog,
                 or fuel_tank_cog is not defined.
         """
-        # Get current propellant masses
         initial_ox_mass = self.feed_system.oxidizer_tank.initial_fluid_mass
         initial_fuel_mass = self.feed_system.fuel_tank.initial_fluid_mass
 
         ox_mass = initial_ox_mass * (1.0 - propellant_fraction)
         fuel_mass = initial_fuel_mass * (1.0 - propellant_fraction)
 
-        # Structural dry mass (thrust chamber, tank structure, feed lines, etc.)
         dry_mass = self.thrust_chamber.dry_mass
 
         if self.thrust_chamber.center_of_gravity_coordinate is None:
@@ -90,23 +88,19 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
 
         dry_cog = self.thrust_chamber.center_of_gravity_coordinate
 
-        # Oxidizer tank CoG
         if self.oxidizer_tank_cog is None:
             raise ValueError("Oxidizer tank center of gravity is not defined.")
 
         ox_cog = np.array([self.oxidizer_tank_cog, 0.0, 0.0], dtype=np.float64)
 
-        # Fuel tank CoG
         if self.fuel_tank_cog is None:
             raise ValueError("Fuel tank center of gravity is not defined.")
 
         fuel_cog = np.array([self.fuel_tank_cog, 0.0, 0.0], dtype=np.float64)
 
-        # Calculate total mass and weighted CoG
         total_mass = dry_mass + ox_mass + fuel_mass
 
         if total_mass <= 0:
-            # Fallback if calculation fails
             return dry_cog
 
         weighted_cog = (

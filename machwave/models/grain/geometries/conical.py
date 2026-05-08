@@ -57,7 +57,6 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         radius = np.sqrt(map_x**2 + map_y**2)
         core_diameter = map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
 
-        # Create the ring:
         core_map[radius < core_diameter / 2] = 0
         core_map[0] = 0  # Inhibit the bottom end
         core_map[-1] = 0  # Inhibit the top end
