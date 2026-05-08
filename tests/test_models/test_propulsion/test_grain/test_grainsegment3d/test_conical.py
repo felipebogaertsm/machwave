@@ -12,10 +12,7 @@ map_dim) for the last 20% of the web thickness.
 import numpy as np
 import pytest
 
-from machwave.models.grain.geometries import (
-    BatesSegment,
-    ConicalGrainSegment,
-)
+from tests.factories import BatesSegmentFactory, ConicalGrainSegmentFactory
 
 TOLERANCE = 0.10  # 10% tolerance
 WEB_DISTANCE_TRAVEL_PERCENTAGE = 0.8  # 80% of the web thickness
@@ -24,7 +21,7 @@ NUMBER_OF_ITERATIONS = 3  # Number of iterations for the test
 
 @pytest.fixture
 def conical_grain_segment_1():
-    return ConicalGrainSegment(
+    return ConicalGrainSegmentFactory.build(
         length=68e-3,
         outer_diameter=41e-3,
         upper_core_diameter=15e-3,
@@ -34,7 +31,7 @@ def conical_grain_segment_1():
 
 @pytest.fixture
 def bates_equivalent_1():
-    return BatesSegment(
+    return BatesSegmentFactory.build(
         length=68e-3,
         outer_diameter=41e-3,
         core_diameter=15e-3,
