@@ -11,11 +11,21 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from machwave.models import feed_systems, motors, propellants
-from machwave.models import thrust_chamber as thrust_chamber_models
-from machwave.models.feed_systems import tanks
+from machwave.models import motors
 from machwave.simulation import InternalBallisticsSimulationParams
 from machwave.states import LiquidEngineState
+from tests.factories import (
+    BiliquidPropellantFactory,
+    BipropellantInjectorFactory,
+    CombustionChamberFactory,
+    FuelComponentFactory,
+    LiquidEngineFactory,
+    LiquidEngineThrustChamberFactory,
+    NozzleFactory,
+    OxidizerComponentFactory,
+    StackedTankPressureFedFeedSystemFactory,
+    TankFactory,
+)
 from tests.test_simulations.conftest import (
     SimulationResult,
     assert_recorded_arrays_aligned,
@@ -25,81 +35,51 @@ from tests.test_simulations.conftest import (
 
 def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationParams]:
     """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
-    oxidizer_name = "N2O"
-    fuel_name = "Ethanol"
-
-    oxidizer = propellants.PropellantComponent(
-        name=oxidizer_name,
-        role=propellants.ComponentRole.OXIDIZER,
-        density=745.0,
-        chemical_formula={"N": 2, "O": 1},
-        enthalpy=0.0,
-        initial_temperature=300.0,
-    )
-    fuel = propellants.PropellantComponent(
-        name=fuel_name,
-        role=propellants.ComponentRole.FUEL,
-        density=789.0,
-        chemical_formula={"C": 2, "H": 6, "O": 1},
-        enthalpy=0.0,
-        initial_temperature=300.0,
-    )
-    propellant = propellants.BiliquidPropellant(
-        name=f"{oxidizer_name}/{fuel_name}",
+    oxidizer = OxidizerComponentFactory.build(initial_temperature=300.0)
+    fuel = FuelComponentFactory.build(initial_temperature=300.0)
+    propellant = BiliquidPropellantFactory.build(
         components=[oxidizer, fuel],
-        combustion_efficiency=0.98,
         of_ratio=1.9495,
     )
 
-    fuel_tank = tanks.Tank(
-        fuel_name.upper(),
-        volume=2.261e-4,
-        temperature=300,
-        initial_fluid_mass=1.55,
-    )
-    oxidizer_tank = tanks.Tank(
-        oxidizer_name,
-        volume=3.622e-3,
-        temperature=300,
-        initial_fluid_mass=2.78,
-    )
-    feed_system = feed_systems.StackedTankPressureFedFeedSystem(
+    feed_system = StackedTankPressureFedFeedSystemFactory.build(
+        oxidizer_tank=TankFactory.build(
+            fluid_name="N2O",
+            volume=3.622e-3,
+            temperature=300,
+            initial_fluid_mass=2.78,
+        ),
+        fuel_tank=TankFactory.build(
+            fluid_name="ETHANOL",
+            volume=2.261e-4,
+            temperature=300,
+            initial_fluid_mass=1.55,
+        ),
         oxidizer_line_diameter=7.925e-3,
         oxidizer_line_length=0.5,
         fuel_line_diameter=5.715e-3,
         fuel_line_length=0.5,
-        oxidizer_tank=oxidizer_tank,
-        fuel_tank=fuel_tank,
         piston_loss=1e5,
     )
 
-    nozzle = thrust_chamber_models.Nozzle(
-        inlet_diameter=55e-3,
-        throat_diameter=25.4e-3,
-        divergent_angle=12,
-        convergent_angle=45,
-        expansion_ratio=4,
+    thrust_chamber = LiquidEngineThrustChamberFactory.build(
+        nozzle=NozzleFactory.build(
+            inlet_diameter=55e-3,
+            throat_diameter=25.4e-3,
+            divergent_angle=12,
+            convergent_angle=45,
+            expansion_ratio=4,
+        ),
+        injector=BipropellantInjectorFactory.build(),
+        combustion_chamber=CombustionChamberFactory.build(
+            casing_inner_diameter=70e-3,
+            casing_outer_diameter=76e-3,
+            internal_length=13e-3,
+            thermal_liner_thickness=2e-3,
+        ),
     )
-    injector = thrust_chamber_models.BipropellantInjector(
-        discharge_coefficient_fuel=0.48,
-        discharge_coefficient_oxidizer=0.48,
-        area_fuel=8.2e-6 / 0.48,
-        area_ox=1.4e-5 / 0.48,
-    )
-    combustion_chamber = thrust_chamber_models.CombustionChamber(
-        casing_inner_diameter=70e-3,
-        casing_outer_diameter=76e-3,
-        internal_length=13e-3,
-        thermal_liner_thickness=2e-3,
-    )
-    thrust_chamber = thrust_chamber_models.LiquidEngineThrustChamber(
-        nozzle=nozzle,
-        injector=injector,
-        combustion_chamber=combustion_chamber,
-        dry_mass=2,
-        center_of_gravity_coordinate=(0.02, 0.0, 0.0),
-    )
-    motor = motors.LiquidEngine(
+
+    motor = LiquidEngineFactory.build(
         propellant=propellant,
         feed_system=feed_system,
         thrust_chamber=thrust_chamber,

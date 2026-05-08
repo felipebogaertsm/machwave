@@ -3,11 +3,9 @@ from pathlib import Path
 import pytest
 
 from machwave.models.propellants.formulations import get_propellant_from_json
-from machwave.models.thrust_chamber import (
-    CombustionChamber,
-)
 
-# Get the formulations directory
+from tests.factories import CombustionChamberFactory
+
 FORMULATIONS_DIR = (
     Path(__file__).parent.parent.parent
     / "machwave"
@@ -46,7 +44,7 @@ def propellant_KNSU():
 
 @pytest.fixture
 def combustion_chamber_olympus():
-    return CombustionChamber(
+    return CombustionChamberFactory.build(
         casing_inner_diameter=128.2e-3,
         casing_outer_diameter=141.3e-3,
         thermal_liner_thickness=3e-3,

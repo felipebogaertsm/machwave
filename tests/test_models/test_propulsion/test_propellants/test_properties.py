@@ -8,7 +8,7 @@ import scipy.constants
 from machwave.models.propellants.properties import (
     ThermochemicalProperties,
 )
-from tests.test_models.test_propulsion.factories import (
+from tests.factories import (
     LiquidPropellantPropertiesFactory,
     SolidPropellantPropertiesFactory,
 )

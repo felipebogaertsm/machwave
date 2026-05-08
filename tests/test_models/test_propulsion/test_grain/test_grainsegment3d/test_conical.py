@@ -12,19 +12,16 @@ map_dim) for the last 20% of the web thickness.
 import numpy as np
 import pytest
 
-from machwave.models.grain.geometries import (
-    BatesSegment,
-    ConicalGrainSegment,
-)
+from tests.factories import BatesSegmentFactory, ConicalGrainSegmentFactory
 
-TOLERANCE = 0.10  # 10% tolerance
-WEB_DISTANCE_TRAVEL_PERCENTAGE = 0.8  # 80% of the web thickness
-NUMBER_OF_ITERATIONS = 3  # Number of iterations for the test
+TOLERANCE = 0.10
+WEB_DISTANCE_TRAVEL_PERCENTAGE = 0.8
+NUMBER_OF_ITERATIONS = 3
 
 
 @pytest.fixture
 def conical_grain_segment_1():
-    return ConicalGrainSegment(
+    return ConicalGrainSegmentFactory.build(
         length=68e-3,
         outer_diameter=41e-3,
         upper_core_diameter=15e-3,
@@ -34,7 +31,7 @@ def conical_grain_segment_1():
 
 @pytest.fixture
 def bates_equivalent_1():
-    return BatesSegment(
+    return BatesSegmentFactory.build(
         length=68e-3,
         outer_diameter=41e-3,
         core_diameter=15e-3,
@@ -51,7 +48,6 @@ def test_burn_area(conical_grain_segment_1, bates_equivalent_1):
 
         assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
-        # Asserting that the burn area is the same as the bates equivalent:
         expected_value = bates_equivalent_1.get_burn_area(web_distance)
         tolerance = expected_value * TOLERANCE
 
@@ -65,7 +61,6 @@ def test_port_area(conical_grain_segment_1, bates_equivalent_1):
 
     assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
-    # Asserting that the burn area is the same as the bates equivalent:
     expected_value = bates_equivalent_1.get_port_area(0)
     tolerance = expected_value * TOLERANCE * 2
 

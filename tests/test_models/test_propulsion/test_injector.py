@@ -1,16 +1,11 @@
 import pytest
 
-from machwave.models.thrust_chamber.injector import BipropellantInjector
+from tests.factories import BipropellantInjectorFactory
 
 
 @pytest.fixture
 def injector():
-    return BipropellantInjector(
-        discharge_coefficient_fuel=0.48,
-        discharge_coefficient_oxidizer=0.48,
-        area_fuel=8.2e-6 / 0.48,
-        area_ox=1.4e-5 / 0.48,
-    )
+    return BipropellantInjectorFactory.build()
 
 
 class TestBipropellantInjectorInstantiation:
@@ -28,7 +23,7 @@ class TestBipropellantInjectorInstantiation:
 
     def test_asymmetric_discharge_coefficients(self):
         """Fuel and oxidizer sides may have different Cd values."""
-        inj = BipropellantInjector(
+        inj = BipropellantInjectorFactory.build(
             discharge_coefficient_fuel=0.40,
             discharge_coefficient_oxidizer=0.65,
             area_fuel=5e-6,
@@ -38,10 +33,5 @@ class TestBipropellantInjectorInstantiation:
 
     def test_different_areas(self):
         """Fuel and oxidizer orifice areas are independently configurable."""
-        inj = BipropellantInjector(
-            discharge_coefficient_fuel=0.48,
-            discharge_coefficient_oxidizer=0.48,
-            area_fuel=5e-6,
-            area_ox=2e-5,
-        )
+        inj = BipropellantInjectorFactory.build(area_fuel=5e-6, area_ox=2e-5)
         assert inj.area_fuel != inj.area_ox
