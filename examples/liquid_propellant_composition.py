@@ -26,7 +26,7 @@ def main() -> None:
         name="LOX/LH2",
         components=[lox, lh2],
         combustion_efficiency=0.99,
-        of_ratio=6.0,
+        oxidizer_to_fuel_ratio=6.0,
     )
 
     chamber_pressure_range = np.linspace(1e5, 10e6, 100)

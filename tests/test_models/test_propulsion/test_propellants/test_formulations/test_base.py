@@ -273,7 +273,7 @@ class TestCreatePropellant:
         data = {
             "name": "Test Biliquid",
             "combustion_efficiency": 0.98,
-            "of_ratio": 2.5,
+            "oxidizer_to_fuel_ratio": 2.5,
         }
         components = []
         mass_fractions = None
@@ -286,7 +286,7 @@ class TestCreatePropellant:
         assert isinstance(result, BiliquidPropellant)
         assert result.name == "Test Biliquid"
         assert result.combustion_efficiency == 0.98
-        assert result.of_ratio == 2.5
+        assert result.oxidizer_to_fuel_ratio == 2.5
 
     def test_create_solid_with_default_efficiency(self):
         from machwave.models.propellants.categories import SolidPropellant
