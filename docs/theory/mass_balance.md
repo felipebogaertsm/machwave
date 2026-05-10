@@ -220,10 +220,13 @@ used in §2.2 — with \(\dot{m}_{in} = \dot{m}_{fuel} + \dot{m}_{ox}\), \(C_d =
 and chamber-state \(\{T_0, R, k\}\) — and integrated with the same RK4 solver as §2.2.
 
 The thermochemical state \(\{T_0, R, k\}\) is evaluated by NASA-CEA at each step from
-the current \(P_0\) and the design expansion ratio, then held constant within the
-RK4 sub-stages — an explicit lag that is acceptable because chamber properties are
+the current \(P_0\), the design expansion ratio, and the instantaneous mixture ratio
+\(\dot{m}_{ox} / \dot{m}_{fuel}\). The result is held constant within the RK4
+sub-stages — an explicit lag that is acceptable because chamber properties are
 only weakly pressure-dependent (cf. Sutton & Biblarz §5.4 on equilibrium
-thermochemistry).
+thermochemistry). Before flow develops the formulation's design O/F is used as
+the seed; after one tank empties the last evaluated properties are reused for
+the chamber-pressure decay.
 
 ### 2.3.6 Modelling Assumptions and Limitations
 

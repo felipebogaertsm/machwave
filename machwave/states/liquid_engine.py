@@ -109,18 +109,18 @@ class LiquidEngineState(MotorState):
         m_dot_fuel = min(m_dot_fuel, self.fuel_mass[-1] / d_t)
         m_dot_ox = min(m_dot_ox, self.oxidizer_mass[-1] / d_t)
 
-        of = self.motor.propellant.of_ratio
-        assert of is not None
+        oxidizer_to_fuel_ratio = self.motor.propellant.oxidizer_to_fuel_ratio
+        assert oxidizer_to_fuel_ratio is not None
         cons_f = m_dot_fuel * d_t
         cons_o = m_dot_ox * d_t
         if cons_f >= self.fuel_mass[-1]:
             cons_f = self.fuel_mass[-1]
-            cons_o = of * cons_f
+            cons_o = oxidizer_to_fuel_ratio * cons_f
             self.end_burn = True
             self.burn_time = self.t[-1]
         elif cons_o >= self.oxidizer_mass[-1]:
             cons_o = self.oxidizer_mass[-1]
-            cons_f = cons_o / of
+            cons_f = cons_o / oxidizer_to_fuel_ratio
             self.end_burn = True
             self.burn_time = self.t[-1]
         m_dot_fuel = cons_f / d_t
@@ -128,10 +128,16 @@ class LiquidEngineState(MotorState):
         self._m_dot_fuel = m_dot_fuel
         self._m_dot_ox = m_dot_ox
 
-        self.motor.propellant.properties = self.motor.propellant.evaluate(
-            chamber_pressure=self.chamber_pressure[-1],
-            expansion_ratio=nz.expansion_ratio,
-        )
+        if self.propellant_mass[-1] > 0:
+            if m_dot_fuel > 0.0:
+                instantaneous_oxidizer_to_fuel_ratio = m_dot_ox / m_dot_fuel
+            else:
+                instantaneous_oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
+            self.motor.propellant.properties = self.motor.propellant.evaluate(
+                chamber_pressure=self.chamber_pressure[-1],
+                expansion_ratio=nz.expansion_ratio,
+                mixture_ratio=instantaneous_oxidizer_to_fuel_ratio,
+            )
         props = self.motor.propellant.properties
         assert props is not None
 

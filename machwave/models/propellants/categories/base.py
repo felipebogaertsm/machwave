@@ -80,13 +80,17 @@ class Propellant(abc.ABC):
         pass
 
     def evaluate(
-        self, chamber_pressure: float, expansion_ratio: float = 8.0
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float = 8.0,
+        mixture_ratio: float | None = None,
     ) -> ThermochemicalProperties:
         """Evaluate thermochemical properties at given conditions.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
             expansion_ratio: Nozzle area ratio (Ae/At).
+            mixture_ratio: Ratio of the propellant mixture.
 
         Returns:
             ThermochemicalProperties.
@@ -98,22 +102,30 @@ class Propellant(abc.ABC):
         service = self.thermochemical_service
 
         adiabatic_flame_temperature = service.get_adiabatic_flame_temperature(
-            chamber_pressure=chamber_pressure
+            chamber_pressure=chamber_pressure, mixture_ratio=mixture_ratio
         )
 
         molecular_weight_chamber, k_chamber = service.get_chamber_properties(
-            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=expansion_ratio,
+            mixture_ratio=mixture_ratio,
         )
 
         molecular_weight_exhaust, k_exhaust = service.get_exhaust_properties(
-            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=expansion_ratio,
+            mixture_ratio=mixture_ratio,
         )
 
         i_sp_frozen, i_sp_shifting = service.get_specific_impulse(
-            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=expansion_ratio,
+            mixture_ratio=mixture_ratio,
         )
         qsi_chamber, qsi_exhaust = service.get_condensed_phase_fractions(
-            chamber_pressure=chamber_pressure, expansion_ratio=expansion_ratio
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=expansion_ratio,
+            mixture_ratio=mixture_ratio,
         )
 
         properties = ThermochemicalProperties(
