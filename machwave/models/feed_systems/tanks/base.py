@@ -13,6 +13,8 @@ class Tank:
       - Ignores temperature changes upon phase change (no thermal balance).
     """
 
+    OVERFILL_TOLERANCE = 0.01
+
     def __init__(
         self,
         fluid_name: str,
@@ -28,12 +30,44 @@ class Tank:
             volume: Internal volume of the tank [m^3].
             temperature: Absolute temperature [K], assumed constant.
             initial_fluid_mass: Initial total mass of fluid [kg].
+
+        Raises:
+            ValueError: If the implied bulk density exceeds the saturated
+                liquid density at ``temperature`` (within
+                :attr:`OVERFILL_TOLERANCE`), which is physically impossible.
         """
+        self._check_not_overfilled(fluid_name, volume, temperature, initial_fluid_mass)
+
         self.fluid_name = fluid_name
         self.volume = volume
         self.temperature = temperature
         self.initial_fluid_mass = initial_fluid_mass
         self.fluid_mass = initial_fluid_mass
+
+    @classmethod
+    def _check_not_overfilled(
+        cls,
+        fluid_name: str,
+        volume: float,
+        temperature: float,
+        initial_fluid_mass: float,
+    ) -> None:
+        """Raise ``ValueError`` if the tank fill is denser than liquid.
+
+        The implied bulk density ``initial_fluid_mass / volume`` cannot exceed
+        the saturated-liquid density at ``temperature`` — anything denser
+        leaves no physical state for the fluid. A small tolerance
+        (:attr:`OVERFILL_TOLERANCE`) absorbs property-table noise and
+        thermal-expansion margin.
+        """
+        rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+        bulk_density = initial_fluid_mass / volume
+        if bulk_density > rho_liquid * (1 + cls.OVERFILL_TOLERANCE):
+            raise ValueError(
+                f"Tank overfilled: implied bulk density "
+                f"{bulk_density:.1f} kg/m^3 exceeds liquid density "
+                f"{rho_liquid:.1f} kg/m^3 for {fluid_name} at {temperature} K"
+            )
 
     def get_pressure(self) -> float:
         """Return the current tank pressure [Pa] using two-phase logic.
