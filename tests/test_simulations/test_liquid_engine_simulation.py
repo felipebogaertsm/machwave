@@ -167,3 +167,33 @@ def test_recorded_per_timestep_arrays_are_aligned(
             "oxidizer_tank_pressure",
         ),
     )
+
+
+def _build_state_for_burnout_test() -> LiquidEngineState:
+    motor, params = _build_1kn_lre()
+    return LiquidEngineState(
+        motor=motor,
+        initial_pressure=params.igniter_pressure,
+        initial_atmospheric_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )
+
+
+def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
+    state = _build_state_for_burnout_test()
+    state.fuel_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.end_burn is True
+    assert state.burn_time == pytest.approx(state.t[-1])
+
+
+def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
+    state = _build_state_for_burnout_test()
+    state.oxidizer_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.end_burn is True
+    assert state.burn_time == pytest.approx(state.t[-1])
