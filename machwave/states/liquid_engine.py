@@ -113,18 +113,9 @@ class LiquidEngineState(MotorState):
         assert oxidizer_to_fuel_ratio is not None
         cons_f = m_dot_fuel * d_t
         cons_o = m_dot_ox * d_t
-        if cons_f >= self.fuel_mass[-1]:
-            cons_f = self.fuel_mass[-1]
-            cons_o = oxidizer_to_fuel_ratio * cons_f
+        if cons_f >= self.fuel_mass[-1] or cons_o >= self.oxidizer_mass[-1]:
             self.end_burn = True
             self.burn_time = self.t[-1]
-        elif cons_o >= self.oxidizer_mass[-1]:
-            cons_o = self.oxidizer_mass[-1]
-            cons_f = cons_o / oxidizer_to_fuel_ratio
-            self.end_burn = True
-            self.burn_time = self.t[-1]
-        m_dot_fuel = cons_f / d_t
-        m_dot_ox = cons_o / d_t
         self._m_dot_fuel = m_dot_fuel
         self._m_dot_ox = m_dot_ox
 
