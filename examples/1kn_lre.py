@@ -44,7 +44,7 @@ def main():
         name=f"{OXIDIZER_NAME}/{FUEL_NAME}",
         components=[oxidizer, fuel],
         combustion_efficiency=0.98,
-        of_ratio=1.9495,
+        oxidizer_to_fuel_ratio=1.9495,
     )
 
     fuel_tank = tanks.Tank(

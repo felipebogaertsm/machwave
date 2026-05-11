@@ -21,6 +21,6 @@
       "temperature": 298.15
     }
   ],
-  "of_ratio": 6.0,
+  "oxidizer_to_fuel_ratio": 6.0,
   "combustion_efficiency": 0.98
 }

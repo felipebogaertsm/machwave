@@ -524,5 +524,49 @@ def test_generate_card_string_utility():
         generate_card_string([])
 
 
+class TestMixtureRatioOverride:
+    @pytest.fixture
+    def lox_rp1_service(self):
+        return create_cea_service(
+            oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
+        )
+
+    def test_adiabatic_flame_temperature_override(self, lox_rp1_service):
+        baseline = lox_rp1_service.get_adiabatic_flame_temperature(3e6)
+        overridden = lox_rp1_service.get_adiabatic_flame_temperature(
+            3e6, mixture_ratio=1.5
+        )
+        assert baseline != pytest.approx(overridden)
+
+    def test_chamber_properties_override(self, lox_rp1_service):
+        mw_default, k_default = lox_rp1_service.get_chamber_properties(3e6, 8.0)
+        mw_override, k_override = lox_rp1_service.get_chamber_properties(
+            3e6, 8.0, mixture_ratio=1.5
+        )
+        assert (mw_default, k_default) != pytest.approx((mw_override, k_override))
+
+    def test_exhaust_properties_override(self, lox_rp1_service):
+        mw_default, k_default = lox_rp1_service.get_exhaust_properties(3e6, 8.0)
+        mw_override, k_override = lox_rp1_service.get_exhaust_properties(
+            3e6, 8.0, mixture_ratio=1.5
+        )
+        assert (mw_default, k_default) != pytest.approx((mw_override, k_override))
+
+    def test_specific_impulse_override(self, lox_rp1_service):
+        isp_f_default, isp_s_default = lox_rp1_service.get_specific_impulse(3e6, 8.0)
+        isp_f_override, isp_s_override = lox_rp1_service.get_specific_impulse(
+            3e6, 8.0, mixture_ratio=1.5
+        )
+        assert isp_f_default != pytest.approx(isp_f_override)
+        assert isp_s_default != pytest.approx(isp_s_override)
+
+    def test_override_matches_construction_default(self, lox_rp1_service):
+        explicit = lox_rp1_service.get_adiabatic_flame_temperature(
+            3e6, mixture_ratio=2.5
+        )
+        cached = lox_rp1_service.get_adiabatic_flame_temperature(3e6)
+        assert explicit == pytest.approx(cached)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

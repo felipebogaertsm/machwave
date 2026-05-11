@@ -154,8 +154,12 @@ class TestJSONFormulationLoading:
         assert 0 < propellant.combustion_efficiency <= 1.0, (
             f"{json_file.stem}: Invalid combustion_efficiency"
         )
-        assert propellant.of_ratio is not None, f"{json_file.stem}: Missing O/F ratio"
-        assert propellant.of_ratio > 0, f"{json_file.stem}: Invalid O/F ratio"
+        assert propellant.oxidizer_to_fuel_ratio is not None, (
+            f"{json_file.stem}: Missing O/F ratio"
+        )
+        assert propellant.oxidizer_to_fuel_ratio > 0, (
+            f"{json_file.stem}: Invalid O/F ratio"
+        )
 
         # Verify components have required fields
         has_oxidizer = False

@@ -161,7 +161,7 @@ def _create_propellant(
             components=components,
             combustion_efficiency=data.get("combustion_efficiency", 0.98),
             properties=properties,
-            of_ratio=data.get("of_ratio"),
+            oxidizer_to_fuel_ratio=data.get("oxidizer_to_fuel_ratio"),
         )
     else:
         raise ValueError(f"Unsupported mixture_type: {mixture_type}")

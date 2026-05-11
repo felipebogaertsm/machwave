@@ -18,7 +18,7 @@ class BiliquidPropellant(Propellant):
         components: list[PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
         properties: ThermochemicalProperties | None = None,
-        of_ratio: float | None = None,
+        oxidizer_to_fuel_ratio: float | None = None,
     ):
         """Initialize biliquid propellant.
 
@@ -27,7 +27,10 @@ class BiliquidPropellant(Propellant):
             components: Chemical components (should be exactly 2: oxidizer and fuel).
             combustion_efficiency: Efficiency factor (0-1).
             properties: Pre-defined thermochemical properties (optional).
-            of_ratio: Oxidizer-to-fuel mass ratio.
+            oxidizer_to_fuel_ratio: Oxidizer-to-fuel mass ratio for this
+                formulation. Used as the default mixture_ratio at the
+                thermochemical service layer; callers can override per-call
+                via ``evaluate(mixture_ratio=...)``.
         """
         super().__init__(
             name=name,
@@ -35,7 +38,7 @@ class BiliquidPropellant(Propellant):
             combustion_efficiency=combustion_efficiency,
         )
         self.properties = properties
-        self.of_ratio = of_ratio
+        self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
         self.oxidizer_tank_density: float = 0.0
         self.fuel_tank_density: float = 0.0
 
@@ -83,5 +86,5 @@ class BiliquidPropellant(Propellant):
         return create_cea_service(
             oxidizer_name=oxidizer.name,
             fuel_name=fuel.name,
-            oxidizer_to_fuel_ratio=self.of_ratio,
+            oxidizer_to_fuel_ratio=self.oxidizer_to_fuel_ratio,
         )
