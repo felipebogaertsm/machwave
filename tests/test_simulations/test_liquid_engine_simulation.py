@@ -130,6 +130,9 @@ def test_propellant_masses_are_monotone_non_increasing(
             f"{series_name} increased between steps; max delta={diffs.max():.3e}"
         )
         assert series[-1] <= series[0]
+        assert (series >= -1e-9).all(), (
+            f"{series_name} went negative; min={series.min():.3e}"
+        )
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
