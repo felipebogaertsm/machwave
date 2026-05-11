@@ -48,10 +48,10 @@ def main():
     )
 
     fuel_tank = tanks.Tank(
-        FUEL_NAME.upper(), volume=2.261e-4, temperature=300, initial_fluid_mass=1.55
+        FUEL_NAME.upper(), volume=2.0e-3, temperature=300, initial_fluid_mass=1.55
     )
     oxidizer_tank = tanks.Tank(
-        OXIDIZER_NAME, volume=3.622e-3, temperature=300, initial_fluid_mass=2.78
+        OXIDIZER_NAME, volume=3.80e-3, temperature=300, initial_fluid_mass=2.78
     )
 
     feed_system = feed_systems.StackedTankPressureFedFeedSystem(

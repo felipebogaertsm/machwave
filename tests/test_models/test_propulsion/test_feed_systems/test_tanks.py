@@ -127,3 +127,72 @@ def test_remove_negative_mass():
     tank = Tank("Water", 0.01, 300.0, 1.0)
     with pytest.raises(ValueError):
         tank.remove_propellant(-0.5)
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_check_not_overfilled_rejects_overfill(fluid_name, temperature):
+    """
+    Bulk density exceeding the saturated-liquid density (beyond tolerance)
+    must be rejected — no physical fluid state exists in this regime.
+    """
+    rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+    volume = 1e-3
+    overfill_mass = 2.0 * rho_liquid * volume
+
+    with pytest.raises(ValueError, match="overfilled"):
+        Tank._check_not_overfilled(fluid_name, volume, temperature, overfill_mass)
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_check_not_overfilled_accepts_fill_just_under_liquid(fluid_name, temperature):
+    """
+    Filling close to (but under) the saturated-liquid density must pass —
+    this is the limiting physical case.
+    """
+    rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+    volume = 1e-3
+    mass = rho_liquid * volume * 0.99
+
+    Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_check_not_overfilled_accepts_within_tolerance(fluid_name, temperature):
+    """
+    Bulk density slightly above liquid density but within the configured
+    tolerance must pass — the tolerance absorbs property-table noise.
+    """
+    rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+    volume = 1e-3
+    mass = rho_liquid * volume * (1 + Tank.OVERFILL_TOLERANCE / 2)
+
+    Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_check_not_overfilled_rejects_just_outside_tolerance(fluid_name, temperature):
+    """
+    Bulk density above liquid density by more than the tolerance must be
+    rejected — the tolerance does not extend to arbitrary overfill.
+    """
+    rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+    volume = 1e-3
+    mass = rho_liquid * volume * (1 + Tank.OVERFILL_TOLERANCE * 2)
+
+    with pytest.raises(ValueError, match="overfilled"):
+        Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+
+
+def test_init_invokes_overfill_check():
+    """
+    The constructor must call :meth:`Tank._check_not_overfilled` so an
+    overfilled tank fails fast at API boundaries rather than silently
+    producing nonsensical pressure / density results downstream.
+    """
+    with pytest.raises(ValueError, match="overfilled"):
+        Tank(
+            fluid_name="Water",
+            volume=1e-3,
+            temperature=300.0,
+            initial_fluid_mass=10.0,  # 10000 kg/m^3, liquid water ~997 kg/m^3
+        )

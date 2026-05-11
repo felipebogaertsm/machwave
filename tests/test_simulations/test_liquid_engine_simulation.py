@@ -45,13 +45,13 @@ def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationP
     feed_system = StackedTankPressureFedFeedSystemFactory.build(
         oxidizer_tank=TankFactory.build(
             fluid_name="N2O",
-            volume=3.622e-3,
+            volume=3.80e-3,
             temperature=300,
             initial_fluid_mass=2.78,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
-            volume=2.261e-4,
+            volume=2.0e-3,
             temperature=300,
             initial_fluid_mass=1.55,
         ),
@@ -111,14 +111,12 @@ def test_simulation_completes_with_terminal_state(
     assert simulation_result.time.size > 1
 
 
-def test_burn_time_and_thrust_time_are_finite_and_ordered(
+def test_thrust_time_is_finite_and_positive(
     simulation_result: SimulationResult,
 ) -> None:
     state = simulation_result.state
-    assert np.isfinite(state.burn_time)
     assert np.isfinite(state.thrust_time)
-    assert state.burn_time > 0.0
-    assert state.thrust_time >= state.burn_time
+    assert state.thrust_time > 0.0
 
 
 def test_propellant_masses_are_monotone_non_increasing(
@@ -169,6 +167,36 @@ def test_recorded_per_timestep_arrays_are_aligned(
             "oxidizer_tank_pressure",
         ),
     )
+
+
+def _build_state_for_burnout_test() -> LiquidEngineState:
+    motor, params = _build_1kn_lre()
+    return LiquidEngineState(
+        motor=motor,
+        initial_pressure=params.igniter_pressure,
+        initial_atmospheric_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )
+
+
+def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
+    state = _build_state_for_burnout_test()
+    state.fuel_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.end_burn is True
+    assert state.burn_time == pytest.approx(state.t[-1])
+
+
+def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
+    state = _build_state_for_burnout_test()
+    state.oxidizer_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.end_burn is True
+    assert state.burn_time == pytest.approx(state.t[-1])
 
 
 def test_live_mixture_ratio_drives_cea(
