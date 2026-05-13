@@ -1,8 +1,5 @@
 import numpy as np
 
-from machwave.core.compressible_flow.nozzle import (
-    get_ideal_thrust_coefficient,
-)
 from machwave.models.feed_systems.base import FeedSystem
 from machwave.models.propellants import BiliquidPropellant
 from machwave.models.thrust_chamber import LiquidEngineThrustChamber
@@ -108,38 +105,3 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
         ) / total_mass
 
         return weighted_cog.astype(np.float64)
-
-    def get_thrust_coefficient(
-        self,
-        chamber_pressure: float,
-        exit_pressure: float,
-        external_pressure: float,
-        expansion_ratio: float,
-        k_exhaust: float,
-        other_losses: float,
-    ) -> float:
-        """Get thrust coefficient.
-
-        Args:
-            chamber_pressure: Chamber pressure [Pa].
-            exit_pressure: Exit pressure [Pa].
-            external_pressure: External pressure [Pa].
-            expansion_ratio: Expansion ratio.
-            k_exhaust: Two-phase isentropic coefficient.
-            other_losses: Additional losses not covered by specific mechanisms,
-                as a fraction in [0, 1].
-
-        Returns:
-            Instantaneous thrust coefficient.
-        """
-        thrust_coefficient_ideal = get_ideal_thrust_coefficient(
-            chamber_pressure=chamber_pressure,
-            exit_pressure=exit_pressure,
-            external_pressure=external_pressure,
-            expansion_ratio=expansion_ratio,
-            k_exhaust=k_exhaust,
-        )
-        nozzle_correction_factor = self.get_thrust_coefficient_correction_factor(
-            other_losses
-        )
-        return thrust_coefficient_ideal * nozzle_correction_factor

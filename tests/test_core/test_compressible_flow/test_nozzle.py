@@ -20,7 +20,7 @@ def test_get_ideal_thrust_coefficient():
     external_pressure = 1e5
     expansion_ratio = 8.0
     k_exhaust = 1.4
-    thrust_coefficient_ideal = core_nozzle.get_ideal_thrust_coefficient(
+    ideal_thrust_coefficient = core_nozzle.get_ideal_thrust_coefficient(
         chamber_pressure,
         exit_pressure,
         external_pressure,
@@ -28,14 +28,14 @@ def test_get_ideal_thrust_coefficient():
         k_exhaust,
     )
 
-    assert thrust_coefficient_ideal == pytest.approx(1.524507)
+    assert ideal_thrust_coefficient == pytest.approx(1.524507)
 
 
 def test_apply_thrust_coefficient_correction():
-    thrust_coefficient_ideal = 1.524507
+    ideal_thrust_coefficient = 1.524507
     nozzle_correction_factor = 0.8
     thrust_coefficient = core_nozzle.apply_thrust_coefficient_correction(
-        thrust_coefficient_ideal, nozzle_correction_factor
+        ideal_thrust_coefficient, nozzle_correction_factor
     )
 
     assert thrust_coefficient == pytest.approx(1.219605)

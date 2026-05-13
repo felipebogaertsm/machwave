@@ -83,7 +83,7 @@ jobs:
       - name: Smoke test
         run: |
           python -c "import machwave; print('machwave', machwave.__version__)"
-          python -c "import machwave.simulation, machwave.models, machwave.core, machwave.io, machwave.adapters, machwave.states"
+          python -c "import machwave.simulation, machwave.models, machwave.core, machwave.io, machwave.adapters"
 
   publish:
     name: Publish to PyPI

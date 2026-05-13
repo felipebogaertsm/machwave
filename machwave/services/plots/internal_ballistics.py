@@ -153,8 +153,8 @@ def plot_bipropellant_tank_profiles(
 
 def thrust_coefficient_plot(
     time: np.ndarray,
-    thrust_coefficient_ideal: np.ndarray,
-    thrust_coefficient_real: np.ndarray,
+    ideal_thrust_coefficient: np.ndarray,
+    thrust_coefficient: np.ndarray,
     show_efficiency: bool = True,
 ) -> go.Figure:
     """
@@ -162,8 +162,8 @@ def thrust_coefficient_plot(
 
     Args:
         time: Time array [s].
-        thrust_coefficient_ideal: Ideal thrust coefficient array [-].
-        thrust_coefficient_real: Real thrust coefficient array [-].
+        ideal_thrust_coefficient: Ideal thrust coefficient array [-].
+        thrust_coefficient: Real thrust coefficient array [-].
         show_efficiency: If True, adds η = Cf_real / Cf_ideal on a secondary Y axis.
 
     Returns:
@@ -174,7 +174,7 @@ def thrust_coefficient_plot(
     fig.add_trace(
         go.Scatter(
             x=time,
-            y=thrust_coefficient_ideal,
+            y=ideal_thrust_coefficient,
             mode="lines",
             name="Cf (ideal)",
         ),
@@ -184,7 +184,7 @@ def thrust_coefficient_plot(
     fig.add_trace(
         go.Scatter(
             x=time,
-            y=thrust_coefficient_real,
+            y=thrust_coefficient,
             mode="lines",
             name="Cf (real)",
         ),
@@ -193,10 +193,10 @@ def thrust_coefficient_plot(
 
     if show_efficiency:
         eta = np.divide(
-            thrust_coefficient_real,
-            thrust_coefficient_ideal,
-            out=np.full_like(thrust_coefficient_real, np.nan),
-            where=thrust_coefficient_ideal != 0,
+            thrust_coefficient,
+            ideal_thrust_coefficient,
+            out=np.full_like(thrust_coefficient, np.nan),
+            where=ideal_thrust_coefficient != 0,
         )
         fig.add_trace(
             go.Scatter(

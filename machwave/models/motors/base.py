@@ -69,31 +69,6 @@ class Motor(Generic[P, T], ABC):
         """
         pass
 
-    def get_thrust_coefficient_correction_factor(self, other_losses: float) -> float:
-        """
-        Calculates the thrust coefficient correction factor. This factor is
-        adimensional and should be applied to the ideal thrust coefficient to
-        get the real thrust coefficient.
-
-        Args:
-            other_losses: Additional losses not covered by specific mechanisms,
-                as a fraction in [0, 1].
-
-        Returns:
-            Thrust coefficient correction factor
-        """
-        return (1.0 - other_losses) * self.propellant.combustion_efficiency
-
-    @abstractmethod
-    def get_thrust_coefficient(self, *args, **kwargs) -> float:
-        """
-        Calculates the thrust coefficient at a particular instant.
-
-        Returns:
-            Thrust coefficient
-        """
-        pass
-
     @property
     @abstractmethod
     def initial_propellant_mass(self) -> float:

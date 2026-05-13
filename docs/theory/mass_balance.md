@@ -98,7 +98,7 @@ Substituting into §2.1:
 Evaluated by
 [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance]
 with \(\dot{m}_{in} = \rho_p r A_b\), as called from
-[`SolidMotorState`][machwave.states.solid_motor.SolidMotorState].
+[`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState].
 
 ---
 
@@ -182,7 +182,7 @@ to preserve the design oxidiser–fuel ratio \(\mathrm{O\!/\!F} = \dot{m}_{ox}/\
 (and symmetrically when oxidiser is the limiting reagent). This avoids unphysical
 post-burnout transients in which one stream continues for several steps after the
 other has been exhausted. Implemented in
-[`_adjust_flows_for_stoichiometry`][machwave.states.liquid_engine.LiquidEngineState].
+[`LiquidEngineState`][machwave.simulation.liquid.states.LiquidEngineState].
 
 ### 2.3.4 Mass Exit Rate — Choked Throat
 

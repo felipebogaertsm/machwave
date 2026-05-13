@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
-from typing import NamedTuple
 
 import numpy as np
 
@@ -11,13 +11,8 @@ from machwave.models.motors import Motor
 from machwave.simulation import (
     InternalBallisticsSimulation,
     InternalBallisticsSimulationParams,
+    SimulationResult,
 )
-from machwave.states import MotorState
-
-
-class SimulationResult(NamedTuple):
-    time: np.ndarray
-    state: MotorState
 
 
 def run_simulation(
@@ -28,18 +23,24 @@ def run_simulation(
     simulation = InternalBallisticsSimulation(motor=motor, params=params)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
-        time, state = simulation.run()
-    return SimulationResult(time=time, state=state)
+        return simulation.run()
 
 
-def assert_recorded_arrays_aligned(
-    state: MotorState, attribute_names: tuple[str, ...]
-) -> None:
-    """Every per-timestep series should have the same length as state.t."""
-    expected_length = len(state.t)
-    for name in attribute_names:
-        actual_length = len(getattr(state, name))
+def assert_recorded_arrays_aligned(result: SimulationResult) -> None:
+    """Every per-timestep series should have the same length as result.time.
+
+    Fields marked with ``metadata={"non_aligned": True}`` are skipped (e.g.
+    arrays filtered to a subset of timesteps, or with a non-time leading axis).
+    """
+    expected_length = result.time.size
+    for field in dataclasses.fields(result):
+        if field.metadata.get("non_aligned", False):
+            continue
+        value = getattr(result, field.name)
+        if not isinstance(value, np.ndarray) or value.ndim < 1:
+            continue
+        actual_length = value.shape[0]
         assert actual_length == expected_length, (
-            f"recorded array `{name}` has length {actual_length}, "
-            f"expected {expected_length} (== len(state.t))"
+            f"recorded array `{field.name}` has length {actual_length}, "
+            f"expected {expected_length} (== result.time.size)"
         )

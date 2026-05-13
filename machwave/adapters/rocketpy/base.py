@@ -9,7 +9,8 @@ import numpy.typing as npt
 if typing.TYPE_CHECKING:
     from rocketpy import Function
 
-    import machwave.states as ib_states
+    import machwave.simulation as ib_simulation
+    from machwave.models.motors import Motor
 
 
 class RocketPyAdapterError(Exception):
@@ -18,14 +19,14 @@ class RocketPyAdapterError(Exception):
     pass
 
 
-M = typing.TypeVar("M", bound="ib_states.MotorState")  # Machwave motor state
+R = typing.TypeVar("R", bound="ib_simulation.SimulationResult")
 
 ROCKETPY_MOTOR_COORDINATE_SYSTEM = "nozzle_to_combustion_chamber"
 RESHAPE_THRUST_CURVE = False
 INTERPOLATION_METHOD = "linear"
 
 
-class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
+class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
     """Abstract base class for RocketPy motor adapters.
 
     Dynamically inherits from the appropriate RocketPy Motor class. Subclasses must
@@ -73,24 +74,25 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         ):
             cls.__bases__ = cls.__bases__ + (motor_class,)
 
-    def __init__(self, motor_state: M) -> None:
-        """Initialize the adapter with a Machwave motor state.
+    def __init__(self, motor: "Motor", simulation_result: R) -> None:
+        """Initialize the adapter.
 
         Args:
-            motor_state: The Machwave motor state to adapt.
+            motor: The machwave motor object.
+            simulation_result: The machwave simulation result.
         """
         self._require_rocketpy()
 
-        self.motor_state = motor_state
-        self.motor = motor_state.motor
+        self.motor = motor
+        self.simulation_result = simulation_result
 
         attrs = self._get_rocketpy_attributes()
         super().__init__(**attrs)
 
     def _get_rocketpy_attributes(self) -> dict[str, typing.Any]:
         """Extract motor attributes and time series compatible with RocketPy."""
-        time = self.motor_state.t
-        thrust = self.motor_state.thrust
+        time = self.simulation_result.time
+        thrust = self.simulation_result.thrust
 
         thrust_chamber = self.motor.thrust_chamber
         nozzle = thrust_chamber.nozzle
@@ -113,11 +115,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
             "center_of_dry_mass_position": center_of_dry_mass_position,
             "dry_mass": self.motor.get_dry_mass(),
             "nozzle_position": 0.0,
-            "burn_time": (time[0], self.motor_state.thrust_time),
+            "burn_time": (time[0], self.simulation_result.thrust_time),
             "reshape_thrust_curve": RESHAPE_THRUST_CURVE,
             "interpolation_method": INTERPOLATION_METHOD,
             "coordinate_system_orientation": ROCKETPY_MOTOR_COORDINATE_SYSTEM,
-            "reference_pressure": self.motor_state.exit_pressure[0],
+            "reference_pressure": self.simulation_result.exit_pressure[0],
         }
 
     @property
@@ -132,8 +134,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """
         from rocketpy import Function
 
-        total_impulse = float(np.trapezoid(self.motor_state.thrust, self.motor_state.t))
-        v_exh = total_impulse / self.propellant_initial_mass
+        v_exh = self.simulation_result.total_impulse / self.propellant_initial_mass
         return Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
 
     @property
@@ -143,13 +144,13 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         Returns:
             Initial propellant mass [kg].
         """
-        return self.motor_state.initial_propellant_mass
+        return self.simulation_result.initial_propellant_mass
 
     @property
     def center_of_propellant_mass(self) -> "Function":
         """Position of propellant center of mass as a function of time.
 
-        Uses pre-computed values from motor state simulation.
+        Uses pre-computed values from the simulation result.
         Extracts the x-coordinate (axial position) from the propellant's center of
         gravity over time.
 
@@ -158,8 +159,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """
         from rocketpy import Function
 
-        time = self.motor_state.t
-        center_positions = np.array([cog[0] for cog in self.motor_state.propellant_cog])  # type: ignore[attr-defined]
+        time = self.simulation_result.time
+        center_positions = np.asarray(
+            self.simulation_result.propellant_cog[:, 0],  # type: ignore[attr-defined]
+            dtype=np.float64,
+        ).copy()
 
         # Replace NaN/Inf values with last valid value (propellant burned out)
         mask = np.isfinite(center_positions)
@@ -171,12 +175,15 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         return Function(data)
 
     def _get_inertia_tensor_over_time(self) -> npt.NDArray[np.float64]:
-        """Get pre-computed inertia tensors from motor state.
+        """Get pre-computed inertia tensors from the simulation result.
 
         Returns:
             Array of shape (n_timesteps, 3, 3) containing inertia tensors.
         """
-        tensors = np.array(self.motor_state.propellant_moi, dtype=np.float64)  # type: ignore[attr-defined]
+        tensors = np.asarray(
+            self.simulation_result.propellant_moi,  # type: ignore[attr-defined]
+            dtype=np.float64,
+        ).copy()
 
         # Replace NaN/Inf values with last valid tensor (propellant burned out)
         for i in range(tensors.shape[0]):
@@ -200,7 +207,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[M]):
         """
         from rocketpy import Function
 
-        time = self.motor_state.t
+        time = self.simulation_result.time
         inertia_tensors = self._get_inertia_tensor_over_time()
         I_values = inertia_tensors[:, i, j]
         data = np.column_stack((time, I_values))

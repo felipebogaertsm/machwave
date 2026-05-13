@@ -80,7 +80,6 @@ nav:
           - Overview: api/services.md
           - plots: api/services/plots.md
       - simulation: api/simulation.md
-      - states: api/states.md
 
 extra_css:
   - stylesheets/extra.css

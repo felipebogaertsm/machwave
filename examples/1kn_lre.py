@@ -106,16 +106,16 @@ def main():
     )
     simulation = InternalBallisticsSimulation(motor=lre, params=sim_params)
 
-    (time, ib_state) = simulation.run()
+    result = simulation.run()
 
-    simulation.print_results()
-    thrust_pressure_plot(time, ib_state.thrust, ib_state.chamber_pressure).show()
+    result.report()
+    thrust_pressure_plot(result.time, result.thrust, result.chamber_pressure).show()
     plot_bipropellant_tank_profiles(
-        time,
-        ib_state.oxidizer_tank_pressure,
-        ib_state.fuel_tank_pressure,
-        ib_state.oxidizer_mass,
-        ib_state.fuel_mass,
+        result.time,
+        result.oxidizer_tank_pressure,
+        result.fuel_tank_pressure,
+        result.oxidizer_mass,
+        result.fuel_mass,
     ).show()
 
 
