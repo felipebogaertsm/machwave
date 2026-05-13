@@ -7,3 +7,5 @@ Main entry point for running internal ballistics simulations. `InternalBallistic
 The per-step accumulator state used by the integrator (`MotorState` and its subclasses `SolidMotorState`, `LiquidEngineState`) lives in this same package — it is rarely consumed directly outside the simulation loop.
 
 ::: machwave.simulation
+    options:
+      show_submodules: true
