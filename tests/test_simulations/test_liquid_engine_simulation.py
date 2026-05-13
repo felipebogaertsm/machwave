@@ -1,9 +1,8 @@
 """End-to-end integration tests for LiquidEngine internal ballistics
 simulations.
 
-The motor configuration below mirrors the one in examples/1kn_lre.py
-(the lone biliquid example) but is duplicated here so the tests stay
-independent of the example layer.
+The motor configuration lives in tests/test_simulations/motor_builders.py so
+it can be reused by benchmarks under tests/benchmarks/.
 """
 
 from __future__ import annotations
@@ -12,91 +11,17 @@ import numpy as np
 import pytest
 
 from machwave.models import motors
-from machwave.simulation import InternalBallisticsSimulationParams
 from machwave.simulation.liquid import LiquidEngineState, LiquidSimulationResult
-from tests.factories import (
-    BiliquidPropellantFactory,
-    BipropellantInjectorFactory,
-    CombustionChamberFactory,
-    FuelComponentFactory,
-    LiquidEngineFactory,
-    LiquidEngineThrustChamberFactory,
-    NozzleFactory,
-    OxidizerComponentFactory,
-    StackedTankPressureFedFeedSystemFactory,
-    TankFactory,
-)
+from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
     run_simulation,
 )
 
 
-def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationParams]:
-    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
-    oxidizer = OxidizerComponentFactory.build(initial_temperature=300.0)
-    fuel = FuelComponentFactory.build(initial_temperature=300.0)
-    propellant = BiliquidPropellantFactory.build(
-        components=[oxidizer, fuel],
-        oxidizer_to_fuel_ratio=1.9495,
-    )
-
-    feed_system = StackedTankPressureFedFeedSystemFactory.build(
-        oxidizer_tank=TankFactory.build(
-            fluid_name="N2O",
-            volume=3.80e-3,
-            temperature=300,
-            initial_fluid_mass=2.78,
-        ),
-        fuel_tank=TankFactory.build(
-            fluid_name="ETHANOL",
-            volume=2.0e-3,
-            temperature=300,
-            initial_fluid_mass=1.55,
-        ),
-        oxidizer_line_diameter=7.925e-3,
-        oxidizer_line_length=0.5,
-        fuel_line_diameter=5.715e-3,
-        fuel_line_length=0.5,
-        piston_loss=1e5,
-    )
-
-    thrust_chamber = LiquidEngineThrustChamberFactory.build(
-        nozzle=NozzleFactory.build(
-            inlet_diameter=55e-3,
-            throat_diameter=25.4e-3,
-            divergent_angle=12,
-            convergent_angle=45,
-            expansion_ratio=4,
-        ),
-        injector=BipropellantInjectorFactory.build(),
-        combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=70e-3,
-            casing_outer_diameter=76e-3,
-            internal_length=13e-3,
-            thermal_liner_thickness=2e-3,
-        ),
-    )
-
-    motor = LiquidEngineFactory.build(
-        propellant=propellant,
-        feed_system=feed_system,
-        thrust_chamber=thrust_chamber,
-        oxidizer_tank_cog=0.5,
-        fuel_tank_cog=0.4,
-    )
-    params = InternalBallisticsSimulationParams(
-        d_t=1e-4,
-        igniter_pressure=1e6,
-        external_pressure=1e5,
-        other_losses=0.12,
-    )
-    return motor, params
-
-
 @pytest.fixture(scope="module")
 def simulated_motor_and_result() -> tuple[motors.LiquidEngine, LiquidSimulationResult]:
-    motor, params = _build_1kn_lre()
+    motor, params = motor_builders.build_1kn_lre()
     return motor, run_simulation(motor, params)
 
 
@@ -159,7 +84,7 @@ def test_recorded_per_timestep_arrays_are_aligned(
 
 
 def _build_state_for_burnout_test() -> LiquidEngineState:
-    motor, params = _build_1kn_lre()
+    motor, params = motor_builders.build_1kn_lre()
     return LiquidEngineState(
         motor=motor,
         igniter_pressure=params.igniter_pressure,
