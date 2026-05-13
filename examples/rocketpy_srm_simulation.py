@@ -4,7 +4,7 @@ Example of a RocketPy 6DOF simulation of a `machwave` solid motor using the
 
 This example demonstrates how to:
 1. Create and simulate a solid rocket motor using machwave
-2. Adapt the motor state to RocketPy's interface
+2. Adapt the simulation result to RocketPy's interface
 3. Run a complete 6DOF flight simulation using RocketPy
 """
 
@@ -72,12 +72,12 @@ def main():
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
-    time, motor_state = sim.run()
+    result = sim.run()
 
-    sim.print_results()
+    result.report()
 
     # 3. Create RocketPy adapter
-    rocketpy_motor = RocketPySolidMotorAdapter(motor_state)
+    rocketpy_motor = RocketPySolidMotorAdapter(motor=motor, simulation_result=result)
     print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
     print(f"  - Average thrust: {rocketpy_motor.average_thrust:.1f} N")
     print(f"  - Max thrust: {rocketpy_motor.max_thrust:.1f} N")

@@ -66,13 +66,13 @@ def main():
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
-    (time, ib_state) = sim.run()
+    result = sim.run()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        time, ib_state.thrust, ib_state.chamber_pressure
+        result.time, result.thrust, result.chamber_pressure
     ).show()
 
-    sim.print_results()
+    result.report()
 
 
 if __name__ == "__main__":

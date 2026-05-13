@@ -7,26 +7,19 @@ from scipy import stats as scipy_stats
 
 def plot_histogram(
     results: list,
-    state_index: int,
     property_name: str,
     x_axes_title: str = "x",
     **plotly_kwargs,
 ) -> None:
-    """
-    Plots a histogram of a single scalar property across all Monte Carlo results.
+    """Histogram of a scalar property across all Monte Carlo results.
 
     Args:
-        results: List of simulation results; each `results[i]` is a list/tuple
-                 of state-objects returned by `Simulation.run()`.
-        state_index: Index within each result where the state-object holds
-                     the desired property.
+        results: List of ``SimulationResult`` objects.
         property_name: Name of the scalar attribute to histogram.
         x_axes_title: Label for the x-axis.
         **plotly_kwargs: Additional kwargs passed to go.Histogram (e.g. nbinsx=50).
     """
-    values = np.array(
-        [getattr(sim_result[state_index], property_name) for sim_result in results]
-    )
+    values = np.array([getattr(sim_result, property_name) for sim_result in results])
 
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=values, **plotly_kwargs))
@@ -36,28 +29,23 @@ def plot_histogram(
 
 def plot_histogram_with_kde(
     results: list,
-    state_index: int,
     property_name: str,
     x_axes_title: str = "x",
     nbins: int = 30,
     kde_points: int = 200,
     **plotly_kwargs,
 ) -> None:
-    """
-    Plots a histogram plus KDE curve for a single scalar property across all results.
+    """Histogram plus KDE curve for a scalar property across all results.
 
     Args:
-        results: List of simulation results (each result is a list/tuple of state-objects).
-        state_index: Index within each result where the state-object holds the desired property.
+        results: List of ``SimulationResult`` objects.
         property_name: Name of the attribute to plot.
         x_axes_title: Label for the x-axis.
         nbins: Number of bins in the histogram.
         kde_points: Number of points to compute the KDE curve.
         **plotly_kwargs: Additional kwargs for go.Histogram.
     """
-    values = np.array(
-        [getattr(sim_result[state_index], property_name) for sim_result in results]
-    )
+    values = np.array([getattr(sim_result, property_name) for sim_result in results])
 
     kde = scipy_stats.gaussian_kde(values)
     xs = np.linspace(values.min(), values.max(), kde_points)
@@ -88,27 +76,21 @@ def plot_histogram_with_kde(
 
 def plot_cdf(
     results: list,
-    state_index: int,
     property_name: str,
     x_axes_title: str = "x",
     percentiles: Sequence[int] = (5, 25, 50, 75, 95),
     **plotly_kwargs,
 ) -> None:
-    """
-    Plots the empirical CDF of a single scalar property across all results,
-    marks specified percentiles, and adjusts y-axis to percent format.
+    """Empirical CDF of a scalar property across all results.
 
     Args:
-        results: List of simulation results (each result is a list/tuple of state-objects).
-        state_index: Index within each result where the state-object holds the desired property.
+        results: List of ``SimulationResult`` objects.
         property_name: Name of the attribute to plot.
         x_axes_title: Label for the x-axis.
-        percentiles: Iterable of percentiles to mark on the plot (e.g. [5,25,50,75,95]).
+        percentiles: Percentiles to mark on the plot.
         **plotly_kwargs: Additional kwargs passed to go.Scatter.
     """
-    values = np.array(
-        [getattr(sim_result[state_index], property_name) for sim_result in results]
-    )
+    values = np.array([getattr(sim_result, property_name) for sim_result in results])
     sorted_vals = np.sort(values)
     cdf = np.arange(1, len(sorted_vals) + 1) / len(sorted_vals)
 
@@ -158,39 +140,32 @@ def plot_cdf(
 
 def plot_time_series_extremes(
     results: list,
-    state_index: int,
     time_property: str,
     series_property: str,
     x_axes_title: str = "time",
     title: str | None = None,
     **plotly_kwargs,
 ) -> None:
-    """
-    Among all Monte Carlo scenarios, find:
-      - scenario whose `series_property` has the lowest mean (over its actual points),
-      - scenario whose `series_property` has the highest mean,
-      - scenario whose `series_property` has the median-of-means.
+    """Plot the lowest-mean, highest-mean, and median-mean scenarios for a
+    time-series property across all Monte Carlo results.
 
-    Then plot all three curves against the *longest* time array, padding shorter
-    series with NaN so that each series stops where its data ends. Shade between
-    min-mean and max-mean only where both have real data.
+    Each curve is aligned against the longest time array, padding shorter
+    series with NaN so they stop where their data ends.
 
     Args:
-        results: List of simulation results (each result is a list/tuple of state-objects).
-        state_index: Index within each result pointing at the state-object with time/series.
-        time_property: Name of the time-array attribute on that state-object (e.g. "time").
-        series_property: Name of the y(t) array attribute on that state-object (e.g. "thrust").
+        results: List of ``SimulationResult`` objects.
+        time_property: Name of the time-array attribute (e.g. ``"time"``).
+        series_property: Name of the y(t) array attribute (e.g. ``"thrust"``).
         x_axes_title: Label for the x-axis.
         title: Plot title. If None, a default title is generated.
-        **plotly_kwargs: Extra kwargs passed into go.Scatter (e.g. line={"dash":"dash"}).
+        **plotly_kwargs: Extra kwargs passed to go.Scatter.
     """
     all_times = []
     all_series = []
 
     for sim_result in results:
-        state_obj = sim_result[state_index]
-        t = np.asarray(getattr(state_obj, time_property))
-        y = np.asarray(getattr(state_obj, series_property))
+        t = np.asarray(getattr(sim_result, time_property))
+        y = np.asarray(getattr(sim_result, series_property))
         all_times.append(t)
         all_series.append(y)
 

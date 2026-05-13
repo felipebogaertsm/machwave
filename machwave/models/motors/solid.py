@@ -1,6 +1,5 @@
 import numpy as np
 
-import machwave.core.compressible_flow.nozzle as nozzle
 import machwave.models.grain as grain
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber
@@ -31,8 +30,6 @@ class SolidMotor(
 
         self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant
-        self.thrust_coefficient_ideal = None
-        self.thrust_coefficient_real = None
 
     def get_free_chamber_volume(self, propellant_volume: float) -> float:
         """
@@ -57,39 +54,6 @@ class SolidMotor(
         return self.grain.get_propellant_mass(
             web_distance=0, ideal_density=self.propellant.ideal_density
         )
-
-    def get_thrust_coefficient(
-        self,
-        chamber_pressure: float,
-        exit_pressure: float,
-        external_pressure: float,
-        expansion_ratio: float,
-        k_exhaust: float,
-        nozzle_correction_factor: float,
-    ) -> float:
-        """
-        Args:
-            chamber_pressure: Chamber pressure, in Pa
-            exit_pressure: Exit pressure, in Pa
-            external_pressure: External pressure, in Pa
-            expansion_ratio: Expansion ratio, adimensional
-            k_exhaust: Two-phase isentropic coefficient, adimensional
-            nozzle_correction_factor: Thrust coefficient correction factor, adimensional
-
-        Returns:
-            Instanteneous thrust coefficient, adimensional
-        """
-        self.thrust_coefficient_ideal = nozzle.get_ideal_thrust_coefficient(
-            chamber_pressure,
-            exit_pressure,
-            external_pressure,
-            expansion_ratio,
-            k_exhaust,
-        )
-        self.thrust_coefficient_real = nozzle.apply_thrust_coefficient_correction(
-            self.thrust_coefficient_ideal, nozzle_correction_factor
-        )
-        return self.thrust_coefficient_real
 
     def get_launch_mass(self) -> float:
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass

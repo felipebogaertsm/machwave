@@ -6,13 +6,13 @@ from machwave.adapters.rocketpy.base import RocketPyMotorAdapter
 
 if typing.TYPE_CHECKING:
     from machwave.models.motors import SolidMotor
-    from machwave.states.solid_motor import (
-        SolidMotorState,  # noqa: F401
+    from machwave.simulation.solid.results import (
+        SolidSimulationResult,  # noqa: F401
     )
 
 
-class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidMotorState"]):
-    """Adapter to use Machwave SolidMotorState as a RocketPy SolidMotor."""
+class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
+    """Adapter to use a Machwave SolidSimulationResult as a RocketPy SolidMotor."""
 
     _rocketpy_motor_class = "SolidMotor"
 
