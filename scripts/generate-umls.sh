@@ -9,7 +9,6 @@ MODULES=(
   machwave.models.motors
   machwave.models.propellants
   machwave.simulation
-  machwave.states
 )
 
 OUT_DIR=docs/umls

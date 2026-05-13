@@ -1,15 +1,15 @@
 # Machwave
 
 Machwave is an open source Python library for chemical rocket propulsion simulation. The
-library enables modeling and simulating solid rocket motors - liquid and hybrid engines
-are coming soon.
+library enables modeling and simulating solid rocket motors and bipropellant liquid
+engines; hybrid engines are coming soon.
 
 ### Key Capabilities
 
 - **Propellant modeling** with pre-defined formulations or CEA custom propellants
 - **Propellant grain analysis** with FMM-based regression (BATES, star, finocyl, and
     more)
-- **Solid rocket motor modeling and simulation** (liquid and hybrid engines coming soon)
+- **Solid rocket motor and bipropellant liquid engine modeling and simulation** (hybrid engines coming soon)
 - **Monte Carlo simulation**
 - **RocketPy trajectory simulation integration** (see [docs](api/adapters/rocketpy.md)
     for details)

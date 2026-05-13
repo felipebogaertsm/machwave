@@ -25,13 +25,11 @@ def main():
         outer_diameter=0.116,
         core_diameter=0.045,
         length=0.200,
-        spacing=0.01,
     )
     bates_segment_60 = grain_models.geometries.BatesSegment(
         outer_diameter=0.116,
         core_diameter=0.060,
         length=0.200,
-        spacing=0.01,
     )
 
     grain.add_segment(bates_segment_45)
@@ -75,21 +73,20 @@ def main():
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
-        other_losses=0.12,
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
-    t, ib_state = sim.run()
+    result = sim.run()
 
-    sim.print_results()
+    result.report()
 
     internal_ballistics_plots.thrust_pressure_plot(
-        t, ib_state.thrust, ib_state.chamber_pressure
+        result.time, result.thrust, result.chamber_pressure
     ).show()
     internal_ballistics_plots.thrust_coefficient_plot(
-        t,
-        ib_state.thrust_coefficient_ideal,
-        ib_state.thrust_coefficient,
+        result.time,
+        result.ideal_thrust_coefficient,
+        result.thrust_coefficient,
         show_efficiency=True,
     ).show()
 

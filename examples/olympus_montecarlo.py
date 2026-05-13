@@ -15,14 +15,15 @@ MC_SAMPLES = 1000
 def main():
     propellant = formulations.solid.KNSB_NAKKA
 
-    grain = grain_models.Grain()
+    grain = grain_models.Grain(
+        spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
+    )
     for _ in range(4):
         grain.add_segment(
             grain_models.geometries.BatesSegment(
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.045, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
-                spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
     for _ in range(3):
@@ -31,7 +32,6 @@ def main():
                 outer_diameter=montecarlo.MonteCarloParameter(0.115, spread=0.002),
                 core_diameter=montecarlo.MonteCarloParameter(0.060, spread=0.002),
                 length=montecarlo.MonteCarloParameter(0.200, spread=0.005),
-                spacing=montecarlo.MonteCarloParameter(0.010, spread=0.005),
             )
         )
 
@@ -78,24 +78,22 @@ def main():
     )
     mc.run()
 
-    total_impulse_stats = mc.get_property_stats(1, "total_impulse")
+    total_impulse_stats = mc.get_property_stats("total_impulse")
     print(f"Total impulse (N.s) mean: {total_impulse_stats.get('mean'):.2f}")
     print(f"Total impulse (N.s) median: {total_impulse_stats.get('median'):.2f}")
     print(f"Total impulse (N.s) variance: {total_impulse_stats.get('variance'):.2f}")
     print(f"Total impulse (N.s) std: {total_impulse_stats.get('std_dev'):.2f}")
 
-    mc.plot_histogram(1, "total_impulse", "Total Impulse (N·s)")
-    mc.plot_histogram_with_kde(1, "total_impulse", "Total Impulse (N·s)")
-    mc.plot_cdf(1, "total_impulse", "Total Impulse (N·s)")
+    mc.plot_histogram("total_impulse", "Total Impulse (N·s)")
+    mc.plot_histogram_with_kde("total_impulse", "Total Impulse (N·s)")
+    mc.plot_cdf("total_impulse", "Total Impulse (N·s)")
     mc.plot_time_series_extremes(
-        1,
-        "t",
+        time_property="time",
         series_property="chamber_pressure",
         title="Pressão de Câmara (MPa)",
     )
     mc.plot_time_series_extremes(
-        1,
-        "t",
+        time_property="time",
         series_property="thrust",
         title="Força de Empuxo (N)",
     )

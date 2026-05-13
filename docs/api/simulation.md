@@ -1,7 +1,11 @@
 # Simulation
 
-Main entry point for running internal ballistics simulations. `InternalBallisticsSimulation` takes a motor model and simulation parameters (time step, igniter pressure, external pressure), then marches through time using an RK4 solver to produce a complete motor state with time-series data for thrust, chamber pressure, propellant mass, efficiency losses, and more.
+Main entry point for running internal ballistics simulations. `InternalBallisticsSimulation` takes a motor model and simulation parameters (time step, igniter pressure, external pressure), then marches through time using an RK4 solver.
 
-The returned `MotorState` object (see [states](states.md)) contains all computed arrays for post-processing or adapter export.
+`run()` returns a frozen `SimulationResult` (subclassed per motor type — `SolidSimulationResult`, `LiquidSimulationResult`) carrying the full time-series data (thrust, chamber pressure, propellant mass, efficiency losses, …) along with derived scalars (total impulse, specific impulse, burn time). Each result class provides a `report()` method to print a human-readable summary and a `summary()` method that returns the scalar metrics as a dict.
+
+The per-step accumulator state used by the integrator (`MotorState` and its subclasses `SolidMotorState`, `LiquidEngineState`) lives in this same package — it is rarely consumed directly outside the simulation loop.
 
 ::: machwave.simulation
+    options:
+      show_submodules: true

@@ -13,7 +13,7 @@ import pytest
 
 from machwave.models import motors
 from machwave.simulation import InternalBallisticsSimulationParams
-from machwave.states import LiquidEngineState
+from machwave.simulation.liquid import LiquidEngineState, LiquidSimulationResult
 from tests.factories import (
     BiliquidPropellantFactory,
     BipropellantInjectorFactory,
@@ -27,7 +27,6 @@ from tests.factories import (
     TankFactory,
 )
 from tests.test_simulations.conftest import (
-    SimulationResult,
     assert_recorded_arrays_aligned,
     run_simulation,
 )
@@ -96,35 +95,38 @@ def _build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationP
 
 
 @pytest.fixture(scope="module")
-def simulation_result() -> SimulationResult:
+def simulated_motor_and_result() -> tuple[motors.LiquidEngine, LiquidSimulationResult]:
     motor, params = _build_1kn_lre()
-    return run_simulation(motor, params)
+    return motor, run_simulation(motor, params)
+
+
+@pytest.fixture(scope="module")
+def simulation_result(
+    simulated_motor_and_result: tuple[motors.LiquidEngine, LiquidSimulationResult],
+) -> LiquidSimulationResult:
+    return simulated_motor_and_result[1]
 
 
 def test_simulation_completes_with_terminal_state(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    assert isinstance(state, LiquidEngineState)
-    assert state.end_thrust is True
-    assert simulation_result.time.size == len(state.t)
+    assert isinstance(simulation_result, LiquidSimulationResult)
+    assert simulation_result.end_thrust is True
     assert simulation_result.time.size > 1
 
 
 def test_thrust_time_is_finite_and_positive(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    assert np.isfinite(state.thrust_time)
-    assert state.thrust_time > 0.0
+    assert np.isfinite(simulation_result.thrust_time)
+    assert simulation_result.thrust_time > 0.0
 
 
 def test_propellant_masses_are_monotone_non_increasing(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    state = simulation_result.state
     for series_name in ("fuel_mass", "oxidizer_mass", "propellant_mass"):
-        series = np.asarray(getattr(state, series_name))
+        series = getattr(simulation_result, series_name)
         diffs = np.diff(series)
         assert (diffs <= 1e-9).all(), (
             f"{series_name} increased between steps; max delta={diffs.max():.3e}"
@@ -136,11 +138,10 @@ def test_propellant_masses_are_monotone_non_increasing(
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    peak_pressure = float(np.max(state.chamber_pressure))
-    peak_thrust = float(np.max(state.thrust))
+    peak_pressure = float(np.max(simulation_result.chamber_pressure))
+    peak_thrust = float(np.max(simulation_result.thrust))
     # A 1 kN-class biliquid engine should peak at 0.5 to 5 MPa chamber pressure
     # and produce on the order of 100 N to 10 kN of peak thrust.
     assert 0.5e6 < peak_pressure < 5.0e6, (
@@ -152,32 +153,17 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
 
 
 def test_recorded_per_timestep_arrays_are_aligned(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    assert_recorded_arrays_aligned(
-        simulation_result.state,
-        attribute_names=(
-            "chamber_pressure",
-            "exit_pressure",
-            "thrust",
-            "thrust_coefficient",
-            "thrust_coefficient_ideal",
-            "fuel_mass",
-            "oxidizer_mass",
-            "propellant_mass",
-            "nozzle_correction_factor",
-            "fuel_tank_pressure",
-            "oxidizer_tank_pressure",
-        ),
-    )
+    assert_recorded_arrays_aligned(simulation_result)
 
 
 def _build_state_for_burnout_test() -> LiquidEngineState:
     motor, params = _build_1kn_lre()
     return LiquidEngineState(
         motor=motor,
-        initial_pressure=params.igniter_pressure,
-        initial_atmospheric_pressure=params.external_pressure,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
         other_losses=params.other_losses,
     )
 
@@ -189,7 +175,7 @@ def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
     assert state.end_burn is True
-    assert state.burn_time == pytest.approx(state.t[-1])
+    assert state.burn_time == pytest.approx(state.time[-1])
 
 
 def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
@@ -199,31 +185,30 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
     assert state.end_burn is True
-    assert state.burn_time == pytest.approx(state.t[-1])
+    assert state.burn_time == pytest.approx(state.time[-1])
 
 
 def test_live_mixture_ratio_drives_cea(
-    simulation_result: SimulationResult,
+    simulated_motor_and_result: tuple[motors.LiquidEngine, LiquidSimulationResult],
 ) -> None:
-    state = simulation_result.state
-    assert isinstance(state, LiquidEngineState)
-    propellant = state.motor.propellant
+    motor, simulation_result = simulated_motor_and_result
+    propellant = motor.propellant
 
     design_ratio = propellant.oxidizer_to_fuel_ratio
     assert design_ratio is not None
 
-    fuel_mass = np.asarray(state.fuel_mass)
-    oxidizer_mass = np.asarray(state.oxidizer_mass)
-    fuel_consumed = -np.diff(fuel_mass)
-    oxidizer_consumed = -np.diff(oxidizer_mass)
+    fuel_consumed = -np.diff(simulation_result.fuel_mass)
+    oxidizer_consumed = -np.diff(simulation_result.oxidizer_mass)
     valid = fuel_consumed > 0
     live_ratios = oxidizer_consumed[valid] / fuel_consumed[valid]
     assert np.any(np.abs(live_ratios - design_ratio) > 1e-6), (
         "Live oxidizer/fuel mass deltas never deviated from the design ratio"
     )
 
-    chamber_pressure = state.chamber_pressure[len(state.chamber_pressure) // 2]
-    expansion_ratio = state.motor.thrust_chamber.nozzle.expansion_ratio
+    chamber_pressure = simulation_result.chamber_pressure[
+        len(simulation_result.chamber_pressure) // 2
+    ]
+    expansion_ratio = motor.thrust_chamber.nozzle.expansion_ratio
     design_props = propellant.evaluate(
         chamber_pressure=chamber_pressure,
         expansion_ratio=expansion_ratio,
@@ -238,8 +223,7 @@ def test_live_mixture_ratio_drives_cea(
 
 
 def test_simulation_runs_through_burnout_without_crashing(
-    simulation_result: SimulationResult,
+    simulation_result: LiquidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    assert state.end_thrust is True
-    assert state.propellant_mass[-1] <= state.propellant_mass[0]
+    assert simulation_result.end_thrust is True
+    assert simulation_result.propellant_mass[-1] <= simulation_result.propellant_mass[0]

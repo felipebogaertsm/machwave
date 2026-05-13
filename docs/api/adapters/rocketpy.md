@@ -1,9 +1,9 @@
 # RocketPy Integration
 
-Machwave can drive RocketPy flight simulations by adapting a simulated motor state
-into a RocketPy-compatible motor object. The integration is intended for workflows
-where Machwave computes the internal ballistics and RocketPy handles the 6-DOF
-trajectory, aerodynamics, and recovery simulation.
+Machwave can drive RocketPy flight simulations by adapting a Machwave motor and
+its simulation result into a RocketPy-compatible motor object. The integration
+is intended for workflows where Machwave computes the internal ballistics and
+RocketPy handles the 6-DOF trajectory, aerodynamics, and recovery simulation.
 
 ## Installation
 
@@ -18,8 +18,8 @@ pip install machwave[rocketpy]
 The adapter sits after the internal ballistics simulation:
 
 1. Build a Machwave motor model.
-2. Run `InternalBallisticsSimulation` to obtain a motor state.
-3. Wrap the resulting state with `RocketPySolidMotorAdapter`.
+2. Run `InternalBallisticsSimulation` to obtain a `SimulationResult`.
+3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)`.
 4. Pass the adapted motor into a RocketPy `Rocket`.
 
 ## Example
@@ -81,12 +81,12 @@ params = simulation.InternalBallisticsSimulationParams(
 	external_pressure=1.013e5,
 )
 
-_, motor_state = simulation.InternalBallisticsSimulation(
+result = simulation.InternalBallisticsSimulation(
 	motor=motor,
 	params=params,
 ).run()
 
-rocketpy_motor = RocketPySolidMotorAdapter(motor_state)
+rocketpy_motor = RocketPySolidMotorAdapter(motor=motor, simulation_result=result)
 
 rocket = Rocket(
 	radius=0.0508,
@@ -114,8 +114,8 @@ For a full runnable script, see `examples/rocketpy_srm_simulation.py`.
 
 ## Data Passed To RocketPy
 
-`RocketPyMotorAdapter` builds the RocketPy motor inputs from the simulated motor
-state. The adapter currently provides:
+`RocketPyMotorAdapter` builds the RocketPy motor inputs from the Machwave motor
+and its simulation result. The adapter currently provides:
 
 - thrust curve from Machwave time history
 - burn-time interval

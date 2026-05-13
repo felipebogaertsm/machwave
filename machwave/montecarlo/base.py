@@ -136,52 +136,27 @@ class MonteCarloSimulation:
             scenario = self.generate_scenario()
             self.results.append(self.simulation(*scenario).run())
 
-    def retrieve_values_from_result(
-        self,
-        state_index: int,
-        property_name: str,
-    ) -> np.ndarray:
-        """
-        Retrieves a specific scalar property from all simulation results.
-        Returns a NumPy array of length = number_of_scenarios.
+    def retrieve_values_from_result(self, property_name: str) -> np.ndarray:
+        """Retrieve a scalar property across every Monte Carlo result.
 
         Args:
-            state_index: Index of the state in the simulation result.
-            property_name: Name of the property to retrieve from the results.
+            property_name: Attribute name on the ``SimulationResult``.
+
         Returns:
-            NumPy array containing the values of the specified property
-            across all simulation results.
+            Array of length ``number_of_scenarios``.
         """
         return np.array(
-            [
-                getattr(sim_result[state_index], property_name)
-                for sim_result in self.results
-            ]
+            [getattr(sim_result, property_name) for sim_result in self.results]
         )
 
-    def get_property_stats(
-        self, state_index: int, property_name: str
-    ) -> dict[str, float]:
-        """
-        Compute descriptive statistics for a scalar property across all results.
+    def get_property_stats(self, property_name: str) -> dict[str, float]:
+        """Descriptive statistics for a scalar property across all results.
 
-        Metrics returned:
-        mean, median, variance, std_dev, mode, skew
-        (Fishers, unbiased), kurtosis (excess, unbiased),
-        p5 (5th percentile), p95 (95th percentile).
-
-        Args:
-            state_index: Index of the state in the simulation result.
-            property_name: Name of the property to retrieve from the
-                results.
-        Returns:
-            Dictionary containing the mean, median, variance, and
-            standard deviation of the specified property across all
-            simulation results.
+        Metrics returned: mean, median, variance, std_dev, mode, skew (Fisher,
+        unbiased), kurtosis (excess, unbiased), p5 (5th percentile), p95 (95th
+        percentile).
         """
-        values = np.asarray(
-            self.retrieve_values_from_result(state_index, property_name)
-        )
+        values = np.asarray(self.retrieve_values_from_result(property_name))
 
         mean_val = np.mean(values)
         median_val = np.median(values)
@@ -207,18 +182,16 @@ class MonteCarloSimulation:
 
     def plot_histogram(
         self,
-        state_index: int,
         property_name: str,
         x_axes_title: str = "x",
         **plotly_kwargs,
     ) -> None:
         plot_service.plot_histogram(
-            self.results, state_index, property_name, x_axes_title, **plotly_kwargs
+            self.results, property_name, x_axes_title, **plotly_kwargs
         )
 
     def plot_histogram_with_kde(
         self,
-        state_index: int,
         property_name: str,
         x_axes_title: str = "x",
         nbins: int = 30,
@@ -227,7 +200,6 @@ class MonteCarloSimulation:
     ) -> None:
         plot_service.plot_histogram_with_kde(
             self.results,
-            state_index,
             property_name,
             x_axes_title,
             nbins,
@@ -237,18 +209,16 @@ class MonteCarloSimulation:
 
     def plot_cdf(
         self,
-        state_index: int,
         property_name: str,
         x_axes_title: str = "x",
         **plotly_kwargs,
     ) -> None:
         plot_service.plot_cdf(
-            self.results, state_index, property_name, x_axes_title, **plotly_kwargs
+            self.results, property_name, x_axes_title, **plotly_kwargs
         )
 
     def plot_time_series_extremes(
         self,
-        state_index: int,
         time_property: str,
         series_property: str,
         x_axes_title: str = "time",
@@ -257,7 +227,6 @@ class MonteCarloSimulation:
     ) -> None:
         plot_service.plot_time_series_extremes(
             self.results,
-            state_index,
             time_property,
             series_property,
             x_axes_title,

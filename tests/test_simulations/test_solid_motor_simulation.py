@@ -18,7 +18,7 @@ from machwave.models import grain as grain_models
 from machwave.models import motors
 from machwave.models.propellants.formulations import solid as solid_propellants
 from machwave.simulation import InternalBallisticsSimulationParams
-from machwave.states import SolidMotorState
+from machwave.simulation.solid import SolidSimulationResult
 from tests.factories import (
     BatesSegmentFactory,
     CombustionChamberFactory,
@@ -27,7 +27,6 @@ from tests.factories import (
     SolidMotorThrustChamberFactory,
 )
 from tests.test_simulations.conftest import (
-    SimulationResult,
     assert_recorded_arrays_aligned,
     run_simulation,
 )
@@ -170,39 +169,36 @@ SOLID_MOTOR_BUILDERS: tuple[SolidMotorBuilder, ...] = (
     params=SOLID_MOTOR_BUILDERS,
     ids=lambda builder: builder.__name__.removeprefix("_build_"),
 )
-def simulation_result(request: pytest.FixtureRequest) -> SimulationResult:
+def simulation_result(request: pytest.FixtureRequest) -> SolidSimulationResult:
     motor, params = request.param()
     return run_simulation(motor, params)
 
 
 def test_simulation_completes_with_terminal_state(
-    simulation_result: SimulationResult,
+    simulation_result: SolidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    assert isinstance(state, SolidMotorState)
-    assert state.end_thrust is True
-    assert state.end_burn is True
-    assert simulation_result.time.size == len(state.t)
+    assert isinstance(simulation_result, SolidSimulationResult)
+    assert simulation_result.end_thrust is True
+    assert simulation_result.end_burn is True
     assert simulation_result.time.size > 1
 
 
 def test_burn_time_and_thrust_time_are_finite_and_ordered(
-    simulation_result: SimulationResult,
+    simulation_result: SolidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    assert np.isfinite(state.burn_time)
-    assert np.isfinite(state.thrust_time)
-    assert state.burn_time > 0.0
-    assert state.thrust_time > 0.0
+    assert np.isfinite(simulation_result.burn_time)
+    assert np.isfinite(simulation_result.thrust_time)
+    assert simulation_result.burn_time > 0.0
+    assert simulation_result.thrust_time > 0.0
     # Thrust persists at least until the burn ends, then decays once the
     # nozzle becomes unchoked.
-    assert state.thrust_time >= state.burn_time
+    assert simulation_result.thrust_time >= simulation_result.burn_time
 
 
 def test_propellant_mass_is_monotone_non_increasing(
-    simulation_result: SimulationResult,
+    simulation_result: SolidSimulationResult,
 ) -> None:
-    propellant_mass = np.asarray(simulation_result.state.propellant_mass)
+    propellant_mass = simulation_result.propellant_mass
     diffs = np.diff(propellant_mass)
     # Allow tiny floating-point noise but no real growth between steps.
     assert (diffs <= 1e-9).all(), (
@@ -212,11 +208,10 @@ def test_propellant_mass_is_monotone_non_increasing(
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
-    simulation_result: SimulationResult,
+    simulation_result: SolidSimulationResult,
 ) -> None:
-    state = simulation_result.state
-    peak_pressure = float(np.max(state.chamber_pressure))
-    peak_thrust = float(np.max(state.thrust))
+    peak_pressure = float(np.max(simulation_result.chamber_pressure))
+    peak_thrust = float(np.max(simulation_result.thrust))
     # Hobbyist-to-experimental solid motors should peak between roughly 1 MPa
     # and 30 MPa chamber pressure, producing thrust in the 100 N to 100 kN range.
     assert 1.0e6 < peak_pressure < 30.0e6, (
@@ -225,31 +220,11 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
     assert 100.0 < peak_thrust < 1.0e5, (
         f"peak thrust {peak_thrust:.2e} N outside [100, 1e5]"
     )
-    assert state.total_impulse > 0
-    assert state.specific_impulse > 0
+    assert simulation_result.total_impulse > 0
+    assert simulation_result.specific_impulse > 0
 
 
 def test_recorded_per_timestep_arrays_are_aligned(
-    simulation_result: SimulationResult,
+    simulation_result: SolidSimulationResult,
 ) -> None:
-    assert_recorded_arrays_aligned(
-        simulation_result.state,
-        attribute_names=(
-            "chamber_pressure",
-            "exit_pressure",
-            "thrust",
-            "thrust_coefficient",
-            "thrust_coefficient_ideal",
-            "burn_area",
-            "burn_rate",
-            "web",
-            "free_chamber_volume",
-            "propellant_mass",
-            "divergent_loss",
-            "kinetics_loss",
-            "boundary_layer_loss",
-            "two_phase_loss",
-            "nozzle_efficiency",
-            "overall_efficiency",
-        ),
-    )
+    assert_recorded_arrays_aligned(simulation_result)

@@ -82,8 +82,8 @@ motor = motors.SolidMotor(
 
 ## 5. Configure and run the simulation
 
-Set up the simulation parameters and run it. `run()` returns a time array and a
-state object containing all ballistic data:
+Set up the simulation parameters and run it. `run()` returns a frozen
+`SimulationResult` containing all ballistic time-series and derived metrics:
 
 ```python
 from machwave import simulation
@@ -95,7 +95,7 @@ params = simulation.InternalBallisticsSimulationParams(
 )
 
 sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)
-time, state = sim.run()
+result = sim.run()
 ```
 
 ## 6. View results
@@ -106,12 +106,12 @@ pressure curves:
 ```python
 from machwave.services.plots import internal_ballistics as ib_plots
 
-sim.print_results()
+result.report()
 
-ib_plots.thrust_pressure_plot(time, state.thrust, state.chamber_pressure).show()
+ib_plots.thrust_pressure_plot(result.time, result.thrust, result.chamber_pressure).show()
 ```
 
-`print_results()` outputs initial propellant mass, max/average chamber pressure,
+`result.report()` outputs initial propellant mass, max/average chamber pressure,
 burn time, max/average thrust, specific impulse, and total impulse.
 
 For more complete examples, including coupled trajectory simulations and Monte
