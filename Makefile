@@ -1,4 +1,4 @@
-.PHONY: install install-dev install-docs install-hooks test publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install install-dev install-docs install-hooks test benchmark publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
@@ -25,6 +25,8 @@ verify-version:
 	echo "Version verified: $$PKG_VERSION"
 test:
 	@uv run pytest
+benchmark:
+	@uv run pytest tests/benchmarks --benchmark-only --benchmark-columns=min,median,mean,stddev,rounds
 publish:
 	@$(MAKE) build
 	@twine upload dist/*
