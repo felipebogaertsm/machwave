@@ -84,8 +84,8 @@ def test_all_vapor_condition(fluid_name, temperature):
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
 def test_remove_propellant(fluid_name, temperature):
     """
-    Removing propellant should decrease fluid_mass and thus reduce density.
-    We also verify that removing more fluid than present empties the tank.
+    Removing propellant must decrement fluid_mass, and removing more than
+    is present must empty the tank cleanly.
     """
     volume = 0.02
     initial_mass = 1.0
@@ -96,17 +96,12 @@ def test_remove_propellant(fluid_name, temperature):
         temperature=temperature,
         initial_fluid_mass=initial_mass,
     )
-    original_density = tank.get_density()
 
     # 1) Remove some fraction of fluid
     remove_mass_1 = 0.2
     tank.remove_propellant(remove_mass_1)
 
     assert tank.fluid_mass == pytest.approx(initial_mass - remove_mass_1, abs=1e-9)
-    new_density = tank.get_density()
-    assert new_density < original_density, (
-        "Density should decrease after removing mass."
-    )
 
     # 2) Remove more mass than is left => tank empties
     tank.remove_propellant(5.0)  # definitely more than remains
@@ -118,6 +113,57 @@ def test_remove_propellant(fluid_name, temperature):
     assert empty_pressure == pytest.approx(0.0, abs=1e-9), (
         f"Pressure should be ~0 for an empty tank of {fluid_name}."
     )
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
+    """
+    In the two-phase regime, ``get_density()`` must return the saturated
+    *liquid* density. Real feed systems pull liquid through a dip tube, so
+    the orifice equation downstream needs ρ_liquid — returning a mixture
+    density under-predicts ṁ as the tank empties.
+    """
+    volume = 0.01
+    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
+    molar_mass = CP.PropsSI("M", fluid_name)
+    R_universal = scipy.constants.R
+    m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
+
+    tank = Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=2.0 * m_vap_sat,
+    )
+
+    rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
+    assert tank.get_density() == pytest.approx(rho_liquid, rel=1e-3)
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
+    """
+    While the tank remains two-phase, ``get_density()`` must be invariant
+    under mass removal — it tracks the saturated liquid density, not the
+    bulk mixture.
+    """
+    volume = 0.01
+    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
+    molar_mass = CP.PropsSI("M", fluid_name)
+    R_universal = scipy.constants.R
+    m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
+
+    tank = Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=5.0 * m_vap_sat,
+    )
+
+    density_before = tank.get_density()
+    tank.remove_propellant(m_vap_sat)  # still leaves > m_vap_sat in the tank
+    assert tank.fluid_mass > m_vap_sat
+    assert tank.get_density() == pytest.approx(density_before, rel=1e-6)
 
 
 def test_remove_negative_mass():
