@@ -154,7 +154,7 @@ jobs:
           make install-dev
       - name: Benchmark pull request branch and compare against base
         if: steps.base_has_benchmarks.outputs.exists == 'true'
-        run: uv run pytest tests/benchmarks --benchmark-only --benchmark-compare=base --benchmark-compare-fail=median:25%
+        run: uv run pytest tests/benchmarks --benchmark-only --benchmark-compare=0001_base --benchmark-compare-fail=median:25%
       - name: Benchmark pull request branch (no base available yet)
         if: steps.base_has_benchmarks.outputs.exists != 'true'
         run: |
