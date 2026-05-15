@@ -103,6 +103,10 @@ class Tank:
         Uses CoolProp. If pressure is provided, it is used as the tank
         pressure override (e.g., a piston-pressurized stacked-tank system).
 
+        For a two-phase tank, returns the saturated *liquid* density: real
+        feed systems pull liquid through a dip tube, so the orifice equation
+        downstream needs ρ_liquid, not the bulk mixture density.
+
         Returns:
             Fluid density [kg/m^3].
         """
@@ -118,19 +122,13 @@ class Tank:
             return CP.PropsSI("D", "T", self.temperature, "P", p, self.fluid_name)
 
         except ValueError:
-            # 2b) Two‐phase: density at saturation is ambiguous, so compute mixture
-            #    via quality:  x = m_vapor / m_total
-            #    ρ_mix = 1 / ( x/ρ_v + (1−x)/ρ_l )
-
-            # If we're exactly at saturation, infer quality by comparing against
-            # max vapor mass at this pressure.
+            # 2b) Two-phase: PropsSI(T, P) is ambiguous at saturation. The
+            #     feed system pulls liquid from the bottom of the tank, so
+            #     return the saturated liquid density at this temperature.
             m_vap_max = self._mass_if_all_vapor(p)
 
             if self.fluid_mass > m_vap_max:
-                x = m_vap_max / self.fluid_mass
-                rho_v = CP.PropsSI("D", "T", self.temperature, "Q", 1, self.fluid_name)
-                rho_l = CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
-                return 1.0 / (x / rho_v + (1 - x) / rho_l)
+                return CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
 
             # Fallback: idealized bulk density
             return self.fluid_mass / self.volume
