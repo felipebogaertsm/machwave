@@ -64,17 +64,17 @@ w_t = c_p \cdot T_{t,\text{in}} \cdot \left[1 - \pi_t^{-(\gamma - 1)/\gamma}\rig
 
 ## `GasGeneratorSpec`
 
-Describes the gas generator that drives the turbine in a gas-generator-cycle engine or the preburner in a staged-combustion engine. The defining design choice is the operating mixture ratio, which is held well off-stoichiometric so the combustion-product temperature stays below uncooled turbine-blade metal limits.
+Describes the gas generator that drives the turbine in a gas-generator-cycle engine or the preburner in a staged-combustion engine. The defining design choice is the operating mixture ratio, which is typically held well off-stoichiometric so the combustion-product temperature stays below the metal limits of the downstream turbine (whether uncooled or actively cooled).
 
 | Field | Units | Constraint |
 | --- | --- | --- |
 | `name` | — | Free-form identifier. |
 | `mixture_ratio` | — | Strictly positive (oxidizer/fuel mass ratio). |
 | `chamber_pressure` | Pa | Strictly positive |
-| `gas_temperature` | K | Must lie in `[GAS_TEMPERATURE_MINIMUM_KELVIN, GAS_TEMPERATURE_MAXIMUM_KELVIN]` (300 K – 1500 K). |
+| `gas_temperature` | K | Strictly positive |
 | `mass_flow` | kg/s | Strictly positive |
 
-The temperature bounds exist to catch unit-confusion bugs and configurations that would silently melt a real turbine — they are intentionally wider than any well-designed gas generator would run, but narrow enough to reject obvious mistakes.
+Cooled, uncooled, and research configurations operate over a wide temperature range, so `gas_temperature` is only checked for physical positivity; the caller is responsible for selecting a value compatible with the turbine they are driving.
 
 ---
 

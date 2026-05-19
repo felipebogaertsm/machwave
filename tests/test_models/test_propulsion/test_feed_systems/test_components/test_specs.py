@@ -114,10 +114,10 @@ def test_turbine_spec_rejects_pressure_ratio_at_or_below_one():
         TurbineSpec(**kwargs)
 
 
-def test_gas_generator_spec_rejects_temperature_above_metal_limit():
-    """A gas-generator temperature above the documented limit must raise."""
+def test_gas_generator_spec_rejects_non_positive_gas_temperature():
+    """A non-positive gas-generator temperature is unphysical and must raise."""
     kwargs = _valid_gas_generator_spec_kwargs()
-    kwargs["gas_temperature"] = 5000.0
+    kwargs["gas_temperature"] = 0.0
 
     with pytest.raises(ValueError, match="gas_temperature"):
         GasGeneratorSpec(**kwargs)
