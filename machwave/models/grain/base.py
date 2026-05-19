@@ -130,7 +130,7 @@ class GrainSegment(ABC):
         with positive x-direction pointing toward the bulkhead.
 
         Returns:
-            Center of gravity of the segment [x, y, z] [m].
+            Center of gravity of the segment as `(x, y, z)` [m].
         """
         pass
 

@@ -76,7 +76,7 @@ class SolidMotor(
             web_distance: Web distance traveled [m]. Defaults to ignition state.
 
         Returns:
-            Center of gravity [x, y, z] [m].
+            Center of gravity as `(x, y, z)` [m].
 
         Raises:
             ValueError: If the thrust chamber dry mass center of gravity is not

@@ -8,11 +8,11 @@ class Nozzle:
 
     def __init__(
         self,
-        inlet_diameter,
-        throat_diameter,
-        divergent_angle,
-        convergent_angle,
-        expansion_ratio,
+        inlet_diameter: float,
+        throat_diameter: float,
+        divergent_angle: float,
+        convergent_angle: float,
+        expansion_ratio: float,
         c_1: float = 0.00506,
         c_2: float = 0.0,
         discharge_coefficient: float = 1.0,
@@ -49,10 +49,10 @@ class Nozzle:
         self.discharge_coefficient = discharge_coefficient
 
     @property
-    def outlet_diameter(self):
+    def outlet_diameter(self) -> float:
         """Return the nozzle exit diameter [m]."""
         return self.throat_diameter * np.sqrt(self.expansion_ratio)
 
-    def get_throat_area(self):
+    def get_throat_area(self) -> float:
         """Return the nozzle throat area [m^2]."""
         return get_circle_area(self.throat_diameter)

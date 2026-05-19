@@ -107,7 +107,7 @@ class BatesSegment(GrainSegment2D):
                 symmetry; included for API consistency.
 
         Returns:
-            Center of gravity [x, y, z] [m], measured from the aft end (port,
+            Center of gravity as `(x, y, z)` [m], measured from the aft end (port,
             closest to nozzle). Always returns [length/2, 0, 0] for symmetric
             BATES grains.
         """

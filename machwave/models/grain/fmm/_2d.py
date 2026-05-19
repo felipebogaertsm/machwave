@@ -291,7 +291,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             web_distance: Web distance traveled [m].
 
         Returns:
-            Center of gravity [x, y, z] [m], measured from the segment port.
+            Center of gravity as `(x, y, z)` [m], measured from the segment port.
         """
         self._validate_web_distance(web_distance)
         y_indices, x_indices = self._get_active_material_indices(web_distance)

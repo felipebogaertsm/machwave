@@ -67,7 +67,7 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
                 1.0 = empty).
 
         Returns:
-            Center of gravity [x, y, z] [m].
+            Center of gravity as `(x, y, z)` [m].
 
         Raises:
             ValueError: If `thrust_chamber.center_of_gravity_coordinate`,
