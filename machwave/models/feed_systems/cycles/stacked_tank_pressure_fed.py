@@ -1,7 +1,6 @@
 from machwave.core.incompressible_flow import get_mass_flow_orifice
+from machwave.models.feed_systems.base import FeedSystem
 from machwave.models.feed_systems.tanks import Tank
-
-from .base import FeedSystem
 
 
 class StackedTankPressureFedFeedSystem(FeedSystem):
