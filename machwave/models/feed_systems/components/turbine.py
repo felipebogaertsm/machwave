@@ -1,27 +1,19 @@
-"""Turbine specification dataclass shared by turbopump-based feed-system cycles."""
-
 import dataclasses
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class TurbineSpec:
-    """Static description of a turbine used by turbopump cycles.
-
-    The values describe the turbine at its design point. Cycle implementations
-    consume these together with the working-fluid conditions to compute the
-    actual shaft power delivered to the coupled pump.
+    """Turbine used by turbopump cycles.
 
     Attributes:
-        name: Human-readable identifier used in logs and reports.
+        name: Identifier used in logs and reports.
         isentropic_efficiency: Ratio of actual specific work extracted to the
-            isentropic specific work available across the turbine
-            (dimensionless). Must lie in the half-open interval `(0, 1]`.
+            isentropic specific work available across the turbine. Must be between 0
+            and 1.
         pressure_ratio: Ratio of turbine inlet total pressure to outlet total
-            pressure (dimensionless). Must be strictly greater than one.
-        inlet_temperature_design: Design-point total temperature at the turbine
-            inlet [K]. Must be strictly positive.
-        mass_flow_design: Design-point mass flow through the turbine [kg/s].
-            Must be strictly positive.
+            pressure. Greater than 1.
+        inlet_temperature_design: Total temperature at the turbine inlet [K] (>0).
+        mass_flow_design: Mass flow through the turbine [kg/s] (>0).
 
     Raises:
         ValueError: If any field is outside its valid physical range.

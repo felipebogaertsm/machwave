@@ -1,27 +1,18 @@
-"""Pump specification dataclass shared by turbopump-based feed-system cycles."""
-
 import dataclasses
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PumpSpec:
-    """Static description of a propellant pump used by turbopump cycles.
-
-    The values describe the pump at its design point. Cycle implementations
-    consume these together with operating-point data (mass flow, density,
-    rotational speed) to compute the actual head rise and power draw.
+    """Propellant pump used by turbopump cycles.
 
     Attributes:
-        name: Human-readable identifier used in logs and reports.
+        name: Identifier used in logs and reports.
         isentropic_efficiency: Ratio of isentropic enthalpy rise to actual
-            enthalpy rise (dimensionless). Must lie in the half-open interval
-            `(0, 1]`.
-        pressure_rise: Design-point pressure rise across the pump [Pa]. Must
-            be strictly positive.
-        volumetric_flow_design: Design-point volumetric flow through the pump
-            [m^3/s]. Must be strictly positive.
-        shaft_speed_design: Design-point shaft angular speed [rad/s]. Must be
-            strictly positive.
+            enthalpy rise. Must lie between 0 and 1.
+        pressure_rise: Pressure rise across the pump [Pa] (>0).
+        volumetric_flow_design: Volumetric flow through the pump
+            [m^3/s] (>0).
+        shaft_speed_design: Shaft angular speed [rad/s] (>0).
 
     Raises:
         ValueError: If any field is outside its valid physical range.
