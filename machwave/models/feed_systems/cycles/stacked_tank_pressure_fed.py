@@ -48,8 +48,9 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
     def get_mass_flow_ox(
         self,
         chamber_pressure: float,
-        discharge_coefficient: float,
-        injector_area: float,
+        *,
+        discharge_coefficient: float | None = None,
+        injector_area: float | None = None,
     ) -> float:
         """
         Compute the current oxidizer mass flow rate via get_mass_flow_orifice().
@@ -61,7 +62,16 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
 
         Returns:
             Oxidizer mass flow rate [kg/s].
+
+        Raises:
+            ValueError: If `discharge_coefficient` or `injector_area` is None.
         """
+        if discharge_coefficient is None or injector_area is None:
+            raise ValueError(
+                "StackedTankPressureFedFeedSystem.get_mass_flow_ox requires "
+                "discharge_coefficient and injector_area"
+            )
+
         p_up = self.get_oxidizer_tank_pressure()
         p_down = chamber_pressure
         oxidizer_density = self.oxidizer_tank.get_density()
@@ -77,8 +87,9 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
     def get_mass_flow_fuel(
         self,
         chamber_pressure: float,
-        discharge_coefficient: float,
-        injector_area: float,
+        *,
+        discharge_coefficient: float | None = None,
+        injector_area: float | None = None,
     ) -> float:
         """
         Compute the current fuel mass flow rate via get_mass_flow_orifice().
@@ -91,7 +102,16 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
 
         Returns:
             Fuel mass flow rate [kg/s].
+
+        Raises:
+            ValueError: If `discharge_coefficient` or `injector_area` is None.
         """
+        if discharge_coefficient is None or injector_area is None:
+            raise ValueError(
+                "StackedTankPressureFedFeedSystem.get_mass_flow_fuel requires "
+                "discharge_coefficient and injector_area"
+            )
+
         p_up = self.get_oxidizer_tank_pressure() - self.piston_loss
         p_down = chamber_pressure
         fuel_density = self.fuel_tank.get_density()
