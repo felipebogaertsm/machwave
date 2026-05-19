@@ -1,5 +1,3 @@
-"""Generic interpolation utilities for tabulated curves used across machwave."""
-
 from collections.abc import Sequence
 
 import numpy as np
@@ -7,7 +5,7 @@ from scipy.interpolate import CubicSpline
 
 
 class BoundedCubicSpline:
-    """Cubic-spline interpolant that does not extrapolate outside its domain."""
+    """Cubic spline interpolant that does not extrapolate outside its domain."""
 
     def __init__(
         self,
