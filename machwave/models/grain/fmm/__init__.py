@@ -1,9 +1,10 @@
 """
-This module contains classes that model grain geometries using the Fast Marching
-Method (FMM). Both 2D and 3D geometries are supported, along with STL files.
+Fast Marching Method (FMM) grain geometry models.
+
+Supports both 2D and 3D geometries, as well as STL meshes.
 
 References:
-https://math.berkeley.edu/~sethian/2006/Explanations/fast_marching_explain.html
+    https://math.berkeley.edu/~sethian/2006/Explanations/fast_marching_explain.html
 """
 
 from machwave.models.grain.fmm._2d import FMMGrainSegment2D

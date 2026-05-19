@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
 class RodAndTubeGrainSegment(FMMGrainSegment2D):
+    """Rod-and-tube grain segment: central rod inside a concentric tube."""
+
     def __init__(
         self,
         length: float,
@@ -15,6 +17,17 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a rod-and-tube grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer (tube outer) diameter [m].
+            rod_outer_diameter: Central rod outer diameter [m].
+            tube_inner_diameter: Tube inner diameter [m].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.rod_outer_diameter = rod_outer_diameter
         self.tube_inner_diameter = tube_inner_diameter
 
@@ -26,6 +39,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
+        """Validate rod-and-tube segment geometry."""
         super().validate()
 
         if not self.rod_outer_diameter > 0:
@@ -44,9 +58,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
             )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """
-        NOTE: Still needs to correctly implement wagon wheel ports.
-        """
+        """NOTE: Still needs to correctly implement wagon wheel ports."""
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
 

@@ -37,6 +37,7 @@ class SimulationResult(ABC, Generic[StateT]):
 
     @classmethod
     def from_state(cls, state: StateT) -> "SimulationResult":
+        """Build a `SimulationResult` from a finished motor state."""
         return cls(
             **cls._collect_base_fields(state),
             **cls._collect_extra_fields(state),
@@ -83,6 +84,7 @@ class SimulationResult(ABC, Generic[StateT]):
         """Print the subclass-specific portion of the report."""
 
     def summary(self) -> dict[str, float]:
+        """Return a mapping of headline scalar metrics for this result."""
         return {
             "burn_time": self.burn_time,
             "thrust_time": self.thrust_time,
@@ -97,5 +99,5 @@ class SimulationResult(ABC, Generic[StateT]):
         }
 
     def _extra_summary(self) -> dict[str, float]:
-        """Return subclass-specific scalar metrics to merge into ``summary()``."""
+        """Return subclass-specific scalar metrics to merge into `summary()`."""
         return {}

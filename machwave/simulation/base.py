@@ -9,7 +9,8 @@ from machwave.simulation.states import MotorState
 
 @dataclass
 class InternalBallisticsSimulationParams:
-    """Parameters for an internal ballistics simulation.
+    """
+    Parameters for an internal ballistics simulation.
 
     Attributes:
         d_t: Time step.
@@ -26,7 +27,8 @@ class InternalBallisticsSimulationParams:
 
 
 class InternalBallisticsSimulation:
-    """Internal ballistics simulation class.
+    """
+    Internal ballistics simulation class.
 
     Attributes:
         motor: Motor object.
@@ -38,10 +40,18 @@ class InternalBallisticsSimulation:
         motor: Motor,
         params: InternalBallisticsSimulationParams,
     ) -> None:
+        """
+        Initialize an internal ballistics simulation.
+
+        Args:
+            motor: Motor model to simulate.
+            params: Simulation parameters.
+        """
         self.motor: Motor = motor
         self.params: InternalBallisticsSimulationParams = params
 
     def _build_motor_state(self) -> MotorState:
+        """Build the motor state matching the configured motor type."""
         if isinstance(self.motor, SolidMotor):
             return SolidMotorState(
                 motor=self.motor,
@@ -59,6 +69,7 @@ class InternalBallisticsSimulation:
         raise ValueError("Unsupported motor type.")
 
     def run(self) -> SimulationResult:
+        """Run the simulation to thrust termination and return its result."""
         motor_state = self._build_motor_state()
 
         d_t = self.params.d_t

@@ -167,9 +167,7 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
 
 
 def test_remove_negative_mass():
-    """
-    Removing negative mass should raise ValueError.
-    """
+    """Removing negative mass should raise ValueError."""
     tank = Tank("Water", 0.01, 300.0, 1.0)
     with pytest.raises(ValueError):
         tank.remove_propellant(-0.5)

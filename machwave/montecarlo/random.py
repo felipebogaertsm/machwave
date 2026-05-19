@@ -8,7 +8,8 @@ import numpy as np
 
 @dataclass(slots=True, frozen=True)
 class RandomGenerator(ABC):
-    """Abstract class for a random number generator.
+    """
+    Abstract class for a random number generator.
 
     Attributes:
         value: Nominal or mean value of the parameter.
@@ -23,9 +24,7 @@ class RandomGenerator(ABC):
     spread: float | tuple[float, float] = 0.0
 
     def __post_init__(self) -> None:
-        """
-        Ensures non-negative spread values and valid inputs.
-        """
+        """Ensures non-negative spread values and valid inputs."""
         if isinstance(self.spread, tuple):
             if len(self.spread) != 2 or self.spread[0] < 0 or self.spread[1] < 0:
                 raise ValueError("Spread must be a tuple of two non-negative values.")
@@ -73,13 +72,11 @@ class NormalRandomGenerator(RandomGenerator):
 
     def get_value(self) -> float:
         """
-        In numpy.random, "scale" determines the standard deviation of the
-        normal distribution. In this case, the spread is defined as 3 times
-        the standard deviation, so that ~99.7% of the generated values are
-        within spread.
+        Return a sample from the normal distribution.
 
-        Returns:
-            Random value based on a normal probability distribution.
+        In `numpy.random`, `scale` is the standard deviation. Here the spread
+        is defined as 3 times the standard deviation, so ~99.7% of generated
+        values lie within `value +/- spread`.
         """
         return np.random.normal(
             loc=self.value,
@@ -126,7 +123,8 @@ _GENERATOR_REGISTRY: dict[str, FactoryFn] = {
 
 
 def register_random_generator(name: str, ctor: FactoryFn) -> None:
-    """Add a new random generator to the registry at runtime.
+    """
+    Add a new random generator to the registry at runtime.
 
     Args:
         name: Name of the generator (case-insensitive).
@@ -146,7 +144,8 @@ def get_random_generator(
     *args,
     **kwargs,
 ) -> RandomGenerator:
-    """Return a random number generator based on probability distribution.
+    """
+    Return a random number generator based on probability distribution.
 
     Args:
         probability_distribution: Name of the probability distribution

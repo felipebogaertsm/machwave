@@ -3,7 +3,8 @@ import dataclasses
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class TurbineSpec:
-    """Turbine used by turbopump cycles.
+    """
+    Turbine used by turbopump cycles.
 
     Attributes:
         name: Identifier used in logs and reports.

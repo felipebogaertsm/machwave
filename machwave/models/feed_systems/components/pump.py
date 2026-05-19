@@ -3,7 +3,8 @@ import dataclasses
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PumpSpec:
-    """Propellant pump used by turbopump cycles.
+    """
+    Propellant pump used by turbopump cycles.
 
     Attributes:
         name: Identifier used in logs and reports.

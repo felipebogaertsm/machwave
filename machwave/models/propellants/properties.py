@@ -23,8 +23,8 @@ VALIDATION_BOUNDS: dict[str, tuple[float, float]] = {
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ThermochemicalProperties:
-    """Thermochemical properties for the combustion products of chemical rocket
-    propellants.
+    """
+    Thermochemical properties of chemical-rocket combustion products.
 
     Attributes:
         k_chamber: Isentropic exponent in chamber.
@@ -82,7 +82,8 @@ class ThermochemicalProperties:
 
     @functools.cached_property
     def is_two_phase_flow(self) -> bool:
-        """Check if combustion products have condensed phase species.
+        """
+        Check if combustion products have condensed phase species.
 
         Returns:
             True if qsi_chamber > 0 or qsi_exhaust > 0.

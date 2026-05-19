@@ -6,7 +6,8 @@ import plotly.subplots
 def thrust_pressure_plot(
     time: np.ndarray, thrust: np.ndarray, chamber_pressure: np.ndarray
 ) -> go.Figure:
-    """Generate an interactive plot with thrust and chamber pressure.
+    """
+    Generate an interactive plot with thrust and chamber pressure.
 
     Args:
         time: Time array.
@@ -56,7 +57,8 @@ def thrust_pressure_plot(
 
 
 def mass_flux_plot(time: np.ndarray, mass_flux: np.ndarray) -> go.Figure:
-    """Generate an interactive plot for mass flux across multiple segments.
+    """
+    Generate an interactive plot for mass flux across multiple segments.
 
     Args:
         time: Time array.
@@ -90,9 +92,10 @@ def plot_bipropellant_tank_profiles(
     fuel_tank_mass: np.ndarray,
 ) -> go.Figure:
     """
-    Generates an interactive double chart:
-      - Left subplot: oxidizer & fuel tank pressures (in MPa) vs time
-      - Right subplot: oxidizer & fuel tank masses (in kg) vs time
+    Generate an interactive two-panel chart of tank pressures and masses.
+
+    Left subplot: oxidizer and fuel tank pressures [MPa] versus time. Right
+    subplot: oxidizer and fuel tank masses [kg] versus time.
 
     Args:
         time: Time array [s].

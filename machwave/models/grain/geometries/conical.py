@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment3D
 
 
 class ConicalGrainSegment(FMMGrainSegment3D):
+    """Grain segment with a conical port tapering between two diameters."""
+
     def __init__(
         self,
         length: float,
@@ -15,6 +17,17 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a conical grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            upper_core_diameter: Core diameter at the upper (bulkhead) end [m].
+            lower_core_diameter: Core diameter at the lower (nozzle) end [m].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.upper_core_diameter = upper_core_diameter
         self.lower_core_diameter = lower_core_diameter
 
@@ -26,6 +39,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         )
 
     def validate(self) -> None:
+        """Validate conical segment geometry."""
         super().validate()
 
         if not self.upper_core_diameter > 0:
@@ -48,6 +62,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
             )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+        """Return the initial face map for the conical port."""
         map_x, map_y, map_z = self.get_maps()
         core_map = self.get_empty_face_map()
 

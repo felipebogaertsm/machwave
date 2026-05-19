@@ -1,7 +1,4 @@
-"""
-Numerical methods for solving systems such as differential equations, optimization
-problems, and more.
-"""
+"""Numerical methods for differential equations, optimization, and similar."""
 
 from .rk4 import rk4th_ode_solver
 

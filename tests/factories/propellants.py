@@ -1,6 +1,8 @@
-"""ThermochemicalProperties uses polyfactory's DataclassFactory (the model is a
+"""
+ThermochemicalProperties uses polyfactory's DataclassFactory (the model is a
 frozen, kw_only dataclass with strict validation bounds); the rest are plain
-builders so chemical formulas stay deterministic rather than randomized."""
+builders so chemical formulas stay deterministic rather than randomized.
+"""
 
 from __future__ import annotations
 

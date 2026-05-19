@@ -1,6 +1,4 @@
-"""
-Performance metrics and calculations.
-"""
+"""Performance metrics and calculations."""
 
 import numpy as np
 import numpy.typing as npt
@@ -11,7 +9,8 @@ def get_total_impulse(
     thrust: npt.NDArray[np.float64],
     time: npt.NDArray[np.float64],
 ) -> float:
-    """Get total impulse by trapezoidal integration of the thrust curve.
+    """
+    Get total impulse by trapezoidal integration of the thrust curve.
 
     Args:
         thrust: Thrust samples [N].
@@ -24,7 +23,8 @@ def get_total_impulse(
 
 
 def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -> float:
-    """Get specific impulse.
+    """
+    Get specific impulse.
 
     Args:
         total_impulse: Total impulse [N-s].

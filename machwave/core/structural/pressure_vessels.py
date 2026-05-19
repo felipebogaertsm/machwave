@@ -1,20 +1,15 @@
 """
-This module provides functions to calculate the burst pressure of pressure vessels,
-specifically closed-end thick-walled cylindrical vessels and flat plates, based on
-the Von Mises equivalent stress theory.
+Pressure vessel burst-pressure calculations.
 
+Provides functions for burst pressure of closed-end thick-walled cylindrical
+vessels and flat plates, based on the Von Mises equivalent stress theory.
 
 References:
-    Shigley, J.E., Mischke, C.R., & Budynas, R.G., "Mechanical Engineering
-    Design", 10th ed., McGraw-Hill, 2015.
+    Shigley, J.E., Mischke, C.R., & Budynas, R.G. (2015). Mechanical
+    Engineering Design (10th ed.). McGraw-Hill.
 """
 
 import numpy as np
-
-"""
-Individual stress calculations for a closed-end thick-walled cylindrical vessel
-under internal pressure.
-"""
 
 
 def _get_cylindrical_vessel_hoop_stress(
@@ -23,20 +18,19 @@ def _get_cylindrical_vessel_hoop_stress(
     outer_radius: float,
 ) -> float:
     """
-    Hoop (circumferential) stress at the inner wall for a closed-end
-    thick-walled cylindrical vessel under internal pressure.
+    Return the hoop stress at the inner wall of a thick-walled cylinder.
 
-    Acts tangentially around the circumference, “trying to split” the cylinder
-    along its length.
-
-    Formula from Shigley et al. (2015), Eq. (3-50).
+    Hoop (circumferential) stress acts tangentially around the circumference,
+    "trying to split" a closed-end cylinder along its length under internal
+    pressure. Formula from Shigley et al. (2015), Eq. (3-50).
 
     Args:
-        pressure (float): Internal pressure.
-        inner_radius (float): Inner radius of the cylinder.
-        outer_radius (float): Outer radius of the cylinder.
+        pressure: Internal pressure [Pa].
+        inner_radius: Inner radius of the cylinder [m].
+        outer_radius: Outer radius of the cylinder [m].
+
     Returns:
-        float: Hoop stress at the inner wall.
+        Hoop stress at the inner wall [Pa].
     """
     a = inner_radius
     b = outer_radius
@@ -49,19 +43,19 @@ def _get_cylindrical_vessel_radial_stress(
     outer_radius: float,
 ) -> float:
     """
-    Radial stress at the inner wall for a closed-end thick-walled cylindrical
-    vessel under internal pressure.
+    Return the radial stress at the inner wall of a thick-walled cylinder.
 
-    Acts along the radius, pushing inward or outward.
-
-    Formula from Shigley et al. (2015), Eq. (3-50).
+    Radial stress acts along the radius, pushing inward or outward for a
+    closed-end cylinder under internal pressure. Formula from Shigley et al.
+    (2015), Eq. (3-50).
 
     Args:
-        pressure (float): Internal pressure.
-        inner_radius (float): Inner radius of the cylinder.
-        outer_radius (float): Outer radius of the cylinder.
+        pressure: Internal pressure [Pa].
+        inner_radius: Inner radius of the cylinder [m].
+        outer_radius: Outer radius of the cylinder [m].
+
     Returns:
-        float: Radial stress at the inner wall.
+        Radial stress at the inner wall [Pa].
     """
     a = inner_radius
     b = outer_radius
@@ -74,26 +68,22 @@ def _get_cylindrical_vessel_logitudinal_stress(
     outer_radius: float,
 ) -> float:
     """
-    Longitudinal stress at the inner wall of a thick-walled closed-end cylinder
-    under internal pressure.
+    Return the longitudinal stress at the inner wall of a thick-walled cylinder.
 
-    Acts along the cylinder's axis, trying to pull the end caps off.
+    Longitudinal stress acts along the cylinder's axis, trying to pull the end
+    caps off, for a closed-end cylinder under internal pressure.
 
     Args:
-        pressure (float): Internal pressure.
-        inner_radius (float): Inner radius of the cylinder.
-        outer_radius (float): Outer radius of the cylinder.
+        pressure: Internal pressure [Pa].
+        inner_radius: Inner radius of the cylinder [m].
+        outer_radius: Outer radius of the cylinder [m].
+
     Returns:
-        float: Longitudinal stress at the inner wall.
+        Longitudinal stress at the inner wall [Pa].
     """
     a = inner_radius
     b = outer_radius
     return 2 * pressure * a**2 / (b**2 - a**2)
-
-
-"""
-Stress calculations:
-"""
 
 
 def get_cylindrical_vessel_von_mises_stress(
@@ -102,15 +92,18 @@ def get_cylindrical_vessel_von_mises_stress(
     outer_radius: float,
 ) -> float:
     """
-    Calculate the Von Mises equivalent stress for a closed-end thick-walled
-    cylindrical vessel under internal pressure.
+    Return the Von Mises equivalent stress for a thick-walled cylinder.
+
+    Applies to a closed-end thick-walled cylindrical vessel under internal
+    pressure.
 
     Args:
-        pressure (float): Internal pressure.
-        inner_radius (float): Inner radius of the cylinder.
-        outer_radius (float): Outer radius of the cylinder.
+        pressure: Internal pressure [Pa].
+        inner_radius: Inner radius of the cylinder [m].
+        outer_radius: Outer radius of the cylinder [m].
+
     Returns:
-        float: Von Mises equivalent stress (same units as pressure).
+        Von Mises equivalent stress [Pa].
     """
     sigma_t = _get_cylindrical_vessel_hoop_stress(pressure, inner_radius, outer_radius)
     sigma_r = _get_cylindrical_vessel_radial_stress(
@@ -130,18 +123,21 @@ def get_cylindrical_vessel_von_mises_stress(
 
 def get_flat_plate_stress(pressure: float, diameter: float, thickness: float) -> float:
     """
-    Membrane (tensile) stress in a flat, simply supported circular plate
-    loaded by uniform internal pressure.
+    Return the membrane (tensile) stress in a uniformly loaded flat plate.
 
-    This is conservative for real end caps, which often include edge
-    bending restraint or doming.
+    Applies to a simply supported circular plate loaded by uniform internal
+    pressure. Conservative for real end caps, which often include edge bending
+    restraint or doming.
+
+    Args:
+        pressure: Internal pressure [Pa].
+        diameter: Plate diameter [m].
+        thickness: Plate thickness [m].
+
+    Returns:
+        Membrane stress [Pa].
     """
     return pressure * diameter / (2.0 * thickness)
-
-
-"""
-Burst pressure calculations:
-"""
 
 
 def get_cylindrical_vessel_burst_pressure(
@@ -150,18 +146,20 @@ def get_cylindrical_vessel_burst_pressure(
     material_yield_strength: float,
 ) -> float:
     """
-    Calculate the internal burst pressure at which the Von Mises equivalent
-    stress reaches the material's yield strength.
+    Return the burst pressure for a thick-walled cylindrical vessel.
+
+    Defined as the internal pressure at which the Von Mises equivalent stress
+    reaches the material's yield strength.
 
     Args:
-        inner_radius (float): Inner radius of the vessel.
-        outer_radius (float): Outer radius of the vessel.
-        material_yield_strength (float): Yield strength of the material.
+        inner_radius: Inner radius of the vessel [m].
+        outer_radius: Outer radius of the vessel [m].
+        material_yield_strength: Material yield strength [Pa].
 
     Returns:
-        float: Burst pressure (same units as yield strength).
+        Burst pressure [Pa].
     """
-    # Von Mises stress per unit internal pressure
+    # Von Mises stress per unit internal pressure.
     equiv_per_unit = get_cylindrical_vessel_von_mises_stress(
         1.0, inner_radius, outer_radius
     )
@@ -175,15 +173,17 @@ def get_flat_plate_burst_pressure(
     material_yield_strength: float,
 ) -> float:
     """
-    Calculate the internal burst pressure at which the Von Mises equivalent
-    stress reaches the material's yield strength.
+    Return the burst pressure for a flat plate.
+
+    Defined as the internal pressure at which the membrane stress reaches the
+    material's yield strength.
 
     Args:
-        diameter (float): Diameter of the plate.
-        thickness (float): Thickness of the plate.
-        material_yield_strength (float): Yield strength of the material.
+        diameter: Plate diameter [m].
+        thickness: Plate thickness [m].
+        material_yield_strength: Material yield strength [Pa].
 
     Returns:
-        float: Burst pressure (same units as yield strength).
+        Burst pressure [Pa].
     """
     return 2 * material_yield_strength * thickness / diameter

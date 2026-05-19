@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, kw_only=True)
 class SolidSimulationResult(SimulationResult["SolidMotorState"]):
+    """Simulation result for a solid motor run."""
+
     free_chamber_volume: SimulationResultArray
     web: SimulationResultArray
     burn_area: SimulationResultArray
@@ -84,9 +86,11 @@ class SolidSimulationResult(SimulationResult["SolidMotorState"]):
     def _get_klemmung(
         burn_area: SimulationResultArray, throat_area: float
     ) -> SimulationResultArray:
-        """Klemmung (Kn) over non-zero burn-area samples.
+        """
+        Return Klemmung (Kn) over non-zero burn-area samples.
 
-        Returns Kn values where burn area is positive; length is <= len(burn_area).
+        Returns Kn values where burn area is positive; length is at most
+        `len(burn_area)`.
         """
         return burn_area[burn_area > 0] / throat_area
 
@@ -94,10 +98,13 @@ class SolidSimulationResult(SimulationResult["SolidMotorState"]):
     def _classify_burn_profile(
         klemmung: SimulationResultArray, deviancy: float = 0.02
     ) -> str:
-        """Classify a burn profile as "regressive", "progressive", or "neutral".
+        """
+        Classify a burn profile as "regressive", "progressive", or "neutral".
 
-        `deviancy` is the fractional threshold around 1.0 for the initial-to-final
-        ratio that delimits the neutral band.
+        Args:
+            klemmung: Klemmung samples.
+            deviancy: Fractional threshold around 1.0 for the initial-to-final
+                ratio that delimits the neutral band.
         """
         ratio = float(klemmung[0] / klemmung[-1])
         if ratio > 1 + deviancy:

@@ -1,4 +1,5 @@
-"""End-to-end integration tests for SolidMotor internal ballistics simulations.
+"""
+End-to-end integration tests for SolidMotor internal ballistics simulations.
 
 The motor configurations live in tests/test_simulations/motor_builders.py so
 they can be reused by benchmarks under tests/benchmarks/.

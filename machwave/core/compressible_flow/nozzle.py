@@ -4,7 +4,8 @@ import numpy as np
 def get_optimal_expansion_ratio(
     k: float, chamber_pressure: float, atmospheric_pressure: float
 ) -> float:
-    """Get optimal expansion ratio for DeLaval nozzle.
+    """
+    Get optimal expansion ratio for DeLaval nozzle.
 
     Args:
         k: Isentropic exponent.
@@ -31,7 +32,8 @@ def get_ideal_thrust_coefficient(
     expansion_ratio: float,
     k_exhaust: float,
 ) -> float:
-    """Get ideal thrust coefficient for DeLaval nozzle.
+    """
+    Get ideal thrust coefficient for DeLaval nozzle.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -61,7 +63,8 @@ def apply_thrust_coefficient_correction(
     ideal_thrust_coefficient: float,
     nozzle_correction_factor: float,
 ) -> float:
-    """Apply nozzle efficiency correction to thrust coefficient.
+    """
+    Apply nozzle efficiency correction to thrust coefficient.
 
     Args:
         ideal_thrust_coefficient: Ideal thrust coefficient.
@@ -76,7 +79,8 @@ def apply_thrust_coefficient_correction(
 def get_thrust_from_thrust_coefficient(
     thrust_coefficient: float, chamber_pressure: float, nozzle_throat_area: float
 ) -> float:
-    """Get thrust from thrust coefficient.
+    """
+    Get thrust from thrust coefficient.
 
     Args:
         thrust_coefficient: Thrust coefficient.

@@ -26,6 +26,16 @@ class SolidMotorState(simulation_states.MotorState):
         external_pressure: float,
         other_losses: float,
     ) -> None:
+        """
+        Initialize a solid motor state.
+
+        Args:
+            motor: Solid motor to track.
+            igniter_pressure: Initial chamber pressure from the igniter [Pa].
+            external_pressure: Ambient pressure [Pa].
+            other_losses: Fractional losses not covered by specific
+                mechanisms, in [0, 1].
+        """
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
@@ -65,6 +75,7 @@ class SolidMotorState(simulation_states.MotorState):
         self.overall_efficiency: simulation_states.SimulationStateArray = [0.0]
 
     def get_m_dot_in(self) -> float:
+        """Return the propellant mass generation rate from the grain [kg/s]."""
         propellant_density = self.motor.grain.get_real_density(
             web_distance=self.web[-1],
             ideal_density=self.motor.propellant.ideal_density,
@@ -76,7 +87,8 @@ class SolidMotorState(simulation_states.MotorState):
         d_t: float,
         external_pressure: float,
     ) -> None:
-        """Iterate the motor operation by calculating operational parameters.
+        """
+        Iterate the motor operation by calculating operational parameters.
 
         Args:
             d_t: Time increment [s].

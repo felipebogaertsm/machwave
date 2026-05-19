@@ -17,7 +17,8 @@ class FeedSystem(ABC):
     """
 
     def __init__(self, fuel_tank: Tank, oxidizer_tank: Tank):
-        """Initialize the FeedSystem with associated tank objects.
+        """
+        Initialize the FeedSystem with associated tank objects.
 
         Args:
             fuel_tank: Instance representing the fuel tank.
@@ -38,7 +39,8 @@ class FeedSystem(ABC):
         discharge_coefficient: float | None = None,
         injector_area: float | None = None,
     ) -> float:
-        """Compute and return the current oxidizer mass flow rate [kg/s].
+        """
+        Compute and return the current oxidizer mass flow rate [kg/s].
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -58,7 +60,8 @@ class FeedSystem(ABC):
         discharge_coefficient: float | None = None,
         injector_area: float | None = None,
     ) -> float:
-        """Compute and return the current fuel mass flow rate [kg/s].
+        """
+        Compute and return the current fuel mass flow rate [kg/s].
 
         Args:
             chamber_pressure: Chamber pressure [Pa].

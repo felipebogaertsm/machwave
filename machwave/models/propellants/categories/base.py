@@ -15,6 +15,8 @@ class PropellantValidationError(Exception):
 
     def __init__(self, message: str):
         """
+        Initialize with a description of the validation error.
+
         Args:
             message: Description of the validation error.
         """
@@ -39,7 +41,8 @@ class Propellant(abc.ABC):
         components: list[PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
     ):
-        """Initialize propellant.
+        """
+        Initialize propellant.
 
         Args:
             name: Propellant name.
@@ -57,7 +60,8 @@ class Propellant(abc.ABC):
 
     @abc.abstractmethod
     def _validate_components(self):
-        """Validate components meet propellant type requirements.
+        """
+        Validate components meet propellant type requirements.
 
         Raises:
             PropellantValidationError: If validation fails.
@@ -66,7 +70,8 @@ class Propellant(abc.ABC):
 
     @abc.abstractmethod
     def _get_thermochemical_service(self) -> cea_service.RocketCEAService:
-        """Create thermochemical service for this propellant.
+        """
+        Create thermochemical service for this propellant.
 
         Implemented for every subclass of propellant category, based on how the CEA
         object is constructed (from components, from properties, others).
@@ -85,7 +90,8 @@ class Propellant(abc.ABC):
         expansion_ratio: float = 8.0,
         mixture_ratio: float | None = None,
     ) -> ThermochemicalProperties:
-        """Evaluate thermochemical properties at given conditions.
+        """
+        Evaluate thermochemical properties at given conditions.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].

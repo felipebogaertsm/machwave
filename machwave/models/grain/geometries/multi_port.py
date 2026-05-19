@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
 class MultiPortGrainSegment(FMMGrainSegment2D):
+    """Grain segment with multiple circular ports arranged radially."""
+
     def __init__(
         self,
         length: float,
@@ -16,6 +18,18 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a multi-port grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            port_diameter: Diameter of each port [m].
+            port_radial_count: Number of ports per concentric ring.
+            port_level_count: Number of concentric rings of ports.
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.port_diameter = port_diameter
         self.port_radial_count = int(port_radial_count)
         self.port_level_count = int(port_level_count)
@@ -28,6 +42,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
+        """Validate multi-port segment geometry."""
         super().validate()
 
         if not self.port_diameter > 0:
@@ -51,9 +66,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
             )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """
-        NOTE: Still needs to correctly implement wagon wheel ports.
-        """
+        """NOTE: Still needs to correctly implement wagon wheel ports."""
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
 

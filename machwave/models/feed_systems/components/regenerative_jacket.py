@@ -3,7 +3,8 @@ import dataclasses
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class RegenerativeJacketSpec:
-    """Regenerative cooling component around the chamber and nozzle.
+    """
+    Regenerative cooling component around the chamber and nozzle.
 
     Attributes:
         name: Identifier used in logs and reports.

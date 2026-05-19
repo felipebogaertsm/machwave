@@ -8,6 +8,8 @@ import numpy as np
 
 
 class GrainGeometryError(Exception):
+    """Raised when a grain geometry is invalid."""
+
     def __init__(self, message: str) -> None:
         self.message = message
 
@@ -16,7 +18,8 @@ class GrainGeometryError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class InhibitedSurfaces:
-    """Describes which surfaces of a grain segment are inhibited.
+    """
+    Describes which surfaces of a grain segment are inhibited.
 
     Attributes:
         outer_surface: If True, the outer cylindrical surface is inhibited.
@@ -31,6 +34,7 @@ class InhibitedSurfaces:
     lower_end: bool = False
 
     def __post_init__(self) -> None:
+        """Reject configurations where every surface is inhibited."""
         if (
             self.outer_surface
             and self.inner_surface
@@ -43,9 +47,7 @@ class InhibitedSurfaces:
 
 
 class GrainSegment(ABC):
-    """
-    Represents a grain segment.
-    """
+    """Represents a grain segment."""
 
     def __init__(
         self,
@@ -67,78 +69,79 @@ class GrainSegment(ABC):
 
     @abstractmethod
     def get_web_thickness(self) -> float:
-        """
-        Calculates the total web thickness of the segment.
-
-        :return: The total web thickness of the segment
-        :rtype: float
-        """
+        """Return the total web thickness of the segment [m]."""
         pass
 
     @abstractmethod
     def get_length(self, web_distance: float) -> float:
+        """Return the segment length at a given web distance [m]."""
         pass
 
     @abstractmethod
     def get_port_area(self, web_distance: float, *args: Any, **kwargs: Any) -> float:
         """
-        Calculates the port area as a function of the web distance traveled.
+        Return the port area as a function of the web distance traveled.
 
         This method assumes a 2D or simplified model where the port area can
         be represented by a single scalar value at a given web distance.
 
         Args:
-            web_distance: Distance traveled into the grain web.
+            web_distance: Distance traveled into the grain web [m].
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            A float representing the port area.
+            Port area [m^2].
         """
         pass
 
     @abstractmethod
     def get_burn_area(self, web_distance: float) -> float:
         """
-        Calculates burn area in function of the web distance traveled.
+        Return the burn area at a given web distance.
 
-        :param float web_distance: Web distance traveled
-        :return: Burn area in function of the web distance traveled
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Burn area [m^2].
         """
         pass
 
     @abstractmethod
     def get_volume(self, web_distance: float) -> float:
         """
-        Calculates volume in function of the web distance traveled.
+        Return the segment volume at a given web distance.
 
-        :param float web_distance: Web distance traveled
-        :return: Segment volume in function of the instant web thickness
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Segment volume [m^3].
         """
         pass
 
     @abstractmethod
     def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
-        Calculates the center of gravity of the segment.
+        Return the center of gravity of the segment.
 
         The coordinate system origin is at the port, closest to the nozzle,
         with positive x-direction pointing toward the bulkhead.
 
-        :return: The center of gravity of the segment [x, y, z] in meters
-        :rtype: np.typing.NDArray[np.float64]
+        Returns:
+            Center of gravity of the segment as `(x, y, z)` [m].
         """
         pass
 
     @abstractmethod
     def get_moment_of_inertia(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
-        Calculates the moment of inertia tensor of the segment at its center of gravity.
+        Return the moment of inertia tensor at the segment's center of gravity.
 
         Returns:
-            A 3x3 array representing the inertia tensor [kg-m^2] with components:
+            A 3x3 inertia tensor [kg-m^2] with components:
+
                 [[Ixx, Ixy, Ixz],
                  [Iyx, Iyy, Iyz],
                  [Izx, Izy, Izz]]
@@ -147,12 +150,14 @@ class GrainSegment(ABC):
 
     def get_mass(self, web_distance: float, ideal_density: float) -> float:
         """
-        Calculates the mass of the segment at a given web distance.
+        Return the mass of the segment at a given web distance.
 
-        :param float web_distance: Web distance traveled [m]
-        :param float ideal_density: Ideal propellant density [kg/m^3]
-        :return: Mass of the segment at the given web distance [kg]
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+            ideal_density: Ideal propellant density [kg/m^3].
+
+        Returns:
+            Mass of the segment [kg].
         """
         if ideal_density <= 0:
             raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
@@ -161,7 +166,8 @@ class GrainSegment(ABC):
 
     def validate(self) -> None:
         """
-        Validates grain geometry.
+        Validate grain geometry.
+
         For every attribute that a child class adds, it must be validated here.
         """
         if not isinstance(self.inhibited_surfaces, InhibitedSurfaces):
@@ -182,15 +188,9 @@ class GrainSegment(ABC):
 
 class GrainSegment2D(GrainSegment, ABC):
     """
-    Class that represents a 2D grain segment.
+    A 2D grain segment with uniform cross section along its length.
 
-    A 2D grain segment is a segment that has the same cross sectional geometry
-    throughout its length.
-
-    Some examples of 2D grain geometries:
-    - BATES
-    - Tubular
-    - Pseudo-finocyl
+    Examples of 2D grain geometries: BATES, tubular, pseudo-finocyl.
     """
 
     def __init__(
@@ -210,42 +210,45 @@ class GrainSegment2D(GrainSegment, ABC):
     @abstractmethod
     def get_core_area(self, web_distance: float) -> float:
         """
-        Calculates the core area in function of the web distance traveled.
+        Return the core area at a given web distance.
 
-        Example:
-        In a simple tubular geometry, the core area would be equal to the
-        instant length of the segment times the instant core area.
+        In a simple tubular geometry, the core area equals the instant length
+        of the segment times the instant inner circumference. Not to be confused
+        with port area.
 
-        Not to be confused with port area!
+        Args:
+            web_distance: Web distance traveled [m].
 
-        :param float web_distance: Web distance traveled
-        :return: Core area in function of the web distance traveled
-        :rtype: float
+        Returns:
+            Core area [m^2].
         """
         pass
 
     @abstractmethod
     def get_face_area(self, web_distance: float) -> float:
         """
-        Calculates the face area in function of the web distance traveled.
+        Return the face area at a given web distance.
 
-        Example:
-        In a simple tubular geometry, the face area would be equal to the
-        outer diameter area minus the instantaneous core diameter area.
+        In a simple tubular geometry, the face area equals the outer diameter
+        area minus the instantaneous core diameter area.
 
-        :param float web_distance: Web distance traveled
-        :return: Face area in function of the web distance traveled
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Face area [m^2].
         """
         pass
 
     def get_length(self, web_distance: float) -> float:
+        """Return the segment length at a given web distance [m]."""
         exposed_ends = (not self.inhibited_surfaces.upper_end) + (
             not self.inhibited_surfaces.lower_end
         )
         return self.length - web_distance * exposed_ends
 
     def get_burn_area(self, web_distance: float) -> float:
+        """Return the segment burn area at a given web distance [m^2]."""
         if web_distance > self.get_web_thickness():
             return 0
 
@@ -262,6 +265,7 @@ class GrainSegment2D(GrainSegment, ABC):
         return core_area + total_face_area
 
     def get_volume(self, web_distance: float) -> float:
+        """Return the segment volume at a given web distance [m^3]."""
         if self.get_web_thickness() >= web_distance:
             return self.get_length(web_distance=web_distance) * self.get_face_area(
                 web_distance=web_distance
@@ -272,11 +276,9 @@ class GrainSegment2D(GrainSegment, ABC):
 
 class GrainSegment3D(GrainSegment, ABC):
     """
-    Class that represents a 3D grain segment.
+    A 3D grain segment with cross section varying along its length.
 
-    Some examples of 3D grain geometries:
-    - Conical
-    - Finocyl
+    Examples of 3D grain geometries: conical, finocyl.
     """
 
     def __init__(
@@ -296,24 +298,19 @@ class GrainSegment3D(GrainSegment, ABC):
     @abstractmethod
     def get_port_area(self, web_distance: float, z: float) -> float:
         """
-        Calculates the port area as a function of the web distance traveled
-        and a specified height (z).
-
-        NOTE: This method is not implemented.
+        Return the port area at a given web distance and axial height.
 
         Args:
-            web_distance: The distance traveled into the grain web.
-            z: The axial position (height) along the grain.
+            web_distance: Distance traveled into the grain web [m].
+            z: Axial position (height) along the grain [m].
 
         Returns:
-            The port area at the given web distance and height.
+            Port area at the given web distance and height [m^2].
         """
         pass
 
     def get_length(self, web_distance: float) -> float:
-        """
-        NOTE: Modify later.
-        """
+        """Return the segment length at a given web distance [m]."""
         exposed_ends = (not self.inhibited_surfaces.upper_end) + (
             not self.inhibited_surfaces.lower_end
         )
@@ -321,32 +318,36 @@ class GrainSegment3D(GrainSegment, ABC):
 
 
 class Grain:
+    """Assembly of one or more grain segments."""
+
     def __init__(self, spacing: float = 0.0) -> None:
         """
         Initialize a grain assembly.
 
         Args:
-            spacing: Distance between segments in meters. Default is 0.0
-                (no spacing).
+            spacing: Distance between segments [m]. Default is 0.0 (no spacing).
         """
         self.segments: list[GrainSegment] = []
         self.spacing = spacing
 
     def add_segment(self, new_segment: GrainSegment) -> None:
         """
-        Adds a new segment to the grain.
+        Add a new segment to the grain.
 
-        :param GrainSegment new_segment: The new segment to be added
-        :rtype: None
-        :raises Exceptiom: If the new_segment is not valid
+        Args:
+            new_segment: The new segment to be added.
+
+        Raises:
+            TypeError: If `new_segment` is not a `GrainSegment` instance.
         """
         if isinstance(new_segment, GrainSegment):
             self.segments.append(new_segment)
         else:
-            raise Exception("Argument is not a GrainSegment class instance")
+            raise TypeError("Argument is not a GrainSegment class instance")
 
     def get_effective_density_ratio(self, *, web_distance: float) -> float:
-        r"""Return an effective (burn-area weighted) density ratio.
+        r"""
+        Return an effective (burn-area weighted) density ratio.
 
         Used for gas generation terms where $\dot{m} \propto A_b r \rho_p$.
         """
@@ -364,7 +365,7 @@ class Grain:
         return float(np.sum(burn_areas * density_ratios) / total_burn_area)
 
     def get_real_density(self, *, web_distance: float, ideal_density: float) -> float:
-        """Return grain *effective real* propellant density [kg/m^3]."""
+        """Return grain effective real propellant density [kg/m^3]."""
         if ideal_density <= 0:
             raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
         return ideal_density * self.get_effective_density_ratio(
@@ -389,14 +390,12 @@ class Grain:
     @property
     def total_length(self) -> float:
         """
-        Calculates total length of the grain.
+        Return the total length of the grain [m].
 
-        Example:
-        - 1 segment of 0.5 m length -> total length = 0.5 m
-        - 2 segments of 0.5 m length with 0.1 m spacing -> total length = 1.1 m
-        - 3 segments of 0.5 m length with 0.1 m spacing -> total length = 1.7 m
-
-        :rtype: float
+        Examples:
+            - 1 segment of 0.5 m length -> total length = 0.5 m.
+            - 2 segments of 0.5 m length with 0.1 m spacing -> total length = 1.1 m.
+            - 3 segments of 0.5 m length with 0.1 m spacing -> total length = 1.7 m.
         """
         total_segment_length = np.sum([grain.length for grain in self.segments])
         if len(self.segments) > 1:  # add spacing between segments
@@ -405,18 +404,14 @@ class Grain:
 
     @property
     def segment_count(self) -> int:
-        """
-        Returns the number of segments in the grain.
-
-        :rtype: int
-        """
+        """Return the number of segments in the grain."""
         return len(self.segments)
 
     def get_center_of_gravity(
         self, web_distance: float
     ) -> np.typing.NDArray[np.float64]:
         """
-        Calculates the center of gravity of the grain.
+        Return the center of gravity of the grain.
 
         Takes the mass-weighted average of all segment centers of gravity,
         accounting for varying density ratios and spacing between segments.
@@ -425,9 +420,9 @@ class Grain:
             web_distance: Web distance traveled [m].
 
         Returns:
-            A 1D array of shape (3,) representing the [x, y, z] coordinates
-            of the center of gravity [m]. Origin is at the port of the grain
-            (closest to nozzle), with positive x pointing toward bulkhead.
+            A 1D array of shape (3,) with the [x, y, z] coordinates of the
+            center of gravity [m]. Origin is at the port of the grain (closest
+            to nozzle), with positive x pointing toward bulkhead.
 
         Raises:
             ValueError: If no segments are found in the grain.
@@ -469,8 +464,10 @@ class Grain:
         self, ideal_density: float, web_distance: float = 0.0
     ) -> np.typing.NDArray[np.float64]:
         """
-        Combines the inertia tensors of all grain segments using the parallel axis
-        theorem, accounting for varying density ratios and spacing between segments.
+        Combine the inertia tensors of all grain segments.
+
+        Uses the parallel axis theorem, accounting for varying density ratios
+        and spacing between segments.
 
         Args:
             ideal_density: Propellant ideal density [kg/m^3].
@@ -478,14 +475,14 @@ class Grain:
 
         Returns:
             A 3x3 inertia tensor [kg-m^2] at the grain's center of gravity:
+
                 [[Ixx, Ixy, Ixz],
                  [Ixy, Iyy, Iyz],
                  [Ixz, Iyz, Izz]]
 
-            Coordinate system: Origin at grain's center of gravity, with:
-            - x-axis: axial direction (toward bulkhead)
-            - y-axis: radial direction
-            - z-axis: radial direction
+            Coordinate system: origin at grain's center of gravity, with x-axis
+            in the axial direction (toward bulkhead) and y-/z-axes in the
+            radial plane.
 
         Raises:
             ValueError: If no segments are found in the grain.
@@ -529,11 +526,13 @@ class Grain:
 
     def get_burn_area(self, web_distance: float) -> float:
         """
-        Calculates the BATES burn area given the web distance.
+        Return the grain burn area at a given web distance.
 
-        :param float web_distance: Instant web thickness value
-        :return float: Instant burn area, in m^2 and in function of web
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Total burn area summed across all segments [m^2].
         """
         return np.sum(
             [segment.get_burn_area(web_distance) for segment in self.segments]
@@ -541,11 +540,13 @@ class Grain:
 
     def get_propellant_volume(self, web_distance: float) -> float:
         """
-        Calculates the BATES grain volume given the web distance.
+        Return the grain propellant volume at a given web distance.
 
-        :param float web_distance: Instant web thickness value
-        :return: Instant propellant volume, in m^3 and in function of web
-        :rtype: float
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Total propellant volume summed across all segments [m^3].
         """
         return np.sum([segment.get_volume(web_distance) for segment in self.segments])
 
@@ -556,8 +557,16 @@ class Grain:
         web_distance: np.ndarray,
     ) -> np.ndarray:
         """
-        Returns a numpy multidimensional array with the mass flux for each
-        grain.
+        Return mass flux per segment over time.
+
+        Args:
+            burn_rate: Burn rate samples [m/s].
+            ideal_density: Propellant ideal density [kg/m^3].
+            web_distance: Web distance samples [m].
+
+        Returns:
+            Mass flux array of shape `(segment_count, len(web_distance))`
+            [kg/(s-m^2)].
         """
         segment_mass_flux = np.zeros((self.segment_count, np.size(web_distance)))
 
@@ -582,8 +591,10 @@ class Grain:
         return segment_mass_flux
 
     def get_segment_mismatches(self) -> list[str]:
-        """Return per-attribute descriptions of where segments diverge. Uses
-        first segment as a reference.
+        """
+        Return per-attribute descriptions of where segments diverge.
+
+        Uses the first segment as reference.
 
         Returns:
             One description per divergent (segment, attribute) pair.

@@ -8,6 +8,8 @@ from .base import Motor
 
 
 class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
+    """Liquid rocket engine with bi-liquid propellant and a feed system."""
+
     def __init__(
         self,
         propellant: BiliquidPropellant,
@@ -21,12 +23,16 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
 
         Args:
             propellant: Bi-liquid propellant properties (oxidizer + fuel).
-            thrust_chamber: Thrust chamber assembly (nozzle + combustion chamber + injector).
-            feed_system: Propellant feed system (tanks, lines, pumps/pressurization).
-            oxidizer_tank_cog: Axial position of the oxidizer tank center (where propellant CoG is),
-                measured from the nozzle exit, in meters. If None, uses a default estimate.
-            fuel_tank_cog: Axial position of the fuel tank center (where propellant CoG is),
-                measured from the nozzle exit, in meters. If None, uses a default estimate.
+            thrust_chamber: Thrust chamber assembly (nozzle, combustion chamber,
+                injector).
+            feed_system: Propellant feed system (tanks, lines, pumps or
+                pressurization).
+            oxidizer_tank_cog: Axial position of the oxidizer propellant center
+                of gravity, measured from the nozzle exit [m]. If None, uses a
+                default estimate.
+            fuel_tank_cog: Axial position of the fuel propellant center of
+                gravity, measured from the nozzle exit [m]. If None, uses a
+                default estimate.
         """
         super().__init__(propellant, thrust_chamber)
         self.feed_system = feed_system
@@ -35,40 +41,37 @@ class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
 
     @property
     def initial_propellant_mass(self) -> float:
-        """
-        Returns the initial propellant mass in kg.
-        """
+        """Return the initial propellant mass [kg]."""
         return self.feed_system.get_propellant_mass()
 
     def get_launch_mass(self) -> float:
+        """Return the launch mass (dry mass + initial propellant) [kg]."""
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass
 
     def get_dry_mass(self) -> float:
+        """Return the dry mass [kg]."""
         return self.thrust_chamber.dry_mass
 
     def get_center_of_gravity(
         self, propellant_fraction: float = 0.0
     ) -> np.typing.NDArray[np.float64]:
         """
-        Calculate the center of gravity of the liquid engine including structural
-        dry mass, oxidizer, and fuel.
+        Return the engine center of gravity.
 
-        The calculation uses a mass-weighted average of:
-        1. Structural dry mass (thrust chamber, tanks structure, feed lines, etc.)
-        2. Oxidizer mass (from oxidizer tank)
-        3. Fuel mass (from fuel tank)
+        Combines structural dry mass, oxidizer, and fuel via a mass-weighted
+        average. Origin is at the nozzle exit on the chamber axis with
+        positive x pointing forward (toward bulkhead).
 
         Args:
-            propellant_fraction: Fraction of propellant consumed (0.0 = full, 1.0 = empty).
+            propellant_fraction: Fraction of propellant consumed (0.0 = full,
+                1.0 = empty).
 
         Returns:
-            Center of gravity in 3D space [x, y, z], in meters.
-            Origin is at the nozzle exit on the chamber axis.
-            Positive x-direction points forward (toward bulkhead/away from nozzle exit).
+            Center of gravity as `(x, y, z)` [m].
 
         Raises:
-            ValueError: If thrust_chamber.center_of_gravity_coordinate, oxidizer_tank_cog,
-                or fuel_tank_cog is not defined.
+            ValueError: If `thrust_chamber.center_of_gravity_coordinate`,
+                `oxidizer_tank_cog`, or `fuel_tank_cog` is not defined.
         """
         initial_ox_mass = self.feed_system.oxidizer_tank.initial_fluid_mass
         initial_fuel_mass = self.feed_system.fuel_tank.initial_fluid_mass
