@@ -14,10 +14,7 @@ T = TypeVar("T", bound=ThrustChamber)
 
 
 class Motor(Generic[P, T], ABC):
-    """
-    Abstract rocket motor/engine class. Can be used to model any chemical
-    rocket propulsion system, such as Solid, Hybrid and Liquid.
-    """
+    """Abstract rocket motor/engine for solid, hybrid, or liquid systems."""
 
     def __init__(
         self,
@@ -25,72 +22,57 @@ class Motor(Generic[P, T], ABC):
         thrust_chamber: T,
     ) -> None:
         """
-        Instantiates object attributes common to any motor/engine (Solid,
-        Hybrid or Liquid).
+        Initialize attributes common to any motor or engine.
 
         Args:
-            propellant: Object representing the propellant used in the motor.
-            thrust_chamber: Object representing the thrust chamber of the motor.
+            propellant: Propellant used in the motor.
+            thrust_chamber: Thrust chamber of the motor.
         """
         self.propellant = propellant
         self.thrust_chamber = thrust_chamber
 
     @abstractmethod
     def get_launch_mass(self) -> float:
-        """
-        Calculates the total mass of the motor before launch.
-
-        Returns:
-            Total mass of the motor before launch, in kg
-        """
+        """Return the total mass of the motor before launch [kg]."""
         pass
 
     @abstractmethod
     def get_dry_mass(self) -> float:
-        """
-        Calculates the dry mass of the rocket at any time.
-
-        Returns:
-            Dry mass of the rocket, in kg
-        """
+        """Return the dry mass of the motor [kg]."""
         pass
 
     @abstractmethod
     def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
         """
-        Calculate the center of gravity of the propulsion system.
+        Return the center of gravity of the propulsion system.
 
         The coordinate system origin corresponds to the combustion chamber axis
         at the nozzle exit plane, with positive x pointing toward the bulkhead.
 
         Returns:
-            A 1D array of shape (3,) representing the [x, y, z] coordinates of
-            the center of gravity, in meters.
+            1D array of shape `(3,)` containing the `[x, y, z]` coordinates of
+            the center of gravity [m].
         """
         pass
 
     @property
     @abstractmethod
     def initial_propellant_mass(self) -> float:
-        """
-        Returns:
-            Initial propellant mass, in kg
-        """
+        """Return the initial propellant mass [kg]."""
         pass
 
     def get_thrust(self, cf: float, chamber_pressure: float) -> float:
         """
-        Calculates the thrust based on instantaneous thrust coefficient and
-        chamber pressure.
+        Return the instantaneous thrust [N].
 
-        Utilized nozzle throat area from the structure and nozzle classes.
+        Uses the nozzle throat area from the thrust chamber.
 
         Args:
-            cf: Instantaneous thrust coefficient, adimensional
-            chamber_pressure: Instantaneous chamber pressure, in Pa
+            cf: Instantaneous thrust coefficient (dimensionless).
+            chamber_pressure: Instantaneous chamber pressure [Pa].
 
         Returns:
-            Instantaneous thrust, in Newtons
+            Instantaneous thrust [N].
         """
         return get_thrust_from_thrust_coefficient(
             cf,

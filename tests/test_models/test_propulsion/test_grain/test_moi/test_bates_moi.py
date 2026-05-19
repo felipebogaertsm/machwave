@@ -15,7 +15,7 @@ class TestBatesSegmentMomentOfInertia:
         outer_diameter = 0.117  # 117 mm
         core_diameter = 0.045  # 45 mm
         length = 0.2  # 200 mm
-        ideal_density = 1800.0  # kg/m³
+        ideal_density = 1800.0  # kg/m^3
 
         segment = BatesSegment(
             outer_diameter=outer_diameter,

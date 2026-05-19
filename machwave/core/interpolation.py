@@ -12,7 +12,8 @@ class BoundedCubicSpline:
         x_points: Sequence[float],
         y_points: Sequence[float],
     ) -> None:
-        """Construct the spline from a table of knots.
+        """
+        Construct the spline from a table of knots.
 
         Args:
             x_points: Strictly increasing knot locations along the independent
@@ -47,7 +48,8 @@ class BoundedCubicSpline:
         return (self._domain_minimum, self._domain_maximum)
 
     def __call__(self, value: float) -> float:
-        """Return the interpolated value at `value`.
+        """
+        Return the interpolated value at `value`.
 
         Args:
             value: Independent-axis input at which to evaluate the spline.

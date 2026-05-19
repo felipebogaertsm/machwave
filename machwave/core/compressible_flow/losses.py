@@ -1,14 +1,14 @@
 """
-Losses and correction factors for rocket engines.
-All functions return a fraction, between 0 and 1.
+Losses and correction factors for rocket engine performance.
+
+All functions return a loss as a fraction in [0, 1].
 
 References:
     Coats, D. E., Levine, J. N., Nickerson, G. R., Tyson, T. J.,
     Cohen, N. S., Harry, D. P. III, & Price, C. F. (1975).
-    *A Computer Program for the Prediction of Solid Propellant
-    Rocket Motor Performance. Volume I* (Technical Report
-    AFRPL-TR-75-36, DTIC Accession AD-A015 140). Air Force
-    Rocket Propulsion Laboratory, Edwards Air Force Base, CA.
+    A Computer Program for the Prediction of Solid Propellant Rocket Motor
+    Performance. Volume I (Technical Report AFRPL-TR-75-36, DTIC Accession
+    AD-A015 140). Air Force Rocket Propulsion Laboratory, Edwards AFB, CA.
 """
 
 import numpy as np
@@ -17,11 +17,8 @@ from machwave.common import decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 
-"""
-AD-A015 140 cites typical ranges for the correction factors.
-Some of these ranges were adjusted based on the experience of the authors and the
-typical outcomes for validation cases. Ranges are expressed as fractions.
-"""
+# Typical ranges (fractions) for the correction factors per AD-A015 140,
+# tightened where experience and validation cases warranted it.
 
 TYPICAL_RANGES = {
     "divergent_loss": {"lower": 0.0075, "upper": 0.05},
@@ -35,14 +32,15 @@ TYPICAL_RANGES = {
 @decorators.warn_if_outside_range(**TYPICAL_RANGES["divergent_loss"])
 def get_nozzle_divergent_loss_fraction(divergent_angle: float) -> float:
     """
-    Calculates the divergent nozzle loss fraction given the half angle.
-    NOTE: only applicable for a conical convergent-divergent nozzle.
+    Return the divergent nozzle loss fraction given the half angle.
+
+    Only applicable for a conical convergent-divergent nozzle.
 
     Args:
-        divergent_angle: The half angle of the divergent nozzle [degrees].
+        divergent_angle: Half angle of the divergent nozzle [deg].
 
     Returns:
-        The divergent loss fraction in [0, 1].
+        Divergent loss fraction in [0, 1].
     """
     return 0.5 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
@@ -53,25 +51,26 @@ def get_kinetics_loss_fraction(
     i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
 ) -> float:
     """
-    The kinetics loss accounts for the decrement in performance due to
-    incomplete heat transfer of latent heat to sensible heat caused by the finite time
-    required for the gas phase chemical reactions to occur.
+    Return the kinetics loss fraction.
 
-    Valid for liquid, solid, and hybrid propellants.
-    The expansion ratio of the i_sp_th_frozen and i_sp_th_shifting should be the same.
+    Kinetics loss accounts for the decrement in performance due to incomplete
+    heat transfer of latent to sensible heat caused by the finite time required
+    for the gas-phase chemical reactions to occur. Valid for liquid, solid, and
+    hybrid propellants; `i_sp_th_frozen` and `i_sp_th_shifting` must share the
+    same expansion ratio.
 
-    Pressure correction is applied for chamber pressures above 1.379 MPa (200 psi), in
-    order to dampen the effect of the kinetics loss.
+    A pressure correction dampens the kinetics loss above 1.379 MPa (200 psi).
 
-    The source AFRPL-TR-75-36 calculates it as a percentage, here it is converted to a
-    fraction [0, 1].
+    The source AFRPL-TR-75-36 expresses this as a percentage; here it is
+    returned as a fraction in [0, 1].
 
     Args:
-        i_sp_th_frozen: The specific impulse of the frozen flow [s].
-        i_sp_th_shifting: The specific impulse of the shifting flow [s].
-        chamber_pressure_psi: The chamber pressure [psi].
+        i_sp_th_frozen: Specific impulse of the frozen flow [s].
+        i_sp_th_shifting: Specific impulse of the shifting flow [s].
+        chamber_pressure_psi: Chamber pressure [psi].
+
     Returns:
-        The kinetics loss fraction in [0, 1].
+        Kinetics loss fraction in [0, 1].
     """
     i_sp_th_ratio = i_sp_th_frozen / i_sp_th_shifting
 
@@ -96,40 +95,35 @@ def get_boundary_layer_loss_fraction(
     c_2: float,
 ) -> float:
     """
+    Return the boundary layer loss fraction.
+
     Boundary layer loss accounts for the decrement in performance due to
-    the viscous and heat transfer effects in the nozzle walls. It is time dependent.
+    viscous and heat-transfer effects on the nozzle walls. It is time
+    dependent: the exponential transient is important in motors with short
+    burn durations (under 4 s). Dependence on expansion ratio represents the
+    effect of the amount of nozzle surface area. Valid for liquid, solid, and
+    hybrid propellants.
 
-    Valid for liquid, solid, and hybrid propellants.
+    Time constant `c_2` comes from analysis of the transient heating of a
+    BATES motor. Time constant `c_1` was obtained from a direct measurement
+    of the heat loss in a BATES motor, among other things. Typical values:
 
-    The time dependence is exponential due to the transient heat up, important in
-    motors with short burn durations (less than 4 seconds). Dependence on expansion
-    ratio represents the effect of a the amount of nozzle surface area.
+    - Ordinary nozzle: `c_1 = 0.003650`, `c_2 = 0.000937`.
+    - Solid steel nozzle with thick walls: `c_1 = 0.005060`, `c_2 = 0.0`.
 
-    Time constant C2 comes from analysis of a the transient heating of a BATES motor.
-
-    Time constant C1 was obtained from a direct measurement of the heat loss in a BATES
-    motor, among other things.
-
-    Ordinary nozzle:
-    C1 = 0.003650
-    C2 = 0.000937
-
-    Solid steel nozzle with relatively thick walls:
-    C1 = 0.005060
-    C2 = 0.000000
-
-    The source AFRPL-TR-75-36 calculates it as a percentage, here it is converted to a
-    fraction [0, 1].
+    The source AFRPL-TR-75-36 expresses this as a percentage; here it is
+    returned as a fraction in [0, 1].
 
     Args:
-        chamber_pressure_psi: The chamber pressure [psi].
-        throat_diameter_inch: The throat diameter [in].
-        expansion_ratio: The expansion ratio of the nozzle.
-        time: The time in seconds [s].
-        c_1: Coefficient for the boundary layer loss.
-        c_2: Coefficient for the boundary layer loss.
+        chamber_pressure_psi: Chamber pressure [psi].
+        throat_diameter_inch: Throat diameter [in].
+        expansion_ratio: Nozzle expansion ratio.
+        time: Time [s].
+        c_1: First boundary-layer loss coefficient.
+        c_2: Second boundary-layer loss coefficient.
+
     Returns:
-        The boundary layer loss fraction in [0, 1].
+        Boundary layer loss fraction in [0, 1].
     """
     term_1 = c_1 * (chamber_pressure_psi**0.8) / (throat_diameter_inch**0.2)
     term_2 = 1 + 2 * np.exp(
@@ -147,19 +141,19 @@ def _get_two_phase_phase_loss_particle_size(
     characteristic_length_inch: float,
 ) -> float:
     """
-    Helper function to calculate the two-phase flow loss due to particle size.
+    Return the two-phase flow average particle size [um].
 
-    Combines theories of particle growth by condensation in the chamber and collisions
-    in the nozzle.
+    Combines theories of particle growth by condensation in the chamber and
+    collisions in the nozzle.
 
     Args:
-        chamber_pressure_psi: The chamber pressure [psi].
-        mass_fraction_of_condensed_phase: The mass fraction of the condensed phase.
-        throat_diameter_inch: The throat diameter [in].
-        characteristic_length_inch: The characteristic length [in].
+        chamber_pressure_psi: Chamber pressure [psi].
+        mass_fraction_of_condensed_phase: Mass fraction of the condensed phase.
+        throat_diameter_inch: Throat diameter [in].
+        characteristic_length_inch: Characteristic length [in].
 
     Returns:
-        The two-phase flow average particle size in micrometers.
+        Two-phase flow average particle size [um].
     """
     return (
         0.454
@@ -180,22 +174,24 @@ def get_two_phase_flow_loss_fraction(
     characteristic_length_inch: float,
 ) -> float:
     """
-    Two-phase flow loss accounts for the decrement in performance due to
-    the presence of a condensed phase in the combustion products.
+    Return the two-phase flow loss fraction.
 
-    Valid for solid, and hybrid propellants.
+    Two-phase flow loss accounts for the decrement in performance due to the
+    presence of a condensed phase in the combustion products. Valid for solid
+    and hybrid propellants.
 
-    The source AFRPL-TR-75-36 calculates it as a percentage, here it is converted to a
-    fraction [0, 1].
+    The source AFRPL-TR-75-36 expresses this as a percentage; here it is
+    returned as a fraction in [0, 1].
 
     Args:
-        chamber_pressure_psi: The chamber pressure [psi].
-        mass_fraction_of_condensed_phase: The mass fraction of the condensed phase.
-        expansion_ratio: The expansion ratio of the nozzle.
-        throat_diameter_inch: The throat diameter [in].
-        characteristic_length_inch: The characteristic length [in].
+        chamber_pressure_psi: Chamber pressure [psi].
+        mass_fraction_of_condensed_phase: Mass fraction of the condensed phase.
+        expansion_ratio: Nozzle expansion ratio.
+        throat_diameter_inch: Throat diameter [in].
+        characteristic_length_inch: Characteristic length [in].
+
     Returns:
-        The two-phase flow loss fraction in [0, 1].
+        Two-phase flow loss fraction in [0, 1].
     """
     particle_size_um: float = _get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi,
@@ -250,19 +246,20 @@ def get_overall_nozzle_efficiency(
     other_losses: float,
 ) -> float:
     """
-    Calculates the overall nozzle efficiency by combining the loss fractions.
+    Return the overall nozzle efficiency.
 
-    All inputs are loss fractions in [0, 1] (not percentages).
+    Combines individual loss fractions into a single efficiency. All inputs are
+    fractions in [0, 1] (not percentages).
 
     Args:
-        divergent_loss: The divergent nozzle loss fraction.
-        kinetics_loss: The kinetics loss fraction.
-        boundary_layer_loss: The boundary layer loss fraction.
-        two_phase_loss: The two-phase flow loss fraction.
-        other_losses: Additional losses, as a fraction in [0, 1].
+        divergent_loss: Divergent nozzle loss fraction.
+        kinetics_loss: Kinetics loss fraction.
+        boundary_layer_loss: Boundary layer loss fraction.
+        two_phase_loss: Two-phase flow loss fraction.
+        other_losses: Additional losses as a fraction in [0, 1].
 
     Returns:
-        The overall nozzle efficiency, as a fraction in [0, 1].
+        Overall nozzle efficiency as a fraction in [0, 1].
     """
     return 1.0 - (
         divergent_loss

@@ -1,6 +1,4 @@
-"""
-Mechanics calculations.
-"""
+"""Mechanics calculations."""
 
 import numpy as np
 import numpy.typing as npt
@@ -12,7 +10,8 @@ def get_center_of_gravity(
     z_coords: npt.NDArray[np.float64],
     masses: npt.NDArray[np.float64] | None = None,
 ) -> npt.NDArray[np.float64]:
-    """Calculate center of gravity from point mass elements.
+    """
+    Calculate center of gravity from point mass elements.
 
     Computes the center of gravity (centroid) of a collection of point masses.
     The coordinate system is [z, x, y] where z is the axial direction.
@@ -56,7 +55,8 @@ def get_moment_of_inertia_tensor(
     z_coords: npt.NDArray[np.float64],
     element_mass: float,
 ) -> npt.NDArray[np.float64]:
-    """Calculate moment of inertia tensor from point mass elements.
+    """
+    Calculate moment of inertia tensor from point mass elements.
 
     Computes the 3x3 inertia tensor for a collection of point masses at given
     coordinates. All coordinates should be relative to the center of gravity. The

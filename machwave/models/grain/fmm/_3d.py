@@ -59,7 +59,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
                 geometry setup).
 
         Returns:
-            A float representing the port area at the specified z slice, in m².
+            A float representing the port area at the specified z slice, in m^2.
         """
         map_dist = self.normalize(web_distance)
         valid = np.logical_not(self.get_mask())
@@ -168,7 +168,6 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_burn_area_interp_func(self) -> Callable[[float], float]:
         """Return a cached interpolator for burn area [m^2] vs normalized web."""
-
         if self.burn_area_interp_func is None:
             regression_map = self.get_regression_map()
             valid = np.logical_not(self.get_mask())
@@ -223,7 +222,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         return active_elements * volume_per_element
 
     def _validate_web_distance(self, web_distance: float) -> None:
-        """Validate that web distance does not exceed web thickness.
+        """
+        Validate that web distance does not exceed web thickness.
 
         Raises:
             GrainGeometryError: If web distance exceeds web thickness.
@@ -237,7 +237,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
     def _get_active_material_indices(
         self, web_distance: float
     ) -> tuple[NDArray[np.int_], NDArray[np.int_], NDArray[np.int_]]:
-        """Get indices of active material at given web distance.
+        """
+        Get indices of active material at given web distance.
 
         Args:
             web_distance: Web distance traveled [m].
@@ -265,7 +266,8 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         y_indices: NDArray[np.int_],
         x_indices: NDArray[np.int_],
     ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
-        """Convert indices to normalized coordinates centered at origin.
+        """
+        Convert indices to normalized coordinates centered at origin.
 
         Args:
             z_indices: Z-axis (axial) indices from face map.
@@ -283,8 +285,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
 
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
-        Calculates the center of gravity of a 3D FMM grain segment at a web
-        distance.
+        Return the center of gravity of a 3D FMM grain segment.
 
         Args:
             web_distance: Web distance traveled [m].

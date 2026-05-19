@@ -52,7 +52,8 @@ def _boundary_ring_cells(masked_face) -> int:
 
 
 def _end_burning_cells(masked_face_3d, idx: int) -> int:
-    """Count burning propellant cells on an end slice, excluding the bore opening.
+    """
+    Count burning propellant cells on an end slice, excluding the bore opening.
 
     The bore opening is identified as the burning (0-valued) cells in the
     adjacent interior slice — this matches how the FMM code defines bore_mask.

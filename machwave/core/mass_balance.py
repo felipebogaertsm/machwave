@@ -24,7 +24,7 @@ def compute_chamber_pressure_mass_balance(
         free_chamber_volume: Chamber free volume [m^3].
         throat_area: Nozzle throat area [m^2].
         k: Isentropic exponent of the mix.
-        R: Gas constant per molecular weight [J/(kg·K)].
+        R: Gas constant per molecular weight [J/(kg-K)].
         flame_temperature: Flame temperature [K].
         discharge_coefficient: Discharge coefficient.
 

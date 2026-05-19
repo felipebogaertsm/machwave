@@ -134,22 +134,22 @@ def test_get_two_phase_phase_loss_particle_size(
         (150.0, 0.12, 9.0, 0.8, 20.0, 5.0, 0.077083257633896425),
         # 1 in <= throat < 2 in
         (200.0, 0.12, 10.0, 1.5, 20.0, 6.0, 0.05081089868159106),
-        # throat >= 2 in, particle < 4 µm
+        # throat >= 2 in, particle < 4 um
         (250.0, 0.12, 12.0, 3.0, 20.0, 3.0, 0.016621488765966366),
-        # throat >= 2 in, 4 µm <= particle <= 8 µm
+        # throat >= 2 in, 4 um <= particle <= 8 um
         (250.0, 0.12, 12.0, 3.0, 20.0, 6.0, 0.034185173799418895),
-        # throat >= 2 in, particle > 8 µm
+        # throat >= 2 in, particle > 8 um
         (250.0, 0.12, 12.0, 3.0, 20.0, 9.0, 0.037947076355546048),
         # - xi < 0.09 branch
         # throat < 1 in
         (150.0, 0.05, 9.0, 0.8, 20.0, 5.0, 0.03708669962078615),
         # 1 in <= throat < 2 in
         (200.0, 0.05, 10.0, 1.5, 20.0, 6.0, 0.024446405026319503),
-        # throat >= 2 in, particle < 4 µm
+        # throat >= 2 in, particle < 4 um
         (250.0, 0.05, 12.0, 3.0, 20.0, 3.0, 0.007967177893556986),
-        # throat >= 2 in, 4 µm <= particle <= 8 µm
+        # throat >= 2 in, 4 um <= particle <= 8 um
         (250.0, 0.05, 12.0, 3.0, 20.0, 6.0, 0.01644734941282387),
-        # throat >= 2 in, particle > 8 µm
+        # throat >= 2 in, particle > 8 um
         (250.0, 0.05, 12.0, 3.0, 20.0, 9.0, 0.01820912334005975),
     ],
 )
@@ -212,9 +212,7 @@ def test_get_overall_nozzle_efficiency_valid(
 
 
 def test_get_overall_nozzle_efficiency_out_of_bounds():
-    """
-    When the sum of loss fractions exceeds 1, the @check_bounds decorator should raise.
-    """
+    """When the sum of loss fractions exceeds 1, the @check_bounds decorator should raise."""
     with pytest.raises((ValueError, AssertionError)):
         # Sum = 1.10, outside allowed range.
         losses.get_overall_nozzle_efficiency(

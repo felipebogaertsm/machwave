@@ -1,7 +1,4 @@
-"""This module defines a service for thermochemical calculations, RocketCEAService.
-It uses that uses the rocketcea package to perform Chemical Equilibrium calculations
-for solid propellants, based on the widely accepted NASA's CEA code.
-"""
+"""Thermochemical service wrapper around `rocketcea` (NASA CEA)."""
 
 import re
 from uuid import uuid4
@@ -21,15 +18,17 @@ from machwave.core.conversions import (
 
 
 def normalize_custom_propellant_name(name: str) -> str:
-    """Normalize a *custom* propellant name for RocketCEA registration.
+    """
+    Normalize a custom propellant name for RocketCEA registration.
 
-    RocketCEA internally sanitizes propellant identifiers; if we register a
-    propellant with a name containing characters like '-' or '(', the lookup can
-    fail later if RocketCEA normalizes it differently.
+    RocketCEA internally sanitizes propellant identifiers; registering a name
+    containing characters like `-` or `(` can cause lookups to fail later if
+    RocketCEA normalizes it differently.
 
     Notes:
-        This should be used for custom propellant registration (propName), not for
-        built-in oxidizer/fuel names (oxName/fuelName), which can be case-sensitive.
+        Use this for custom propellant registration (`propName`), not for
+        built-in oxidizer/fuel names (`oxName`/`fuelName`), which can be
+        case-sensitive.
     """
     normalized = name.strip().upper()
     normalized = re.sub(r"\s+", "_", normalized)
@@ -72,27 +71,27 @@ def create_cea_service(
     fuel_card_string: str | None = None,
     oxidizer_to_fuel_ratio: float | None = None,
 ) -> "RocketCEAService":
-    """Factory function to create RocketCEAService with propellant registration.
+    """
+    Create a `RocketCEAService` and register propellants if needed.
 
-    This function handles all the complexity of registering custom
-    propellants/oxidizers/fuels with RocketCEA and returns a simple service wrapper.
+    Handles registering custom propellants, oxidizers, and fuels with RocketCEA
+    and returns a thin service wrapper. Supported configurations:
 
-    Configuration modes:
-    1. Solid/monopropellant: propellant_name (+ optional card_string)
-    2. Biliquid: oxidizer_name + fuel_name (+ optional card strings)
-    3. Custom biliquid: Custom oxidizer/fuel via card strings
+    1. Solid or monopropellant: `propellant_name` (plus optional `card_string`).
+    2. Biliquid: `oxidizer_name` and `fuel_name` (plus optional card strings).
+    3. Custom biliquid: custom oxidizer/fuel via card strings.
 
     Args:
-        propellant_name: Name of solid/monoliquid propellant.
-        card_string: CEA card string for custom solid/monopropellant.
-        oxidizer_name: Oxidizer name for biliquid propellant.
-        oxidizer_card_string: CEA card string for custom oxidizer.
-        fuel_name: Fuel name for biliquid propellant.
-        fuel_card_string: CEA card string for custom fuel.
-        oxidizer_to_fuel_ratio: O/F ratio for biliquid propellant.
+        propellant_name: Solid or monoliquid propellant name.
+        card_string: CEA card string for a custom solid/monopropellant.
+        oxidizer_name: Oxidizer name for a biliquid propellant.
+        oxidizer_card_string: CEA card string for a custom oxidizer.
+        fuel_name: Fuel name for a biliquid propellant.
+        fuel_card_string: CEA card string for a custom fuel.
+        oxidizer_to_fuel_ratio: O/F ratio for a biliquid propellant.
 
     Returns:
-        Configured RocketCEAService instance.
+        Configured `RocketCEAService` instance.
 
     Raises:
         ValueError: If configuration is invalid or registration/creation fails.
@@ -157,18 +156,20 @@ def create_cea_service(
 
 
 class RocketCEAService:
-    """Thin wrapper around RocketCEA CEA_Obj for thermochemical queries.
+    """
+    Thin wrapper around RocketCEA `CEA_Obj` for thermochemical queries.
 
-    This class provides a clean interface for fetching thermochemical properties.
-    Use create_cea_service() factory function to instantiate with custom propellants.
+    Use `create_cea_service()` to instantiate with custom propellants.
     """
 
     def __init__(self, cea_obj: CEA_Obj, oxidizer_to_fuel_ratio: float | None = None):
-        """Initialize service with CEA object.
+        """
+        Initialize the service from a configured `CEA_Obj`.
 
         Args:
-            cea_obj: RocketCEA CEA_Obj instance.
-            oxidizer_to_fuel_ratio: O/F ratio for biliquid propellants (optional).
+            cea_obj: RocketCEA `CEA_Obj` instance.
+            oxidizer_to_fuel_ratio: O/F ratio for biliquid propellants
+                (optional).
         """
         self.cea_obj = cea_obj
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
@@ -326,7 +327,7 @@ class RocketCEAService:
         return qsi_chamber, qsi_exhaust
 
     def get_tank_densities(self) -> tuple[float, float]:
-        """Get tank densities [kg/m³]: (oxidizer, fuel)."""
+        """Get tank densities [kg/m^3]: (oxidizer, fuel)."""
         densities_lb_per_ft3 = self.cea_obj.get_Densities()
         return (
             convert_lbft3_to_kgm3(densities_lb_per_ft3[0]),

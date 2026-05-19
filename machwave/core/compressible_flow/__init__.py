@@ -1,6 +1,4 @@
-"""
-Compressible flow theory and analysis.
-"""
+"""Compressible flow theory and analysis."""
 
 from .nozzle import (
     apply_thrust_coefficient_correction,

@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
 class WagonWheelGrainSegment(FMMGrainSegment2D):
+    """Wagon-wheel grain segment with a central core and radial spoke ports."""
+
     def __init__(
         self,
         length: float,
@@ -18,6 +20,20 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a wagon-wheel grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            core_diameter: Central core diameter [m].
+            number_of_ports: Number of radial spoke ports (must be even).
+            port_inner_diameter: Inner radial extent of each spoke port [m].
+            port_outer_diameter: Outer radial extent of each spoke port [m].
+            port_angular_width: Angular width of each spoke port [deg].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.core_diameter = core_diameter
         self.number_of_ports = int(number_of_ports)
         self.port_inner_diameter = port_inner_diameter
@@ -32,6 +48,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
+        """Validate wagon-wheel segment geometry."""
         super().validate()
 
         if not self.number_of_ports > 0:
@@ -72,9 +89,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
             )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """
-        NOTE: Still needs to correctly implement wagon wheel ports.
-        """
+        """NOTE: Still needs to correctly implement wagon wheel ports."""
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()
 

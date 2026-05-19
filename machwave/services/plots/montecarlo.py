@@ -11,7 +11,8 @@ def plot_histogram(
     x_axes_title: str = "x",
     **plotly_kwargs,
 ) -> None:
-    """Histogram of a scalar property across all Monte Carlo results.
+    """
+    Histogram of a scalar property across all Monte Carlo results.
 
     Args:
         results: List of ``SimulationResult`` objects.
@@ -35,7 +36,8 @@ def plot_histogram_with_kde(
     kde_points: int = 200,
     **plotly_kwargs,
 ) -> None:
-    """Histogram plus KDE curve for a scalar property across all results.
+    """
+    Histogram plus KDE curve for a scalar property across all results.
 
     Args:
         results: List of ``SimulationResult`` objects.
@@ -81,7 +83,8 @@ def plot_cdf(
     percentiles: Sequence[int] = (5, 25, 50, 75, 95),
     **plotly_kwargs,
 ) -> None:
-    """Empirical CDF of a scalar property across all results.
+    """
+    Empirical CDF of a scalar property across all results.
 
     Args:
         results: List of ``SimulationResult`` objects.
@@ -146,16 +149,16 @@ def plot_time_series_extremes(
     title: str | None = None,
     **plotly_kwargs,
 ) -> None:
-    """Plot the lowest-mean, highest-mean, and median-mean scenarios for a
-    time-series property across all Monte Carlo results.
+    """
+    Plot lowest-mean, highest-mean, and median-mean scenarios over time.
 
     Each curve is aligned against the longest time array, padding shorter
     series with NaN so they stop where their data ends.
 
     Args:
-        results: List of ``SimulationResult`` objects.
-        time_property: Name of the time-array attribute (e.g. ``"time"``).
-        series_property: Name of the y(t) array attribute (e.g. ``"thrust"``).
+        results: List of `SimulationResult` objects.
+        time_property: Name of the time-array attribute (e.g. `"time"`).
+        series_property: Name of the y(t) array attribute (e.g. `"thrust"`).
         x_axes_title: Label for the x-axis.
         title: Plot title. If None, a default title is generated.
         **plotly_kwargs: Extra kwargs passed to go.Scatter.

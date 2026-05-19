@@ -305,7 +305,8 @@ class TestJSONFormulationLoading:
         ids=lambda p: p.stem,
     )
     def test_solid_formulations_can_be_evaluated_with_cea(self, json_file):
-        """Ensure a CEA-backed evaluation can run for each solid formulation.
+        """
+        Ensure a CEA-backed evaluation can run for each solid formulation.
 
         The formulation JSONs may include fixed properties; this test explicitly
         bypasses those to validate that the component-based CEA path still works.
@@ -337,7 +338,8 @@ class TestJSONFormulationLoading:
     def test_fixed_properties_are_reasonably_close_to_cea_for_selected_solids(
         self, json_stem
     ):
-        """Compare fixed JSON properties to a CEA reconstruction for a few solids.
+        """
+        Compare fixed JSON properties to a CEA reconstruction for a few solids.
 
         The fixed properties in JSON are treated as canonical reference values.
         This check is intentionally limited to a small representative set where

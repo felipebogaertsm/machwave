@@ -1,4 +1,5 @@
-"""Tests for RocketCEAService and create_cea_service factory function.
+"""
+Tests for RocketCEAService and create_cea_service factory function.
 
 Tests all three ways of creating/using the service:
 1. Via factory with solid propellant
@@ -140,10 +141,10 @@ class TestCreateCEAServiceBiliquidPropellant:
 
         # Test tank densities (biliquid specific)
         ox_dens, fuel_dens = service.get_tank_densities()
-        # Note: CEA returns densities in g/cm³
-        # LOX density ~1.14 g/cm³, RP1 ~0.54 g/cm³ (at boiling point)
-        assert 0.8 < ox_dens < 1.3, f"LOX density out of range: {ox_dens} g/cm³"
-        assert 0.5 < fuel_dens < 0.9, f"RP1 density out of range: {fuel_dens} g/cm³"
+        # Note: CEA returns densities in g/cm^3
+        # LOX density ~1.14 g/cm^3, RP1 ~0.54 g/cm^3 (at boiling point)
+        assert 0.8 < ox_dens < 1.3, f"LOX density out of range: {ox_dens} g/cm^3"
+        assert 0.5 < fuel_dens < 0.9, f"RP1 density out of range: {fuel_dens} g/cm^3"
 
     def test_lox_lh2_high_performance(self):
         """Test LOX/LH2 high-performance propellant."""
@@ -389,7 +390,8 @@ class TestServiceEdgeCases:
 
 
 class TestRegistryIsolation:
-    """Repeated calls with the same user-facing propellant name but different
+    """
+    Repeated calls with the same user-facing propellant name but different
     cards must not clobber each other in RocketCEA's process-global registry.
 
     Without name-mangling the second registration silently wins and both

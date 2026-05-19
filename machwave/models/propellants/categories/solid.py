@@ -18,6 +18,8 @@ class BurnRateOutOfBoundsError(Exception):
 
     def __init__(self, chamber_pressure: float):
         """
+        Build the error from the offending chamber pressure.
+
         Args:
             chamber_pressure: Chamber pressure that is out of bounds [Pa].
         """
@@ -41,16 +43,18 @@ class SolidPropellant(Propellant):
         properties: ThermochemicalProperties | None = None,
         burn_rate_map: list[dict[str, float | int]] | None = None,
     ):
-        """Initialize solid propellant. If components are not provided,
-        properties must be defined and vice-versa.
+        """
+        Initialize a solid propellant.
+
+        Either `components` or `properties` must be provided.
 
         Args:
             name: Propellant name.
             components: Chemical components (optional).
             mass_fractions: Mass fractions for each component (optional).
-            combustion_efficiency: Efficiency factor (0-1).
+            combustion_efficiency: Efficiency factor in [0, 1].
             properties: Pre-defined thermochemical properties (optional).
-            burn_rate_map: St. Robert's law coefficients by pressure range.
+            burn_rate_map: Saint Robert's law coefficients by pressure range.
         """
         super().__init__(
             name=name,
@@ -67,7 +71,8 @@ class SolidPropellant(Propellant):
         return self._properties
 
     def _validate_components(self):
-        """Validate solid propellant has oxidizer and fuel.
+        """
+        Validate that the solid propellant has both an oxidizer and a fuel.
 
         Raises:
             PropellantValidationError: If validation fails.
@@ -116,7 +121,8 @@ class SolidPropellant(Propellant):
             )
 
     def _get_thermochemical_service(self):
-        """Create RocketCEA service from components.
+        """
+        Create a RocketCEA service from this propellant's components.
 
         Returns:
             RocketCEAService instance.
@@ -144,17 +150,17 @@ class SolidPropellant(Propellant):
         expansion_ratio: float = 8.0,
         mixture_ratio: float | None = None,
     ) -> ThermochemicalProperties:
-        """Evaluate thermochemical properties.
+        """
+        Evaluate thermochemical properties.
 
-        If properties are pre-defined, returns them directly.
-        Otherwise, evaluates using the thermochemical service via parent
-        class.
+        If properties are pre-defined, returns them directly. Otherwise,
+        evaluates using the thermochemical service via the parent class.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
             expansion_ratio: Nozzle area expansion ratio (Ae/At).
-            mixture_ratio: Per-call mixture ratio override (unused for solid
-                formulations; accepted for parent-class compatibility).
+            mixture_ratio: Per-call mixture ratio override. Unused for solid
+                formulations; accepted for parent-class compatibility.
 
         Returns:
             Pre-defined or calculated properties.
@@ -168,9 +174,10 @@ class SolidPropellant(Propellant):
 
     @property
     def ideal_density(self) -> float:
-        """Calculate ideal propellant density [kg/m^3] for solid mixtures.
+        """
+        Return the ideal propellant density [kg/m^3] for solid mixtures.
 
-        Uses harmonic mean based on solid mixture mass fractions.
+        Uses a harmonic mean based on solid mixture mass fractions.
         """
         self._validate_components()
         reciprocal_sum = sum(
@@ -179,10 +186,12 @@ class SolidPropellant(Propellant):
         return 1.0 / reciprocal_sum
 
     def get_burn_rate(self, chamber_pressure: float) -> float:
-        """Calculate instantaneous burn rate for solid propellants.
+        """
+        Return the instantaneous burn rate of the solid propellant.
 
-        Uses St. Robert's law: r = a * P^n, where r is burn rate [m/s],
-        P is chamber pressure [MPa], and a, n are empirical coefficients.
+        Uses Saint Robert's law `r = a * P^n`, where `r` is burn rate [m/s],
+        `P` is chamber pressure [MPa], and `a`, `n` are empirical coefficients
+        drawn from `burn_rate_map`.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -191,8 +200,8 @@ class SolidPropellant(Propellant):
             Burn rate [m/s].
 
         Raises:
-            BurnRateOutOfBoundsError: If pressure is outside valid range.
-            ValueError: If burn_rate model is not defined.
+            BurnRateOutOfBoundsError: If pressure is outside the valid range.
+            PropellantValidationError: If the burn rate model is not defined.
         """
         if not self.burn_rate_map:
             raise PropellantValidationError(

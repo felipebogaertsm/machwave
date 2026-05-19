@@ -12,6 +12,8 @@ class SolidMotor(
         propellants.SolidPropellant, thrust_chamber.SolidMotorThrustChamber
     ]
 ):
+    """Solid rocket motor with a propellant grain and thrust chamber."""
+
     def __init__(
         self,
         grain: grain.Grain,
@@ -33,13 +35,13 @@ class SolidMotor(
 
     def get_free_chamber_volume(self, propellant_volume: float) -> float:
         """
-        Calculates the chamber volume without any propellant.
+        Return the chamber volume without any propellant.
 
         Args:
-            propellant_volume: Propellant volume, in m^3
+            propellant_volume: Propellant volume [m^3].
 
         Returns:
-            Free chamber volume, in m^3
+            Free chamber volume [m^3].
         """
         return (
             self.thrust_chamber.combustion_chamber.internal_volume - propellant_volume
@@ -47,41 +49,38 @@ class SolidMotor(
 
     @property
     def initial_propellant_mass(self) -> float:
-        """
-        Returns:
-            Initial propellant mass, in kg
-        """
+        """Return the initial propellant mass [kg]."""
         return self.grain.get_propellant_mass(
             web_distance=0, ideal_density=self.propellant.ideal_density
         )
 
     def get_launch_mass(self) -> float:
+        """Return the launch mass (dry mass + initial propellant) [kg]."""
         return self.thrust_chamber.dry_mass + self.initial_propellant_mass
 
     def get_dry_mass(self) -> float:
+        """Return the dry mass [kg]."""
         return self.thrust_chamber.dry_mass
 
     def get_center_of_gravity(
         self, web_distance: float = 0.0
     ) -> np.typing.NDArray[np.float64]:
         """
-        Calculates the center of gravity of the solid motor including
-        propellant grain (wet mass) and dry mass.
+        Return the solid motor center of gravity.
 
-        The calculation uses a mass-weighted average of:
-        1. Propellant grain CoG;
-        2. Thrust chamber dry mass CoG, considered constant.
+        Combines the propellant grain (wet mass) and the thrust chamber dry
+        mass via a mass-weighted average. Dry mass center of gravity is
+        considered constant.
 
         Args:
-            web_distance: Web distance traveled [m].
-                Defaults to ignition state.
+            web_distance: Web distance traveled [m]. Defaults to ignition state.
 
         Returns:
-            Center of gravity in 3D space (x, y, z) [m].
+            Center of gravity [x, y, z] [m].
 
         Raises:
-            ValueError: If thrust chamber dry mass CoG is not defined or if
-                total mass is less than or equal to zero.
+            ValueError: If the thrust chamber dry mass center of gravity is not
+                defined or if the total mass is not strictly positive.
         """
         grain_cog_port = self.grain.get_center_of_gravity(web_distance=web_distance)
         propellant_mass = self.grain.get_propellant_mass(

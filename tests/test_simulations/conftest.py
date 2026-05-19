@@ -18,8 +18,10 @@ from machwave.simulation import (
 def run_simulation(
     motor: Motor, params: InternalBallisticsSimulationParams
 ) -> SimulationResult:
-    """Run InternalBallisticsSimulation end-to-end, suppressing the empirical
-    boundary-layer-loss warning that otherwise floods test output."""
+    """
+    Run InternalBallisticsSimulation end-to-end, suppressing the empirical
+    boundary-layer-loss warning that otherwise floods test output.
+    """
     simulation = InternalBallisticsSimulation(motor=motor, params=params)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
@@ -27,7 +29,8 @@ def run_simulation(
 
 
 def assert_recorded_arrays_aligned(result: SimulationResult) -> None:
-    """Every per-timestep series should have the same length as result.time.
+    """
+    Every per-timestep series should have the same length as result.time.
 
     Fields marked with ``metadata={"non_aligned": True}`` are skipped (e.g.
     arrays filtered to a subset of timesteps, or with a non-time leading axis).

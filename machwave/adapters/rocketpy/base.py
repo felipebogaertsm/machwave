@@ -1,22 +1,18 @@
-"""Base adapter classes for RocketPy motor integration."""
-
 import abc
 import typing
 
 import numpy as np
 import numpy.typing as npt
 
-if typing.TYPE_CHECKING:
-    from rocketpy import Function
+try:
+    import rocketpy
+    import rocketpy.motors as rocketpy_motors
+except ImportError as e:
+    raise ImportError("RocketPy adapters require the `rocketpy` package") from e
 
+if typing.TYPE_CHECKING:
     import machwave.simulation as ib_simulation
     from machwave.models.motors import Motor
-
-
-class RocketPyAdapterError(Exception):
-    """Base exception for RocketPy adapter errors."""
-
-    pass
 
 
 R = typing.TypeVar("R", bound="ib_simulation.SimulationResult")
@@ -27,38 +23,19 @@ INTERPOLATION_METHOD = "linear"
 
 
 class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
-    """Abstract base class for RocketPy motor adapters.
+    """
+    Abstract base class for RocketPy motor adapters.
 
-    Dynamically inherits from the appropriate RocketPy Motor class. Subclasses must
-    specify _rocketpy_motor_class to indicate which RocketPy Motor class to adapt to.
+    Subclasses must set `_rocketpy_motor_class` to the name of the RocketPy
+    Motor class they adapt.
     """
 
-    # Subclasses must override this to specify the RocketPy motor class name
     _rocketpy_motor_class: typing.ClassVar[str] = "Motor"
 
-    @staticmethod
-    def _require_rocketpy() -> None:
-        """Ensure rocketpy is available.
-
-        Raises:
-            ImportError: If rocketpy is not installed.
-        """
-        try:
-            import rocketpy  # noqa: F401
-        except ImportError as e:
-            raise ImportError(
-                "RocketPy adapters require the 'rocketpy' package. Install it with: "
-                "pip install rocketpy"
-            ) from e
-
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        """Dynamically inherit from specified RocketPy Motor class when subclass is created."""
+        """Dynamically inherit from specified RocketPy Motor class."""
         super().__init_subclass__(**kwargs)
 
-        cls._require_rocketpy()
-        import rocketpy.motors as rocketpy_motors
-
-        # Get the specific motor class to inherit from
         motor_class_name = cls._rocketpy_motor_class
         if not hasattr(rocketpy_motors, motor_class_name):
             raise AttributeError(
@@ -67,7 +44,6 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         motor_class = getattr(rocketpy_motors, motor_class_name)
 
-        # Dynamically add the specific Motor class to the base classes if not already there
         if not any(
             isinstance(base, type) and issubclass(base, motor_class)
             for base in cls.__bases__
@@ -75,14 +51,13 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
             cls.__bases__ = cls.__bases__ + (motor_class,)
 
     def __init__(self, motor: "Motor", simulation_result: R) -> None:
-        """Initialize the adapter.
+        """
+        Initialize the adapter.
 
         Args:
-            motor: The machwave motor object.
+            motor: The machwave motor.
             simulation_result: The machwave simulation result.
         """
-        self._require_rocketpy()
-
         self.motor = motor
         self.simulation_result = simulation_result
 
@@ -100,8 +75,8 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         thrust_source = np.column_stack((time, thrust))
 
         # Axial position of the dry mass center of gravity.
-        # Both machwave and RocketPy use nozzle exit as origin, positive toward
-        # the bulkhead ("nozzle_to_combustion_chamber" orientation).
+        # Both machwave and RocketPy use nozzle exit as origin, positive toward the
+        # bulkhead ("nozzle_to_combustion_chamber" orientation).
         center_of_dry_mass_position = (
             thrust_chamber.center_of_gravity_coordinate[0]
             if thrust_chamber.center_of_gravity_coordinate is not None
@@ -123,42 +98,36 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         }
 
     @property
-    def exhaust_velocity(self) -> "Function":
-        """Exhaust velocity as a function of time.
+    def exhaust_velocity(self) -> rocketpy.Function:
+        """
+        Return exhaust velocity as a function of time.
 
         Computed as total impulse divided by propellant initial mass,
         assumed constant and discretized over the burn time.
 
         Returns:
-            Gas exhaust velocity [m/s] as a function of time.
+            Exhaust velocity [m/s] as a function of time.
         """
-        from rocketpy import Function
-
         v_exh = self.simulation_result.total_impulse / self.propellant_initial_mass
-        return Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
+        return rocketpy.Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
 
     @property
     def propellant_initial_mass(self) -> float:
-        """Initial mass of propellant.
-
-        Returns:
-            Initial propellant mass [kg].
-        """
+        """Return the initial propellant mass [kg]."""
         return self.simulation_result.initial_propellant_mass
 
     @property
-    def center_of_propellant_mass(self) -> "Function":
-        """Position of propellant center of mass as a function of time.
+    def center_of_propellant_mass(self) -> rocketpy.Function:
+        """
+        Return the propellant center of mass axial position over time.
 
-        Uses pre-computed values from the simulation result.
-        Extracts the x-coordinate (axial position) from the propellant's center of
-        gravity over time.
+        Uses pre-computed values from the simulation result, extracts the
+        x-coordinate (axial position) from the propellant's center of gravity
+        over time.
 
         Returns:
-            Function object with (time, position) data [m].
+            `rocketpy.Function` with (time, position) data [m].
         """
-        from rocketpy import Function
-
         time = self.simulation_result.time
         center_positions = np.asarray(
             self.simulation_result.propellant_cog[:, 0],  # type: ignore[attr-defined]
@@ -172,13 +141,14 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
             center_positions[~mask] = center_positions[last_valid_idx]
 
         data = np.column_stack((time, center_positions))
-        return Function(data)
+        return rocketpy.Function(data)
 
     def _get_inertia_tensor_over_time(self) -> npt.NDArray[np.float64]:
-        """Get pre-computed inertia tensors from the simulation result.
+        """
+        Return pre-computed inertia tensors from the simulation result.
 
         Returns:
-            Array of shape (n_timesteps, 3, 3) containing inertia tensors.
+            Array of shape `(n_timesteps, 3, 3)` containing inertia tensors.
         """
         tensors = np.asarray(
             self.simulation_result.propellant_moi,  # type: ignore[attr-defined]
@@ -195,83 +165,88 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         return tensors
 
-    def _get_propellant_inertia_component(self, i: int, j: int) -> "Function":
-        """Get a specific component of the propellant inertia tensor.
+    def _get_propellant_inertia_component(self, i: int, j: int) -> rocketpy.Function:
+        """
+        Return a single component of the propellant inertia tensor over time.
 
         Args:
             i: First index (0, 1, or 2).
             j: Second index (0, 1, or 2).
 
         Returns:
-            Function object with (time, I_ij) data [kg-m^2].
+            `rocketpy.Function` with (time, I_ij) data [kg-m^2].
         """
-        from rocketpy import Function
-
         time = self.simulation_result.time
         inertia_tensors = self._get_inertia_tensor_over_time()
         I_values = inertia_tensors[:, i, j]
         data = np.column_stack((time, I_values))
-        return Function(data)
+        return rocketpy.Function(data)
 
     @property
-    def propellant_I_11(self) -> "Function":
-        """Inertia tensor I_11 (I_xx) component of the propellant.
+    def propellant_I_11(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_11` (`I_xx`) of the propellant over time.
 
         Inertia relative to the e_1 axis (perpendicular to motor body axis), centered at
         the instantaneous propellant center of mass.
 
         Returns:
-            Function object with (time, I_11) data [kg-m^2].
+            `rocketpy.Function` with (time, I_11) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(0, 0)
 
     @property
-    def propellant_I_12(self) -> "Function":
-        """Inertia tensor I_12 (I_xy) component of the propellant.
+    def propellant_I_12(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_12` (`I_xy`) of the propellant over time.
 
         Returns:
-            Function object with (time, I_12) data [kg-m^2].
+            `rocketpy.Function` with (time, I_12) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(0, 1)
 
     @property
-    def propellant_I_13(self) -> "Function":
-        """Inertia tensor I_13 (I_xz) component of the propellant.
+    def propellant_I_13(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_13` (`I_xz`) of the propellant over time.
 
         Returns:
-            Function object with (time, I_13) data [kg-m^2].
+            `rocketpy.Function` with (time, I_13) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(0, 2)
 
     @property
-    def propellant_I_22(self) -> "Function":
-        """Inertia tensor I_22 (I_yy) component of the propellant.
+    def propellant_I_22(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_22` (`I_yy`) of the propellant over time.
 
         Inertia relative to the e_2 axis (perpendicular to motor body axis), centered at
         the instantaneous propellant center of mass.
 
         Returns:
-            Function object with (time, I_22) data [kg-m^2].
+            `rocketpy.Function` with (time, I_22) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(1, 1)
 
     @property
-    def propellant_I_23(self) -> "Function":
-        """Inertia tensor I_23 (I_yz) component of the propellant.
+    def propellant_I_23(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_23` (`I_yz`) of the propellant over time.
 
         Returns:
-            Function object with (time, I_23) data [kg-m^2].
+            `rocketpy.Function` with (time, I_23) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(1, 2)
 
     @property
-    def propellant_I_33(self) -> "Function":
-        """Inertia tensor I_33 (I_zz) component of the propellant.
+    def propellant_I_33(self) -> rocketpy.Function:
+        """
+        Return inertia tensor `I_33` (`I_zz`) of the propellant over time.
 
         Inertia relative to the e_3 axis (motor body axis), centered at the
         instantaneous propellant center of mass.
 
         Returns:
-            Function object with (time, I_33) data [kg-m^2].
+            `rocketpy.Function` with (time, I_33) data [kg-m^2].
         """
         return self._get_propellant_inertia_component(2, 2)

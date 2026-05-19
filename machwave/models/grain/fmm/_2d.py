@@ -47,8 +47,9 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
     def get_maps(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         """
-        Return a tuple of two 2D arrays (map_x, map_y).
-        Each is of shape (map_dim, map_dim), ranging from -1 to 1.
+        Return the coordinate maps `(map_x, map_y)`.
+
+        Each array has shape `(map_dim, map_dim)` and ranges from -1 to 1.
         """
         if self.maps is None:
             map_x, map_y = np.meshgrid(
@@ -59,9 +60,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return self.maps
 
     def get_mask(self) -> NDArray[np.bool_]:
-        """
-        Return a boolean mask indicating which points lie outside the unit circle.
-        """
+        """Return a boolean mask indicating which points lie outside the unit circle."""
         if self.mask is None:
             map_x, map_y = self.get_maps()
             self.mask = (map_x**2 + map_y**2) > 1
@@ -80,25 +79,20 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """
-        Return a list of contour arrays for the given web distance.
-        Each contour is typically an (N,2) array of (row, col) points.
+        Return contour arrays for the given web distance.
+
+        Each contour is typically an `(N, 2)` array of `(row, col)` points.
         """
         map_dist = self.normalize(web_distance)
         return get_contours(self.get_regression_map(), map_dist)
 
     def get_port_area(self, web_distance: float) -> float:
-        """
-        Return the grain's port area (open cross-sectional area) at the given web distance.
-        Could be a scalar or array, depending on how the computations are done.
-        """
+        """Return the open cross-sectional port area [m^2]."""
         face_area = self.get_face_area(web_distance)
         return get_circle_area(self.outer_diameter) - face_area
 
     def get_face_area_interp_func(self) -> Callable[[float], float]:
-        """
-        Build and return an interpolation function that, given a normalized
-        web distance, returns the face area in square meters.
-        """
+        """Return an interpolator mapping normalized web distance to face area [m^2]."""
         if self.face_area_interp_func is None:
             regression_map = self.get_regression_map()
             valid = np.logical_not(self.get_mask())
@@ -137,15 +131,12 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return self.face_area_interp_func
 
     def get_face_area(self, web_distance: float) -> float:
-        """
-        Return the face area at the given web distance.
-        """
+        """Return the face area at the given web distance."""
         map_distance = self.normalize(web_distance)
         return float(self.get_face_area_interp_func()(map_distance))
 
     def get_burn_area_interp_func(self) -> Callable[[float], float]:
         """Return a cached interpolator for burn area [m^2] vs normalized web."""
-
         if self.burn_area_interp_func is None:
             regression_map = self.get_regression_map()
             valid = np.logical_not(self.get_mask())
@@ -219,9 +210,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         return max(0.0, value)
 
     def get_core_perimeter(self, web_distance: float) -> float:
-        """
-        Return the perimeter of the open core at the given web distance.
-        """
+        """Return the perimeter of the open core at the given web distance."""
         contours = self.get_contours(web_distance)
         return float(
             sum(
@@ -232,13 +221,15 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
     def get_core_area(self, web_distance: float) -> float:
         """
-        Calculate the core (internal) area at the given web distance by
-        multiplying perimeter by grain segment length (a 2D approximation).
+        Return the core (internal) area [m^2] at the given web distance.
+
+        Computed as `perimeter * length` (2D approximation).
         """
         return self.get_core_perimeter(web_distance) * self.get_length(web_distance)
 
     def _validate_web_distance(self, web_distance: float) -> None:
-        """Validate that web distance does not exceed web thickness.
+        """
+        Validate that web distance does not exceed web thickness.
 
         Raises:
             GrainGeometryError: If web distance exceeds web thickness.
@@ -251,7 +242,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
     def _get_active_material_indices(
         self, web_distance: float
     ) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
-        """Get indices of active material at given web distance.
+        """
+        Get indices of active material at given web distance.
 
         Args:
             web_distance: Web distance traveled [m].
@@ -276,7 +268,8 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
     def _indices_to_normalized_coords(
         self, y_indices: NDArray[np.int_], x_indices: NDArray[np.int_]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Convert indices to normalized coordinates centered at origin.
+        """
+        Convert indices to normalized coordinates centered at origin.
 
         Args:
             y_indices: Y-axis indices from face map.
@@ -292,14 +285,13 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
-        Calculates the center of gravity of a 2D FMM grain segment at a web
-        distance.
+        Return the center of gravity of a 2D FMM grain segment.
 
         Args:
             web_distance: Web distance traveled [m].
 
         Returns:
-            Center of gravity [x, y, z] in meters from the port of the segment.
+            Center of gravity [x, y, z] [m], measured from the segment port.
         """
         self._validate_web_distance(web_distance)
         y_indices, x_indices = self._get_active_material_indices(web_distance)
@@ -326,7 +318,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         Args:
             web_distance: Web distance traveled [m].
-            ideal_density: Propellant ideal density [kg/m³].
+            ideal_density: Propellant ideal density [kg/m^3].
 
         Returns:
             A 3x3 inertia tensor [kg-m^2].
@@ -360,7 +352,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         moi = get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)
 
         # For 2D grain (uniform along axial direction), add axial contribution
-        # For a uniform rod of length L with mass M: I_axial = M*L²/12 (about CoG)
+        # For a uniform rod of length L with mass M: I_axial = M*L^2/12 (about CoG)
         I_axial = total_mass * current_length**2 / 12
 
         # Add axial contribution to radial axes (indices 1 and 2 in [z,x,y] system)

@@ -64,3 +64,27 @@ Homepage = "https://github.com/felipebogaertsm/machwave"
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
+select = ["D"]
+extend-select = ["D213", "D407"]
+# Skipped intentionally:
+#   D100, D104: module/package docstrings not required.
+#   D102, D105, D107: trivial methods, magic methods, and __init__ are not
+#     required to be documented (getters, simple delegations, etc.). When the
+#     behavior is non-obvious, document it; otherwise let the name speak.
+#   D203, D212: incompatible with Google convention.
+ignore = ["D100", "D102", "D104", "D105", "D107", "D203", "D212"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+# Tests, examples, scripts, and docs are exempt from docstring requirements.
+"tests/**" = ["D"]
+"examples/**" = ["D"]
+"scripts/**" = ["D"]
+"docs/**" = ["D"]

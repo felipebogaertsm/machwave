@@ -1,7 +1,5 @@
 class BipropellantInjector:
-    """
-    A simple injector class for a liquid rocket engine.
-    """
+    """A simple injector class for a liquid rocket engine."""
 
     def __init__(
         self,

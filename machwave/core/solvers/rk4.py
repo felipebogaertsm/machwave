@@ -8,18 +8,17 @@ def rk4th_ode_solver(
     **kwargs: Any,
 ) -> tuple[float, ...]:
     """
-    Solves a system of ordinary differential equations using the 4th order Runge-Kutta
-    method.
+    Advance a system of ODEs by one step using the 4th-order Runge-Kutta method.
 
     Args:
-        variables: A dictionary containing the variables to be solved.
-        equation: A function that returns the derivatives of the variables.
-        d_t: The time step.
-        **kwargs: Additional keyword arguments to be passed to the equation function.
+        variables: Mapping of variable name to current value.
+        equation: Callable returning the derivatives of the variables.
+        d_t: Time step [s].
+        **kwargs: Additional keyword arguments forwarded to `equation`.
 
     Returns:
-        A tuple containing the new values of the variables. The length of the tuple is
-        equal to the number of variables + 1.
+        Tuple containing the new values of the variables followed by the
+        averaged auxiliary term; length equals `len(variables) + 1`.
     """
     k_1 = equation(**variables, **kwargs)
     k_2 = equation(

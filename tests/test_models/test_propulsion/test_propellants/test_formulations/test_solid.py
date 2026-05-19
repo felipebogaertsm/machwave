@@ -1,4 +1,5 @@
-"""Tests for solid propellant formulations.
+"""
+Tests for solid propellant formulations.
 
 This test suite automatically tests all solid propellant formulations
 defined in the formulations.solid module. Any new formulation added
@@ -208,7 +209,7 @@ class TestConsistency:
         if propellant.properties is not None:
             return
 
-        # Typical solid propellants: 1500-2000 kg/m³
+        # Typical solid propellants: 1500-2000 kg/m^3
         # Density is grain-specific, check ideal_density from propellant formulation
         if hasattr(propellant, "ideal_density"):
             density = propellant.ideal_density

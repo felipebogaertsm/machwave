@@ -10,10 +10,7 @@ from machwave.models.thrust_chamber.nozzle import Nozzle
 
 
 class ThrustChamber(abc.ABC):
-    """
-    Represents the thrust chamber assembly of a liquid rocket engine.
-    ThrustChamber acts as a coordinating layer that ties these elements together.
-    """
+    """Thrust chamber assembly that ties nozzle, chamber, and injectors together."""
 
     def __init__(
         self,
@@ -23,19 +20,16 @@ class ThrustChamber(abc.ABC):
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):
         """
-        Initialize the ThrustChamber.
+        Initialize a thrust chamber.
 
         Args:
-            nozzle:
-                An instance of a Nozzle class.
-            combustion_chamber:
-                An instance of a CombustionChamber class.
-            dry_mass:
-                The dry mass of the thrust chamber assembly in kg.
-            center_of_gravity_coordinate:
-                3D position (x, y, z) of the dry mass (hardware) center of gravity,
-                measured from the nozzle exit, in meters. Positive x values point toward
-                the bulkhead. If None, will be estimated from chamber geometry.
+            nozzle: Nozzle instance.
+            combustion_chamber: Combustion chamber instance.
+            dry_mass: Dry mass of the thrust chamber assembly [kg].
+            center_of_gravity_coordinate: Dry-mass center of gravity position
+                `(x, y, z)` [m], measured from the nozzle exit. Positive x
+                points toward the bulkhead. If None, estimated from chamber
+                geometry.
         """
         self.nozzle = nozzle
         self.combustion_chamber = combustion_chamber
@@ -48,6 +42,8 @@ class ThrustChamber(abc.ABC):
 
 
 class SolidMotorThrustChamber(ThrustChamber):
+    """Thrust chamber assembly specialized for solid rocket motors."""
+
     def __init__(
         self,
         nozzle: Nozzle,
@@ -57,21 +53,18 @@ class SolidMotorThrustChamber(ThrustChamber):
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):
         """
-        Initialize the SolidMotorThrustChamber.
+        Initialize a solid motor thrust chamber.
 
         Args:
-            nozzle:
-                An instance of a Nozzle class.
-            combustion_chamber:
-                An instance of a CombustionChamber class.
-            dry_mass:
-                The dry mass of the thrust chamber assembly in kg.
-            nozzle_exit_to_grain_port_distance:
-                Axial distance from nozzle exit plane to the grain port [m].
-            center_of_gravity_coordinate:
-                3D position (x, y, z) of the dry mass (hardware) center of gravity,
-                measured from the nozzle exit, in meters. Positive x values point toward
-                the bulkhead. If None, will be estimated from chamber geometry.
+            nozzle: Nozzle instance.
+            combustion_chamber: Combustion chamber instance.
+            dry_mass: Dry mass of the thrust chamber assembly [kg].
+            nozzle_exit_to_grain_port_distance: Axial distance from the nozzle
+                exit plane to the grain port [m].
+            center_of_gravity_coordinate: Dry-mass center of gravity position
+                `(x, y, z)` [m], measured from the nozzle exit. Positive x
+                points toward the bulkhead. If None, estimated from chamber
+                geometry.
         """
         super().__init__(
             nozzle, combustion_chamber, dry_mass, center_of_gravity_coordinate
@@ -80,10 +73,7 @@ class SolidMotorThrustChamber(ThrustChamber):
 
 
 class LiquidEngineThrustChamber(ThrustChamber):
-    """
-    Represents the thrust chamber assembly of a liquid rocket engine.
-    This class is a specialization of the ThrustChamber class for liquid rocket engines.
-    """
+    """Thrust chamber assembly specialized for liquid rocket engines."""
 
     def __init__(
         self,
@@ -94,21 +84,17 @@ class LiquidEngineThrustChamber(ThrustChamber):
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):
         """
-        Initialize the LiquidEngineThrustChamber.
+        Initialize a liquid engine thrust chamber.
 
         Args:
-            nozzle:
-                An instance of a Nozzle class.
-            injector:
-                An instance of an Injector class.
-            combustion_chamber:
-                An instance of a CombustionChamber class.
-            dry_mass:
-                The dry mass of the thrust chamber assembly in kg.
-            center_of_gravity_coordinate:
-                3D position (x, y, z) of the dry mass (hardware) center of gravity,
-                measured from the nozzle exit, in meters. Positive x values point toward
-                the bulkhead. If None, will be estimated from chamber geometry.
+            nozzle: Nozzle instance.
+            injector: Bipropellant injector instance.
+            combustion_chamber: Combustion chamber instance.
+            dry_mass: Dry mass of the thrust chamber assembly [kg].
+            center_of_gravity_coordinate: Dry-mass center of gravity position
+                `(x, y, z)` [m], measured from the nozzle exit. Positive x
+                points toward the bulkhead. If None, estimated from chamber
+                geometry.
         """
         super().__init__(
             nozzle, combustion_chamber, dry_mass, center_of_gravity_coordinate

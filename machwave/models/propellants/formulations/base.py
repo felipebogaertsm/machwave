@@ -9,7 +9,8 @@ from .. import properties as propellant_properties
 
 
 def _parse_mixture_type(data: dict) -> propellant_categories.MixtureType:
-    """Parse and validate mixture_type from JSON data.
+    """
+    Parse and validate mixture_type from JSON data.
 
     Args:
         data: JSON data dictionary.
@@ -34,7 +35,8 @@ def _parse_mixture_type(data: dict) -> propellant_categories.MixtureType:
 
 
 def _parse_component(comp_data: dict) -> propellant_components.PropellantComponent:
-    """Parse single component from JSON data.
+    """
+    Parse single component from JSON data.
 
     Args:
         comp_data: Component dictionary from JSON.
@@ -68,19 +70,20 @@ def _parse_component(comp_data: dict) -> propellant_components.PropellantCompone
 def _parse_components(
     data: dict, *, mixture_type: propellant_categories.MixtureType
 ) -> tuple[list[propellant_components.PropellantComponent], list[float] | None]:
-    """Parse all components from JSON data.
+    """
+    Parse all components from JSON data.
 
     Args:
         data: JSON data dictionary.
+        mixture_type: Propellant mixture type.
 
     Returns:
-        (components, mass_fractions)
-
-        - For SOLID: mass_fractions is a list[float] aligned with components.
-        - For BILIQUID: mass_fractions is None (O/F defines mixture).
+        Tuple `(components, mass_fractions)`. For `SOLID`, `mass_fractions`
+        is a list aligned with `components`. For `BILIQUID`, `mass_fractions`
+        is None (O/F ratio defines the mixture).
 
     Raises:
-        ValueError: If component data invalid.
+        ValueError: If component data is invalid.
     """
     components_data = data.get("components", [])
     components = [_parse_component(comp_data) for comp_data in components_data]
@@ -97,7 +100,8 @@ def _parse_components(
 def _parse_properties(
     data: dict,
 ) -> propellant_properties.ThermochemicalProperties | None:
-    """Parse thermochemical properties from JSON data.
+    """
+    Parse thermochemical properties from JSON data.
 
     Args:
         data: JSON data dictionary.
@@ -132,19 +136,21 @@ def _create_propellant(
     mass_fractions: list[float] | None,
     properties: propellant_properties.ThermochemicalProperties | None,
 ) -> propellant_categories.SolidPropellant | propellant_categories.BiliquidPropellant:
-    """Create propellant instance based on mixture type.
+    """
+    Create propellant instance based on mixture type.
 
     Args:
         mixture_type: Type of propellant mixture.
         data: JSON data dictionary.
         components: Parsed components.
+        mass_fractions: Parsed mass fractions for solid mixtures, or None.
         properties: Parsed properties or None.
 
     Returns:
-        SolidPropellant or BiliquidPropellant instance.
+        `SolidPropellant` or `BiliquidPropellant` instance.
 
     Raises:
-        ValueError: If mixture_type unsupported.
+        ValueError: If `mixture_type` is unsupported.
     """
     if mixture_type == propellant_categories.MixtureType.SOLID:
         return propellant_categories.SolidPropellant(
@@ -170,7 +176,8 @@ def _create_propellant(
 def get_propellant_from_json(
     filepath: str | Path,
 ) -> propellant_categories.SolidPropellant | propellant_categories.BiliquidPropellant:
-    """Load propellant formulation from JSON file.
+    """
+    Load propellant formulation from JSON file.
 
     Args:
         filepath: Path to JSON file.

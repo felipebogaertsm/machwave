@@ -8,7 +8,8 @@ def get_mass_flow_orifice(
     pressure_upstream: float,
     pressure_downstream: float,
 ) -> float:
-    """Get mass flow rate through an orifice.
+    """
+    Get mass flow rate through an orifice.
 
     Args:
         discharge_coefficient: Discharge coefficient.
