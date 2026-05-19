@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
 class StarGrainSegment(FMMGrainSegment2D):
+    """Star grain segment with a radial point pattern as the port."""
+
     def __init__(
         self,
         length: float,
@@ -16,6 +18,18 @@ class StarGrainSegment(FMMGrainSegment2D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a star grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            number_of_points: Number of star points (must be < 12).
+            point_length: Radial length of each point [m].
+            point_width: Width of each point at the base [m].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.number_of_points = int(number_of_points)
         self.point_length = point_length
         self.point_width = point_width
@@ -28,6 +42,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
+        """Validate star segment geometry."""
         super().validate()
 
         if not self.number_of_points > 0:
@@ -53,10 +68,10 @@ class StarGrainSegment(FMMGrainSegment2D):
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
-        This method returns the initial face map for a star grain segment.
+        Return the initial face map for a star grain segment.
 
         References:
-        openMotor, https://github.com/reilleya/openMotor
+            openMotor, https://github.com/reilleya/openMotor
         """
         map_x, map_y = self.get_maps()
         core_map = self.get_empty_face_map()

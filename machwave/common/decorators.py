@@ -68,12 +68,11 @@ def check_bounds(lower: float = 0.0, upper: float = 1.0) -> typing.Callable:
 
 def warn_if_outside_range(lower: float, upper: float) -> typing.Callable:
     """
-    Emit a warning if the decorated function's return value is outside the specified
-    range.
+    Warn if the decorated function's return value is outside `[lower, upper]`.
 
     Args:
-        lower: The inclusive lower bound.
-        upper: The inclusive upper bound.
+        lower: Inclusive lower bound.
+        upper: Inclusive upper bound.
 
     Returns:
         The decorated function.

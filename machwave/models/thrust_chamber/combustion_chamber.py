@@ -11,7 +11,8 @@ class CombustionChamber:
         internal_length: float,
         thermal_liner_thickness: float = 0.0,
     ) -> None:
-        """Create a new CombustionChamber instance.
+        """
+        Create a new CombustionChamber instance.
 
         Args:
             casing_inner_diameter: Internal diameter [m].

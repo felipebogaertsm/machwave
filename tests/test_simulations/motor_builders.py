@@ -1,4 +1,5 @@
-"""Shared motor + simulation-params builders for end-to-end simulation tests
+"""
+Shared motor + simulation-params builders for end-to-end simulation tests
 and benchmarks.
 
 These configurations mirror the example scripts under examples/ (apcp_motor,

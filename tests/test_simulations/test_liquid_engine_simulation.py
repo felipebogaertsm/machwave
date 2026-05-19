@@ -1,4 +1,5 @@
-"""End-to-end integration tests for LiquidEngine internal ballistics
+"""
+End-to-end integration tests for LiquidEngine internal ballistics
 simulations.
 
 The motor configuration lives in tests/test_simulations/motor_builders.py so

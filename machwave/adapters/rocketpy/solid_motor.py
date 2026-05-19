@@ -3,6 +3,7 @@
 import typing
 
 from machwave.adapters.rocketpy.base import RocketPyMotorAdapter
+from machwave.models.grain.geometries import BatesSegment
 
 if typing.TYPE_CHECKING:
     from machwave.models.motors import SolidMotor
@@ -12,12 +13,13 @@ if typing.TYPE_CHECKING:
 
 
 class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
-    """Adapter to use a Machwave SolidSimulationResult as a RocketPy SolidMotor."""
+    """Adapter to use a simulation result and motor as a RocketPy SolidMotor."""
 
     _rocketpy_motor_class = "SolidMotor"
 
     def _get_rocketpy_attributes(self) -> dict[str, typing.Any]:
-        """Extract motor and grain attributes compatible with RocketPy SolidMotor.
+        """
+        Extract motor and grain attributes compatible with RocketPy SolidMotor.
 
         Returns:
             Attributes for RocketPy SolidMotor initialization.
@@ -25,7 +27,6 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
         Raises:
             ValueError: If grain configuration is incompatible with RocketPy.
         """
-        # Get base motor attributes
         base_attrs = super()._get_rocketpy_attributes()
 
         motor = typing.cast("SolidMotor", self.motor)
@@ -45,10 +46,18 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
 
         first_segment = grain.segments[0]
 
+        # RocketPy's SolidMotor only supports a BATES geometry
+        if not isinstance(first_segment, BatesSegment):
+            raise ValueError(
+                "RocketPy SolidMotor only supports BATES grain geometry, got "
+                f"{type(first_segment).__name__}"
+            )
+
         grain_number = grain.segment_count
         grain_separation = grain.spacing
         grain_outer_radius = first_segment.outer_diameter / 2
         grain_initial_height = first_segment.length
+        grain_initial_inner_radius = first_segment.core_diameter / 2
         throat_radius = motor.thrust_chamber.nozzle.throat_diameter / 2
         grains_center_of_mass_position = motor.grain.get_center_of_gravity(
             web_distance=0.0
@@ -57,12 +66,7 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
         # RocketPy handles real density internally
         grain_density = motor.propellant.ideal_density
 
-        if hasattr(first_segment, "core_diameter"):
-            grain_initial_inner_radius = first_segment.core_diameter / 2  # type: ignore[attr-defined]
-        else:  # Some geometries might not have core_diameter, use 0 as default
-            grain_initial_inner_radius = 0.0
-
-        # Combine base attributes with grain-specific parameters
+        # Combine base attributes with grain specific parameters
         solid_motor_attrs = {
             **base_attrs,
             "grain_number": grain_number,

@@ -20,7 +20,8 @@ class BiliquidPropellant(Propellant):
         properties: ThermochemicalProperties | None = None,
         oxidizer_to_fuel_ratio: float | None = None,
     ):
-        """Initialize biliquid propellant.
+        """
+        Initialize biliquid propellant.
 
         Args:
             name: Propellant name.
@@ -43,7 +44,8 @@ class BiliquidPropellant(Propellant):
         self.fuel_tank_density: float = 0.0
 
     def _validate_components(self):
-        """Validate biliquid has exactly 2 components: oxidizer and fuel.
+        """
+        Validate biliquid has exactly 2 components: oxidizer and fuel.
 
         Raises:
             PropellantValidationError: If validation fails.
@@ -75,7 +77,8 @@ class BiliquidPropellant(Propellant):
         )
 
     def _get_thermochemical_service(self):
-        """Create RocketCEA service for biliquid propellant.
+        """
+        Create RocketCEA service for biliquid propellant.
 
         Returns:
             RocketCEAService instance.

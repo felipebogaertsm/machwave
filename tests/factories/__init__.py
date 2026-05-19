@@ -1,6 +1,8 @@
-"""Each factory exposes ``build(**overrides)``; composite factories delegate
+"""
+Each factory exposes ``build(**overrides)``; composite factories delegate
 sub-component construction to lower-level factories so overrides apply at any
-layer."""
+layer.
+"""
 
 from tests.factories.feed_systems import (
     StackedTankPressureFedFeedSystemFactory,

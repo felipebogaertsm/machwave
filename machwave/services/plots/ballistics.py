@@ -6,7 +6,8 @@ import plotly.subplots
 def ballistics_plots(
     t: np.ndarray, a: np.ndarray, v: np.ndarray, y: np.ndarray
 ) -> go.Figure:
-    """Create interactive plots for height, velocity, and acceleration.
+    """
+    Create interactive plots for height, velocity, and acceleration.
 
     Args:
         t: Time array.
@@ -44,7 +45,7 @@ def ballistics_plots(
     fig.update_xaxes(title_text="Time (s)", row=3, col=1)
     fig.update_yaxes(title_text="Height (m)", row=1, col=1)
     fig.update_yaxes(title_text="Velocity (m/s)", row=2, col=1)
-    fig.update_yaxes(title_text="Acceleration (m/s²)", row=3, col=1)
+    fig.update_yaxes(title_text="Acceleration (m/s^2)", row=3, col=1)
 
     fig.update_layout(title="Ballistics Plots", height=900)
 

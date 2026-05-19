@@ -23,8 +23,10 @@ def get_contours(
 
 def get_length(contour: np.ndarray, map_size: int, tolerance: float = 3.0) -> float:
     """
-    Returns the total length of all segments in a contour that aren't within
-    'tolerance' of the edge of a circle with diameter 'map_size'.
+    Return the total length of contour segments away from the disc edge.
+
+    Segments within `tolerance` of the edge of a circle of diameter `map_size`
+    are excluded.
 
     Args:
         contour: The contour array.

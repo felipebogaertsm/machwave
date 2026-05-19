@@ -30,6 +30,16 @@ class FMMGrainSegment(GrainSegment, ABC):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize an FMM grain segment.
+
+        Args:
+            map_dim: Pixel resolution of the cross-section map.
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.map_dim = map_dim
 
         # "Cache" variables:
@@ -48,36 +58,33 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     @abstractmethod
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """
-        Method needs to be implemented for each and every geometry.
-        """
+        """Method needs to be implemented for each and every geometry."""
         pass
 
     @abstractmethod
     def get_maps(self) -> tuple:
         """
+        Return the coordinate maps for the grain.
+
         Returns:
-            - 2D: (map_x, map_y)
-            - 3D: (map_x, map_y, map_z)
+            `(map_x, map_y)` for 2D; `(map_x, map_y, map_z)` for 3D.
         """
         pass
 
     @abstractmethod
     def get_mask(self) -> np.ndarray:
-        """
-        Implementation varies depending if the geometry is 2D or 3D.
-        """
+        """Implementation varies depending if the geometry is 2D or 3D."""
         pass
 
     def validate(self) -> None:
         """
-        Validates the internal geometry of the grain.
+        Validate the internal geometry of the grain.
 
-        This method ensures the grain map dimension meets the minimum
-        required size. If validation fails, a GrainGeometryError is raised.
+        Ensures the grain map dimension meets the minimum required size.
 
         Raises:
-            GrainGeometryError: If the grain map dimension is below the valid threshold.
+            GrainGeometryError: If the grain map dimension is below the valid
+                threshold.
         """
         super().validate()
         if not self.map_dim >= MINIMUM_MAP_DIMENSION:
@@ -88,48 +95,35 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     def normalize(self, value: int | float) -> float:
         """
-        Converts a raw dimensional value into a normalized scale based on the
-        object's outer diameter.
+        Convert a dimensional value to a fraction of the half-diameter.
 
         Args:
-            value: The dimensional value (e.g., length) to normalize.
+            value: Dimensional value (e.g., length) to normalize [m].
 
         Returns:
-            A float representing the dimension as a fraction of the object's
-            half-diameter.
+            Value expressed as a fraction of the half-diameter.
         """
         return value / (0.5 * self.outer_diameter)
 
     def denormalize(
         self, value: int | float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
-        """
-        Converts a normalized input value into an actual dimension based on the
-        object's outer diameter.
-
-        Args:
-            value: A numeric value representing a normalized quantity.
-
-        Returns:
-            The denormalized value as a float, calculated by scaling `value` with
-            the object's outer diameter.
-        """
+        """Convert a normalized input back into a dimensional value [m]."""
         return (value / 2) * (self.outer_diameter)
 
     def map_to_area(
         self, value: float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
         """
-        Convert a pixel-area value into square meters.
+        Convert a pixel-area value to [m^2].
 
-        The conversion is based on the ratio of this object's outer diameter
-        (squared) to the total pixel map dimension (squared).
+        Scales by `outer_diameter^2 / map_dim^2`.
 
         Args:
-            value: The area in pixel units.
+            value: Area in pixel units.
 
         Returns:
-            The corresponding area in square meters.
+            Area [m^2].
         """
         return (self.outer_diameter**2) * (value / (self.map_dim**2))
 
@@ -137,25 +131,20 @@ class FMMGrainSegment(GrainSegment, ABC):
         self, value: float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
         """
-        Convert a pixel-distance value into meters.
+        Convert a pixel-distance value to [m].
 
-        The conversion is based on the ratio of this object's outer diameter
-        to its total map dimension.
+        Scales by `outer_diameter / map_dim`.
 
         Args:
-            value: The distance in pixel units.
+            value: Distance in pixel units.
 
         Returns:
-            The corresponding distance in meters.
+            Distance [m].
         """
         return self.outer_diameter * (value / self.map_dim)
 
     def get_empty_face_map(self) -> np.ndarray:
-        """
-        Return a new face map consisting entirely of ones.
-
-        The shape of the array matches the first element in the object's stored maps.
-        """
+        """Return a face map of all ones, shaped like the first stored map."""
         return np.ones_like(self.get_maps()[0])
 
     def _apply_inhibition(
@@ -163,18 +152,18 @@ class FMMGrainSegment(GrainSegment, ABC):
         face_map: NDArray[np.int_],
         outside: NDArray[np.bool_],
     ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
-        """Apply surface-inhibition adjustments to the face map and mask.
+        """
+        Apply surface-inhibition adjustments to the face map and mask.
 
-        This base implementation handles outer surface inhibition.
-        2D and 3D subclasses add their own logic to apply other inhibited surfaces as
-        needed.
+        Base implementation handles outer-surface inhibition. 2D and 3D
+        subclasses add their own logic for other inhibited surfaces.
 
         Args:
             face_map: Mutable copy of the initial face map.
             outside: Mutable copy of the circular boundary mask.
 
         Returns:
-            The face_map and outside mask with inhibition applied.
+            Tuple `(face_map, outside)` with inhibition applied.
         """
         if not self.inhibited_surfaces.outer_surface:
             inside = ~outside  # Invert the mask
@@ -188,9 +177,8 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         Return a masked representation of the face map.
 
-        The mask is circular and normalized to the map dimensions. If a mask
-        has not been created yet, it is generated by combining the initial face
-        map with the circular mask.
+        The mask is circular and normalized to the map dimensions. Generated on
+        first access by combining the initial face map with the circular mask.
         """
         if self.masked_face is None:
             face_map = self.get_initial_face_map().copy()
@@ -202,18 +190,15 @@ class FMMGrainSegment(GrainSegment, ABC):
         return self.masked_face
 
     def get_cell_size(self) -> float:
-        """
-        Return the size of each grid cell in normalized coordinates.
-
-        The value is derived by taking 1 divided by the map dimension.
-        """
+        """Return the cell size in normalized coordinates (`1 / map_dim`)."""
         return 1 / self.map_dim
 
     @property
     def has_cross_section_regression(self) -> bool:
-        """Whether the cross-section has any burning surface.
+        """
+        Return whether the cross-section has any burning surface.
 
-        Inspects the masked face map for zero-valued (burning) cells.
+        Inspects the masked face map for zero-valued (burning) cells. Returns
         False when no burning front exists for the FMM to propagate from.
         """
         masked_face = self.get_masked_face()
@@ -222,14 +207,12 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     def get_regression_map(self):
         """
-        Calculate and return the distance map for grain regression.
+        Return the distance map for grain regression.
 
-        This uses the fast marching method (scikit-fmm) on the masked face.
-        Each value represents the distance from the initial face along the
-        cross-section of the grain.
-
-        When the cross-section has no burning surface (end burner), a
-        static map is returned.
+        Uses the fast marching method (scikit-fmm) on the masked face. Each
+        value represents the distance from the initial face along the
+        cross-section of the grain. When the cross-section has no burning
+        surface (end burner), a static map is returned instead.
         """
         if self.regression_map is None:
             masked_face = self.get_masked_face()
@@ -248,11 +231,10 @@ class FMMGrainSegment(GrainSegment, ABC):
 
     def get_web_thickness(self) -> float:
         """
-        Return the maximum thickness of the grain web in real units.
+        Return the maximum web thickness of the grain [m].
 
-        The web thickness is the largest distance from the center of the
-        grain segment, derived from the distance map and converted to a
-        real-world measurement.
+        Derived from the distance map as the largest normalized distance,
+        converted back into real units.
         """
         if self.web_thickness is None:
             self.web_thickness = float(
@@ -265,13 +247,13 @@ class FMMGrainSegment(GrainSegment, ABC):
         self, web_distance: float, *args: Any, **kwargs: Any
     ) -> list[NDArray[np.float64]]:
         """
-        Return the contours of the regression map after a specified web distance.
+        Return the contours of the regression map for a given web distance.
 
-        This method must be implemented by a subclass to compute the contour
-        data based on the given web distance and any additional parameters.
+        Must be implemented by a subclass to compute the contour data based on
+        the given web distance and any additional parameters.
 
         Args:
-            web_distance: The depth of regression into the grain web.
+            web_distance: Depth of regression into the grain web [m].
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 

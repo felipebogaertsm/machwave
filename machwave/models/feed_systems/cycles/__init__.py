@@ -1,4 +1,5 @@
-"""Concrete feed-system cycle implementations.
+"""
+Concrete feed-system cycle implementations.
 
 Each module in this package implements one cycle topology (pressure-fed,
 electric-pump, gas-generator, expander, staged combustion, ...). Cycles consume

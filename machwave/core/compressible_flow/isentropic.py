@@ -4,7 +4,8 @@ import scipy.optimize
 
 
 def get_critical_pressure_ratio(k: float) -> float:
-    """Get critical pressure ratio for choked flow.
+    """
+    Get critical pressure ratio for choked flow.
 
     Args:
         k: Isentropic exponent.
@@ -16,7 +17,8 @@ def get_critical_pressure_ratio(k: float) -> float:
 
 
 def get_expansion_ratio_from_exit_mach(mach: float, k: float) -> float:
-    """Get expansion ratio from exit Mach number.
+    """
+    Get expansion ratio from exit Mach number.
 
     Args:
         mach: Mach number.
@@ -31,7 +33,8 @@ def get_expansion_ratio_from_exit_mach(mach: float, k: float) -> float:
 
 
 def get_exit_mach_from_expansion_ratio(k: float, expansion_ratio: float) -> float:
-    """Get exit Mach number from expansion ratio.
+    """
+    Get exit Mach number from expansion ratio.
 
     Args:
         k: Isentropic exponent.
@@ -64,7 +67,8 @@ def get_exit_pressure(
     expansion_ratio: float,
     chamber_pressure: float,
 ) -> float:
-    """Get exit pressure from isentropic relations.
+    """
+    Get exit pressure from isentropic relations.
 
     Args:
         k_exhaust: Isentropic exponent at exit.
@@ -85,7 +89,8 @@ def is_flow_choked(
     external_pressure: float,
     critical_pressure_ratio: float,
 ) -> bool:
-    """Check if flow is choked.
+    """
+    Check if flow is choked.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].

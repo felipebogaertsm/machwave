@@ -13,7 +13,8 @@ def generate_eng_file_content(
     name: str,
     eng_res: int = 25,
 ) -> str:
-    """Generate .eng file content for rocket simulation software.
+    """
+    Generate .eng file content for rocket simulation software.
 
     Args:
         time: Time array [s].

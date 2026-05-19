@@ -32,9 +32,7 @@ def test_get_mass_flow_orifice(
 
 
 def test_get_mass_flow_orifice_raises_value_error():
-    """
-    ValueError is raised when downstream pressure exceeds upstream pressure.
-    """
+    """ValueError is raised when downstream pressure exceeds upstream pressure."""
     with pytest.raises(
         ValueError, match="Pressure downstream cannot be greater than upstream"
     ):

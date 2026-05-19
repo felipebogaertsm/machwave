@@ -107,7 +107,7 @@ class TestFMM3DSegmentMomentOfInertia:
         )
 
         # Longer segment should have higher radial MOI (Iyy, Izz)
-        # because of both more mass and length² term
+        # because of both more mass and length^2 term
         assert moi_long[1, 1] > moi_short[1, 1]
         assert moi_long[2, 2] > moi_short[2, 2]
 

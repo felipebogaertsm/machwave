@@ -82,13 +82,13 @@ def convert_rankine_to_kelvin(temperature_rankine: float) -> float:
 
 def convert_lbft3_to_kgm3(density_lbft3: float) -> float:
     """
-    Converts density in lb/ft³ to kg/m³.
+    Convert density in lb/ft^3 to kg/m^3.
 
     Args:
-        density_lbft3: Density [lb/ft³].
+        density_lbft3: Density [lb/ft^3].
 
     Returns:
-        Density [kg/m³].
+        Density [kg/m^3].
     """
     return density_lbft3 * 16.01846337
 

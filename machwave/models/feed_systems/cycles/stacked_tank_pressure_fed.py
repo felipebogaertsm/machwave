@@ -92,12 +92,14 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         injector_area: float | None = None,
     ) -> float:
         """
-        Compute the current fuel mass flow rate via get_mass_flow_orifice().
-        The pressure upstream will be the same as the oxidizer tank pressure, since this is a model for a stacked tank.
+        Compute the current fuel mass flow rate via the orifice model.
+
+        The upstream pressure is the oxidizer tank pressure, since this models
+        a stacked tank.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Discharge coefficient for the injector (dimensionless).
+            discharge_coefficient: Discharge coefficient for the injector.
             injector_area: Effective flow area for the fuel injector [m^2].
 
         Returns:
@@ -125,9 +127,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         )
 
     def get_oxidizer_tank_pressure(self) -> float:
-        """
-        Returns the tank pressure [Pa].
-        """
+        """Returns the tank pressure [Pa]."""
         return self.oxidizer_tank.get_pressure()
 
     def get_fuel_tank_pressure(self) -> float:

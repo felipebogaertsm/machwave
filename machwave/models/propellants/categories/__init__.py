@@ -1,14 +1,12 @@
 """Propellant categories or mixture types."""
 
-from .base import MixtureType, Propellant, PropellantValidationError
+from .base import MixtureType, Propellant
 from .biliquid import BiliquidPropellant
-from .solid import BurnRateOutOfBoundsError, SolidPropellant
+from .solid import SolidPropellant
 
 __all__ = [
     "BiliquidPropellant",
-    "BurnRateOutOfBoundsError",
     "MixtureType",
     "Propellant",
-    "PropellantValidationError",
     "SolidPropellant",
 ]

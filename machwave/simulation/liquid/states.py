@@ -24,6 +24,16 @@ class LiquidEngineState(simulation_states.MotorState):
         external_pressure: float,
         other_losses: float,
     ) -> None:
+        """
+        Initialize a liquid engine state.
+
+        Args:
+            motor: Liquid engine to track.
+            igniter_pressure: Initial chamber pressure from the igniter [Pa].
+            external_pressure: Ambient pressure [Pa].
+            other_losses: Fractional losses not covered by specific
+                mechanisms, in [0, 1].
+        """
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
@@ -47,6 +57,7 @@ class LiquidEngineState(simulation_states.MotorState):
         ]
 
     def get_m_dot_in(self) -> float:
+        """Return the total inlet mass flow (fuel + oxidizer) [kg/s]."""
         return self._m_dot_fuel + self._m_dot_ox
 
     def run_timestep(
@@ -54,7 +65,8 @@ class LiquidEngineState(simulation_states.MotorState):
         d_t: float,
         external_pressure: float,
     ) -> None:
-        """Advance simulation by time step d_t under external pressure.
+        """
+        Advance simulation by time step d_t under external pressure.
 
         Args:
             d_t: Time step.

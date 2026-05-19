@@ -3,7 +3,8 @@ import dataclasses
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GasGeneratorSpec:
-    """Gas generator driving a turbopump turbine.
+    """
+    Gas generator driving a turbopump turbine.
 
     Attributes:
         name: Identifier used in logs and reports.

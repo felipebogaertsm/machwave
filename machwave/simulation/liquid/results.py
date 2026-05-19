@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, kw_only=True)
 class LiquidSimulationResult(SimulationResult["LiquidEngineState"]):
+    """Simulation result for a liquid engine run."""
+
     oxidizer_mass: SimulationResultArray
     fuel_mass: SimulationResultArray
     nozzle_correction_factor: SimulationResultArray
@@ -57,7 +59,7 @@ class LiquidSimulationResult(SimulationResult["LiquidEngineState"]):
         print(f"  Mean: {np.mean(self.thrust):.4f}", file=file)
 
         print("\nIMPULSE AND I_SP", file=file)
-        print(f"  Total impulse: {self.total_impulse:.4f} N·s", file=file)
+        print(f"  Total impulse: {self.total_impulse:.4f} N-s", file=file)
         print(f"  Specific impulse: {self.specific_impulse:.4f} s", file=file)
 
         print("\nPROPELLANT REMAINING (kg)", file=file)

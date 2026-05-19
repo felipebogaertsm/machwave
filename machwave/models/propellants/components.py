@@ -1,6 +1,7 @@
 """
-This module contains classes representing the chemical components of a propellant
-formulation, including their roles and properties.
+Chemical components of a propellant formulation.
+
+Provides classes representing the role and properties of each component.
 """
 
 import dataclasses
@@ -22,12 +23,13 @@ class ComponentRole(enum.StrEnum):
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PropellantComponent:
-    """Chemical component of a propellant formulation.
+    """
+    Chemical component of a propellant formulation.
 
     Attributes:
         name: Component name (i.e., "KNO3", "LOX", "HTPB").
         role: Component role (oxidizer, fuel, additive).
-        density: Component density [kg/m³].
+        density: Component density [kg/m^3].
         chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
         enthalpy: Standard enthalpy of formation [J/mol].
         initial_temperature: Initial component temperature before combustion [K].
@@ -41,7 +43,8 @@ class PropellantComponent:
     initial_temperature: float = 298.15
 
     def to_cea_dict(self, *, weight_percent: float) -> dict:
-        """Convert component to CEA-compatible dictionary format.
+        """
+        Convert component to CEA-compatible dictionary format.
 
         Args:
             weight_percent: Component weight percent in the mixture [%].

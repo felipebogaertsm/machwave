@@ -9,7 +9,6 @@ class TestBatesGrainCenterOfGravity:
 
     def test_single_segment_cog_position(self):
         """Test CoG with a single BATES segment of length 1.0m."""
-
         grain = Grain(spacing=0.1)  # Spacing doesn't matter with 1 segment
 
         segment = BatesSegment(
@@ -27,10 +26,7 @@ class TestBatesGrainCenterOfGravity:
         np.testing.assert_array_almost_equal(cog, expected_cog)
 
     def test_two_segments_equal_length_with_spacing(self):
-        """
-        Test CoG with 2 BATES segments of length 1.0m each with 0.1m spacing.
-        """
-
+        """Test CoG with 2 BATES segments of length 1.0m each with 0.1m spacing."""
         grain = Grain(spacing=0.1)
 
         segment_1 = BatesSegment(
@@ -56,9 +52,7 @@ class TestBatesGrainCenterOfGravity:
         np.testing.assert_array_almost_equal(cog, expected_cog)
 
     def test_three_segments_equal_length_with_spacing(self):
-        """
-        Test CoG with 3 BATES segments of length 1.0m each with 0.2m spacing.
-        """
+        """Test CoG with 3 BATES segments of length 1.0m each with 0.2m spacing."""
         grain = Grain(spacing=0.2)
 
         segment1 = BatesSegment(
@@ -92,9 +86,7 @@ class TestBatesGrainCenterOfGravity:
         np.testing.assert_array_almost_equal(cog, expected_cog)
 
     def test_three_segments_variable_length_with_spacing(self):
-        """
-        Test CoG with 3 BATES segments of different lengths with 0.2m spacing.
-        """
+        """Test CoG with 3 BATES segments of different lengths with 0.2m spacing."""
         grain = Grain(spacing=0.2)
 
         # L1 = 1.0m

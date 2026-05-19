@@ -23,6 +23,16 @@ class MotorState(ABC):
         external_pressure: float,
         other_losses: float,
     ) -> None:
+        """
+        Initialize a motor state.
+
+        Args:
+            motor: Motor to track.
+            igniter_pressure: Initial chamber pressure from the igniter [Pa].
+            external_pressure: Ambient pressure [Pa].
+            other_losses: Fractional losses not covered by specific
+                mechanisms, in [0, 1].
+        """
         self.motor = motor
         self.other_losses = other_losses
 
@@ -56,16 +66,29 @@ class MotorState(ABC):
 
     @property
     def initial_propellant_mass(self) -> float:
+        """Return the initial propellant mass [kg]."""
         return self.motor.initial_propellant_mass
 
     @property
     def thrust_time(self) -> float:
+        """
+        Return the thrust time [s].
+
+        Raises:
+            ValueError: If the simulation has not yet completed.
+        """
         if self._thrust_time is None:
             raise ValueError("Thrust time has not been set, run the simulation.")
         return self._thrust_time
 
     @property
     def burn_time(self) -> float:
+        """
+        Return the burn time [s].
+
+        Raises:
+            ValueError: If the simulation has not yet completed.
+        """
         if self._burn_time is None:
             raise ValueError("Burn time has not been set, run the simulation.")
         return self._burn_time

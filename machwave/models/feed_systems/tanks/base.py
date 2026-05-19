@@ -22,7 +22,8 @@ class Tank:
         temperature: float,
         initial_fluid_mass: float,
     ) -> None:
-        """Initialize a two-phase tank model.
+        """
+        Initialize a two-phase tank model.
 
         Args:
             fluid_name: Name of the fluid in the CoolProp database
@@ -52,7 +53,8 @@ class Tank:
         temperature: float,
         initial_fluid_mass: float,
     ) -> None:
-        """Raise ``ValueError`` if the tank fill is denser than liquid.
+        """
+        Raise ``ValueError`` if the tank fill is denser than liquid.
 
         The implied bulk density ``initial_fluid_mass / volume`` cannot exceed
         the saturated-liquid density at ``temperature`` — anything denser
@@ -70,7 +72,8 @@ class Tank:
             )
 
     def get_pressure(self) -> float:
-        """Return the current tank pressure [Pa] using two-phase logic.
+        """
+        Return the current tank pressure [Pa] using two-phase logic.
 
         1) Compute the saturation pressure at the given temperature.
         2) If fluid_mass > mass_if_all_vapor(p_sat), the tank is partially
@@ -98,7 +101,8 @@ class Tank:
             )
 
     def get_density(self, pressure: float | None = None) -> float:
-        """Return fluid density [kg/m^3] at tank pressure and temperature.
+        """
+        Return fluid density [kg/m^3] at tank pressure and temperature.
 
         Uses CoolProp. If pressure is provided, it is used as the tank
         pressure override (e.g., a piston-pressurized stacked-tank system).
@@ -147,7 +151,8 @@ class Tank:
             self.fluid_mass = 0.0
 
     def _mass_if_all_vapor(self, p_vapor: float) -> float:
-        """Return mass if tank were entirely vapor at given pressure.
+        """
+        Return mass if tank were entirely vapor at given pressure.
 
         Uses ideal gas law at pressure p_vapor [Pa] and
         temperature self.temperature.
@@ -167,8 +172,9 @@ class Tank:
         self, mass: float, volume: float, temperature: float
     ) -> float:
         """
-        Computes the pressure [Pa] if all the fluid is in the vapor phase,
-        using the ideal gas law: P = (mass / M) * R * T / volume.
+        Return the ideal-gas pressure [Pa] if all the fluid is vapor.
+
+        Uses `P = (mass / M) * R * T / volume`.
         """
         molar_mass = CP.PropsSI("M", self.fluid_name)  # kg/mol
         R_universal = scipy.constants.R  # J/(mol*K)

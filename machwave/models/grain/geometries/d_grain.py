@@ -6,6 +6,8 @@ from machwave.models.grain.fmm import FMMGrainSegment2D
 
 
 class DGrainSegment(FMMGrainSegment2D):
+    """D-shaped grain segment with a single offset planar slot."""
+
     def __init__(
         self,
         length: float,
@@ -14,6 +16,16 @@ class DGrainSegment(FMMGrainSegment2D):
         inhibited_surfaces: InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
+        """
+        Initialize a D-grain segment.
+
+        Args:
+            length: Segment length [m].
+            outer_diameter: Outer diameter [m].
+            slot_offset: Distance from the grain center to the slot face [m].
+            inhibited_surfaces: Surfaces inhibited from burning.
+            density_ratio: Ratio of real to ideal propellant density.
+        """
         self.slot_offset = slot_offset
 
         super().__init__(
@@ -24,6 +36,7 @@ class DGrainSegment(FMMGrainSegment2D):
         )
 
     def validate(self) -> None:
+        """Validate D-grain segment geometry."""
         super().validate()
 
         if not self.slot_offset >= 0:
@@ -38,6 +51,7 @@ class DGrainSegment(FMMGrainSegment2D):
             )
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+        """Return the initial face map for the D-grain port."""
         slot_offset_normalized = self.normalize(self.slot_offset)
         map_x = self.get_maps()[0]
         core_map = self.get_empty_face_map()

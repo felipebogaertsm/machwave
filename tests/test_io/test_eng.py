@@ -51,9 +51,7 @@ from machwave.io.eng import generate_eng_file_content
 
 @pytest.fixture
 def payload_data():
-    """
-    Fixture to set up common test data used in all test cases.
-    """
+    """Fixture to set up common test data used in all test cases."""
     return {
         "time": np.linspace(0, 5, 100),  # Simulated time data
         "thrust": np.linspace(0, 500, 100),  # Simulated thrust data
@@ -69,9 +67,7 @@ def payload_data():
 
 
 def test_eng_header_format(payload_data):
-    """
-    Test if the header in the .eng file is formatted correctly.
-    """
+    """Test if the header in the .eng file is formatted correctly."""
     content = generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
@@ -102,9 +98,7 @@ def test_eng_header_format(payload_data):
 
 
 def test_eng_data_format(payload_data):
-    """
-    Test if the time and thrust data in the .eng file are formatted correctly.
-    """
+    """Test if the time and thrust data in the .eng file are formatted correctly."""
     content = generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
@@ -174,9 +168,7 @@ def test_eng_data_values(payload_data):
 
 
 def test_eng_file_ends_with_semicolon(payload_data):
-    """
-    Test if the .eng file ends with a semicolon.
-    """
+    """Test if the .eng file ends with a semicolon."""
     content = generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
