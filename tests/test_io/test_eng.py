@@ -46,7 +46,7 @@ Requirements for an .eng file:
 import numpy as np
 import pytest
 
-from machwave.io.eng import generate_eng_file_content
+import machwave.io.eng as eng_io
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def payload_data():
 
 def test_eng_header_format(payload_data):
     """Test if the header in the .eng file is formatted correctly."""
-    content = generate_eng_file_content(
+    content = eng_io.generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
         propellant_mass=payload_data["propellant_mass"],
@@ -99,7 +99,7 @@ def test_eng_header_format(payload_data):
 
 def test_eng_data_format(payload_data):
     """Test if the time and thrust data in the .eng file are formatted correctly."""
-    content = generate_eng_file_content(
+    content = eng_io.generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
         propellant_mass=payload_data["propellant_mass"],
@@ -131,7 +131,7 @@ def test_eng_data_values(payload_data):
     - Time must be increasing and start from 0.
     - Thrust must be non-negative.
     """
-    content = generate_eng_file_content(
+    content = eng_io.generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
         propellant_mass=payload_data["propellant_mass"],
@@ -169,7 +169,7 @@ def test_eng_data_values(payload_data):
 
 def test_eng_file_ends_with_semicolon(payload_data):
     """Test if the .eng file ends with a semicolon."""
-    content = generate_eng_file_content(
+    content = eng_io.generate_eng_file_content(
         time=payload_data["time"],
         thrust=payload_data["thrust"],
         propellant_mass=payload_data["propellant_mass"],

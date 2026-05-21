@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment2D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class DGrainSegment(FMMGrainSegment2D):
+class DGrainSegment(grain_fmm.FMMGrainSegment2D):
     """D-shaped grain segment with a single offset planar slot."""
 
     def __init__(
@@ -13,7 +13,7 @@ class DGrainSegment(FMMGrainSegment2D):
         length: float,
         outer_diameter: float,
         slot_offset: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -40,12 +40,12 @@ class DGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         if not self.slot_offset >= 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Slot offset must be non-negative, got {self.slot_offset}"
             )
         max_slot_offset = self.outer_diameter / 2
         if not self.slot_offset < max_slot_offset:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Slot offset ({self.slot_offset}) must be less than "
                 f"half the outer diameter ({max_slot_offset})"
             )

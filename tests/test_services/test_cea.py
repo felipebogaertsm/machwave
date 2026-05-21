@@ -12,11 +12,7 @@ Also validates that returned parameter values are physically reasonable.
 import pytest
 from rocketcea.cea_obj import CEA_Obj
 
-from machwave.services.cea import (
-    RocketCEAService,
-    create_cea_service,
-    generate_card_string,
-)
+import machwave.services.cea as cea_service
 
 
 class TestCreateCEAServiceSolidPropellant:
@@ -24,10 +20,10 @@ class TestCreateCEAServiceSolidPropellant:
 
     def test_standard_solid_propellant(self):
         """Test factory with standard solid propellant."""
-        service = create_cea_service(propellant_name="AP")
+        service = cea_service.create_cea_service(propellant_name="AP")
 
         assert service is not None
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         assert service.cea_obj is not None
         assert service.oxidizer_to_fuel_ratio is None
 
@@ -58,7 +54,7 @@ class TestCreateCEAServiceSolidPropellant:
 
     def test_custom_solid_propellant(self):
         """Test factory with custom solid propellant card."""
-        card = generate_card_string(
+        card = cea_service.generate_card_string(
             [
                 {
                     "name": "KNO3",
@@ -79,11 +75,11 @@ class TestCreateCEAServiceSolidPropellant:
             ]
         )
 
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             propellant_name="TEST_KNSU_SERVICE", card_string=card
         )
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
 
         # Validate KNSU properties
         chamber_pressure = 3e6
@@ -114,11 +110,11 @@ class TestCreateCEAServiceBiliquidPropellant:
 
     def test_standard_biliquid_propellant(self):
         """Test factory with standard biliquid propellant."""
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         assert service.oxidizer_to_fuel_ratio == 2.5
 
         # Validate LOX/RP1 properties
@@ -148,7 +144,7 @@ class TestCreateCEAServiceBiliquidPropellant:
 
     def test_lox_lh2_high_performance(self):
         """Test LOX/LH2 high-performance propellant."""
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="LOX",
             fuel_name="LH2",
             oxidizer_to_fuel_ratio=5.5,  # Near optimal O/F
@@ -178,7 +174,7 @@ h,cal=-4676.0  t(k)=298.15  rho,g/cc=1.443"""
         fuel_card = """name CustomMMH  C 1 H 6 N 2  wt%=100.0
 h,cal=12800.0  t(k)=298.15  rho,g/cc=0.866"""
 
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="CUSTOM_N2O4_TEST_2",
             oxidizer_card_string=ox_card,
             fuel_name="CUSTOM_MMH_TEST_2",
@@ -186,7 +182,7 @@ h,cal=12800.0  t(k)=298.15  rho,g/cc=0.866"""
             oxidizer_to_fuel_ratio=1.65,
         )
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         assert service.oxidizer_to_fuel_ratio == 1.65
 
         # Validate properties are reasonable
@@ -205,9 +201,11 @@ class TestDirectRocketCEAServiceInstantiation:
         cea_obj = CEA_Obj(propName="AP")
 
         # Direct instantiation
-        service = RocketCEAService(cea_obj=cea_obj, oxidizer_to_fuel_ratio=None)
+        service = cea_service.RocketCEAService(
+            cea_obj=cea_obj, oxidizer_to_fuel_ratio=None
+        )
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         assert service.cea_obj is cea_obj
         assert service.oxidizer_to_fuel_ratio is None
 
@@ -221,9 +219,11 @@ class TestDirectRocketCEAServiceInstantiation:
         cea_obj = CEA_Obj(oxName="LOX", fuelName="RP1")
 
         # Direct instantiation with O/F ratio
-        service = RocketCEAService(cea_obj=cea_obj, oxidizer_to_fuel_ratio=2.5)
+        service = cea_service.RocketCEAService(
+            cea_obj=cea_obj, oxidizer_to_fuel_ratio=2.5
+        )
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         assert service.cea_obj is cea_obj
         assert service.oxidizer_to_fuel_ratio == 2.5
 
@@ -236,7 +236,7 @@ class TestDirectRocketCEAServiceInstantiation:
         from rocketcea.cea_obj import add_new_propellant
 
         # Manually register propellant
-        card = generate_card_string(
+        card = cea_service.generate_card_string(
             [
                 {
                     "name": "TestComp",
@@ -254,9 +254,9 @@ class TestDirectRocketCEAServiceInstantiation:
         cea_obj = CEA_Obj(propName="MANUAL_REG_TEST")
 
         # Direct instantiation
-        service = RocketCEAService(cea_obj=cea_obj)
+        service = cea_service.RocketCEAService(cea_obj=cea_obj)
 
-        assert isinstance(service, RocketCEAService)
+        assert isinstance(service, cea_service.RocketCEAService)
         # KNO3 alone won't burn, so CEA may return 0 or low temp
         # Just check service was created successfully
         assert service.cea_obj is not None
@@ -268,7 +268,7 @@ class TestServiceParameterValidation:
     @pytest.fixture
     def lox_rp1_service(self):
         """LOX/RP1 service fixture."""
-        return create_cea_service(
+        return cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 
@@ -351,7 +351,7 @@ class TestServiceEdgeCases:
 
     def test_very_low_pressure(self):
         """Test service at very low chamber pressure."""
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 
@@ -366,7 +366,7 @@ class TestServiceEdgeCases:
 
     def test_very_high_pressure(self):
         """Test service at very high chamber pressure."""
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 
@@ -376,7 +376,7 @@ class TestServiceEdgeCases:
 
     def test_extreme_expansion_ratios(self):
         """Test service with extreme expansion ratios."""
-        service = create_cea_service(
+        service = cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 
@@ -399,7 +399,7 @@ class TestRegistryIsolation:
     """
 
     def _kno3_sucrose_card(self, kno3_pct: float) -> str:
-        return generate_card_string(
+        return cea_service.generate_card_string(
             [
                 {
                     "name": "KNO3",
@@ -423,10 +423,10 @@ class TestRegistryIsolation:
     def test_same_name_different_cards_keep_distinct_properties(self):
         shared_name = "REGISTRY_ISOLATION_PROBE"
 
-        service_a = create_cea_service(
+        service_a = cea_service.create_cea_service(
             propellant_name=shared_name, card_string=self._kno3_sucrose_card(65.0)
         )
-        service_b = create_cea_service(
+        service_b = cea_service.create_cea_service(
             propellant_name=shared_name, card_string=self._kno3_sucrose_card(80.0)
         )
 
@@ -465,14 +465,14 @@ class TestRegistryIsolation:
             "h,cal=2000.0  t(k)=298.15  rho,g/cc=1.443"
         )
 
-        service_a = create_cea_service(
+        service_a = cea_service.create_cea_service(
             oxidizer_name=shared_ox_name,
             oxidizer_card_string=ox_card_a,
             fuel_name="REGISTRY_ISOLATION_FUEL_A",
             fuel_card_string=fuel_card,
             oxidizer_to_fuel_ratio=1.65,
         )
-        service_b = create_cea_service(
+        service_b = cea_service.create_cea_service(
             oxidizer_name=shared_ox_name,
             oxidizer_card_string=ox_card_b,
             fuel_name="REGISTRY_ISOLATION_FUEL_B",
@@ -511,7 +511,7 @@ def test_generate_card_string_utility():
         },
     ]
 
-    card = generate_card_string(components)
+    card = cea_service.generate_card_string(components)
 
     # Verify card string format
     assert "name KNO3" in card
@@ -523,13 +523,13 @@ def test_generate_card_string_utility():
 
     # Empty components should raise error
     with pytest.raises(ValueError, match="No components provided"):
-        generate_card_string([])
+        cea_service.generate_card_string([])
 
 
 class TestMixtureRatioOverride:
     @pytest.fixture
     def lox_rp1_service(self):
-        return create_cea_service(
+        return cea_service.create_cea_service(
             oxidizer_name="LOX", fuel_name="RP1", oxidizer_to_fuel_ratio=2.5
         )
 

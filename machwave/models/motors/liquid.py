@@ -1,20 +1,24 @@
 import numpy as np
 
-from machwave.models.feed_systems.base import FeedSystem
-from machwave.models.propellants import BiliquidPropellant
-from machwave.models.thrust_chamber import LiquidEngineThrustChamber
+import machwave.models.feed_systems.base as feed_system_base
+import machwave.models.propellants as propellants
+import machwave.models.thrust_chamber as thrust_chamber_models
 
-from .base import Motor
+from . import base as motor_base
 
 
-class LiquidEngine(Motor[BiliquidPropellant, LiquidEngineThrustChamber]):
+class LiquidEngine(
+    motor_base.Motor[
+        propellants.BiliquidPropellant, thrust_chamber_models.LiquidEngineThrustChamber
+    ]
+):
     """Liquid rocket engine with bi-liquid propellant and a feed system."""
 
     def __init__(
         self,
-        propellant: BiliquidPropellant,
-        thrust_chamber: LiquidEngineThrustChamber,
-        feed_system: FeedSystem,
+        propellant: propellants.BiliquidPropellant,
+        thrust_chamber: thrust_chamber_models.LiquidEngineThrustChamber,
+        feed_system: feed_system_base.FeedSystem,
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
     ) -> None:

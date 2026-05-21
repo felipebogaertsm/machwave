@@ -7,8 +7,8 @@ attribute and not as a GrainSegment attribute.
 
 import pytest
 
-from machwave.models.grain import Grain
-from machwave.models.grain.geometries.bates import BatesSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries.bates as bates_geometry
 
 
 class TestGrainSpacing:
@@ -16,25 +16,25 @@ class TestGrainSpacing:
 
     def test_grain_default_spacing(self):
         """Test that Grain has default spacing of 0.0."""
-        grain = Grain()
+        grain = grain_models.Grain()
         assert grain.spacing == 0.0
 
     def test_grain_custom_spacing(self):
         """Test that Grain accepts custom spacing value."""
         spacing = 0.01
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
         assert grain.spacing == spacing
 
     def test_grain_negative_spacing(self):
         """Test that Grain can have negative spacing (overlapping segments)."""
         # Negative spacing might be used for overlapping segments
         spacing = -0.005
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
         assert grain.spacing == spacing
 
     def test_segment_no_spacing_attribute(self):
         """Test that GrainSegment does not have a spacing attribute."""
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
@@ -46,7 +46,7 @@ class TestGrainSpacing:
     def test_segment_init_rejects_spacing(self):
         """Test that passing spacing to a segment raises TypeError."""
         with pytest.raises(TypeError, match="unexpected keyword argument"):
-            BatesSegment(
+            bates_geometry.BatesSegment(
                 outer_diameter=0.086,
                 core_diameter=0.032,
                 length=0.150,
@@ -55,9 +55,9 @@ class TestGrainSpacing:
 
     def test_total_length_with_no_spacing(self):
         """Test total_length calculation with zero spacing."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
@@ -74,9 +74,9 @@ class TestGrainSpacing:
     def test_total_length_with_spacing(self):
         """Test total_length calculation with positive spacing."""
         spacing = 0.01
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
 
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
@@ -93,9 +93,9 @@ class TestGrainSpacing:
     def test_total_length_single_segment_ignores_spacing(self):
         """Test that spacing is ignored for single segment."""
         spacing = 0.01
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
 
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
@@ -110,9 +110,9 @@ class TestGrainSpacing:
     def test_total_length_with_negative_spacing(self):
         """Test total_length calculation with negative spacing (overlapping)."""
         spacing = -0.005  # 5mm overlap
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
 
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
@@ -127,19 +127,17 @@ class TestGrainSpacing:
 
     def test_spacing_affects_cog_calculation(self):
         """Test that spacing is properly used in center of gravity calculations."""
-        from machwave.models.grain.geometries.bates import BatesSegment
-
         spacing = 0.01
-        grain = Grain(spacing=spacing)
+        grain = grain_models.Grain(spacing=spacing)
 
-        segment1 = BatesSegment(
+        segment1 = bates_geometry.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=200e-3,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = bates_geometry.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=200e-3,
@@ -160,37 +158,37 @@ class TestGrainSpacing:
 
     def test_spacing_multiple_segments_different_spacing_values(self):
         """Test that changing spacing value affects different grain instances."""
-        segment1 = BatesSegment(
+        segment1 = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
         )
 
-        segment2 = BatesSegment(
+        segment2 = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
         )
 
-        segment3 = BatesSegment(
+        segment3 = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
         )
 
-        segment4 = BatesSegment(
+        segment4 = bates_geometry.BatesSegment(
             outer_diameter=0.086,
             core_diameter=0.032,
             length=0.150,
         )
 
         # Grain with 1mm spacing
-        grain1 = Grain(spacing=0.001)
+        grain1 = grain_models.Grain(spacing=0.001)
         grain1.add_segment(segment1)
         grain1.add_segment(segment2)
 
         # Grain with 10mm spacing
-        grain2 = Grain(spacing=0.010)
+        grain2 = grain_models.Grain(spacing=0.010)
         grain2.add_segment(segment3)
         grain2.add_segment(segment4)
 

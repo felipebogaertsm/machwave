@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.common.decorators import timing
-from machwave.models.propellants import categories as propellant_categories
-from machwave.models.propellants import components as propellant_components
+import machwave.common.decorators as decorators
+import machwave.models.propellants.categories as propellant_categories
+import machwave.models.propellants.components as propellant_components
 
 
-@timing
+@decorators.timing
 def main() -> None:
     lox = propellant_components.PropellantComponent(
         name="LOX",

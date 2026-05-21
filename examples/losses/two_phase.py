@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from machwave.core import losses
+import machwave.core.compressible_flow.losses as losses
 
 CHAMBER_PRESSURES = (
     150,

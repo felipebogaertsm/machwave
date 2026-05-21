@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core.geometric import get_circle_area
+import machwave.core.geometric as geometric
 
 from tests.factories import NozzleFactory
 
@@ -34,7 +34,7 @@ class TestNozzleGeometry:
 
     def test_outlet_area_equals_expansion_ratio_times_throat_area(self, nozzle):
         """A_exit / A_throat = ε by definition."""
-        A_exit = get_circle_area(nozzle.outlet_diameter)
+        A_exit = geometric.get_circle_area(nozzle.outlet_diameter)
         assert A_exit == pytest.approx(2.0268299164e-3, rel=1e-6)
 
     def test_outlet_diameter_scales_with_expansion_ratio(self):

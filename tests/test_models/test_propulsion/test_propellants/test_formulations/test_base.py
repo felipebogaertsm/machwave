@@ -2,15 +2,9 @@
 
 import pytest
 
-from machwave.models.propellants.categories import MixtureType
-from machwave.models.propellants.components import ComponentRole
-from machwave.models.propellants.formulations.base import (
-    _create_propellant,
-    _parse_component,
-    _parse_components,
-    _parse_mixture_type,
-    _parse_properties,
-)
+import machwave.models.propellants.categories as propellant_categories
+import machwave.models.propellants.components as propellant_components
+import machwave.models.propellants.formulations.base as formulations_base
 
 
 class TestParseMixtureType:
@@ -18,28 +12,28 @@ class TestParseMixtureType:
 
     def test_parse_solid_mixture_type(self):
         data = {"mixture_type": "solid"}
-        result = _parse_mixture_type(data)
-        assert result == MixtureType.SOLID
+        result = formulations_base._parse_mixture_type(data)
+        assert result == propellant_categories.MixtureType.SOLID
 
     def test_parse_biliquid_mixture_type(self):
         data = {"mixture_type": "biliquid"}
-        result = _parse_mixture_type(data)
-        assert result == MixtureType.BILIQUID
+        result = formulations_base._parse_mixture_type(data)
+        assert result == propellant_categories.MixtureType.BILIQUID
 
     def test_parse_uppercase_mixture_type(self):
         data = {"mixture_type": "SOLID"}
-        result = _parse_mixture_type(data)
-        assert result == MixtureType.SOLID
+        result = formulations_base._parse_mixture_type(data)
+        assert result == propellant_categories.MixtureType.SOLID
 
     def test_missing_mixture_type_raises_error(self):
         data = {}
         with pytest.raises(ValueError, match="must contain 'mixture_type'"):
-            _parse_mixture_type(data)
+            formulations_base._parse_mixture_type(data)
 
     def test_invalid_mixture_type_raises_error(self):
         data = {"mixture_type": "invalid"}
         with pytest.raises(ValueError, match="Invalid mixture_type"):
-            _parse_mixture_type(data)
+            formulations_base._parse_mixture_type(data)
 
 
 class TestParseComponent:
@@ -55,10 +49,10 @@ class TestParseComponent:
             "enthalpy": -494600.0,
             "temperature": 298.15,
         }
-        result = _parse_component(comp_data)
+        result = formulations_base._parse_component(comp_data)
 
         assert result.name == "KNO3"
-        assert result.role == ComponentRole.OXIDIZER
+        assert result.role == propellant_components.ComponentRole.OXIDIZER
         assert result.density == 2109.0
         assert result.chemical_formula == {"K": 1, "N": 1, "O": 3}
         assert result.enthalpy == -494600.0
@@ -73,10 +67,10 @@ class TestParseComponent:
             "chemical_formula": {"C": 1, "H": 1.95},
             "enthalpy": -23500.0,
         }
-        result = _parse_component(comp_data)
+        result = formulations_base._parse_component(comp_data)
 
         assert result.name == "RP1"
-        assert result.role == ComponentRole.FUEL
+        assert result.role == propellant_components.ComponentRole.FUEL
         assert result.density == 820.0
 
     def test_parse_additive_component(self):
@@ -88,8 +82,8 @@ class TestParseComponent:
             "chemical_formula": {"Al": 1},
             "enthalpy": 0.0,
         }
-        result = _parse_component(comp_data)
-        assert result.role == ComponentRole.ADDITIVE
+        result = formulations_base._parse_component(comp_data)
+        assert result.role == propellant_components.ComponentRole.ADDITIVE
 
     def test_parse_component_with_default_temperature(self):
         comp_data = {
@@ -100,7 +94,7 @@ class TestParseComponent:
             "chemical_formula": {"H": 2},
             "enthalpy": 0.0,
         }
-        result = _parse_component(comp_data)
+        result = formulations_base._parse_component(comp_data)
 
         assert result.initial_temperature == 298.15
 
@@ -114,7 +108,7 @@ class TestParseComponent:
             "enthalpy": -494600.0,
         }
         with pytest.raises(KeyError):
-            _parse_component(comp_data)
+            formulations_base._parse_component(comp_data)
 
     def test_invalid_role_raises_error(self):
         comp_data = {
@@ -124,7 +118,7 @@ class TestParseComponent:
             "density": 1000.0,
         }
         with pytest.raises(ValueError, match="Invalid component role"):
-            _parse_component(comp_data)
+            formulations_base._parse_component(comp_data)
 
     def test_missing_required_field_raises_error(self):
         comp_data = {
@@ -135,7 +129,7 @@ class TestParseComponent:
             # Missing mass_fraction and chemical_formula
         }
         with pytest.raises(KeyError):
-            _parse_component(comp_data)
+            formulations_base._parse_component(comp_data)
 
 
 class TestParseComponents:
@@ -143,8 +137,8 @@ class TestParseComponents:
 
     def test_parse_empty_components(self):
         data = {}
-        components, mass_fractions = _parse_components(
-            data, mixture_type=MixtureType.SOLID
+        components, mass_fractions = formulations_base._parse_components(
+            data, mixture_type=propellant_categories.MixtureType.SOLID
         )
         assert components == []
         assert mass_fractions == []
@@ -162,8 +156,8 @@ class TestParseComponents:
                 }
             ]
         }
-        components, mass_fractions = _parse_components(
-            data, mixture_type=MixtureType.SOLID
+        components, mass_fractions = formulations_base._parse_components(
+            data, mixture_type=propellant_categories.MixtureType.SOLID
         )
 
         assert len(components) == 1
@@ -191,8 +185,8 @@ class TestParseComponents:
                 },
             ]
         }
-        components, mass_fractions = _parse_components(
-            data, mixture_type=MixtureType.SOLID
+        components, mass_fractions = formulations_base._parse_components(
+            data, mixture_type=propellant_categories.MixtureType.SOLID
         )
 
         assert len(components) == 2
@@ -218,7 +212,7 @@ class TestParseProperties:
                 "qsi_exhaust": 0.0,
             }
         }
-        result = _parse_properties(data)
+        result = formulations_base._parse_properties(data)
 
         assert result is not None
         assert result.k_chamber == 1.24
@@ -229,7 +223,7 @@ class TestParseProperties:
 
     def test_parse_properties_when_absent(self):
         data = {}
-        result = _parse_properties(data)
+        result = formulations_base._parse_properties(data)
         assert result is None
 
     def test_missing_required_property_raises_error(self):
@@ -240,15 +234,13 @@ class TestParseProperties:
             }
         }
         with pytest.raises(KeyError):
-            _parse_properties(data)
+            formulations_base._parse_properties(data)
 
 
 class TestCreatePropellant:
     """Tests for _create_propellant function."""
 
     def test_create_solid_propellant(self):
-        from machwave.models.propellants.categories import SolidPropellant
-
         data = {
             "name": "Test Solid",
             "combustion_efficiency": 0.95,
@@ -258,18 +250,20 @@ class TestCreatePropellant:
         mass_fractions = []
         properties = None
 
-        result = _create_propellant(
-            MixtureType.SOLID, data, components, mass_fractions, properties
+        result = formulations_base._create_propellant(
+            propellant_categories.MixtureType.SOLID,
+            data,
+            components,
+            mass_fractions,
+            properties,
         )
 
-        assert isinstance(result, SolidPropellant)
+        assert isinstance(result, propellant_categories.SolidPropellant)
         assert result.name == "Test Solid"
         assert result.combustion_efficiency == 0.95
         assert len(result.burn_rate_map) == 1
 
     def test_create_biliquid_propellant(self):
-        from machwave.models.propellants.categories import BiliquidPropellant
-
         data = {
             "name": "Test Biliquid",
             "combustion_efficiency": 0.98,
@@ -279,29 +273,33 @@ class TestCreatePropellant:
         mass_fractions = None
         properties = None
 
-        result = _create_propellant(
-            MixtureType.BILIQUID, data, components, mass_fractions, properties
+        result = formulations_base._create_propellant(
+            propellant_categories.MixtureType.BILIQUID,
+            data,
+            components,
+            mass_fractions,
+            properties,
         )
 
-        assert isinstance(result, BiliquidPropellant)
+        assert isinstance(result, propellant_categories.BiliquidPropellant)
         assert result.name == "Test Biliquid"
         assert result.combustion_efficiency == 0.98
         assert result.oxidizer_to_fuel_ratio == 2.5
 
     def test_create_solid_with_default_efficiency(self):
-        from machwave.models.propellants.categories import SolidPropellant
-
         data = {"name": "Test"}
-        result = _create_propellant(MixtureType.SOLID, data, [], [], None)
+        result = formulations_base._create_propellant(
+            propellant_categories.MixtureType.SOLID, data, [], [], None
+        )
 
-        assert isinstance(result, SolidPropellant)
+        assert isinstance(result, propellant_categories.SolidPropellant)
         assert result.combustion_efficiency == 0.95
 
     def test_create_biliquid_with_default_efficiency(self):
-        from machwave.models.propellants.categories import BiliquidPropellant
-
         data = {"name": "Test"}
-        result = _create_propellant(MixtureType.BILIQUID, data, [], None, None)
+        result = formulations_base._create_propellant(
+            propellant_categories.MixtureType.BILIQUID, data, [], None, None
+        )
 
-        assert isinstance(result, BiliquidPropellant)
+        assert isinstance(result, propellant_categories.BiliquidPropellant)
         assert result.combustion_efficiency == 0.98

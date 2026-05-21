@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment2D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class WagonWheelGrainSegment(FMMGrainSegment2D):
+class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
     """Wagon-wheel grain segment with a central core and radial spoke ports."""
 
     def __init__(
@@ -17,7 +17,7 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         port_inner_diameter: float,
         port_outer_diameter: float,
         port_angular_width: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -52,38 +52,38 @@ class WagonWheelGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         if not self.number_of_ports > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of ports must be positive, got {self.number_of_ports}"
             )
         if not self.number_of_ports < 12:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of ports must be less than 12, got {self.number_of_ports}"
             )
         if not self.number_of_ports % 2 == 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of ports must be even, got {self.number_of_ports}"
             )
         if not isinstance(self.number_of_ports, int):
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of ports must be an integer, got {type(self.number_of_ports).__name__}"
             )
         if not self.port_inner_diameter > self.core_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port inner diameter ({self.port_inner_diameter}) must be greater than "
                 f"core diameter ({self.core_diameter})"
             )
         if not self.port_outer_diameter > self.port_inner_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port outer diameter ({self.port_outer_diameter}) must be greater than "
                 f"port inner diameter ({self.port_inner_diameter})"
             )
         if not self.port_angular_width > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port angular width must be positive, got {self.port_angular_width}"
             )
         max_angular_width = 360 / self.number_of_ports
         if not self.port_angular_width < max_angular_width:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port angular width ({self.port_angular_width}) must be less than "
                 f"{max_angular_width} (360 / {self.number_of_ports})"
             )

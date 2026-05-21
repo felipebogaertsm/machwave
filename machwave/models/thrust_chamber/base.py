@@ -2,11 +2,9 @@ import abc
 
 import numpy as np
 
-from machwave.models.thrust_chamber.combustion_chamber import (
-    CombustionChamber,
-)
-from machwave.models.thrust_chamber.injector import BipropellantInjector
-from machwave.models.thrust_chamber.nozzle import Nozzle
+import machwave.models.thrust_chamber.combustion_chamber as combustion_chamber_models
+import machwave.models.thrust_chamber.injector as injector_models
+import machwave.models.thrust_chamber.nozzle as nozzle_models
 
 
 class ThrustChamber(abc.ABC):
@@ -14,8 +12,8 @@ class ThrustChamber(abc.ABC):
 
     def __init__(
         self,
-        nozzle: Nozzle,
-        combustion_chamber: CombustionChamber,
+        nozzle: nozzle_models.Nozzle,
+        combustion_chamber: combustion_chamber_models.CombustionChamber,
         dry_mass: float,
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):
@@ -46,8 +44,8 @@ class SolidMotorThrustChamber(ThrustChamber):
 
     def __init__(
         self,
-        nozzle: Nozzle,
-        combustion_chamber: CombustionChamber,
+        nozzle: nozzle_models.Nozzle,
+        combustion_chamber: combustion_chamber_models.CombustionChamber,
         dry_mass: float,
         nozzle_exit_to_grain_port_distance: float,
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
@@ -77,9 +75,9 @@ class LiquidEngineThrustChamber(ThrustChamber):
 
     def __init__(
         self,
-        nozzle: Nozzle,
-        injector: BipropellantInjector,
-        combustion_chamber: CombustionChamber,
+        nozzle: nozzle_models.Nozzle,
+        injector: injector_models.BipropellantInjector,
+        combustion_chamber: combustion_chamber_models.CombustionChamber,
         dry_mass: float,
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):

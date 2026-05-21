@@ -2,9 +2,9 @@
 
 import pytest
 
-from machwave.models.grain import Grain
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.geometries import BatesSegment, StarGrainSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.geometries as grain_geometries
 
 
 def _bates(
@@ -13,8 +13,8 @@ def _bates(
     core_diameter: float = 0.030,
     length: float = 0.100,
     density_ratio: float = 1.0,
-) -> BatesSegment:
-    return BatesSegment(
+) -> grain_geometries.BatesSegment:
+    return grain_geometries.BatesSegment(
         outer_diameter=outer_diameter,
         core_diameter=core_diameter,
         length=length,
@@ -29,10 +29,10 @@ def _star(
     number_of_points: int = 5,
     point_length: float = 0.020,
     point_width: float = 0.010,
-    inhibited_surfaces: InhibitedSurfaces | None = None,
+    inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
     density_ratio: float = 1.0,
-) -> StarGrainSegment:
-    return StarGrainSegment(
+) -> grain_geometries.StarGrainSegment:
+    return grain_geometries.StarGrainSegment(
         outer_diameter=outer_diameter,
         length=length,
         number_of_points=number_of_points,
@@ -43,8 +43,8 @@ def _star(
     )
 
 
-def _grain(*segments) -> Grain:
-    grain = Grain()
+def _grain(*segments) -> grain_models.Grain:
+    grain = grain_models.Grain()
     for segment in segments:
         grain.add_segment(segment)
     return grain
@@ -52,7 +52,7 @@ def _grain(*segments) -> Grain:
 
 class TestGrainGetSegmentMismatches:
     def test_empty_grain(self):
-        assert Grain().get_segment_mismatches() == []
+        assert grain_models.Grain().get_segment_mismatches() == []
 
     def test_single_segment(self):
         assert _grain(_bates()).get_segment_mismatches() == []
@@ -79,7 +79,7 @@ class TestGrainGetSegmentMismatches:
         # the non-float equality branch.
         mismatches = _grain(
             _star(),
-            _star(inhibited_surfaces=InhibitedSurfaces(outer_surface=False)),
+            _star(inhibited_surfaces=grain_base.InhibitedSurfaces(outer_surface=False)),
         ).get_segment_mismatches()
 
         assert len(mismatches) == 1

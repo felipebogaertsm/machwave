@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from machwave.models.grain import InhibitedSurfaces
-from machwave.models.grain.geometries import ConicalGrainSegment, StarGrainSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 # ── shared geometry params ────────────────────────────────────────────────────
 
@@ -75,7 +75,9 @@ def _end_burning_cells(masked_face_3d, idx: int) -> int:
 
 def test_2d_outer_surface_inhibited_by_default():
     """Default config: outer surface IS inhibited → boundary ring = all propellant (1s)."""
-    seg = StarGrainSegment(**STAR_PARAMS)  # outer_surface=True by default
+    seg = grain_geometries.StarGrainSegment(
+        **STAR_PARAMS
+    )  # outer_surface=True by default
     mf = seg.get_masked_face()
 
     from scipy.ndimage import binary_erosion
@@ -90,8 +92,9 @@ def test_2d_outer_surface_inhibited_by_default():
 
 def test_2d_outer_surface_exposed():
     """OD=F → outer boundary ring must contain burning cells."""
-    seg = StarGrainSegment(
-        **STAR_PARAMS, inhibited_surfaces=InhibitedSurfaces(outer_surface=False)
+    seg = grain_geometries.StarGrainSegment(
+        **STAR_PARAMS,
+        inhibited_surfaces=grain_models.InhibitedSurfaces(outer_surface=False),
     )
     mf = seg.get_masked_face()
 
@@ -109,16 +112,16 @@ def test_2d_outer_surface_exposed():
 
 def test_2d_inner_surface_exposed_by_default():
     """Default config: inner surface NOT inhibited → bore pixels are burning (0)."""
-    seg = StarGrainSegment(**STAR_PARAMS)
+    seg = grain_geometries.StarGrainSegment(**STAR_PARAMS)
     mf = seg.get_masked_face()
     assert _burning_cells(mf) > 0, "Bore should be burning by default."
 
 
 def test_2d_inner_surface_inhibited():
     """ID=T → bore pixels are masked out, not burning."""
-    seg = StarGrainSegment(
+    seg = grain_geometries.StarGrainSegment(
         **STAR_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(inner_surface=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(inner_surface=True),
     )
     mf = seg.get_masked_face()
     # All unmasked region should be propellant (1), not bore
@@ -132,9 +135,11 @@ def test_2d_inner_surface_inhibited():
 
 def test_2d_outer_exposed_inner_inhibited():
     """OD=F, ID=T → outer boundary burns, bore is masked; they must not cancel each other."""
-    seg = StarGrainSegment(
+    seg = grain_geometries.StarGrainSegment(
         **STAR_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False, inner_surface=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
+            outer_surface=False, inner_surface=True
+        ),
     )
     mf = seg.get_masked_face()
 
@@ -155,9 +160,9 @@ def test_2d_outer_exposed_inner_inhibited():
 
 def test_3d_upper_end_exposed_by_default():
     """Default: UE=F → upper end slice has burning cells beyond the bore."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(outer_surface=False),
     )
     mf = seg.get_masked_face()
     assert _end_burning_cells(mf, -1) > 0, "Upper end should be burning by default."
@@ -165,9 +170,11 @@ def test_3d_upper_end_exposed_by_default():
 
 def test_3d_upper_end_inhibited():
     """UE=T → upper end slice has no burning cells beyond the bore."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False, upper_end=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
+            outer_surface=False, upper_end=True
+        ),
     )
     mf = seg.get_masked_face()
     assert _end_burning_cells(mf, -1) == 0, (
@@ -177,9 +184,9 @@ def test_3d_upper_end_inhibited():
 
 def test_3d_lower_end_exposed_by_default():
     """Default: LE=F → lower end slice has burning cells beyond the bore."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(outer_surface=False),
     )
     mf = seg.get_masked_face()
     assert _end_burning_cells(mf, 0) > 0, "Lower end should be burning by default."
@@ -187,9 +194,11 @@ def test_3d_lower_end_exposed_by_default():
 
 def test_3d_lower_end_inhibited():
     """LE=T → lower end slice has no burning cells beyond the bore."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False, lower_end=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
+            outer_surface=False, lower_end=True
+        ),
     )
     mf = seg.get_masked_face()
     assert _end_burning_cells(mf, 0) == 0, (
@@ -199,9 +208,9 @@ def test_3d_lower_end_inhibited():
 
 def test_3d_both_ends_inhibited():
     """UE=T, LE=T → neither end slice has burning cells beyond the bore."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
             outer_surface=False, upper_end=True, lower_end=True
         ),
     )
@@ -215,9 +224,11 @@ def test_3d_both_ends_inhibited():
 
 def test_3d_outer_exposed_upper_end_inhibited():
     """OD=F, UE=T → outer surface burns along the body; upper face does not."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False, upper_end=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
+            outer_surface=False, upper_end=True
+        ),
     )
     mf = seg.get_masked_face()
 
@@ -236,9 +247,11 @@ def test_3d_outer_exposed_upper_end_inhibited():
 
 def test_3d_outer_exposed_lower_end_inhibited():
     """OD=F, LE=T → outer surface burns along the body; lower face does not."""
-    seg = ConicalGrainSegment(
+    seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
-        inhibited_surfaces=InhibitedSurfaces(outer_surface=False, lower_end=True),
+        inhibited_surfaces=grain_models.InhibitedSurfaces(
+            outer_surface=False, lower_end=True
+        ),
     )
     mf = seg.get_masked_face()
 

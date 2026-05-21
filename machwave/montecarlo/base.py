@@ -6,10 +6,10 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.stats as scipy_stats
 
-from machwave.common.objects import get_object_dict
-from machwave.montecarlo import random
-from machwave.services.plots import montecarlo as plot_service
-from machwave.simulation import InternalBallisticsSimulation
+import machwave.common.objects as common_objects
+import machwave.montecarlo.random as random
+import machwave.services.plots.montecarlo as plot_service
+import machwave.simulation as machwave_simulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
 
@@ -59,7 +59,7 @@ class MonteCarloSimulation:
         self,
         parameters: list[typing.Any],
         number_of_scenarios: int,
-        simulation: type[InternalBallisticsSimulation],
+        simulation: type[machwave_simulation.InternalBallisticsSimulation],
     ) -> None:
         """
         Initialize a Monte Carlo driver.
@@ -106,7 +106,7 @@ class MonteCarloSimulation:
         """
         parameter_uuid = uuid.uuid4()
         self._object_store[parameter_uuid] = parameter
-        search_tree = {parameter_uuid: get_object_dict(parameter)}
+        search_tree = {parameter_uuid: common_objects.get_object_dict(parameter)}
 
         i = 0
         while search_tree and i < SEARCH_TREE_DEPTH_LIMIT:
@@ -124,11 +124,15 @@ class MonteCarloSimulation:
                             if isinstance(item, dict):
                                 continue
                             self._object_store[object_uuid] = item
-                            new_search_tree[object_uuid] = get_object_dict(item)
+                            new_search_tree[object_uuid] = (
+                                common_objects.get_object_dict(item)
+                            )
                     else:
                         object_uuid = uuid.uuid4()
                         self._object_store[object_uuid] = attr
-                        new_search_tree[object_uuid] = get_object_dict(attr)
+                        new_search_tree[object_uuid] = common_objects.get_object_dict(
+                            attr
+                        )
 
             search_tree = new_search_tree
 

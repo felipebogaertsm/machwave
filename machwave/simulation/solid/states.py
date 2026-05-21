@@ -10,14 +10,14 @@ import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
+import machwave.simulation.solid.results as solid_results
 import machwave.simulation.states as simulation_states
-from machwave.simulation.solid.results import SolidSimulationResult
 
 
 class SolidMotorState(simulation_states.MotorState):
     """State for a Solid Rocket Motor."""
 
-    result_class = SolidSimulationResult
+    result_class = solid_results.SolidSimulationResult
 
     def __init__(
         self,

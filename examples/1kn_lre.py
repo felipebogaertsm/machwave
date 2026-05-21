@@ -2,21 +2,13 @@
 Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 """
 
-from machwave import (
-    feed_systems,
-    motors,
-    propellants,
-    thrust_chamber as thrust_chamber_models,
-)
-from machwave.models.feed_systems import tanks
-from machwave.services.plots.internal_ballistics import (
-    plot_bipropellant_tank_profiles,
-    thrust_pressure_plot,
-)
-from machwave.simulation import (
-    InternalBallisticsSimulation,
-    InternalBallisticsSimulationParams,
-)
+import machwave.models.feed_systems as feed_systems
+import machwave.models.feed_systems.tanks as tanks
+import machwave.models.motors as motors_models
+import machwave.models.propellants as propellants
+import machwave.models.thrust_chamber as thrust_chamber_models
+import machwave.services.plots.internal_ballistics as internal_ballistics_plots
+import machwave.simulation as simulation_module
 
 FUEL_NAME = "Ethanol"
 OXIDIZER_NAME = "N2O"
@@ -93,7 +85,7 @@ def main():
         center_of_gravity_coordinate=(0.02, 0.0, 0.0),
     )
 
-    lre = motors.LiquidEngine(
+    lre = motors_models.LiquidEngine(
         propellant=propellant,
         feed_system=feed_system,
         thrust_chamber=thrust_chamber,
@@ -101,16 +93,20 @@ def main():
         fuel_tank_cog=0.4,
     )
 
-    sim_params = InternalBallisticsSimulationParams(
+    sim_params = simulation_module.InternalBallisticsSimulationParams(
         d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5, other_losses=0.12
     )
-    simulation = InternalBallisticsSimulation(motor=lre, params=sim_params)
+    simulation = simulation_module.InternalBallisticsSimulation(
+        motor=lre, params=sim_params
+    )
 
     result = simulation.run()
 
     result.report()
-    thrust_pressure_plot(result.time, result.thrust, result.chamber_pressure).show()
-    plot_bipropellant_tank_profiles(
+    internal_ballistics_plots.thrust_pressure_plot(
+        result.time, result.thrust, result.chamber_pressure
+    ).show()
+    internal_ballistics_plots.plot_bipropellant_tank_profiles(
         result.time,
         result.oxidizer_tank_pressure,
         result.fuel_tank_pressure,

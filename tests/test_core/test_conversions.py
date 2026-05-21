@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core import conversions
+import machwave.core.conversions as conversions
 
 
 @pytest.mark.parametrize(

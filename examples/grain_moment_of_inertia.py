@@ -9,10 +9,10 @@ trajectory modeling.
 
 import numpy as np
 
-from machwave.models.grain import Grain
-from machwave.models.grain.geometries.bates import BatesSegment
-from machwave.models.grain.geometries.conical import ConicalGrainSegment
-from machwave.models.grain.geometries.star import StarGrainSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries.bates as bates_geometry
+import machwave.models.grain.geometries.conical as conical_geometry
+import machwave.models.grain.geometries.star as star_geometry
 
 
 def print_inertia_tensor(moi: np.ndarray, title: str = "Moment of Inertia Tensor"):
@@ -36,7 +36,7 @@ def example_single_segment():
     print("EXAMPLE 1: Single BATES Segment")
     print("=" * 60)
 
-    segment = BatesSegment(
+    segment = bates_geometry.BatesSegment(
         outer_diameter=0.117,  # 117 mm
         core_diameter=0.045,  # 45 mm
         length=0.200,  # 200 mm
@@ -69,10 +69,10 @@ def example_multi_segment():
     print("EXAMPLE 2: Three-Segment Grain Assembly")
     print("=" * 60)
 
-    grain = Grain(spacing=0.010)  # 10 mm spacing
+    grain = grain_models.Grain(spacing=0.010)  # 10 mm spacing
 
     for i in range(3):
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.150,
@@ -104,10 +104,10 @@ def example_burn_progression():
     print("EXAMPLE 3: MOI Evolution During Burn")
     print("=" * 60)
 
-    grain = Grain(spacing=0.005)
+    grain = grain_models.Grain(spacing=0.005)
 
     for _ in range(2):
-        segment = BatesSegment(
+        segment = bates_geometry.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.200,
@@ -143,10 +143,10 @@ def example_asymmetric_grain():
     print("EXAMPLE 4: Asymmetric Grain (Different Density Ratios)")
     print("=" * 60)
 
-    grain = Grain(spacing=0.0)
+    grain = grain_models.Grain(spacing=0.0)
 
     # First segment: full density
-    segment1 = BatesSegment(
+    segment1 = bates_geometry.BatesSegment(
         outer_diameter=0.117,
         core_diameter=0.045,
         length=0.200,
@@ -154,7 +154,7 @@ def example_asymmetric_grain():
     )
 
     # Second segment: 80% density (damaged or intentionally lighter)
-    segment2 = BatesSegment(
+    segment2 = bates_geometry.BatesSegment(
         outer_diameter=0.117,
         core_diameter=0.045,
         length=0.200,
@@ -182,7 +182,7 @@ def example_2d_fmm_star_grain():
     print("EXAMPLE 5: 2D FMM Star Grain Segment")
     print("=" * 60)
 
-    star_segment = StarGrainSegment(
+    star_segment = star_geometry.StarGrainSegment(
         length=0.250,  # 250 mm
         outer_diameter=0.120,  # 120 mm
         number_of_points=5,
@@ -224,7 +224,7 @@ def example_3d_fmm_conical_grain():
     print("EXAMPLE 6: 3D FMM Conical Grain Segment")
     print("=" * 60)
 
-    conical_segment = ConicalGrainSegment(
+    conical_segment = conical_geometry.ConicalGrainSegment(
         length=0.300,  # 300 mm
         outer_diameter=0.130,  # 130 mm
         upper_core_diameter=0.040,  # 40 mm at top

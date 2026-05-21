@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models.propellants.formulations import solid as solid_propellants
+import machwave.models.grain as grain_models
+import machwave.models.motors as motors_models
+import machwave.models.propellants.formulations.solid as solid_propellants
 
 from tests.factories.feed_systems import StackedTankPressureFedFeedSystemFactory
 from tests.factories.grain import BatesSegmentFactory
@@ -19,7 +19,7 @@ class SolidMotorFactory:
     """Defaults to a single-segment BATES motor with KNDX propellant."""
 
     @classmethod
-    def build(cls, **overrides: Any) -> motors.SolidMotor:
+    def build(cls, **overrides: Any) -> motors_models.SolidMotor:
         grain = overrides.pop("grain", None)
         if grain is None:
             grain = grain_models.Grain()
@@ -37,14 +37,14 @@ class SolidMotorFactory:
             thrust_chamber=thrust_chamber,
         )
         kwargs.update(overrides)
-        return motors.SolidMotor(**kwargs)
+        return motors_models.SolidMotor(**kwargs)
 
 
 class LiquidEngineFactory:
     """Defaults to an N2O/Ethanol engine on a pressure-fed feed system."""
 
     @classmethod
-    def build(cls, **overrides: Any) -> motors.LiquidEngine:
+    def build(cls, **overrides: Any) -> motors_models.LiquidEngine:
         propellant = (
             overrides.pop("propellant", None) or BiliquidPropellantFactory.build()
         )
@@ -65,4 +65,4 @@ class LiquidEngineFactory:
             fuel_tank_cog=0.4,
         )
         kwargs.update(overrides)
-        return motors.LiquidEngine(**kwargs)
+        return motors_models.LiquidEngine(**kwargs)

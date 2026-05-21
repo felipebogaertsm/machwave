@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from machwave.core import interpolation
+import machwave.core.interpolation as interpolation
 
 
 def test_bounded_cubic_spline_returns_knot_values_at_knots():

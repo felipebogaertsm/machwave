@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from machwave.models.grain import geometries as grain_geometries
+import machwave.models.grain.geometries as grain_geometries
 
 
 class BatesSegmentFactory:

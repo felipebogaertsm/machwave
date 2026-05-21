@@ -1,7 +1,7 @@
 import numpy as np
 
-from machwave.models.grain import Grain
-from machwave.models.grain.geometries import BatesSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 class TestBatesGrainCenterOfGravity:
@@ -9,9 +9,9 @@ class TestBatesGrainCenterOfGravity:
 
     def test_single_segment_cog_position(self):
         """Test CoG with a single BATES segment of length 1.0m."""
-        grain = Grain(spacing=0.1)  # Spacing doesn't matter with 1 segment
+        grain = grain_models.Grain(spacing=0.1)  # Spacing doesn't matter with 1 segment
 
-        segment = BatesSegment(
+        segment = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -27,16 +27,16 @@ class TestBatesGrainCenterOfGravity:
 
     def test_two_segments_equal_length_with_spacing(self):
         """Test CoG with 2 BATES segments of length 1.0m each with 0.1m spacing."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
-        segment_1 = BatesSegment(
+        segment_1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment_2 = BatesSegment(
+        segment_2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -53,23 +53,23 @@ class TestBatesGrainCenterOfGravity:
 
     def test_three_segments_equal_length_with_spacing(self):
         """Test CoG with 3 BATES segments of length 1.0m each with 0.2m spacing."""
-        grain = Grain(spacing=0.2)
+        grain = grain_models.Grain(spacing=0.2)
 
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment3 = BatesSegment(
+        segment3 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -87,10 +87,10 @@ class TestBatesGrainCenterOfGravity:
 
     def test_three_segments_variable_length_with_spacing(self):
         """Test CoG with 3 BATES segments of different lengths with 0.2m spacing."""
-        grain = Grain(spacing=0.2)
+        grain = grain_models.Grain(spacing=0.2)
 
         # L1 = 1.0m
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -98,7 +98,7 @@ class TestBatesGrainCenterOfGravity:
         )
 
         # L2 = 2.0m
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=2.0,
@@ -106,7 +106,7 @@ class TestBatesGrainCenterOfGravity:
         )
 
         # L3 = 3.0m
-        segment3 = BatesSegment(
+        segment3 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=3.0,
@@ -139,10 +139,10 @@ class TestBatesGrainCenterOfGravity:
         Test CoG with 2 BATES segments of same length but different core
         diameters.
         """
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         # Segment 1: 45mm core diameter
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -150,7 +150,7 @@ class TestBatesGrainCenterOfGravity:
         )
 
         # Segment 2: 60mm core diameter (larger core = less propellant mass)
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=60e-3,
             length=1.0,
@@ -180,10 +180,10 @@ class TestBatesGrainCenterOfGravity:
         Test CoG with 2 BATES segments of same geometry but different
         densities.
         """
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         # Segment 1: full density
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -191,7 +191,7 @@ class TestBatesGrainCenterOfGravity:
         )
 
         # Segment 2: 70% density (e.g., foamed propellant)
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -223,16 +223,16 @@ class TestBatesGrainCenterOfGravity:
 
     def test_two_segments_zero_spacing(self):
         """Test CoG with 2 BATES segments with zero spacing (touching)."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -252,23 +252,23 @@ class TestBatesGrainCenterOfGravity:
         Test that CoG remains constant during burn for 3 identical BATES segments.
         BATES grains are symmetric, so CoG should not change as they burn.
         """
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
             density_ratio=1.0,
         )
 
-        segment3 = BatesSegment(
+        segment3 = grain_geometries.BatesSegment(
             outer_diameter=117e-3,
             core_diameter=45e-3,
             length=1.0,
@@ -303,10 +303,10 @@ class TestBatesGrainCenterOfGravity:
         Test CoG shift during burn with 2 segments of different web thickness.
         When the thinner segment burns out, CoG should be at center of remaining segment.
         """
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         # Segment 1: smaller web thickness (30mm core, wt ≈ 21.75mm)
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=73.5e-3,
             core_diameter=30e-3,
             length=1.0,
@@ -314,7 +314,7 @@ class TestBatesGrainCenterOfGravity:
         )
 
         # Segment 2: larger web thickness (15mm core, wt ≈ 29.25mm)
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=73.5e-3,
             core_diameter=15e-3,
             length=1.0,

@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment2D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class StarGrainSegment(FMMGrainSegment2D):
+class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
     """Star grain segment with a radial point pattern as the port."""
 
     def __init__(
@@ -15,7 +15,7 @@ class StarGrainSegment(FMMGrainSegment2D):
         number_of_points: int,
         point_length: float,
         point_width: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -46,23 +46,23 @@ class StarGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         if not self.number_of_points > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of points must be positive, got {self.number_of_points}"
             )
         if not self.number_of_points < 12:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of points must be less than 12, got {self.number_of_points}"
             )
         if not isinstance(self.number_of_points, int):
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Number of points must be an integer, got {type(self.number_of_points).__name__}"
             )
         if not self.point_length > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Point length must be positive, got {self.point_length}"
             )
         if not self.point_width > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Point width must be positive, got {self.point_width}"
             )
 

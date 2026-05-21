@@ -7,28 +7,29 @@ import warnings
 
 import numpy as np
 
-from machwave.models.motors import Motor
-from machwave.simulation import (
-    InternalBallisticsSimulation,
-    InternalBallisticsSimulationParams,
-    SimulationResult,
-)
+import machwave.models.motors as motors_models
+import machwave.simulation as machwave_simulation
 
 
 def run_simulation(
-    motor: Motor, params: InternalBallisticsSimulationParams
-) -> SimulationResult:
+    motor: motors_models.Motor,
+    params: machwave_simulation.InternalBallisticsSimulationParams,
+) -> machwave_simulation.SimulationResult:
     """
     Run InternalBallisticsSimulation end-to-end, suppressing the empirical
     boundary-layer-loss warning that otherwise floods test output.
     """
-    simulation = InternalBallisticsSimulation(motor=motor, params=params)
+    simulation = machwave_simulation.InternalBallisticsSimulation(
+        motor=motor, params=params
+    )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
         return simulation.run()
 
 
-def assert_recorded_arrays_aligned(result: SimulationResult) -> None:
+def assert_recorded_arrays_aligned(
+    result: machwave_simulation.SimulationResult,
+) -> None:
     """
     Every per-timestep series should have the same length as result.time.
 

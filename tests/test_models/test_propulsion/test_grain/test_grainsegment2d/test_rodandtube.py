@@ -1,14 +1,12 @@
 import pytest
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.geometries import (
-    RodAndTubeGrainSegment,
-)
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 def test_rodandtube_segment_geometry_validation():
     # Control group:
-    _ = RodAndTubeGrainSegment(
+    _ = grain_geometries.RodAndTubeGrainSegment(
         outer_diameter=100e-3,
         rod_outer_diameter=30e-3,
         tube_inner_diameter=40e-3,
@@ -16,8 +14,8 @@ def test_rodandtube_segment_geometry_validation():
     )
 
     # Negative rod outer diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = RodAndTubeGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.RodAndTubeGrainSegment(
             outer_diameter=100e-3,
             rod_outer_diameter=-30e-3,
             tube_inner_diameter=40e-3,
@@ -25,8 +23,8 @@ def test_rodandtube_segment_geometry_validation():
         )
 
     # Negative tube inner diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = RodAndTubeGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.RodAndTubeGrainSegment(
             outer_diameter=100e-3,
             rod_outer_diameter=30e-3,
             tube_inner_diameter=-40e-3,
@@ -34,8 +32,8 @@ def test_rodandtube_segment_geometry_validation():
         )
 
     # Rod outer diameter larger than tube inner diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = RodAndTubeGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.RodAndTubeGrainSegment(
             outer_diameter=100e-3,
             rod_outer_diameter=50e-3,
             tube_inner_diameter=40e-3,

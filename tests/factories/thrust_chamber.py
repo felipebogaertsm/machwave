@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from machwave.models import thrust_chamber as thrust_chamber_models
+import machwave.models.thrust_chamber as thrust_chamber_models
 
 
 class NozzleFactory:

@@ -11,8 +11,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from machwave.models import motors
-from machwave.simulation.liquid import LiquidEngineState, LiquidSimulationResult
+import machwave.models.motors as motors_models
+import machwave.simulation.liquid as liquid_simulation
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
@@ -21,35 +21,39 @@ from tests.test_simulations.conftest import (
 
 
 @pytest.fixture(scope="module")
-def simulated_motor_and_result() -> tuple[motors.LiquidEngine, LiquidSimulationResult]:
+def simulated_motor_and_result() -> tuple[
+    motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+]:
     motor, params = motor_builders.build_1kn_lre()
     return motor, run_simulation(motor, params)
 
 
 @pytest.fixture(scope="module")
 def simulation_result(
-    simulated_motor_and_result: tuple[motors.LiquidEngine, LiquidSimulationResult],
-) -> LiquidSimulationResult:
+    simulated_motor_and_result: tuple[
+        motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+    ],
+) -> liquid_simulation.LiquidSimulationResult:
     return simulated_motor_and_result[1]
 
 
 def test_simulation_completes_with_terminal_state(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
-    assert isinstance(simulation_result, LiquidSimulationResult)
+    assert isinstance(simulation_result, liquid_simulation.LiquidSimulationResult)
     assert simulation_result.end_thrust is True
     assert simulation_result.time.size > 1
 
 
 def test_thrust_time_is_finite_and_positive(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
     assert np.isfinite(simulation_result.thrust_time)
     assert simulation_result.thrust_time > 0.0
 
 
 def test_propellant_masses_are_monotone_non_increasing(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
     for series_name in ("fuel_mass", "oxidizer_mass", "propellant_mass"):
         series = getattr(simulation_result, series_name)
@@ -64,7 +68,7 @@ def test_propellant_masses_are_monotone_non_increasing(
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
     peak_pressure = float(np.max(simulation_result.chamber_pressure))
     peak_thrust = float(np.max(simulation_result.thrust))
@@ -79,14 +83,14 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
 
 
 def test_recorded_per_timestep_arrays_are_aligned(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
     assert_recorded_arrays_aligned(simulation_result)
 
 
-def _build_state_for_burnout_test() -> LiquidEngineState:
+def _build_state_for_burnout_test() -> liquid_simulation.LiquidEngineState:
     motor, params = motor_builders.build_1kn_lre()
-    return LiquidEngineState(
+    return liquid_simulation.LiquidEngineState(
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
@@ -115,7 +119,9 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 
 def test_live_mixture_ratio_drives_cea(
-    simulated_motor_and_result: tuple[motors.LiquidEngine, LiquidSimulationResult],
+    simulated_motor_and_result: tuple[
+        motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+    ],
 ) -> None:
     motor, simulation_result = simulated_motor_and_result
     propellant = motor.propellant
@@ -149,7 +155,7 @@ def test_live_mixture_ratio_drives_cea(
 
 
 def test_simulation_runs_through_burnout_without_crashing(
-    simulation_result: LiquidSimulationResult,
+    simulation_result: liquid_simulation.LiquidSimulationResult,
 ) -> None:
     assert simulation_result.end_thrust is True
     assert simulation_result.propellant_mass[-1] <= simulation_result.propellant_mass[0]

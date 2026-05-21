@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.core.geometric import get_circle_area
+import machwave.core.geometric as geometric
 
 
 class Nozzle:
@@ -55,4 +55,4 @@ class Nozzle:
 
     def get_throat_area(self) -> float:
         """Return the nozzle throat area [m^2]."""
-        return get_circle_area(self.throat_diameter)
+        return geometric.get_circle_area(self.throat_diameter)
