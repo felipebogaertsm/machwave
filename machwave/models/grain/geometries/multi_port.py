@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment2D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class MultiPortGrainSegment(FMMGrainSegment2D):
+class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
     """Grain segment with multiple circular ports arranged radially."""
 
     def __init__(
@@ -15,7 +15,7 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         port_diameter: float,
         port_radial_count: float,
         port_level_count: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -46,22 +46,22 @@ class MultiPortGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         if not self.port_diameter > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port diameter must be positive, got {self.port_diameter}"
             )
         if not self.port_level_count > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port level count must be positive, got {self.port_level_count}"
             )
         max_port_size = self.outer_diameter / 2
         total_port_size = self.port_level_count * self.port_diameter
         if not total_port_size < max_port_size:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Total port size ({total_port_size}) must be less than "
                 f"half the outer diameter ({max_port_size})"
             )
         if not self.port_radial_count > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Port radial count must be positive, got {self.port_radial_count}"
             )
 

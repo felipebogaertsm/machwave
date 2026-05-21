@@ -7,10 +7,7 @@ Provides classes representing the role and properties of each component.
 import dataclasses
 import enum
 
-from machwave.core.conversions import (
-    convert_joules_per_mol_to_cal_per_mol,
-    convert_kgm3_to_gcc,
-)
+import machwave.core.conversions as conversions
 
 
 class ComponentRole(enum.StrEnum):
@@ -53,8 +50,10 @@ class PropellantComponent:
             CEA format with name, formula, weight_percent,
             heat_of_formation (cal/mol), temperature [K], and density [g/cc].
         """
-        heat_of_formation_cal = convert_joules_per_mol_to_cal_per_mol(self.enthalpy)
-        density_gcc = convert_kgm3_to_gcc(self.density)
+        heat_of_formation_cal = conversions.convert_joules_per_mol_to_cal_per_mol(
+            self.enthalpy
+        )
+        density_gcc = conversions.convert_kgm3_to_gcc(self.density)
 
         return {
             "name": self.name,

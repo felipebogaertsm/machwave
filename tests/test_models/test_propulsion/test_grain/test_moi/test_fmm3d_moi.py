@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from machwave.models.grain import Grain
+import machwave.models.grain as grain_models
 from tests.test_models.test_propulsion.test_grain.test_moi.conftest import (
     fmm3d_geometries,
 )
@@ -138,7 +138,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_single_segment_grain_moi(self, segment_factory, geometry_name):
         """Test MOI for a grain with a single 3D segment."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
         segment = segment_factory(length=0.2, outer_diameter=0.1)
         grain.add_segment(segment)
 
@@ -156,7 +156,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_two_segments_equal_moi(self, segment_factory, geometry_name):
         """Test MOI for two identical 3D segments."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
         segment1 = segment_factory(length=0.2, outer_diameter=0.1)
         segment2 = segment_factory(length=0.2, outer_diameter=0.1)
 
@@ -180,7 +180,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_three_segments_with_spacing(self, segment_factory, geometry_name):
         """Test MOI for three 3D segments with spacing."""
-        grain = Grain(spacing=0.05)  # 50mm spacing
+        grain = grain_models.Grain(spacing=0.05)  # 50mm spacing
 
         for _ in range(3):
             segment = segment_factory(length=0.2, outer_diameter=0.1)
@@ -198,7 +198,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
         self, segment_factory, geometry_name
     ):
         """Test that total MOI decreases as multi-segment grain burns."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
         for _ in range(2):
             segment = segment_factory(length=0.2, outer_diameter=0.1)
@@ -224,14 +224,14 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
         ideal_density = 1800.0
 
         # Grain with no spacing
-        grain_no_spacing = Grain(spacing=0.0)
+        grain_no_spacing = grain_models.Grain(spacing=0.0)
         segment1 = segment_factory(length=0.2, outer_diameter=0.1)
         segment2 = segment_factory(length=0.2, outer_diameter=0.1)
         grain_no_spacing.add_segment(segment1)
         grain_no_spacing.add_segment(segment2)
 
         # Grain with spacing
-        grain_with_spacing = Grain(spacing=0.1)
+        grain_with_spacing = grain_models.Grain(spacing=0.1)
         segment3 = segment_factory(length=0.2, outer_diameter=0.1)
         segment4 = segment_factory(length=0.2, outer_diameter=0.1)
         grain_with_spacing.add_segment(segment3)
@@ -255,7 +255,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_parallel_axis_theorem_validation(self, segment_factory, geometry_name):
         """Validate that parallel axis theorem is correctly applied in multi-segment grain."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         # Create two segments
         segment1 = segment_factory(length=0.2, outer_diameter=0.1)

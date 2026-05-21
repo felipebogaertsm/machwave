@@ -5,26 +5,30 @@ from typing import IO, TYPE_CHECKING, Any
 
 import numpy as np
 
-from machwave.simulation.results import SimulationResult, SimulationResultArray
+import machwave.simulation.results as simulation_results
 
 if TYPE_CHECKING:
-    from machwave.simulation.liquid.states import LiquidEngineState
+    import machwave.simulation.liquid.states as liquid_states
 
 
 @dataclass(frozen=True, kw_only=True)
-class LiquidSimulationResult(SimulationResult["LiquidEngineState"]):
+class LiquidSimulationResult(
+    simulation_results.SimulationResult["liquid_states.LiquidEngineState"]
+):
     """Simulation result for a liquid engine run."""
 
-    oxidizer_mass: SimulationResultArray
-    fuel_mass: SimulationResultArray
-    nozzle_correction_factor: SimulationResultArray
-    fuel_tank_pressure: SimulationResultArray
-    oxidizer_tank_pressure: SimulationResultArray
+    oxidizer_mass: simulation_results.SimulationResultArray
+    fuel_mass: simulation_results.SimulationResultArray
+    nozzle_correction_factor: simulation_results.SimulationResultArray
+    fuel_tank_pressure: simulation_results.SimulationResultArray
+    oxidizer_tank_pressure: simulation_results.SimulationResultArray
     final_oxidizer_mass: float
     final_fuel_mass: float
 
     @classmethod
-    def _collect_extra_fields(cls, state: "LiquidEngineState") -> dict[str, Any]:
+    def _collect_extra_fields(
+        cls, state: "liquid_states.LiquidEngineState"
+    ) -> dict[str, Any]:
         oxidizer_mass = np.asarray(state.oxidizer_mass)
         fuel_mass = np.asarray(state.fuel_mass)
         return {

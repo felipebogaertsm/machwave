@@ -9,11 +9,11 @@ import numpy as np
 import numpy.typing as npt
 
 import machwave.core.performance as performance
-from machwave.simulation.states import MotorState
+import machwave.simulation.states as simulation_states
 
 SimulationResultArray: TypeAlias = npt.NDArray[np.float64]
 
-StateT = TypeVar("StateT", bound=MotorState)
+StateT = TypeVar("StateT", bound=simulation_states.MotorState)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -3,18 +3,16 @@ Example for the Kappa motor, developed by Richard Nakka.
 https://www.nakka-rocketry.net/kappa.html
 """
 
-from machwave import (
-    formulations,
-    grain as grain_models,
-    motors,
-    simulation,
-    thrust_chamber as thrust_chamber_models,
-)
-from machwave.common.decorators import timing
-from machwave.services.plots import internal_ballistics as internal_ballistics_plots
+import machwave.common.decorators as decorators
+import machwave.models.grain as grain_models
+import machwave.models.motors as motors_models
+import machwave.models.propellants.formulations as formulations
+import machwave.models.thrust_chamber as thrust_chamber_models
+import machwave.services.plots.internal_ballistics as internal_ballistics_plots
+import machwave.simulation as simulation
 
 
-@timing
+@decorators.timing
 def main():
     propellant = formulations.solid.KNDX
 
@@ -52,7 +50,7 @@ def main():
         center_of_gravity_coordinate=(0.035, 0.0, 0.0),
     )
 
-    motor = motors.SolidMotor(
+    motor = motors_models.SolidMotor(
         grain=grain, propellant=propellant, thrust_chamber=thrust_chamber
     )
 

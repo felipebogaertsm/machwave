@@ -5,9 +5,7 @@ import math
 import pytest
 import scipy.constants
 
-from machwave.models.propellants.properties import (
-    ThermochemicalProperties,
-)
+import machwave.models.propellants.properties as propellant_properties
 from tests.factories import (
     LiquidPropellantPropertiesFactory,
     SolidPropellantPropertiesFactory,
@@ -21,7 +19,7 @@ class TestThermochemicalPropertiesBasics:
         """Test that properties can be instantiated and are immutable."""
         props = SolidPropellantPropertiesFactory.build()
 
-        assert isinstance(props, ThermochemicalProperties)
+        assert isinstance(props, propellant_properties.ThermochemicalProperties)
 
         with pytest.raises(AttributeError):
             props.k_chamber = 1.5
@@ -70,7 +68,7 @@ class TestInputValidation:
         base_data["k_chamber"] = 0.9  # Below minimum
 
         with pytest.raises(ValueError, match="outside valid range"):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
     def test_invalid_molecular_weight_raises_error(self):
         """Test that molecular weight outside valid range raises ValueError."""
@@ -78,7 +76,7 @@ class TestInputValidation:
         base_data["molecular_weight_chamber"] = 0.0  # At minimum (exclusive)
 
         with pytest.raises(ValueError, match="outside valid range"):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
     def test_invalid_temperature_raises_error(self):
         """Test that temperature outside valid range raises ValueError."""
@@ -86,7 +84,7 @@ class TestInputValidation:
         base_data["adiabatic_flame_temperature"] = -100.0  # Below minimum
 
         with pytest.raises(ValueError, match="outside valid range"):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
     def test_invalid_isp_raises_error(self):
         """Test that specific impulse outside valid range raises ValueError."""
@@ -94,7 +92,7 @@ class TestInputValidation:
         base_data["i_sp_frozen"] = 700.0  # Above maximum
 
         with pytest.raises(ValueError, match="outside valid range"):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
     def test_invalid_qsi_raises_error(self):
         """Test that qsi outside valid range raises ValueError."""
@@ -102,7 +100,7 @@ class TestInputValidation:
         base_data["qsi_chamber"] = 1.5  # Above maximum
 
         with pytest.raises(ValueError, match="outside valid range"):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
     def test_shifting_less_than_frozen_raises_error(self):
         """Test that i_sp_shifting < i_sp_frozen raises ValueError."""
@@ -111,7 +109,7 @@ class TestInputValidation:
         base_data["i_sp_shifting"] = 290.0  # Less than frozen
 
         with pytest.raises(ValueError, match="must be >="):
-            ThermochemicalProperties(**base_data)
+            propellant_properties.ThermochemicalProperties(**base_data)
 
 
 class TestSolidPropellantBehavior:

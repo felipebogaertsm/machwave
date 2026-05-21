@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core.incompressible_flow import get_mass_flow_orifice
+import machwave.core.incompressible_flow as incompressible_flow
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ def test_get_mass_flow_orifice(
     pressure_downstream,
     expected,
 ):
-    mass_flow = get_mass_flow_orifice(
+    mass_flow = incompressible_flow.get_mass_flow_orifice(
         discharge_coefficient,
         area,
         density,
@@ -36,7 +36,7 @@ def test_get_mass_flow_orifice_raises_value_error():
     with pytest.raises(
         ValueError, match="Pressure downstream cannot be greater than upstream"
     ):
-        get_mass_flow_orifice(
+        incompressible_flow.get_mass_flow_orifice(
             discharge_coefficient=0.8,
             area=0.001,
             density=1000,

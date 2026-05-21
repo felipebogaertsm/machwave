@@ -2,12 +2,9 @@ import itertools
 
 import numpy as np
 
-from machwave.models import grain
-from machwave.models.grain import geometries
-from machwave.services.plots.fmm import (
-    plot_2d_face_map_animated,
-    plot_3d_face_map_animated,
-)
+import machwave.models.grain as grain
+import machwave.models.grain.geometries as geometries
+import machwave.services.plots.fmm as fmm_plots
 
 
 STAR_GRAIN_PARAMS = dict(
@@ -36,14 +33,14 @@ def _collect_face_maps(segment, n_steps: int = 20):
 
 def _show_2d(label: str, segment) -> None:
     face_maps, web_distances = _collect_face_maps(segment)
-    fig = plot_2d_face_map_animated(face_maps, web_distances)
+    fig = fmm_plots.plot_2d_face_map_animated(face_maps, web_distances)
     fig.update_layout(title=label)
     fig.show()
 
 
 def _show_3d(label: str, segment) -> None:
     face_maps, web_distances = _collect_face_maps(segment)
-    fig = plot_3d_face_map_animated(face_maps, web_distances)
+    fig = fmm_plots.plot_3d_face_map_animated(face_maps, web_distances)
     fig.update_layout(title=label)
     fig.show()
 

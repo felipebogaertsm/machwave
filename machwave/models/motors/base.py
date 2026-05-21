@@ -3,14 +3,12 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-from machwave.core.compressible_flow.nozzle import (
-    get_thrust_from_thrust_coefficient,
-)
-from machwave.models.propellants import Propellant
-from machwave.models.thrust_chamber import ThrustChamber
+import machwave.core.compressible_flow.nozzle as nozzle_core
+import machwave.models.propellants as propellants
+import machwave.models.thrust_chamber as thrust_chamber_models
 
-P = TypeVar("P", bound=Propellant)
-T = TypeVar("T", bound=ThrustChamber)
+P = TypeVar("P", bound=propellants.Propellant)
+T = TypeVar("T", bound=thrust_chamber_models.ThrustChamber)
 
 
 class Motor(Generic[P, T], ABC):
@@ -74,7 +72,7 @@ class Motor(Generic[P, T], ABC):
         Returns:
             Instantaneous thrust [N].
         """
-        return get_thrust_from_thrust_coefficient(
+        return nozzle_core.get_thrust_from_thrust_coefficient(
             cf,
             chamber_pressure,
             self.thrust_chamber.nozzle.get_throat_area(),

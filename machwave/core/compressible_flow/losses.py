@@ -13,7 +13,7 @@ References:
 
 import numpy as np
 
-from machwave.common import decorators
+import machwave.common.decorators as decorators
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 

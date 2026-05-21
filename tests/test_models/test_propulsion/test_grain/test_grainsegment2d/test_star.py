@@ -1,12 +1,12 @@
 import pytest
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.geometries import StarGrainSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 def test_star_segment_geometry_validation():
     # Control group:
-    _ = StarGrainSegment(
+    _ = grain_geometries.StarGrainSegment(
         outer_diameter=41e-3,
         length=0.5,
         number_of_points=5,
@@ -15,8 +15,8 @@ def test_star_segment_geometry_validation():
     )
 
     # Negative number of points:
-    with pytest.raises(GrainGeometryError):
-        _ = StarGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.StarGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             number_of_points=-5,
@@ -25,8 +25,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Too many points:
-    with pytest.raises(GrainGeometryError):
-        _ = StarGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.StarGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             number_of_points=13,
@@ -35,8 +35,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Negative point length:
-    with pytest.raises(GrainGeometryError):
-        _ = StarGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.StarGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             number_of_points=5,
@@ -45,8 +45,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Negative point width:
-    with pytest.raises(GrainGeometryError):
-        _ = StarGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.StarGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             number_of_points=5,

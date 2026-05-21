@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment3D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class ConicalGrainSegment(FMMGrainSegment3D):
+class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
     """Grain segment with a conical port tapering between two diameters."""
 
     def __init__(
@@ -14,7 +14,7 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         outer_diameter: float,
         upper_core_diameter: float,
         lower_core_diameter: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -43,20 +43,20 @@ class ConicalGrainSegment(FMMGrainSegment3D):
         super().validate()
 
         if not self.upper_core_diameter > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Upper core diameter must be positive, got {self.upper_core_diameter}"
             )
         if not self.upper_core_diameter < self.outer_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Upper core diameter ({self.upper_core_diameter}) must be less than "
                 f"outer diameter ({self.outer_diameter})"
             )
         if not self.lower_core_diameter > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Lower core diameter must be positive, got {self.lower_core_diameter}"
             )
         if not self.lower_core_diameter < self.outer_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Lower core diameter ({self.lower_core_diameter}) must be less than "
                 f"outer diameter ({self.outer_diameter})"
             )

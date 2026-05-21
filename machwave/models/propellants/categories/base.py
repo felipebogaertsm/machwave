@@ -4,10 +4,10 @@ import abc
 import enum
 import functools
 
-from machwave.services import cea as cea_service
+import machwave.services.cea as cea_service
 
-from ..components import PropellantComponent
-from ..properties import ThermochemicalProperties
+from .. import components as propellant_components
+from .. import properties as propellant_properties
 
 
 class PropellantValidationError(Exception):
@@ -38,7 +38,7 @@ class Propellant(abc.ABC):
     def __init__(
         self,
         name: str,
-        components: list[PropellantComponent] | None = None,
+        components: list[propellant_components.PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
     ):
         """
@@ -89,7 +89,7 @@ class Propellant(abc.ABC):
         chamber_pressure: float,
         expansion_ratio: float = 8.0,
         mixture_ratio: float | None = None,
-    ) -> ThermochemicalProperties:
+    ) -> propellant_properties.ThermochemicalProperties:
         """
         Evaluate thermochemical properties at given conditions.
 
@@ -134,7 +134,7 @@ class Propellant(abc.ABC):
             mixture_ratio=mixture_ratio,
         )
 
-        properties = ThermochemicalProperties(
+        properties = propellant_properties.ThermochemicalProperties(
             k_chamber=k_chamber,
             k_exhaust=k_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,

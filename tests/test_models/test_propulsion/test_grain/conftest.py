@@ -2,7 +2,7 @@
 
 import pytest
 
-from machwave.models.grain import Grain
+import machwave.models.grain as grain_models
 
 from tests.factories import BatesSegmentFactory
 
@@ -27,7 +27,7 @@ def bates_segment_olympus_60():
 
 @pytest.fixture
 def bates_grain_olympus(bates_segment_olympus_45, bates_segment_olympus_60):
-    grain = Grain(spacing=10e-3)
+    grain = grain_models.Grain(spacing=10e-3)
     for _ in range(4):
         grain.add_segment(bates_segment_olympus_45)
     for _ in range(3):

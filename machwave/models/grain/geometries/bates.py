@@ -1,17 +1,14 @@
 import numpy as np
 
-from machwave.core.geometric import (
-    get_circle_area,
-    get_cylinder_surface_area,
-)
-from machwave.models.grain import GrainGeometryError, GrainSegment2D
-from machwave.models.grain.base import InhibitedSurfaces
+import machwave.core.geometric as geometric
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
 
 
-class BatesSegment(GrainSegment2D):
+class BatesSegment(grain.GrainSegment2D):
     """BATES grain segment: cylindrical with circular central port."""
 
-    INHIBITED_SURFACES = InhibitedSurfaces(
+    INHIBITED_SURFACES = grain_base.InhibitedSurfaces(
         outer_surface=True,
         inner_surface=False,
         upper_end=False,
@@ -48,12 +45,12 @@ class BatesSegment(GrainSegment2D):
         super().validate()
 
         if not self.outer_diameter > self.core_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Outer diameter ({self.outer_diameter}) must be greater than "
                 f"core diameter ({self.core_diameter})"
             )
         if not self.core_diameter > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Core diameter must be positive, got {self.core_diameter}"
             )
 
@@ -63,13 +60,13 @@ class BatesSegment(GrainSegment2D):
 
     def get_port_area(self, web_distance: float) -> float:
         """Return the port area at a given web distance [m^2]."""
-        return get_circle_area(diameter=self.get_core_diameter(web_distance))
+        return geometric.get_circle_area(diameter=self.get_core_diameter(web_distance))
 
     def get_core_area(self, web_distance: float) -> float:
         """Return the core (inner cylindrical) surface area [m^2]."""
         length = self.get_length(web_distance=web_distance)
         core_diameter = self.core_diameter + 2 * web_distance
-        return get_cylinder_surface_area(length, core_diameter)
+        return geometric.get_cylinder_surface_area(length, core_diameter)
 
     def get_face_area(self, web_distance: float) -> float:
         """Return the annular face area at a given web distance [m^2]."""

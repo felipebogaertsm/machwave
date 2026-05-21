@@ -3,10 +3,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
-from machwave.models.motors import Motor
+import machwave.models.motors as motors
 
 if TYPE_CHECKING:
-    from machwave.simulation.results import SimulationResult
+    import machwave.simulation.results as simulation_results
 
 SimulationStateArray: TypeAlias = list[float]
 
@@ -14,11 +14,11 @@ SimulationStateArray: TypeAlias = list[float]
 class MotorState(ABC):
     """Defines the states and iteration step for a motor operation."""
 
-    result_class: ClassVar[type["SimulationResult"]]
+    result_class: ClassVar[type["simulation_results.SimulationResult"]]
 
     def __init__(
         self,
-        motor: Motor,
+        motor: motors.Motor,
         igniter_pressure: float,
         external_pressure: float,
         other_losses: float,
@@ -60,7 +60,7 @@ class MotorState(ABC):
     def run_timestep(self, *args, **kwargs) -> None:
         """Advance the per-step accumulators by one time increment."""
 
-    def build_result(self) -> "SimulationResult":
+    def build_result(self) -> "simulation_results.SimulationResult":
         """Return a frozen ``SimulationResult`` snapshot of this state."""
         return self.result_class.from_state(self)
 

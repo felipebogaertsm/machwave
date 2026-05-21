@@ -2,17 +2,17 @@
 
 import typing
 
-from machwave.adapters.rocketpy.base import RocketPyMotorAdapter
-from machwave.models.grain.geometries import BatesSegment
+import machwave.adapters.rocketpy.base as rocketpy_base
+import machwave.models.grain.geometries as grain_geometries
 
 if typing.TYPE_CHECKING:
-    from machwave.models.motors import SolidMotor
-    from machwave.simulation.solid.results import (
-        SolidSimulationResult,  # noqa: F401
-    )
+    import machwave.models.motors as motors_models  # noqa: F401
+    import machwave.simulation.solid.results as solid_results  # noqa: F401
 
 
-class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
+class RocketPySolidMotorAdapter(
+    rocketpy_base.RocketPyMotorAdapter["solid_results.SolidSimulationResult"]
+):
     """Adapter to use a simulation result and motor as a RocketPy SolidMotor."""
 
     _rocketpy_motor_class = "SolidMotor"
@@ -29,7 +29,7 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
         """
         base_attrs = super()._get_rocketpy_attributes()
 
-        motor = typing.cast("SolidMotor", self.motor)
+        motor = typing.cast("motors_models.SolidMotor", self.motor)
         grain = motor.grain
 
         if not grain.segments:
@@ -47,7 +47,7 @@ class RocketPySolidMotorAdapter(RocketPyMotorAdapter["SolidSimulationResult"]):
         first_segment = grain.segments[0]
 
         # RocketPy's SolidMotor only supports a BATES geometry
-        if not isinstance(first_segment, BatesSegment):
+        if not isinstance(first_segment, grain_geometries.BatesSegment):
             raise ValueError(
                 "RocketPy SolidMotor only supports BATES grain geometry, got "
                 f"{type(first_segment).__name__}"

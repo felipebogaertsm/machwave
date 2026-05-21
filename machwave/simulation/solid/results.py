@@ -6,40 +6,48 @@ from typing import IO, TYPE_CHECKING, Any
 import numpy as np
 
 import machwave.core.conversions as conversions
-from machwave.simulation.results import SimulationResult, SimulationResultArray
+import machwave.simulation.results as simulation_results
 
 if TYPE_CHECKING:
-    from machwave.simulation.solid.states import SolidMotorState
+    import machwave.simulation.solid.states as solid_states
 
 
 @dataclass(frozen=True, kw_only=True)
-class SolidSimulationResult(SimulationResult["SolidMotorState"]):
+class SolidSimulationResult(
+    simulation_results.SimulationResult["solid_states.SolidMotorState"]
+):
     """Simulation result for a solid motor run."""
 
-    free_chamber_volume: SimulationResultArray
-    web: SimulationResultArray
-    burn_area: SimulationResultArray
-    propellant_volume: SimulationResultArray
-    burn_rate: SimulationResultArray
-    divergent_loss: SimulationResultArray
-    kinetics_loss: SimulationResultArray
-    boundary_layer_loss: SimulationResultArray
-    two_phase_loss: SimulationResultArray
-    nozzle_efficiency: SimulationResultArray
-    overall_efficiency: SimulationResultArray
-    propellant_cog: SimulationResultArray
-    propellant_moi: SimulationResultArray
+    free_chamber_volume: simulation_results.SimulationResultArray
+    web: simulation_results.SimulationResultArray
+    burn_area: simulation_results.SimulationResultArray
+    propellant_volume: simulation_results.SimulationResultArray
+    burn_rate: simulation_results.SimulationResultArray
+    divergent_loss: simulation_results.SimulationResultArray
+    kinetics_loss: simulation_results.SimulationResultArray
+    boundary_layer_loss: simulation_results.SimulationResultArray
+    two_phase_loss: simulation_results.SimulationResultArray
+    nozzle_efficiency: simulation_results.SimulationResultArray
+    overall_efficiency: simulation_results.SimulationResultArray
+    propellant_cog: simulation_results.SimulationResultArray
+    propellant_moi: simulation_results.SimulationResultArray
     # klemmung is filtered to burn_area > 0, so its length is < len(time).
-    klemmung: SimulationResultArray = field(metadata={"non_aligned": True})
+    klemmung: simulation_results.SimulationResultArray = field(
+        metadata={"non_aligned": True}
+    )
     # grain_mass_flux is shaped [segment_count, time_count]; axis 0 is segments.
-    grain_mass_flux: SimulationResultArray = field(metadata={"non_aligned": True})
+    grain_mass_flux: simulation_results.SimulationResultArray = field(
+        metadata={"non_aligned": True}
+    )
     initial_to_final_klemmung_ratio: float
     volumetric_efficiency: float
     burn_profile: str
     max_mass_flux: float
 
     @classmethod
-    def _collect_extra_fields(cls, state: "SolidMotorState") -> dict[str, Any]:
+    def _collect_extra_fields(
+        cls, state: "solid_states.SolidMotorState"
+    ) -> dict[str, Any]:
         motor = state.motor
         nozzle = motor.thrust_chamber.nozzle
         chamber_volume = motor.thrust_chamber.combustion_chamber.internal_volume
@@ -84,8 +92,8 @@ class SolidSimulationResult(SimulationResult["SolidMotorState"]):
 
     @staticmethod
     def _get_klemmung(
-        burn_area: SimulationResultArray, throat_area: float
-    ) -> SimulationResultArray:
+        burn_area: simulation_results.SimulationResultArray, throat_area: float
+    ) -> simulation_results.SimulationResultArray:
         """
         Return Klemmung (Kn) over non-zero burn-area samples.
 
@@ -96,7 +104,7 @@ class SolidSimulationResult(SimulationResult["SolidMotorState"]):
 
     @staticmethod
     def _classify_burn_profile(
-        klemmung: SimulationResultArray, deviancy: float = 0.02
+        klemmung: simulation_results.SimulationResultArray, deviancy: float = 0.02
     ) -> str:
         """
         Classify a burn profile as "regressive", "progressive", or "neutral".

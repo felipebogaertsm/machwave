@@ -6,19 +6,16 @@ from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
-from machwave.core.geometric import get_circle_area
-from machwave.core.mechanics import (
-    get_center_of_gravity,
-    get_moment_of_inertia_tensor,
-)
-from machwave.models.grain import GrainGeometryError, GrainSegment2D
-from machwave.models.grain.base import InhibitedSurfaces
+import machwave.core.geometric as geometric
+import machwave.core.mechanics as mechanics
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
 
-from .base import FMMGrainSegment
-from .contours import get_contours, get_length
+from . import base as fmm_base
+from . import contours as fmm_contours
 
 
-class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
+class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
     """
     Fast Marching Method (FMM) implementation for 2D grain segment.
 
@@ -31,7 +28,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
@@ -84,12 +81,12 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         Each contour is typically an `(N, 2)` array of `(row, col)` points.
         """
         map_dist = self.normalize(web_distance)
-        return get_contours(self.get_regression_map(), map_dist)
+        return fmm_contours.get_contours(self.get_regression_map(), map_dist)
 
     def get_port_area(self, web_distance: float) -> float:
         """Return the open cross-sectional port area [m^2]."""
         face_area = self.get_face_area(web_distance)
-        return get_circle_area(self.outer_diameter) - face_area
+        return geometric.get_circle_area(self.outer_diameter) - face_area
 
     def get_face_area_interp_func(self) -> Callable[[float], float]:
         """Return an interpolator mapping normalized web distance to face area [m^2]."""
@@ -162,10 +159,12 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
             perimeter_values = np.empty_like(distances, dtype=np.float64)
             for i, dist in enumerate(distances):
-                contours = get_contours(regression_map, float(dist))
+                contours = fmm_contours.get_contours(regression_map, float(dist))
                 perimeter_values[i] = float(
                     sum(
-                        self.map_to_length(get_length(contour, self.map_dim))
+                        self.map_to_length(
+                            fmm_contours.get_length(contour, self.map_dim)
+                        )
                         for contour in contours
                     )
                 )
@@ -214,7 +213,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         contours = self.get_contours(web_distance)
         return float(
             sum(
-                self.map_to_length(get_length(contour, self.map_dim))
+                self.map_to_length(fmm_contours.get_length(contour, self.map_dim))
                 for contour in contours
             )
         )
@@ -235,7 +234,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
             GrainGeometryError: If web distance exceeds web thickness.
         """
         if web_distance > self.get_web_thickness():
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 "The web distance traveled is greater than the grain segment's web thickness."
             )
 
@@ -259,7 +258,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         y_indices, x_indices = np.where(mask)
 
         if len(x_indices) == 0 or len(y_indices) == 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 "No active material found at the given web distance."
             )
 
@@ -308,7 +307,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
 
         z_phys = np.full_like(x_phys, axial_cog)
 
-        return get_center_of_gravity(x_phys, y_phys, z_phys)
+        return mechanics.get_center_of_gravity(x_phys, y_phys, z_phys)
 
     def get_moment_of_inertia(
         self, ideal_density: float, web_distance: float = 0.0
@@ -349,7 +348,7 @@ class FMMGrainSegment2D(FMMGrainSegment, GrainSegment2D, ABC):
         element_mass = total_mass / n_elements
 
         # Get base inertia from point masses (radial only)
-        moi = get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)
+        moi = mechanics.get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)
 
         # For 2D grain (uniform along axial direction), add axial contribution
         # For a uniform rod of length L with mass M: I_axial = M*L^2/12 (about CoG)

@@ -1,9 +1,9 @@
-from machwave.core.incompressible_flow import get_mass_flow_orifice
-from machwave.models.feed_systems.base import FeedSystem
-from machwave.models.feed_systems.tanks import Tank
+import machwave.core.incompressible_flow as incompressible_flow
+import machwave.models.feed_systems.base as feed_system_base
+import machwave.models.feed_systems.tanks as tanks
 
 
-class StackedTankPressureFedFeedSystem(FeedSystem):
+class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     """
     Represents a bipropellant liquid rocket engine feed system with stacked tanks.
 
@@ -17,8 +17,8 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         oxidizer_line_length: float,
         fuel_line_diameter: float,
         fuel_line_length: float,
-        fuel_tank: Tank,
-        oxidizer_tank: Tank,
+        fuel_tank: tanks.Tank,
+        oxidizer_tank: tanks.Tank,
         piston_loss: float = 0.0,
     ):
         """
@@ -76,7 +76,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         p_down = chamber_pressure
         oxidizer_density = self.oxidizer_tank.get_density()
 
-        return get_mass_flow_orifice(
+        return incompressible_flow.get_mass_flow_orifice(
             discharge_coefficient=discharge_coefficient,
             area=injector_area,
             density=oxidizer_density,
@@ -118,7 +118,7 @@ class StackedTankPressureFedFeedSystem(FeedSystem):
         p_down = chamber_pressure
         fuel_density = self.fuel_tank.get_density()
 
-        return get_mass_flow_orifice(
+        return incompressible_flow.get_mass_flow_orifice(
             discharge_coefficient=discharge_coefficient,
             area=injector_area,
             density=fuel_density,

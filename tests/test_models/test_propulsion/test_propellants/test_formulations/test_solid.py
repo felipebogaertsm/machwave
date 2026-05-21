@@ -8,11 +8,9 @@ to the module will automatically be tested.
 
 import pytest
 
+import machwave.models.propellants as propellants_models
+import machwave.models.propellants.categories.solid as solid_propellant_category
 import machwave.models.propellants.formulations.solid as solid_formulations
-from machwave.models.propellants import SolidPropellant
-from machwave.models.propellants.categories.solid import (
-    BurnRateOutOfBoundsError,
-)
 
 
 def get_all_solid_propellants():
@@ -20,7 +18,7 @@ def get_all_solid_propellants():
     propellants = []
     for name in dir(solid_formulations):
         obj = getattr(solid_formulations, name)
-        if isinstance(obj, SolidPropellant):
+        if isinstance(obj, propellants_models.SolidPropellant):
             propellants.append((name, obj))
     return propellants
 
@@ -38,7 +36,7 @@ class TestAllSolidPropellants:
     @pytest.mark.parametrize("name,propellant", ALL_SOLID_PROPELLANTS)
     def test_is_solid_propellant(self, name, propellant):
         """Verify formulation is instance of SolidPropellant."""
-        assert isinstance(propellant, SolidPropellant), (
+        assert isinstance(propellant, propellants_models.SolidPropellant), (
             f"{name} is not a SolidPropellant"
         )
         assert propellant.mixture_type in ("solid", "hybrid"), (
@@ -149,7 +147,7 @@ class TestBurnRateBehavior:
             max_pressure = max(segment["max"] for segment in propellant.burn_rate_map)
             out_of_bounds_pressure = max_pressure * 2
 
-            with pytest.raises(BurnRateOutOfBoundsError):
+            with pytest.raises(solid_propellant_category.BurnRateOutOfBoundsError):
                 propellant.get_burn_rate(out_of_bounds_pressure)
 
 

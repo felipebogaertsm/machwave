@@ -1,14 +1,12 @@
 import pytest
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.geometries import (
-    WagonWheelGrainSegment,
-)
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 def test_star_segment_geometry_validation():
     # Control group:
-    _ = WagonWheelGrainSegment(
+    _ = grain_geometries.WagonWheelGrainSegment(
         outer_diameter=41e-3,
         length=0.5,
         core_diameter=8e-3,
@@ -19,8 +17,8 @@ def test_star_segment_geometry_validation():
     )
 
     # Negative core diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=-8e-3,
@@ -31,8 +29,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Port inner diameter smaller than core diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,
@@ -43,8 +41,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Port outer diameter smaller than inner diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,
@@ -55,8 +53,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Negative number of ports:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,
@@ -67,8 +65,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Too many points:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,
@@ -79,8 +77,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Negative port angle:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,
@@ -91,8 +89,8 @@ def test_star_segment_geometry_validation():
         )
 
     # Port angle too large:
-    with pytest.raises(GrainGeometryError):
-        _ = WagonWheelGrainSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.WagonWheelGrainSegment(
             outer_diameter=41e-3,
             length=0.5,
             core_diameter=8e-3,

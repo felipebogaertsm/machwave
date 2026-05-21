@@ -1,31 +1,28 @@
 import pytest
 
-from machwave.models.propellants import BiliquidPropellant
-from machwave.models.propellants.components import (
-    ComponentRole,
-    PropellantComponent,
-)
+import machwave.models.propellants as propellants_models
+import machwave.models.propellants.components as propellant_components
 
 
 @pytest.fixture
-def lox_rp1_propellant() -> BiliquidPropellant:
-    oxidizer = PropellantComponent(
+def lox_rp1_propellant() -> propellants_models.BiliquidPropellant:
+    oxidizer = propellant_components.PropellantComponent(
         name="LOX",
         density=1141.0,
         chemical_formula={"O": 2},
         enthalpy=0.0,
         initial_temperature=298.15,
-        role=ComponentRole.OXIDIZER,
+        role=propellant_components.ComponentRole.OXIDIZER,
     )
-    fuel = PropellantComponent(
+    fuel = propellant_components.PropellantComponent(
         name="RP1",
         density=820.0,
         chemical_formula={"C": 12, "H": 26},
         enthalpy=0.0,
         initial_temperature=298.15,
-        role=ComponentRole.FUEL,
+        role=propellant_components.ComponentRole.FUEL,
     )
-    return BiliquidPropellant(
+    return propellants_models.BiliquidPropellant(
         name="LOX/RP1",
         components=[oxidizer, fuel],
         oxidizer_to_fuel_ratio=2.5,

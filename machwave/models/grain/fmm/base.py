@@ -6,13 +6,13 @@ import skfmm
 from scipy.ndimage import binary_erosion
 from numpy.typing import NDArray
 
-from machwave.models.grain import GrainGeometryError, GrainSegment
-from machwave.models.grain.base import InhibitedSurfaces
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
 
 MINIMUM_MAP_DIMENSION = 100
 
 
-class FMMGrainSegment(GrainSegment, ABC):
+class FMMGrainSegment(grain.GrainSegment, ABC):
     """
     Fast Marching Method (FMM) implementation of a grain segment.
 
@@ -27,7 +27,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         map_dim: int,
         length: float,
         outer_diameter: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -88,7 +88,7 @@ class FMMGrainSegment(GrainSegment, ABC):
         """
         super().validate()
         if not self.map_dim >= MINIMUM_MAP_DIMENSION:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Map dimension must be at least {MINIMUM_MAP_DIMENSION}, "
                 f"got {self.map_dim}"
             )

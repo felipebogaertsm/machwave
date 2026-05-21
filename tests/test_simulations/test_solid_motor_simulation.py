@@ -12,9 +12,9 @@ from typing import Callable
 import numpy as np
 import pytest
 
-from machwave.models import motors
-from machwave.simulation import InternalBallisticsSimulationParams
-from machwave.simulation.solid import SolidSimulationResult
+import machwave.models.motors as motors_models
+import machwave.simulation as machwave_simulation
+import machwave.simulation.solid as solid_simulation
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
@@ -22,7 +22,10 @@ from tests.test_simulations.conftest import (
 )
 
 SolidMotorBuilder = Callable[
-    [], tuple[motors.SolidMotor, InternalBallisticsSimulationParams]
+    [],
+    tuple[
+        motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
+    ],
 ]
 
 
@@ -38,22 +41,24 @@ SOLID_MOTOR_BUILDERS: tuple[SolidMotorBuilder, ...] = (
     params=SOLID_MOTOR_BUILDERS,
     ids=lambda builder: builder.__name__.removeprefix("build_"),
 )
-def simulation_result(request: pytest.FixtureRequest) -> SolidSimulationResult:
+def simulation_result(
+    request: pytest.FixtureRequest,
+) -> solid_simulation.SolidSimulationResult:
     motor, params = request.param()
     return run_simulation(motor, params)
 
 
 def test_simulation_completes_with_terminal_state(
-    simulation_result: SolidSimulationResult,
+    simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
-    assert isinstance(simulation_result, SolidSimulationResult)
+    assert isinstance(simulation_result, solid_simulation.SolidSimulationResult)
     assert simulation_result.end_thrust is True
     assert simulation_result.end_burn is True
     assert simulation_result.time.size > 1
 
 
 def test_burn_time_and_thrust_time_are_finite_and_ordered(
-    simulation_result: SolidSimulationResult,
+    simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
     assert np.isfinite(simulation_result.burn_time)
     assert np.isfinite(simulation_result.thrust_time)
@@ -65,7 +70,7 @@ def test_burn_time_and_thrust_time_are_finite_and_ordered(
 
 
 def test_propellant_mass_is_monotone_non_increasing(
-    simulation_result: SolidSimulationResult,
+    simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
     propellant_mass = simulation_result.propellant_mass
     diffs = np.diff(propellant_mass)
@@ -77,7 +82,7 @@ def test_propellant_mass_is_monotone_non_increasing(
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
-    simulation_result: SolidSimulationResult,
+    simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
     peak_pressure = float(np.max(simulation_result.chamber_pressure))
     peak_thrust = float(np.max(simulation_result.thrust))
@@ -94,6 +99,6 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
 
 
 def test_recorded_per_timestep_arrays_are_aligned(
-    simulation_result: SolidSimulationResult,
+    simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
     assert_recorded_arrays_aligned(simulation_result)

@@ -7,15 +7,15 @@ import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
+import machwave.simulation.liquid.results as liquid_results
 import machwave.simulation.states as simulation_states
-from machwave.simulation.liquid.results import LiquidSimulationResult
 
 
 class LiquidEngineState(simulation_states.MotorState):
     """State for a Liquid Rocket Engine."""
 
     motor: motors.LiquidEngine
-    result_class = LiquidSimulationResult
+    result_class = liquid_results.LiquidSimulationResult
 
     def __init__(
         self,

@@ -5,15 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from machwave.models.propellants.categories import (
-    BiliquidPropellant,
-    MixtureType,
-    SolidPropellant,
-)
-from machwave.models.propellants.components import ComponentRole
-from machwave.models.propellants.formulations import (
-    get_propellant_from_json,
-)
+import machwave.models.propellants.categories as propellant_categories
+import machwave.models.propellants.components as propellant_components
+import machwave.models.propellants.formulations as propellant_formulations
 
 # Get paths to formulation directories
 FORMULATIONS_DIR = (
@@ -60,15 +54,15 @@ class TestJSONFormulationLoading:
     def test_load_all_solid_formulations(self, json_file):
         """Test loading each solid propellant JSON file."""
         # Load the propellant
-        propellant = get_propellant_from_json(json_file)
+        propellant = propellant_formulations.get_propellant_from_json(json_file)
 
         # Verify it's a SolidPropellant
-        assert isinstance(propellant, SolidPropellant), (
+        assert isinstance(propellant, propellant_categories.SolidPropellant), (
             f"{json_file.stem}: Not a SolidPropellant instance"
         )
 
         # Verify mixture type
-        assert propellant.mixture_type == MixtureType.SOLID, (
+        assert propellant.mixture_type == propellant_categories.MixtureType.SOLID, (
             f"{json_file.stem}: Wrong mixture_type"
         )
 
@@ -83,7 +77,7 @@ class TestJSONFormulationLoading:
         for comp in propellant.components:
             assert comp.name, f"{json_file.stem}: Component missing name"
             assert comp.density > 0, f"{json_file.stem}: Invalid density"
-            assert isinstance(comp.role, ComponentRole), (
+            assert isinstance(comp.role, propellant_components.ComponentRole), (
                 f"{json_file.stem}: Invalid component role"
             )
             assert hasattr(comp, "chemical_formula"), (
@@ -134,15 +128,15 @@ class TestJSONFormulationLoading:
     def test_load_all_biliquid_formulations(self, json_file):
         """Test loading each liquid propellant JSON file."""
         # Load the propellant
-        propellant = get_propellant_from_json(json_file)
+        propellant = propellant_formulations.get_propellant_from_json(json_file)
 
         # Verify it's a BiliquidPropellant
-        assert isinstance(propellant, BiliquidPropellant), (
+        assert isinstance(propellant, propellant_categories.BiliquidPropellant), (
             f"{json_file.stem}: Not a BiliquidPropellant instance"
         )
 
         # Verify mixture type
-        assert propellant.mixture_type == MixtureType.BILIQUID, (
+        assert propellant.mixture_type == propellant_categories.MixtureType.BILIQUID, (
             f"{json_file.stem}: Wrong mixture_type"
         )
 
@@ -167,7 +161,7 @@ class TestJSONFormulationLoading:
         for comp in propellant.components:
             assert comp.name, f"{json_file.stem}: Component missing name"
             assert comp.density > 0, f"{json_file.stem}: Invalid density"
-            assert isinstance(comp.role, ComponentRole), (
+            assert isinstance(comp.role, propellant_components.ComponentRole), (
                 f"{json_file.stem}: Invalid component role"
             )
             assert hasattr(comp, "chemical_formula"), (
@@ -178,9 +172,9 @@ class TestJSONFormulationLoading:
                 f"{json_file.stem}: Invalid temperature"
             )
 
-            if comp.role == ComponentRole.OXIDIZER:
+            if comp.role == propellant_components.ComponentRole.OXIDIZER:
                 has_oxidizer = True
-            elif comp.role == ComponentRole.FUEL:
+            elif comp.role == propellant_components.ComponentRole.FUEL:
                 has_fuel = True
 
         assert has_oxidizer and has_fuel, (
@@ -219,7 +213,7 @@ class TestJSONFormulationLoading:
     def test_evaluate_with_predefined_properties(self):
         """Test that propellants with pre-defined properties evaluate correctly."""
         # Load a solid propellant
-        kndx = get_propellant_from_json(SOLID_DIR / "kndx.json")
+        kndx = propellant_formulations.get_propellant_from_json(SOLID_DIR / "kndx.json")
 
         # Verify it has pre-defined properties
         assert kndx.properties is not None, "KNDX should have pre-defined properties"
@@ -235,7 +229,7 @@ class TestJSONFormulationLoading:
     def test_component_to_cea_dict(self):
         """Test that components can be converted to CEA dict format."""
         # Load any propellant
-        prop = get_propellant_from_json(SOLID_DIR / "kndx.json")
+        prop = propellant_formulations.get_propellant_from_json(SOLID_DIR / "kndx.json")
 
         # Test to_cea_dict on first component
         comp = prop.components[0]
@@ -253,17 +247,17 @@ class TestJSONFormulationLoading:
         assert cea_dict["name"] == comp.name
         assert cea_dict["weight_percent"] == 50.0
         # Heat of formation is converted from J/mol to cal/mol
-        from machwave.core.conversions import convert_joules_per_mol_to_cal_per_mol
+        import machwave.core.conversions as conversions
 
-        assert cea_dict["heat_of_formation"] == convert_joules_per_mol_to_cal_per_mol(
-            comp.enthalpy
+        assert cea_dict["heat_of_formation"] == (
+            conversions.convert_joules_per_mol_to_cal_per_mol(comp.enthalpy)
         )
         assert cea_dict["formula"] == comp.chemical_formula
 
     def test_solid_burn_rate_calculation(self):
         """Test burn rate calculation for solid propellants."""
         # Load KNDX which has burn rate data
-        kndx = get_propellant_from_json(SOLID_DIR / "kndx.json")
+        kndx = propellant_formulations.get_propellant_from_json(SOLID_DIR / "kndx.json")
 
         # Calculate burn rate at 5 MPa
         burn_rate = kndx.get_burn_rate(5e6)
@@ -280,20 +274,20 @@ class TestJSONFormulationLoading:
             json.dump({"name": "Invalid", "components": []}, f)
 
         with pytest.raises(ValueError, match="mixture_type"):
-            get_propellant_from_json(invalid_json)
+            propellant_formulations.get_propellant_from_json(invalid_json)
 
     def test_nonexistent_file_raises_error(self):
         """Test that loading non-existent file raises FileNotFoundError."""
         with pytest.raises(FileNotFoundError):
-            get_propellant_from_json("nonexistent_file.json")
+            propellant_formulations.get_propellant_from_json("nonexistent_file.json")
 
     def test_mass_fractions_sum_approximately_to_one(self):
         """Test that component mass fractions sum to approximately 1.0."""
         all_files = list(SOLID_DIR.glob("*.json")) + list(BILIQUID_DIR.glob("*.json"))
 
         for json_file in all_files:
-            prop = get_propellant_from_json(json_file)
-            if isinstance(prop, SolidPropellant):
+            prop = propellant_formulations.get_propellant_from_json(json_file)
+            if isinstance(prop, propellant_categories.SolidPropellant):
                 total_mass_fraction = sum(prop.mass_fractions)
                 assert 0.99 <= total_mass_fraction <= 1.01, (
                     f"{json_file.stem}: Mass fractions sum to {total_mass_fraction}, expected ~1.0"
@@ -311,12 +305,12 @@ class TestJSONFormulationLoading:
         The formulation JSONs may include fixed properties; this test explicitly
         bypasses those to validate that the component-based CEA path still works.
         """
-        loaded = get_propellant_from_json(json_file)
-        assert isinstance(loaded, SolidPropellant)
+        loaded = propellant_formulations.get_propellant_from_json(json_file)
+        assert isinstance(loaded, propellant_categories.SolidPropellant)
         assert loaded.components, f"{json_file.stem}: expected components"
         assert loaded.mass_fractions, f"{json_file.stem}: expected mass_fractions"
 
-        cea_propellant = SolidPropellant(
+        cea_propellant = propellant_categories.SolidPropellant(
             name=f"{loaded.name}__CEA__{json_file.stem}",
             components=loaded.components,
             mass_fractions=loaded.mass_fractions,
@@ -346,11 +340,11 @@ class TestJSONFormulationLoading:
         the CEA reconstruction is expected to be in the same ballpark.
         """
         json_file = SOLID_DIR / f"{json_stem}.json"
-        loaded = get_propellant_from_json(json_file)
-        assert isinstance(loaded, SolidPropellant)
+        loaded = propellant_formulations.get_propellant_from_json(json_file)
+        assert isinstance(loaded, propellant_categories.SolidPropellant)
         assert loaded.properties is not None, f"{json_stem}: expected fixed properties"
 
-        cea_propellant = SolidPropellant(
+        cea_propellant = propellant_categories.SolidPropellant(
             name=f"{loaded.name}__CEA__{json_stem}",
             components=loaded.components,
             mass_fractions=loaded.mass_fractions,

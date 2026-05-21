@@ -5,8 +5,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
-from machwave.models import grain as grain_models
+import machwave.adapters.rocketpy as rocketpy_adapters
+import machwave.models.grain as grain_models
 
 from tests.factories import (
     ConicalGrainSegmentFactory,
@@ -31,9 +31,11 @@ def _stub_simulation_result() -> SimpleNamespace:
     )
 
 
-def _build_adapter_without_init(motor) -> RocketPySolidMotorAdapter:
+def _build_adapter_without_init(motor) -> rocketpy_adapters.RocketPySolidMotorAdapter:
     """Bypass __init__ so the test isolates the geometry validation."""
-    adapter = RocketPySolidMotorAdapter.__new__(RocketPySolidMotorAdapter)
+    adapter = rocketpy_adapters.RocketPySolidMotorAdapter.__new__(
+        rocketpy_adapters.RocketPySolidMotorAdapter
+    )
     adapter.motor = motor
     adapter.simulation_result = _stub_simulation_result()
     return adapter
