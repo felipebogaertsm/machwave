@@ -9,10 +9,10 @@ independent of the example layer.
 
 from __future__ import annotations
 
-from machwave.models import grain as grain_models
-from machwave.models import motors
-from machwave.models.propellants.formulations import solid as solid_propellants
-from machwave.simulation import InternalBallisticsSimulationParams
+import machwave.models.grain as grain_models
+import machwave.models.motors as motors_models
+import machwave.models.propellants.formulations.solid as solid_propellants
+import machwave.simulation as machwave_simulation
 from tests.factories import (
     BatesSegmentFactory,
     BiliquidPropellantFactory,
@@ -30,7 +30,9 @@ from tests.factories import (
 )
 
 
-def build_apcp_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationParams]:
+def build_apcp_motor() -> tuple[
+    motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
+]:
     """MIT Cherry Limeade APCP motor with five identical BATES segments."""
     grain = grain_models.Grain(spacing=0.01)
     bates_segment = BatesSegmentFactory.build(
@@ -61,7 +63,7 @@ def build_apcp_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationP
         propellant=solid_propellants.MIT_CHERRY_LIMEADE,
         thrust_chamber=thrust_chamber,
     )
-    params = InternalBallisticsSimulationParams(
+    params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
@@ -71,7 +73,7 @@ def build_apcp_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationP
 
 
 def build_kappa_rnakka_motor() -> tuple[
-    motors.SolidMotor, InternalBallisticsSimulationParams
+    motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
 ]:
     """Richard Nakka's Kappa motor (KNDX, four BATES segments)."""
     grain = grain_models.Grain(spacing=5e-3)
@@ -102,7 +104,7 @@ def build_kappa_rnakka_motor() -> tuple[
         propellant=solid_propellants.KNDX,
         thrust_chamber=thrust_chamber,
     )
-    params = InternalBallisticsSimulationParams(
+    params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1e5,
@@ -111,7 +113,9 @@ def build_kappa_rnakka_motor() -> tuple[
     return motor, params
 
 
-def build_nero_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationParams]:
+def build_nero_motor() -> tuple[
+    motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
+]:
     """Supernova Rocketry Nero motor (KNDX, four BATES segments)."""
     grain = grain_models.Grain(spacing=10e-3)
     bates_segment = BatesSegmentFactory.build(
@@ -141,7 +145,7 @@ def build_nero_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationP
         propellant=solid_propellants.KNDX,
         thrust_chamber=thrust_chamber,
     )
-    params = InternalBallisticsSimulationParams(
+    params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
@@ -150,7 +154,9 @@ def build_nero_motor() -> tuple[motors.SolidMotor, InternalBallisticsSimulationP
     return motor, params
 
 
-def build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationParams]:
+def build_1kn_lre() -> tuple[
+    motors_models.LiquidEngine, machwave_simulation.InternalBallisticsSimulationParams
+]:
     """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
     oxidizer = OxidizerComponentFactory.build(initial_temperature=300.0)
     fuel = FuelComponentFactory.build(initial_temperature=300.0)
@@ -203,7 +209,7 @@ def build_1kn_lre() -> tuple[motors.LiquidEngine, InternalBallisticsSimulationPa
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
     )
-    params = InternalBallisticsSimulationParams(
+    params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=1e-4,
         igniter_pressure=1e6,
         external_pressure=1e5,

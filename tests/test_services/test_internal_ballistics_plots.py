@@ -3,7 +3,7 @@
 import numpy as np
 import plotly.graph_objects as go
 
-from machwave.services.plots.internal_ballistics import thrust_coefficient_plot
+import machwave.services.plots.internal_ballistics as ib_plots
 
 
 class TestThrustCoefficientPlot:
@@ -15,7 +15,9 @@ class TestThrustCoefficientPlot:
         cf_ideal = np.linspace(1.5, 1.6, 10)
         cf_real = np.linspace(1.4, 1.5, 10)
 
-        fig = thrust_coefficient_plot(time, cf_ideal, cf_real, show_efficiency=True)
+        fig = ib_plots.thrust_coefficient_plot(
+            time, cf_ideal, cf_real, show_efficiency=True
+        )
 
         assert isinstance(fig, go.Figure)
         trace_names = [trace.name for trace in fig.data]
@@ -36,7 +38,9 @@ class TestThrustCoefficientPlot:
         cf_ideal = np.linspace(1.5, 1.6, 10)
         cf_real = np.linspace(1.4, 1.5, 10)
 
-        fig = thrust_coefficient_plot(time, cf_ideal, cf_real, show_efficiency=False)
+        fig = ib_plots.thrust_coefficient_plot(
+            time, cf_ideal, cf_real, show_efficiency=False
+        )
 
         assert isinstance(fig, go.Figure)
         trace_names = [trace.name for trace in fig.data]
@@ -51,7 +55,9 @@ class TestThrustCoefficientPlot:
         cf_ideal = np.array([0.0, 1.5, 1.6])
         cf_real = np.array([0.0, 1.4, 1.5])
 
-        fig = thrust_coefficient_plot(time, cf_ideal, cf_real, show_efficiency=True)
+        fig = ib_plots.thrust_coefficient_plot(
+            time, cf_ideal, cf_real, show_efficiency=True
+        )
 
         eta_trace = fig.data[2]
         assert np.isnan(eta_trace.y[0])

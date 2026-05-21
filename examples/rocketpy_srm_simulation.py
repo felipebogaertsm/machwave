@@ -8,15 +8,13 @@ This example demonstrates how to:
 3. Run a complete 6DOF flight simulation using RocketPy
 """
 
-from machwave import (
-    formulations,
-    grain as grain_models,
-    motors,
-    simulation,
-    thrust_chamber as thrust_chamber_models,
-)
-from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
-from machwave.common import decorators
+import machwave.adapters.rocketpy as rocketpy_adapters
+import machwave.common.decorators as decorators
+import machwave.models.grain as grain_models
+import machwave.models.motors as motors_models
+import machwave.models.propellants.formulations as formulations
+import machwave.models.thrust_chamber as thrust_chamber_models
+import machwave.simulation as simulation
 from rocketpy import Environment, Flight, Rocket
 
 
@@ -57,7 +55,7 @@ def main():
         center_of_gravity_coordinate=(0.35, 0.0, 0.0),
     )
 
-    motor = motors.SolidMotor(
+    motor = motors_models.SolidMotor(
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,
@@ -77,7 +75,9 @@ def main():
     result.report()
 
     # 3. Create RocketPy adapter
-    rocketpy_motor = RocketPySolidMotorAdapter(motor=motor, simulation_result=result)
+    rocketpy_motor = rocketpy_adapters.RocketPySolidMotorAdapter(
+        motor=motor, simulation_result=result
+    )
     print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
     print(f"  - Average thrust: {rocketpy_motor.average_thrust:.1f} N")
     print(f"  - Max thrust: {rocketpy_motor.max_thrust:.1f} N")

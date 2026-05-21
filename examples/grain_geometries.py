@@ -5,29 +5,20 @@ geometries within Machwave.
 
 import numpy as np
 
-from machwave.models.grain.geometries import (
-    BatesSegment,
-    ConicalGrainSegment,
-    DGrainSegment,
-    MultiPortGrainSegment,
-    StarGrainSegment,
-)
-from machwave.services.plots.fmm import (
-    plot_2d_face_map,
-    plot_2d_face_map_animated,
-)
+import machwave.models.grain.geometries as grain_geometries
+import machwave.services.plots.fmm as fmm_plots
 
 np.set_printoptions(precision=2, suppress=True)
 
 
 def main():
-    bates_segment = BatesSegment(
+    bates_segment = grain_geometries.BatesSegment(
         length=68e-3,
         outer_diameter=41e-3,
         core_diameter=15e-3,
     )
 
-    multiport_segment = MultiPortGrainSegment(
+    multiport_segment = grain_geometries.MultiPortGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
         port_diameter=3e-3,
@@ -35,20 +26,20 @@ def main():
         port_level_count=4,
     )
 
-    dgrain_segment = DGrainSegment(
+    dgrain_segment = grain_geometries.DGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
         slot_offset=10e-3,
     )
 
-    conical_segment = ConicalGrainSegment(
+    conical_segment = grain_geometries.ConicalGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
         upper_core_diameter=35e-3,
         lower_core_diameter=5e-3,
     )
 
-    star_segment = StarGrainSegment(
+    star_segment = grain_geometries.StarGrainSegment(
         length=68e-3,
         outer_diameter=41e-3,
         number_of_points=5,
@@ -75,7 +66,7 @@ def main():
     print(f"Dgrain grain area: {grain_area * 1e6:2f} mm^2")
     print(f"Dgrain grain port area: {port_area * 1e6:2f} mm^2")
     print(f"Dgrain center of gravity: {dgrain_segment.get_center_of_gravity(0)}")
-    plot_2d_face_map(face_map).show()
+    fmm_plots.plot_2d_face_map(face_map).show()
 
     grain_area = multiport_segment.get_burn_area(web_distance=web_distance)
     port_area = multiport_segment.get_port_area(web_distance=web_distance)
@@ -86,7 +77,7 @@ def main():
     print(
         f"Multiport center of gravity: {multiport_segment.get_center_of_gravity(web_distance)}"
     )
-    multiport_fig = plot_2d_face_map_animated(
+    multiport_fig = fmm_plots.plot_2d_face_map_animated(
         face_maps=np.array(
             [
                 multiport_segment.get_face_map(web_distance)
@@ -97,7 +88,7 @@ def main():
     )
     multiport_fig.show()
 
-    star_fig = plot_2d_face_map_animated(
+    star_fig = fmm_plots.plot_2d_face_map_animated(
         face_maps=np.array(
             [
                 star_segment.get_face_map(web_distance)

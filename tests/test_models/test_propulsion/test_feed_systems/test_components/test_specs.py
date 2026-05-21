@@ -4,12 +4,7 @@ import dataclasses
 
 import pytest
 
-from machwave.models.feed_systems.components import (
-    GasGeneratorSpec,
-    PumpSpec,
-    RegenerativeJacketSpec,
-    TurbineSpec,
-)
+import machwave.models.feed_systems.components as feed_components
 
 
 def _valid_pump_spec_kwargs() -> dict:
@@ -57,7 +52,7 @@ def _valid_regenerative_jacket_spec_kwargs() -> dict:
 
 def test_pump_spec_constructs_with_valid_values():
     """A `PumpSpec` with valid fields must construct without error."""
-    spec = PumpSpec(**_valid_pump_spec_kwargs())
+    spec = feed_components.PumpSpec(**_valid_pump_spec_kwargs())
 
     assert spec.name == "oxidizer pump"
     assert spec.isentropic_efficiency == pytest.approx(0.7)
@@ -65,7 +60,7 @@ def test_pump_spec_constructs_with_valid_values():
 
 def test_turbine_spec_constructs_with_valid_values():
     """A `TurbineSpec` with valid fields must construct without error."""
-    spec = TurbineSpec(**_valid_turbine_spec_kwargs())
+    spec = feed_components.TurbineSpec(**_valid_turbine_spec_kwargs())
 
     assert spec.name == "oxidizer turbine"
     assert spec.pressure_ratio == pytest.approx(20.0)
@@ -73,7 +68,7 @@ def test_turbine_spec_constructs_with_valid_values():
 
 def test_gas_generator_spec_constructs_with_valid_values():
     """A `GasGeneratorSpec` with valid fields must construct without error."""
-    spec = GasGeneratorSpec(**_valid_gas_generator_spec_kwargs())
+    spec = feed_components.GasGeneratorSpec(**_valid_gas_generator_spec_kwargs())
 
     assert spec.name == "gas generator"
     assert spec.mixture_ratio == pytest.approx(0.3)
@@ -81,7 +76,9 @@ def test_gas_generator_spec_constructs_with_valid_values():
 
 def test_regenerative_jacket_spec_constructs_with_valid_values():
     """A `RegenerativeJacketSpec` with valid fields must construct without error."""
-    spec = RegenerativeJacketSpec(**_valid_regenerative_jacket_spec_kwargs())
+    spec = feed_components.RegenerativeJacketSpec(
+        **_valid_regenerative_jacket_spec_kwargs()
+    )
 
     assert spec.name == "chamber jacket"
     assert spec.coolant_temperature_rise == pytest.approx(200.0)
@@ -93,7 +90,7 @@ def test_pump_spec_rejects_efficiency_above_one():
     kwargs["isentropic_efficiency"] = 1.5
 
     with pytest.raises(ValueError, match="isentropic_efficiency"):
-        PumpSpec(**kwargs)
+        feed_components.PumpSpec(**kwargs)
 
 
 def test_pump_spec_rejects_non_positive_pressure_rise():
@@ -102,7 +99,7 @@ def test_pump_spec_rejects_non_positive_pressure_rise():
     kwargs["pressure_rise"] = 0.0
 
     with pytest.raises(ValueError, match="pressure_rise"):
-        PumpSpec(**kwargs)
+        feed_components.PumpSpec(**kwargs)
 
 
 def test_turbine_spec_rejects_pressure_ratio_at_or_below_one():
@@ -111,7 +108,7 @@ def test_turbine_spec_rejects_pressure_ratio_at_or_below_one():
     kwargs["pressure_ratio"] = 1.0
 
     with pytest.raises(ValueError, match="pressure_ratio"):
-        TurbineSpec(**kwargs)
+        feed_components.TurbineSpec(**kwargs)
 
 
 def test_gas_generator_spec_rejects_non_positive_gas_temperature():
@@ -120,7 +117,7 @@ def test_gas_generator_spec_rejects_non_positive_gas_temperature():
     kwargs["gas_temperature"] = 0.0
 
     with pytest.raises(ValueError, match="gas_temperature"):
-        GasGeneratorSpec(**kwargs)
+        feed_components.GasGeneratorSpec(**kwargs)
 
 
 def test_gas_generator_spec_rejects_non_positive_mixture_ratio():
@@ -129,7 +126,7 @@ def test_gas_generator_spec_rejects_non_positive_mixture_ratio():
     kwargs["mixture_ratio"] = 0.0
 
     with pytest.raises(ValueError, match="mixture_ratio"):
-        GasGeneratorSpec(**kwargs)
+        feed_components.GasGeneratorSpec(**kwargs)
 
 
 def test_regenerative_jacket_spec_rejects_negative_pressure_drop():
@@ -138,7 +135,7 @@ def test_regenerative_jacket_spec_rejects_negative_pressure_drop():
     kwargs["pressure_drop"] = -1.0
 
     with pytest.raises(ValueError, match="pressure_drop"):
-        RegenerativeJacketSpec(**kwargs)
+        feed_components.RegenerativeJacketSpec(**kwargs)
 
 
 def test_regenerative_jacket_spec_rejects_non_positive_temperature_rise():
@@ -147,22 +144,27 @@ def test_regenerative_jacket_spec_rejects_non_positive_temperature_rise():
     kwargs["coolant_temperature_rise"] = 0.0
 
     with pytest.raises(ValueError, match="coolant_temperature_rise"):
-        RegenerativeJacketSpec(**kwargs)
+        feed_components.RegenerativeJacketSpec(**kwargs)
 
 
 @pytest.mark.parametrize(
     "spec_class, kwargs_builder, field_name, new_value",
     [
-        (PumpSpec, _valid_pump_spec_kwargs, "name", "modified pump"),
-        (TurbineSpec, _valid_turbine_spec_kwargs, "name", "modified turbine"),
+        (feed_components.PumpSpec, _valid_pump_spec_kwargs, "name", "modified pump"),
         (
-            GasGeneratorSpec,
+            feed_components.TurbineSpec,
+            _valid_turbine_spec_kwargs,
+            "name",
+            "modified turbine",
+        ),
+        (
+            feed_components.GasGeneratorSpec,
             _valid_gas_generator_spec_kwargs,
             "name",
             "modified gas generator",
         ),
         (
-            RegenerativeJacketSpec,
+            feed_components.RegenerativeJacketSpec,
             _valid_regenerative_jacket_spec_kwargs,
             "name",
             "modified jacket",

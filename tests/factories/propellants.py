@@ -10,7 +10,9 @@ from typing import Any
 
 from polyfactory.factories import DataclassFactory
 
-from machwave.models.propellants import categories, components, properties
+import machwave.models.propellants.categories as categories
+import machwave.models.propellants.components as components
+import machwave.models.propellants.properties as properties
 
 
 class SolidPropellantPropertiesFactory(

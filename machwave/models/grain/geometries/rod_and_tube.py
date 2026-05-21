@@ -1,11 +1,11 @@
 import numpy as np
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.base import InhibitedSurfaces
-from machwave.models.grain.fmm import FMMGrainSegment2D
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
+import machwave.models.grain.fmm as grain_fmm
 
 
-class RodAndTubeGrainSegment(FMMGrainSegment2D):
+class RodAndTubeGrainSegment(grain_fmm.FMMGrainSegment2D):
     """Rod-and-tube grain segment: central rod inside a concentric tube."""
 
     def __init__(
@@ -14,7 +14,7 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         outer_diameter: float,
         rod_outer_diameter: float,
         tube_inner_diameter: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -43,16 +43,16 @@ class RodAndTubeGrainSegment(FMMGrainSegment2D):
         super().validate()
 
         if not self.rod_outer_diameter > 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Rod outer diameter must be positive, got {self.rod_outer_diameter}"
             )
         if not self.tube_inner_diameter > self.rod_outer_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Tube inner diameter ({self.tube_inner_diameter}) must be greater than "
                 f"rod outer diameter ({self.rod_outer_diameter})"
             )
         if not self.tube_inner_diameter < self.outer_diameter:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 f"Tube inner diameter ({self.tube_inner_diameter}) must be less than "
                 f"outer diameter ({self.outer_diameter})"
             )

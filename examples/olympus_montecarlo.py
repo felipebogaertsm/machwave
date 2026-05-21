@@ -1,17 +1,15 @@
-from machwave import (
-    formulations,
-    grain as grain_models,
-    montecarlo,
-    motors,
-    simulation,
-    thrust_chamber as thrust_chamber_models,
-)
-from machwave.common.decorators import timing
+import machwave.common.decorators as decorators
+import machwave.models.grain as grain_models
+import machwave.models.motors as motors_models
+import machwave.models.propellants.formulations as formulations
+import machwave.models.thrust_chamber as thrust_chamber_models
+import machwave.montecarlo as montecarlo
+import machwave.simulation as simulation
 
 MC_SAMPLES = 1000
 
 
-@timing
+@decorators.timing
 def main():
     propellant = formulations.solid.KNSB_NAKKA
 
@@ -58,7 +56,7 @@ def main():
         center_of_gravity_coordinate=(0.5, 0.0, 0.0),
     )
 
-    motor = motors.SolidMotor(
+    motor = motors_models.SolidMotor(
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,

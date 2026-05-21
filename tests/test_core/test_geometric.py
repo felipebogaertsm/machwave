@@ -1,19 +1,13 @@
 import pytest
 
-from machwave.core.geometric import (
-    get_circle_area,
-    get_cylinder_surface_area,
-    get_cylinder_volume,
-    get_torus_area,
-    get_trapezoidal_area,
-)
+import machwave.core.geometric as geometric
 
 
 def test_get_circle_area():
     # Test case: Circle with diameter 4
     diameter = 4
     expected_area = 12.56637
-    assert pytest.approx(get_circle_area(diameter), rel=1e-4) == expected_area
+    assert pytest.approx(geometric.get_circle_area(diameter), rel=1e-4) == expected_area
 
 
 def test_get_torus_area():
@@ -22,7 +16,7 @@ def test_get_torus_area():
     minor_radius = 1
     expected_area = 78.95684
     assert (
-        pytest.approx(get_torus_area(major_radius, minor_radius), rel=1e-4)
+        pytest.approx(geometric.get_torus_area(major_radius, minor_radius), rel=1e-4)
         == expected_area
     )
 
@@ -33,7 +27,9 @@ def test_get_trapezoidal_area():
     tip_length = 6
     height = 3
     expected_area = 15.0
-    assert get_trapezoidal_area(base_length, tip_length, height) == expected_area
+    assert (
+        geometric.get_trapezoidal_area(base_length, tip_length, height) == expected_area
+    )
 
 
 def test_get_cylinder_surface_area():
@@ -42,7 +38,7 @@ def test_get_cylinder_surface_area():
     diameter = 2
     expected_area = 31.4159265359
     assert (
-        pytest.approx(get_cylinder_surface_area(length, diameter), rel=1e-4)
+        pytest.approx(geometric.get_cylinder_surface_area(length, diameter), rel=1e-4)
         == expected_area
     )
 
@@ -53,6 +49,6 @@ def test_get_cylinder_volume():
     diameter = 2
     expected_volume = 15.7079632679
     assert (
-        pytest.approx(get_cylinder_volume(diameter, length), rel=1e-4)
+        pytest.approx(geometric.get_cylinder_volume(diameter, length), rel=1e-4)
         == expected_volume
     )

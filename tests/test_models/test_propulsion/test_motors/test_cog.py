@@ -3,10 +3,8 @@
 import numpy as np
 import pytest
 
-from machwave.models import grain as grain_models
-from machwave.models.propellants.formulations import (
-    solid as solid_propellants,
-)
+import machwave.models.grain as grain_models
+import machwave.models.propellants.formulations.solid as solid_propellants
 
 from tests.factories import (
     BatesSegmentFactory,

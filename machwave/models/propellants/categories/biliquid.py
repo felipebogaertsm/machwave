@@ -1,23 +1,23 @@
 """Liquid propellant categories (biliquid)."""
 
-from machwave.services.cea import create_cea_service
+import machwave.services.cea as cea_service
 
-from ..components import ComponentRole, PropellantComponent
-from ..properties import ThermochemicalProperties
-from .base import MixtureType, Propellant, PropellantValidationError
+from .. import components as propellant_components
+from .. import properties as propellant_properties
+from . import base as propellant_base
 
 
-class BiliquidPropellant(Propellant):
+class BiliquidPropellant(propellant_base.Propellant):
     """Biliquid propellant with separate oxidizer and fuel."""
 
-    mixture_type = MixtureType.BILIQUID
+    mixture_type = propellant_base.MixtureType.BILIQUID
 
     def __init__(
         self,
         name: str,
-        components: list[PropellantComponent] | None = None,
+        components: list[propellant_components.PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
-        properties: ThermochemicalProperties | None = None,
+        properties: propellant_properties.ThermochemicalProperties | None = None,
         oxidizer_to_fuel_ratio: float | None = None,
     ):
         """
@@ -51,28 +51,28 @@ class BiliquidPropellant(Propellant):
             PropellantValidationError: If validation fails.
         """
         if not self.components or len(self.components) != 2:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Biliquid propellant '{self.name}' requires exactly two components"
             )
 
         _ = self._get_fuel()  # check fuel
         _ = self._get_oxidizer()  # check oxidizer
 
-    def _get_fuel(self) -> PropellantComponent:
+    def _get_fuel(self) -> propellant_components.PropellantComponent:
         """Get the fuel component."""
         for c in self.components:
-            if c.role == ComponentRole.FUEL:
+            if c.role == propellant_components.ComponentRole.FUEL:
                 return c
-        raise PropellantValidationError(
+        raise propellant_base.PropellantValidationError(
             f"Biliquid propellant '{self.name}' has no fuel component"
         )
 
-    def _get_oxidizer(self) -> PropellantComponent:
+    def _get_oxidizer(self) -> propellant_components.PropellantComponent:
         """Get the oxidizer component."""
         for c in self.components:
-            if c.role == ComponentRole.OXIDIZER:
+            if c.role == propellant_components.ComponentRole.OXIDIZER:
                 return c
-        raise PropellantValidationError(
+        raise propellant_base.PropellantValidationError(
             f"Biliquid propellant '{self.name}' has no oxidizer component"
         )
 
@@ -86,7 +86,7 @@ class BiliquidPropellant(Propellant):
         fuel = self._get_fuel()
         oxidizer = self._get_oxidizer()
 
-        return create_cea_service(
+        return cea_service.create_cea_service(
             oxidizer_name=oxidizer.name,
             fuel_name=fuel.name,
             oxidizer_to_fuel_ratio=self.oxidizer_to_fuel_ratio,

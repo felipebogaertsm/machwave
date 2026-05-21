@@ -1,14 +1,10 @@
 """Solid propellant category."""
 
-from machwave.services.cea import (
-    create_cea_service,
-    generate_card_string,
-    normalize_custom_propellant_name,
-)
+import machwave.services.cea as cea_service
 
-from ..components import ComponentRole, PropellantComponent
-from ..properties import ThermochemicalProperties
-from .base import MixtureType, Propellant, PropellantValidationError
+from .. import components as propellant_components
+from .. import properties as propellant_properties
+from . import base as propellant_base
 
 MASS_FRACTION_SUM_TOLERANCE = 1e-6
 
@@ -29,18 +25,18 @@ class BurnRateOutOfBoundsError(Exception):
         )
 
 
-class SolidPropellant(Propellant):
+class SolidPropellant(propellant_base.Propellant):
     """Solid propellant with burn rate model."""
 
-    mixture_type = MixtureType.SOLID
+    mixture_type = propellant_base.MixtureType.SOLID
 
     def __init__(
         self,
         name: str,
-        components: list[PropellantComponent] | None = None,
+        components: list[propellant_components.PropellantComponent] | None = None,
         mass_fractions: list[float] | None = None,
         combustion_efficiency: float = 0.95,
-        properties: ThermochemicalProperties | None = None,
+        properties: propellant_properties.ThermochemicalProperties | None = None,
         burn_rate_map: list[dict[str, float | int]] | None = None,
     ):
         """
@@ -66,7 +62,7 @@ class SolidPropellant(Propellant):
         self.mass_fractions = mass_fractions if mass_fractions is not None else []
 
     @property
-    def properties(self) -> ThermochemicalProperties | None:
+    def properties(self) -> propellant_properties.ThermochemicalProperties | None:
         """Expose pre-defined thermochemical properties when present."""
         return self._properties
 
@@ -80,43 +76,48 @@ class SolidPropellant(Propellant):
         # Allow empty components if properties are pre-defined (for formulations)
         if not self.components:
             if self._properties is None:
-                raise PropellantValidationError(
+                raise propellant_base.PropellantValidationError(
                     f"Solid propellant '{self.name}' has no components or pre-defined "
                     "properties"
                 )
             return
 
         if not self.mass_fractions:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' requires mass_fractions for its "
                 "components"
             )
         if len(self.mass_fractions) != len(self.components):
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' mass_fractions length must match "
                 "components length"
             )
         if any(mf < 0 for mf in self.mass_fractions):
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' mass_fractions must be non-negative"
             )
         mf_sum = sum(self.mass_fractions)
         if abs(mf_sum - 1.0) > MASS_FRACTION_SUM_TOLERANCE:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' mass_fractions must sum to 1.0 (got "
                 f"{mf_sum:.6f})"
             )
 
-        has_oxidizer = any(c.role == ComponentRole.OXIDIZER for c in self.components)
-        has_fuel = any(c.role == ComponentRole.FUEL for c in self.components)
+        has_oxidizer = any(
+            c.role == propellant_components.ComponentRole.OXIDIZER
+            for c in self.components
+        )
+        has_fuel = any(
+            c.role == propellant_components.ComponentRole.FUEL for c in self.components
+        )
 
         if not has_oxidizer:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' requires at least one oxidizer "
                 "component"
             )
         if not has_fuel:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Solid propellant '{self.name}' requires at least one fuel component"
             )
 
@@ -133,13 +134,13 @@ class SolidPropellant(Propellant):
                 comp.to_cea_dict(weight_percent=mf * 100.0)
                 for comp, mf in zip(self.components, self.mass_fractions)
             ]
-            card_string = generate_card_string(components_data)
-            return create_cea_service(
-                propellant_name=normalize_custom_propellant_name(self.name),
+            card_string = cea_service.generate_card_string(components_data)
+            return cea_service.create_cea_service(
+                propellant_name=cea_service.normalize_custom_propellant_name(self.name),
                 card_string=card_string,
             )
         else:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Cannot create thermochemical service without components for "
                 f"propellant '{self.name}'"
             )
@@ -149,7 +150,7 @@ class SolidPropellant(Propellant):
         chamber_pressure: float,
         expansion_ratio: float = 8.0,
         mixture_ratio: float | None = None,
-    ) -> ThermochemicalProperties:
+    ) -> propellant_properties.ThermochemicalProperties:
         """
         Evaluate thermochemical properties.
 
@@ -204,7 +205,7 @@ class SolidPropellant(Propellant):
             PropellantValidationError: If the burn rate model is not defined.
         """
         if not self.burn_rate_map:
-            raise PropellantValidationError(
+            raise propellant_base.PropellantValidationError(
                 f"Burn rate model not defined for propellant '{self.name}'"
             )
 

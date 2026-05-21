@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.core.compressible_flow import isentropic
+import machwave.core.compressible_flow.isentropic as isentropic
 
 
 def test_get_critical_pressure_ratio():

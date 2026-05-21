@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from machwave.core.structural import pressure_vessels
+import machwave.core.structural.pressure_vessels as pressure_vessels
 
 
 def test_unit_pressure_stresses() -> None:

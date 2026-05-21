@@ -5,19 +5,16 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
-from machwave.core.geometric import get_circle_area
-from machwave.core.mechanics import (
-    get_center_of_gravity,
-    get_moment_of_inertia_tensor,
-)
-from machwave.models.grain import GrainGeometryError, GrainSegment3D
-from machwave.models.grain.base import InhibitedSurfaces
+import machwave.core.geometric as geometric
+import machwave.core.mechanics as mechanics
+import machwave.models.grain as grain
+import machwave.models.grain.base as grain_base
 
-from .base import FMMGrainSegment
-from .contours import get_contours, get_length
+from . import base as fmm_base
+from . import contours as fmm_contours
 
 
-class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
+class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     """
     Fast Marching Method (FMM) implementation for 3D grain segment.
 
@@ -31,7 +28,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         self,
         length: float,
         outer_diameter: float,
-        inhibited_surfaces: InhibitedSurfaces | None = None,
+        inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
         map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
@@ -71,7 +68,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         z_index = 0 if z_index < 0 else (max_index if z_index > max_index else z_index)
 
         face_area = float(self.map_to_area(float(np.count_nonzero(solid[z_index]))))
-        return get_circle_area(self.outer_diameter) - face_area
+        return geometric.get_circle_area(self.outer_diameter) - face_area
 
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
@@ -142,7 +139,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         z_index = int(round(length_normalized))
         boolean_slice_2d = boolean_3d[z_index]
 
-        return get_contours(
+        return fmm_contours.get_contours(
             boolean_slice_2d,
             map_dist,
         )
@@ -157,9 +154,9 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         total = 0.0
         for z_index in range(self.get_normalized_length()):
             boolean_slice_2d = boolean_3d[z_index]
-            contours = get_contours(boolean_slice_2d, map_dist)
+            contours = fmm_contours.get_contours(boolean_slice_2d, map_dist)
             perimeter = sum(
-                self.map_to_length(get_length(contour, self.map_dim))
+                self.map_to_length(fmm_contours.get_length(contour, self.map_dim))
                 for contour in contours
             )
             total += float(perimeter) * float(length_factor)
@@ -229,7 +226,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
             GrainGeometryError: If web distance exceeds web thickness.
         """
         if web_distance > self.get_web_thickness():
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 "The web distance traveled is greater than the grain "
                 "segment's web thickness."
             )
@@ -254,7 +251,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         z_indices, y_indices, x_indices = np.where(mask)
 
         if len(x_indices) == 0:
-            raise GrainGeometryError(
+            raise grain.GrainGeometryError(
                 "No active material found at the given web distance."
             )
 
@@ -310,7 +307,7 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         y_phys = np.asarray(self.map_to_length(y_coords), dtype=np.float64)
         z_phys = np.asarray(self.map_to_length(z_coords), dtype=np.float64)
 
-        return get_center_of_gravity(x_phys, y_phys, z_phys)
+        return mechanics.get_center_of_gravity(x_phys, y_phys, z_phys)
 
     def get_moment_of_inertia(
         self, ideal_density: float, web_distance: float = 0.0
@@ -355,4 +352,4 @@ class FMMGrainSegment3D(FMMGrainSegment, GrainSegment3D, ABC):
         element_mass = element_volume * ideal_density * self.density_ratio
 
         # Use core function to compute inertia tensor
-        return get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)
+        return mechanics.get_moment_of_inertia_tensor(x_rel, y_rel, z_rel, element_mass)

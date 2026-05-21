@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from machwave.models.feed_systems.tanks import Tank
+import machwave.models.feed_systems.tanks as tanks
 
 
 class FeedSystem(ABC):
@@ -16,7 +16,7 @@ class FeedSystem(ABC):
     schedule mass flow from pump curves or other internal logic can ignore them.
     """
 
-    def __init__(self, fuel_tank: Tank, oxidizer_tank: Tank):
+    def __init__(self, fuel_tank: tanks.Tank, oxidizer_tank: tanks.Tank):
         """
         Initialize the FeedSystem with associated tank objects.
 

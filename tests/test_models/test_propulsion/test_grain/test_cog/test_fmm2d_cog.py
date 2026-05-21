@@ -1,6 +1,6 @@
 import numpy as np
 
-from machwave.models.grain import Grain
+import machwave.models.grain as grain_models
 from tests.test_models.test_propulsion.test_grain.test_cog.conftest import (
     fmm2d_geometries,
 )
@@ -53,7 +53,7 @@ class TestFMM2DGrainMultiSegmentCoG:
 
     def test_single_segment_cog_position(self, segment_factory, geometry_name):
         """Test CoG with a single 2D segment of length 1.0m."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
         segment = segment_factory(length=1.0, outer_diameter=0.1)
         grain.add_segment(segment)
 
@@ -67,7 +67,7 @@ class TestFMM2DGrainMultiSegmentCoG:
         self, segment_factory, geometry_name
     ):
         """Test CoG with 2 2D segments of length 1.0m each with 0.1m spacing."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         segment1 = segment_factory(length=1.0, outer_diameter=0.1)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1)
@@ -84,7 +84,7 @@ class TestFMM2DGrainMultiSegmentCoG:
 
     def test_two_segments_zero_spacing(self, segment_factory, geometry_name):
         """Test CoG with 2 2D segments with zero spacing (touching)."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
         segment1 = segment_factory(length=1.0, outer_diameter=0.1)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1)
@@ -102,7 +102,7 @@ class TestFMM2DGrainMultiSegmentCoG:
         self, segment_factory, geometry_name
     ):
         """Test that CoG remains relatively constant during burn for 3 identical 2D segments."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         segment1 = segment_factory(length=1.0, outer_diameter=0.1)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1)
@@ -130,7 +130,7 @@ class TestFMM2DGrainMultiSegmentCoG:
 
     def test_two_segments_different_densities(self, segment_factory, geometry_name):
         """Test CoG with 2 2D segments of same geometry but different densities."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         segment1 = segment_factory(length=1.0, outer_diameter=0.1, density_ratio=1.0)
         segment2 = segment_factory(length=1.0, outer_diameter=0.1, density_ratio=0.7)

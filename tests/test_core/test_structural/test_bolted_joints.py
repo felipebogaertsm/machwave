@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from machwave.core.structural import bolted_joints
+import machwave.core.structural.bolted_joints as bolted_joints
 
 
 @pytest.mark.parametrize(

@@ -1,36 +1,36 @@
 import pytest
 
-from machwave.models.grain import GrainGeometryError
-from machwave.models.grain.geometries import BatesSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 def test_bates_segment_geometry_validation():
     # Control group:
-    _ = BatesSegment(
+    _ = grain_geometries.BatesSegment(
         outer_diameter=100e-3,
         core_diameter=30e-3,
         length=120e-3,
     )
 
     # Larger core diameter than outer diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = BatesSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.BatesSegment(
             outer_diameter=100e-3,
             core_diameter=300e-3,
             length=120e-3,
         )
 
     # Negative core diameter:
-    with pytest.raises(GrainGeometryError):
-        _ = BatesSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.BatesSegment(
             outer_diameter=100e-3,
             core_diameter=-30e-3,
             length=120e-3,
         )
 
     # Negative length:
-    with pytest.raises(GrainGeometryError):
-        _ = BatesSegment(
+    with pytest.raises(grain_models.GrainGeometryError):
+        _ = grain_geometries.BatesSegment(
             outer_diameter=100e-3,
             core_diameter=30e-3,
             length=-120e-3,

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from machwave.models.motors import LiquidEngine, Motor, SolidMotor
-from machwave.simulation.liquid.states import LiquidEngineState
-from machwave.simulation.results import SimulationResult
-from machwave.simulation.solid.states import SolidMotorState
-from machwave.simulation.states import MotorState
+import machwave.models.motors as motors
+import machwave.simulation.liquid.states as liquid_states
+import machwave.simulation.results as simulation_results
+import machwave.simulation.solid.states as solid_states
+import machwave.simulation.states as simulation_states
 
 
 @dataclass
@@ -37,7 +37,7 @@ class InternalBallisticsSimulation:
 
     def __init__(
         self,
-        motor: Motor,
+        motor: motors.Motor,
         params: InternalBallisticsSimulationParams,
     ) -> None:
         """
@@ -47,20 +47,20 @@ class InternalBallisticsSimulation:
             motor: Motor model to simulate.
             params: Simulation parameters.
         """
-        self.motor: Motor = motor
+        self.motor: motors.Motor = motor
         self.params: InternalBallisticsSimulationParams = params
 
-    def _build_motor_state(self) -> MotorState:
+    def _build_motor_state(self) -> simulation_states.MotorState:
         """Build the motor state matching the configured motor type."""
-        if isinstance(self.motor, SolidMotor):
-            return SolidMotorState(
+        if isinstance(self.motor, motors.SolidMotor):
+            return solid_states.SolidMotorState(
                 motor=self.motor,
                 igniter_pressure=self.params.igniter_pressure,
                 external_pressure=self.params.external_pressure,
                 other_losses=self.params.other_losses,
             )
-        if isinstance(self.motor, LiquidEngine):
-            return LiquidEngineState(
+        if isinstance(self.motor, motors.LiquidEngine):
+            return liquid_states.LiquidEngineState(
                 motor=self.motor,
                 igniter_pressure=self.params.igniter_pressure,
                 external_pressure=self.params.external_pressure,
@@ -68,7 +68,7 @@ class InternalBallisticsSimulation:
             )
         raise ValueError("Unsupported motor type.")
 
-    def run(self) -> SimulationResult:
+    def run(self) -> simulation_results.SimulationResult:
         """Run the simulation to thrust termination and return its result."""
         motor_state = self._build_motor_state()
 

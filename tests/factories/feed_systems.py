@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from machwave.models import feed_systems as feed_systems_models
-from machwave.models.feed_systems import tanks
+import machwave.models.feed_systems as feed_systems_models
+import machwave.models.feed_systems.tanks as tanks
 
 
 class TankFactory:

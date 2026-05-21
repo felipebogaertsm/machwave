@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from machwave.models.grain import Grain
-from machwave.models.grain.geometries import BatesSegment
+import machwave.models.grain as grain_models
+import machwave.models.grain.geometries as grain_geometries
 
 
 class TestBatesSegmentMomentOfInertia:
@@ -17,7 +17,7 @@ class TestBatesSegmentMomentOfInertia:
         length = 0.2  # 200 mm
         ideal_density = 1800.0  # kg/m^3
 
-        segment = BatesSegment(
+        segment = grain_geometries.BatesSegment(
             outer_diameter=outer_diameter,
             core_diameter=core_diameter,
             length=length,
@@ -55,14 +55,14 @@ class TestBatesSegmentMomentOfInertia:
         core_diameter = 0.045
         ideal_density = 1800.0
 
-        segment_short = BatesSegment(
+        segment_short = grain_geometries.BatesSegment(
             outer_diameter=outer_diameter,
             core_diameter=core_diameter,
             length=0.1,
             density_ratio=1.0,
         )
 
-        segment_long = BatesSegment(
+        segment_long = grain_geometries.BatesSegment(
             outer_diameter=outer_diameter,
             core_diameter=core_diameter,
             length=0.3,
@@ -85,7 +85,7 @@ class TestBatesSegmentMomentOfInertia:
 
     def test_segment_moi_decreases_with_burn(self):
         """Test that MOI decreases as propellant burns (mass decreases)."""
-        segment = BatesSegment(
+        segment = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
@@ -111,7 +111,7 @@ class TestBatesSegmentMomentOfInertia:
 
     def test_segment_moi_scales_with_density(self):
         """Test that MOI scales linearly with density."""
-        segment = BatesSegment(
+        segment = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
@@ -139,7 +139,7 @@ class TestBatesSegmentMomentOfInertia:
         length = 0.3  # 300 mm
         ideal_density = 1800.0
 
-        segment = BatesSegment(
+        segment = grain_geometries.BatesSegment(
             outer_diameter=outer_diameter,
             core_diameter=core_diameter,
             length=length,
@@ -172,8 +172,8 @@ class TestBatesGrainMomentOfInertia:
 
     def test_single_segment_grain_moi(self):
         """Test MOI for a grain with a single BATES segment."""
-        grain = Grain(spacing=0.0)
-        segment = BatesSegment(
+        grain = grain_models.Grain(spacing=0.0)
+        segment = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
@@ -195,14 +195,14 @@ class TestBatesGrainMomentOfInertia:
 
     def test_two_segments_equal_moi(self):
         """Test MOI for two identical BATES segments."""
-        grain = Grain(spacing=0.0)
-        segment1 = BatesSegment(
+        grain = grain_models.Grain(spacing=0.0)
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
             density_ratio=1.0,
         )
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
@@ -228,10 +228,10 @@ class TestBatesGrainMomentOfInertia:
 
     def test_three_segments_with_spacing(self):
         """Test MOI for three BATES segments with spacing."""
-        grain = Grain(spacing=0.05)  # 50mm spacing
+        grain = grain_models.Grain(spacing=0.05)  # 50mm spacing
 
         for _ in range(3):
-            segment = BatesSegment(
+            segment = grain_geometries.BatesSegment(
                 outer_diameter=0.117,
                 core_diameter=0.045,
                 length=0.2,
@@ -252,10 +252,10 @@ class TestBatesGrainMomentOfInertia:
 
     def test_moi_decreases_during_burn_multisegment(self):
         """Test that total MOI decreases as multi-segment grain burns."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
         for _ in range(2):
-            segment = BatesSegment(
+            segment = grain_geometries.BatesSegment(
                 outer_diameter=0.117,
                 core_diameter=0.045,
                 length=0.2,
@@ -280,16 +280,16 @@ class TestBatesGrainMomentOfInertia:
 
     def test_different_density_ratios(self):
         """Test MOI calculation with segments of different density ratios."""
-        grain = Grain(spacing=0.0)
+        grain = grain_models.Grain(spacing=0.0)
 
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.2,
@@ -309,17 +309,17 @@ class TestBatesGrainMomentOfInertia:
 
     def test_parallel_axis_theorem_validation(self):
         """Validate that parallel axis theorem is correctly applied."""
-        grain = Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.1)
 
         # Create two different segments
-        segment1 = BatesSegment(
+        segment1 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.15,
             density_ratio=1.0,
         )
 
-        segment2 = BatesSegment(
+        segment2 = grain_geometries.BatesSegment(
             outer_diameter=0.117,
             core_diameter=0.045,
             length=0.25,
