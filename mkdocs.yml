@@ -60,7 +60,6 @@ nav:
           - mass_balance: api/core/mass_balance.md
           - solvers: api/core/solvers.md
           - structural: api/core/structural.md
-      - io: api/io.md
       - models:
           - Overview: api/models.md
           - feed_systems:
@@ -81,6 +80,7 @@ nav:
       - montecarlo: api/montecarlo.md
       - services:
           - Overview: api/services.md
+          - eng: api/services/eng.md
           - plots: api/services/plots.md
       - simulation: api/simulation.md
 
