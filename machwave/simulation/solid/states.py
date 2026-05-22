@@ -94,9 +94,6 @@ class SolidMotorState(simulation_states.MotorState):
             d_t: Time increment [s].
             external_pressure: External pressure [Pa].
         """
-        if self.end_thrust:
-            return
-
         propellant_properties = self.motor.propellant.properties
         if propellant_properties is None:
             raise ValueError(
