@@ -35,6 +35,11 @@ class InternalBallisticsSimulation:
         params: Simulation parameters.
     """
 
+    _STATE_CLASS_BY_MOTOR_TYPE = (
+        (motors.SolidMotor, solid_states.SolidMotorState),
+        (motors.LiquidEngine, liquid_states.LiquidEngineState),
+    )
+
     def __init__(
         self,
         motor: motors.Motor,
@@ -52,21 +57,16 @@ class InternalBallisticsSimulation:
 
     def _build_motor_state(self) -> simulation_states.MotorState:
         """Build the motor state matching the configured motor type."""
-        if isinstance(self.motor, motors.SolidMotor):
-            return solid_states.SolidMotorState(
-                motor=self.motor,
-                igniter_pressure=self.params.igniter_pressure,
-                external_pressure=self.params.external_pressure,
-                other_losses=self.params.other_losses,
-            )
-        if isinstance(self.motor, motors.LiquidEngine):
-            return liquid_states.LiquidEngineState(
-                motor=self.motor,
-                igniter_pressure=self.params.igniter_pressure,
-                external_pressure=self.params.external_pressure,
-                other_losses=self.params.other_losses,
-            )
-        raise ValueError("Unsupported motor type.")
+        state_kwargs = {
+            "motor": self.motor,
+            "igniter_pressure": self.params.igniter_pressure,
+            "external_pressure": self.params.external_pressure,
+            "other_losses": self.params.other_losses,
+        }
+        for motor_type, state_class in self._STATE_CLASS_BY_MOTOR_TYPE:
+            if isinstance(self.motor, motor_type):
+                return state_class(**state_kwargs)
+        raise ValueError(f"Unsupported motor type: {type(self.motor).__name__}.")
 
     def run(self) -> simulation_results.SimulationResult:
         """Run the simulation to thrust termination and return its result."""
