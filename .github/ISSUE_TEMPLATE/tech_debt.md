@@ -1,5 +1,5 @@
 ---
-name: Tech debt / refactor
+name: Tech debt/refactor
 about: Propose a cleanup, refactor, or other internal improvement
 title: ""
 labels: tech-debt
