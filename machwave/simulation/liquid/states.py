@@ -72,9 +72,6 @@ class LiquidEngineState(simulation_states.MotorState):
             d_t: Time step.
             external_pressure: External pressure.
         """
-        if self.end_thrust:
-            return
-
         nozzle = self.motor.thrust_chamber.nozzle
         injector = self.motor.thrust_chamber.injector
         feed_system = self.motor.feed_system
