@@ -104,60 +104,59 @@ class SolidMotorState(simulation_states.MotorState):
             )
 
         nozzle = self.motor.thrust_chamber.nozzle
-        ideal_density = self.motor.propellant.ideal_density
+        ideal_propellant_density = self.motor.propellant.ideal_density
 
-        self.time.append(self.time[-1] + d_t)
+        time = self.time[-1] + d_t
+        self.time.append(time)
 
-        web_last = self.web[-1]
-        self.burn_area.append(self.motor.grain.get_burn_area(web_last))
-        self.propellant_volume.append(self.motor.grain.get_propellant_volume(web_last))
+        web_distance = self.web[-1]
+        burn_area = self.motor.grain.get_burn_area(web_distance)
+        self.burn_area.append(burn_area)
+        propellant_volume = self.motor.grain.get_propellant_volume(web_distance)
+        self.propellant_volume.append(propellant_volume)
         burn_rate = self.motor.propellant.get_burn_rate(self.chamber_pressure[-1])
         self.burn_rate.append(burn_rate)
-        self.web.append(web_last + burn_rate * (self.time[-1] - self.time[-2]))
+        web_consumed = burn_rate * d_t
+        self.web.append(web_distance + web_consumed)
 
-        self.free_chamber_volume.append(
-            self.motor.get_free_chamber_volume(self.propellant_volume[-1])
+        free_chamber_volume = self.motor.get_free_chamber_volume(propellant_volume)
+        self.free_chamber_volume.append(free_chamber_volume)
+        propellant_mass = self.motor.grain.get_propellant_mass(
+            web_distance=web_distance, ideal_density=ideal_propellant_density
         )
-        self.propellant_mass.append(
-            self.motor.grain.get_propellant_mass(
-                web_distance=self.web[-1],
-                ideal_density=ideal_density,
-            )
-        )
+        self.propellant_mass.append(propellant_mass)
 
-        self.propellant_cog.append(
-            self.motor.grain.get_center_of_gravity(web_distance=self.web[-1])
+        propellant_cog = self.motor.grain.get_center_of_gravity(
+            web_distance=web_distance
         )
-        self.propellant_moi.append(
-            self.motor.grain.get_moment_of_inertia(
-                ideal_density=ideal_density,
-                web_distance=self.web[-1],
-            )
+        self.propellant_cog.append(propellant_cog)
+        propellant_moi = self.motor.grain.get_moment_of_inertia(
+            ideal_density=ideal_propellant_density, web_distance=web_distance
         )
+        self.propellant_moi.append(propellant_moi)
 
-        new_chamber_pressure = rk4.rk4th_ode_solver(
+        chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": self.chamber_pressure[-1]},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,
             external_pressure=external_pressure,
             mass_flow_in=self.get_m_dot_in(),
-            free_chamber_volume=self.free_chamber_volume[-1],
+            free_chamber_volume=free_chamber_volume,
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
             flame_temperature=propellant_properties.adiabatic_flame_temperature,
             discharge_coefficient=nozzle.discharge_coefficient,
         )[0]
-        self.chamber_pressure.append(new_chamber_pressure)
-        self.exit_pressure.append(
-            isentropic.get_exit_pressure(
-                propellant_properties.k_exhaust,
-                nozzle.expansion_ratio,
-                new_chamber_pressure,
-            )
+        self.chamber_pressure.append(chamber_pressure)
+        exit_pressure = isentropic.get_exit_pressure(
+            propellant_properties.k_exhaust,
+            nozzle.expansion_ratio,
+            chamber_pressure,
         )
+        self.exit_pressure.append(exit_pressure)
 
-        chamber_pressure_psi = conversions.convert_pa_to_psi(new_chamber_pressure)
+        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
         throat_diameter_inch = conversions.convert_meter_to_inch(nozzle.throat_diameter)
         divergent_loss = losses.get_nozzle_divergent_loss_fraction(
             divergent_angle=nozzle.divergent_angle,
@@ -171,18 +170,19 @@ class SolidMotorState(simulation_states.MotorState):
             chamber_pressure_psi=chamber_pressure_psi,
             throat_diameter_inch=throat_diameter_inch,
             expansion_ratio=nozzle.expansion_ratio,
-            time=self.time[-1],
+            time=time,
             c_1=nozzle.c_1,
             c_2=nozzle.c_2,
+        )
+        characteristic_length_inch = conversions.convert_meter_to_inch(
+            free_chamber_volume / nozzle.get_throat_area()
         )
         two_phase_loss = losses.get_two_phase_flow_loss_fraction(
             chamber_pressure_psi=chamber_pressure_psi,
             mass_fraction_of_condensed_phase=propellant_properties.qsi_chamber,
             expansion_ratio=nozzle.expansion_ratio,
             throat_diameter_inch=throat_diameter_inch,
-            characteristic_length_inch=conversions.convert_meter_to_inch(
-                self.free_chamber_volume[-1] / nozzle.get_throat_area()
-            ),
+            characteristic_length_inch=characteristic_length_inch,
         )
         nozzle_efficiency = losses.get_overall_nozzle_efficiency(
             divergent_loss,
@@ -202,32 +202,31 @@ class SolidMotorState(simulation_states.MotorState):
         self.overall_efficiency.append(overall_efficiency)
 
         ideal_thrust_coefficient = nozzle_core.get_ideal_thrust_coefficient(
-            new_chamber_pressure,
-            self.exit_pressure[-1],
+            chamber_pressure,
+            exit_pressure,
             external_pressure,
             nozzle.expansion_ratio,
             propellant_properties.k_exhaust,
         )
+        self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
         thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
             ideal_thrust_coefficient, overall_efficiency
         )
         self.thrust_coefficient.append(thrust_coefficient)
-        self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
-        self.thrust.append(
-            nozzle_core.get_thrust_from_thrust_coefficient(
-                thrust_coefficient, new_chamber_pressure, nozzle.get_throat_area()
-            )
+        thrust = nozzle_core.get_thrust_from_thrust_coefficient(
+            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
         )
+        self.thrust.append(thrust)
 
-        if self.propellant_mass[-1] <= 0 and not self.end_burn:
-            self._burn_time = self.time[-1]
+        if propellant_mass <= 0 and not self.end_burn:
+            self._burn_time = time
             self.end_burn = True
         if not isentropic.is_flow_choked(
-            new_chamber_pressure,
+            chamber_pressure,
             external_pressure,
             isentropic.get_critical_pressure_ratio(propellant_properties.k_chamber),
         ):
             if self._burn_time is None:
-                self._burn_time = self.time[-1]
-            self._thrust_time = self.time[-1]
+                self._burn_time = time
+            self._thrust_time = time
             self.end_thrust = True
