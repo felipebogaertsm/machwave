@@ -9,8 +9,8 @@ import machwave.models.propellants.formulations.solid as solid_propellants
 from tests.factories import (
     BatesSegmentFactory,
     CombustionChamberFactory,
-    LiquidEngineFactory,
-    LiquidEngineThrustChamberFactory,
+    BiliquidEngineFactory,
+    BiliquidEngineThrustChamberFactory,
     NozzleFactory,
     SolidMotorFactory,
     SolidMotorThrustChamberFactory,
@@ -176,9 +176,9 @@ class TestSolidMotorCoG:
         assert cog[0] > 0
 
 
-class TestLiquidEngineCoG:
-    def test_liquid_engine_cog_default_estimates(self):
-        engine = LiquidEngineFactory.build()
+class TestBiliquidEngineCoG:
+    def test_biliquid_engine_cog_default_estimates(self):
+        engine = BiliquidEngineFactory.build()
 
         cog_full = engine.get_center_of_gravity(propellant_fraction=0.0)
         assert isinstance(cog_full, np.ndarray)
@@ -189,13 +189,13 @@ class TestLiquidEngineCoG:
         assert isinstance(cog_half, np.ndarray)
         assert cog_half.shape == (3,)
 
-    def test_liquid_engine_cog_custom_positions(self):
+    def test_biliquid_engine_cog_custom_positions(self):
         dry_cog_value = 0.15
         ox_cog = 0.8
         fuel_cog = 0.75
 
-        engine = LiquidEngineFactory.build(
-            thrust_chamber=LiquidEngineThrustChamberFactory.build(
+        engine = BiliquidEngineFactory.build(
+            thrust_chamber=BiliquidEngineThrustChamberFactory.build(
                 dry_mass=5.0,
                 center_of_gravity_coordinate=(dry_cog_value, 0.0, 0.0),
             ),

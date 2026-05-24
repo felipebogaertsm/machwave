@@ -1,5 +1,5 @@
 """
-End-to-end integration tests for LiquidEngine internal ballistics
+End-to-end integration tests for BiliquidEngine internal ballistics
 simulations.
 
 The motor configuration lives in tests/test_simulations/motor_builders.py so
@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 import machwave.models.motors as motors_models
-import machwave.simulation.liquid as liquid_simulation
+import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
@@ -22,38 +22,38 @@ from tests.test_simulations.conftest import (
 
 @pytest.fixture(scope="module")
 def simulated_motor_and_result() -> tuple[
-    motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+    motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
 ]:
-    motor, params = motor_builders.build_1kn_lre()
+    motor, params = motor_builders.build_1kn_biliquid_engine()
     return motor, run_simulation(motor, params)
 
 
 @pytest.fixture(scope="module")
 def simulation_result(
     simulated_motor_and_result: tuple[
-        motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
     ],
-) -> liquid_simulation.LiquidSimulationResult:
+) -> biliquid_simulation.BiliquidSimulationResult:
     return simulated_motor_and_result[1]
 
 
 def test_simulation_completes_with_terminal_state(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
-    assert isinstance(simulation_result, liquid_simulation.LiquidSimulationResult)
+    assert isinstance(simulation_result, biliquid_simulation.BiliquidSimulationResult)
     assert simulation_result.end_thrust is True
     assert simulation_result.time.size > 1
 
 
 def test_thrust_time_is_finite_and_positive(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     assert np.isfinite(simulation_result.thrust_time)
     assert simulation_result.thrust_time > 0.0
 
 
 def test_propellant_masses_are_monotone_non_increasing(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     for series_name in ("fuel_mass", "oxidizer_mass", "propellant_mass"):
         series = getattr(simulation_result, series_name)
@@ -68,7 +68,7 @@ def test_propellant_masses_are_monotone_non_increasing(
 
 
 def test_chamber_pressure_and_thrust_are_physically_plausible(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     peak_pressure = float(np.max(simulation_result.chamber_pressure))
     peak_thrust = float(np.max(simulation_result.thrust))
@@ -83,14 +83,14 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
 
 
 def test_recorded_per_timestep_arrays_are_aligned(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     assert_recorded_arrays_aligned(simulation_result)
 
 
-def _build_state_for_burnout_test() -> liquid_simulation.LiquidEngineState:
-    motor, params = motor_builders.build_1kn_lre()
-    return liquid_simulation.LiquidEngineState(
+def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+    return biliquid_simulation.BiliquidEngineState(
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
@@ -120,7 +120,7 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_live_mixture_ratio_drives_cea(
     simulated_motor_and_result: tuple[
-        motors_models.LiquidEngine, liquid_simulation.LiquidSimulationResult
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
     ],
 ) -> None:
     motor, simulation_result = simulated_motor_and_result
@@ -155,7 +155,7 @@ def test_live_mixture_ratio_drives_cea(
 
 
 def test_simulation_runs_through_burnout_without_crashing(
-    simulation_result: liquid_simulation.LiquidSimulationResult,
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     assert simulation_result.end_thrust is True
     assert simulation_result.propellant_mass[-1] <= simulation_result.propellant_mass[0]

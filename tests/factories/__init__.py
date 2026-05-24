@@ -18,35 +18,35 @@ from tests.factories.grain import (
     WagonWheelGrainSegmentFactory,
 )
 from tests.factories.motors import (
-    LiquidEngineFactory,
+    BiliquidEngineFactory,
     SolidMotorFactory,
 )
 from tests.factories.propellants import (
     BiliquidPropellantFactory,
+    BiliquidPropellantPropertiesFactory,
     FuelComponentFactory,
-    LiquidPropellantPropertiesFactory,
     OxidizerComponentFactory,
     SolidPropellantPropertiesFactory,
 )
 from tests.factories.thrust_chamber import (
+    BiliquidEngineThrustChamberFactory,
     BipropellantInjectorFactory,
     CombustionChamberFactory,
-    LiquidEngineThrustChamberFactory,
     NozzleFactory,
     SolidMotorThrustChamberFactory,
 )
 
 __all__ = [
     "BatesSegmentFactory",
+    "BiliquidEngineFactory",
+    "BiliquidEngineThrustChamberFactory",
     "BiliquidPropellantFactory",
+    "BiliquidPropellantPropertiesFactory",
     "BipropellantInjectorFactory",
     "CombustionChamberFactory",
     "ConicalGrainSegmentFactory",
     "DGrainSegmentFactory",
     "FuelComponentFactory",
-    "LiquidEngineFactory",
-    "LiquidEngineThrustChamberFactory",
-    "LiquidPropellantPropertiesFactory",
     "MultiPortGrainSegmentFactory",
     "NozzleFactory",
     "OxidizerComponentFactory",

@@ -1,6 +1,6 @@
 # models.feed_systems
 
-Feed-system models for liquid rocket engines. The package describes how
+Feed-system models for biliquid rocket engines. The package describes how
 propellant is delivered from the tanks to the combustion chamber, and is
 organised around three concerns:
 
@@ -22,7 +22,7 @@ Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.b
 
 `discharge_coefficient` and `injector_area` are keyword-only with `None` defaults: pressure-fed cycles need them to evaluate the injector orifice equation, while turbopump cycles that schedule mass flow from pump-curve solutions do not. Keeping the keywords on the abstract base means a single call site in the integrator works against either kind of cycle.
 
-The concrete propellant mass-flow consumer is [`machwave.simulation.liquid.states.LiquidEngineState.run_timestep`][machwave.simulation.liquid.states.LiquidEngineState.run_timestep], which always passes the keywords explicitly — code calling these methods should follow the same pattern.
+The concrete propellant mass-flow consumer is [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which always passes the keywords explicitly — code calling these methods should follow the same pattern.
 
 ## Public surface
 

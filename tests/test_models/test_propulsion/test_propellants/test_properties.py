@@ -7,7 +7,7 @@ import scipy.constants
 
 import machwave.models.propellants.properties as propellant_properties
 from tests.factories import (
-    LiquidPropellantPropertiesFactory,
+    BiliquidPropellantPropertiesFactory,
     SolidPropellantPropertiesFactory,
 )
 
@@ -54,7 +54,7 @@ class TestIsTwoPhaseFlow:
 
     def test_zero_qsi_is_not_two_phase(self):
         """Test that propellants with qsi = 0 are single-phase."""
-        props = LiquidPropellantPropertiesFactory.build()
+        props = BiliquidPropellantPropertiesFactory.build()
 
         assert props.is_two_phase_flow is False
 
@@ -123,12 +123,12 @@ class TestSolidPropellantBehavior:
         assert props.is_two_phase_flow is True
 
 
-class TestLiquidPropellantBehavior:
-    """Test suite for liquid propellant specific behavior (qsi = 0)."""
+class TestBiliquidPropellantBehavior:
+    """Test suite for biliquid propellant specific behavior (qsi = 0)."""
 
-    def test_liquid_propellant_has_zero_qsi(self):
-        """Test that liquid propellants have qsi = 0 and are single-phase."""
-        props = LiquidPropellantPropertiesFactory.build()
+    def test_biliquid_propellant_has_zero_qsi(self):
+        """Test that biliquid propellants have qsi = 0 and are single-phase."""
+        props = BiliquidPropellantPropertiesFactory.build()
 
         assert props.qsi_chamber == 0.0
         assert props.qsi_exhaust == 0.0

@@ -10,7 +10,7 @@ from tests.factories.feed_systems import StackedTankPressureFedFeedSystemFactory
 from tests.factories.grain import BatesSegmentFactory
 from tests.factories.propellants import BiliquidPropellantFactory
 from tests.factories.thrust_chamber import (
-    LiquidEngineThrustChamberFactory,
+    BiliquidEngineThrustChamberFactory,
     SolidMotorThrustChamberFactory,
 )
 
@@ -40,17 +40,17 @@ class SolidMotorFactory:
         return motors_models.SolidMotor(**kwargs)
 
 
-class LiquidEngineFactory:
+class BiliquidEngineFactory:
     """Defaults to an N2O/Ethanol engine on a pressure-fed feed system."""
 
     @classmethod
-    def build(cls, **overrides: Any) -> motors_models.LiquidEngine:
+    def build(cls, **overrides: Any) -> motors_models.BiliquidEngine:
         propellant = (
             overrides.pop("propellant", None) or BiliquidPropellantFactory.build()
         )
         thrust_chamber = (
             overrides.pop("thrust_chamber", None)
-            or LiquidEngineThrustChamberFactory.build()
+            or BiliquidEngineThrustChamberFactory.build()
         )
         feed_system = (
             overrides.pop("feed_system", None)
@@ -65,4 +65,4 @@ class LiquidEngineFactory:
             fuel_tank_cog=0.4,
         )
         kwargs.update(overrides)
-        return motors_models.LiquidEngine(**kwargs)
+        return motors_models.BiliquidEngine(**kwargs)

@@ -7,28 +7,28 @@ import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
-import machwave.simulation.liquid.results as liquid_results
+import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
 
-class LiquidEngineState(simulation_states.MotorState):
-    """State for a Liquid Rocket Engine."""
+class BiliquidEngineState(simulation_states.MotorState):
+    """State for a biliquid rocket engine."""
 
-    motor: motors.LiquidEngine
-    result_class = liquid_results.LiquidSimulationResult
+    motor: motors.BiliquidEngine
+    result_class = biliquid_results.BiliquidSimulationResult
 
     def __init__(
         self,
-        motor: motors.LiquidEngine,
+        motor: motors.BiliquidEngine,
         igniter_pressure: float,
         external_pressure: float,
         other_losses: float,
     ) -> None:
         """
-        Initialize a liquid engine state.
+        Initialize a biliquid engine state.
 
         Args:
-            motor: Liquid engine to track.
+            motor: Biliquid engine to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
             other_losses: Fractional losses not covered by specific

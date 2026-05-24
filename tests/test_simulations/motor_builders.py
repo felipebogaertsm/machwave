@@ -3,8 +3,8 @@ Shared motor + simulation-params builders for end-to-end simulation tests
 and benchmarks.
 
 These configurations mirror the example scripts under examples/ (apcp_motor,
-kappa_rnakka, nero_motor, 1kn_lre) but are duplicated here so tests stay
-independent of the example layer.
+kappa_rnakka, nero_motor, 1kn_biliquid_engine) but are duplicated here so tests
+stay independent of the example layer.
 """
 
 from __future__ import annotations
@@ -15,12 +15,12 @@ import machwave.models.propellants.formulations.solid as solid_propellants
 import machwave.simulation as machwave_simulation
 from tests.factories import (
     BatesSegmentFactory,
+    BiliquidEngineFactory,
+    BiliquidEngineThrustChamberFactory,
     BiliquidPropellantFactory,
     BipropellantInjectorFactory,
     CombustionChamberFactory,
     FuelComponentFactory,
-    LiquidEngineFactory,
-    LiquidEngineThrustChamberFactory,
     NozzleFactory,
     OxidizerComponentFactory,
     SolidMotorFactory,
@@ -154,8 +154,8 @@ def build_nero_motor() -> tuple[
     return motor, params
 
 
-def build_1kn_lre() -> tuple[
-    motors_models.LiquidEngine, machwave_simulation.InternalBallisticsSimulationParams
+def build_1kn_biliquid_engine() -> tuple[
+    motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
     """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
     oxidizer = OxidizerComponentFactory.build(initial_temperature=300.0)
@@ -185,7 +185,7 @@ def build_1kn_lre() -> tuple[
         piston_loss=1e5,
     )
 
-    thrust_chamber = LiquidEngineThrustChamberFactory.build(
+    thrust_chamber = BiliquidEngineThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
             inlet_diameter=55e-3,
             throat_diameter=25.4e-3,
@@ -202,7 +202,7 @@ def build_1kn_lre() -> tuple[
         ),
     )
 
-    motor = LiquidEngineFactory.build(
+    motor = BiliquidEngineFactory.build(
         propellant=propellant,
         feed_system=feed_system,
         thrust_chamber=thrust_chamber,

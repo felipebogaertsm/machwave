@@ -55,8 +55,8 @@ def get_kinetics_loss_fraction(
 
     Kinetics loss accounts for the decrement in performance due to incomplete
     heat transfer of latent to sensible heat caused by the finite time required
-    for the gas-phase chemical reactions to occur. Valid for liquid, solid, and
-    hybrid propellants; `i_sp_th_frozen` and `i_sp_th_shifting` must share the
+    for the gas-phase chemical reactions to occur. Valid for biliquid, solid,
+    and hybrid propellants; `i_sp_th_frozen` and `i_sp_th_shifting` must share the
     same expansion ratio.
 
     A pressure correction dampens the kinetics loss above 1.379 MPa (200 psi).
@@ -101,8 +101,8 @@ def get_boundary_layer_loss_fraction(
     viscous and heat-transfer effects on the nozzle walls. It is time
     dependent: the exponential transient is important in motors with short
     burn durations (under 4 s). Dependence on expansion ratio represents the
-    effect of the amount of nozzle surface area. Valid for liquid, solid, and
-    hybrid propellants.
+    effect of the amount of nozzle surface area. Valid for biliquid, solid,
+    and hybrid propellants.
 
     Time constant `c_2` comes from analysis of the transient heating of a
     BATES motor. Time constant `c_1` was obtained from a direct measurement

@@ -5,7 +5,7 @@ import machwave.models.feed_systems.tanks as tanks
 
 class FeedSystem(ABC):
     """
-    Abstract base class for a bipropellant feed system in a liquid rocket engine (LRE).
+    Abstract base class for a bipropellant feed system in a biliquid rocket engine.
 
     This class is responsible for determining oxidizer and fuel mass flows as a function of tank/pressurant states,
     pumps (if any), and current chamber conditions. Subclasses must implement the abstract methods to specify the
