@@ -77,7 +77,7 @@ def main():
         internal_length=13e-3,
         thermal_liner_thickness=2e-3,
     )
-    thrust_chamber = thrust_chamber_models.LiquidEngineThrustChamber(
+    thrust_chamber = thrust_chamber_models.BiliquidEngineThrustChamber(
         nozzle=nozzle,
         injector=injector,
         combustion_chamber=chamber,
@@ -85,7 +85,7 @@ def main():
         center_of_gravity_coordinate=(0.02, 0.0, 0.0),
     )
 
-    lre = motors_models.LiquidEngine(
+    engine = motors_models.BiliquidEngine(
         propellant=propellant,
         feed_system=feed_system,
         thrust_chamber=thrust_chamber,
@@ -97,7 +97,7 @@ def main():
         d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5, other_losses=0.12
     )
     simulation = simulation_module.InternalBallisticsSimulation(
-        motor=lre, params=sim_params
+        motor=engine, params=sim_params
     )
 
     result = simulation.run()

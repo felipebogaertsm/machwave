@@ -1,5 +1,5 @@
 from .base import Motor
-from .liquid import LiquidEngine
+from .biliquid import BiliquidEngine
 from .solid import SolidMotor
 
-__all__ = ["Motor", "SolidMotor", "LiquidEngine"]
+__all__ = ["Motor", "SolidMotor", "BiliquidEngine"]

@@ -41,11 +41,11 @@ def test_solid_motor_simulation_loop(benchmark: BenchmarkFixture) -> None:
 
 
 @pytest.mark.benchmark(group="simulation-loop")
-def test_liquid_engine_simulation_loop(benchmark: BenchmarkFixture) -> None:
+def test_biliquid_engine_simulation_loop(benchmark: BenchmarkFixture) -> None:
     def setup() -> tuple[
         tuple[simulation_module.InternalBallisticsSimulation], dict[str, object]
     ]:
-        motor, params = motor_builders.build_1kn_lre()
+        motor, params = motor_builders.build_1kn_biliquid_engine()
         params = dataclasses.replace(params, d_t=4e-4)
         simulation = simulation_module.InternalBallisticsSimulation(
             motor=motor, params=params

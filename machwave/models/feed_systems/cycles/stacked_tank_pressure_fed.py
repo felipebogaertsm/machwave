@@ -5,7 +5,7 @@ import machwave.models.feed_systems.tanks as tanks
 
 class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     """
-    Represents a bipropellant liquid rocket engine feed system with stacked tanks.
+    Represents a bipropellant biliquid rocket engine feed system with stacked tanks.
 
     A stacked tank system is a type of pressure-fed system where the oxidizer and fuel tanks are arranged in a
     vertical stack. The tanks are separated by a piston and the fuel is pressurized by the oxidizer tank.

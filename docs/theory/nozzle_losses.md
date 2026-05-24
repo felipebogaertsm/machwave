@@ -35,7 +35,7 @@ Applicable to **conical nozzles only**. Contoured (bell) nozzles can achieve nea
 divergence loss by design. Implemented in
 [`get_nozzle_divergent_loss_fraction`][machwave.core.compressible_flow.losses.get_nozzle_divergent_loss_fraction].
 
-*Applies to: solid and liquid motors.*
+*Applies to: solid and biliquid motors.*
 
 ---
 
@@ -63,7 +63,7 @@ f_P = \begin{cases} 1 & P_0 < 200\ \text{psi} \\ \dfrac{200}{P_0[\text{psi}]} & 
 Implemented in
 [`get_kinetics_loss_fraction`][machwave.core.compressible_flow.losses.get_kinetics_loss_fraction].
 
-*Applies to: solid and liquid motors.*
+*Applies to: solid and biliquid motors.*
 
 ---
 
@@ -91,7 +91,7 @@ classical percent-form expression to the fraction convention used here.
 [`get_boundary_layer_loss_fraction`][machwave.core.compressible_flow.losses.get_boundary_layer_loss_fraction].
 
 *Applies to: solid motors only* (the empirical constants \(C_1, C_2\) are
-calibrated against a BATES motor; the LRE state passes \(\eta_{BL} = 0\)).
+calibrated against a BATES motor; the biliquid engine state passes \(\eta_{BL} = 0\)).
 
 ---
 
@@ -124,8 +124,8 @@ Coefficients \(C_3\)–\(C_6\) depend on \(\xi\), \(D_t\), and \(d_p\) ranges
 expression to the fraction convention used here). Implemented in
 [`get_two_phase_flow_loss_fraction`][machwave.core.compressible_flow.losses.get_two_phase_flow_loss_fraction].
 
-*Applies to: solid motors only.* Liquid bipropellants typically produce gas-phase
-products with no condensed phase, so the LRE state passes \(\eta_{2p} = 0\).
+*Applies to: solid motors only.* Biliquid propellants typically produce gas-phase
+products with no condensed phase, so the biliquid engine state passes \(\eta_{2p} = 0\).
 
 ---
 

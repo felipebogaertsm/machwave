@@ -1,6 +1,6 @@
 site_name: machwave
 site_url: https://felipebogaertsm.github.io/machwave/
-site_description: Chemical propulsion simulator - solid, liquid and hybrid motors
+site_description: Chemical propulsion simulator - solid, biliquid and hybrid motors
 site_author: Felipe Bogaerts de Mattos
 
 repo_url: https://github.com/felipebogaertsm/machwave

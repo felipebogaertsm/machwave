@@ -12,7 +12,7 @@ T = TypeVar("T", bound=thrust_chamber_models.ThrustChamber)
 
 
 class Motor(Generic[P, T], ABC):
-    """Abstract rocket motor/engine for solid, hybrid, or liquid systems."""
+    """Abstract rocket motor/engine for solid, hybrid, or biliquid systems."""
 
     def __init__(
         self,

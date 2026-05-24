@@ -30,8 +30,8 @@ What actually happened. Include the full traceback if there is one.
 
 If the bug surfaces in a simulation, please describe what was being modelled:
 
-- Engine type: solid motor / liquid engine / hybrid / other
-- Feed system (if liquid): pressure-fed / pump-fed / stacked tank / other
+- Engine type: solid motor / biliquid engine / hybrid / other
+- Feed system (if biliquid): pressure-fed / pump-fed / stacked tank / other
 - Grain geometry (if solid): BATES / star / finocyl / custom / other
 - Propellant: name or composition
 - Relevant simulation parameters: time step, chamber pressure, mixture ratio, etc.
