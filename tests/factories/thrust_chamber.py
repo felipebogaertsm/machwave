@@ -64,9 +64,11 @@ class SolidMotorThrustChamberFactory:
         return thrust_chamber_models.SolidMotorThrustChamber(**kwargs)
 
 
-class LiquidEngineThrustChamberFactory:
+class BiliquidEngineThrustChamberFactory:
     @classmethod
-    def build(cls, **overrides: Any) -> thrust_chamber_models.LiquidEngineThrustChamber:
+    def build(
+        cls, **overrides: Any
+    ) -> thrust_chamber_models.BiliquidEngineThrustChamber:
         nozzle = overrides.pop("nozzle", None) or NozzleFactory.build()
         injector = (
             overrides.pop("injector", None) or BipropellantInjectorFactory.build()
@@ -83,4 +85,4 @@ class LiquidEngineThrustChamberFactory:
             center_of_gravity_coordinate=(0.02, 0.0, 0.0),
         )
         kwargs.update(overrides)
-        return thrust_chamber_models.LiquidEngineThrustChamber(**kwargs)
+        return thrust_chamber_models.BiliquidEngineThrustChamber(**kwargs)

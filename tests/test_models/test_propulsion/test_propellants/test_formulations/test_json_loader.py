@@ -126,7 +126,7 @@ class TestJSONFormulationLoading:
         ids=lambda p: p.stem,
     )
     def test_load_all_biliquid_formulations(self, json_file):
-        """Test loading each liquid propellant JSON file."""
+        """Test loading each biliquid propellant JSON file."""
         # Load the propellant
         propellant = propellant_formulations.get_propellant_from_json(json_file)
 

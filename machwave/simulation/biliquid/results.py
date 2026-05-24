@@ -8,14 +8,14 @@ import numpy as np
 import machwave.simulation.results as simulation_results
 
 if TYPE_CHECKING:
-    import machwave.simulation.liquid.states as liquid_states
+    import machwave.simulation.biliquid.states as biliquid_states
 
 
 @dataclass(frozen=True, kw_only=True)
-class LiquidSimulationResult(
-    simulation_results.SimulationResult["liquid_states.LiquidEngineState"]
+class BiliquidSimulationResult(
+    simulation_results.SimulationResult["biliquid_states.BiliquidEngineState"]
 ):
-    """Simulation result for a liquid engine run."""
+    """Simulation result for a biliquid engine run."""
 
     oxidizer_mass: simulation_results.SimulationResultArray
     fuel_mass: simulation_results.SimulationResultArray
@@ -27,7 +27,7 @@ class LiquidSimulationResult(
 
     @classmethod
     def _collect_extra_fields(
-        cls, state: "liquid_states.LiquidEngineState"
+        cls, state: "biliquid_states.BiliquidEngineState"
     ) -> dict[str, Any]:
         oxidizer_mass = np.asarray(state.oxidizer_mass)
         fuel_mass = np.asarray(state.fuel_mass)
@@ -48,7 +48,7 @@ class LiquidSimulationResult(
         }
 
     def _report_body(self, file: IO) -> None:
-        print("\nLIQUID ENGINE OPERATION RESULTS", file=file)
+        print("\nBILIQUID ENGINE OPERATION RESULTS", file=file)
 
         print(f"Initial propellant mass: {self.propellant_mass[0]:.4f} kg", file=file)
         print(f"Burnout time: {self.burn_time:.4f} s", file=file)

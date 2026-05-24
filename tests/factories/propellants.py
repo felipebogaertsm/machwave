@@ -57,10 +57,10 @@ class SolidPropellantPropertiesFactory(
         return 0.32
 
 
-class LiquidPropellantPropertiesFactory(
+class BiliquidPropellantPropertiesFactory(
     DataclassFactory[properties.ThermochemicalProperties]
 ):
-    """qsi values are zero — liquid combustion has no condensed phase."""
+    """qsi values are zero — biliquid combustion has no condensed phase."""
 
     __model__ = properties.ThermochemicalProperties
 

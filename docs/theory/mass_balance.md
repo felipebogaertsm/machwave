@@ -102,13 +102,13 @@ with \(\dot{m}_{in} = \rho_p r A_b\), as called from
 
 ---
 
-## 2.3 Liquid Rocket Engine (LRE)
+## 2.3 Biliquid Rocket Engine
 
 *References: Sutton & Biblarz (2017), Ch. 6; Huzel & Huang (1992), Ch. 1, 4, 7.*
 
-For an LRE the mass-generation term is no longer set by surface regression but by
-the **injector mass flow** of two independent propellant streams. Mass exits through
-the same choked throat as in §2.2.2.
+For a biliquid engine the mass-generation term is no longer set by surface
+regression but by the **injector mass flow** of two independent propellant
+streams. Mass exits through the same choked throat as in §2.2.2.
 
 ### 2.3.1 Mass Inflow Rate — Injector
 
@@ -182,7 +182,7 @@ to preserve the design oxidiser–fuel ratio \(\mathrm{O\!/\!F} = \dot{m}_{ox}/\
 (and symmetrically when oxidiser is the limiting reagent). This avoids unphysical
 post-burnout transients in which one stream continues for several steps after the
 other has been exhausted. Implemented in
-[`LiquidEngineState`][machwave.simulation.liquid.states.LiquidEngineState].
+[`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
 ### 2.3.4 Mass Exit Rate — Choked Throat
 
@@ -232,7 +232,7 @@ the chamber-pressure decay.
 
 *References: Sutton & Biblarz (2017) Ch. 8-9; Huzel & Huang (1992) Ch. 1, 4, 8.*
 
-The LRE mass balance is built on a number of simplifying assumptions; users should
+The biliquid engine mass balance is built on a number of simplifying assumptions; users should
 keep these in mind when interpreting transient results:
 
 - **Well-stirred reactor / instantaneous combustion.** Cold liquid propellant is

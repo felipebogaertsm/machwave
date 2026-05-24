@@ -70,8 +70,8 @@ class SolidMotorThrustChamber(ThrustChamber):
         self.nozzle_exit_to_grain_port_distance = nozzle_exit_to_grain_port_distance
 
 
-class LiquidEngineThrustChamber(ThrustChamber):
-    """Thrust chamber assembly specialized for liquid rocket engines."""
+class BiliquidEngineThrustChamber(ThrustChamber):
+    """Thrust chamber assembly specialized for biliquid rocket engines."""
 
     def __init__(
         self,
@@ -82,7 +82,7 @@ class LiquidEngineThrustChamber(ThrustChamber):
         center_of_gravity_coordinate: tuple[float, float, float] | None = None,
     ):
         """
-        Initialize a liquid engine thrust chamber.
+        Initialize a biliquid engine thrust chamber.
 
         Args:
             nozzle: Nozzle instance.

@@ -1,7 +1,7 @@
 # Machwave
 
 Machwave is a Python library for chemical propulsion simulation. The library makes it
-easy to model solid or liquid rocket engines, analyse performance and integrate the
+easy to model solid or biliquid rocket engines, analyse performance and integrate the
 results into trajectory simulations.
 
 ## Getting Started

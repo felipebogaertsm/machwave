@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import machwave.models.motors as motors
-import machwave.simulation.liquid.states as liquid_states
+import machwave.simulation.biliquid.states as biliquid_states
 import machwave.simulation.results as simulation_results
 import machwave.simulation.solid.states as solid_states
 import machwave.simulation.states as simulation_states
@@ -37,7 +37,7 @@ class InternalBallisticsSimulation:
 
     _STATE_CLASS_BY_MOTOR_TYPE = (
         (motors.SolidMotor, solid_states.SolidMotorState),
-        (motors.LiquidEngine, liquid_states.LiquidEngineState),
+        (motors.BiliquidEngine, biliquid_states.BiliquidEngineState),
     )
 
     def __init__(

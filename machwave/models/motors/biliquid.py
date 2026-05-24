@@ -7,26 +7,27 @@ import machwave.models.thrust_chamber as thrust_chamber_models
 from . import base as motor_base
 
 
-class LiquidEngine(
+class BiliquidEngine(
     motor_base.Motor[
-        propellants.BiliquidPropellant, thrust_chamber_models.LiquidEngineThrustChamber
+        propellants.BiliquidPropellant,
+        thrust_chamber_models.BiliquidEngineThrustChamber,
     ]
 ):
-    """Liquid rocket engine with bi-liquid propellant and a feed system."""
+    """Biliquid rocket engine with a bipropellant feed system."""
 
     def __init__(
         self,
         propellant: propellants.BiliquidPropellant,
-        thrust_chamber: thrust_chamber_models.LiquidEngineThrustChamber,
+        thrust_chamber: thrust_chamber_models.BiliquidEngineThrustChamber,
         feed_system: feed_system_base.FeedSystem,
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
     ) -> None:
         """
-        Initialize a liquid rocket engine.
+        Initialize a biliquid rocket engine.
 
         Args:
-            propellant: Bi-liquid propellant properties (oxidizer + fuel).
+            propellant: Biliquid propellant properties (oxidizer + fuel).
             thrust_chamber: Thrust chamber assembly (nozzle, combustion chamber,
                 injector).
             feed_system: Propellant feed system (tanks, lines, pumps or
