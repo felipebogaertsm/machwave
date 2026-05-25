@@ -7,7 +7,7 @@ import numpy.typing as npt
 try:
     import rocketpy
     import rocketpy.motors as rocketpy_motors
-except ImportError as e:  # pragma: no cover - exercised only without rocketpy
+except ImportError as e:
     raise ImportError("RocketPy adapters require the `rocketpy` package") from e
 
 if typing.TYPE_CHECKING:

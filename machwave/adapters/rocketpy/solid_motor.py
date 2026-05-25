@@ -1,13 +1,11 @@
-"""RocketPy adapter for Machwave solid motors."""
-
 import typing
 
 import machwave.adapters.rocketpy.base as rocketpy_base
 import machwave.models.grain.geometries as grain_geometries
 
 if typing.TYPE_CHECKING:
-    import machwave.models.motors as motors_models  # noqa: F401
-    import machwave.simulation.solid.results as solid_results  # noqa: F401
+    import machwave.models.motors as motors_models
+    import machwave.simulation.solid.results as solid_results
 
 
 class RocketPySolidMotorAdapter(
