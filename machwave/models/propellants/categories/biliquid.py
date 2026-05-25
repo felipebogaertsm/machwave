@@ -1,7 +1,6 @@
 import machwave.services.cea as cea_service
 
 from .. import components as propellant_components
-from .. import properties as propellant_properties
 from . import base as propellant_base
 
 
@@ -39,7 +38,6 @@ class BiliquidPropellant(propellant_base.Propellant):
             combustion_efficiency=combustion_efficiency,
         )
 
-        self.properties: propellant_properties.ThermochemicalProperties | None = None
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
         self._validate_components()
 
