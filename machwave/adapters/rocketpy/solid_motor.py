@@ -16,7 +16,6 @@ class RocketPySolidMotorAdapter(
     _rocketpy_motor_class = "SolidMotor"
 
     def _get_rocketpy_attributes(self) -> dict[str, typing.Any]:
-        """Extract motor and grain attributes compatible with RocketPy SolidMotor."""
         base_attrs = super()._get_rocketpy_attributes()
 
         motor = typing.cast("motors_models.SolidMotor", self.motor)
