@@ -4,7 +4,8 @@ Thrust chamber assembly and sub-components.
 
 - `Nozzle` — Conical nozzle defined by throat diameter, expansion ratio, convergent/divergent half-angles, and boundary-layer loss coefficients (`c_1`, `c_2`). Computes throat area and outlet diameter.
 - `CombustionChamber` — Cylindrical casing with thermal liner. Provides internal volume from casing dimensions and liner thickness.
-- `BipropellantInjector` — Injector for biliquid engines, characterized by discharge coefficients and orifice areas for oxidizer and fuel.
+- `BipropellantInjector` — Injector for biliquid engines, characterized by discharge coefficients, orifice areas, and a per-side `MassFlowModel` for the oxidizer and fuel sides. Owns the orifice mass-flow dispatch: `get_mass_flow_ox(*, tank, pressure_upstream, chamber_pressure)` and `get_mass_flow_fuel(*, tank, pressure_upstream, chamber_pressure)`. Feed systems delegate to these methods.
+- `MassFlowModel` — Enum selecting the orifice flow model. `SPI` (single-phase incompressible) for subcooled liquid propellants; `HEM` (homogeneous-equilibrium two-phase) for self-pressurized propellants such as nitrous oxide, where flow can choke on the two-phase sound speed.
 - `SolidMotorThrustChamber` — Bundles nozzle + chamber + the distance from nozzle exit to grain port.
 - `BiliquidEngineThrustChamber` — Bundles nozzle + chamber + injector.
 
