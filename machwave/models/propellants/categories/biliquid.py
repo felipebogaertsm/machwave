@@ -1,5 +1,3 @@
-"""Liquid propellant categories (biliquid)."""
-
 import machwave.services.cea as cea_service
 
 from .. import components as propellant_components
@@ -17,7 +15,6 @@ class BiliquidPropellant(propellant_base.Propellant):
         name: str,
         components: list[propellant_components.PropellantComponent] | None = None,
         combustion_efficiency: float = 0.95,
-        properties: propellant_properties.ThermochemicalProperties | None = None,
         oxidizer_to_fuel_ratio: float | None = None,
     ):
         """
@@ -27,21 +24,26 @@ class BiliquidPropellant(propellant_base.Propellant):
             name: Propellant name.
             components: Chemical components (should be exactly 2: oxidizer and fuel).
             combustion_efficiency: Efficiency factor (0-1).
-            properties: Pre-defined thermochemical properties (optional).
             oxidizer_to_fuel_ratio: Oxidizer-to-fuel mass ratio for this
                 formulation. Used as the default mixture_ratio at the
                 thermochemical service layer; callers can override per-call
                 via ``evaluate(mixture_ratio=...)``.
+
+        Raises:
+            PropellantValidationError: If components do not include exactly
+                one oxidizer and one fuel.
         """
         super().__init__(
             name=name,
             components=components,
             combustion_efficiency=combustion_efficiency,
         )
-        self.properties = properties
+
+        self.properties: propellant_properties.ThermochemicalProperties | None = None
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
         self.oxidizer_tank_density: float = 0.0
         self.fuel_tank_density: float = 0.0
+        self._validate_components()
 
     def _validate_components(self):
         """

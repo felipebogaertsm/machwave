@@ -166,7 +166,6 @@ def _create_propellant(
             name=data["name"],
             components=components,
             combustion_efficiency=data.get("combustion_efficiency", 0.98),
-            properties=properties,
             oxidizer_to_fuel_ratio=data.get("oxidizer_to_fuel_ratio"),
         )
     else:
