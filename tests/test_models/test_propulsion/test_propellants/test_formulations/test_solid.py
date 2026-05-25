@@ -9,6 +9,8 @@ to the module will automatically be tested.
 import pytest
 
 import machwave.models.propellants as propellants_models
+import machwave.models.propellants.categories as propellant_categories
+import machwave.models.propellants.categories.base as propellant_base
 import machwave.models.propellants.categories.solid as solid_propellant_category
 import machwave.models.propellants.formulations.solid as solid_formulations
 
@@ -132,6 +134,15 @@ class TestFixedSolidPropellantSpecifics:
             assert propellant.properties is not None, (
                 f"{name} should have immediate properties"
             )
+
+
+class TestSolidPropellantConstruction:
+    """Test construction-time validation of SolidPropellant."""
+
+    def test_missing_components_raises(self):
+        """Reject a solid propellant built without components."""
+        with pytest.raises(propellant_base.PropellantValidationError):
+            propellant_categories.SolidPropellant(name="Empty")
 
 
 class TestBurnRateBehavior:
