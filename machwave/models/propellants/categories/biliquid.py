@@ -41,8 +41,6 @@ class BiliquidPropellant(propellant_base.Propellant):
 
         self.properties: propellant_properties.ThermochemicalProperties | None = None
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
-        self.oxidizer_tank_density: float = 0.0
-        self.fuel_tank_density: float = 0.0
         self._validate_components()
 
     def _validate_components(self):
