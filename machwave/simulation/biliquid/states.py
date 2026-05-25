@@ -7,6 +7,7 @@ import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
+import machwave.models.propellants.properties as propellant_properties_models
 import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
@@ -56,15 +57,26 @@ class BiliquidEngineState(simulation_states.MotorState):
             motor.feed_system.get_oxidizer_tank_pressure()
         ]
 
-        self.propellant_properties = motor.propellant.evaluate(
+        self.propellant_properties = self._evaluate_propellant_properties(
             chamber_pressure=igniter_pressure,
-            expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
             mixture_ratio=motor.propellant.oxidizer_to_fuel_ratio,
         )
 
     def get_m_dot_in(self) -> float:
         """Return the total inlet mass flow (fuel + oxidizer) [kg/s]."""
         return self._m_dot_fuel + self._m_dot_ox
+
+    def _evaluate_propellant_properties(
+        self,
+        chamber_pressure: float,
+        mixture_ratio: float | None,
+    ) -> propellant_properties_models.ThermochemicalProperties:
+        """Evaluate the propellant at the chamber pressure and mixture ratio."""
+        return self.motor.propellant.evaluate(
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
+            mixture_ratio=mixture_ratio,
+        )
 
     def run_timestep(
         self,
@@ -119,9 +131,8 @@ class BiliquidEngineState(simulation_states.MotorState):
                 instantaneous_oxidizer_to_fuel_ratio = m_dot_ox / m_dot_fuel
             else:
                 instantaneous_oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
-            self.propellant_properties = self.motor.propellant.evaluate(
+            self.propellant_properties = self._evaluate_propellant_properties(
                 chamber_pressure=self.chamber_pressure[-1],
-                expansion_ratio=nozzle.expansion_ratio,
                 mixture_ratio=instantaneous_oxidizer_to_fuel_ratio,
             )
         propellant_properties = self.propellant_properties
