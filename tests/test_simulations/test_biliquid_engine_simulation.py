@@ -8,10 +8,13 @@ it can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 
 import machwave.models.motors as motors_models
+import machwave.models.propellants.properties as propellant_properties
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
@@ -118,38 +121,46 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     assert state.burn_time == pytest.approx(state.time[-1])
 
 
-def test_live_mixture_ratio_drives_cea(
-    simulated_motor_and_result: tuple[
-        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
-    ],
-) -> None:
-    motor, simulation_result = simulated_motor_and_result
-    propellant = motor.propellant
+def test_live_mixture_ratio_drives_cea() -> None:
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+    state = biliquid_simulation.BiliquidEngineState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )
 
-    design_ratio = propellant.oxidizer_to_fuel_ratio
+    design_ratio = motor.propellant.oxidizer_to_fuel_ratio
     assert design_ratio is not None
 
-    fuel_consumed = -np.diff(simulation_result.fuel_mass)
-    oxidizer_consumed = -np.diff(simulation_result.oxidizer_mass)
-    valid = fuel_consumed > 0
-    live_ratios = oxidizer_consumed[valid] / fuel_consumed[valid]
-    assert np.any(np.abs(live_ratios - design_ratio) > 1e-6), (
-        "Live oxidizer/fuel mass deltas never deviated from the design ratio"
-    )
+    deviation_sample: (
+        tuple[propellant_properties.ThermochemicalProperties, float] | None
+    ) = None
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        while not state.end_thrust:
+            state.run_timestep(params.d_t, params.external_pressure)
+            if state._m_dot_fuel <= 0.0:
+                continue
+            live_ratio = state._m_dot_ox / state._m_dot_fuel
+            if abs(live_ratio - design_ratio) > 1e-6:
+                deviation_sample = (
+                    state.propellant_properties,
+                    state.chamber_pressure[-1],
+                )
 
-    chamber_pressure = simulation_result.chamber_pressure[
-        len(simulation_result.chamber_pressure) // 2
-    ]
-    expansion_ratio = motor.thrust_chamber.nozzle.expansion_ratio
-    design_props = propellant.evaluate(
-        chamber_pressure=chamber_pressure,
-        expansion_ratio=expansion_ratio,
+    assert deviation_sample is not None, (
+        "Live oxidizer/fuel mass flow ratio never deviated from the design ratio"
+    )
+    live_properties, live_chamber_pressure = deviation_sample
+
+    design_props = motor.propellant.evaluate(
+        chamber_pressure=live_chamber_pressure,
+        expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
         mixture_ratio=design_ratio,
     )
-    live_props = propellant.properties
-    assert live_props is not None
     assert (
-        live_props.adiabatic_flame_temperature
+        live_properties.adiabatic_flame_temperature
         != design_props.adiabatic_flame_temperature
     )
 
