@@ -15,14 +15,14 @@ organised around three concerns:
 
 Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] and exposes four methods used by the simulation loop:
 
-- `get_mass_flow_ox(chamber_pressure, *, discharge_coefficient=None, injector_area=None) -> float`
-- `get_mass_flow_fuel(chamber_pressure, *, discharge_coefficient=None, injector_area=None) -> float`
+- `get_mass_flow_ox(chamber_pressure, *, injector) -> float`
+- `get_mass_flow_fuel(chamber_pressure, *, injector) -> float`
 - `get_oxidizer_tank_pressure() -> float`
 - `get_fuel_tank_pressure() -> float`
 
-`discharge_coefficient` and `injector_area` are keyword-only with `None` defaults: pressure-fed cycles need them to evaluate the injector orifice equation, while turbopump cycles that schedule mass flow from pump-curve solutions do not. Keeping the keywords on the abstract base means a single call site in the integrator works against either kind of cycle.
+The mass-flow methods take a [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] and delegate the orifice dispatch to it. The feed system is responsible for computing the upstream pressure (tank state, piston losses, pump discharge); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). This split lets pump-fed cycles substitute a different upstream-pressure source without touching orifice physics.
 
-The concrete propellant mass-flow consumer is [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which always passes the keywords explicitly — code calling these methods should follow the same pattern.
+The concrete propellant mass-flow consumer is [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls these methods once per integration step with the current `chamber_pressure` and the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] from the thrust chamber.
 
 ## Public surface
 

@@ -1,20 +1,11 @@
 from abc import ABC, abstractmethod
 
 import machwave.models.feed_systems.tanks as tanks
+import machwave.models.thrust_chamber.injector as injector_models
 
 
 class FeedSystem(ABC):
-    """
-    Abstract base class for a bipropellant feed system in a biliquid rocket engine.
-
-    This class is responsible for determining oxidizer and fuel mass flows as a function of tank/pressurant states,
-    pumps (if any), and current chamber conditions. Subclasses must implement the abstract methods to specify the
-    actual flow calculations.
-
-    The mass-flow methods accept `discharge_coefficient` and `injector_area` as keyword-only arguments with
-    `None` defaults. Pressure-fed cycles require both to evaluate the injector orifice equation. Cycles that
-    schedule mass flow from pump curves or other internal logic can ignore them.
-    """
+    """Abstract base class for a bipropellant feed system in a biliquid rocket engine."""
 
     def __init__(self, fuel_tank: tanks.Tank, oxidizer_tank: tanks.Tank):
         """
@@ -36,16 +27,14 @@ class FeedSystem(ABC):
         self,
         chamber_pressure: float,
         *,
-        discharge_coefficient: float | None = None,
-        injector_area: float | None = None,
+        injector: injector_models.BipropellantInjector,
     ) -> float:
         """
         Compute and return the current oxidizer mass flow rate [kg/s].
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Oxidizer injector discharge coefficient (dimensionless).
-            injector_area: Effective flow area for the oxidizer injector [m^2].
+            injector: Bipropellant injector handling the orifice dispatch.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
@@ -57,16 +46,14 @@ class FeedSystem(ABC):
         self,
         chamber_pressure: float,
         *,
-        discharge_coefficient: float | None = None,
-        injector_area: float | None = None,
+        injector: injector_models.BipropellantInjector,
     ) -> float:
         """
         Compute and return the current fuel mass flow rate [kg/s].
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Fuel injector discharge coefficient (dimensionless).
-            injector_area: Effective flow area for the fuel injector [m^2].
+            injector: Bipropellant injector handling the orifice dispatch.
 
         Returns:
             Fuel mass flow rate [kg/s].

@@ -99,13 +99,11 @@ class BiliquidEngineState(simulation_states.MotorState):
         if self.propellant_mass[-1] > 0:
             m_dot_fuel = feed_system.get_mass_flow_fuel(
                 chamber_pressure=self.chamber_pressure[-1],
-                discharge_coefficient=injector.discharge_coefficient_fuel,
-                injector_area=injector.area_fuel,
+                injector=injector,
             )
             m_dot_ox = feed_system.get_mass_flow_ox(
                 chamber_pressure=self.chamber_pressure[-1],
-                discharge_coefficient=injector.discharge_coefficient_oxidizer,
-                injector_area=injector.area_ox,
+                injector=injector,
             )
         else:
             m_dot_fuel = m_dot_ox = 0.0

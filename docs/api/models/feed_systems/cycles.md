@@ -47,13 +47,17 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Mass-flow model.** Each propellant's mass flow is evaluated with the injector orifice equation via `get_mass_flow_orifice` (in [`machwave.core.incompressible_flow`](../../core.md)):
+**Mass-flow model.** The feed system supplies the upstream pressure for each side and delegates the orifice dispatch to the injector. Upstream pressure is the oxidizer tank pressure for the oxidizer branch and `oxidizer_tank_pressure - piston_loss` for the fuel branch; downstream pressure is `chamber_pressure`. The injector picks SPI or HEM per side from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]:
 
-\[
-\dot{m} = C_d \cdot A \cdot \sqrt{2 \rho \left(P_\text{up} - P_\text{down}\right)}
-\]
+- **SPI** (single-phase incompressible) — `get_mass_flow_orifice` in [`machwave.core.incompressible_flow`](../../core.md):
 
-with $P_\text{up}$ equal to the oxidizer tank pressure for the oxidizer branch and to `oxidizer_tank_pressure - piston_loss` for the fuel branch, $P_\text{down}$ equal to `chamber_pressure`, and $\rho$ the saturated-liquid density returned by [`Tank.get_density`][machwave.models.feed_systems.tanks.base.Tank.get_density].
+    \[
+    \dot{m} = C_d \cdot A \cdot \sqrt{2 \rho \left(P_\text{up} - P_\text{down}\right)}
+    \]
+
+    with $\rho$ the saturated-liquid density returned by [`Tank.get_density`][machwave.models.feed_systems.tanks.base.Tank.get_density].
+
+- **HEM** (homogeneous-equilibrium two-phase) — `get_homogeneous_equilibrium_mass_flux` in [`machwave.core.two_phase_flow`](../../core.md), required for self-pressurized propellants such as nitrous oxide where the upstream saturated liquid flashes across the orifice and the flow can choke on the two-phase sound speed. The injector multiplies the returned mass flux by $C_d \cdot A$.
 
 Line geometry (`oxidizer_line_diameter`, `oxidizer_line_length`, `fuel_line_diameter`, `fuel_line_length`) is currently stored on the instance for downstream issues that will add feedline pressure drop, but is not consumed by the mass-flow model itself yet.
 
