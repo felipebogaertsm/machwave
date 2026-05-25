@@ -1,14 +1,15 @@
-import machwave.core.incompressible_flow as incompressible_flow
 import machwave.models.feed_systems.base as feed_system_base
 import machwave.models.feed_systems.tanks as tanks
+import machwave.models.thrust_chamber.injector as injector_models
 
 
 class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     """
     Represents a bipropellant biliquid rocket engine feed system with stacked tanks.
 
-    A stacked tank system is a type of pressure-fed system where the oxidizer and fuel tanks are arranged in a
-    vertical stack. The tanks are separated by a piston and the fuel is pressurized by the oxidizer tank.
+    A stacked tank system is a type of pressure-fed system where the oxidizer and fuel
+    tanks are arranged in a vertical stack. The tanks are separated by a piston and the
+    fuel is pressurized by the oxidizer tank.
     """
 
     def __init__(
@@ -22,7 +23,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         piston_loss: float = 0.0,
     ):
         """
-        Initialize the StackedTankPressureFedFeedSystem with feedline dimensions, tank objects, and fluid densities.
+        Initialize the StackedTankPressureFedFeedSystem.
 
         Args:
             oxidizer_line_diameter: Diameter of the oxidizer feedline [m].
@@ -49,81 +50,47 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         self,
         chamber_pressure: float,
         *,
-        discharge_coefficient: float | None = None,
-        injector_area: float | None = None,
+        injector: injector_models.BipropellantInjector,
     ) -> float:
         """
-        Compute the current oxidizer mass flow rate via get_mass_flow_orifice().
+        Compute the current oxidizer mass flow rate by delegating to the injector.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Discharge coefficient for the injector (dimensionless).
-            injector_area: Effective flow area for the oxidizer injector [m^2].
+            injector: Bipropellant injector handling the orifice dispatch.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
-
-        Raises:
-            ValueError: If `discharge_coefficient` or `injector_area` is None.
         """
-        if discharge_coefficient is None or injector_area is None:
-            raise ValueError(
-                "StackedTankPressureFedFeedSystem.get_mass_flow_ox requires "
-                "discharge_coefficient and injector_area"
-            )
-
-        p_up = self.get_oxidizer_tank_pressure()
-        p_down = chamber_pressure
-        oxidizer_density = self.oxidizer_tank.get_density()
-
-        return incompressible_flow.get_mass_flow_orifice(
-            discharge_coefficient=discharge_coefficient,
-            area=injector_area,
-            density=oxidizer_density,
-            pressure_upstream=p_up,
-            pressure_downstream=p_down,
+        return injector.get_mass_flow_ox(
+            tank=self.oxidizer_tank,
+            pressure_upstream=self.get_oxidizer_tank_pressure(),
+            chamber_pressure=chamber_pressure,
         )
 
     def get_mass_flow_fuel(
         self,
         chamber_pressure: float,
         *,
-        discharge_coefficient: float | None = None,
-        injector_area: float | None = None,
+        injector: injector_models.BipropellantInjector,
     ) -> float:
         """
-        Compute the current fuel mass flow rate via the orifice model.
+        Compute the current fuel mass flow rate by delegating to the injector.
 
-        The upstream pressure is the oxidizer tank pressure, since this models
-        a stacked tank.
+        The upstream pressure is the oxidizer tank pressure minus the piston
+        loss, since this models a stacked tank pressurized through the piston.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Discharge coefficient for the injector.
-            injector_area: Effective flow area for the fuel injector [m^2].
+            injector: Bipropellant injector handling the orifice dispatch.
 
         Returns:
             Fuel mass flow rate [kg/s].
-
-        Raises:
-            ValueError: If `discharge_coefficient` or `injector_area` is None.
         """
-        if discharge_coefficient is None or injector_area is None:
-            raise ValueError(
-                "StackedTankPressureFedFeedSystem.get_mass_flow_fuel requires "
-                "discharge_coefficient and injector_area"
-            )
-
-        p_up = self.get_oxidizer_tank_pressure() - self.piston_loss
-        p_down = chamber_pressure
-        fuel_density = self.fuel_tank.get_density()
-
-        return incompressible_flow.get_mass_flow_orifice(
-            discharge_coefficient=discharge_coefficient,
-            area=injector_area,
-            density=fuel_density,
-            pressure_upstream=p_up,
-            pressure_downstream=p_down,
+        return injector.get_mass_flow_fuel(
+            tank=self.fuel_tank,
+            pressure_upstream=self.get_fuel_tank_pressure(),
+            chamber_pressure=chamber_pressure,
         )
 
     def get_oxidizer_tank_pressure(self) -> float:
