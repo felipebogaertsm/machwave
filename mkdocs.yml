@@ -59,7 +59,6 @@ nav:
           - interpolation: api/core/interpolation.md
           - mass_balance: api/core/mass_balance.md
           - solvers: api/core/solvers.md
-          - structural: api/core/structural.md
       - models:
           - Overview: api/models.md
           - feed_systems:
