@@ -26,6 +26,7 @@ class FeedSystem(ABC):
     def get_mass_flow_ox(
         self,
         chamber_pressure: float,
+        *,
         injector: injector_models.BipropellantInjector,
     ) -> float:
         """
@@ -44,6 +45,7 @@ class FeedSystem(ABC):
     def get_mass_flow_fuel(
         self,
         chamber_pressure: float,
+        *,
         injector: injector_models.BipropellantInjector,
     ) -> float:
         """
