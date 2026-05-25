@@ -1,5 +1,3 @@
-"""Solid propellant category."""
-
 import machwave.services.cea as cea_service
 
 from .. import components as propellant_components
@@ -42,24 +40,31 @@ class SolidPropellant(propellant_base.Propellant):
         """
         Initialize a solid propellant.
 
-        Either `components` or `properties` must be provided.
-
         Args:
             name: Propellant name.
-            components: Chemical components (optional).
-            mass_fractions: Mass fractions for each component (optional).
+            components: Chemical components. Required; must contain at least
+                one oxidizer and one fuel.
+            mass_fractions: Mass fractions aligned with `components`. Must
+                sum to 1.0.
             combustion_efficiency: Efficiency factor in [0, 1].
-            properties: Pre-defined thermochemical properties (optional).
+            properties: Pre-defined thermochemical properties. Optional
+                override used by `evaluate()` to skip CEA when provided.
             burn_rate_map: Saint Robert's law coefficients by pressure range.
+
+        Raises:
+            PropellantValidationError: If components, mass_fractions, or
+                their relationship is invalid.
         """
         super().__init__(
             name=name,
             components=components,
             combustion_efficiency=combustion_efficiency,
         )
+
         self._properties = properties
-        self.burn_rate_map = burn_rate_map if burn_rate_map is not None else []
-        self.mass_fractions = mass_fractions if mass_fractions is not None else []
+        self.burn_rate_map = burn_rate_map or []
+        self.mass_fractions = mass_fractions or []
+        self._validate_components()
 
     @property
     def properties(self) -> propellant_properties.ThermochemicalProperties | None:
@@ -68,38 +73,34 @@ class SolidPropellant(propellant_base.Propellant):
 
     def _validate_components(self):
         """
-        Validate that the solid propellant has both an oxidizer and a fuel.
+        Validate solid propellant components and mass fractions.
 
         Raises:
             PropellantValidationError: If validation fails.
         """
-        # Allow empty components if properties are pre-defined (for formulations)
         if not self.components:
-            if self._properties is None:
-                raise propellant_base.PropellantValidationError(
-                    f"Solid propellant '{self.name}' has no components or pre-defined "
-                    "properties"
-                )
-            return
+            raise propellant_base.PropellantValidationError(
+                f"Solid propellant '{self.name}' requires `components`"
+            )
 
         if not self.mass_fractions:
             raise propellant_base.PropellantValidationError(
-                f"Solid propellant '{self.name}' requires mass_fractions for its "
+                f"Solid propellant '{self.name}' requires `mass_fractions` for its "
                 "components"
             )
         if len(self.mass_fractions) != len(self.components):
             raise propellant_base.PropellantValidationError(
-                f"Solid propellant '{self.name}' mass_fractions length must match "
+                f"Solid propellant '{self.name}' `mass_fractions` length must match "
                 "components length"
             )
         if any(mf < 0 for mf in self.mass_fractions):
             raise propellant_base.PropellantValidationError(
-                f"Solid propellant '{self.name}' mass_fractions must be non-negative"
+                f"Solid propellant '{self.name}' `mass_fractions` must be non-negative"
             )
         mf_sum = sum(self.mass_fractions)
         if abs(mf_sum - 1.0) > MASS_FRACTION_SUM_TOLERANCE:
             raise propellant_base.PropellantValidationError(
-                f"Solid propellant '{self.name}' mass_fractions must sum to 1.0 (got "
+                f"Solid propellant '{self.name}' `mass_fractions` must sum to 1.0 (got "
                 f"{mf_sum:.6f})"
             )
 
@@ -128,22 +129,15 @@ class SolidPropellant(propellant_base.Propellant):
         Returns:
             RocketCEAService instance.
         """
-        if self.components:
-            self._validate_components()
-            components_data = [
-                comp.to_cea_dict(weight_percent=mf * 100.0)
-                for comp, mf in zip(self.components, self.mass_fractions)
-            ]
-            card_string = cea_service.generate_card_string(components_data)
-            return cea_service.create_cea_service(
-                propellant_name=cea_service.normalize_custom_propellant_name(self.name),
-                card_string=card_string,
-            )
-        else:
-            raise propellant_base.PropellantValidationError(
-                f"Cannot create thermochemical service without components for "
-                f"propellant '{self.name}'"
-            )
+        components_data = [
+            comp.to_cea_dict(weight_percent=mf * 100.0)
+            for comp, mf in zip(self.components, self.mass_fractions)
+        ]
+        card_string = cea_service.generate_card_string(components_data)
+        return cea_service.create_cea_service(
+            propellant_name=cea_service.normalize_custom_propellant_name(self.name),
+            card_string=card_string,
+        )
 
     def evaluate(
         self,
@@ -180,7 +174,6 @@ class SolidPropellant(propellant_base.Propellant):
 
         Uses a harmonic mean based on solid mixture mass fractions.
         """
-        self._validate_components()
         reciprocal_sum = sum(
             mf / comp.density for comp, mf in zip(self.components, self.mass_fractions)
         )

@@ -1,5 +1,3 @@
-"""Base propellant class with shared functionality."""
-
 import abc
 import enum
 import functools
@@ -42,7 +40,7 @@ class Propellant(abc.ABC):
         combustion_efficiency: float = 0.95,
     ):
         """
-        Initialize propellant.
+        Initialize a propellant.
 
         Args:
             name: Propellant name.
@@ -50,7 +48,7 @@ class Propellant(abc.ABC):
             combustion_efficiency: Efficiency factor (0-1).
         """
         self.name = name
-        self.components = list(components) if components is not None else []
+        self.components = list(components or [])
         self.combustion_efficiency = combustion_efficiency
 
     @functools.cached_property
@@ -104,7 +102,6 @@ class Propellant(abc.ABC):
         Raises:
             ValueError: If evaluation fails.
         """
-        self._validate_components()
         service = self.thermochemical_service
 
         adiabatic_flame_temperature = service.get_adiabatic_flame_temperature(

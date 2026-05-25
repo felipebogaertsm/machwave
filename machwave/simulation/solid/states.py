@@ -35,7 +35,18 @@ class SolidMotorState(simulation_states.MotorState):
             external_pressure: Ambient pressure [Pa].
             other_losses: Fractional losses not covered by specific
                 mechanisms, in [0, 1].
+
+        Raises:
+            ValueError: If the motor's propellant has no thermochemical
+                properties. Solid propellant properties are fixed for the
+                entire run, so a missing value is a configuration error and
+                the simulation refuses to start.
         """
+        if motor.propellant.properties is None:
+            raise ValueError(
+                "Propellant properties must be defined to run the simulation."
+            )
+
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
@@ -95,11 +106,6 @@ class SolidMotorState(simulation_states.MotorState):
             external_pressure: External pressure [Pa].
         """
         propellant_properties = self.motor.propellant.properties
-        if propellant_properties is None:
-            raise ValueError(
-                "Propellant properties must be defined to run the simulation."
-            )
-
         nozzle = self.motor.thrust_chamber.nozzle
         ideal_propellant_density = self.motor.propellant.ideal_density
 
