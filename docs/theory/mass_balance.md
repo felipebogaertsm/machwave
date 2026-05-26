@@ -17,17 +17,23 @@ temperature \(T_0\), volume \(V_0\)):
 M_{stored} = \rho_c V_0 = \frac{P_0 V_0}{R T_0}
 \]
 
-Differentiating (constant \(T_0\), constant \(V_0\)):
+Differentiating with \(R T_0\) quasi-steady and allowing \(V_0\) to vary
+(product rule on \(P_0 V_0\)):
 
 \[
-\frac{dM_{stored}}{dt} = \frac{V_0}{R T_0}\frac{dP_0}{dt}
+\frac{dM_{stored}}{dt} = \frac{1}{R T_0}\left(V_0 \frac{dP_0}{dt} + P_0 \frac{dV_0}{dt}\right)
 \]
 
-Substituting into the mass balance:
+Substituting into the mass balance and solving for \(dP_0/dt\):
 
 \[
-\boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left(\dot{m}_{gen} - \dot{m}_{out}\right)}
+\boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left(\dot{m}_{gen} - \dot{m}_{out}\right) - \frac{P_0}{V_0}\frac{dV_0}{dt}}
 \]
+
+The \(-P_0\,\dot V_0/V_0\) term captures pressure decay due to free-volume
+expansion (e.g. grain regression in an SRM, port growth in a hybrid). For a
+rigid control volume \(\dot V_0 = 0\) and the expression reduces to
+\(dP_0/dt = (R T_0/V_0)(\dot m_{gen} - \dot m_{out})\).
 
 This single ODE is the foundation of all internal-ballistics simulations in machwave.
 It is integrated numerically using the 4th-order Runge–Kutta solver in
@@ -87,18 +93,33 @@ H_\text{sub} = \sqrt{\frac{2k}{k-1}}\,P_r^{1/k}\sqrt{1 - P_r^{(k-1)/k}}
 
 (Seidel 1965, Eq. 35.)
 
-### 2.2.4 SRM ODE
+### 2.2.4 Free-Volume Expansion Rate
 
-Substituting into §2.1:
+As propellant regresses, the free chamber volume grows at the rate the solid
+phase recedes:
 
 \[
-\boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left(\rho_p r A_b - \frac{C_d P_0 A_t\, H}{\sqrt{R T_0}}\right)}
+\dot V_0 = r \cdot A_b
+\]
+
+i.e. the volumetric burn rate of the grain. This is passed to the ODE as the
+\(\dot V_0\) term in §2.1.
+
+### 2.2.5 SRM ODE
+
+Substituting §2.2.1, §2.2.2–§2.2.3, and §2.2.4 into §2.1:
+
+\[
+\boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left(\rho_p r A_b - \frac{C_d P_0 A_t\, H}{\sqrt{R T_0}}\right) - \frac{P_0\, r A_b}{V_0}}
 \]
 
 Evaluated by
 [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance]
-with \(\dot{m}_{in} = \rho_p r A_b\), as called from
-[`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState].
+with \(\dot{m}_{in} = \rho_p r A_b\) and `free_chamber_volume_rate` \(= r A_b\),
+as called from
+[`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState]. The
+expansion term shifts steady-state \(P_0\) and total impulse by roughly
+0.5–1.3 % on the standard BATES configurations.
 
 ---
 
@@ -204,8 +225,10 @@ coefficient (\(C_d \equiv 1\)) and uses the chamber-state isentropic exponent
 Processes); Sutton & Biblarz (2017) Ch. 8 §8.1 (Combustion Chamber Basic
 Configurations).*
 
-Substituting §2.3.1 and §2.3.4 into §2.1 yields the LRE form of the well-stirred
-reactor balance (Huzel & Huang §1.4; Sutton & Biblarz §8.1):
+Biliquid engines have a rigid combustion chamber (\(\dot V_0 = 0\)), so the
+expansion term in §2.1 vanishes. Substituting §2.3.1 and §2.3.4 into §2.1
+yields the LRE form of the well-stirred reactor balance (Huzel & Huang §1.4;
+Sutton & Biblarz §8.1):
 
 \[
 \boxed{\frac{dP_0}{dt} = \frac{R T_0}{V_0}\left[
