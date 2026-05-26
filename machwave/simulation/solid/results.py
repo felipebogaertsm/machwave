@@ -19,6 +19,7 @@ class SolidSimulationResult(
     """Simulation result for a solid motor run."""
 
     free_chamber_volume: simulation_results.SimulationResultArray
+    free_chamber_volume_rate: simulation_results.SimulationResultArray
     web: simulation_results.SimulationResultArray
     burn_area: simulation_results.SimulationResultArray
     propellant_volume: simulation_results.SimulationResultArray
@@ -64,6 +65,7 @@ class SolidSimulationResult(
 
         return {
             "free_chamber_volume": np.asarray(state.free_chamber_volume),
+            "free_chamber_volume_rate": np.asarray(state.free_chamber_volume_rate),
             "web": web,
             "burn_area": burn_area,
             "propellant_volume": propellant_volume,

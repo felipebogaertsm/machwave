@@ -69,6 +69,7 @@ class SolidMotorState(simulation_states.MotorState):
             self.motor.grain.get_propellant_volume(0.0)
         ]
         self.burn_rate: simulation_states.SimulationStateArray = [0.0]
+        self.free_chamber_volume_rate: simulation_states.SimulationStateArray = [0.0]
 
         initial_cog = motor.grain.get_center_of_gravity(
             web_distance=0.0,
@@ -127,6 +128,7 @@ class SolidMotorState(simulation_states.MotorState):
         free_chamber_volume = self.motor.get_free_chamber_volume(propellant_volume)
         self.free_chamber_volume.append(free_chamber_volume)
         free_chamber_volume_rate = burn_rate * burn_area
+        self.free_chamber_volume_rate.append(free_chamber_volume_rate)
         propellant_mass = self.motor.grain.get_propellant_mass(
             web_distance=web_distance, ideal_density=ideal_propellant_density
         )
