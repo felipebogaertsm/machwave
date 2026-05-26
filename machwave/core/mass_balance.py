@@ -10,7 +10,8 @@ def compute_chamber_pressure_mass_balance(
     k: float,
     R: float,
     flame_temperature: float,
-    discharge_coefficient: float = 1.0,
+    nozzle_discharge_coefficient: float = 1.0,
+    free_chamber_volume_rate: float = 0.0,
 ) -> tuple[float]:
     """
     Right-hand side of the chamber pressure ODE from a control-volume mass balance.
@@ -26,7 +27,9 @@ def compute_chamber_pressure_mass_balance(
         k: Isentropic exponent of the mix.
         R: Gas constant per molecular weight [J/(kg-K)].
         flame_temperature: Flame temperature [K].
-        discharge_coefficient: Discharge coefficient.
+        nozzle_discharge_coefficient: Nozzle discharge coefficient.
+        free_chamber_volume_rate: Rate of change of chamber free volume [m^3/s].
+            Defaults to 0, i.e. constant free volume.
 
     Returns:
         Derivative of chamber pressure with respect to time, as a one-tuple.
@@ -35,23 +38,25 @@ def compute_chamber_pressure_mass_balance(
     pressure_ratio = external_pressure / chamber_pressure
 
     if pressure_ratio <= critical_pressure_ratio:  # choked
-        H = (k**0.5) * (2 / (k + 1)) ** ((k + 1) / (2 * (k - 1)))
+        isentropic_flow_function = (k**0.5) * (2 / (k + 1)) ** (
+            (k + 1) / (2 * (k - 1))
+        )  # Vandenkerckhove function
     else:
-        H = (
+        isentropic_flow_function = (
             ((2 * k / (k - 1)) ** 0.5)
             * pressure_ratio ** (1 / k)
             * (1 - pressure_ratio ** ((k - 1) / k)) ** 0.5
         )
 
     mass_flow_out = (
-        discharge_coefficient
+        nozzle_discharge_coefficient
         * chamber_pressure
         * throat_area
-        * H
+        * isentropic_flow_function
         / (R * flame_temperature) ** 0.5
     )
 
     chamber_pressure_derivative = (R * flame_temperature / free_chamber_volume) * (
         mass_flow_in - mass_flow_out
-    )
+    ) - chamber_pressure * free_chamber_volume_rate / free_chamber_volume
     return (chamber_pressure_derivative,)
