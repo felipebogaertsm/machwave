@@ -152,6 +152,7 @@ class SolidMotorState(simulation_states.MotorState):
             R=propellant_properties.R_chamber,
             flame_temperature=propellant_properties.adiabatic_flame_temperature,
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
+            free_chamber_volume_rate=burn_rate * burn_area,
         )[0]
         self.chamber_pressure.append(chamber_pressure)
         exit_pressure = isentropic.get_exit_pressure(
