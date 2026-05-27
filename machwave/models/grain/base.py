@@ -345,33 +345,6 @@ class Grain:
         else:
             raise TypeError("Argument is not a GrainSegment class instance")
 
-    def get_effective_density_ratio(self, *, web_distance: float) -> float:
-        r"""
-        Return an effective (burn-area weighted) density ratio.
-
-        Used for gas generation terms where $\dot{m} \propto A_b r \rho_p$.
-        """
-        burn_areas = np.asarray(
-            [seg.get_burn_area(web_distance) for seg in self.segments],
-            dtype=np.float64,
-        )
-        total_burn_area = float(np.sum(burn_areas))
-        if total_burn_area <= 0:
-            return 0.0
-
-        density_ratios = np.asarray(
-            [seg.density_ratio for seg in self.segments], dtype=np.float64
-        )
-        return float(np.sum(burn_areas * density_ratios) / total_burn_area)
-
-    def get_real_density(self, *, web_distance: float, ideal_density: float) -> float:
-        """Return grain effective real propellant density [kg/m^3]."""
-        if ideal_density <= 0:
-            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
-        return ideal_density * self.get_effective_density_ratio(
-            web_distance=web_distance
-        )
-
     def get_propellant_mass(
         self, *, web_distance: float, ideal_density: float
     ) -> float:
