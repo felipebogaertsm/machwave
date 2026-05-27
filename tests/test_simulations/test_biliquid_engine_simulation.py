@@ -14,7 +14,6 @@ import numpy as np
 import pytest
 
 import machwave.models.motors as motors_models
-import machwave.models.propellants.properties as propellant_properties
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
@@ -133,34 +132,34 @@ def test_live_mixture_ratio_drives_cea() -> None:
     design_ratio = motor.propellant.oxidizer_to_fuel_ratio
     assert design_ratio is not None
 
-    deviation_sample: (
-        tuple[propellant_properties.ThermochemicalProperties, float] | None
-    ) = None
+    deviation_sample: tuple[float, float] | None = None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
         while not state.end_thrust:
             state.run_timestep(params.d_t, params.external_pressure)
-            if state._m_dot_fuel <= 0.0:
+            if state.fuel_mass_flow_rate[-1] <= 0.0:
                 continue
-            live_ratio = state._m_dot_ox / state._m_dot_fuel
+            live_ratio = state.oxidizer_to_fuel_ratio[-1]
             if abs(live_ratio - design_ratio) > 1e-6:
-                deviation_sample = (
-                    state.propellant_properties,
-                    state.chamber_pressure[-1],
-                )
+                deviation_sample = (live_ratio, state.chamber_pressure[-1])
 
     assert deviation_sample is not None, (
         "Live oxidizer/fuel mass flow ratio never deviated from the design ratio"
     )
-    live_properties, live_chamber_pressure = deviation_sample
+    live_ratio, live_chamber_pressure = deviation_sample
 
+    live_props = motor.propellant.evaluate(
+        chamber_pressure=live_chamber_pressure,
+        expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
+        mixture_ratio=live_ratio,
+    )
     design_props = motor.propellant.evaluate(
         chamber_pressure=live_chamber_pressure,
         expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
         mixture_ratio=design_ratio,
     )
     assert (
-        live_properties.adiabatic_flame_temperature
+        live_props.adiabatic_flame_temperature
         != design_props.adiabatic_flame_temperature
     )
 
