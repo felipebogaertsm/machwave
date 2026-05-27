@@ -17,6 +17,7 @@ import machwave.simulation.states as simulation_states
 class SolidMotorState(simulation_states.MotorState):
     """State for a Solid Rocket Motor."""
 
+    motor: motors.SolidMotor
     result_class = solid_results.SolidSimulationResult
 
     def __init__(
