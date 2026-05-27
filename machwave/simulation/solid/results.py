@@ -23,6 +23,9 @@ class SolidSimulationResult(
     web: simulation_results.SimulationResultArray
     burn_area: simulation_results.SimulationResultArray
     propellant_volume: simulation_results.SimulationResultArray
+    burn_area_per_segment: simulation_results.SimulationResultArray
+    propellant_volume_per_segment: simulation_results.SimulationResultArray
+    propellant_mass_per_segment: simulation_results.SimulationResultArray
     burn_rate: simulation_results.SimulationResultArray
     divergent_loss: simulation_results.SimulationResultArray
     kinetics_loss: simulation_results.SimulationResultArray
@@ -69,6 +72,11 @@ class SolidSimulationResult(
             "web": web,
             "burn_area": burn_area,
             "propellant_volume": propellant_volume,
+            "burn_area_per_segment": np.stack(state.burn_area_per_segment),
+            "propellant_volume_per_segment": np.stack(
+                state.propellant_volume_per_segment
+            ),
+            "propellant_mass_per_segment": np.stack(state.propellant_mass_per_segment),
             "burn_rate": burn_rate,
             "divergent_loss": np.asarray(state.divergent_loss),
             "kinetics_loss": np.asarray(state.kinetics_loss),
@@ -150,6 +158,15 @@ class SolidSimulationResult(
                 f" Propellant initial mass {self.propellant_mass[0] * 1e3:.3f} g",
                 file=file,
             )
+        print(
+            f" Initial propellant volume: {self.propellant_volume[0] * 1e6:.3f} cm^3",
+            file=file,
+        )
+        print(f" Initial burn area: {self.burn_area[0] * 1e4:.3f} cm^2", file=file)
+        print(
+            f" Peak burn area: {float(np.max(self.burn_area)) * 1e4:.3f} cm^2",
+            file=file,
+        )
         print(" Mean Kn: %.2f" % np.mean(self.klemmung), file=file)
         print(" Max Kn: %.2f" % np.max(self.klemmung), file=file)
         print(

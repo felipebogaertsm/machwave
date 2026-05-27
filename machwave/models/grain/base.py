@@ -345,20 +345,37 @@ class Grain:
         else:
             raise TypeError("Argument is not a GrainSegment class instance")
 
+    def get_propellant_mass_per_segment(
+        self, *, web_distance: float, ideal_density: float
+    ) -> np.typing.NDArray[np.float64]:
+        """
+        Return per-segment propellant mass at a given web distance.
+
+        Args:
+            web_distance: Web distance traveled [m].
+            ideal_density: Propellant ideal density [kg/m^3].
+
+        Returns:
+            Per-segment mass array of shape `(segment_count,)` [kg].
+        """
+        if ideal_density <= 0:
+            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
+
+        volumes = self.get_propellant_volume_per_segment(web_distance)
+        density_ratios = self.get_density_ratio_per_segment()
+        return volumes * density_ratios * ideal_density
+
     def get_propellant_mass(
         self, *, web_distance: float, ideal_density: float
     ) -> float:
         """Return remaining propellant mass [kg] at a given web distance."""
-        if ideal_density <= 0:
-            raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
-
-        volumes = np.asarray(
-            [seg.get_volume(web_distance) for seg in self.segments], dtype=np.float64
+        return float(
+            np.sum(
+                self.get_propellant_mass_per_segment(
+                    web_distance=web_distance, ideal_density=ideal_density
+                )
+            )
         )
-        density_ratios = np.asarray(
-            [seg.density_ratio for seg in self.segments], dtype=np.float64
-        )
-        return float(np.sum(volumes * density_ratios) * ideal_density)
 
     @property
     def total_length(self) -> float:
@@ -423,12 +440,8 @@ class Grain:
         total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
             axis=0, dtype=np.float64
         )
-        volumes = np.asarray(
-            [seg.get_volume(web_distance) for seg in self.segments], dtype=np.float64
-        )
-        density_ratios = np.asarray(
-            [seg.density_ratio for seg in self.segments], dtype=np.float64
-        )
+        volumes = self.get_propellant_volume_per_segment(web_distance)
+        density_ratios = self.get_density_ratio_per_segment()
         total_mass_normalized = float(np.sum(volumes * density_ratios))
 
         return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
@@ -497,6 +510,35 @@ class Grain:
 
         return total_inertia.astype(np.float64)
 
+    def get_density_ratio_per_segment(self) -> np.typing.NDArray[np.float64]:
+        """
+        Return per-segment density ratios.
+
+        Returns:
+            Per-segment density-ratio array of shape `(segment_count,)`.
+        """
+        return np.asarray(
+            [segment.density_ratio for segment in self.segments],
+            dtype=np.float64,
+        )
+
+    def get_burn_area_per_segment(
+        self, web_distance: float
+    ) -> np.typing.NDArray[np.float64]:
+        """
+        Return per-segment burn area at a given web distance.
+
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Per-segment burn area array of shape `(segment_count,)` [m^2].
+        """
+        return np.asarray(
+            [segment.get_burn_area(web_distance) for segment in self.segments],
+            dtype=np.float64,
+        )
+
     def get_burn_area(self, web_distance: float) -> float:
         """
         Return the grain burn area at a given web distance.
@@ -507,8 +549,23 @@ class Grain:
         Returns:
             Total burn area summed across all segments [m^2].
         """
-        return np.sum(
-            [segment.get_burn_area(web_distance) for segment in self.segments]
+        return float(np.sum(self.get_burn_area_per_segment(web_distance)))
+
+    def get_propellant_volume_per_segment(
+        self, web_distance: float
+    ) -> np.typing.NDArray[np.float64]:
+        """
+        Return per-segment propellant volume at a given web distance.
+
+        Args:
+            web_distance: Web distance traveled [m].
+
+        Returns:
+            Per-segment volume array of shape `(segment_count,)` [m^3].
+        """
+        return np.asarray(
+            [segment.get_volume(web_distance) for segment in self.segments],
+            dtype=np.float64,
         )
 
     def get_propellant_volume(self, web_distance: float) -> float:
@@ -521,7 +578,7 @@ class Grain:
         Returns:
             Total propellant volume summed across all segments [m^3].
         """
-        return np.sum([segment.get_volume(web_distance) for segment in self.segments])
+        return float(np.sum(self.get_propellant_volume_per_segment(web_distance)))
 
     def get_mass_flux_per_segment(
         self,
