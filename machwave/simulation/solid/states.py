@@ -17,6 +17,7 @@ import machwave.simulation.states as simulation_states
 class SolidMotorState(simulation_states.MotorState):
     """State for a Solid Rocket Motor."""
 
+    motor: motors.SolidMotor
     result_class = solid_results.SolidSimulationResult
 
     def __init__(
@@ -55,46 +56,30 @@ class SolidMotorState(simulation_states.MotorState):
             other_losses=other_losses,
         )
 
-        self.motor: motors.SolidMotor = motor
         self.propellant_properties = propellant_properties
 
-        self.free_chamber_volume: simulation_states.SimulationStateArray = [
-            motor.thrust_chamber.combustion_chamber.internal_volume
-        ]
         self.web: simulation_states.SimulationStateArray = [0.0]
-        self.burn_area: simulation_states.SimulationStateArray = [
-            self.motor.grain.get_burn_area(0.0)
-        ]
-        self.propellant_volume: simulation_states.SimulationStateArray = [
-            self.motor.grain.get_propellant_volume(0.0)
-        ]
-        self.burn_rate: simulation_states.SimulationStateArray = [0.0]
-        self.free_chamber_volume_rate: simulation_states.SimulationStateArray = [0.0]
 
-        initial_cog = motor.grain.get_center_of_gravity(
-            web_distance=0.0,
-        )
-        initial_moi = motor.grain.get_moment_of_inertia(
-            ideal_density=motor.propellant.ideal_density,
-            web_distance=0.0,
-        )
-        self.propellant_cog: list[npt.NDArray[np.float64]] = [initial_cog]
-        self.propellant_moi: list[npt.NDArray[np.float64]] = [initial_moi]
+        self.burn_area: simulation_states.SimulationStateArray = []
+        self.propellant_volume: simulation_states.SimulationStateArray = []
+        self.burn_rate: simulation_states.SimulationStateArray = []
+        self.free_chamber_volume: simulation_states.SimulationStateArray = []
+        self.free_chamber_volume_rate: simulation_states.SimulationStateArray = []
+        self.grain_segment_mass_flow: list[npt.NDArray[np.float64]] = []
 
-        self.divergent_loss: simulation_states.SimulationStateArray = [0.0]
-        self.kinetics_loss: simulation_states.SimulationStateArray = [0.0]
-        self.boundary_layer_loss: simulation_states.SimulationStateArray = [0.0]
-        self.two_phase_loss: simulation_states.SimulationStateArray = [0.0]
-        self.nozzle_efficiency: simulation_states.SimulationStateArray = [0.0]
-        self.overall_efficiency: simulation_states.SimulationStateArray = [0.0]
+        self.propellant_cog: list[npt.NDArray[np.float64]] = []
+        self.propellant_moi: list[npt.NDArray[np.float64]] = []
+
+        self.divergent_loss: simulation_states.SimulationStateArray = []
+        self.kinetics_loss: simulation_states.SimulationStateArray = []
+        self.boundary_layer_loss: simulation_states.SimulationStateArray = []
+        self.two_phase_loss: simulation_states.SimulationStateArray = []
+        self.nozzle_efficiency: simulation_states.SimulationStateArray = []
+        self.overall_efficiency: simulation_states.SimulationStateArray = []
 
     def get_m_dot_in(self) -> float:
         """Return the propellant mass generation rate from the grain [kg/s]."""
-        propellant_density = self.motor.grain.get_real_density(
-            web_distance=self.web[-1],
-            ideal_density=self.motor.propellant.ideal_density,
-        )
-        return propellant_density * self.burn_rate[-1] * self.burn_area[-1]
+        return float(np.sum(self.grain_segment_mass_flow[-1]))
 
     def run_timestep(
         self,
@@ -112,18 +97,18 @@ class SolidMotorState(simulation_states.MotorState):
         nozzle = self.motor.thrust_chamber.nozzle
         ideal_propellant_density = self.motor.propellant.ideal_density
 
-        time = self.time[-1] + d_t
-        self.time.append(time)
-
+        time = self.time[-1]
         web_distance = self.web[-1]
+        chamber_pressure = self.chamber_pressure[-1]
+
         burn_area = self.motor.grain.get_burn_area(web_distance)
         self.burn_area.append(burn_area)
         propellant_volume = self.motor.grain.get_propellant_volume(web_distance)
         self.propellant_volume.append(propellant_volume)
-        burn_rate = self.motor.propellant.get_burn_rate(self.chamber_pressure[-1])
+
+        burn_rate = self.motor.propellant.get_burn_rate(chamber_pressure)
         self.burn_rate.append(burn_rate)
         web_consumed = burn_rate * d_t
-        self.web.append(web_distance + web_consumed)
 
         free_chamber_volume = self.motor.get_free_chamber_volume(propellant_volume)
         self.free_chamber_volume.append(free_chamber_volume)
@@ -143,21 +128,18 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.propellant_moi.append(propellant_moi)
 
-        chamber_pressure = rk4.rk4th_ode_solver(
-            variables={"chamber_pressure": self.chamber_pressure[-1]},
-            equation=mass_balance.compute_chamber_pressure_mass_balance,
-            d_t=d_t,
-            external_pressure=external_pressure,
-            mass_flow_in=self.get_m_dot_in(),
-            free_chamber_volume=free_chamber_volume,
-            throat_area=nozzle.get_throat_area(),
-            k=propellant_properties.k_chamber,
-            R=propellant_properties.R_chamber,
-            flame_temperature=propellant_properties.adiabatic_flame_temperature,
-            nozzle_discharge_coefficient=nozzle.discharge_coefficient,
-            free_chamber_volume_rate=free_chamber_volume_rate,
-        )[0]
-        self.chamber_pressure.append(chamber_pressure)
+        grain_segment_mass_flow = (
+            ideal_propellant_density
+            * burn_rate
+            * np.asarray(
+                [
+                    segment.get_burn_area(web_distance) * segment.density_ratio
+                    for segment in self.motor.grain.segments
+                ]
+            )
+        )
+        self.grain_segment_mass_flow.append(grain_segment_mass_flow)
+
         exit_pressure = isentropic.get_exit_pressure(
             propellant_properties.k_exhaust,
             nozzle.expansion_ratio,
@@ -230,6 +212,7 @@ class SolidMotorState(simulation_states.MotorState):
         if propellant_mass <= 0 and not self.end_burn:
             self._burn_time = time
             self.end_burn = True
+
         if not isentropic.is_flow_choked(
             chamber_pressure,
             external_pressure,
@@ -239,3 +222,24 @@ class SolidMotorState(simulation_states.MotorState):
                 self._burn_time = time
             self._thrust_time = time
             self.end_thrust = True
+            return
+
+        new_time = time + d_t
+        self.time.append(new_time)
+        new_web_distance = web_distance + web_consumed
+        self.web.append(new_web_distance)
+        new_chamber_pressure = rk4.rk4th_ode_solver(
+            variables={"chamber_pressure": self.chamber_pressure[-1]},
+            equation=mass_balance.compute_chamber_pressure_mass_balance,
+            d_t=d_t,
+            external_pressure=external_pressure,
+            mass_flow_in=self.get_m_dot_in(),
+            free_chamber_volume=free_chamber_volume,
+            throat_area=nozzle.get_throat_area(),
+            k=propellant_properties.k_chamber,
+            R=propellant_properties.R_chamber,
+            flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            nozzle_discharge_coefficient=nozzle.discharge_coefficient,
+            free_chamber_volume_rate=free_chamber_volume_rate,
+        )[0]
+        self.chamber_pressure.append(new_chamber_pressure)

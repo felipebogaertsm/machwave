@@ -34,17 +34,17 @@ class MotorState(ABC):
                 mechanisms, in [0, 1].
         """
         self.motor = motor
+        self.external_pressure = external_pressure
         self.other_losses = other_losses
 
         self.time: SimulationStateArray = [0.0]
-
-        self.propellant_mass: SimulationStateArray = [motor.initial_propellant_mass]
         self.chamber_pressure: SimulationStateArray = [igniter_pressure]
-        self.exit_pressure: SimulationStateArray = [external_pressure]
 
-        self.thrust_coefficient: SimulationStateArray = [0.0]
-        self.ideal_thrust_coefficient: SimulationStateArray = [0.0]
-        self.thrust: SimulationStateArray = [0.0]
+        self.propellant_mass: SimulationStateArray = []
+        self.exit_pressure: SimulationStateArray = []
+        self.ideal_thrust_coefficient: SimulationStateArray = []
+        self.thrust_coefficient: SimulationStateArray = []
+        self.thrust: SimulationStateArray = []
 
         self._thrust_time: float | None = None
         self._burn_time: float | None = None
