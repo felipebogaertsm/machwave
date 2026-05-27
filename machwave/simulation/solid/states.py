@@ -57,11 +57,15 @@ class SolidMotorState(simulation_states.MotorState):
         )
 
         self.propellant_properties = propellant_properties
+        self.segment_density_ratios = motor.grain.get_density_ratio_per_segment()
 
         self.web: simulation_states.SimulationStateArray = [0.0]
 
         self.burn_area: simulation_states.SimulationStateArray = []
         self.propellant_volume: simulation_states.SimulationStateArray = []
+        self.burn_area_per_segment: list[npt.NDArray[np.float64]] = []
+        self.propellant_volume_per_segment: list[npt.NDArray[np.float64]] = []
+        self.propellant_mass_per_segment: list[npt.NDArray[np.float64]] = []
         self.burn_rate: simulation_states.SimulationStateArray = []
         self.free_chamber_volume: simulation_states.SimulationStateArray = []
         self.free_chamber_volume_rate: simulation_states.SimulationStateArray = []
@@ -101,9 +105,16 @@ class SolidMotorState(simulation_states.MotorState):
         web_distance = self.web[-1]
         chamber_pressure = self.chamber_pressure[-1]
 
-        burn_area = self.motor.grain.get_burn_area(web_distance)
+        burn_area_per_segment = self.motor.grain.get_burn_area_per_segment(web_distance)
+        self.burn_area_per_segment.append(burn_area_per_segment)
+        burn_area = float(np.sum(burn_area_per_segment))
         self.burn_area.append(burn_area)
-        propellant_volume = self.motor.grain.get_propellant_volume(web_distance)
+
+        propellant_volume_per_segment = (
+            self.motor.grain.get_propellant_volume_per_segment(web_distance)
+        )
+        self.propellant_volume_per_segment.append(propellant_volume_per_segment)
+        propellant_volume = float(np.sum(propellant_volume_per_segment))
         self.propellant_volume.append(propellant_volume)
 
         burn_rate = self.motor.propellant.get_burn_rate(chamber_pressure)
@@ -114,9 +125,13 @@ class SolidMotorState(simulation_states.MotorState):
         self.free_chamber_volume.append(free_chamber_volume)
         free_chamber_volume_rate = burn_rate * burn_area
         self.free_chamber_volume_rate.append(free_chamber_volume_rate)
-        propellant_mass = self.motor.grain.get_propellant_mass(
-            web_distance=web_distance, ideal_density=ideal_propellant_density
+        propellant_mass_per_segment = (
+            propellant_volume_per_segment
+            * self.segment_density_ratios
+            * ideal_propellant_density
         )
+        self.propellant_mass_per_segment.append(propellant_mass_per_segment)
+        propellant_mass = float(np.sum(propellant_mass_per_segment))
         self.propellant_mass.append(propellant_mass)
 
         propellant_cog = self.motor.grain.get_center_of_gravity(
@@ -131,12 +146,8 @@ class SolidMotorState(simulation_states.MotorState):
         grain_segment_mass_flow = (
             ideal_propellant_density
             * burn_rate
-            * np.asarray(
-                [
-                    segment.get_burn_area(web_distance) * segment.density_ratio
-                    for segment in self.motor.grain.segments
-                ]
-            )
+            * burn_area_per_segment
+            * self.segment_density_ratios
         )
         self.grain_segment_mass_flow.append(grain_segment_mass_flow)
 
