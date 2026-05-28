@@ -49,18 +49,16 @@ class BiliquidEngineState(simulation_states.MotorState):
             motor.feed_system.fuel_tank.fluid_mass
         ]
 
-        self.nozzle_correction_factor: simulation_states.SimulationStateArray = []
+        self.fuel_mass_flow_rate: simulation_states.SimulationStateArray = []
+        self.oxidizer_mass_flow_rate: simulation_states.SimulationStateArray = []
+        self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
         self.fuel_tank_pressure: simulation_states.SimulationStateArray = []
         self.oxidizer_tank_pressure: simulation_states.SimulationStateArray = []
-
-        self.propellant_properties = self._evaluate_propellant_properties(
-            chamber_pressure=igniter_pressure,
-            mixture_ratio=motor.propellant.oxidizer_to_fuel_ratio,
-        )
+        self.nozzle_correction_factor: simulation_states.SimulationStateArray = []
 
     def get_m_dot_in(self) -> float:
         """Return the total inlet mass flow (fuel + oxidizer) [kg/s]."""
-        return self._m_dot_fuel + self._m_dot_ox
+        return self.fuel_mass_flow_rate[-1] + self.oxidizer_mass_flow_rate[-1]
 
     def _evaluate_propellant_properties(
         self,
@@ -114,24 +112,23 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         m_dot_fuel = min(m_dot_fuel, fuel_mass / d_t)
         m_dot_ox = min(m_dot_ox, oxidizer_mass / d_t)
-        self._m_dot_fuel = m_dot_fuel
-        self._m_dot_ox = m_dot_ox
-
-        oxidizer_to_fuel_ratio = self.motor.propellant.oxidizer_to_fuel_ratio
-        assert oxidizer_to_fuel_ratio is not None
+        self.fuel_mass_flow_rate.append(m_dot_fuel)
+        self.oxidizer_mass_flow_rate.append(m_dot_ox)
         fuel_consumed = m_dot_fuel * d_t
         oxidizer_consumed = m_dot_ox * d_t
 
-        if propellant_mass > 0:
-            if m_dot_fuel > 0.0:
-                instantaneous_oxidizer_to_fuel_ratio = m_dot_ox / m_dot_fuel
-            else:
-                instantaneous_oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
-            self.propellant_properties = self._evaluate_propellant_properties(
-                chamber_pressure=chamber_pressure,
-                mixture_ratio=instantaneous_oxidizer_to_fuel_ratio,
-            )
-        propellant_properties = self.propellant_properties
+        if m_dot_fuel > 0.0:
+            oxidizer_to_fuel_ratio = m_dot_ox / m_dot_fuel
+        else:
+            design_ratio = self.motor.propellant.oxidizer_to_fuel_ratio
+            assert design_ratio is not None
+            oxidizer_to_fuel_ratio = design_ratio
+        self.oxidizer_to_fuel_ratio.append(oxidizer_to_fuel_ratio)
+
+        propellant_properties = self._evaluate_propellant_properties(
+            chamber_pressure=chamber_pressure,
+            mixture_ratio=oxidizer_to_fuel_ratio,
+        )
 
         exit_pressure = isentropic.get_exit_pressure(
             propellant_properties.k_exhaust,
@@ -169,18 +166,16 @@ class BiliquidEngineState(simulation_states.MotorState):
             ideal_thrust_coefficient, nozzle_correction_factor
         )
         self.thrust_coefficient.append(thrust_coefficient)
-        self.thrust.append(
-            nozzle_core.get_thrust_from_thrust_coefficient(
-                thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
-            )
+        thrust = nozzle_core.get_thrust_from_thrust_coefficient(
+            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
         )
+        self.thrust.append(thrust)
 
-        new_time = time + d_t
         if (
             fuel_consumed >= fuel_mass or oxidizer_consumed >= oxidizer_mass
         ) and not self.end_burn:
             self.end_burn = True
-            self._burn_time = new_time
+            self._burn_time = time + d_t
 
         if not isentropic.is_flow_choked(
             chamber_pressure,
@@ -193,11 +188,12 @@ class BiliquidEngineState(simulation_states.MotorState):
             self.end_thrust = True
             return
 
+        new_time = time + d_t
+        self.time.append(new_time)
         feed_system.fuel_tank.remove_propellant(fuel_consumed)
         feed_system.oxidizer_tank.remove_propellant(oxidizer_consumed)
         self.fuel_mass.append(fuel_mass - fuel_consumed)
         self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)
-
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": chamber_pressure},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
@@ -210,6 +206,6 @@ class BiliquidEngineState(simulation_states.MotorState):
             R=propellant_properties.R_chamber,
             flame_temperature=propellant_properties.adiabatic_flame_temperature,
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
+            free_chamber_volume_rate=0.0,
         )[0]
         self.chamber_pressure.append(new_chamber_pressure)
-        self.time.append(new_time)
