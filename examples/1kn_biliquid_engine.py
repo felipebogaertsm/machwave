@@ -3,7 +3,7 @@ Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 """
 
 import machwave.models.feed_systems as feed_systems
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank
 import machwave.models.motors as motors_models
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
@@ -39,10 +39,10 @@ def main():
         oxidizer_to_fuel_ratio=1.9495,
     )
 
-    fuel_tank = tanks.Tank(
+    fuel_tank = tank.Tank(
         FUEL_NAME.upper(), volume=2.0e-3, temperature=300, initial_fluid_mass=1.55
     )
-    oxidizer_tank = tanks.Tank(
+    oxidizer_tank = tank.Tank(
         OXIDIZER_NAME, volume=3.80e-3, temperature=300, initial_fluid_mass=2.78
     )
 
