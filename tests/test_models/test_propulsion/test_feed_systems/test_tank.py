@@ -264,3 +264,28 @@ def test_init_invokes_overfill_check():
             temperature=300.0,
             initial_fluid_mass=10.0,  # 10000 kg/m^3, liquid water ~997 kg/m^3
         )
+
+
+@pytest.mark.parametrize(
+    "overrides, match",
+    [
+        ({"volume": 0.0}, "volume must be strictly positive"),
+        ({"volume": -1e-3}, "volume must be strictly positive"),
+        ({"temperature": 0.0}, "temperature must be strictly positive"),
+        ({"temperature": -10.0}, "temperature must be strictly positive"),
+        ({"initial_fluid_mass": -0.1}, "initial_fluid_mass must be non-negative"),
+        ({"overfill_tolerance": -0.01}, "overfill_tolerance must be non-negative"),
+    ],
+)
+def test_init_rejects_invalid_inputs(overrides, match):
+    """The constructor must reject physically invalid arguments up front."""
+    kwargs = dict(
+        fluid_name="Water",
+        volume=1e-3,
+        temperature=300.0,
+        initial_fluid_mass=0.5,
+    )
+    kwargs.update(overrides)
+
+    with pytest.raises(ValueError, match=match):
+        tank_models.Tank(**kwargs)
