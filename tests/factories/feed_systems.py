@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 import machwave.models.feed_systems as feed_systems_models
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank_models
 
 
 class TankFactory:
     @classmethod
-    def build(cls, **overrides: Any) -> tanks.Tank:
+    def build(cls, **overrides: Any) -> tank_models.Tank:
         kwargs: dict[str, Any] = dict(
             fluid_name="N2O",
             volume=0.01,
@@ -16,7 +16,7 @@ class TankFactory:
             initial_fluid_mass=5.0,
         )
         kwargs.update(overrides)
-        return tanks.Tank(**kwargs)
+        return tank_models.Tank(**kwargs)
 
 
 class StackedTankPressureFedFeedSystemFactory:

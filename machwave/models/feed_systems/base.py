@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank
 import machwave.models.thrust_chamber.injector as injector_models
 
 
 class FeedSystem(ABC):
     """Abstract base class for a bipropellant feed system in a biliquid rocket engine."""
 
-    def __init__(self, fuel_tank: tanks.Tank, oxidizer_tank: tanks.Tank):
+    def __init__(self, fuel_tank: tank.Tank, oxidizer_tank: tank.Tank):
         """
         Initialize the FeedSystem with associated tank objects.
 

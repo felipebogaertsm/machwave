@@ -1,6 +1,6 @@
 import pytest
 
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank_models
 from machwave.models.thrust_chamber import MassFlowModel
 from tests.factories import (
     BipropellantInjectorFactory,
@@ -10,7 +10,7 @@ from tests.factories import (
 
 def test_get_mass_flow_ox_delegates_to_injector_dispatch():
     """Feed-system call equals the injector's own dispatch on the ox tank."""
-    oxidizer_tank = tanks.Tank(
+    oxidizer_tank = tank_models.Tank(
         fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
     )
     feed_system = StackedTankPressureFedFeedSystemFactory.build(

@@ -12,7 +12,7 @@ Additional cycles are under active development as separate work items: electric-
 
 ```
 ┌──────────────┐  ┌──────────────────────┐  ┌──────────┐  ┌──────────┐
-│ tanks.Tank   │──│ feed_systems.cycles  │──│ injector │──│ chamber  │
+│ tank.Tank    │──│ feed_systems.cycles  │──│ injector │──│ chamber  │
 │ (two-phase)  │  │  (this sub-package)  │  │          │  │          │
 └──────────────┘  └──────────────────────┘  └──────────┘  └──────────┘
                        ▲           ▲
@@ -22,7 +22,7 @@ Additional cycles are under active development as separate work items: electric-
                    /regenerative-jacket specs)
 ```
 
-The cycle reads tank state via the [`Tank`][machwave.models.feed_systems.tanks.base.Tank] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to evaluate mass flow through the injector. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_mass_flow_ox` and `get_mass_flow_fuel` once per integration step with the current `chamber_pressure` and the injector geometry from the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector].
+The cycle reads tank state via the [`Tank`][machwave.models.feed_systems.tank.Tank] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to evaluate mass flow through the injector. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_mass_flow_ox` and `get_mass_flow_fuel` once per integration step with the current `chamber_pressure` and the injector geometry from the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector].
 
 ---
 
@@ -34,7 +34,7 @@ A bipropellant pressure-fed engine in which the oxidizer and fuel tanks are arra
 
 ```python
 from machwave.models.feed_systems import StackedTankPressureFedFeedSystem
-from machwave.models.feed_systems.tanks import Tank
+from machwave.models.feed_systems.tank import Tank
 
 feed_system = StackedTankPressureFedFeedSystem(
     oxidizer_line_diameter=0.010,    # m
@@ -55,7 +55,7 @@ feed_system = StackedTankPressureFedFeedSystem(
     \dot{m} = C_d \cdot A \cdot \sqrt{2 \rho \left(P_\text{up} - P_\text{down}\right)}
     \]
 
-    with $\rho$ the saturated-liquid density returned by [`Tank.get_density`][machwave.models.feed_systems.tanks.base.Tank.get_density].
+    with $\rho$ the saturated-liquid density returned by [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density].
 
 - **HEM** (homogeneous-equilibrium two-phase) — `get_homogeneous_equilibrium_mass_flux` in [`machwave.core.two_phase_flow`](../../core.md), required for self-pressurized propellants such as nitrous oxide where the upstream saturated liquid flashes across the orifice and the flow can choke on the two-phase sound speed. The injector multiplies the returned mass flux by $C_d \cdot A$.
 

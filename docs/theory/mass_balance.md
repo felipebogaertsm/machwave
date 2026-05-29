@@ -180,7 +180,7 @@ P_{\text{up},fuel} = P_{\text{tank},ox} - \Delta P_\text{piston}.
 Each tank is modelled as a **two-phase isothermal vessel** (constant \(T\), saturation
 pinning when liquid is present, ideal-gas vapour when only vapour remains; cf. Huzel &
 Huang Ch. 8 for tank thermodynamics). Properties come from CoolProp; details in
-[`Tank`][machwave.models.feed_systems.tanks.base.Tank] and the orchestrating
+[`Tank`][machwave.models.feed_systems.tank.Tank] and the orchestrating
 [`StackedTankPressureFedFeedSystem`][machwave.models.feed_systems.cycles.stacked_tank_pressure_fed.StackedTankPressureFedFeedSystem].
 
 ### 2.3.3 Stoichiometric Limiting-Reagent Adjustment
