@@ -3,7 +3,7 @@ import CoolProp.CoolProp as CP
 import pytest
 import scipy.constants
 
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank_models
 
 # A few (fluid, temperature) pairs for running tests.
 # Adjust temperatures to ensure we stay within valid ranges for each fluid in CoolProp.
@@ -36,7 +36,7 @@ def test_saturated_condition(fluid_name, temperature):
     m_vap = (p_sat * volume * molar_mass) / (R_universal * temperature)
 
     # 3) Put more mass than m_vap => ensures there's liquid
-    tank = tanks.Tank(
+    tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
@@ -65,7 +65,7 @@ def test_all_vapor_condition(fluid_name, temperature):
 
     # Put slightly less than that => ensures no liquid
     mass = 0.5 * m_vap_sat
-    tank = tanks.Tank(
+    tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
@@ -90,7 +90,7 @@ def test_remove_propellant(fluid_name, temperature):
     volume = 0.02
     initial_mass = 1.0
 
-    tank = tanks.Tank(
+    tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
@@ -129,7 +129,7 @@ def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
     R_universal = scipy.constants.R
     m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
 
-    tank = tanks.Tank(
+    tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
@@ -153,7 +153,7 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
     R_universal = scipy.constants.R
     m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
 
-    tank = tanks.Tank(
+    tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
@@ -168,7 +168,7 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
 
 def test_remove_negative_mass():
     """Removing negative mass should raise ValueError."""
-    tank = tanks.Tank("Water", 0.01, 300.0, 1.0)
+    tank = tank_models.Tank("Water", 0.01, 300.0, 1.0)
     with pytest.raises(ValueError):
         tank.remove_propellant(-0.5)
 
@@ -184,7 +184,12 @@ def test_check_not_overfilled_rejects_overfill(fluid_name, temperature):
     overfill_mass = 2.0 * rho_liquid * volume
 
     with pytest.raises(ValueError, match="overfilled"):
-        tanks.Tank._check_not_overfilled(fluid_name, volume, temperature, overfill_mass)
+        tank_models.Tank(
+            fluid_name=fluid_name,
+            volume=volume,
+            temperature=temperature,
+            initial_fluid_mass=overfill_mass,
+        )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -197,7 +202,12 @@ def test_check_not_overfilled_accepts_fill_just_under_liquid(fluid_name, tempera
     volume = 1e-3
     mass = rho_liquid * volume * 0.99
 
-    tanks.Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+    tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=mass,
+    )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -208,9 +218,16 @@ def test_check_not_overfilled_accepts_within_tolerance(fluid_name, temperature):
     """
     rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
     volume = 1e-3
-    mass = rho_liquid * volume * (1 + tanks.Tank.OVERFILL_TOLERANCE / 2)
+    tolerance = 0.01
+    mass = rho_liquid * volume * (1 + tolerance / 2)
 
-    tanks.Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+    tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=mass,
+        overfill_tolerance=tolerance,
+    )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -221,20 +238,27 @@ def test_check_not_overfilled_rejects_just_outside_tolerance(fluid_name, tempera
     """
     rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
     volume = 1e-3
-    mass = rho_liquid * volume * (1 + tanks.Tank.OVERFILL_TOLERANCE * 2)
+    tolerance = 0.01
+    mass = rho_liquid * volume * (1 + tolerance * 2)
 
     with pytest.raises(ValueError, match="overfilled"):
-        tanks.Tank._check_not_overfilled(fluid_name, volume, temperature, mass)
+        tank_models.Tank(
+            fluid_name=fluid_name,
+            volume=volume,
+            temperature=temperature,
+            initial_fluid_mass=mass,
+            overfill_tolerance=tolerance,
+        )
 
 
 def test_init_invokes_overfill_check():
     """
-    The constructor must call :meth:`tanks.Tank._check_not_overfilled` so an
+    The constructor must call :meth:`tank_models.Tank._check_not_overfilled` so an
     overfilled tank fails fast at API boundaries rather than silently
     producing nonsensical pressure / density results downstream.
     """
     with pytest.raises(ValueError, match="overfilled"):
-        tanks.Tank(
+        tank_models.Tank(
             fluid_name="Water",
             volume=1e-3,
             temperature=300.0,
