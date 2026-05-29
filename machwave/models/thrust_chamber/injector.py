@@ -7,7 +7,7 @@ import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
 
 if TYPE_CHECKING:
-    import machwave.models.feed_systems.tanks as tanks
+    import machwave.models.feed_systems.tank as tank_models
 
 
 class MassFlowModel(enum.StrEnum):
@@ -64,7 +64,7 @@ class BipropellantInjector:
     def get_mass_flow_fuel(
         self,
         *,
-        tank: tanks.Tank,
+        tank: tank_models.Tank,
         pressure_upstream: float,
         chamber_pressure: float,
     ) -> float:
@@ -91,7 +91,7 @@ class BipropellantInjector:
     def get_mass_flow_ox(
         self,
         *,
-        tank: tanks.Tank,
+        tank: tank_models.Tank,
         pressure_upstream: float,
         chamber_pressure: float,
     ) -> float:
@@ -118,7 +118,7 @@ class BipropellantInjector:
     @staticmethod
     def _get_mass_flow(
         *,
-        tank: tanks.Tank,
+        tank: tank_models.Tank,
         pressure_upstream: float,
         chamber_pressure: float,
         discharge_coefficient: float,
