@@ -43,10 +43,10 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
 
         self.oxidizer_mass: simulation_states.SimulationStateArray = [
-            motor.feed_system.oxidizer_tank.fluid_mass
+            motor.feed_system.oxidizer_tank.initial_fluid_mass
         ]
         self.fuel_mass: simulation_states.SimulationStateArray = [
-            motor.feed_system.fuel_tank.fluid_mass
+            motor.feed_system.fuel_tank.initial_fluid_mass
         ]
 
         self.fuel_mass_flow_rate: simulation_states.SimulationStateArray = []
@@ -95,17 +95,35 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         propellant_mass = fuel_mass + oxidizer_mass
         self.propellant_mass.append(propellant_mass)
-        self.fuel_tank_pressure.append(feed_system.get_fuel_tank_pressure())
-        self.oxidizer_tank_pressure.append(feed_system.get_oxidizer_tank_pressure())
 
-        if propellant_mass > 0:
+        fuel_tank_pressure = feed_system.get_fuel_tank_pressure(
+            oxidizer_mass=oxidizer_mass, fuel_mass=fuel_mass
+        )
+        self.fuel_tank_pressure.append(fuel_tank_pressure)
+        oxidizer_tank_pressure = feed_system.get_oxidizer_tank_pressure(
+            oxidizer_mass=oxidizer_mass
+        )
+        self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
+
+        # A tank can only feed the chamber while its pressure exceeds the
+        # chamber pressure. Once a tank is (nearly) empty its pressure collapses
+        # below the chamber and the engine can no longer be fed.
+        can_feed = (
+            propellant_mass > 0
+            and fuel_tank_pressure > chamber_pressure
+            and oxidizer_tank_pressure > chamber_pressure
+        )
+        if can_feed:
             m_dot_fuel = feed_system.get_mass_flow_fuel(
                 chamber_pressure=chamber_pressure,
                 injector=injector,
+                fuel_mass=fuel_mass,
+                oxidizer_mass=oxidizer_mass,
             )
             m_dot_ox = feed_system.get_mass_flow_ox(
                 chamber_pressure=chamber_pressure,
                 injector=injector,
+                oxidizer_mass=oxidizer_mass,
             )
         else:
             m_dot_fuel = m_dot_ox = 0.0
@@ -172,7 +190,9 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.thrust.append(thrust)
 
         if (
-            fuel_consumed >= fuel_mass or oxidizer_consumed >= oxidizer_mass
+            not can_feed
+            or fuel_consumed >= fuel_mass
+            or oxidizer_consumed >= oxidizer_mass
         ) and not self.end_burn:
             self.end_burn = True
             self._burn_time = time + d_t
@@ -190,8 +210,6 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         new_time = time + d_t
         self.time.append(new_time)
-        feed_system.fuel_tank.remove_propellant(fuel_consumed)
-        feed_system.oxidizer_tank.remove_propellant(oxidizer_consumed)
         self.fuel_mass.append(fuel_mass - fuel_consumed)
         self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)
         new_chamber_pressure = rk4.rk4th_ode_solver(
