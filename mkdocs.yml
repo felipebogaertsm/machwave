@@ -65,7 +65,7 @@ nav:
               - Overview: api/models/feed_systems.md
               - components: api/models/feed_systems/components.md
               - cycles: api/models/feed_systems/cycles.md
-              - tanks: api/models/feed_systems/tanks.md
+              - tank: api/models/feed_systems/tank.md
           - grain:
               - Overview: api/models/grain.md
               - fmm: api/models/grain/fmm.md

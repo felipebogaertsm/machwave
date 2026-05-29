@@ -1,5 +1,5 @@
 import machwave.models.feed_systems.base as feed_system_base
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank
 import machwave.models.thrust_chamber.injector as injector_models
 
 
@@ -18,8 +18,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         oxidizer_line_length: float,
         fuel_line_diameter: float,
         fuel_line_length: float,
-        fuel_tank: tanks.Tank,
-        oxidizer_tank: tanks.Tank,
+        fuel_tank: tank.Tank,
+        oxidizer_tank: tank.Tank,
         piston_loss: float = 0.0,
     ):
         """

@@ -1,6 +1,6 @@
 import pytest
 
-import machwave.models.feed_systems.tanks as tanks
+import machwave.models.feed_systems.tank as tank_models
 from machwave.models.thrust_chamber import MassFlowModel
 from tests.factories import BipropellantInjectorFactory
 
@@ -59,7 +59,7 @@ class TestBipropellantInjectorInstantiation:
 class TestBipropellantInjectorMassFlow:
     def test_hem_predicts_lower_oxidizer_flow_than_spi_for_saturated_n2o(self):
         """For saturated N2O, HEM under-predicts SPI."""
-        oxidizer_tank = tanks.Tank(
+        oxidizer_tank = tank_models.Tank(
             fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
         )
         kwargs = dict(
@@ -80,7 +80,7 @@ class TestBipropellantInjectorMassFlow:
         assert flow_hem < flow_spi
 
     def test_spi_dispatch_returns_positive_flow(self):
-        oxidizer_tank = tanks.Tank(
+        oxidizer_tank = tank_models.Tank(
             fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
         )
         injector = BipropellantInjectorFactory.build()
@@ -95,7 +95,7 @@ class TestBipropellantInjectorMassFlow:
         """SPI dispatch equals `Cd * A * sqrt(2 * rho * dP)` from the core helper."""
         import machwave.core.incompressible_flow as incompressible_flow
 
-        oxidizer_tank = tanks.Tank(
+        oxidizer_tank = tank_models.Tank(
             fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
         )
         injector = BipropellantInjectorFactory.build(
@@ -122,7 +122,7 @@ class TestBipropellantInjectorMassFlow:
         """HEM dispatch equals `Cd * A * G_HEM` from the core helper."""
         import machwave.core.two_phase_flow as two_phase_flow
 
-        oxidizer_tank = tanks.Tank(
+        oxidizer_tank = tank_models.Tank(
             fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
         )
         injector = BipropellantInjectorFactory.build(
@@ -149,7 +149,7 @@ class TestBipropellantInjectorMassFlow:
 
     def test_fuel_side_dispatch_uses_fuel_attributes(self):
         """Fuel dispatch uses fuel-side Cd, area, and model — not the ox-side ones."""
-        fuel_tank = tanks.Tank(
+        fuel_tank = tank_models.Tank(
             fluid_name="Ethanol",
             volume=0.005,
             temperature=298.0,
