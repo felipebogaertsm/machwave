@@ -47,6 +47,17 @@ def main():
         point_width=6e-3,
     )
 
+    finocyl_segment = grain_geometries.FinocylGrainSegment(
+        length=68e-3,
+        outer_diameter=41e-3,
+        core_diameter=12e-3,
+        number_of_fins=6,
+        fin_length=8e-3,
+        fin_width=3e-3,
+        finned_length=34e-3,
+        transition_length=8e-3,
+    )
+
     web_distance = 0
 
     grain_area = bates_segment.get_burn_area(web_distance=web_distance)
@@ -59,6 +70,12 @@ def main():
     port_area = conical_segment.get_port_area(web_distance=web_distance, z=0)
     print(f"Conical grain port area: {port_area * 1e6:2f} mm^2")
     print(f"Conical center of gravity: {conical_segment.get_center_of_gravity(0)}")
+
+    grain_area = finocyl_segment.get_burn_area(web_distance=web_distance)
+    print(f"Finocyl grain area: {grain_area * 1e6:2f} mm^2")
+    port_area = finocyl_segment.get_port_area(web_distance=web_distance, z=17e-3)
+    print(f"Finocyl grain port area (finned slice): {port_area * 1e6:2f} mm^2")
+    print(f"Finocyl center of gravity: {finocyl_segment.get_center_of_gravity(0)}")
 
     grain_area = dgrain_segment.get_burn_area(web_distance=web_distance)
     port_area = dgrain_segment.get_port_area(web_distance=web_distance)

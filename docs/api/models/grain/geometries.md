@@ -14,6 +14,7 @@ Concrete grain segment geometries, both analytical and FMM-based.
 **3D (varying cross-section):**
 
 - `ConicalGrainSegment` — Linearly tapered core from upper to lower diameter.
+- `FinocylGrainSegment` — Central circular bore with radial fins over a partial axial section (FMM-based).
 
 All segments implement the `GrainSegment` interface and can be mixed within a single `Grain`.
 
