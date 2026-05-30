@@ -104,3 +104,24 @@ class ConicalGrainSegmentFactory:
         )
         kwargs.update(overrides)
         return grain_geometries.ConicalGrainSegment(**kwargs)
+
+
+class FinocylGrainSegmentFactory:
+    @classmethod
+    def build(cls, **overrides: Any) -> grain_geometries.FinocylGrainSegment:
+        kwargs: dict[str, Any] = dict(
+            length=0.3,
+            outer_diameter=0.1,
+            core_diameter=0.03,
+            number_of_fins=6,
+            fin_length=0.02,
+            fin_width=0.006,
+            density_ratio=1.0,
+        )
+        kwargs.update(overrides)
+        # Center the finned band so the default segment is axially symmetric.
+        kwargs.setdefault("finned_length", kwargs["length"] / 2)
+        kwargs.setdefault(
+            "fin_axial_offset", (kwargs["length"] - kwargs["finned_length"]) / 2
+        )
+        return grain_geometries.FinocylGrainSegment(**kwargs)

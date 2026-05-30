@@ -3,6 +3,7 @@ import pytest
 from tests.factories import (
     ConicalGrainSegmentFactory,
     DGrainSegmentFactory,
+    FinocylGrainSegmentFactory,
     MultiPortGrainSegmentFactory,
     RodAndTubeGrainSegmentFactory,
     StarGrainSegmentFactory,
@@ -25,6 +26,7 @@ fmm3d_geometries = pytest.mark.parametrize(
     "segment_factory,geometry_name",
     [
         (ConicalGrainSegmentFactory.build, "Conical"),
+        (FinocylGrainSegmentFactory.build, "Finocyl"),
     ],
-    ids=["Conical"],
+    ids=["Conical", "Finocyl"],
 )
