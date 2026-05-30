@@ -31,7 +31,7 @@ numerically. The closed-form equivalent for a constant average thrust is:
 \]
 
 Implemented in
-[`get_total_impulse`](../api/core.md).
+[`get_total_impulse`][machwave.core.performance.get_total_impulse].
 
 ---
 
@@ -50,7 +50,7 @@ The unit *seconds* is universal: it does not depend on the unit system used for
 thrust or mass.
 
 Implemented in
-[`get_specific_impulse`](../api/core.md).
+[`get_specific_impulse`][machwave.core.performance.get_specific_impulse].
 
 ---
 

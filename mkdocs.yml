@@ -8,6 +8,8 @@ repo_name: felipebogaertsm/machwave
 
 theme:
   name: material
+  logo: assets/logo/machwave-icon-white.svg
+  favicon: assets/logo/favicon.svg
   palette:
     - scheme: default
       primary: deep orange
@@ -58,6 +60,7 @@ nav:
           - compressible_flow: api/core/compressible_flow.md
           - interpolation: api/core/interpolation.md
           - mass_balance: api/core/mass_balance.md
+          - performance: api/core/performance.md
           - solvers: api/core/solvers.md
       - models:
           - Overview: api/models.md

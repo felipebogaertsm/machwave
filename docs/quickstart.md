@@ -1,12 +1,11 @@
 # Quick Start
 
-This walkthrough builds a simple BATES-grain SRM from scratch, runs an internal
-ballistics simulation, and plots the results.
+This guide shows how to simulate a Solid Rocket Motor with a BATES grain geometry using Machwave.
 
 ## 1. Choose a propellant
 
-Machwave ships with several pre-defined solid propellant formulations. Here we
-use KNDX (potassium nitrate / dextrose):
+Machwave ships with several pre-defined solid propellant formulations.
+Here we use KNDX (65% potassium nitrate and 35% dextrose):
 
 ```python
 from machwave import formulations
@@ -15,7 +14,7 @@ propellant = formulations.solid.KNDX
 ```
 
 For a full list of available solid propellants, see the
-[formulations page](https://felipebogaertsm.github.io/machwave/api/models/propulsion/propellants/formulations/).
+[formulations page](api/models/propellants/formulations.md).
 
 ## 2. Define the grain geometry
 
