@@ -105,9 +105,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
         self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
 
-        # A tank can only feed the chamber while its pressure exceeds the
-        # chamber pressure. Once a tank is (nearly) empty its pressure collapses
-        # below the chamber and the engine can no longer be fed.
         can_feed = (
             propellant_mass > 0
             and fuel_tank_pressure > chamber_pressure
