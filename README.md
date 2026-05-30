@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo/machwave-lockup-white.png">
-    <img src="docs/assets/logo/machwave-lockup-color.png" alt="Machwave" width="400">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo/machwave-lockup-white.svg">
+    <img src="docs/assets/logo/machwave-lockup-color.svg" alt="Machwave" width="400">
   </picture>
 </p>
 
