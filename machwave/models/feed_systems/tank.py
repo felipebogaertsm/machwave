@@ -7,6 +7,11 @@ class Tank:
     """
     A generic two-phase tank model for any single fluid recognized by CoolProp.
 
+    This is a static description of the tank: it carries no propellant-mass
+    state. Pressure and density are pure functions of a fluid mass passed in by
+    the caller, which lets the integrator own the mass and keeps the model
+    re-runnable.
+
     Assumptions:
       - Constant temperature (isothermal).
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
@@ -29,7 +34,8 @@ class Tank:
             fluid_name: Name of the fluid in the CoolProp database.
             volume: Internal volume of the tank [m^3] (>0).
             temperature: Absolute temperature [K], assumed constant (>0).
-            initial_fluid_mass: Initial total mass of fluid [kg] (>=0).
+            initial_fluid_mass: Initial total mass of fluid [kg] (>=0). This is
+                the tank's loading; the integrator owns the mass thereafter.
             overfill_tolerance: Allowed fraction over the saturated liquid
                 density, e.g. 0.01 = 1% (>=0).
 
@@ -41,7 +47,6 @@ class Tank:
         self.volume = volume
         self.temperature = temperature
         self.initial_fluid_mass = initial_fluid_mass
-        self.fluid_mass = initial_fluid_mass
         self.overfill_tolerance = overfill_tolerance
         self.molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
 
@@ -91,15 +96,18 @@ class Tank:
                 f"{self.temperature} K"
             )
 
-    def get_pressure(self) -> float:
+    def get_pressure(self, fluid_mass: float) -> float:
         """
-        Return the tank pressure [Pa].
+        Return the tank pressure [Pa] for a given fluid mass.
 
         1) Compute the saturation pressure at the given temperature.
         2) If the fluid mass is larger than the mass if all vapor at the saturation
             pressure, the tank is partially liquid and the pressure is the saturation
             pressure.
         3) Otherwise, the tank is all vapor and behaves like an ideal gas.
+
+        Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
 
         Returns:
             Tank pressure [Pa].
@@ -111,16 +119,16 @@ class Tank:
             saturation_pressure, self.volume, self.temperature, self.molar_mass
         )
 
-        if self.fluid_mass > max_vapor_mass:
+        if fluid_mass > max_vapor_mass:
             return saturation_pressure
         else:
             return ideal_gas.get_pressure(
-                self.fluid_mass, self.volume, self.temperature, self.molar_mass
+                fluid_mass, self.volume, self.temperature, self.molar_mass
             )
 
-    def get_density(self, pressure: float | None = None) -> float:
+    def get_density(self, fluid_mass: float, pressure: float | None = None) -> float:
         """
-        Return fluid density [kg/m^3] at tank pressure and temperature.
+        Return fluid density [kg/m^3] for a given fluid mass.
 
         1) An empty tank has zero density.
         2) Away from saturation the single-phase density follows directly from
@@ -130,16 +138,17 @@ class Tank:
             from the bottom), otherwise it falls back to the bulk density.
 
         Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
             pressure: Tank pressure override [Pa], e.g. for a piston-pressurized
                 stacked-tank system. Defaults to the tank's own pressure.
 
         Returns:
             Fluid density [kg/m^3].
         """
-        if self.fluid_mass <= 0:
+        if fluid_mass <= 0:
             return 0.0
 
-        tank_pressure = self.get_pressure() if pressure is None else pressure
+        tank_pressure = self.get_pressure(fluid_mass) if pressure is None else pressure
 
         try:
             return CP.PropsSI(
@@ -149,25 +158,6 @@ class Tank:
             max_vapor_mass = ideal_gas.get_mass(
                 tank_pressure, self.volume, self.temperature, self.molar_mass
             )
-            if self.fluid_mass > max_vapor_mass:
+            if fluid_mass > max_vapor_mass:
                 return CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
-            return self.fluid_mass / self.volume
-
-    def remove_propellant(self, mass: float) -> None:
-        """
-        Remove the specified mass of fluid [kg] from the tank.
-
-        If the requested mass exceeds what's in the tank, sets total mass to 0.
-
-        Args:
-            mass: Mass of fluid to remove [kg].
-
-        Raises:
-            ValueError: If `mass` is negative.
-        """
-        if mass < 0:
-            raise ValueError("Cannot remove a negative mass of propellant.")
-
-        self.fluid_mass -= mass
-        if self.fluid_mass < 0:
-            self.fluid_mass = 0.0
+            return fluid_mass / self.volume

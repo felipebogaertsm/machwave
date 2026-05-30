@@ -36,15 +36,16 @@ def test_saturated_condition(fluid_name, temperature):
     m_vap = (p_sat * volume * molar_mass) / (R_universal * temperature)
 
     # 3) Put more mass than m_vap => ensures there's liquid
+    fluid_mass = 2.0 * m_vap  # definitely more than needed for vapor only
     tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
-        initial_fluid_mass=2.0 * m_vap,  # definitely more than needed for vapor only
+        initial_fluid_mass=fluid_mass,
     )
 
     # 4) Check the tank pressure ~ saturation
-    assert tank.get_pressure() == pytest.approx(p_sat, rel=1e-3), (
+    assert tank.get_pressure(fluid_mass) == pytest.approx(p_sat, rel=1e-3), (
         f"Expected saturation pressure for {fluid_name} at T={temperature} K."
     )
 
@@ -76,41 +77,25 @@ def test_all_vapor_condition(fluid_name, temperature):
     n_moles = mass / molar_mass
     p_ideal = (n_moles * R_universal * temperature) / volume
 
-    assert tank.get_pressure() == pytest.approx(p_ideal, rel=1e-3), (
+    assert tank.get_pressure(mass) == pytest.approx(p_ideal, rel=1e-3), (
         f"Expected ideal-gas pressure for {fluid_name} at T={temperature} K with insufficient mass."
     )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
-def test_remove_propellant(fluid_name, temperature):
+def test_empty_tank_pressure_and_density(fluid_name, temperature):
     """
-    Removing propellant must decrement fluid_mass, and removing more than
-    is present must empty the tank cleanly.
+    An empty tank (zero fluid mass) must report ~zero pressure and density.
     """
-    volume = 0.02
-    initial_mass = 1.0
-
     tank = tank_models.Tank(
         fluid_name=fluid_name,
-        volume=volume,
+        volume=0.02,
         temperature=temperature,
-        initial_fluid_mass=initial_mass,
+        initial_fluid_mass=1.0,
     )
 
-    # 1) Remove some fraction of fluid
-    remove_mass_1 = 0.2
-    tank.remove_propellant(remove_mass_1)
-
-    assert tank.fluid_mass == pytest.approx(initial_mass - remove_mass_1, abs=1e-9)
-
-    # 2) Remove more mass than is left => tank empties
-    tank.remove_propellant(5.0)  # definitely more than remains
-    assert tank.fluid_mass == 0.0, "Tank should be fully emptied."
-    assert tank.get_density() == 0.0, "Density should be zero when empty."
-
-    # Depending on your model, if fluid_mass=0 => get_pressure() might be 0 or very small
-    empty_pressure = tank.get_pressure()
-    assert empty_pressure == pytest.approx(0.0, abs=1e-9), (
+    assert tank.get_density(0.0) == 0.0, "Density should be zero when empty."
+    assert tank.get_pressure(0.0) == pytest.approx(0.0, abs=1e-9), (
         f"Pressure should be ~0 for an empty tank of {fluid_name}."
     )
 
@@ -129,22 +114,23 @@ def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
     R_universal = scipy.constants.R
     m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
 
+    fluid_mass = 2.0 * m_vap_sat
     tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
-        initial_fluid_mass=2.0 * m_vap_sat,
+        initial_fluid_mass=fluid_mass,
     )
 
     rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
-    assert tank.get_density() == pytest.approx(rho_liquid, rel=1e-3)
+    assert tank.get_density(fluid_mass) == pytest.approx(rho_liquid, rel=1e-3)
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
 def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
     """
     While the tank remains two-phase, ``get_density()`` must be invariant
-    under mass removal — it tracks the saturated liquid density, not the
+    under mass change — it tracks the saturated liquid density, not the
     bulk mixture.
     """
     volume = 0.01
@@ -160,17 +146,13 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
         initial_fluid_mass=5.0 * m_vap_sat,
     )
 
-    density_before = tank.get_density()
-    tank.remove_propellant(m_vap_sat)  # still leaves > m_vap_sat in the tank
-    assert tank.fluid_mass > m_vap_sat
-    assert tank.get_density() == pytest.approx(density_before, rel=1e-6)
-
-
-def test_remove_negative_mass():
-    """Removing negative mass should raise ValueError."""
-    tank = tank_models.Tank("Water", 0.01, 300.0, 1.0)
-    with pytest.raises(ValueError):
-        tank.remove_propellant(-0.5)
+    # Both masses leave the tank two-phase (> m_vap_sat), so density is invariant.
+    higher_mass = 5.0 * m_vap_sat
+    lower_mass = 4.0 * m_vap_sat
+    assert lower_mass > m_vap_sat
+    assert tank.get_density(lower_mass) == pytest.approx(
+        tank.get_density(higher_mass), rel=1e-6
+    )
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)

@@ -51,6 +51,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         chamber_pressure: float,
         *,
         injector: injector_models.BipropellantInjector,
+        oxidizer_mass: float,
     ) -> float:
         """
         Compute the current oxidizer mass flow rate by delegating to the injector.
@@ -58,14 +59,18 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Args:
             chamber_pressure: Chamber pressure [Pa].
             injector: Bipropellant injector handling the orifice dispatch.
+            oxidizer_mass: Current oxidizer mass in the tank [kg].
 
         Returns:
             Oxidizer mass flow rate [kg/s].
         """
         return injector.get_mass_flow_ox(
             tank=self.oxidizer_tank,
-            pressure_upstream=self.get_oxidizer_tank_pressure(),
+            pressure_upstream=self.get_oxidizer_tank_pressure(
+                oxidizer_mass=oxidizer_mass
+            ),
             chamber_pressure=chamber_pressure,
+            fluid_mass=oxidizer_mass,
         )
 
     def get_mass_flow_fuel(
@@ -73,6 +78,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         chamber_pressure: float,
         *,
         injector: injector_models.BipropellantInjector,
+        fuel_mass: float,
+        oxidizer_mass: float,
     ) -> float:
         """
         Compute the current fuel mass flow rate by delegating to the injector.
@@ -83,26 +90,36 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Args:
             chamber_pressure: Chamber pressure [Pa].
             injector: Bipropellant injector handling the orifice dispatch.
+            fuel_mass: Current fuel mass in the tank [kg].
+            oxidizer_mass: Current oxidizer mass in the tank [kg].
 
         Returns:
             Fuel mass flow rate [kg/s].
         """
         return injector.get_mass_flow_fuel(
             tank=self.fuel_tank,
-            pressure_upstream=self.get_fuel_tank_pressure(),
+            pressure_upstream=self.get_fuel_tank_pressure(
+                oxidizer_mass=oxidizer_mass, fuel_mass=fuel_mass
+            ),
             chamber_pressure=chamber_pressure,
+            fluid_mass=fuel_mass,
         )
 
-    def get_oxidizer_tank_pressure(self) -> float:
+    def get_oxidizer_tank_pressure(self, *, oxidizer_mass: float) -> float:
         """Returns the tank pressure [Pa]."""
-        return self.oxidizer_tank.get_pressure()
+        return self.oxidizer_tank.get_pressure(oxidizer_mass)
 
-    def get_fuel_tank_pressure(self) -> float:
+    def get_fuel_tank_pressure(
+        self, *, oxidizer_mass: float, fuel_mass: float
+    ) -> float:
         """
         Returns the fuel-side upstream pressure [Pa].
 
         In a stacked-tank system the fuel is pressurized by the oxidizer
         through the piston, so the fuel-side pressure is the oxidizer tank
-        pressure minus the piston pressure loss.
+        pressure minus the piston pressure loss; ``fuel_mass`` is unused here.
         """
-        return self.get_oxidizer_tank_pressure() - self.piston_loss
+        return (
+            self.get_oxidizer_tank_pressure(oxidizer_mass=oxidizer_mass)
+            - self.piston_loss
+        )

@@ -67,6 +67,7 @@ class BipropellantInjector:
         tank: tank_models.Tank,
         pressure_upstream: float,
         chamber_pressure: float,
+        fluid_mass: float,
     ) -> float:
         """
         Compute the fuel-side mass flow rate through this injector.
@@ -75,6 +76,7 @@ class BipropellantInjector:
             tank: Tank supplying the fuel.
             pressure_upstream: Upstream stagnation pressure [Pa].
             chamber_pressure: Chamber pressure [Pa].
+            fluid_mass: Current fuel mass in the tank [kg].
 
         Returns:
             Fuel mass flow rate [kg/s].
@@ -86,6 +88,7 @@ class BipropellantInjector:
             discharge_coefficient=self.discharge_coefficient_fuel,
             injector_area=self.area_fuel,
             mass_flow_model=self.mass_flow_model_fuel,
+            fluid_mass=fluid_mass,
         )
 
     def get_mass_flow_ox(
@@ -94,6 +97,7 @@ class BipropellantInjector:
         tank: tank_models.Tank,
         pressure_upstream: float,
         chamber_pressure: float,
+        fluid_mass: float,
     ) -> float:
         """
         Compute the oxidizer-side mass flow rate through this injector.
@@ -102,6 +106,7 @@ class BipropellantInjector:
             tank: Tank supplying the oxidizer.
             pressure_upstream: Upstream stagnation pressure [Pa].
             chamber_pressure: Chamber pressure [Pa].
+            fluid_mass: Current oxidizer mass in the tank [kg].
 
         Returns:
             Oxidizer mass flow rate [kg/s].
@@ -113,6 +118,7 @@ class BipropellantInjector:
             discharge_coefficient=self.discharge_coefficient_oxidizer,
             injector_area=self.area_ox,
             mass_flow_model=self.mass_flow_model_oxidizer,
+            fluid_mass=fluid_mass,
         )
 
     @staticmethod
@@ -124,6 +130,7 @@ class BipropellantInjector:
         discharge_coefficient: float,
         injector_area: float,
         mass_flow_model: MassFlowModel,
+        fluid_mass: float,
     ) -> float:
         """
         Dispatch a mass flow calculation through the requested model.
@@ -135,6 +142,7 @@ class BipropellantInjector:
             discharge_coefficient: Discharge coefficient (dimensionless).
             injector_area: Effective flow area [m^2].
             mass_flow_model: Mass flow model for this side.
+            fluid_mass: Current mass of fluid in the tank [kg].
 
         Returns:
             Mass flow rate [kg/s].
@@ -151,7 +159,7 @@ class BipropellantInjector:
             return incompressible_flow.get_mass_flow_orifice(
                 discharge_coefficient=discharge_coefficient,
                 area=injector_area,
-                density=tank.get_density(),
+                density=tank.get_density(fluid_mass),
                 pressure_upstream=pressure_upstream,
                 pressure_downstream=chamber_pressure,
             )
