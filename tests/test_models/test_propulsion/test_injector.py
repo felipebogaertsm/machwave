@@ -59,13 +59,18 @@ class TestBipropellantInjectorInstantiation:
 class TestBipropellantInjectorMassFlow:
     def test_hem_predicts_lower_oxidizer_flow_than_spi_for_saturated_n2o(self):
         """For saturated N2O, HEM under-predicts SPI."""
+        oxidizer_mass = 5.0
         oxidizer_tank = tank_models.Tank(
-            fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=oxidizer_mass,
         )
         kwargs = dict(
             tank=oxidizer_tank,
-            pressure_upstream=oxidizer_tank.get_pressure(),
+            pressure_upstream=oxidizer_tank.get_pressure(oxidizer_mass),
             chamber_pressure=20e5,
+            fluid_mass=oxidizer_mass,
         )
         injector_spi = BipropellantInjectorFactory.build(
             mass_flow_model_oxidizer=MassFlowModel.SPI,
@@ -80,14 +85,19 @@ class TestBipropellantInjectorMassFlow:
         assert flow_hem < flow_spi
 
     def test_spi_dispatch_returns_positive_flow(self):
+        oxidizer_mass = 5.0
         oxidizer_tank = tank_models.Tank(
-            fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=oxidizer_mass,
         )
         injector = BipropellantInjectorFactory.build()
         flow = injector.get_mass_flow_ox(
             tank=oxidizer_tank,
-            pressure_upstream=oxidizer_tank.get_pressure(),
+            pressure_upstream=oxidizer_tank.get_pressure(oxidizer_mass),
             chamber_pressure=20e5,
+            fluid_mass=oxidizer_mass,
         )
         assert flow > 0.0
 
@@ -95,24 +105,29 @@ class TestBipropellantInjectorMassFlow:
         """SPI dispatch equals `Cd * A * sqrt(2 * rho * dP)` from the core helper."""
         import machwave.core.incompressible_flow as incompressible_flow
 
+        oxidizer_mass = 5.0
         oxidizer_tank = tank_models.Tank(
-            fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=oxidizer_mass,
         )
         injector = BipropellantInjectorFactory.build(
             mass_flow_model_oxidizer=MassFlowModel.SPI,
         )
-        pressure_upstream = oxidizer_tank.get_pressure()
+        pressure_upstream = oxidizer_tank.get_pressure(oxidizer_mass)
         chamber_pressure = 20e5
 
         actual = injector.get_mass_flow_ox(
             tank=oxidizer_tank,
             pressure_upstream=pressure_upstream,
             chamber_pressure=chamber_pressure,
+            fluid_mass=oxidizer_mass,
         )
         expected = incompressible_flow.get_mass_flow_orifice(
             discharge_coefficient=injector.discharge_coefficient_oxidizer,
             area=injector.area_ox,
-            density=oxidizer_tank.get_density(),
+            density=oxidizer_tank.get_density(oxidizer_mass),
             pressure_upstream=pressure_upstream,
             pressure_downstream=chamber_pressure,
         )
@@ -122,19 +137,24 @@ class TestBipropellantInjectorMassFlow:
         """HEM dispatch equals `Cd * A * G_HEM` from the core helper."""
         import machwave.core.two_phase_flow as two_phase_flow
 
+        oxidizer_mass = 5.0
         oxidizer_tank = tank_models.Tank(
-            fluid_name="N2O", volume=0.01, temperature=293.0, initial_fluid_mass=5.0
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=oxidizer_mass,
         )
         injector = BipropellantInjectorFactory.build(
             mass_flow_model_oxidizer=MassFlowModel.HEM,
         )
-        pressure_upstream = oxidizer_tank.get_pressure()
+        pressure_upstream = oxidizer_tank.get_pressure(oxidizer_mass)
         chamber_pressure = 20e5
 
         actual = injector.get_mass_flow_ox(
             tank=oxidizer_tank,
             pressure_upstream=pressure_upstream,
             chamber_pressure=chamber_pressure,
+            fluid_mass=oxidizer_mass,
         )
         mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
             fluid_name=oxidizer_tank.fluid_name,
@@ -149,11 +169,12 @@ class TestBipropellantInjectorMassFlow:
 
     def test_fuel_side_dispatch_uses_fuel_attributes(self):
         """Fuel dispatch uses fuel-side Cd, area, and model — not the ox-side ones."""
+        fuel_mass = 2.0
         fuel_tank = tank_models.Tank(
             fluid_name="Ethanol",
             volume=0.005,
             temperature=298.0,
-            initial_fluid_mass=2.0,
+            initial_fluid_mass=fuel_mass,
         )
         injector = BipropellantInjectorFactory.build(
             discharge_coefficient_fuel=0.40,
@@ -170,6 +191,7 @@ class TestBipropellantInjectorMassFlow:
             tank=fuel_tank,
             pressure_upstream=pressure_upstream,
             chamber_pressure=chamber_pressure,
+            fluid_mass=fuel_mass,
         )
 
         import machwave.core.incompressible_flow as incompressible_flow
@@ -177,7 +199,7 @@ class TestBipropellantInjectorMassFlow:
         expected = incompressible_flow.get_mass_flow_orifice(
             discharge_coefficient=0.40,
             area=5.0e-6,
-            density=fuel_tank.get_density(),
+            density=fuel_tank.get_density(fuel_mass),
             pressure_upstream=pressure_upstream,
             pressure_downstream=chamber_pressure,
         )

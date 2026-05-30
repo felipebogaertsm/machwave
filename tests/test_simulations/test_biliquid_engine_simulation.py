@@ -54,6 +54,24 @@ def test_thrust_time_is_finite_and_positive(
     assert simulation_result.thrust_time > 0.0
 
 
+def test_motor_is_re_runnable() -> None:
+    """A motor must produce identical results when simulated twice.
+
+    Regression test for #321: the tank used to be drained in place during a
+    run, so a second run started from an empty tank. With the tank stateless and
+    the mass owned by the simulation state, re-running is reproducible.
+    """
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+
+    first = run_simulation(motor, params)
+    second = run_simulation(motor, params)
+
+    assert first.time.size == second.time.size
+    np.testing.assert_array_equal(first.oxidizer_mass, second.oxidizer_mass)
+    np.testing.assert_array_equal(first.fuel_mass, second.fuel_mass)
+    np.testing.assert_array_equal(first.thrust, second.thrust)
+
+
 def test_propellant_masses_are_monotone_non_increasing(
     simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:

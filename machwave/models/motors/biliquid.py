@@ -47,7 +47,7 @@ class BiliquidEngine(
     @property
     def initial_propellant_mass(self) -> float:
         """Return the initial propellant mass [kg]."""
-        return self.feed_system.get_propellant_mass()
+        return self.feed_system.get_initial_propellant_mass()
 
     def get_launch_mass(self) -> float:
         """Return the launch mass (dry mass + initial propellant) [kg]."""
