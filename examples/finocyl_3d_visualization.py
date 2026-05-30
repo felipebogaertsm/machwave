@@ -1,12 +1,4 @@
-"""
-Visualize a finocyl grain segment in 3D with Plotly.
-
-Renders the port (the perforation through the propellant) as a solid surface so
-the central bore, the radial fins, and the tapered transition into the plain
-cylindrical section are all visible, wrapped by a translucent casing for
-context. The port surface is extracted from the FMM face map with marching
-cubes. Pass a non-zero web distance to inspect a partially regressed grain.
-"""
+"""Visualize a finocyl grain segment in 3D with Plotly."""
 
 import numpy as np
 import plotly.graph_objects as go
@@ -23,8 +15,6 @@ def build_finocyl_figure(
     face_map = segment.get_face_map(web_distance=web_distance)
 
     port = face_map == 0
-    # Drop the end-face slices so the bore renders as an open channel rather
-    # than being capped by full-diameter disks.
     port[0] = False
     port[-1] = False
 
