@@ -149,7 +149,7 @@ Applying continuity between the throat and an arbitrary cross-section of area
 Expressing each factor using §1.2 and §1.3:
 
 \[
-\frac{a^*}{v} = \frac{a^*}{Ma} = \frac{1}{M}\sqrt{\frac{T^*}{T}} = \frac{1}{M}\sqrt{\frac{2}{k+1}\cdot\frac{1}{1+\frac{k-1}{2}M^2}}
+\frac{a^*}{v} = \frac{a^*}{Ma} = \frac{1}{M}\sqrt{\frac{T^*}{T}} = \frac{1}{M}\sqrt{\frac{2}{k+1}\left(1+\frac{k-1}{2}M^2\right)}
 \]
 
 \[
@@ -199,7 +199,8 @@ Substituting \(\rho_0 = P_0/(RT_0)\), \(T^* = 2T_0/(k+1)\):
 \]
 
 This is the key expression linking chamber pressure to propellant mass flow — used
-in all mass-balance ODEs throughout machwave.
+in all mass-balance ODEs throughout machwave. Evaluated in the choked branch of
+[`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance].
 
 ---
 

@@ -31,7 +31,7 @@ Substituting into the mass balance and solving for \(dP_0/dt\):
 \]
 
 The \(-P_0\,\dot V_0/V_0\) term captures pressure decay due to free-volume
-expansion (e.g. grain regression in an SRM, port growth in a hybrid). For a
+expansion (e.g. grain regression in a solid motor, port growth in a hybrid). For a
 rigid control volume \(\dot V_0 = 0\) and the expression reduces to
 \(dP_0/dt = (R T_0/V_0)(\dot m_{gen} - \dot m_{out})\).
 
@@ -41,7 +41,7 @@ It is integrated numerically using the 4th-order Runge–Kutta solver in
 
 ---
 
-## 2.2 Solid Rocket Motor (SRM)
+## 2.2 Solid Rocket Motor
 
 *Reference: Seidel, H. (1965). Transient Chamber Pressure and Thrust in Solid Rocket
 Motors. AFRPL.*
@@ -105,7 +105,7 @@ phase recedes:
 i.e. the volumetric burn rate of the grain. This is passed to the ODE as the
 \(\dot V_0\) term in §2.1.
 
-### 2.2.5 SRM ODE
+### 2.2.5 Solid-Motor ODE
 
 Substituting §2.2.1, §2.2.2–§2.2.3, and §2.2.4 into §2.1:
 
@@ -118,8 +118,8 @@ Evaluated by
 with \(\dot{m}_{in} = \rho_p r A_b\) and `free_chamber_volume_rate` \(= r A_b\),
 as called from
 [`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState]. The
-expansion term shifts steady-state \(P_0\) and total impulse by roughly
-0.5–1.3 % on the standard BATES configurations.
+expansion term slightly lowers steady-state \(P_0\) and total impulse relative to
+a rigid-volume model.
 
 ---
 
@@ -157,7 +157,10 @@ The total inflow is the sum of the fuel and oxidiser streams:
 
 Implemented in `get_mass_flow_orifice` (module
 [`machwave.core.incompressible_flow`](../api/core.md)) and called per stream by the
-feed system (see §2.3.2).
+feed system (see §2.3.2). This single-phase incompressible branch is the default;
+self-pressurised propellants (e.g. nitrous oxide) can instead select a
+homogeneous-equilibrium two-phase model (`get_homogeneous_equilibrium_mass_flux` in
+`machwave.core.two_phase_flow`), which captures choking on the two-phase sound speed.
 
 ### 2.3.2 Upstream Pressure — Pressurised Tank
 
@@ -183,26 +186,22 @@ Huang Ch. 8 for tank thermodynamics). Properties come from CoolProp; details in
 [`Tank`][machwave.models.feed_systems.tank.Tank] and the orchestrating
 [`StackedTankPressureFedFeedSystem`][machwave.models.feed_systems.cycles.stacked_tank_pressure_fed.StackedTankPressureFedFeedSystem].
 
-### 2.3.3 Stoichiometric Limiting-Reagent Adjustment
+### 2.3.3 Propellant Depletion
 
-*References: Sutton & Biblarz (2017) Ch. 6 §6.1 (Mixture Ratio); Huzel & Huang
-(1992) Ch. 1 §1.3 (Performance Parameters).*
-
-The injectors deliver fuel and oxidiser independently, so over a finite step \(\Delta t\)
-one tank can run dry while the other still has propellant. machwave clamps the surplus
-to preserve the design oxidiser–fuel ratio \(\mathrm{O\!/\!F} = \dot{m}_{ox}/\dot{m}_{fuel}\)
-(Sutton & Biblarz §6.1):
+The injectors draw fuel and oxidiser independently, so a tank can be emptied within a
+single step. To keep tank masses non-negative, each stream is capped at the mass
+remaining in its own tank over the step \(\Delta t\):
 
 \[
-\text{if } \dot{m}_{fuel}\Delta t \geq m_{fuel}: \;\;
-\dot{m}_{fuel} \leftarrow m_{fuel}/\Delta t,
-\;\;
-\dot{m}_{ox} \leftarrow \mathrm{O\!/\!F}\cdot\dot{m}_{fuel}
+\dot{m}_{fuel} \leftarrow \min\!\left(\dot{m}_{fuel},\, \frac{m_{fuel}}{\Delta t}\right),
+\qquad
+\dot{m}_{ox} \leftarrow \min\!\left(\dot{m}_{ox},\, \frac{m_{ox}}{\Delta t}\right).
 \]
 
-(and symmetrically when oxidiser is the limiting reagent). This avoids unphysical
-post-burnout transients in which one stream continues for several steps after the
-other has been exhausted. Implemented in
+The two streams are clamped independently — the instantaneous mixture ratio
+\(\mathrm{O\!/\!F} = \dot{m}_{ox}/\dot{m}_{fuel}\) is recomputed from the capped flows
+and passed to the thermochemistry, so a depleting tank simply drives the engine off
+its design ratio. The burn ends as soon as either tank is exhausted. Implemented in
 [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
 ### 2.3.4 Mass Exit Rate — Choked Throat
@@ -211,15 +210,15 @@ other has been exhausted. Implemented in
 Huzel & Huang (1992) Ch. 1 §1.4 (The Gas-Flow Processes).*
 
 The exit term is identical to §2.2.2 — the choked-flow expression derived in §1.7
-(Sutton & Biblarz §3.3). For LRE the implementation drops the throat discharge
-coefficient (\(C_d \equiv 1\)) and uses the chamber-state isentropic exponent
-\(k = k_\text{chamber}\):
+(Sutton & Biblarz §3.3). For the biliquid engine the implementation drops the throat
+discharge coefficient (\(C_d \equiv 1\)) and uses the chamber-state isentropic
+exponent \(k = k_\text{chamber}\):
 
 \[
 \dot{m}_{out} = \frac{P_0\, A_t}{\sqrt{R T_0}}\,\sqrt{k}\left(\frac{2}{k+1}\right)^{(k+1)/[2(k-1)]}.
 \]
 
-### 2.3.5 LRE Chamber-Pressure ODE
+### 2.3.5 Biliquid Chamber-Pressure ODE
 
 *References: Huzel & Huang (1992) Ch. 1 §1.4 and Ch. 4 §4.1 (Combustion-Chamber
 Processes); Sutton & Biblarz (2017) Ch. 8 §8.1 (Combustion Chamber Basic
@@ -227,7 +226,7 @@ Configurations).*
 
 Biliquid engines have a rigid combustion chamber (\(\dot V_0 = 0\)), so the
 expansion term in §2.1 vanishes. Substituting §2.3.1 and §2.3.4 into §2.1
-yields the LRE form of the well-stirred reactor balance (Huzel & Huang §1.4;
+yields the biliquid form of the well-stirred reactor balance (Huzel & Huang §1.4;
 Sutton & Biblarz §8.1):
 
 \[
@@ -278,14 +277,15 @@ keep these in mind when interpreting transient results:
   flow uses the bulk mixture density rather than the liquid saturation density —
   acceptable while the tank is mostly liquid, less accurate as it empties
   (Huzel & Huang §4.5 on injector hydraulics).
-- **Stoichiometric clamping.** When one tank empties first, the simulation drops
-  the surplus reagent rather than tracking the fuel-rich (or ox-rich) tail of a
-  real engine (Sutton & Biblarz §6.1).
+- **Burn ends at first depletion.** Each stream is capped at its remaining tank mass
+  and the burn stops as soon as either tank empties (§2.3.3); the fuel-rich (or
+  oxidiser-rich) tail a real engine produces as one propellant runs out is not
+  modelled (Sutton & Biblarz §6.1).
 
 ---
 
 ## References
 
 1. Seidel, H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Air Force Rocket Propulsion Laboratory (AFRPL).
-2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Ch. 6, 12.
-3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147. Ch. 1, 4, 7.
+2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley.
+3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.

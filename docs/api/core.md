@@ -5,7 +5,9 @@ The engineering math layer. Contains unit conversions, geometric primitives (cir
 Submodules:
 
 - [compressible_flow](core/compressible_flow.md) — Isentropic relations, thrust coefficients, nozzle loss models
-- [mass_balance](core/mass_balance.md) — Chamber-pressure ODE shared by SRM and LRE
+- [interpolation](core/interpolation.md) — Non-extrapolating bounded cubic spline for tabulated curves
+- [mass_balance](core/mass_balance.md) — Chamber-pressure ODE shared by solid motors and biliquid engines
+- [performance](core/performance.md) — Total and specific impulse
 - [solvers](core/solvers.md) — RK4 ODE solver
 
 ::: machwave.core
