@@ -85,7 +85,7 @@ Describes a regenerative cooling jacket wrapping the combustion chamber and nozz
 | Field | Units | Constraint |
 | --- | --- | --- |
 | `name` | — | Free-form identifier. |
-| `pressure_drop` | Pa | Non-negative |
+| `pressure_drop` | Pa | Strictly positive |
 | `coolant_temperature_rise` | K | Strictly positive |
 | `heat_pickup` | W | Non-negative |
 

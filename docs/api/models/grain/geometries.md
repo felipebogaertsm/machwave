@@ -4,17 +4,16 @@ Concrete grain segment geometries, both analytical and FMM-based.
 
 **2D (constant cross-section):**
 
-- `BatesSegment` — Standard cylindrical grain with axial core (the most common hobby/amateur geometry).
-- `TubularSegment` — Thin-walled tube, burns from inner and/or outer surfaces.
-- `RodAndTubeSegment` — Central rod surrounded by an outer tubular section.
-- `MultiPortGrainSegment` — Multiple circular ports arranged radially in the cross-section.
-- `StarGrainSegment` — Star-shaped port (FMM-based). Configurable point count, length, and width.
+- `BatesSegment` — Cylindrical grain with an axial core, the most common amateur geometry (analytical).
+- `RodAndTubeGrainSegment` — Central rod surrounded by an outer tube (FMM-based).
+- `MultiPortGrainSegment` — Multiple circular ports arranged radially in the cross-section (FMM-based).
+- `StarGrainSegment` — Star-shaped port with configurable point count, length, and width (FMM-based).
 - `DGrainSegment` — D-shaped slot port (FMM-based).
+- `WagonWheelGrainSegment` — Multi-spoke geometry with a central core and radial ports (FMM-based).
 
 **3D (varying cross-section):**
 
 - `ConicalGrainSegment` — Linearly tapered core from upper to lower diameter.
-- `WagonWheelSegment` — Complex multi-spoke geometry (FMM-based).
 
 All segments implement the `GrainSegment` interface and can be mixed within a single `Grain`.
 

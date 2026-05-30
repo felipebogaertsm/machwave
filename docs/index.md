@@ -1,27 +1,21 @@
+<p align="center">
+  <img src="assets/logo/machwave-icon-color.svg#only-light" alt="Machwave" width="120">
+  <img src="assets/logo/machwave-icon-white.svg#only-dark" alt="Machwave" width="120">
+</p>
+
 # Machwave
 
-Machwave is an open source Python library for chemical rocket propulsion simulation. The
-library enables modeling and simulating solid rocket motors and biliquid rocket
-engines; hybrid engines are coming soon.
+Machwave is an open source Python library for chemical rocket propulsion simulation.
+Here is what it is capable of:
 
-### Key Capabilities
-
-- **Propellant modeling** with pre-defined formulations or CEA custom propellants
-- **Propellant grain analysis** with FMM-based regression (BATES, star, finocyl, and
-    more)
-- **Solid rocket motor and biliquid rocket engine modeling and simulation** (hybrid engines coming soon)
-- **Monte Carlo simulation**
-- **RocketPy trajectory simulation integration** (see [docs](api/adapters/rocketpy.md)
-    for details)
-
-## Why Machwave?
-
-Machwave provides a programmatic interface for modeling chemical propulsion systems,
-allowing users to have more control and flexibility over their designs and simulations.
-Other tools may offer similar capabilities, but they often come with limitations such as
-being closed source, lacking integration with trajectory simulations, or not being
-flexible enough for more advanced users.
-
+- **Propellant modeling** with NASA CEA integration and pre-defined formulations
+- **Grain regression analysis** with FMM for 2D and 3D geometries
+- **Rocket motor and engine simulation** for the following categories:
+    - Solid Rocket Motors
+    - *Bi-propellant Liquid Rocket Engines (in development 🔧)*
+    - *Hybrid Rocket Engines (coming soon 🗓️)*
+- **Monte Carlo simulation** for all of the motors/engines above
+- **Integration with RocketPy** for trajectory simulation and analysis
 
 ## Installation
 
@@ -39,24 +33,12 @@ pip install machwave[rocketpy]
 
 ## Quick Start
 
-Start with the step-by-step walkthrough on the
-[Quick Start page](quickstart.md), which covers propellant selection, grain
-geometry, thrust chamber setup, simulation execution, and result plotting.
+The [Quick Start page](quickstart.md) covers a Solid Rocket Motor simulation.
+Propellant selection, grain geometry, nozzle design, simulation execution and result plotting.
 
-For more complete examples, including coupled trajectory simulations and Monte
-Carlo analyses, see the
+For more complete examples, including coupled trajectory with RocketPy and Monte
+Carlo simulation, check out the
 [examples directory](https://github.com/felipebogaertsm/machwave/tree/main/examples).
-
-
-## Development Setup
-
-If you're contributing to Machwave, you'll need [uv](https://docs.astral.sh/uv/) for dependency management.
-
-```bash
-git clone https://github.com/felipebogaertsm/machwave.git
-cd machwave
-uv sync
-```
 
 ## License
 

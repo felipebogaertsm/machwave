@@ -15,10 +15,10 @@ organised around three concerns:
 
 Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] and exposes four methods used by the simulation loop:
 
-- `get_mass_flow_ox(chamber_pressure, *, injector) -> float`
-- `get_mass_flow_fuel(chamber_pressure, *, injector) -> float`
-- `get_oxidizer_tank_pressure() -> float`
-- `get_fuel_tank_pressure() -> float`
+- `get_mass_flow_ox(chamber_pressure, *, injector, oxidizer_mass) -> float`
+- `get_mass_flow_fuel(chamber_pressure, *, injector, fuel_mass, oxidizer_mass) -> float`
+- `get_oxidizer_tank_pressure(*, oxidizer_mass) -> float`
+- `get_fuel_tank_pressure(*, oxidizer_mass, fuel_mass) -> float`
 
 The mass-flow methods take a [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] and delegate the orifice dispatch to it. The feed system is responsible for computing the upstream pressure (tank state, piston losses, pump discharge); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). This split lets pump-fed cycles substitute a different upstream-pressure source without touching orifice physics.
 
