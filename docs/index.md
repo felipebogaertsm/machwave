@@ -1,9 +1,7 @@
 <p align="center">
-  <img src="assets/logo/machwave-icon-color.svg#only-light" alt="Machwave" width="120">
-  <img src="assets/logo/machwave-icon-white.svg#only-dark" alt="Machwave" width="120">
+  <img src="assets/logo/machwave-lockup-color.png#only-light" alt="Machwave" width="400">
+  <img src="assets/logo/machwave-lockup-white.png#only-dark" alt="Machwave" width="400">
 </p>
-
-# Machwave
 
 Machwave is an open source Python library for chemical rocket propulsion simulation.
 Here is what it is capable of:
