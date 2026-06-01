@@ -41,7 +41,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             density_ratio=density_ratio,
         )
 
-    def get_port_area(self, web_distance: float, z: float) -> float:
+    def get_port_area(self, web_distance: float, z: float = 0.0) -> float:
         """
         Calculates the port area at a given web distance and axial height z.
 
@@ -51,9 +51,9 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
 
         Args:
             web_distance: The distance traveled into the grain web.
-            z: Axial position (in meters) along the grain, where z=0 is the top
-                and z=self.length is the bottom (or vice versa, depending on
-                geometry setup).
+            z: Axial position (in meters) along the grain, measured from the aft
+                (nozzle) end, where z=0 is the nozzle end and z=self.length is the
+                far end. Defaults to the nozzle end.
 
         Returns:
             A float representing the port area at the specified z slice, in m^2.
