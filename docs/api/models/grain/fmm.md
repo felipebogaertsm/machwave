@@ -1,11 +1,11 @@
 # models.grain.fmm
 
-Fast Marching Method (FMM) base classes for grain geometries with complex cross-sections that cannot be described analytically. FMM operates on a 2D (or 3D) distance map to compute burn area and port area as the flame front regresses inward.
+Fast Marching Method (FMM) base classes for grain geometries whose cross-section cannot be described analytically. The burning surface at any web distance is read off a single distance map of the initial port (solved with scikit-fmm), instead of re-meshing the geometry at every regression step.
 
-- `FMMGrainSegment` — Base class providing the distance-map regression logic.
-- `FMMGrainSegment2D` — Constant cross-section FMM geometries (Star, D-grain, wagon-wheel, multi-port, rod-and-tube).
-- `FMMGrainSegment3D` — Varying cross-section FMM geometries (Conical).
-- `FMMSTLGrainSegment` — Import arbitrary grain geometry from an STL mesh file.
+- `FMMGrainSegment` — Shared regression logic: builds the distance map and derives web thickness, the regressed face map, and port and burn area from it.
+- `FMMGrainSegment2D` — Constant cross-section geometries (Star, D-grain, wagon-wheel, multi-port, rod-and-tube). Burn area is the core perimeter (a single contour of the distance map) times the grain length, plus any exposed end faces.
+- `FMMGrainSegment3D` — Axially varying cross-section geometries (Conical, Finocyl). The port is a stack of axial slices through a 3D distance map; burn area integrates each slice's regressing perimeter along the length, and port area is read from a chosen slice.
+- `FMMSTLGrainSegment` — Arbitrary grain geometry imported from an STL mesh file.
 
 Used internally by the concrete geometry classes in [geometries](geometries.md).
 
