@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 import machwave.models.grain as grain_models
+import machwave.models.grain.fmm.contours as fmm_contours
 import machwave.models.grain.geometries as grain_geometries
 
 # Aft-flush finned section over the lower 40% of the segment. The unfinned
@@ -52,6 +53,37 @@ def test_burn_area_is_positive_float(finocyl_segment):
         value = finocyl_segment.get_burn_area(web_distance)
         assert isinstance(value, float), f"Expected float, but got {type(value)}"
         assert value > 0
+
+
+def test_burn_area_dedup_matches_per_slice_sum(finocyl_segment):
+    """Slice deduplication must reproduce the brute-force per-slice perimeter sum.
+
+    ``_get_burn_area_uncached`` caches the traced perimeter per distinct slice;
+    this guards that the cache key never collapses slices that actually differ.
+    """
+    segment = finocyl_segment
+    map_dist = segment.normalize(segment.get_web_thickness() * 0.3)
+
+    valid = np.logical_not(segment.get_mask())
+    boolean_3d = np.logical_and(segment.get_regression_map() > map_dist, valid)
+    length_factor = (
+        segment.get_length(web_distance=float(segment.denormalize(map_dist)))
+        / segment.map_dim
+    )
+
+    # Reference: trace every slice independently, with no caching.
+    reference = 0.0
+    for z_index in range(segment.get_normalized_length()):
+        contours = fmm_contours.get_contours(boolean_3d[z_index], map_dist)
+        perimeter = sum(
+            segment.map_to_length(fmm_contours.get_length(contour, segment.map_dim))
+            for contour in contours
+        )
+        reference += float(perimeter) * float(length_factor)
+
+    assert segment._get_burn_area_uncached(map_dist=map_dist) == pytest.approx(
+        reference, rel=1e-12
+    )
 
 
 def test_port_area_returns_float(finocyl_segment):

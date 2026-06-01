@@ -150,15 +150,26 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         web_distance = float(self.denormalize(map_dist))
         length_factor = self.get_length(web_distance=web_distance) / self.map_dim
 
+        # Slices with an identical boolean cross-section trace to an identical
+        # contour at this map_dist, so each distinct slice is traced only once.
+        perimeter_by_slice: dict[bytes, float] = {}
         total = 0.0
         for z_index in range(self.get_normalized_length()):
             boolean_slice_2d = boolean_3d[z_index]
-            contours = fmm_contours.get_contours(boolean_slice_2d, map_dist)
-            perimeter = sum(
-                self.map_to_length(fmm_contours.get_length(contour, self.map_dim))
-                for contour in contours
-            )
-            total += float(perimeter) * float(length_factor)
+            key = np.asarray(boolean_slice_2d).tobytes()
+            perimeter = perimeter_by_slice.get(key)
+            if perimeter is None:
+                contours = fmm_contours.get_contours(boolean_slice_2d, map_dist)
+                perimeter = float(
+                    sum(
+                        self.map_to_length(
+                            fmm_contours.get_length(contour, self.map_dim)
+                        )
+                        for contour in contours
+                    )
+                )
+                perimeter_by_slice[key] = perimeter
+            total += perimeter * float(length_factor)
 
         return float(total)
 
