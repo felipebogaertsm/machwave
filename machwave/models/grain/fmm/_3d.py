@@ -51,9 +51,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
 
         Args:
             web_distance: The distance traveled into the grain web.
-            z: Axial position (in meters) along the grain, measured from the aft
-                (nozzle) end, where z=0 is the nozzle end and z=self.length is the
-                far end. Defaults to the nozzle end.
+            z: Axial position along the grain [m], measured from the aft
+                (nozzle) end. Defaults to nozzle end.
 
         Returns:
             A float representing the port area at the specified z slice, in m^2.
