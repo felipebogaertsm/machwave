@@ -1,6 +1,6 @@
-# 4. Nozzle Losses
+# 3. Nozzle Losses
 
-The ideal thrust coefficient \(C_f\) derived in §1.8 assumes isentropic, perfectly
+The ideal thrust coefficient \(C_f\) derived in §1.2 assumes isentropic, perfectly
 expanded, single-phase, axially directed flow. Real nozzles deviate from this ideal
 due to four independent loss mechanisms. Each is expressed as a **percentage loss**
 and combined into an overall nozzle efficiency \(\eta_{nozzle}\).
@@ -11,7 +11,7 @@ Rocket Motor Performance, Vol. I. AFRPL-TR-75-36 (DTIC AD-A015 140).*
 
 ---
 
-## 4.1 Divergent Loss
+## 3.1 Divergent Loss
 
 A conical nozzle exhausts gas over a range of directions from \(0\) to the
 half-angle \(\alpha\) relative to the thrust axis. The **axial momentum fraction**
@@ -39,7 +39,7 @@ divergence loss by design. Implemented in
 
 ---
 
-## 4.2 Kinetics Loss
+## 3.2 Kinetics Loss
 
 In the ideal \(C_f\) derivation, the combustion products are assumed to remain in
 **shifting chemical equilibrium** as they expand through the nozzle. In reality,
@@ -67,7 +67,7 @@ Implemented in
 
 ---
 
-## 4.3 Boundary Layer Loss
+## 3.3 Boundary Layer Loss
 
 Viscous effects near the nozzle wall create a low-velocity **boundary layer** that
 reduces the effective flow area and transfers heat from the gas to the wall. The
@@ -95,7 +95,7 @@ calibrated against a BATES motor; the biliquid engine state passes \(\eta_{BL} =
 
 ---
 
-## 4.4 Two-Phase Flow Loss
+## 3.4 Two-Phase Flow Loss
 
 Solid and hybrid propellants produce **condensed-phase particles** (e.g. alumina
 \(\text{Al}_2\text{O}_3\)) in the combustion products. These particles cannot
@@ -129,7 +129,7 @@ products with no condensed phase, so the biliquid engine state passes \(\eta_{2p
 
 ---
 
-## 4.5 Overall Nozzle Efficiency
+## 3.5 Overall Nozzle Efficiency
 
 The four loss fractions are additive, giving the overall efficiency applied
 to the ideal thrust coefficient:
