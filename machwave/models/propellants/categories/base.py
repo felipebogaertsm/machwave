@@ -45,7 +45,8 @@ class Propellant(abc.ABC):
         Args:
             name: Propellant name.
             components: Chemical components. If None, defaults to empty list.
-            combustion_efficiency: Efficiency factor (0-1).
+            combustion_efficiency: Combustion efficiency in [0, 1], the ratio of the
+                actual to the ideal (adiabatic) flame temperature.
         """
         self.name = name
         self.components = list(components or [])

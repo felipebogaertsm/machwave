@@ -8,6 +8,7 @@ import machwave.core.compressible_flow.losses as losses
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
+import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
 import machwave.simulation.solid.results as solid_results
@@ -79,7 +80,6 @@ class SolidMotorState(simulation_states.MotorState):
         self.boundary_layer_loss: simulation_states.SimulationStateArray = []
         self.two_phase_loss: simulation_states.SimulationStateArray = []
         self.nozzle_efficiency: simulation_states.SimulationStateArray = []
-        self.overall_efficiency: simulation_states.SimulationStateArray = []
 
     def get_m_dot_in(self) -> float:
         """Return the propellant mass generation rate from the grain [kg/s]."""
@@ -193,15 +193,11 @@ class SolidMotorState(simulation_states.MotorState):
             two_phase_loss,
             other_losses=self.other_losses,
         )
-        overall_efficiency = (
-            nozzle_efficiency * self.motor.propellant.combustion_efficiency
-        )
         self.divergent_loss.append(divergent_loss)
         self.kinetics_loss.append(kinetics_loss)
         self.boundary_layer_loss.append(boundary_layer_loss)
         self.two_phase_loss.append(two_phase_loss)
         self.nozzle_efficiency.append(nozzle_efficiency)
-        self.overall_efficiency.append(overall_efficiency)
 
         ideal_thrust_coefficient = nozzle_core.get_ideal_thrust_coefficient(
             chamber_pressure,
@@ -212,7 +208,7 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
         thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
-            ideal_thrust_coefficient, overall_efficiency
+            ideal_thrust_coefficient, nozzle_efficiency
         )
         self.thrust_coefficient.append(thrust_coefficient)
         thrust = nozzle_core.get_thrust_from_thrust_coefficient(
@@ -239,6 +235,10 @@ class SolidMotorState(simulation_states.MotorState):
         self.time.append(new_time)
         new_web_distance = web_distance + web_consumed
         self.web.append(new_web_distance)
+        effective_flame_temperature = performance.get_effective_flame_temperature(
+            adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            combustion_efficiency=self.motor.propellant.combustion_efficiency,
+        )
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": self.chamber_pressure[-1]},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
@@ -249,7 +249,7 @@ class SolidMotorState(simulation_states.MotorState):
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
-            flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            flame_temperature=effective_flame_temperature,
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
             free_chamber_volume_rate=free_chamber_volume_rate,
         )[0]

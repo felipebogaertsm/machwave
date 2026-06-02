@@ -32,7 +32,6 @@ class SolidSimulationResult(
     boundary_layer_loss: simulation_results.SimulationResultArray
     two_phase_loss: simulation_results.SimulationResultArray
     nozzle_efficiency: simulation_results.SimulationResultArray
-    overall_efficiency: simulation_results.SimulationResultArray
     propellant_cog: simulation_results.SimulationResultArray
     propellant_moi: simulation_results.SimulationResultArray
     # klemmung is filtered to burn_area > 0, so its length is < len(time).
@@ -83,7 +82,6 @@ class SolidSimulationResult(
             "boundary_layer_loss": np.asarray(state.boundary_layer_loss),
             "two_phase_loss": np.asarray(state.two_phase_loss),
             "nozzle_efficiency": np.asarray(state.nozzle_efficiency),
-            "overall_efficiency": np.asarray(state.overall_efficiency),
             "propellant_cog": np.stack(
                 [np.asarray(cog) for cog in state.propellant_cog]
             ),
@@ -206,10 +204,6 @@ class SolidSimulationResult(
         print("\nNOZZLE DESIGN", file=file)
         print(
             f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}",
-            file=file,
-        )
-        print(
-            f" Average overall efficiency: {np.mean(self.overall_efficiency):.3%}",
             file=file,
         )
         print(
