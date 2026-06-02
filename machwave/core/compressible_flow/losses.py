@@ -101,8 +101,7 @@ def get_boundary_layer_loss_fraction(
     viscous and heat-transfer effects on the nozzle walls. It is time
     dependent: the exponential transient is important in motors with short
     burn durations (under 4 s). Dependence on expansion ratio represents the
-    effect of the amount of nozzle surface area. Valid for biliquid, solid,
-    and hybrid propellants.
+    effect of the amount of nozzle surface area. Valid for solid propellants.
 
     Time constant `c_2` comes from analysis of the transient heating of a
     BATES motor. Time constant `c_1` was obtained from a direct measurement

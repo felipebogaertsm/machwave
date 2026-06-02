@@ -4,6 +4,8 @@ Machwave calculates the **thrust** of a rocket motor/engine using the **thrust c
 The ideal thrust coefficient is calculated and multiplied by the **nozzle efficiency** to obtain the real thrust coefficient.
 The nozzle efficiency accounts for the deviations from the idealized assumptions, such as boundary layer losses, chemical kinetic losses, and more.
 
+## 1.1 Thrust Coefficient
+
 $$
 F = C_f\, P_0\, A_t
 $$
@@ -18,6 +20,8 @@ where:
 - $A_t$ is the nozzle throat area [m$^2$]
 
 Implemented in [`get_thrust_from_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_thrust_from_thrust_coefficient].
+
+## 1.2 Ideal Thrust Coefficient
 
 The **ideal thrust coefficient** is given by:
 
@@ -35,6 +39,8 @@ where:
 - $\varepsilon$ is the expansion ratio (dimensionless)
 
 Implemented in [`get_ideal_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient].
+
+## 1.3 Nozzle Efficiency
 
 Real nozzles deviate from the ideal assumptions baked into the ideal thrust coefficient.
 Machwave lumps these deviations into a single **nozzle efficiency** $\eta_\text{nozzle}$ applied multiplicatively to the ideal coefficient:
@@ -54,6 +60,8 @@ Implemented in
 [`apply_thrust_coefficient_correction`][machwave.core.compressible_flow.nozzle.apply_thrust_coefficient_correction],
 with the efficiency from
 [`get_overall_nozzle_efficiency`][machwave.core.compressible_flow.losses.get_overall_nozzle_efficiency].
+
+## 1.4 Total Impulse and Specific Impulse
 
 After the thrust is calculated, the total impulse is obtained by integrating it over the thrust time:
 

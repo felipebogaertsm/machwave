@@ -1,6 +1,6 @@
 # 2. Mass Balance
 
-Machwave applies the **conservation of mass** for an open control volume (the thrust chamber).
+Machwave applies the **conservation of mass** to an open control volume (the combustion chamber).
 This means that the rate of change of **mass stored** equals the difference between the **mass inflow** and the **mass outflow**:
 
 $$
@@ -9,7 +9,8 @@ $$
 
 (Seidel 1965, Eq. 1)
 
-This principle is applied to all chemical rocket motors/engines modeled in Machwave. Among the 3 terms of the equation above, only $\dot{m}_{in}$ is dependent on the motor/engine category.
+This principle is applied to all chemical rocket motors/engines modeled in Machwave.
+Among the three terms of the equation above, only $\dot{m}_{in}$ depends on the motor/engine category.
 
 By applying the ideal gas law to $M_{stored}$, the mass balance can be rewritten in terms of the chamber stagnation state:
 
@@ -24,8 +25,13 @@ where:
 - $R$ is the specific gas constant of the combustion products [J/(kg-K)]
 - $T$ is the flame temperature [K]
 
-The **flame temperature** $T$ can be obtained by multiplying the **adiabatic flame temperature** $T_{0}$ by a **combustion efficiency** $\eta_{comb}$.
-This coefficient accounts for the fact that the actual flame temperature is often lower than the ideal adiabatic value due to incomplete combustion, heat losses or other inefficiencies in the combustion process.
+Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
+
+The actual **flame temperature** $T$ is obtained by multiplying the **adiabatic flame temperature** $T_{0}$ by a **combustion efficiency** $\eta_{comb}$.
+The combustion efficiency accounts for the fact that the actual flame temperature is often lower than the ideal adiabatic value due to incomplete combustion, heat losses or other inefficiencies in the combustion process.
+
+In Machwave, $\eta_{comb}$ is defined as a *temperature* ratio, $\eta_{comb} = T / T_0$.
+It should not be confused with the characteristic velocity efficiency $\eta_{c^*} = c^*_\text{actual} / c^*_\text{ideal}$ common in the literature, which relates to temperature as $\eta_{comb} = \eta_{c^*}^2$ (since $c^* \propto \sqrt{T}$).
 Typical values for $\eta_{comb}$ range from 0.9 to 0.99, depending mainly on the propellant combination and motor/engine size.
 A unitary $\eta_{comb}$ tends to overestimate the chamber pressure.
 
@@ -48,6 +54,8 @@ where:
 - $\dot{m}_{in}$ is the mass inflow rate [kg/s]
 - $\dot{m}_{out}$ is the nozzle mass exit rate [kg/s]
 
+In differentiating $M_{stored} = P_0 V_0 / (R T)$, the gas constant $R$ and flame temperature $T$ are treated as constant in time, so that only $P_0$ and $V_0$ vary; the $dR/dt$ and $dT/dt$ contributions are neglected (Seidel 1965).
+
 The mass outflow $\dot{m}_{out}$ is the flow through the nozzle throat and follows the same expression for every motor/engine category.
 It is written compactly in terms of a dimensionless flow function $H$:
 
@@ -61,10 +69,9 @@ where:
 - $A_t$ is the nozzle throat area [m$^2$]
 - $H$ is the dimensionless flow function, set by the throat regime
 
-$H$ changes depending on the flow condition: if the flow through the nozzle is **choked**, the sonic condition is reached at the nozzle and $H = H_{choked}$.
-If the flow is **subsonic**, $H = H_{sub}$.
-What decides the flow is choked or subsonic is the critical pressure ratio $P^*$.
-If the pressure ratio $P_e / P_0 \leq P^*$, the flow is **choked**, and **subsonic** otherwise.
+$H$ changes depending on the flow condition.
+If the flow through the nozzle is **choked**, the sonic condition is reached at the throat and $H = H_{choked}$; if it is **subsonic**, $H = H_{sub}$.
+Whether the flow is choked or subsonic is decided by the **critical pressure ratio** $P^*$: writing the back-pressure ratio as $P_r = P_\text{ext} / P_0$, the flow is **choked** when $P_r \leq P^*$ and **subsonic** otherwise.
 
 $$
 H_\text{choked} = \sqrt{k}\left(\frac{2}{k+1}\right)^{(k+1)/[2(k-1)]}
@@ -76,6 +83,12 @@ $$
 
 (Seidel 1965, Eqs. 19 and 20)
 
+where:
+
+- $k$ is the isentropic exponent of the combustion products, evaluated at chamber conditions — the chamber value, distinct from the exhaust value $k_e$ used for the thrust coefficient in §1 (dimensionless)
+- $P_r = P_\text{ext} / P_0$ is the back-pressure ratio, formed with the external (ambient) pressure $P_\text{ext}$ (dimensionless)
+- $P^* = \left(\dfrac{2}{k+1}\right)^{k/(k-1)}$ is the critical pressure ratio (dimensionless)
+
 A choked throat is the normal operating condition.
 The subsonic branch matters mainly during ignition and tail-off, when the chamber pressure is close to the ambient pressure.
 
@@ -85,8 +98,10 @@ $$
 \frac{dP_0}{dt} = \frac{R T}{V_0}\left(\dot{m}_{in} - \frac{C_d P_0 A_t}{\sqrt{R T}}\, H\right) - \frac{P_0}{V_0}\frac{dV_0}{dt}
 $$
 
+(Seidel 1965, Eq. 35)
+
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
-It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the 4th-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
+It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
 The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
 
 ## 2.1 Solid Rocket Motor
@@ -125,70 +140,26 @@ $$
 \dot V_0 = r\, A_b
 $$
 
+Implemented in [`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState].
+
 ## 2.2 Biliquid Rocket Engine
 
-For a biliquid engine the inflow term is set not by surface regression but by the **injector mass flow** of two independent propellant streams; mass exits through the same nozzle throat as for the solid motor.
+For a biliquid engine, the mass inflow is set by the **injector mass flow** of two independent propellant streams.
 
-Each propellant stream is treated as an **incompressible fluid** flowing through an orifice from the upstream feed pressure $P_\text{up}$ to the chamber pressure $P_0$. Combining Bernoulli with continuity through an effective orifice area $A_\text{eff}$ and applying a discharge coefficient $C_d$ to lump together contraction and viscous losses gives (Huzel & Huang §4.5; Sutton & Biblarz §8.2):
-
-$$
-\dot{m} = C_d\,A_\text{eff}\,\sqrt{2\rho\,(P_\text{up} - P_0)}
-$$
-
-so the total inflow is the sum of the fuel and oxidiser streams:
+The total inflow is the sum of the fuel and oxidiser injector streams:
 
 $$
-\dot{m}_{in} = \dot{m}_{fuel} + \dot{m}_{ox},
-\qquad
-\dot{m}_{i} = C_{d,i}\,A_{\text{eff},i}\,\sqrt{2\rho_i\,(P_{\text{up},i} - P_0)},
-\quad i \in \{fuel, ox\}
+\dot{m}_{in} = \dot{m}_{fuel} + \dot{m}_{ox}
 $$
 
-where:
+The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed system implementation. The mass balance consumes only their sum. In addition, a biliquid engine has a rigid chamber ($\dot V_0 = 0$), so the free chamber volume term of the general ODE vanishes.
 
-- $A_\text{eff}$ is the effective orifice area [m$^2$]
-- $P_\text{up}$ is the upstream feed pressure [Pa]
-- $\rho$ is the propellant density [kg/m$^3$]
+The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA at each step from the current $P_0$, the design expansion ratio, and the instantaneous mixture ratio.
 
-Implemented in `get_mass_flow_orifice` (module [`machwave.core.incompressible_flow`](../api/core.md)) and called per stream by the feed system. This single-phase incompressible branch is the default; self-pressurised propellants (e.g. nitrous oxide) can instead select a homogeneous-equilibrium two-phase model (`get_homogeneous_equilibrium_mass_flux` in `machwave.core.two_phase_flow`), which captures choking on the two-phase sound speed.
-
-machwave currently models a **stacked-tank pressure-fed** architecture: a single pressurant volume above the oxidiser also drives the fuel via a piston, with a constant pressure drop $\Delta P_\text{piston}$ accounting for friction and piston weight (Huzel & Huang §5.2; Sutton & Biblarz §6.3). The injector upstream pressures are therefore:
-
-$$
-P_{\text{up},ox} = P_{\text{tank},ox},
-\qquad
-P_{\text{up},fuel} = P_{\text{tank},ox} - \Delta P_\text{piston}
-$$
-
-Each tank is modelled as a **two-phase isothermal vessel** (constant $T$, saturation pinning when liquid is present, ideal-gas vapour when only vapour remains; cf. Huzel & Huang Ch. 8). Properties come from CoolProp; details in [`Tank`][machwave.models.feed_systems.tank.Tank] and the orchestrating [`StackedTankPressureFedFeedSystem`][machwave.models.feed_systems.cycles.stacked_tank_pressure_fed.StackedTankPressureFedFeedSystem].
-
-The injectors draw fuel and oxidiser independently, so a tank can be emptied within a single step. To keep tank masses non-negative, each stream is capped at the mass remaining in its own tank over the step $\Delta t$:
-
-$$
-\dot{m}_{fuel} \leftarrow \min\!\left(\dot{m}_{fuel},\, \frac{m_{fuel}}{\Delta t}\right),
-\qquad
-\dot{m}_{ox} \leftarrow \min\!\left(\dot{m}_{ox},\, \frac{m_{ox}}{\Delta t}\right)
-$$
-
-The two streams are clamped independently — the instantaneous mixture ratio $\mathrm{O\!/\!F} = \dot{m}_{ox}/\dot{m}_{fuel}$ is recomputed from the capped flows and passed to the thermochemistry, so a depleting tank simply drives the engine off its design ratio. The burn ends as soon as either tank is exhausted. Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
-
-A biliquid engine has a rigid combustion chamber ($\dot V_0 = 0$), so the free-volume term of the general chamber-pressure ODE vanishes and it reduces to the well-stirred reactor form (Huzel & Huang §1.4; Sutton & Biblarz §8.1). It is evaluated by the same [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] used for the solid motor — here with $\dot{m}_{in} = \dot{m}_{fuel} + \dot{m}_{ox}$ and the chamber-state $\{T, R, k\}$ — and integrated with the same RK4 solver.
-
-The thermochemical state $\{T, R, k\}$ is evaluated by NASA-CEA at each step from the current $P_0$, the design expansion ratio, and the instantaneous mixture ratio $\dot{m}_{ox}/\dot{m}_{fuel}$. The result is held constant within the RK4 sub-stages — an explicit lag that is acceptable because chamber properties are only weakly pressure-dependent (cf. Sutton & Biblarz §5.4). Before flow develops, the formulation's design O/F seeds the state; after one tank empties, the last evaluated properties are reused for the chamber-pressure decay.
-
-The biliquid mass balance rests on several simplifying assumptions; keep these in mind when interpreting transient results:
-
-- **Well-stirred reactor / instantaneous combustion.** Cold liquid propellant is assumed to burn to equilibrium products immediately upon entering the chamber. Atomisation, vaporisation, and finite reaction times are not resolved (Huzel & Huang Ch. 4; Sutton & Biblarz Ch. 9).
-- **Uniform chamber state.** Pressure, temperature, and composition are spatially uniform — there is no $L^*$ effect, no residence-time penalty, and no chamber-cooling energy loss.
-- **Constant $T$, constant $V_0$.** Flame temperature is the CEA equilibrium value at the *current* $P_0$ and design $\varepsilon$; free volume is fixed (no regenerative cooling-jacket displacement, no throat erosion).
-- **Isothermal tank.** The two-phase model assumes constant tank temperature; the energy of vaporisation that would normally cool a self-pressurised tank during blowdown is **not** modelled (Huzel & Huang Ch. 8).
-- **Bulk fluid density at the injector.** When the tank is two-phase, the orifice flow uses the bulk mixture density rather than the liquid saturation density — acceptable while the tank is mostly liquid, less accurate as it empties.
-- **Burn ends at first depletion.** Each stream is capped at its remaining tank mass and the burn stops as soon as either tank empties; the fuel-rich (or oxidiser-rich) tail a real engine produces as one propellant runs out is not modelled (Sutton & Biblarz §6.1).
-
----
+Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
 # References
 
-1. Seidel, H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Air Force Rocket Propulsion Laboratory (AFRPL).
-2. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley.
+1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
+2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
