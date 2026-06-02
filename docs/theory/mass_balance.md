@@ -121,6 +121,51 @@ as called from
 expansion term slightly lowers steady-state \(P_0\) and total impulse relative to
 a rigid-volume model.
 
+### 2.2.6 Combustion Efficiency
+
+*Reference: Sutton & Biblarz (2017), Ch. 3.*
+
+The **combustion efficiency** \(\eta_\text{comb}\) is the ratio of the actual to the
+ideal (adiabatic) flame temperature, stored per propellant and applied directly to
+the flame temperature in the chamber-pressure balance:
+
+\[
+\eta_\text{comb} = \frac{T_{0,\text{actual}}}{T_{0,\text{adiabatic}}},
+\qquad
+T_{0,\text{eff}} = \eta_\text{comb}\, T_{0,\text{adiabatic}}.
+\]
+
+It derates the characteristic-velocity (choked-outflow) term of §2.2.2 and is not
+applied to the thrust coefficient \(C_F\), which carries the nozzle losses of
+[nozzle losses](nozzle_losses.md).
+
+Characteristic velocity is \(c^* = \sqrt{R T_0}/\Gamma\) with
+\(\Gamma = \sqrt{k}\,(2/(k+1))^{(k+1)/[2(k-1)]}\), so \(c^* \propto \sqrt{T_0}\). The
+combustion efficiency is therefore distinct from the characteristic-velocity
+efficiency \(\eta_{c^*} = c^*_\text{actual}/c^*_\text{ideal}\):
+
+\[
+\eta_{c^*} = \sqrt{\eta_\text{comb}}, \qquad \eta_\text{comb} = \eta_{c^*}^{\,2}.
+\]
+
+Applying \(\eta_\text{comb}\) directly to \(T_0\) follows the Nakka SRM spreadsheet
+convention. With Saint Robert's law \(r = a P_0^n\) and
+\(P_0 = (K_n \rho_p a\, c^*)^{1/(1-n)}\):
+
+\[
+P_0 \propto \eta_\text{comb}^{\,1/[2(1-n)]},
+\qquad
+I_{sp} \propto \eta_{c^*} = \sqrt{\eta_\text{comb}}.
+\]
+
+\(T_{0,\text{eff}}\) is computed by
+[`get_effective_flame_temperature`][machwave.core.performance.get_effective_flame_temperature]
+and passed as `flame_temperature` to
+[`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance]
+from [`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState]. As the
+actual chamber-gas temperature, it is used in both the outflow and storage terms of
+the §2.2.5 ODE.
+
 ---
 
 ## 2.3 Biliquid Rocket Engine

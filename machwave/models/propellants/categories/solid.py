@@ -46,7 +46,8 @@ class SolidPropellant(propellant_base.Propellant):
                 one oxidizer and one fuel.
             mass_fractions: Mass fractions aligned with `components`. Must
                 sum to 1.0.
-            combustion_efficiency: Efficiency factor in [0, 1].
+            combustion_efficiency: Combustion efficiency in [0, 1], the ratio of the
+                actual to the ideal (adiabatic) flame temperature.
             properties: Pre-defined thermochemical properties. Optional
                 override used by `evaluate()` to skip CEA when provided.
             burn_rate_map: Saint Robert's law coefficients by pressure range.
