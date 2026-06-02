@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap");
 
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #fffdf9;
@@ -75,6 +75,6 @@
 }
 
 .md-header__title {
-  font-family: "JetBrains Mono", monospace;
-  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
 }
