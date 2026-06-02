@@ -13,7 +13,7 @@ $$
 where:
 
 - $F$ is the thrust [N]
-- $C_f$ is the thrust coefficient
+- $C_f$ is the thrust coefficient (dimensionless)
 - $P_0$ is the chamber stagnation pressure [Pa]
 - $A_t$ is the nozzle throat area [m$^2$]
 
@@ -29,10 +29,10 @@ $$
 
 where:
 
-- $k_e$ is the exhaust isentropic exponent
+- $k_e$ is the exhaust isentropic exponent (dimensionless)
 - $P_e$ is the exit pressure [Pa]
 - $P_\text{ext}$ is the external (ambient) pressure [Pa]
-- $\varepsilon$ is the expansion ratio
+- $\varepsilon$ is the expansion ratio (dimensionless)
 
 Implemented in [`get_ideal_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient].
 

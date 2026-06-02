@@ -47,7 +47,7 @@ nav:
   - Quick Start: quickstart.md
   - Rocket Theory:
       - 1. Thrust and Performance: theory/thrust.md
-      - 2. Balance of Mass: theory/mass_balance.md
+      - 2. Mass Balance: theory/mass_balance.md
       - 3. Nozzle Losses: theory/nozzle_losses.md
   - Modules:
       - adapters:
