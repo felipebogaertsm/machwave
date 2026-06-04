@@ -70,7 +70,8 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
         lower_core_norm = self.normalize(self.lower_core_diameter)
 
         radius = np.sqrt(map_x**2 + map_y**2)
-        core_diameter = map_z * (upper_core_norm - lower_core_norm) + lower_core_norm
+        # map_z is 1 at the aft (nozzle) slice and 0 at the forward (bulkhead) slice.
+        core_diameter = map_z * (lower_core_norm - upper_core_norm) + upper_core_norm
 
         core_map[radius < core_diameter / 2] = 0
         core_map[0] = 0  # Inhibit the bottom end
