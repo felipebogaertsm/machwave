@@ -141,8 +141,7 @@ class Propellant(abc.ABC):
         Evaluate thermochemical properties at given conditions.
 
         Chamber pressure is quantized to `CHAMBER_PRESSURE_QUANTIZATION_PA` and the
-        result is cached per `(chamber_pressure, expansion_ratio, mixture_ratio)` for
-        performance.
+        result is cached per `(chamber_pressure, expansion_ratio, mixture_ratio)`.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
