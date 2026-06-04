@@ -157,7 +157,6 @@ def _create_propellant(
             name=data["name"],
             components=components,
             mass_fractions=mass_fractions,
-            combustion_efficiency=data.get("combustion_efficiency", 0.95),
             properties=properties,
             burn_rate_map=data.get("burn_rate_map", data.get("burn_rate", [])),
         )
@@ -165,7 +164,6 @@ def _create_propellant(
         return propellant_categories.BiliquidPropellant(
             name=data["name"],
             components=components,
-            combustion_efficiency=data.get("combustion_efficiency", 0.98),
             oxidizer_to_fuel_ratio=data.get("oxidizer_to_fuel_ratio"),
         )
     else:

@@ -13,7 +13,6 @@ class BiliquidPropellant(propellant_base.Propellant):
         self,
         name: str,
         components: list[propellant_components.PropellantComponent] | None = None,
-        combustion_efficiency: float = 0.95,
         oxidizer_to_fuel_ratio: float | None = None,
     ):
         """
@@ -22,7 +21,6 @@ class BiliquidPropellant(propellant_base.Propellant):
         Args:
             name: Propellant name.
             components: Chemical components (should be exactly 2: oxidizer and fuel).
-            combustion_efficiency: Efficiency factor (0-1).
             oxidizer_to_fuel_ratio: Oxidizer-to-fuel mass ratio for this
                 formulation. Used as the default mixture_ratio at the
                 thermochemical service layer; callers can override per-call
@@ -35,7 +33,6 @@ class BiliquidPropellant(propellant_base.Propellant):
         super().__init__(
             name=name,
             components=components,
-            combustion_efficiency=combustion_efficiency,
         )
 
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
