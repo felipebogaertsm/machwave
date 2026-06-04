@@ -48,17 +48,27 @@ class Tank:
         self.temperature = temperature
         self.initial_fluid_mass = initial_fluid_mass
         self.overfill_tolerance = overfill_tolerance
-        self.molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
 
         self._validate()
 
+        # The tank is isothermal with a fixed fluid, so these CoolProp lookups
+        # are constant over its lifetime; evaluate them once.
+        self.molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
+        self.saturation_pressure = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
+        self.saturated_liquid_density = CP.PropsSI(
+            "D", "T", temperature, "Q", 0, fluid_name
+        )
+        # Single-phase density at the tank temperature, memoized per pressure.
+        self._density_by_pressure: dict[float, float | None] = {}
+
+        self._check_not_overfilled()
+
     def _validate(self) -> None:
         """
-        Validate the tank inputs and physical consistency.
+        Validate the scalar tank inputs.
 
         Raises:
-            ValueError: If any field is outside its valid physical range, or if
-                the fill is denser than the saturated liquid.
+            ValueError: If any field is outside its valid physical range.
         """
         if self.volume <= 0.0:
             raise ValueError(f"volume must be strictly positive, got {self.volume}")
@@ -77,8 +87,6 @@ class Tank:
                 f"{self.overfill_tolerance}"
             )
 
-        self._check_not_overfilled()
-
     def _check_not_overfilled(self) -> None:
         """
         Check whether the tank is overfilled within the `overfill_tolerance` threshold.
@@ -86,14 +94,13 @@ class Tank:
         Raises:
             ValueError: If the bulk density exceeds the saturated liquid density.
         """
-        liquid_density = CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
         bulk_density = self.initial_fluid_mass / self.volume
 
-        if bulk_density > liquid_density * (1 + self.overfill_tolerance):
+        if bulk_density > self.saturated_liquid_density * (1 + self.overfill_tolerance):
             raise ValueError(
                 f"Tank overfilled: bulk density {bulk_density:.1f} kg/m^3 exceeds "
-                f"liquid density {liquid_density:.1f} kg/m^3 for {self.fluid_name} at "
-                f"{self.temperature} K"
+                f"liquid density {self.saturated_liquid_density:.1f} kg/m^3 for "
+                f"{self.fluid_name} at {self.temperature} K"
             )
 
     def get_pressure(self, fluid_mass: float) -> float:
@@ -112,15 +119,12 @@ class Tank:
         Returns:
             Tank pressure [Pa].
         """
-        saturation_pressure = CP.PropsSI(
-            "P", "T", self.temperature, "Q", 0, self.fluid_name
-        )
         max_vapor_mass = ideal_gas.get_mass(
-            saturation_pressure, self.volume, self.temperature, self.molar_mass
+            self.saturation_pressure, self.volume, self.temperature, self.molar_mass
         )
 
         if fluid_mass > max_vapor_mass:
-            return saturation_pressure
+            return self.saturation_pressure
         else:
             return ideal_gas.get_pressure(
                 fluid_mass, self.volume, self.temperature, self.molar_mass
@@ -150,14 +154,29 @@ class Tank:
 
         tank_pressure = self.get_pressure(fluid_mass) if pressure is None else pressure
 
-        try:
-            return CP.PropsSI(
-                "D", "T", self.temperature, "P", tank_pressure, self.fluid_name
-            )
-        except ValueError:
-            max_vapor_mass = ideal_gas.get_mass(
-                tank_pressure, self.volume, self.temperature, self.molar_mass
-            )
-            if fluid_mass > max_vapor_mass:
-                return CP.PropsSI("D", "T", self.temperature, "Q", 0, self.fluid_name)
-            return fluid_mass / self.volume
+        single_phase_density = self._single_phase_density(tank_pressure)
+        if single_phase_density is not None:
+            return single_phase_density
+
+        max_vapor_mass = ideal_gas.get_mass(
+            tank_pressure, self.volume, self.temperature, self.molar_mass
+        )
+        if fluid_mass > max_vapor_mass:
+            return self.saturated_liquid_density
+        return fluid_mass / self.volume
+
+    def _single_phase_density(self, pressure: float) -> float | None:
+        """
+        Return the memoized single-phase density [kg/m^3] at the tank temperature.
+
+        Returns None when the (temperature, pressure) lookup is undefined at the
+        saturation boundary, which the caller resolves from the fill state.
+        """
+        if pressure not in self._density_by_pressure:
+            try:
+                self._density_by_pressure[pressure] = CP.PropsSI(
+                    "D", "T", self.temperature, "P", pressure, self.fluid_name
+                )
+            except ValueError:
+                self._density_by_pressure[pressure] = None
+        return self._density_by_pressure[pressure]
