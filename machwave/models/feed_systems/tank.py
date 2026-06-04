@@ -51,8 +51,8 @@ class Tank:
 
         self._validate()
 
-        # The tank is isothermal with a fixed fluid, so these CoolProp lookups
-        # are constant over its lifetime; evaluate them once.
+        # The tank is isothermal with a fixed fluid, so these properties are constant
+        # and cached
         self.molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
         self.saturation_pressure = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
         self.saturated_liquid_density = CP.PropsSI(
