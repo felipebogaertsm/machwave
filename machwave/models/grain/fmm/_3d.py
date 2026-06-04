@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
+import machwave.core.filters as filters
 import machwave.core.geometric as geometric
 import machwave.core.mechanics as mechanics
 import machwave.models.grain as grain
@@ -202,11 +203,15 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 burn_area_values[i] = self._get_burn_area_uncached(map_dist=float(dist))
 
             burn_area_values = np.asarray(burn_area_values, dtype=np.float64)
+            smoothed_burn_area = filters.smooth_savitzky_golay(burn_area_values)
             self.burn_area_interp_func = interp1d(
                 distances,
-                burn_area_values,
+                smoothed_burn_area,
                 bounds_error=False,
-                fill_value=(float(burn_area_values[0]), float(burn_area_values[-1])),  # type: ignore[arg-type]
+                fill_value=(
+                    float(smoothed_burn_area[0]),
+                    float(smoothed_burn_area[-1]),
+                ),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
