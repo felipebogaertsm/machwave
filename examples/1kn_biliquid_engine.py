@@ -35,7 +35,6 @@ def main():
     propellant = propellants.BiliquidPropellant(
         name=f"{OXIDIZER_NAME}/{FUEL_NAME}",
         components=[oxidizer, fuel],
-        combustion_efficiency=0.98,
         oxidizer_to_fuel_ratio=1.9495,
     )
 
@@ -91,6 +90,7 @@ def main():
         thrust_chamber=thrust_chamber,
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
+        combustion_efficiency=0.98,
     )
 
     sim_params = simulation_module.InternalBallisticsSimulationParams(
