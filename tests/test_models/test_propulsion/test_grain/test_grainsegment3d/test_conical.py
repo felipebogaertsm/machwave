@@ -17,6 +17,7 @@ lower map_dim) for the last 20% of the web thickness.
 import numpy as np
 import pytest
 
+import machwave.core.geometric as geometric
 from tests.factories import BatesSegmentFactory, ConicalGrainSegmentFactory
 
 TOLERANCE = 0.15
@@ -72,3 +73,37 @@ def test_port_area(conical_grain_segment_1, bates_equivalent_1):
     assert value == pytest.approx(expected_value, abs=tolerance), (
         f"Expected value {expected_value} with tolerance {tolerance}"
     )
+
+
+def test_taper_places_lower_diameter_at_the_nozzle_end():
+    """An asymmetric cone places the lower (nozzle) core diameter at the aft end.
+
+    The z map runs from 1 at the aft slice to 0 at the forward slice, and
+    get_port_area treats z index 0 as the nozzle end. So the larger of the two
+    bores below must show up as the larger port area near the nozzle, and the
+    smaller bore near the bulkhead -- not the other way around.
+    """
+    lower_diameter = 30e-3  # nozzle (aft) end, larger bore
+    upper_diameter = 8e-3  # bulkhead (forward) end, smaller bore
+    segment = ConicalGrainSegmentFactory.build(
+        length=68e-3,
+        outer_diameter=41e-3,
+        upper_core_diameter=upper_diameter,
+        lower_core_diameter=lower_diameter,
+    )
+    length = segment.length
+
+    # Sample just inside each end; the very end slices are inhibited open faces.
+    nozzle_port = segment.get_port_area(web_distance=0.0, z=0.05 * length)
+    bulkhead_port = segment.get_port_area(web_distance=0.0, z=0.95 * length)
+
+    # At web distance zero the open port is the core bore at that slice.
+    lower_bore = geometric.get_circle_area(lower_diameter)
+    upper_bore = geometric.get_circle_area(upper_diameter)
+
+    # The larger bore is at the nozzle, the smaller at the bulkhead.
+    assert nozzle_port > bulkhead_port
+
+    # Each end's port matches its own core diameter, not the opposite end's.
+    assert abs(nozzle_port - lower_bore) < abs(nozzle_port - upper_bore)
+    assert abs(bulkhead_port - upper_bore) < abs(bulkhead_port - lower_bore)
