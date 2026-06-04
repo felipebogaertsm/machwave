@@ -22,6 +22,7 @@ class BiliquidEngine(
         feed_system: feed_system_base.FeedSystem,
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
+        combustion_efficiency: float = 0.95,
     ) -> None:
         """
         Initialize a biliquid rocket engine.
@@ -38,8 +39,10 @@ class BiliquidEngine(
             fuel_tank_cog: Axial position of the fuel propellant center of
                 gravity, measured from the nozzle exit [m]. If None, uses a
                 default estimate.
+            combustion_efficiency: Ratio of the of the actual flame temperature to the
+                ideal adiabatic flame temperature (0, 1].
         """
-        super().__init__(propellant, thrust_chamber)
+        super().__init__(propellant, thrust_chamber, combustion_efficiency)
         self.feed_system = feed_system
         self.oxidizer_tank_cog = oxidizer_tank_cog
         self.fuel_tank_cog = fuel_tank_cog

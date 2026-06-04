@@ -19,6 +19,7 @@ class SolidMotor(
         grain: grain.Grain,
         propellant: propellants.SolidPropellant,
         thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
+        combustion_efficiency: float = 0.95,
     ) -> None:
         """
         Initialize a solid rocket motor.
@@ -27,8 +28,10 @@ class SolidMotor(
             grain: Grain geometry configuration.
             propellant: Solid propellant properties.
             thrust_chamber: Thrust chamber model.
+            combustion_efficiency: Ratio of the of the actual flame temperature to the
+                ideal adiabatic flame temperature (0, 1].
         """
-        super().__init__(propellant, thrust_chamber)
+        super().__init__(propellant, thrust_chamber, combustion_efficiency)
 
         self.grain = grain
         self.propellant: propellants.SolidPropellant = propellant

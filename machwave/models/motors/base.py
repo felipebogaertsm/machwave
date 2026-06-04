@@ -18,6 +18,7 @@ class Motor(Generic[P, T], ABC):
         self,
         propellant: P,
         thrust_chamber: T,
+        combustion_efficiency: float = 0.95,
     ) -> None:
         """
         Initialize attributes common to any motor or engine.
@@ -25,9 +26,21 @@ class Motor(Generic[P, T], ABC):
         Args:
             propellant: Propellant used in the motor.
             thrust_chamber: Thrust chamber of the motor.
+            combustion_efficiency: Ratio of the of the actual flame temperature to the
+                ideal adiabatic flame temperature (0, 1].
+
+        Raises:
+            ValueError: If `combustion_efficiency` is not in (0, 1].
         """
+        if not 0.0 < combustion_efficiency <= 1.0:
+            raise ValueError(
+                "combustion_efficiency must be in the range (0, 1], got "
+                f"{combustion_efficiency}"
+            )
+
         self.propellant = propellant
         self.thrust_chamber = thrust_chamber
+        self.combustion_efficiency = combustion_efficiency
 
     @abstractmethod
     def get_launch_mass(self) -> float:
