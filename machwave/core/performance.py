@@ -13,7 +13,7 @@ def get_effective_flame_temperature(
 
     Args:
         adiabatic_flame_temperature: Adiabatic flame temperature [K].
-        combustion_efficiency: Combustion efficiency in [0, 1], the ratio of the actual
+        combustion_efficiency: Combustion efficiency in (0, 1], the ratio of the actual
             to the ideal (adiabatic) flame temperature.
 
     Returns:

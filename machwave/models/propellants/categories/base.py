@@ -37,7 +37,6 @@ class Propellant(abc.ABC):
         self,
         name: str,
         components: list[propellant_components.PropellantComponent] | None = None,
-        combustion_efficiency: float = 0.95,
     ):
         """
         Initialize a propellant.
@@ -45,12 +44,9 @@ class Propellant(abc.ABC):
         Args:
             name: Propellant name.
             components: Chemical components. If None, defaults to empty list.
-            combustion_efficiency: Combustion efficiency in [0, 1], the ratio of the
-                actual to the ideal (adiabatic) flame temperature.
         """
         self.name = name
         self.components = list(components or [])
-        self.combustion_efficiency = combustion_efficiency
 
     @functools.cached_property
     def thermochemical_service(self) -> cea_service.RocketCEAService:
