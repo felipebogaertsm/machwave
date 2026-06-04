@@ -136,7 +136,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         axial_pitch = self.length / max(self.get_normalized_length() - 1, 1)
         radial_pitch = self.outer_diameter / (self.map_dim - 1)
         distance = skfmm.distance(
-            masked_face, dx=[axial_pitch, radial_pitch, radial_pitch]
+            masked_face,
+            dx=[axial_pitch, radial_pitch, radial_pitch],  # type: ignore[arg-type]
         )
         return distance * (2.0 / self.outer_diameter)
 
