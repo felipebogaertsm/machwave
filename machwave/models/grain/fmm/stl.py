@@ -8,6 +8,18 @@ import machwave.models.grain.base as grain_base
 import machwave.models.grain.fmm as grain_fmm
 
 
+def _resample_nearest(
+    volume: np.typing.NDArray[np.int_],
+    target_shape: tuple[int, ...],
+) -> np.typing.NDArray[np.int_]:
+    """Nearest-neighbour resample a 3D array onto an exact target shape."""
+    index = [
+        np.minimum(np.arange(t) * s // t, s - 1)
+        for t, s in zip(target_shape, volume.shape)
+    ]
+    return volume[np.ix_(*index)]
+
+
 class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
     """FMM grain segment loaded from an STL mesh."""
 
@@ -45,26 +57,23 @@ class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
 
     def validate(self) -> None:
         """Validate STL grain segment geometry."""
+        grain.GrainSegment.validate(self)
         if not self.map_dim >= 20:
             raise grain.GrainGeometryError(
                 f"Map dimension must be at least 20 for STL grains, got {self.map_dim}"
             )
 
     def get_voxel_size(self) -> float:
-        """
-        Return the voxel edge size [m].
-
-        Note:
-            Only returns correct voxel size if `map_dim` is an odd number.
-        """
-        return self.outer_diameter / int(self.map_dim - 1)
+        """Return the voxelization pitch [m]."""
+        return self.outer_diameter / (self.map_dim - 1)
 
     def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """
-        Generate the initial face map by voxelizing an STL file.
+        Generate the initial face map by voxelizing an STL mesh.
 
-        Uses the `trimesh` library. Still needs to convert the boolean matrix
-        to a masked array.
+        The trimesh voxel grid does not line up with the FMM grid, so it is
+        resampled onto the canonical `(normalized_length, map_dim, map_dim)`
+        shape the rest of the 3D machinery expects.
         """
         mesh = trimesh.load_mesh(self.file_path)
         assert isinstance(mesh, trimesh.Trimesh), "Expected a single Trimesh"
@@ -72,13 +81,6 @@ class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
 
         voxels = mesh.voxelized(pitch=self.get_voxel_size())
         assert voxels is not None, "Voxelization failed"
-        volume = voxels.fill()
-        voxel_map: np.typing.NDArray[np.int_] = (
-            volume.matrix.view(np.ndarray).transpose().astype(np.int_)
-        )
+        voxel_map = voxels.fill().matrix.view(np.ndarray).transpose().astype(np.int_)
 
-        assert voxel_map.shape == self.get_maps()[0].shape, (
-            "Generated map shape mismatch"
-        )
-
-        return voxel_map
+        return _resample_nearest(voxel_map, self.get_maps()[0].shape)
