@@ -243,7 +243,6 @@ class TestCreatePropellant:
     def test_create_solid_propellant(self):
         data = {
             "name": "Test Solid",
-            "combustion_efficiency": 0.95,
             "burn_rate_map": [{"min": 0, "max": 1e7, "a": 5.0, "n": 0.5}],
         }
         components = [
@@ -275,13 +274,11 @@ class TestCreatePropellant:
 
         assert isinstance(result, propellant_categories.SolidPropellant)
         assert result.name == "Test Solid"
-        assert result.combustion_efficiency == 0.95
         assert len(result.burn_rate_map) == 1
 
     def test_create_biliquid_propellant(self):
         data = {
             "name": "Test Biliquid",
-            "combustion_efficiency": 0.98,
             "oxidizer_to_fuel_ratio": 2.5,
         }
         components = [
@@ -313,59 +310,4 @@ class TestCreatePropellant:
 
         assert isinstance(result, propellant_categories.BiliquidPropellant)
         assert result.name == "Test Biliquid"
-        assert result.combustion_efficiency == 0.98
         assert result.oxidizer_to_fuel_ratio == 2.5
-
-    def test_create_solid_with_default_efficiency(self):
-        data = {"name": "Test"}
-        components = [
-            propellant_components.PropellantComponent(
-                name="KNO3",
-                role=propellant_components.ComponentRole.OXIDIZER,
-                density=2109.0,
-                chemical_formula={"K": 1, "N": 1, "O": 3},
-                enthalpy=-494600.0,
-            ),
-            propellant_components.PropellantComponent(
-                name="Sucrose",
-                role=propellant_components.ComponentRole.FUEL,
-                density=1587.0,
-                chemical_formula={"C": 12, "H": 22, "O": 11},
-                enthalpy=-2226100.0,
-            ),
-        ]
-        result = formulations_base._create_propellant(
-            propellant_categories.MixtureType.SOLID,
-            data,
-            components,
-            [0.65, 0.35],
-            None,
-        )
-
-        assert isinstance(result, propellant_categories.SolidPropellant)
-        assert result.combustion_efficiency == 0.95
-
-    def test_create_biliquid_with_default_efficiency(self):
-        data = {"name": "Test"}
-        components = [
-            propellant_components.PropellantComponent(
-                name="LOX",
-                role=propellant_components.ComponentRole.OXIDIZER,
-                density=1141.0,
-                chemical_formula={"O": 2},
-                enthalpy=0.0,
-            ),
-            propellant_components.PropellantComponent(
-                name="LH2",
-                role=propellant_components.ComponentRole.FUEL,
-                density=70.8,
-                chemical_formula={"H": 2},
-                enthalpy=0.0,
-            ),
-        ]
-        result = formulations_base._create_propellant(
-            propellant_categories.MixtureType.BILIQUID, data, components, None, None
-        )
-
-        assert isinstance(result, propellant_categories.BiliquidPropellant)
-        assert result.combustion_efficiency == 0.98

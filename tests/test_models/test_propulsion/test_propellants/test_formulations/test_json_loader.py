@@ -69,9 +69,6 @@ class TestJSONFormulationLoading:
         # Verify basic fields
         assert propellant.name, f"{json_file.stem}: Missing name"
         assert len(propellant.components) > 0, f"{json_file.stem}: No components"
-        assert 0 < propellant.combustion_efficiency <= 1.0, (
-            f"{json_file.stem}: Invalid combustion_efficiency"
-        )
 
         # Verify components have required fields
         for comp in propellant.components:
@@ -144,9 +141,6 @@ class TestJSONFormulationLoading:
         assert propellant.name, f"{json_file.stem}: Missing name"
         assert len(propellant.components) == 2, (
             f"{json_file.stem}: Biliquid must have exactly 2 components"
-        )
-        assert 0 < propellant.combustion_efficiency <= 1.0, (
-            f"{json_file.stem}: Invalid combustion_efficiency"
         )
         assert propellant.oxidizer_to_fuel_ratio is not None, (
             f"{json_file.stem}: Missing O/F ratio"
@@ -314,7 +308,6 @@ class TestJSONFormulationLoading:
             name=f"{loaded.name}__CEA__{json_file.stem}",
             components=loaded.components,
             mass_fractions=loaded.mass_fractions,
-            combustion_efficiency=loaded.combustion_efficiency,
             properties=None,
             burn_rate_map=loaded.burn_rate_map,
         )
@@ -348,7 +341,6 @@ class TestJSONFormulationLoading:
             name=f"{loaded.name}__CEA__{json_stem}",
             components=loaded.components,
             mass_fractions=loaded.mass_fractions,
-            combustion_efficiency=loaded.combustion_efficiency,
             properties=None,
             burn_rate_map=loaded.burn_rate_map,
         )

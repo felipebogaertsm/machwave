@@ -110,11 +110,6 @@ class TestAllSolidPropellants:
         assert propellant.properties.i_sp_frozen > 0, f"{name} frozen Isp invalid"
         assert propellant.properties.i_sp_shifting > 0, f"{name} shifting Isp invalid"
 
-        # Check operational properties are accessible from propellant class
-        assert propellant.combustion_efficiency > 0, (
-            f"{name} combustion efficiency invalid"
-        )
-
 
 class TestFixedSolidPropellantSpecifics:
     """Test specific behaviors of solid propellants with pre-defined properties."""
@@ -164,20 +159,6 @@ class TestBurnRateBehavior:
 
 class TestConsistency:
     """Test consistency across all formulations."""
-
-    @pytest.mark.parametrize("name,propellant", ALL_SOLID_PROPELLANTS)
-    def test_combustion_efficiency_field(self, name, propellant):
-        """Verify combustion_efficiency field exists and is valid."""
-        # Ensure properties exist
-        if propellant.properties is None:
-            propellant.evaluate(5e6, 8.0)
-
-        assert hasattr(propellant, "combustion_efficiency"), (
-            f"{name} should have combustion_efficiency field"
-        )
-        assert 0 < propellant.combustion_efficiency <= 1, (
-            f"{name} combustion_efficiency should be between 0 and 1"
-        )
 
     @pytest.mark.parametrize("name,propellant", ALL_SOLID_PROPELLANTS)
     def test_isp_relationship(self, name, propellant):
