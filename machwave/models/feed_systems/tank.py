@@ -58,7 +58,7 @@ class Tank:
         self.saturated_liquid_density = CP.PropsSI(
             "D", "T", temperature, "Q", 0, fluid_name
         )
-        # Single-phase density at the tank temperature, memoized per pressure.
+        # Single phase density at the tank temperature, memoized per pressure.
         self._density_by_pressure: dict[float, float | None] = {}
 
         self._check_not_overfilled()
