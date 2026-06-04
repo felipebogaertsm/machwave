@@ -4,8 +4,8 @@ from collections.abc import Callable
 import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 
+import machwave.core.filters as filters
 import machwave.core.geometric as geometric
 import machwave.core.mechanics as mechanics
 import machwave.models.grain as grain
@@ -106,22 +106,15 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             counts = float(values.size) - n_le.astype(np.float64)
             face_area_values = np.asarray(self.map_to_area(counts), dtype=np.float64)
 
-            # Smooth + interpolate (adapt for small arrays)
-            smoothed = face_area_values
-            if face_area_values.size >= 7:
-                window_length = min(31, int(face_area_values.size))
-                if window_length % 2 == 0:
-                    window_length -= 1
-                polyorder = min(5, window_length - 2)
-                if window_length >= 3 and polyorder >= 1:
-                    smoothed = savgol_filter(face_area_values, window_length, polyorder)
-
-            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
+            smoothed_face_area = filters.smooth_savitzky_golay(face_area_values)
             self.face_area_interp_func = interp1d(
                 distances,
-                smoothed_arr,
+                smoothed_face_area,
                 bounds_error=False,
-                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
+                fill_value=(
+                    float(smoothed_face_area[0]),
+                    float(smoothed_face_area[-1]),
+                ),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
@@ -180,21 +173,15 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             total_face_area_values = exposed_ends * face_area_values
             burn_area_values = core_area_values + total_face_area_values
 
-            smoothed = burn_area_values
-            if burn_area_values.size >= 7:
-                window_length = min(31, int(burn_area_values.size))
-                if window_length % 2 == 0:
-                    window_length -= 1
-                polyorder = min(5, window_length - 2)
-                if window_length >= 3 and polyorder >= 1:
-                    smoothed = savgol_filter(burn_area_values, window_length, polyorder)
-
-            smoothed_arr = np.asarray(smoothed, dtype=np.float64)
+            smoothed_burn_area = filters.smooth_savitzky_golay(burn_area_values)
             self.burn_area_interp_func = interp1d(
                 distances,
-                smoothed_arr,
+                smoothed_burn_area,
                 bounds_error=False,
-                fill_value=(float(smoothed_arr[0]), float(smoothed_arr[-1])),  # type: ignore[arg-type]
+                fill_value=(
+                    float(smoothed_burn_area[0]),
+                    float(smoothed_burn_area[-1]),
+                ),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
 
