@@ -2,6 +2,7 @@ from abc import ABC
 from collections.abc import Callable
 
 import numpy as np
+import skfmm
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
@@ -129,38 +130,40 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
 
         return face_map, outside
 
+    def _regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
+        # Regression speed needs to be calibrated for the z axes separately from the x
+        # and y axes, because the 3D grid is anisotropic
+        axial_pitch = self.length / max(self.get_normalized_length() - 1, 1)
+        radial_pitch = self.outer_diameter / (self.map_dim - 1)
+        distance = skfmm.distance(
+            masked_face, dx=[axial_pitch, radial_pitch, radial_pitch]
+        )
+        return distance * (2.0 / self.outer_diameter)
+
     def get_contours(
         self, web_distance: float, length_normalized: float
     ) -> list[NDArray[np.float64]]:
         map_dist = self.normalize(web_distance)
-        valid = np.logical_not(self.get_mask())
-        boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
-
         z_index = int(round(length_normalized))
-        boolean_slice_2d = boolean_3d[z_index]
-
-        return fmm_contours.get_contours(
-            boolean_slice_2d,
-            map_dist,
-        )
+        regression_slice = self.get_regression_map()[z_index]
+        return fmm_contours.get_contours(regression_slice, map_dist)
 
     def _get_burn_area_uncached(self, *, map_dist: float) -> float:
-        valid = np.logical_not(self.get_mask())
-        boolean_3d = np.logical_and(self.get_regression_map() > map_dist, valid)
+        regression_map = self.get_regression_map()
 
         web_distance = float(self.denormalize(map_dist))
         length_factor = self.get_length(web_distance=web_distance) / self.map_dim
 
-        # Slices with an identical boolean cross-section trace to an identical
-        # contour at this map_dist, so each distinct slice is traced only once.
+        # Slices with an identical cross-section trace to an identical contour at
+        # this map_dist, so each distinct slice is traced only once.
         perimeter_by_slice: dict[bytes, float] = {}
         total = 0.0
         for z_index in range(self.get_normalized_length()):
-            boolean_slice_2d = boolean_3d[z_index]
-            key = np.asarray(boolean_slice_2d).tobytes()
+            regression_slice = regression_map[z_index]
+            key = np.asarray(regression_slice).tobytes()
             perimeter = perimeter_by_slice.get(key)
             if perimeter is None:
-                contours = fmm_contours.get_contours(boolean_slice_2d, map_dist)
+                contours = fmm_contours.get_contours(regression_slice, map_dist)
                 perimeter = float(
                     sum(
                         self.map_to_length(
