@@ -237,7 +237,7 @@ class SolidMotorState(simulation_states.MotorState):
         self.web.append(new_web_distance)
         effective_flame_temperature = performance.get_effective_flame_temperature(
             adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
-            combustion_efficiency=self.motor.propellant.combustion_efficiency,
+            combustion_efficiency=self.motor.combustion_efficiency,
         )
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": self.chamber_pressure[-1]},
