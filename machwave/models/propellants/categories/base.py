@@ -33,6 +33,9 @@ class Propellant(abc.ABC):
 
     mixture_type: MixtureType
 
+    # Chamber pressure is quantized to this width [Pa] before evaluation.
+    CHAMBER_PRESSURE_QUANTIZATION_PA: float = 200.0
+
     def __init__(
         self,
         name: str,
@@ -47,6 +50,7 @@ class Propellant(abc.ABC):
         """
         self.name = name
         self.components = list(components or [])
+        self._evaluation_cache: dict = {}
 
     @functools.cached_property
     def thermochemical_service(self) -> cea_service.RocketCEAService:
@@ -79,26 +83,13 @@ class Propellant(abc.ABC):
         """
         pass
 
-    def evaluate(
+    def _compute_thermochemical_properties(
         self,
         chamber_pressure: float,
-        expansion_ratio: float = 8.0,
-        mixture_ratio: float | None = None,
+        expansion_ratio: float,
+        mixture_ratio: float | None,
     ) -> propellant_properties.ThermochemicalProperties:
-        """
-        Evaluate thermochemical properties at given conditions.
-
-        Args:
-            chamber_pressure: Chamber pressure [Pa].
-            expansion_ratio: Nozzle area ratio (Ae/At).
-            mixture_ratio: Ratio of the propellant mixture.
-
-        Returns:
-            ThermochemicalProperties.
-
-        Raises:
-            ValueError: If evaluation fails.
-        """
+        """Query the thermochemical service at the given conditions."""
         service = self.thermochemical_service
 
         adiabatic_flame_temperature = service.get_adiabatic_flame_temperature(
@@ -128,7 +119,7 @@ class Propellant(abc.ABC):
             mixture_ratio=mixture_ratio,
         )
 
-        properties = propellant_properties.ThermochemicalProperties(
+        return propellant_properties.ThermochemicalProperties(
             k_chamber=k_chamber,
             k_exhaust=k_exhaust,
             adiabatic_flame_temperature=adiabatic_flame_temperature,
@@ -139,4 +130,43 @@ class Propellant(abc.ABC):
             qsi_chamber=qsi_chamber,
             qsi_exhaust=qsi_exhaust,
         )
+
+    def evaluate(
+        self,
+        chamber_pressure: float,
+        expansion_ratio: float = 8.0,
+        mixture_ratio: float | None = None,
+    ) -> propellant_properties.ThermochemicalProperties:
+        """
+        Evaluate thermochemical properties at given conditions.
+
+        Chamber pressure is quantized to `CHAMBER_PRESSURE_QUANTIZATION_PA` and the
+        result is cached per `(chamber_pressure, expansion_ratio, mixture_ratio)`.
+
+        Args:
+            chamber_pressure: Chamber pressure [Pa].
+            expansion_ratio: Nozzle area ratio (Ae/At).
+            mixture_ratio: Ratio of the propellant mixture.
+
+        Returns:
+            ThermochemicalProperties.
+
+        Raises:
+            ValueError: If evaluation fails.
+        """
+        quantized_chamber_pressure = (
+            round(chamber_pressure / self.CHAMBER_PRESSURE_QUANTIZATION_PA)
+            * self.CHAMBER_PRESSURE_QUANTIZATION_PA
+        )
+        cache_key = (quantized_chamber_pressure, expansion_ratio, mixture_ratio)
+        cached_properties = self._evaluation_cache.get(cache_key)
+        if cached_properties is not None:
+            return cached_properties
+
+        properties = self._compute_thermochemical_properties(
+            chamber_pressure=quantized_chamber_pressure,
+            expansion_ratio=expansion_ratio,
+            mixture_ratio=mixture_ratio,
+        )
+        self._evaluation_cache[cache_key] = properties
         return properties
