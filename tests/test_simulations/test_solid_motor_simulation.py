@@ -102,3 +102,26 @@ def test_recorded_per_timestep_arrays_are_aligned(
     simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
     assert_recorded_arrays_aligned(simulation_result)
+
+
+def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
+    """The solid read site sources combustion efficiency from the motor.
+
+    The effective flame temperature scales with the motor's combustion
+    efficiency, so a more efficient motor produces a higher chamber pressure
+    after one identical time step.
+    """
+
+    def first_step_chamber_pressure(combustion_efficiency: float) -> float:
+        motor, params = motor_builders.build_nero_motor()
+        motor.combustion_efficiency = combustion_efficiency
+        state = solid_simulation.SolidMotorState(
+            motor=motor,
+            igniter_pressure=params.igniter_pressure,
+            external_pressure=params.external_pressure,
+            other_losses=params.other_losses,
+        )
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+        return state.chamber_pressure[-1]
+
+    assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)

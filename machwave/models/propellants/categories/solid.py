@@ -33,7 +33,6 @@ class SolidPropellant(propellant_base.Propellant):
         name: str,
         components: list[propellant_components.PropellantComponent] | None = None,
         mass_fractions: list[float] | None = None,
-        combustion_efficiency: float = 0.95,
         properties: propellant_properties.ThermochemicalProperties | None = None,
         burn_rate_map: list[dict[str, float | int]] | None = None,
     ):
@@ -46,8 +45,6 @@ class SolidPropellant(propellant_base.Propellant):
                 one oxidizer and one fuel.
             mass_fractions: Mass fractions aligned with `components`. Must
                 sum to 1.0.
-            combustion_efficiency: Combustion efficiency in [0, 1], the ratio of the
-                actual to the ideal (adiabatic) flame temperature.
             properties: Pre-defined thermochemical properties. Optional
                 override used by `evaluate()` to skip CEA when provided.
             burn_rate_map: Saint Robert's law coefficients by pressure range.
@@ -59,7 +56,6 @@ class SolidPropellant(propellant_base.Propellant):
         super().__init__(
             name=name,
             components=components,
-            combustion_efficiency=combustion_efficiency,
         )
 
         self._properties = properties

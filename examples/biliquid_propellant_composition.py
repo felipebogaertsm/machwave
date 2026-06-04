@@ -25,7 +25,6 @@ def main() -> None:
     loxlh2 = propellant_categories.BiliquidPropellant(
         name="LOX/LH2",
         components=[lox, lh2],
-        combustion_efficiency=0.99,
         oxidizer_to_fuel_ratio=6.0,
     )
 

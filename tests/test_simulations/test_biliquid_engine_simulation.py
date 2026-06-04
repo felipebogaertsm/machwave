@@ -187,3 +187,29 @@ def test_simulation_runs_through_burnout_without_crashing(
 ) -> None:
     assert simulation_result.end_thrust is True
     assert simulation_result.propellant_mass[-1] <= simulation_result.propellant_mass[0]
+
+
+def test_nozzle_correction_factor_uses_motor_combustion_efficiency() -> None:
+    """The biliquid read site sources combustion efficiency from the motor.
+
+    ``nozzle_correction_factor = nozzle_efficiency * motor.combustion_efficiency``.
+    The nozzle efficiency depends only on geometry and losses, which are identical
+    across the two runs' first step, so the recorded correction factor must scale
+    linearly with the motor's combustion efficiency.
+    """
+
+    def first_nozzle_correction(combustion_efficiency: float) -> float:
+        motor, params = motor_builders.build_1kn_biliquid_engine()
+        motor.combustion_efficiency = combustion_efficiency
+        state = biliquid_simulation.BiliquidEngineState(
+            motor=motor,
+            igniter_pressure=params.igniter_pressure,
+            external_pressure=params.external_pressure,
+            other_losses=params.other_losses,
+        )
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+        return state.nozzle_correction_factor[-1]
+
+    assert first_nozzle_correction(1.0) == pytest.approx(
+        first_nozzle_correction(0.5) * 2.0
+    )

@@ -65,6 +65,7 @@ def main():
         grain=grain,
         propellant=propellant,
         thrust_chamber=thrust_chamber,
+        combustion_efficiency=0.95,
     )
 
     params = simulation.InternalBallisticsSimulationParams(

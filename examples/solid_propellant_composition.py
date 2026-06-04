@@ -26,7 +26,6 @@ def main() -> None:
         name="KNSU",
         components=[potassium_nitrate, sucrose],
         mass_fractions=[0.65, 0.35],
-        combustion_efficiency=0.95,
         burn_rate_map=[{"min": 0, "max": 100000000, "a": 8.260, "n": 0.319}],
     )
 

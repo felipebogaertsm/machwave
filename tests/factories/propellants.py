@@ -147,7 +147,6 @@ class BiliquidPropellantFactory:
         kwargs: dict[str, Any] = dict(
             name="N2O/Ethanol",
             components=component_list,
-            combustion_efficiency=0.98,
             oxidizer_to_fuel_ratio=2.0,
         )
         kwargs.update(overrides)

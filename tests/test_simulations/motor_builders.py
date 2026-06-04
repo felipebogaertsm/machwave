@@ -208,6 +208,7 @@ def build_1kn_biliquid_engine() -> tuple[
         thrust_chamber=thrust_chamber,
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
+        combustion_efficiency=0.98,
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=1e-4,

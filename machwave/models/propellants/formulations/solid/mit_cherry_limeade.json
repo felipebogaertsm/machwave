@@ -43,6 +43,5 @@
     "i_sp_shifting": 245.1,
     "qsi_chamber": 0.138,
     "qsi_exhaust": 0.139
-  },
-  "combustion_efficiency": 0.95
+  }
 }
