@@ -26,8 +26,8 @@ class Motor(Generic[P, T], ABC):
         Args:
             propellant: Propellant used in the motor.
             thrust_chamber: Thrust chamber of the motor.
-            combustion_efficiency: Ratio of the of the actual flame temperature to the
-                ideal adiabatic flame temperature (0, 1].
+            combustion_efficiency: Ratio of the actual flame temperature to the ideal
+                adiabatic flame temperature (0, 1].
 
         Raises:
             ValueError: If `combustion_efficiency` is not in (0, 1].

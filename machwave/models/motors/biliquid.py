@@ -39,8 +39,8 @@ class BiliquidEngine(
             fuel_tank_cog: Axial position of the fuel propellant center of
                 gravity, measured from the nozzle exit [m]. If None, uses a
                 default estimate.
-            combustion_efficiency: Ratio of the of the actual flame temperature to the
-                ideal adiabatic flame temperature (0, 1].
+            combustion_efficiency: Ratio of the actual flame temperature to the ideal
+                adiabatic flame temperature (0, 1].
         """
         super().__init__(propellant, thrust_chamber, combustion_efficiency)
         self.feed_system = feed_system

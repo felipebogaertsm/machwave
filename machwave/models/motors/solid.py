@@ -28,8 +28,8 @@ class SolidMotor(
             grain: Grain geometry configuration.
             propellant: Solid propellant properties.
             thrust_chamber: Thrust chamber model.
-            combustion_efficiency: Ratio of the of the actual flame temperature to the
-                ideal adiabatic flame temperature (0, 1].
+            combustion_efficiency: Ratio of the actual flame temperature to the ideal
+                adiabatic flame temperature (0, 1].
         """
         super().__init__(propellant, thrust_chamber, combustion_efficiency)
 
