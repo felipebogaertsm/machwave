@@ -64,8 +64,7 @@ def test_burn_area_dedup_matches_per_slice_sum(finocyl_segment):
     segment = finocyl_segment
     map_dist = segment.normalize(segment.get_web_thickness() * 0.3)
 
-    valid = np.logical_not(segment.get_mask())
-    boolean_3d = np.logical_and(segment.get_regression_map() > map_dist, valid)
+    regression_map = segment.get_regression_map()
     length_factor = (
         segment.get_length(web_distance=float(segment.denormalize(map_dist)))
         / segment.map_dim
@@ -74,7 +73,7 @@ def test_burn_area_dedup_matches_per_slice_sum(finocyl_segment):
     # Reference: trace every slice independently, with no caching.
     reference = 0.0
     for z_index in range(segment.get_normalized_length()):
-        contours = fmm_contours.get_contours(boolean_3d[z_index], map_dist)
+        contours = fmm_contours.get_contours(regression_map[z_index], map_dist)
         perimeter = sum(
             segment.map_to_length(fmm_contours.get_length(contour, segment.map_dim))
             for contour in contours

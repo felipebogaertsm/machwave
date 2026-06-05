@@ -75,6 +75,32 @@ def test_port_area(conical_grain_segment_1, bates_equivalent_1):
     )
 
 
+def test_axial_burnout_web_is_calibrated_on_the_anisotropic_grid():
+    """A short, both-ends-exposed tube burns out axially before radially.
+
+    Its web thickness is then set by the axial half-length, not the radial web.
+    That only comes out right if the axial axis of the anisotropic 3D grid is
+    calibrated separately from the cross-section; a single scalar dx mis-scales
+    it by the length-to-diameter ratio.
+    """
+    outer_diameter = 41e-3
+    bore_diameter = 30e-3
+    length = 8e-3  # axial half-length (4 mm) is below the radial web (5.5 mm)
+
+    segment = ConicalGrainSegmentFactory.build(
+        length=length,
+        outer_diameter=outer_diameter,
+        upper_core_diameter=bore_diameter,
+        lower_core_diameter=bore_diameter,
+    )
+
+    radial_web = (outer_diameter - bore_diameter) / 2
+    axial_half_length = length / 2
+    assert axial_half_length < radial_web  # the grain is axial-limited by design
+
+    assert segment.get_web_thickness() == pytest.approx(axial_half_length, rel=0.1)
+
+
 def test_taper_places_lower_diameter_at_the_nozzle_end():
     """An asymmetric cone places the lower (nozzle) core diameter at the aft end.
 
