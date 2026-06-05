@@ -60,3 +60,44 @@ class TestBiliquidEvaluateMixtureRatio:
     def test_design_attribute_unchanged_after_evaluate(self, lox_rp1_propellant):
         lox_rp1_propellant.evaluate(chamber_pressure=3e6, mixture_ratio=1.5)
         assert lox_rp1_propellant.oxidizer_to_fuel_ratio == 2.5
+
+
+def _biliquid_with_fuel_formula(
+    fuel_formula: dict[str, int],
+) -> propellants_models.BiliquidPropellant:
+    oxidizer = propellant_components.PropellantComponent(
+        name="LOX",
+        density=1141.0,
+        chemical_formula={"O": 2},
+        enthalpy=0.0,
+        role=propellant_components.ComponentRole.OXIDIZER,
+    )
+    fuel = propellant_components.PropellantComponent(
+        name="FUEL",
+        density=820.0,
+        chemical_formula=fuel_formula,
+        enthalpy=0.0,
+        role=propellant_components.ComponentRole.FUEL,
+    )
+    return propellants_models.BiliquidPropellant(
+        name="PROBE", components=[oxidizer, fuel], oxidizer_to_fuel_ratio=2.5
+    )
+
+
+class TestBiliquidCondensedPhase:
+    def test_gaseous_only_propellant_reports_no_condensed_phase(
+        self, lox_rp1_propellant
+    ):
+        assert lox_rp1_propellant.has_condensed_phase is False
+
+    def test_metal_component_reports_condensed_phase(self):
+        propellant = _biliquid_with_fuel_formula({"Al": 1})
+        assert propellant.has_condensed_phase is True
+
+    def test_element_matching_is_case_insensitive(self):
+        # "cl" must classify as the gaseous-only element Cl.
+        propellant = _biliquid_with_fuel_formula({"cl": 1, "h": 1})
+        assert propellant.has_condensed_phase is False
+
+    def test_service_inherits_no_condensed_phase_flag(self, lox_rp1_propellant):
+        assert lox_rp1_propellant.thermochemical_service.has_condensed_phase is False

@@ -85,4 +85,5 @@ class BiliquidPropellant(propellant_base.Propellant):
             oxidizer_name=oxidizer.name,
             fuel_name=fuel.name,
             oxidizer_to_fuel_ratio=self.oxidizer_to_fuel_ratio,
+            has_condensed_phase=self.has_condensed_phase,
         )
