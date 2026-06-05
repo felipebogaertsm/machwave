@@ -221,6 +221,43 @@ class TestBatesGrainCenterOfGravity:
         # CoG should be closer to segment 1 (more massive)
         assert cog[0] > 1.05, "CoG should be pulled toward the denser segment"
 
+    def test_zero_total_mass_falls_back_to_geometric_centroid(self):
+        """Zero density everywhere -> CoG is the geometric centroid, not nan."""
+        grain = grain_models.Grain(spacing=0.1)
+        for _ in range(2):
+            grain.add_segment(
+                grain_geometries.BatesSegment(
+                    outer_diameter=117e-3,
+                    core_diameter=45e-3,
+                    length=1.0,
+                    density_ratio=0.0,
+                )
+            )
+
+        cog = grain.get_center_of_gravity(web_distance=0.0)
+
+        assert np.all(np.isfinite(cog)), "CoG must stay finite when total mass is zero"
+        np.testing.assert_array_almost_equal(cog, np.array([1.05, 0.0, 0.0]))
+
+    def test_full_burnout_cog_stays_finite(self):
+        """Past burnout every segment has zero mass -> CoG stays finite."""
+        grain = grain_models.Grain(spacing=0.1)
+        for _ in range(2):
+            grain.add_segment(
+                grain_geometries.BatesSegment(
+                    outer_diameter=117e-3,
+                    core_diameter=45e-3,
+                    length=1.0,
+                    density_ratio=1.0,
+                )
+            )
+
+        web_thickness = grain.segments[0].get_web_thickness()
+        cog = grain.get_center_of_gravity(web_distance=web_thickness * 2)
+
+        assert np.all(np.isfinite(cog)), "CoG must stay finite at full burnout"
+        np.testing.assert_array_almost_equal(cog, np.array([1.05, 0.0, 0.0]))
+
     def test_two_segments_zero_spacing(self):
         """Test CoG with 2 BATES segments with zero spacing (touching)."""
         grain = grain_models.Grain(spacing=0.0)
