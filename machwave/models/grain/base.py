@@ -421,6 +421,7 @@ class Grain:
             raise ValueError("No segments found, cannot compute CoG.")
 
         weighted_cogs = []
+        global_cogs = []
         # Iterate segments in reverse order (last added is closest to port)
         axial_position = 0.0
 
@@ -431,19 +432,26 @@ class Grain:
             # Global CoG position from grain's port
             global_cog = local_cog.copy()
             global_cog[0] = axial_position + local_cog[0]
+            global_cogs.append(global_cog)
 
             mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
             weighted_cogs.append(global_cog * mass)
 
             axial_position += segment.length + self.spacing
 
-        total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
-            axis=0, dtype=np.float64
-        )
         volumes = self.get_propellant_volume_per_segment(web_distance)
         density_ratios = self.get_density_ratio_per_segment()
         total_mass_normalized = float(np.sum(volumes * density_ratios))
 
+        if total_mass_normalized <= 0.0:
+            weights = self.get_propellant_volume_per_segment(0.0)[::-1]
+            return np.average(
+                np.stack(global_cogs, axis=0), axis=0, weights=weights
+            ).astype(np.float64)
+
+        total_weighted_cogs = np.stack(weighted_cogs, axis=0).sum(
+            axis=0, dtype=np.float64
+        )
         return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
 
     def get_moment_of_inertia(
