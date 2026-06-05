@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 import machwave.core.geometric as geometric
+import machwave.models.grain as grain_models
 from tests.factories import BatesSegmentFactory, ConicalGrainSegmentFactory
 
 TOLERANCE = 0.15
@@ -133,3 +134,25 @@ def test_taper_places_lower_diameter_at_the_nozzle_end():
     # Each end's port matches its own core diameter, not the opposite end's.
     assert abs(nozzle_port - lower_bore) < abs(nozzle_port - upper_bore)
     assert abs(bulkhead_port - upper_bore) < abs(bulkhead_port - lower_bore)
+
+
+def test_segment_too_short_for_axial_map_is_rejected():
+    """int(100 * 0.002 / 0.1) == 2 slices -> rejected."""
+    with pytest.raises(grain_models.GrainGeometryError):
+        ConicalGrainSegmentFactory.build(
+            length=2e-3,
+            outer_diameter=100e-3,
+            upper_core_diameter=15e-3,
+            lower_core_diameter=10e-3,
+        )
+
+
+def test_three_axial_slices_is_accepted():
+    """int(100 * 0.0035 / 0.1) == 3, the minimum that validates."""
+    segment = ConicalGrainSegmentFactory.build(
+        length=3.5e-3,
+        outer_diameter=100e-3,
+        upper_core_diameter=15e-3,
+        lower_core_diameter=10e-3,
+    )
+    assert segment.get_normalized_length() == 3

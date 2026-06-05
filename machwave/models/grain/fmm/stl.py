@@ -62,6 +62,7 @@ class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
             raise grain.GrainGeometryError(
                 f"Map dimension must be at least 20 for STL grains, got {self.map_dim}"
             )
+        self._validate_normalized_length()
 
     def get_voxel_size(self) -> float:
         """Return the voxelization pitch [m]."""
