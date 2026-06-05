@@ -1,5 +1,6 @@
-import CoolProp.CoolProp as CP
 import numpy as np
+
+import machwave.services.coolprop as coolprop_service
 
 
 def get_homogeneous_equilibrium_mass_flux(
@@ -34,8 +35,10 @@ def get_homogeneous_equilibrium_mass_flux(
     if sweep_points < 2:
         raise ValueError("sweep_points must be at least 2")
 
+    coolprop = coolprop_service.CoolPropService(fluid_name)
+
     upstream_pressure = (
-        CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
+        coolprop.get_saturation_pressure(temperature_upstream)
         if pressure_upstream is None
         else pressure_upstream
     )
@@ -44,21 +47,21 @@ def get_homogeneous_equilibrium_mass_flux(
         return 0.0
 
     upstream_enthalpy, upstream_entropy = _get_stagnation_enthalpy_and_entropy(
-        fluid_name, temperature_upstream, upstream_pressure
+        coolprop, temperature_upstream, upstream_pressure
     )
 
     pressures = np.linspace(pressure_downstream, upstream_pressure, sweep_points)
     mass_flux = np.zeros_like(pressures)
     for index, pressure in enumerate(pressures):
         mass_flux[index] = _get_isentropic_mass_flux(
-            fluid_name, pressure, upstream_enthalpy, upstream_entropy
+            coolprop, pressure, upstream_enthalpy, upstream_entropy
         )
 
     return float(mass_flux.max())
 
 
 def _get_stagnation_enthalpy_and_entropy(
-    fluid_name: str,
+    coolprop: coolprop_service.CoolPropService,
     temperature: float,
     pressure: float,
 ) -> tuple[float, float]:
@@ -69,7 +72,7 @@ def _get_stagnation_enthalpy_and_entropy(
     when the pressure-temperature pair lies on the saturation curve.
 
     Args:
-        fluid_name: CoolProp fluid name.
+        coolprop: Fluid-property service bound to the working fluid.
         temperature: Stagnation temperature [K].
         pressure: Stagnation pressure [Pa].
 
@@ -77,17 +80,17 @@ def _get_stagnation_enthalpy_and_entropy(
         Tuple of enthalpy [J/kg] and entropy [J/(kg K)].
     """
     try:
-        enthalpy = CP.PropsSI("H", "P", pressure, "T", temperature, fluid_name)
-        entropy = CP.PropsSI("S", "P", pressure, "T", temperature, fluid_name)
+        enthalpy = coolprop.get_enthalpy_at_temperature_pressure(temperature, pressure)
+        entropy = coolprop.get_entropy_at_temperature_pressure(temperature, pressure)
         return enthalpy, entropy
     except ValueError:
-        enthalpy = CP.PropsSI("H", "T", temperature, "Q", 0, fluid_name)
-        entropy = CP.PropsSI("S", "T", temperature, "Q", 0, fluid_name)
+        enthalpy = coolprop.get_saturated_liquid_enthalpy(temperature)
+        entropy = coolprop.get_saturated_liquid_entropy(temperature)
         return enthalpy, entropy
 
 
 def _get_isentropic_mass_flux(
-    fluid_name: str,
+    coolprop: coolprop_service.CoolPropService,
     pressure: float,
     enthalpy_upstream: float,
     entropy_upstream: float,
@@ -96,7 +99,7 @@ def _get_isentropic_mass_flux(
     Get the isentropic mass flux at a given pressure for a known upstream state.
 
     Args:
-        fluid_name: CoolProp fluid name.
+        coolprop: Fluid-property service bound to the working fluid.
         pressure: Downstream pressure [Pa].
         enthalpy_upstream: Upstream stagnation enthalpy [J/kg].
         entropy_upstream: Upstream stagnation entropy [J/(kg K)].
@@ -106,8 +109,8 @@ def _get_isentropic_mass_flux(
         the upstream value or if CoolProp cannot evaluate the state.
     """
     try:
-        density = CP.PropsSI("D", "P", pressure, "S", entropy_upstream, fluid_name)
-        enthalpy = CP.PropsSI("H", "P", pressure, "S", entropy_upstream, fluid_name)
+        density = coolprop.get_density_at_pressure_entropy(pressure, entropy_upstream)
+        enthalpy = coolprop.get_enthalpy_at_pressure_entropy(pressure, entropy_upstream)
     except ValueError:
         return 0.0
     delta_enthalpy = enthalpy_upstream - enthalpy
