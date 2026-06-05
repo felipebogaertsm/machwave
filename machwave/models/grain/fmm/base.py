@@ -226,7 +226,7 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             else:
                 # End burner: web = length split across exposed ends. Fill the
                 # whole array with one constant (not 0 outside the mask) so the
-                # perimeter tracer finds no spurious contour -> zero core area.
+                # perimeter tracer finds no spurious contour.
                 exposed_ends = (not self.inhibited_surfaces.upper_end) + (
                     not self.inhibited_surfaces.lower_end
                 )
