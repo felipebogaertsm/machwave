@@ -74,6 +74,20 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def get_normalized_length(self) -> int:
         return int(self.map_dim * self.length / self.outer_diameter)
 
+    def validate(self) -> None:
+        super().validate()
+        self._validate_normalized_length()
+
+    def _validate_normalized_length(self) -> None:
+        # < 3 slices: get_port_area indexes a size-0 axis and inhibition is skipped
+        normalized_length = self.get_normalized_length()
+        if normalized_length < 3:
+            raise grain.GrainGeometryError(
+                f"Normalized axial length must be at least 3, got "
+                f"{normalized_length}; increase map_dim or the "
+                f"length-to-outer-diameter ratio."
+            )
+
     def get_maps(
         self,
     ) -> tuple[
