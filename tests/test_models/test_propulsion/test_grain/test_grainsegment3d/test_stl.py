@@ -60,6 +60,7 @@ def test_volume_matches_the_analytical_tube(tube_segment):
         dict(outer_diameter=-1e-3),
         dict(length=0.0),
         dict(map_dim=10),  # below the STL map-dimension floor of 20
+        dict(length=2e-3),  # axial map collapses below three slices
     ],
 )
 def test_invalid_geometry_raises(tube_stl_path, overrides):
