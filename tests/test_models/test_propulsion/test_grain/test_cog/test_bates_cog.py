@@ -221,42 +221,49 @@ class TestBatesGrainCenterOfGravity:
         # CoG should be closer to segment 1 (more massive)
         assert cog[0] > 1.05, "CoG should be pulled toward the denser segment"
 
-    def test_zero_total_mass_falls_back_to_geometric_centroid(self):
-        """Zero density everywhere -> CoG is the geometric centroid, not nan."""
+    def test_zero_mass_cog_is_initial_volume_weighted(self):
+        """Zero density on unequal segments -> CoG is the initial-volume centroid."""
         grain = grain_models.Grain(spacing=0.1)
-        for _ in range(2):
-            grain.add_segment(
-                grain_geometries.BatesSegment(
-                    outer_diameter=117e-3,
-                    core_diameter=45e-3,
-                    length=1.0,
-                    density_ratio=0.0,
-                )
-            )
+        small = grain_geometries.BatesSegment(
+            outer_diameter=117e-3, core_diameter=45e-3, length=1.0, density_ratio=0.0
+        )
+        big = grain_geometries.BatesSegment(
+            outer_diameter=117e-3, core_diameter=45e-3, length=3.0, density_ratio=0.0
+        )
+        grain.add_segment(small)  # forward, center at 3.6
+        grain.add_segment(big)  # aft, center at 1.5
 
         cog = grain.get_center_of_gravity(web_distance=0.0)
 
+        v_small, v_big = small.get_volume(0.0), big.get_volume(0.0)
+        expected_x = (3.6 * v_small + 1.5 * v_big) / (v_small + v_big)
         assert np.all(np.isfinite(cog)), "CoG must stay finite when total mass is zero"
-        np.testing.assert_array_almost_equal(cog, np.array([1.05, 0.0, 0.0]))
+        np.testing.assert_array_almost_equal(cog, np.array([expected_x, 0.0, 0.0]))
 
-    def test_full_burnout_cog_stays_finite(self):
-        """Past burnout every segment has zero mass -> CoG stays finite."""
+    def test_full_burnout_cog_has_no_large_spike(self):
+        """Unequal segments: burnout CoG stays near the pre-burnout limit.
+
+        The unweighted centroid would jump ~0.5 m at the dead tail; weighting by
+        initial volume keeps it continuous with the burn.
+        """
         grain = grain_models.Grain(spacing=0.1)
-        for _ in range(2):
-            grain.add_segment(
-                grain_geometries.BatesSegment(
-                    outer_diameter=117e-3,
-                    core_diameter=45e-3,
-                    length=1.0,
-                    density_ratio=1.0,
-                )
+        grain.add_segment(
+            grain_geometries.BatesSegment(
+                outer_diameter=117e-3, core_diameter=45e-3, length=1.0
             )
+        )
+        grain.add_segment(
+            grain_geometries.BatesSegment(
+                outer_diameter=117e-3, core_diameter=45e-3, length=3.0
+            )
+        )
 
         web_thickness = grain.segments[0].get_web_thickness()
-        cog = grain.get_center_of_gravity(web_distance=web_thickness * 2)
+        before = grain.get_center_of_gravity(web_distance=web_thickness * 0.99)
+        after = grain.get_center_of_gravity(web_distance=web_thickness * 1.5)
 
-        assert np.all(np.isfinite(cog)), "CoG must stay finite at full burnout"
-        np.testing.assert_array_almost_equal(cog, np.array([1.05, 0.0, 0.0]))
+        assert np.all(np.isfinite(after)), "CoG must stay finite at full burnout"
+        np.testing.assert_allclose(after, before, atol=0.05)
 
     def test_two_segments_zero_spacing(self):
         """Test CoG with 2 BATES segments with zero spacing (touching)."""
