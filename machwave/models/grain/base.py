@@ -444,10 +444,6 @@ class Grain:
         total_mass_normalized = float(np.sum(volumes * density_ratios))
 
         if total_mass_normalized <= 0.0:
-            # zero mass (burnout / zero density): mass-weighted CoG is undefined.
-            # Weight by initial (unburned) volume instead -- non-zero for any
-            # valid grain and continuous with the burn, so no end-of-trace spike.
-            # global_cogs is in reversed-segment order, so reverse the weights.
             weights = self.get_propellant_volume_per_segment(0.0)[::-1]
             return np.average(
                 np.stack(global_cogs, axis=0), axis=0, weights=weights

@@ -134,12 +134,11 @@ class SolidMotorState(simulation_states.MotorState):
         propellant_mass = float(np.sum(propellant_mass_per_segment))
         self.propellant_mass.append(propellant_mass)
 
-        # No propellant left -> CoG is undefined; record a gap, not a value
         if propellant_mass > 0.0:
             propellant_cog = self.motor.grain.get_center_of_gravity(
                 web_distance=web_distance
             )
-        else:
+        else:  # no propellant left, CoG is undefined
             propellant_cog = np.full(3, np.nan)
         self.propellant_cog.append(propellant_cog)
         propellant_moi = self.motor.grain.get_moment_of_inertia(
