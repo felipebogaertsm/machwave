@@ -24,7 +24,7 @@ verify-version:
 	fi; \
 	echo "Version verified: $$PKG_VERSION"
 test:
-	@uv run pytest
+	@uv run pytest -n auto
 benchmark:
 	@uv run pytest tests/benchmarks --benchmark-only --benchmark-columns=min,median,mean,stddev,rounds
 publish:
