@@ -214,9 +214,9 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         Return the distance map for grain regression.
 
         Uses the fast marching method (scikit-fmm) on the masked face. Each
-        value represents the distance from the initial face along the
-        cross-section of the grain. When the cross-section has no burning
-        surface (end burner), a static map is returned instead.
+        value is the distance from the initial face along the cross-section.
+        With no burning surface (end burner), returns a static map set to the
+        axial burnout web, so the grain regresses along its length, not a cell.
         """
         if self.regression_map is None:
             masked_face = self.get_masked_face()
@@ -224,10 +224,18 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             if self.has_cross_section_regression:
                 self.regression_map = self._regression_distance(masked_face)
             else:
-                unmasked = ~np.ma.getmaskarray(masked_face)
+                # End burner: web = length split across exposed ends. Fill the
+                # whole array with one constant (not 0 outside the mask) so the
+                # perimeter tracer finds no spurious contour -> zero core area.
+                exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+                    not self.inhibited_surfaces.lower_end
+                )
+                axial_web = (
+                    self.normalize(self.length / exposed_ends) if exposed_ends else 0.0
+                )
                 self.regression_map = np.ma.MaskedArray(
-                    np.where(unmasked, self.get_cell_size(), 0.0),
-                    mask=~unmasked,
+                    np.full(masked_face.shape, axial_web),
+                    mask=np.ma.getmaskarray(masked_face),
                 )
         return self.regression_map
 
