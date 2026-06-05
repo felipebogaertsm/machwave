@@ -205,6 +205,10 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         unmasked = ~np.ma.getmaskarray(masked_face)
         return bool(np.any(masked_face.data[np.asarray(unmasked, dtype=bool)] == 0))
 
+    def _regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
+        """Return the regression distance from the burning surface in normalized web units."""
+        return skfmm.distance(masked_face, dx=self.get_cell_size()) * 2
+
     def get_regression_map(self):
         """
         Return the distance map for grain regression.
@@ -218,9 +222,7 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             masked_face = self.get_masked_face()
 
             if self.has_cross_section_regression:
-                self.regression_map = (
-                    skfmm.distance(masked_face, dx=self.get_cell_size()) * 2
-                )
+                self.regression_map = self._regression_distance(masked_face)
             else:
                 unmasked = ~np.ma.getmaskarray(masked_face)
                 self.regression_map = np.ma.MaskedArray(
