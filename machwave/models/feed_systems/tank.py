@@ -1,6 +1,5 @@
-import CoolProp.CoolProp as CP
-
 import machwave.core.ideal_gas as ideal_gas
+import machwave.services.coolprop as coolprop_service
 
 
 class Tank:
@@ -51,12 +50,14 @@ class Tank:
 
         self._validate()
 
+        self._coolprop = coolprop_service.CoolPropService(fluid_name)
+
         # The tank is isothermal with a fixed fluid, so these properties are constant
         # and cached
-        self.molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
-        self.saturation_pressure = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
-        self.saturated_liquid_density = CP.PropsSI(
-            "D", "T", temperature, "Q", 0, fluid_name
+        self.molar_mass = self._coolprop.get_molar_mass()  # kg/mol
+        self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
+        self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
+            temperature
         )
         # Single phase density at the tank temperature, memoized per pressure.
         self._density_by_pressure: dict[float, float | None] = {}
@@ -174,8 +175,10 @@ class Tank:
         """
         if pressure not in self._density_by_pressure:
             try:
-                self._density_by_pressure[pressure] = CP.PropsSI(
-                    "D", "T", self.temperature, "P", pressure, self.fluid_name
+                self._density_by_pressure[pressure] = (
+                    self._coolprop.get_density_at_temperature_pressure(
+                        self.temperature, pressure
+                    )
                 )
             except ValueError:
                 self._density_by_pressure[pressure] = None
