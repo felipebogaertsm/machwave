@@ -14,6 +14,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
         outer_diameter: float,
         slot_offset: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -24,6 +25,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
             outer_diameter: Outer diameter [m].
             slot_offset: Distance from the grain center to the slot face [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.slot_offset = slot_offset
@@ -32,6 +34,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 

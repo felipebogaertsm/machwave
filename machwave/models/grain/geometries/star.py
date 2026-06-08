@@ -16,6 +16,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
         point_length: float,
         point_width: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -28,6 +29,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
             point_length: Radial length of each point [m].
             point_width: Width of each point at the base [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.number_of_points = int(number_of_points)
@@ -38,6 +40,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 
