@@ -78,3 +78,7 @@
   font-family: "Space Grotesk", sans-serif;
   font-weight: 600;
 }
+
+.md-typeset p:has(> img) {
+  text-align: center;
+}
