@@ -1,11 +1,10 @@
 """
 Constant-bore conical burn area versus the analytical hollow cylinder.
 
-The 3D per-slice integration accumulates the core (lateral) burning surface, so
-the comparison is against the BATES core area rather than its full burn area,
-which also counts the two exposed end faces. Results depend on map_dim; the 15%
-tolerance absorbs the marching-squares quantization and the Savitzky-Golay
-smoothing, and the sweep stops at 80% web where the near-casing accuracy drops.
+With inhibited ends the grain is a pure-radial burner whose lateral burning
+area is exactly pi * (core + 2 * web) * length. Results depend on map_dim; the
+15% tolerance absorbs the marching-squares quantization and the Savitzky-Golay
+smoothing, and the sweep stops at 80% web.
 """
 
 import numpy as np
@@ -13,8 +12,12 @@ import pytest
 
 import machwave.core.geometric as geometric
 import machwave.models.grain as grain_models
+from machwave.models.grain.base import InhibitedSurfaces
 from tests.factories import BatesSegmentFactory, ConicalGrainSegmentFactory
 
+LENGTH = 68e-3
+OUTER_DIAMETER = 41e-3
+CORE_DIAMETER = 15e-3
 TOLERANCE = 0.15
 WEB_DISTANCE_TRAVEL_PERCENTAGE = 0.8
 NUMBER_OF_ITERATIONS = 3
@@ -23,38 +26,65 @@ NUMBER_OF_ITERATIONS = 3
 @pytest.fixture
 def conical_grain_segment_1():
     return ConicalGrainSegmentFactory.build(
-        length=68e-3,
-        outer_diameter=41e-3,
-        upper_core_diameter=15e-3,
-        lower_core_diameter=15e-3,
+        length=LENGTH,
+        outer_diameter=OUTER_DIAMETER,
+        upper_core_diameter=CORE_DIAMETER,
+        lower_core_diameter=CORE_DIAMETER,
+    )
+
+
+@pytest.fixture
+def radial_conical():
+    """Constant-bore conical with inhibited ends: a pure-radial hollow cylinder."""
+    return ConicalGrainSegmentFactory.build(
+        length=LENGTH,
+        outer_diameter=OUTER_DIAMETER,
+        upper_core_diameter=CORE_DIAMETER,
+        lower_core_diameter=CORE_DIAMETER,
+        inhibited_surfaces=InhibitedSurfaces(
+            outer_surface=True, upper_end=True, lower_end=True
+        ),
     )
 
 
 @pytest.fixture
 def bates_equivalent_1():
     return BatesSegmentFactory.build(
-        length=68e-3,
-        outer_diameter=41e-3,
-        core_diameter=15e-3,
+        length=LENGTH,
+        outer_diameter=OUTER_DIAMETER,
+        core_diameter=CORE_DIAMETER,
     )
 
 
-def test_burn_area(conical_grain_segment_1, bates_equivalent_1):
-    web_thickness = conical_grain_segment_1.get_web_thickness()
+def test_burn_area(radial_conical):
+    web_thickness = radial_conical.get_web_thickness()
 
     for web_distance in np.linspace(
         0, web_thickness * WEB_DISTANCE_TRAVEL_PERCENTAGE, NUMBER_OF_ITERATIONS
     ):
-        value = conical_grain_segment_1.get_burn_area(web_distance)
+        value = radial_conical.get_burn_area(web_distance)
 
         assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
-        expected_value = bates_equivalent_1.get_core_area(web_distance)
-        tolerance = expected_value * TOLERANCE
+        expected_value = np.pi * (CORE_DIAMETER + 2 * web_distance) * LENGTH
 
-        assert value == pytest.approx(expected_value, abs=tolerance), (
-            f"Expected value {expected_value} with tolerance {tolerance}, but got {value} for web_distance {web_distance} out of {web_thickness}"
+        assert value == pytest.approx(expected_value, rel=TOLERANCE), (
+            f"Expected {expected_value} (rel {TOLERANCE}), got {value} for "
+            f"web_distance {web_distance} out of {web_thickness}"
         )
+
+
+def test_burn_area_includes_end_faces(conical_grain_segment_1, bates_equivalent_1):
+    """With exposed ends, the burn area counts the two end faces (core + 2 faces).
+
+    The marching-cubes surface meshes the axial end faces that a per-slice
+    perimeter misses, so an uninhibited constant-bore conical matches the full
+    BATES burn area, not just its core area.
+    """
+    conical_initial = conical_grain_segment_1.get_burn_area(0.0)
+    bates_initial = bates_equivalent_1.get_burn_area(0.0)  # core + 2 end faces
+
+    assert conical_initial == pytest.approx(bates_initial, rel=TOLERANCE)
 
 
 def test_port_area(conical_grain_segment_1, bates_equivalent_1):
