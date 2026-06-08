@@ -161,7 +161,9 @@ def write_geometry_animations(path):
         (
             "Rod and tube",
             geometries.RodAndTubeGrainSegment,
-            dict(rod_outer_diameter=0.26, tube_inner_diameter=0.62),
+            # rod_od + tube_id == outer_diameter -> rod burns out exactly as the
+            # tube reaches the casing, so the burn is perfectly neutral.
+            dict(rod_outer_diameter=0.30, tube_inner_diameter=0.70),
         ),
         (
             "Multi-port",
@@ -170,7 +172,7 @@ def write_geometry_animations(path):
         ),
         ("D-grain", geometries.DGrainSegment, dict(slot_offset=0.06)),
     ]
-    gmap_dim, n_frames, target_pts = 120, 22, 64
+    gmap_dim, n_frames, target_pts = 220, 24, 120
     front_col, open_col, case_col, prop_col = "#e2683c", "#f7f2ea", "#454a52", "#cdbb92"
     pw, ph, pad, r_case, r_prop, disc_cy = 168, 196, 8, 70, 64, 84
     dur, reveal_end = "6s", 0.85
@@ -214,7 +216,8 @@ def write_geometry_animations(path):
             d = " ".join(d_parts)
             shape = (
                 f'<path d="{d}" fill="{open_col}" fill-rule="evenodd" '
-                f'stroke="{front_col}" stroke-width="2.5"'
+                f'stroke="{front_col}" stroke-width="2.5" '
+                'stroke-linejoin="round" stroke-linecap="round"'
             )
             if i == 0:
                 parts.append(shape + "/>")
