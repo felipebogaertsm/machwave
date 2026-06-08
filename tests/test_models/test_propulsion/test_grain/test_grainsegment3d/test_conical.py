@@ -1,17 +1,11 @@
 """
-NOTE: Due to the nature of the FMM algorithm, the results of this test are
-dependent on the map_dim parameter. The higher the map_dim, the more accurate
-the results will be, but the slower the algorithm will be.
+Constant-bore conical burn area versus the analytical hollow cylinder.
 
-The burn-area curve is additionally passed through a Savitzky-Golay smoothing
-filter, which replaces individual quantized samples with a local trend and so
-shifts the comparison by a couple of percent (it reveals that the systematic
-overestimate for this constant-bore conical grain is closer to ten percent than
-the luckier raw samples suggested). Combined with the map_dim discretization
-bias and small floating-point differences across platforms, the tolerance is set
-to 15% of the expected value. The tests only run for a web distance up to 80% of
-the web thickness, since the FMM algorithm is not accurate enough (given the
-lower map_dim) for the last 20% of the web thickness.
+The 3D per-slice integration accumulates the core (lateral) burning surface, so
+the comparison is against the BATES core area rather than its full burn area,
+which also counts the two exposed end faces. Results depend on map_dim; the 15%
+tolerance absorbs the marching-squares quantization and the Savitzky-Golay
+smoothing, and the sweep stops at 80% web where the near-casing accuracy drops.
 """
 
 import numpy as np
@@ -55,7 +49,7 @@ def test_burn_area(conical_grain_segment_1, bates_equivalent_1):
 
         assert isinstance(value, float), f"Expected float, but got {type(value)}"
 
-        expected_value = bates_equivalent_1.get_burn_area(web_distance)
+        expected_value = bates_equivalent_1.get_core_area(web_distance)
         tolerance = expected_value * TOLERANCE
 
         assert value == pytest.approx(expected_value, abs=tolerance), (
