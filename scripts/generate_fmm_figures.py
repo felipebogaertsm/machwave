@@ -80,7 +80,7 @@ def write_animation(path):
     width, height = 560, 320
     cx, cy = 160, 160
     r_case, r_prop, r_bore, r_max = 150, 140, 36, 138
-    front_col, arrow_col, handle = "#e2683c", "#6b7079", 14
+    front_col, arrow_col, handle = "#e2683c", "#6b7079", 20
     keytimes, dur = "0;0.82;1", "4s"
     anim_r = (
         f'<animate attributeName="r" values="{r_bore};{r_max};{r_max}" '
