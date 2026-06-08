@@ -74,6 +74,19 @@ def test_burn_area(radial_conical):
         )
 
 
+def test_burn_area_includes_end_faces(conical_grain_segment_1, bates_equivalent_1):
+    """With exposed ends, the burn area counts the two end faces (core + 2 faces).
+
+    The marching-cubes surface meshes the axial end faces that a per-slice
+    perimeter misses, so an uninhibited constant-bore conical matches the full
+    BATES burn area, not just its core area.
+    """
+    conical_initial = conical_grain_segment_1.get_burn_area(0.0)
+    bates_initial = bates_equivalent_1.get_burn_area(0.0)  # core + 2 end faces
+
+    assert conical_initial == pytest.approx(bates_initial, rel=TOLERANCE)
+
+
 def test_port_area(conical_grain_segment_1, bates_equivalent_1):
     value = conical_grain_segment_1.get_port_area(0, 0.01)
 
