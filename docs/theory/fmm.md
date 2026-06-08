@@ -8,7 +8,7 @@ The idea rests on Piobert's law: a burning surface recedes perpendicular to itse
 
 ![Grain regression overview](../assets/theory/fmm/regression_overview.svg)
 
-*The burning surface starts at the port and regresses outward through the propellant, staying perpendicular to itself, until it reaches the inhibited casing. Each ring is the front at a later time; FMM records, for every point, the web distance at which the front arrives.*
+*The burning surface starts at the port and regresses outward through the propellant, staying perpendicular to itself, until it reaches the inhibited casing. FMM records, for every point, the web distance at which the front arrives.*
 
 That one map is all you need. The grain after burning a web `w` is simply every point whose value still exceeds `w`, since everything closer to the surface has already burned. The burning surface at that instant is the set of points whose value equals `w`. Once the map exists, burn area, port area, remaining volume, and mass properties at any `w` are cheap lookups instead of a fresh geometry calculation. It behaves like a topographic map of "depth into the propellant": flood it to level `w`, and the shoreline is the flame front.
 

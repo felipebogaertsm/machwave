@@ -78,8 +78,8 @@ def write_overview(path):
     """Schematic of the burning surface regressing outward through the grain."""
     width, height = 560, 320
     cx, cy = 160, 160
-    r_case, r_prop, r_open, r_bore = 150, 140, 122, 36
-    rings = [(64, "#f4a259"), (94, "#e8743b"), (122, "#d63a26")]
+    r_case, r_prop, r_bore = 150, 140, 36
+    front_r, front_col = 92, "#e2683c"
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
         f'height="{height}" viewBox="0 0 {width} {height}" '
@@ -91,18 +91,15 @@ def write_overview(path):
         'fill="#ffffff" stroke="#e6e6e6"/>',
         f'<circle cx="{cx}" cy="{cy}" r="{r_case}" fill="#454a52"/>',
         f'<circle cx="{cx}" cy="{cy}" r="{r_prop}" fill="#cdbb92"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_open}" fill="#f7f2ea"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{front_r}" fill="#f7f2ea"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{front_r}" fill="none" '
+        f'stroke="{front_col}" stroke-width="6"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>',
     ]
-    for r, col in rings:
-        parts.append(
-            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
-            f'stroke="{col}" stroke-width="5"/>'
-        )
-    parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>')
     for k in range(8):
         a = np.radians(k * 45 + 22.5)
         x1, y1 = cx + 42 * np.cos(a), cy + 42 * np.sin(a)
-        x2, y2 = cx + 110 * np.cos(a), cy + 110 * np.sin(a)
+        x2, y2 = cx + 84 * np.cos(a), cy + 84 * np.sin(a)
         parts.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
             'stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>'
@@ -111,7 +108,7 @@ def write_overview(path):
     rows = [
         ("swatch", "#cdbb92", "Propellant grain"),
         ("swatch", "#454a52", "Inhibited surface (casing)"),
-        ("rings", None, "Burning surface (t1, t2, t3)"),
+        ("line", front_col, "Burning surface"),
         ("arrow", None, "Direction of regression"),
     ]
     for kind, col, text in rows:
@@ -120,12 +117,11 @@ def write_overview(path):
                 f'<rect x="{lx}" y="{y - 14}" width="20" height="20" rx="3" '
                 f'fill="{col}" stroke="#bbbbbb"/>'
             )
-        elif kind == "rings":
-            for i, (_, rc) in enumerate(rings):
-                parts.append(
-                    f'<rect x="{lx + i * 8}" y="{y - 14}" width="6" height="20" '
-                    f'rx="2" fill="{rc}"/>'
-                )
+        elif kind == "line":
+            parts.append(
+                f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 20}" y2="{y - 4}" '
+                f'stroke="{col}" stroke-width="5"/>'
+            )
         else:
             parts.append(
                 f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 18}" y2="{y - 4}" '
