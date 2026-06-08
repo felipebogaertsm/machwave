@@ -166,8 +166,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def _get_burn_area_uncached(self, *, map_dist: float) -> float:
         regression_map = self.get_regression_map()
 
-        web_distance = float(self.denormalize(map_dist))
-        length_factor = self.get_length(web_distance=web_distance) / self.map_dim
+        length_factor = self.length / self.get_normalized_length()
 
         # Slices with an identical cross-section trace to an identical contour at
         # this map_dist, so each distinct slice is traced only once.
