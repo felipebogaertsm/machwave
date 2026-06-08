@@ -151,7 +151,7 @@ The face map of a web distance is can be obtained by thresholding the regression
 
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
-**Trace the front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
+**Contour the front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
 The flame front is the boundary between the solid and burned cells above. It is traced as a curve (one closed loop of 29 points here, in `(row, col)`) by `get_contours` in `machwave.models.grain.fmm.contours`; `get_length` from that module sums the curve into the burning perimeter, dropping any stretch that lies on the casing wall.
 
 ```
