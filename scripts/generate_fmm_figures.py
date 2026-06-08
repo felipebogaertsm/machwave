@@ -172,7 +172,7 @@ def write_geometry_animations(path):
         ),
         ("D-grain", geometries.DGrainSegment, dict(slot_offset=0.06)),
     ]
-    gmap_dim, n_frames, target_pts = 220, 24, 120
+    gmap_dim, n_frames, target_pts = 120, 44, 64
     front_col, open_col, case_col, prop_col = "#e2683c", "#f7f2ea", "#454a52", "#cdbb92"
     pw, ph, pad, r_case, r_prop, disc_cy = 168, 196, 8, 70, 64, 84
     dur, reveal_end = "6s", 0.85

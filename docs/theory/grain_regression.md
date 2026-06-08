@@ -108,7 +108,7 @@ Mask the initial face with the outer diameter, then apply the inihbitors with `_
 ![masked face](../assets/theory/grain_regression/masked_face.svg)
 
 **Compute the regression map: [`get_regression_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_regression_map].**
-Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. This is the map the whole analysis hangs on: its largest value is the web thickness (here `0.270 m`, via [`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
+Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. The map's largest value is the web thickness ([`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
 
 ```
   ·   ·   ·   ·   ·   · 0.5   ·   ·   ·   ·   ·   ·
