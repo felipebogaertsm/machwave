@@ -5,12 +5,12 @@ As the propellant burns, combustion products are released (mostly in gaseous for
 The burn direction is always perpendicular to the uninhibited surface (Piobert's Law), so the shape of that surface determines how much area is burning at any moment.
 Determining the shape of the burning surface as a function of how far it has receded is called regression analysis.
 
-![Animated grain regression](../assets/theory/fmm/regression_animation.svg)
+![Animated grain regression](../assets/theory/grain_regression/regression_animation.svg)
 
 For a tubular or BATES geometry, the burn area can be easily determined analytically as a function of the web distance distance traveled.
 However, for more complex geometries, the burn area may need to be determined through numerical methods.
 
-![Complex port geometries regressing](../assets/theory/fmm/geometry_animations.svg)
+![Complex port geometries regressing](../assets/theory/grain_regression/geometry_animations.svg)
 
 *Star, rod-and-tube, multi-port, and D-grain ports regressing to burnout. The same distance map drives every shape: points round off, separate ports merge, and an inner rod is consumed before the surrounding tube.*
 
@@ -39,8 +39,8 @@ x by column:  -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67 
 y by row:     -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67  0.83  1.00
 ```
 
-![map_x gradient](../assets/theory/fmm/coord_x.svg)
-![map_y gradient](../assets/theory/fmm/coord_y.svg)
+![map_x gradient](../assets/theory/grain_regression/coord_x.svg)
+![map_y gradient](../assets/theory/grain_regression/coord_y.svg)
 
 Every later step works from each cell's distance from the center, $\sqrt{x^2 + y^2}$.
 
@@ -63,7 +63,7 @@ A `1` marks a cell outside the casing wall ($x^2 + y^2 > 1$); the `0` cells are 
  1  1  1  1  1  1  0  1  1  1  1  1  1
 ```
 
-![casing mask](../assets/theory/fmm/mask.svg)
+![casing mask](../assets/theory/grain_regression/mask.svg)
 
 **Carve the port: [`get_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_initial_face_map].**
 Each grain geometry draws its own port shape here; this example uses a round bore. Cells on the burning surface are `0`, solid propellant is `1`.
@@ -84,7 +84,7 @@ Each grain geometry draws its own port shape here; this example uses a round bor
  1  1  1  1  1  1  1  1  1  1  1  1  1
 ```
 
-![initial port](../assets/theory/fmm/initial_face.svg)
+![initial port](../assets/theory/grain_regression/initial_face.svg)
 
 **Apply the inhibitors: [`get_masked_face()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_masked_face].**
 Combine the port with the casing, then decide which surfaces are allowed to burn (`_apply_inhibition`). An inhibited inner surface stops the bore from burning, inhibited ends protect the end faces in 3D, and an uninhibited outer surface lets the wall burn inward. The grain here is case-bonded (outer surface inhibited, the default), so only the bore burns; the dots are outside the casing.
@@ -105,7 +105,7 @@ Combine the port with the casing, then decide which surfaces are allowed to burn
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
 ```
 
-![masked face](../assets/theory/fmm/masked_face.svg)
+![masked face](../assets/theory/grain_regression/masked_face.svg)
 
 **Build the map: [`get_regression_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_regression_map].**
 Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. This is the map the whole analysis hangs on: its largest value is the web thickness (here `0.270 m`, via [`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
@@ -126,7 +126,7 @@ Now the fast marching method runs. `skfmm.distance` fills every propellant cell 
   ·   ·   ·   ·   ·   · 0.5   ·   ·   ·   ·   ·   ·
 ```
 
-![regression field gradient](../assets/theory/fmm/regression.svg)
+![regression field gradient](../assets/theory/grain_regression/regression.svg)
 
 *Bright cells sit on the burning surface; the color darkens with depth into the web, so the gradient is the order in which the propellant burns.*
 
@@ -149,7 +149,7 @@ To see the grain after it has burned a web `w`, keep the cells whose map value s
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
 ```
 
-![regressed face map](../assets/theory/fmm/face_map.svg)
+![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
 **Trace the front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
 The flame front is the boundary between the solid and burned cells above. It is traced as a curve (one closed loop of 29 points here, in `(row, col)`) by `get_contours` in `machwave.models.grain.fmm.contours`; `get_length` from that module sums the curve into the burning perimeter, dropping any stretch that lies on the casing wall.
@@ -159,7 +159,7 @@ The flame front is the boundary between the solid and burned cells above. It is 
 ... (6.0, 2.4) (7.0, 2.4) (8.0, 2.9) (9.0, 3.8) (9.6, 5.0) (9.6, 6.0) ... (closed)
 ```
 
-![burning front contour](../assets/theory/fmm/contours.svg)
+![burning front contour](../assets/theory/grain_regression/contours.svg)
 
 From the regressed grid Machwave reads everything the ballistics solver needs: the burning and port areas ([`get_burn_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area], [`get_port_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area]), the remaining volume, and the center of gravity and inertia tensor ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]). Repeating the threshold at each web distance traces these out across the whole burn.
 

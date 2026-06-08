@@ -2,7 +2,7 @@
 
 Runs the real 2D FMM pipeline on a generic circular bore at a coarse map_dim
 (so the arrays match the matrices printed on the page) and writes one small
-hand-built SVG per step into docs/assets/theory/fmm/, plus a looping animation
+hand-built SVG per step into docs/assets/theory/grain_regression/, plus a looping animation
 of the burn for the page intro.
 """
 
@@ -20,7 +20,7 @@ OUT = "#eceff1"  # outside the casing
 PROP = "#cdbb92"  # solid propellant
 BURN = "#e2683c"  # burning surface / burned away
 GRID = "#ffffff"
-OUT_DIR = Path("docs/assets/theory/fmm")
+OUT_DIR = Path("docs/assets/theory/grain_regression")
 
 VIRIDIS = [(68, 1, 84), (59, 82, 139), (33, 145, 140), (94, 201, 98), (253, 231, 37)]
 COOLWARM = [(59, 76, 192), (221, 221, 221), (180, 4, 38)]
