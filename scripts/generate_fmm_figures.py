@@ -74,6 +74,71 @@ def write_svg(path, colors, polyline=None):
     path.write_text("\n".join(parts) + "\n")
 
 
+def write_overview(path):
+    """Schematic of the burning surface regressing outward through the grain."""
+    width, height = 560, 320
+    cx, cy = 160, 160
+    r_case, r_prop, r_open, r_bore = 150, 140, 122, 36
+    rings = [(64, "#f4a259"), (94, "#e8743b"), (122, "#d63a26")]
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
+        f'height="{height}" viewBox="0 0 {width} {height}" '
+        'font-family="sans-serif">',
+        '<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="5" '
+        'refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7 z" fill="#6b7079"/>'
+        "</marker></defs>",
+        f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="12" '
+        'fill="#ffffff" stroke="#e6e6e6"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_case}" fill="#454a52"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_prop}" fill="#cdbb92"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_open}" fill="#f7f2ea"/>',
+    ]
+    for r, col in rings:
+        parts.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
+            f'stroke="{col}" stroke-width="5"/>'
+        )
+    parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>')
+    for k in range(8):
+        a = np.radians(k * 45 + 22.5)
+        x1, y1 = cx + 42 * np.cos(a), cy + 42 * np.sin(a)
+        x2, y2 = cx + 110 * np.cos(a), cy + 110 * np.sin(a)
+        parts.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+            'stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>'
+        )
+    lx, y, rh = 344, 84, 46
+    rows = [
+        ("swatch", "#cdbb92", "Propellant grain"),
+        ("swatch", "#454a52", "Inhibited surface (casing)"),
+        ("rings", None, "Burning surface (t1, t2, t3)"),
+        ("arrow", None, "Direction of regression"),
+    ]
+    for kind, col, text in rows:
+        if kind == "swatch":
+            parts.append(
+                f'<rect x="{lx}" y="{y - 14}" width="20" height="20" rx="3" '
+                f'fill="{col}" stroke="#bbbbbb"/>'
+            )
+        elif kind == "rings":
+            for i, (_, rc) in enumerate(rings):
+                parts.append(
+                    f'<rect x="{lx + i * 8}" y="{y - 14}" width="6" height="20" '
+                    f'rx="2" fill="{rc}"/>'
+                )
+        else:
+            parts.append(
+                f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 18}" y2="{y - 4}" '
+                'stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>'
+            )
+        parts.append(
+            f'<text x="{lx + 30}" y="{y}" font-size="13" fill="#3a3f47">{text}</text>'
+        )
+        y += rh
+    parts.append("</svg>")
+    path.write_text("\n".join(parts) + "\n")
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     s = CircularPort(R=CORE_RADIUS, length=1.0, outer_diameter=1.0, map_dim=100)
@@ -136,6 +201,8 @@ def main():
     write_svg(OUT_DIR / "face_map.svg", face_colors)
     polyline = [(c * CELL + CELL / 2, r * CELL + CELL / 2) for r, c in contour]
     write_svg(OUT_DIR / "contours.svg", face_colors, polyline=polyline)
+
+    write_overview(OUT_DIR / "regression_overview.svg")
 
     print(
         f"web_thickness={s.get_web_thickness():.3f} web={web:.3f} "

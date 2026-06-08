@@ -1,10 +1,14 @@
-# 4. Regression Analysis
+# 4. Grain Regression Analysis
 
 The thrust a solid motor makes at any instant is set by how much propellant surface is burning. As the grain burns back, that burning area changes, and the chamber pressure and thrust follow it. So to predict a thrust curve, Machwave has to know the burning area, and along with it the port area, the free chamber volume, and the grain's mass properties, as a function of how far the surface has receded into the web. That recession depth is the **web distance** `w`, and working these quantities out across the burn is what we call regression analysis.
 
 For a plain tubular (BATES) grain this is easy: the burning surface is a cylinder that grows outward, so the burn area is a textbook function of `w`. Most grains worth designing are not that simple. A star, a finocyl, a wagon wheel, or any port cut to shape a particular thrust profile has a burning surface with no closed-form area. Machwave handles these with the **fast marching method** (FMM).
 
 The idea rests on Piobert's law: a burning surface recedes perpendicular to itself at the local burn rate. Picture the flame as a wavefront sweeping into the propellant. Rather than redraw the grain at every time step, FMM asks one question up front: for every point in the propellant, how far must the surface regress before the flame reaches it? Storing that answer for every point gives a **regression map**. A point deep in a thick web holds a large value; a point right at the port holds nearly zero.
+
+![Grain regression overview](../assets/theory/fmm/regression_overview.svg)
+
+*The burning surface starts at the port and regresses outward through the propellant, staying perpendicular to itself, until it reaches the inhibited casing. Each ring is the front at a later time; FMM records, for every point, the web distance at which the front arrives.*
 
 That one map is all you need. The grain after burning a web `w` is simply every point whose value still exceeds `w`, since everything closer to the surface has already burned. The burning surface at that instant is the set of points whose value equals `w`. Once the map exists, burn area, port area, remaining volume, and mass properties at any `w` are cheap lookups instead of a fresh geometry calculation. It behaves like a topographic map of "depth into the propellant": flood it to level `w`, and the shoreline is the flame front.
 
@@ -14,7 +18,10 @@ $$
 \lvert \nabla \phi \rvert = 1, \qquad \phi = 0 \text{ on the burning surface}
 $$
 
-which just says $\phi$ is the distance from the initial burning surface. The `skfmm.distance` solver fills the whole grid in one pass. Machwave builds the map once, caches it, and from then on each time step only thresholds it.
+which just says $\phi$ is the distance from the initial burning surface. This is the grassfire picture: light the edge of a dry field and the fire line spreads outward at a steady rate, so the time it reaches any spot is its distance from the line. Here the fire is the real flame front, and $\phi$ is the web it has to burn through to reach each point. The `skfmm.distance` solver fills the whole grid in one pass; Machwave builds the map once, caches it, and from then on each step only thresholds it.
+
+!!! note "Where else this equation shows up"
+    The eikonal equation gives the first-arrival time of any wavefront moving at a known speed. It is named for geometric optics (from the Greek *eikon*, image), where it traces light through a lens, and it underlies seismic travel-time tomography, sonar, and ultrasound timing. When the speed is uniform the arrival time is simply distance, which is why the fast marching method also powers robot path planning around obstacles, distance transforms in image processing, and the signed-distance fields used in computer graphics.
 
 ## 4.1 Step by Step
 

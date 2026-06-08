@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320" viewBox="0 0 560 320" font-family="sans-serif">
+<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="5" refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7 z" fill="#6b7079"/></marker></defs>
+<rect x="0.5" y="0.5" width="559" height="319" rx="12" fill="#ffffff" stroke="#e6e6e6"/>
+<circle cx="160" cy="160" r="150" fill="#454a52"/>
+<circle cx="160" cy="160" r="140" fill="#cdbb92"/>
+<circle cx="160" cy="160" r="122" fill="#f7f2ea"/>
+<circle cx="160" cy="160" r="64" fill="none" stroke="#f4a259" stroke-width="5"/>
+<circle cx="160" cy="160" r="94" fill="none" stroke="#e8743b" stroke-width="5"/>
+<circle cx="160" cy="160" r="122" fill="none" stroke="#d63a26" stroke-width="5"/>
+<circle cx="160" cy="160" r="36" fill="#ffffff"/>
+<line x1="198.8" y1="176.1" x2="261.6" y2="202.1" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="176.1" y1="198.8" x2="202.1" y2="261.6" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="143.9" y1="198.8" x2="117.9" y2="261.6" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="121.2" y1="176.1" x2="58.4" y2="202.1" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="121.2" y1="143.9" x2="58.4" y2="117.9" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="143.9" y1="121.2" x2="117.9" y2="58.4" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="176.1" y1="121.2" x2="202.1" y2="58.4" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="198.8" y1="143.9" x2="261.6" y2="117.9" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="344" y="70" width="20" height="20" rx="3" fill="#cdbb92" stroke="#bbbbbb"/>
+<text x="374" y="84" font-size="13" fill="#3a3f47">Propellant grain</text>
+<rect x="344" y="116" width="20" height="20" rx="3" fill="#454a52" stroke="#bbbbbb"/>
+<text x="374" y="130" font-size="13" fill="#3a3f47">Inhibited surface (casing)</text>
+<rect x="344" y="162" width="6" height="20" rx="2" fill="#f4a259"/>
+<rect x="352" y="162" width="6" height="20" rx="2" fill="#e8743b"/>
+<rect x="360" y="162" width="6" height="20" rx="2" fill="#d63a26"/>
+<text x="374" y="176" font-size="13" fill="#3a3f47">Burning surface (t1, t2, t3)</text>
+<line x1="344" y1="218" x2="362" y2="218" stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>
+<text x="374" y="222" font-size="13" fill="#3a3f47">Direction of regression</text>
+</svg>
