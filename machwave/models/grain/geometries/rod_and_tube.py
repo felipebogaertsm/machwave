@@ -15,6 +15,7 @@ class RodAndTubeGrainSegment(grain_fmm.FMMGrainSegment2D):
         rod_outer_diameter: float,
         tube_inner_diameter: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -26,6 +27,7 @@ class RodAndTubeGrainSegment(grain_fmm.FMMGrainSegment2D):
             rod_outer_diameter: Central rod outer diameter [m].
             tube_inner_diameter: Tube inner diameter [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.rod_outer_diameter = rod_outer_diameter
@@ -35,6 +37,7 @@ class RodAndTubeGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 

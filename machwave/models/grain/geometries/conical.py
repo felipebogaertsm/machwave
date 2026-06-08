@@ -15,6 +15,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
         upper_core_diameter: float,
         lower_core_diameter: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -26,6 +27,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
             upper_core_diameter: Core diameter at the upper (bulkhead) end [m].
             lower_core_diameter: Core diameter at the lower (nozzle) end [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.upper_core_diameter = upper_core_diameter
@@ -35,6 +37,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 
