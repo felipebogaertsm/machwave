@@ -66,6 +66,7 @@ def create_cea_service(
     fuel_name: str | None = None,
     fuel_card_string: str | None = None,
     oxidizer_to_fuel_ratio: float | None = None,
+    has_condensed_phase: bool = True,
 ) -> "RocketCEAService":
     """
     Create a `RocketCEAService` and register propellants if needed.
@@ -85,6 +86,8 @@ def create_cea_service(
         fuel_name: Fuel name for a biliquid propellant.
         fuel_card_string: CEA card string for a custom fuel.
         oxidizer_to_fuel_ratio: O/F ratio for a biliquid propellant.
+        has_condensed_phase: Whether the propellant can form a condensed combustion
+            phase. When False, condensed-phase queries are assumed 0.
 
     Returns:
         Configured `RocketCEAService` instance.
@@ -148,7 +151,7 @@ def create_cea_service(
             "Must provide either propellant_name or (oxidizer_name and fuel_name)"
         )
 
-    return RocketCEAService(cea_obj, oxidizer_to_fuel_ratio)
+    return RocketCEAService(cea_obj, oxidizer_to_fuel_ratio, has_condensed_phase)
 
 
 class RocketCEAService:
@@ -158,7 +161,12 @@ class RocketCEAService:
     Use `create_cea_service()` to instantiate with custom propellants.
     """
 
-    def __init__(self, cea_obj: CEA_Obj, oxidizer_to_fuel_ratio: float | None = None):
+    def __init__(
+        self,
+        cea_obj: CEA_Obj,
+        oxidizer_to_fuel_ratio: float | None = None,
+        has_condensed_phase: bool = True,
+    ):
         """
         Initialize the service from a configured `CEA_Obj`.
 
@@ -166,9 +174,12 @@ class RocketCEAService:
             cea_obj: RocketCEA `CEA_Obj` instance.
             oxidizer_to_fuel_ratio: O/F ratio for biliquid propellants
                 (optional).
+            has_condensed_phase: Whether the propellant can form a condensed combustion
+                phase. When False, condensed-phase queries are assumed 0.
         """
         self.cea_obj = cea_obj
         self.oxidizer_to_fuel_ratio = oxidizer_to_fuel_ratio
+        self.has_condensed_phase = has_condensed_phase
 
     def _resolve_mixture_ratio(self, mixture_ratio: float | None) -> float | None:
         if mixture_ratio is not None:
@@ -298,6 +309,9 @@ class RocketCEAService:
         mixture_ratio: float | None = None,
     ) -> tuple[float, float]:
         """Get condensed phase mass fractions: (chamber, exhaust)."""
+        if not self.has_condensed_phase:
+            return 0.0, 0.0
+
         chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
         mr = self._resolve_mixture_ratio(mixture_ratio)
 
