@@ -10,17 +10,14 @@ Determining the shape of the burning surface as a function of how far it has rec
 For a tubular or BATES geometry, the burn area can be easily determined analytically as a function of the web distance distance traveled.
 However, for more complex geometries, the burn area may need to be determined through numerical methods.
 
-![Complex port geometries regressing](../assets/theory/fmm/geometry_animations.svg)
-
-*Star, rod-and-tube, multi-port, and D-grain ports regressing to burnout. The same distance map drives every shape: points round off, separate ports merge, and an inner rod is consumed before the surrounding tube.*
-
 Machwave uses the fast marching method (FMM) to compute the burn area for complex grain geometries.
 The FMM is a numerical algorithm for solving the Eikonal equation, which describes the evolution of a wavefront as it propagates through a medim.
 In the context of grain regression analysis, the wavefront represents the burning surface of the propellant, and the medium is the solid grain.
 
-In short, Machwave builds a map of the grain with a 2x2 or 3x3 matrix (depending on the geometry).
+In short, Machwave builds a map of the grain with matrices (depending on the geometry).
 Each cell in the map represents either a 1. point in the propellant; 2. a point outside the outer diameter; or 3. an empty point.
 The burn surface is defined by the boundary between 1 and 3.
+The number of cells in the map is determined by the map dimension. A higher map dimension means a more accurate representation of the grain, but longer computation time.
 
 The FMM algorithm then picks up this map and calculates the distance from the initial burning surface(s) to every point in the propellant grain.
 The result is a single regression map, that can be used to determine the perimeter of the burning surface at any web distance.
@@ -29,10 +26,10 @@ Section 4.1 walks through the FMM implementation step by step, showing the array
 
 ## 4.1 Step by Step
 
-This section exemplifies a single tubular grain regression, but the same steps apply to any other geometry.
+This section exemplifies a single tubular grain regression with a map dimension of `n=13`, but the same steps apply to any other geometry.
 
 **Generate the coordinate maps: [`get_maps()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_maps].**
-Each cell is given a position `(x, y)` as a fraction of the grain radius, so the casing wall sits at radius 1. The two maps are just the axis broadcast over the grid:
+Each cell is given a position `(x, y)` as a fraction of the grain radius, so the outer diameter sits at radius 1. The two maps are just the axis broadcast over the grid:
 
 ```
 x by column:  -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67  0.83  1.00
@@ -42,10 +39,8 @@ y by row:     -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67 
 ![map_x gradient](../assets/theory/fmm/coord_x.svg)
 ![map_y gradient](../assets/theory/fmm/coord_y.svg)
 
-Every later step works from each cell's distance from the center, $\sqrt{x^2 + y^2}$.
-
-**Find the propellant: [`get_mask()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_mask].**
-A `1` marks a cell outside the casing wall ($x^2 + y^2 > 1$); the `0` cells are propellant.
+**Mask the outer diameter: [`get_mask()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_mask].**
+A `1` marks a cell outside the outer diameter ($x^2 + y^2 > 1$); the `0` cells are propellant.
 
 ```
  1  1  1  1  1  1  0  1  1  1  1  1  1
@@ -65,8 +60,9 @@ A `1` marks a cell outside the casing wall ($x^2 + y^2 > 1$); the `0` cells are 
 
 ![casing mask](../assets/theory/fmm/mask.svg)
 
-**Carve the port: [`get_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_initial_face_map].**
-Each grain geometry draws its own port shape here; this example uses a round bore. Cells on the burning surface are `0`, solid propellant is `1`.
+**Carve the core: [`get_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_initial_face_map].**
+Each grain geometry draws its own shape here.
+This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
 
 ```
  1  1  1  1  1  1  1  1  1  1  1  1  1

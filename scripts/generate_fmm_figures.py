@@ -143,6 +143,98 @@ def write_animation(path):
     path.write_text("\n".join(parts) + "\n")
 
 
+def write_geometry_animations(path):
+    """Side-by-side looping regression of four 2D grain geometries.
+
+    Each panel runs the real FMM pipeline; the burned region at every frame is
+    the even-odd fill of the actual regression contours, so rings and merging
+    ports render correctly. Frames reveal cumulatively with a moving front.
+    """
+    import machwave.models.grain.geometries as geometries
+
+    specs = [
+        (
+            "Star",
+            geometries.StarGrainSegment,
+            dict(number_of_points=5, point_length=0.34, point_width=0.16),
+        ),
+        (
+            "Rod and tube",
+            geometries.RodAndTubeGrainSegment,
+            dict(rod_outer_diameter=0.26, tube_inner_diameter=0.62),
+        ),
+        (
+            "Multi-port",
+            geometries.MultiPortGrainSegment,
+            dict(port_diameter=0.16, port_radial_count=6, port_level_count=2),
+        ),
+        ("D-grain", geometries.DGrainSegment, dict(slot_offset=0.06)),
+    ]
+    gmap_dim, n_frames, target_pts = 120, 22, 64
+    front_col, open_col, case_col, prop_col = "#e2683c", "#f7f2ea", "#454a52", "#cdbb92"
+    pw, ph, pad, r_case, r_prop, disc_cy = 168, 196, 8, 70, 64, 84
+    dur, reveal_end = "6s", 0.85
+    half = (gmap_dim - 1) / 2
+    width, height = pad * 2 + pw * len(specs), pad * 2 + ph
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
+        f'height="{height}" viewBox="0 0 {width} {height}" '
+        'font-family="sans-serif">',
+        f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="12" '
+        'fill="#ffffff" stroke="#e6e6e6"/>',
+    ]
+
+    for p, (title, cls, kw) in enumerate(specs):
+        seg = cls(length=1.0, outer_diameter=1.0, map_dim=gmap_dim, **kw)
+        web = seg.get_web_thickness()
+        pcx, pcy = pad + pw * p + pw / 2, pad + disc_cy
+        parts.append(
+            f'<circle cx="{pcx:.1f}" cy="{pcy}" r="{r_case}" fill="{case_col}"/>'
+        )
+        parts.append(
+            f'<circle cx="{pcx:.1f}" cy="{pcy}" r="{r_prop}" fill="{prop_col}"/>'
+        )
+
+        for i in range(n_frames):
+            w = web * 0.93 * i / (n_frames - 1)
+            d_parts = []
+            for contour in seg.get_contours(w):
+                if len(contour) < 3:
+                    continue
+                step = max(1, (len(contour) - 1) // target_pts)
+                coords = []
+                for r, c in contour[::step]:
+                    x = pcx + (c - half) / half * r_prop
+                    y = pcy + (r - half) / half * r_prop
+                    coords.append(f"{x:.1f},{y:.1f}")
+                d_parts.append("M" + " L".join(coords) + " Z")
+            if not d_parts:
+                continue
+            d = " ".join(d_parts)
+            shape = (
+                f'<path d="{d}" fill="{open_col}" fill-rule="evenodd" '
+                f'stroke="{front_col}" stroke-width="2.5"'
+            )
+            if i == 0:
+                parts.append(shape + "/>")
+            else:
+                r = reveal_end * i / (n_frames - 1)
+                parts.append(
+                    shape + ' opacity="0"><animate attributeName="opacity" '
+                    f'values="0;1;1" keyTimes="0;{r:.3f};1" dur="{dur}" '
+                    'calcMode="discrete" repeatCount="indefinite"/></path>'
+                )
+
+        parts.append(
+            f'<text x="{pcx:.1f}" y="{pad + ph - 14}" text-anchor="middle" '
+            f'font-size="13" fill="#3a3f47">{title}</text>'
+        )
+
+    parts.append("</svg>")
+    path.write_text("\n".join(parts) + "\n")
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     s = CircularPort(R=CORE_RADIUS, length=1.0, outer_diameter=1.0, map_dim=100)
@@ -200,6 +292,7 @@ def main():
     write_svg(OUT_DIR / "contours.svg", face_colors, polyline=polyline)
 
     write_animation(OUT_DIR / "regression_animation.svg")
+    write_geometry_animations(OUT_DIR / "geometry_animations.svg")
 
     print(
         f"web_thickness={s.get_web_thickness():.3f} web={web:.3f} "
