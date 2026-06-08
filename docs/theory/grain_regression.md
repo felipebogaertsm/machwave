@@ -26,7 +26,7 @@ The result is a single regression map, that can be used to determine the perimet
 
 Machwave currently supports both 2D and 3D FMM regression, for constant and varying cross-section grain geometries.
 
-Section 4.1 walks through the FMM implementation step by step, showing the arrays and visualizations at each stage.
+Section 4.1 walks through the 2D FMM implementation step by step, showing the arrays and visualizations at each stage. Section 4.2 shows the differences between the 2D and 3D implementations, and how Machwave handles varying cross-section geometries.
 
 ## 4.1 Step by Step
 
@@ -163,11 +163,9 @@ The flame front is the boundary between the solid and burned cells above. It is 
 
 From the regressed grid Machwave reads everything the ballistics solver needs: the burning and port areas ([`get_burn_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area], [`get_port_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area]), the remaining volume, and the center of gravity and inertia tensor ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]). Repeating the threshold at each web distance traces these out across the whole burn.
 
+These curves are read straight off a pixel grid, so they come out jagged: as the web advances cell by cell, the perimeter traced around the front jumps slightly each time it clears another row or column of cells, and the burn-area-versus-web curve inherits that stair-stepping. Before the curve is turned into a lookup table, Machwave smooths it with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`): a short window slides along the curve and a low-order polynomial is fitted to the points inside it, replacing each point with the value of that fit. Unlike a plain moving average, it keeps the height and location of real features such as the burn-area peak, so the areas vary smoothly with web distance instead of chattering.
+
 ## 4.2 Constant vs Varying Cross-Section
-
-![Finocyl grain regressing in 3D](../assets/theory/grain_regression/finocyl_3d.svg)
-
-*A finocyl grain (central bore plus radial fins over the aft section). Looking into the aft face, the six-fin port opens up as the propellant regresses, the fins rounding off as the front reaches the casing.*
 
 Many grains keep the same cross-section all the way down the tube, a port simply extruded along the length. One 2D slice then describes the whole grain, which is what [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] does: the burn area is the burning perimeter times the current length, plus any exposed end faces. When the port changes along the length, a finocyl whose fins cover only part of the span, or a cone, one slice is not enough, and [`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] solves the same map over the full volume. The differences, step by step:
 
@@ -178,6 +176,8 @@ Many grains keep the same cross-section all the way down the tube, a port simply
 - **Burn area.** 2D extrudes the burning perimeter over the length and adds the exposed end faces. 3D measures the burning surface directly, as a marching-cubes mesh of the regression iso-surface ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]), which captures the port walls and the end faces together.
 - **Volume.** 2D is length times face area; 3D counts the solid voxels and multiplies by the voxel volume (`get_volume_per_element`).
 - **Mass properties.** 2D works from the single cross-section, placing it along the axis and adding a uniform-rod term for the length; 3D feeds the real voxel cloud straight to the inertia routines ([`get_center_of_gravity`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_moment_of_inertia]).
+
+The heart of that difference is how each one reads the burning surface off the regression map, and the two do it the same way, one dimension apart. In 2D the burning surface is a curve, and [`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours] traces it with **marching squares** (`skimage`'s `find_contours`): the algorithm walks every 2x2 block of cells and, from which corners fall inside or outside the front, draws the short line segment that the front cuts through that block; the segments stitch together into the closed burning perimeter. In 3D the burning surface is an actual surface, and the burn area is measured with **marching cubes** (`skimage`'s `marching_cubes`, via [`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]): it walks every 2x2x2 block of voxels and emits the triangles that the front cuts through it, building a watertight mesh whose total area is the burning area. Same look-up-and-stitch recipe, line segments in 2D and triangles in 3D.
 
 # References
 
