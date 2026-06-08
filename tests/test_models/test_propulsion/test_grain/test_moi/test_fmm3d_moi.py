@@ -16,7 +16,7 @@ class TestFMM3DSegmentMomentOfInertia:
     def test_segment_moi_at_ignition(self, segment_factory, geometry_name):
         """Test MOI of a 3D segment at ignition (web_distance=0)."""
         outer_diameter = 0.1
-        length = 0.2
+        length = 0.02
         ideal_density = 1800.0
 
         segment = segment_factory(length=length, outer_diameter=outer_diameter)
@@ -41,7 +41,7 @@ class TestFMM3DSegmentMomentOfInertia:
 
     def test_segment_moi_tensor_structure(self, segment_factory, geometry_name):
         """Test that MOI tensor has expected structure."""
-        segment = segment_factory(length=0.2, outer_diameter=0.1)
+        segment = segment_factory(length=0.02, outer_diameter=0.1)
         ideal_density = 1800.0
 
         moi = segment.get_moment_of_inertia(
@@ -57,7 +57,7 @@ class TestFMM3DSegmentMomentOfInertia:
 
     def test_segment_moi_decreases_with_burn(self, segment_factory, geometry_name):
         """Test that MOI decreases as propellant burns (mass decreases)."""
-        segment = segment_factory(length=0.2, outer_diameter=0.1)
+        segment = segment_factory(length=0.02, outer_diameter=0.1)
         ideal_density = 1800.0
         web_thickness = segment.get_web_thickness()
 
@@ -75,7 +75,7 @@ class TestFMM3DSegmentMomentOfInertia:
 
     def test_segment_moi_scales_with_density(self, segment_factory, geometry_name):
         """Test that MOI scales linearly with density."""
-        segment = segment_factory(length=0.2, outer_diameter=0.1)
+        segment = segment_factory(length=0.02, outer_diameter=0.1)
 
         density_low = 1500.0
         density_high = 2100.0
@@ -96,8 +96,8 @@ class TestFMM3DSegmentMomentOfInertia:
         outer_diameter = 0.1
         ideal_density = 1800.0
 
-        segment_short = segment_factory(length=0.1, outer_diameter=outer_diameter)
-        segment_long = segment_factory(length=0.3, outer_diameter=outer_diameter)
+        segment_short = segment_factory(length=0.01, outer_diameter=outer_diameter)
+        segment_long = segment_factory(length=0.03, outer_diameter=outer_diameter)
 
         moi_short = segment_short.get_moment_of_inertia(
             web_distance=0.0, ideal_density=ideal_density
@@ -113,7 +113,7 @@ class TestFMM3DSegmentMomentOfInertia:
 
     def test_segment_moi_burnout_behavior(self, segment_factory, geometry_name):
         """Test MOI behavior as segment approaches burnout."""
-        segment = segment_factory(length=0.2, outer_diameter=0.1)
+        segment = segment_factory(length=0.02, outer_diameter=0.1)
         ideal_density = 1800.0
         web_thickness = segment.get_web_thickness()
 
@@ -139,7 +139,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
     def test_single_segment_grain_moi(self, segment_factory, geometry_name):
         """Test MOI for a grain with a single 3D segment."""
         grain = grain_models.Grain(spacing=0.0)
-        segment = segment_factory(length=0.2, outer_diameter=0.1)
+        segment = segment_factory(length=0.02, outer_diameter=0.1)
         grain.add_segment(segment)
 
         ideal_density = 1800.0
@@ -157,8 +157,8 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
     def test_two_segments_equal_moi(self, segment_factory, geometry_name):
         """Test MOI for two identical 3D segments."""
         grain = grain_models.Grain(spacing=0.0)
-        segment1 = segment_factory(length=0.2, outer_diameter=0.1)
-        segment2 = segment_factory(length=0.2, outer_diameter=0.1)
+        segment1 = segment_factory(length=0.02, outer_diameter=0.1)
+        segment2 = segment_factory(length=0.02, outer_diameter=0.1)
 
         grain.add_segment(segment1)
         grain.add_segment(segment2)
@@ -180,10 +180,10 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_three_segments_with_spacing(self, segment_factory, geometry_name):
         """Test MOI for three 3D segments with spacing."""
-        grain = grain_models.Grain(spacing=0.05)  # 50mm spacing
+        grain = grain_models.Grain(spacing=0.005)  # 5mm spacing
 
         for _ in range(3):
-            segment = segment_factory(length=0.2, outer_diameter=0.1)
+            segment = segment_factory(length=0.02, outer_diameter=0.1)
             grain.add_segment(segment)
 
         ideal_density = 1800.0
@@ -201,7 +201,7 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
         grain = grain_models.Grain(spacing=0.0)
 
         for _ in range(2):
-            segment = segment_factory(length=0.2, outer_diameter=0.1)
+            segment = segment_factory(length=0.02, outer_diameter=0.1)
             grain.add_segment(segment)
 
         ideal_density = 1800.0
@@ -225,15 +225,15 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
         # Grain with no spacing
         grain_no_spacing = grain_models.Grain(spacing=0.0)
-        segment1 = segment_factory(length=0.2, outer_diameter=0.1)
-        segment2 = segment_factory(length=0.2, outer_diameter=0.1)
+        segment1 = segment_factory(length=0.02, outer_diameter=0.1)
+        segment2 = segment_factory(length=0.02, outer_diameter=0.1)
         grain_no_spacing.add_segment(segment1)
         grain_no_spacing.add_segment(segment2)
 
         # Grain with spacing
-        grain_with_spacing = grain_models.Grain(spacing=0.1)
-        segment3 = segment_factory(length=0.2, outer_diameter=0.1)
-        segment4 = segment_factory(length=0.2, outer_diameter=0.1)
+        grain_with_spacing = grain_models.Grain(spacing=0.01)
+        segment3 = segment_factory(length=0.02, outer_diameter=0.1)
+        segment4 = segment_factory(length=0.02, outer_diameter=0.1)
         grain_with_spacing.add_segment(segment3)
         grain_with_spacing.add_segment(segment4)
 
@@ -255,11 +255,11 @@ class TestFMM3DGrainMultiSegmentMomentOfInertia:
 
     def test_parallel_axis_theorem_validation(self, segment_factory, geometry_name):
         """Validate that parallel axis theorem is correctly applied in multi-segment grain."""
-        grain = grain_models.Grain(spacing=0.1)
+        grain = grain_models.Grain(spacing=0.01)
 
         # Create two segments
-        segment1 = segment_factory(length=0.2, outer_diameter=0.1)
-        segment2 = segment_factory(length=0.2, outer_diameter=0.1)
+        segment1 = segment_factory(length=0.02, outer_diameter=0.1)
+        segment2 = segment_factory(length=0.02, outer_diameter=0.1)
 
         grain.add_segment(segment1)
         grain.add_segment(segment2)
