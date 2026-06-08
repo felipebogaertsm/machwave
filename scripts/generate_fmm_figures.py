@@ -2,7 +2,8 @@
 
 Runs the real 2D FMM pipeline on a generic circular bore at a coarse map_dim
 (so the arrays match the matrices printed on the page) and writes one small
-hand-built SVG per step into docs/assets/theory/fmm/.
+hand-built SVG per step into docs/assets/theory/fmm/, plus a looping animation
+of the burn for the page intro.
 """
 
 from pathlib import Path
@@ -74,42 +75,49 @@ def write_svg(path, colors, polyline=None):
     path.write_text("\n".join(parts) + "\n")
 
 
-def write_overview(path):
-    """Schematic of the burning surface regressing outward through the grain."""
+def write_animation(path):
+    """Looping animation of the burning surface regressing to burnout."""
     width, height = 560, 320
     cx, cy = 160, 160
-    r_case, r_prop, r_bore = 150, 140, 36
-    front_r, front_col = 92, "#e2683c"
+    r_case, r_prop, r_bore, r_max = 150, 140, 36, 138
+    front_col, arrow_col, handle = "#e2683c", "#6b7079", 14
+    keytimes, dur = "0;0.82;1", "4s"
+    anim_r = (
+        f'<animate attributeName="r" values="{r_bore};{r_max};{r_max}" '
+        f'keyTimes="{keytimes}" dur="{dur}" repeatCount="indefinite"/>'
+    )
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
         f'height="{height}" viewBox="0 0 {width} {height}" '
         'font-family="sans-serif">',
         '<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="5" '
-        'refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7 z" fill="#6b7079"/>'
+        f'refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7 z" fill="{arrow_col}"/>'
         "</marker></defs>",
         f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="12" '
         'fill="#ffffff" stroke="#e6e6e6"/>',
         f'<circle cx="{cx}" cy="{cy}" r="{r_case}" fill="#454a52"/>',
         f'<circle cx="{cx}" cy="{cy}" r="{r_prop}" fill="#cdbb92"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{front_r}" fill="#f7f2ea"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{front_r}" fill="none" '
-        f'stroke="{front_col}" stroke-width="6"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#f7f2ea">{anim_r}</circle>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="none" '
+        f'stroke="{front_col}" stroke-width="6">{anim_r}</circle>',
         f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>',
     ]
-    for k in range(8):
-        a = np.radians(k * 45 + 22.5)
-        x1, y1 = cx + 42 * np.cos(a), cy + 42 * np.sin(a)
-        x2, y2 = cx + 84 * np.cos(a), cy + 84 * np.sin(a)
+    for k in range(16):
+        deg = k * 22.5
         parts.append(
-            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-            'stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>'
+            f'<g transform="translate({cx} {cy}) rotate({deg})"><g>'
+            '<animateTransform attributeName="transform" type="translate" '
+            f'values="{r_bore - handle} 0;{r_max - handle} 0;{r_max - handle} 0" '
+            f'keyTimes="{keytimes}" dur="{dur}" repeatCount="indefinite"/>'
+            f'<line x1="0" y1="0" x2="{handle}" y2="0" stroke="{arrow_col}" '
+            'stroke-width="2" marker-end="url(#ah)"/></g></g>'
         )
     lx, y, rh = 344, 84, 46
     rows = [
         ("swatch", "#cdbb92", "Propellant grain"),
         ("swatch", "#454a52", "Inhibited surface (casing)"),
         ("line", front_col, "Burning surface"),
-        ("arrow", None, "Direction of regression"),
+        ("arrow", arrow_col, "Direction of regression"),
     ]
     for kind, col, text in rows:
         if kind == "swatch":
@@ -125,56 +133,7 @@ def write_overview(path):
         else:
             parts.append(
                 f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 18}" y2="{y - 4}" '
-                'stroke="#6b7079" stroke-width="2" marker-end="url(#ah)"/>'
-            )
-        parts.append(
-            f'<text x="{lx + 30}" y="{y}" font-size="13" fill="#3a3f47">{text}</text>'
-        )
-        y += rh
-    parts.append("</svg>")
-    path.write_text("\n".join(parts) + "\n")
-
-
-def write_animation(path):
-    """Looping animation of the burning surface regressing to burnout."""
-    width, height = 560, 320
-    cx, cy = 160, 160
-    r_case, r_prop, r_bore, r_max = 150, 140, 36, 138
-    front_col = "#e2683c"
-    anim = (
-        '<animate attributeName="r" '
-        f'values="{r_bore};{r_max};{r_max}" keyTimes="0;0.82;1" '
-        'dur="4s" repeatCount="indefinite"/>'
-    )
-    parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
-        f'height="{height}" viewBox="0 0 {width} {height}" '
-        'font-family="sans-serif">',
-        f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="12" '
-        'fill="#ffffff" stroke="#e6e6e6"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_case}" fill="#454a52"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_prop}" fill="#cdbb92"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#f7f2ea">{anim}</circle>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="none" '
-        f'stroke="{front_col}" stroke-width="6">{anim}</circle>',
-        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>',
-    ]
-    lx, y, rh = 344, 108, 46
-    rows = [
-        ("swatch", "#cdbb92", "Propellant grain"),
-        ("swatch", "#454a52", "Inhibited surface (casing)"),
-        ("line", front_col, "Burning surface"),
-    ]
-    for kind, col, text in rows:
-        if kind == "swatch":
-            parts.append(
-                f'<rect x="{lx}" y="{y - 14}" width="20" height="20" rx="3" '
-                f'fill="{col}" stroke="#bbbbbb"/>'
-            )
-        else:
-            parts.append(
-                f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 20}" y2="{y - 4}" '
-                f'stroke="{col}" stroke-width="5"/>'
+                f'stroke="{col}" stroke-width="2" marker-end="url(#ah)"/>'
             )
         parts.append(
             f'<text x="{lx + 30}" y="{y}" font-size="13" fill="#3a3f47">{text}</text>'
@@ -200,7 +159,6 @@ def main():
     face_w = s.get_face_map(web)
     contour = s.get_contours(web)[0]
 
-    # Coordinate gradients (diverging coolwarm over [-1, 1]).
     write_svg(
         OUT_DIR / "coord_x.svg",
         [[_hex(_lerp(COOLWARM, (v + 1) / 2)) for v in row] for row in map_x],
@@ -209,11 +167,7 @@ def main():
         OUT_DIR / "coord_y.svg",
         [[_hex(_lerp(COOLWARM, (v + 1) / 2)) for v in row] for row in map_y],
     )
-
-    # Casing mask: propellant disc on the outside.
     write_svg(OUT_DIR / "mask.svg", [[OUT if m else PROP for m in row] for row in mask])
-
-    # Initial port and masked face: solid / burning / outside.
     write_svg(
         OUT_DIR / "initial_face.svg",
         [[BURN if v == 0 else PROP for v in row] for row in face],
@@ -226,7 +180,6 @@ def main():
         ],
     )
 
-    # Regression field: reversed-viridis gradient (bright at the surface).
     reg_max = float(np.max(reg))
     reg_colors = []
     for row in reg:
@@ -239,7 +192,6 @@ def main():
         reg_colors.append(line)
     write_svg(OUT_DIR / "regression.svg", reg_colors)
 
-    # Regressed face at the web distance, then the same with the traced front.
     face_colors = [
         [OUT if v == -1 else (BURN if v == 0 else PROP) for v in row] for row in face_w
     ]
@@ -247,7 +199,6 @@ def main():
     polyline = [(c * CELL + CELL / 2, r * CELL + CELL / 2) for r, c in contour]
     write_svg(OUT_DIR / "contours.svg", face_colors, polyline=polyline)
 
-    write_overview(OUT_DIR / "regression_overview.svg")
     write_animation(OUT_DIR / "regression_animation.svg")
 
     print(
