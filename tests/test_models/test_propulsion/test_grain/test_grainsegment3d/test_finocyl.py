@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 import machwave.models.grain as grain_models
-import machwave.models.grain.fmm.contours as fmm_contours
 import machwave.models.grain.geometries as grain_geometries
 
 # Aft-flush finned section over the lower 40% of the segment. The unfinned
@@ -55,76 +54,23 @@ def test_burn_area_is_positive_float(finocyl_segment):
         assert value > 0
 
 
-def test_burn_area_dedup_matches_per_slice_sum(finocyl_segment):
-    """Slice deduplication must reproduce the brute-force per-slice perimeter sum.
+def test_burn_area_curve_is_smooth_and_non_negative(finocyl_segment):
+    """The marching-cubes burn-area curve is smooth and never negative.
 
-    ``_get_burn_area_uncached`` caches the traced perimeter per distinct slice;
-    this guards that the cache key never collapses slices that actually differ.
+    The iso-surface area varies gently with web, so the interpolated curve must
+    stay non-negative and have only low high-frequency ripple across the whole
+    web (a quantization sawtooth would maximize the second difference).
     """
     segment = finocyl_segment
-    map_dist = segment.normalize(segment.get_web_thickness() * 0.3)
-
-    regression_map = segment.get_regression_map()
-    length_factor = segment.length / segment.get_normalized_length()
-
-    # Reference: trace every slice independently, with no caching.
-    reference = 0.0
-    for z_index in range(segment.get_normalized_length()):
-        contours = fmm_contours.get_contours(regression_map[z_index], map_dist)
-        perimeter = sum(
-            segment.map_to_length(fmm_contours.get_length(contour, segment.map_dim))
-            for contour in contours
-        )
-        reference += float(perimeter) * float(length_factor)
-
-    assert segment._get_burn_area_uncached(map_dist=map_dist) == pytest.approx(
-        reference, rel=1e-12
-    )
-
-
-def test_burn_area_curve_is_smoothed(finocyl_segment):
-    """The 3D burn-area interpolator smooths marching-squares quantization
-    ripple, mirroring the 2D path.
-
-    Sampling the interpolator at its own web grid must yield a curve with far
-    less high-frequency ripple than the raw per-web samples it is built from,
-    while preserving the burn-area integral (total impulse).
-    """
-    segment = finocyl_segment
-
-    # Reconstruct the normalized-web grid the interpolator samples internally
-    # (see _3d.get_burn_area_interp_func: oversample=3 over the distance map).
-    oversample = 3
-    regression_map = segment.get_regression_map()
-    valid = np.logical_not(segment.get_mask())
-    values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
-    max_dist = float(values.max())
-    denom = segment.map_dim * oversample
-    step_count = int(max_dist * denom) + 2
-    distances = np.arange(step_count, dtype=np.float64) / denom
-
-    raw = np.array(
-        [segment._get_burn_area_uncached(map_dist=float(d)) for d in distances]
-    )
-    interpolate = segment.get_burn_area_interp_func()
-    smoothed = np.array([float(interpolate(d)) for d in distances])
-
-    def high_frequency_ripple(curve):
-        # RMS of the discrete second difference relative to the mean: a
-        # quantization sawtooth maximizes curvature, a smooth trend minimizes it.
-        second_difference = curve[2:] - 2.0 * curve[1:-1] + curve[:-2]
-        return float(np.sqrt(np.mean(second_difference**2)) / np.mean(np.abs(curve)))
-
-    # Smoothing removes the bulk of the ripple (observed ~15x; assert a safe 5x).
-    assert high_frequency_ripple(smoothed) < high_frequency_ripple(raw) / 5
-
-    # The average burn area, and therefore the total impulse, is preserved.
-    assert smoothed.mean() == pytest.approx(raw.mean(), rel=0.01)
-
-    # The public burn area stays non-negative across the whole web.
     web_thickness = segment.get_web_thickness()
-    for web_distance in np.linspace(0, web_thickness, 25):
-        assert segment.get_burn_area(web_distance) >= 0.0
+    webs = np.linspace(0.0, web_thickness, 60)
+    curve = np.array([segment.get_burn_area(w) for w in webs])
+
+    assert np.all(curve >= 0.0)
+
+    second_difference = curve[2:] - 2.0 * curve[1:-1] + curve[:-2]
+    ripple = float(np.sqrt(np.mean(second_difference**2)) / np.mean(np.abs(curve)))
+    assert ripple < 0.1
 
 
 def test_port_area_returns_float(finocyl_segment):

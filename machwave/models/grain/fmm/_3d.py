@@ -5,6 +5,7 @@ import numpy as np
 import skfmm
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
+from skimage import measure
 
 import machwave.core.filters as filters
 import machwave.core.geometric as geometric
@@ -163,42 +164,32 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         regression_slice = self.get_regression_map()[z_index]
         return fmm_contours.get_contours(regression_slice, map_dist)
 
-    def _get_burn_area_uncached(self, *, map_dist: float) -> float:
-        regression_map = self.get_regression_map()
-
-        length_factor = self.length / self.get_normalized_length()
-
-        # Slices with an identical cross-section trace to an identical contour at
-        # this map_dist, so each distinct slice is traced only once.
-        perimeter_by_slice: dict[bytes, float] = {}
-        total = 0.0
-        for z_index in range(self.get_normalized_length()):
-            regression_slice = regression_map[z_index]
-            key = np.asarray(regression_slice).tobytes()
-            perimeter = perimeter_by_slice.get(key)
-            if perimeter is None:
-                contours = fmm_contours.get_contours(regression_slice, map_dist)
-                perimeter = float(
-                    sum(
-                        self.map_to_length(
-                            fmm_contours.get_length(contour, self.map_dim)
-                        )
-                        for contour in contours
-                    )
-                )
-                perimeter_by_slice[key] = perimeter
-            total += perimeter * float(length_factor)
-
-        return float(total)
+    @staticmethod
+    def _measure_iso_surface_area(
+        regression_field: NDArray[np.float64],
+        level: float,
+        voxel_spacing: tuple[float, float, float],
+    ) -> float:
+        """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
+        try:
+            vertices, faces, _, _ = measure.marching_cubes(
+                regression_field, level=level, spacing=voxel_spacing
+            )
+        except (ValueError, RuntimeError):
+            return 0.0
+        return float(measure.mesh_surface_area(vertices, faces))
 
     def get_burn_area_interp_func(self) -> Callable[[float], float]:
-        """Return a cached interpolator for burn area [m^2] vs normalized web."""
+        """Return a cached interpolator for burn area [m^2] vs web distance [m]."""
         if self.burn_area_interp_func is None:
             regression_map = self.get_regression_map()
-            valid = np.logical_not(self.get_mask())
-
-            values = np.asarray(regression_map[valid], dtype=np.float64).ravel()
-            if values.size == 0:
+            regression_values = np.asarray(
+                regression_map[~np.ma.getmaskarray(regression_map)], dtype=np.float64
+            )
+            max_level = (
+                float(regression_values.max()) if regression_values.size else 0.0
+            )
+            if max_level <= 0.0:
                 self.burn_area_interp_func = interp1d(
                     np.asarray([0.0], dtype=np.float64),
                     np.asarray([0.0], dtype=np.float64),
@@ -208,26 +199,41 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 )
                 return self.burn_area_interp_func
 
-            values.sort()
-            max_dist = float(values[-1])
-            oversample = 3
-            denom = float(self.map_dim * oversample)
-            step_count = int(max_dist * denom) + 2
-            distances = np.arange(step_count, dtype=np.float64) / denom
+            # Lift the inhibited casing above every iso level so marching cubes
+            # meshes only the burning front, not the wall.
+            regression_field = np.ma.filled(regression_map, max_level + 1.0)
+            axial_spacing = self.length / max(self.get_normalized_length() - 1, 1)
+            radial_spacing = self.outer_diameter / (self.map_dim - 1)
+            voxel_spacing = (axial_spacing, radial_spacing, radial_spacing)
 
-            burn_area_values = np.empty_like(distances, dtype=np.float64)
-            for i, dist in enumerate(distances):
-                burn_area_values[i] = self._get_burn_area_uncached(map_dist=float(dist))
+            # The iso-surface at level 0 lies on the voxelized initial face and is
+            # degenerate, so sample above it and hold the first area back to web 0.
+            sample_count = 80
+            levels = np.linspace(max_level / sample_count, max_level, sample_count)
+            surface_areas = np.array(
+                [
+                    self._measure_iso_surface_area(
+                        regression_field, float(level), voxel_spacing
+                    )
+                    for level in levels
+                ],
+                dtype=np.float64,
+            )
+            web_distances = np.concatenate(
+                ([0.0], np.asarray(self.denormalize(levels), dtype=np.float64))
+            )
+            surface_areas = np.concatenate(([surface_areas[0]], surface_areas))
 
-            burn_area_values = np.asarray(burn_area_values, dtype=np.float64)
-            smoothed_burn_area = filters.smooth_savitzky_golay(burn_area_values)
+            smoothed_areas = filters.smooth_savitzky_golay(
+                surface_areas, window_length=9, polyorder=3
+            )
             self.burn_area_interp_func = interp1d(
-                distances,
-                smoothed_burn_area,
+                web_distances,
+                smoothed_areas,
                 bounds_error=False,
                 fill_value=(
-                    float(smoothed_burn_area[0]),
-                    float(smoothed_burn_area[-1]),
+                    float(smoothed_areas[0]),
+                    float(smoothed_areas[-1]),
                 ),  # type: ignore[arg-type]
                 assume_sorted=True,
             )
@@ -237,9 +243,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def get_burn_area(self, web_distance: float) -> float:
         if web_distance > self.get_web_thickness():
             return 0.0
-        map_distance = self.normalize(web_distance)
-        value = float(self.get_burn_area_interp_func()(map_distance))
-        return max(0.0, value)
+        return max(0.0, float(self.get_burn_area_interp_func()(web_distance)))
 
     def get_volume_per_element(self) -> float:
         return (float(self.denormalize(self.get_cell_size())) * 2) ** 3

@@ -18,20 +18,25 @@ def get_contours(
         A list of float64 arrays, where each array represents a contour.
         Each contour array is typically shaped (N, 2) with (row, col) coordinates.
     """
+    if np.ma.isMaskedArray(map):
+        # Outside-casing cells read as 0, tracing a spurious contour along the
+        # wall; lift them above every iso level so only real fronts are traced.
+        map = np.ma.filled(map, float(map.max()) + 1.0)
     return measure.find_contours(map, map_dist, fully_connected="low", *args, **kwargs)
 
 
-def get_length(contour: np.ndarray, map_size: int, tolerance: float = 3.0) -> float:
+def get_length(contour: np.ndarray, map_size: int, tolerance: float = 1.0) -> float:
     """
     Return the total length of contour segments away from the disc edge.
 
     Segments within `tolerance` of the edge of a circle of diameter `map_size`
-    are excluded.
+    are excluded, dropping the casing wall while keeping a burning front that
+    has regressed close to it.
 
     Args:
         contour: The contour array.
         map_size: The size of the map.
-        tolerance: The tolerance value. Defaults to 3.0.
+        tolerance: The tolerance value. Defaults to 1.0.
 
     Returns:
         The total length of the segments.
