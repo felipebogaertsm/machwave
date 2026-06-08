@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 
 import machwave.models.grain.fmm as fmm
+import machwave.models.grain.geometries as geometries
 
 MAP_DIM = 13
 CORE_RADIUS = 0.45  # normalized
@@ -20,6 +21,7 @@ OUT = "#eceff1"  # outside the casing
 PROP = "#cdbb92"  # solid propellant
 BURN = "#e2683c"  # burning surface / burned away
 GRID = "#ffffff"
+DUR = "6s"  # shared duration for every animation
 OUT_DIR = Path("docs/assets/theory/grain_regression")
 
 VIRIDIS = [(68, 1, 84), (59, 82, 139), (33, 145, 140), (94, 201, 98), (253, 231, 37)]
@@ -81,7 +83,7 @@ def write_animation(path):
     cx, cy = 160, 160
     r_case, r_prop, r_bore, r_max = 150, 140, 36, 138
     front_col, arrow_col, handle = "#e2683c", "#6b7079", 20
-    keytimes, dur = "0;0.82;1", "4s"
+    keytimes, dur = "0;0.82;1", DUR
     anim_r = (
         f'<animate attributeName="r" values="{r_bore};{r_max};{r_max}" '
         f'keyTimes="{keytimes}" dur="{dur}" repeatCount="indefinite"/>'
@@ -175,7 +177,7 @@ def write_geometry_animations(path):
     gmap_dim, n_frames, target_pts = 120, 68, 64
     front_col, open_col, case_col, prop_col = "#e2683c", "#f7f2ea", "#454a52", "#cdbb92"
     pw, ph, pad, r_case, r_prop, disc_cy = 168, 196, 8, 70, 64, 84
-    dur, reveal_end = "6s", 0.85
+    dur, reveal_end = DUR, 0.85
     half = (gmap_dim - 1) / 2
     width, height = pad * 2 + pw * len(specs), pad * 2 + ph
 
@@ -240,6 +242,134 @@ def write_geometry_animations(path):
     path.write_text("\n".join(parts) + "\n")
 
 
+def write_finocyl_3d_animation(path):
+    """Looping pictorial of the real finocyl grain regressing.
+
+    Builds the actual 3D FMM FinocylGrainSegment at the SolidWorks-validated
+    dimensions. The propellant is a solid oblique cylinder; the aft end shows
+    the real finned port cross-section as a void that opens up to burnout.
+    """
+    import math
+
+    seg = geometries.FinocylGrainSegment(
+        length=0.3048,
+        outer_diameter=0.1016,
+        core_diameter=0.03556,
+        number_of_fins=6,
+        fin_length=0.0127,
+        fin_width=0.003175,
+        finned_length=0.127,
+        transition_length=0.0254,
+        fin_axial_offset=0.0,
+        map_dim=100,
+    )
+    seg.get_regression_map()
+    web = seg.get_web_thickness()
+    n_axial = seg.get_normalized_length()
+    half = (seg.map_dim - 1) / 2
+
+    # a mid-finned slice: full-depth fins, deep enough that the open-end axial
+    # burn never reaches it, so the void shows pure radial bore-and-fin growth
+    aft = round(0.18 * (n_axial - 1))
+    n_frames, target_pts = 48, 72
+    radius_px, axis_x, axis_y = 82.0, 178.0, -168.0
+    reveal_end = 0.9
+    face_col, edge_col, front_col = "#e0d1ab", "#5c5346", "#e2683c"
+
+    def proj(uf, nx, ny):
+        # aft finned face is frontal (true shape); the axis recedes obliquely
+        return nx * radius_px + uf * axis_x, -ny * radius_px + uf * axis_y
+
+    def poly(pts):
+        return "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts) + " Z"
+
+    thetas = np.linspace(0, 2 * math.pi, 80)
+    aft_ell = [proj(0.0, math.cos(t), math.sin(t)) for t in thetas]
+    fwd_ell = [proj(1.0, math.cos(t), math.sin(t)) for t in thetas]
+    cen = proj(0.0, 0, 0)
+    cross = [
+        (aft_ell[i][0] - cen[0]) * axis_y - (aft_ell[i][1] - cen[1]) * axis_x
+        for i in range(len(thetas))
+    ]
+    hi, lo = int(np.argmax(cross)), int(np.argmin(cross))
+
+    xs = [p[0] for p in aft_ell + fwd_ell]
+    ys = [p[1] for p in aft_ell + fwd_ell]
+    pad = 16
+    minx, miny = min(xs) - pad, min(ys) - pad
+    maxx, maxy = max(xs) + pad, max(ys) + pad
+    w_box, h_box = maxx - minx, maxy - miny + 28
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w_box:.0f}" '
+        f'height="{h_box:.0f}" viewBox="{minx:.1f} {miny:.1f} {w_box:.1f} {h_box:.1f}" '
+        'font-family="sans-serif">',
+        "<defs>"
+        f'<linearGradient id="fcyl_body" gradientUnits="userSpaceOnUse" '
+        f'x1="{cen[0]:.1f}" y1="{cen[1]:.1f}" x2="{axis_x:.1f}" y2="{axis_y:.1f}">'
+        '<stop offset="0" stop-color="#d6c596"/>'
+        '<stop offset="1" stop-color="#a89169"/></linearGradient>'
+        f'<linearGradient id="fcyl_bore" gradientUnits="userSpaceOnUse" '
+        f'x1="{cen[0]:.1f}" y1="{cen[1]:.1f}" x2="{axis_x:.1f}" y2="{axis_y:.1f}">'
+        '<stop offset="0" stop-color="#4a4236"/>'
+        '<stop offset="1" stop-color="#15120d"/></linearGradient></defs>',
+        f'<rect x="{minx + 0.5:.1f}" y="{miny + 0.5:.1f}" width="{w_box - 1:.1f}" '
+        f'height="{h_box - 1:.1f}" rx="12" fill="#ffffff" stroke="#e6e6e6"/>',
+    ]
+
+    # solid cylinder: far cap, lateral body, aft face on top
+    parts.append(f'<path d="{poly(fwd_ell)}" fill="#a89169"/>')
+    parts.append(
+        f'<path d="{poly([aft_ell[hi], fwd_ell[hi], fwd_ell[lo], aft_ell[lo]])}" '
+        f'fill="url(#fcyl_body)" stroke="{edge_col}" stroke-width="1.5" '
+        'stroke-linejoin="round"/>'
+    )
+    parts.append(
+        f'<path d="{poly(aft_ell)}" fill="{face_col}" stroke="{edge_col}" '
+        'stroke-width="1.5"/>'
+    )
+
+    # aft port cross-section: a void that opens up to burnout
+    for i in range(n_frames):
+        w = web * 0.97 * i / (n_frames - 1)
+        subs = []
+        for contour in seg.get_contours(w, aft):
+            if len(contour) < 3:
+                continue
+            step = max(1, (len(contour) - 1) // target_pts)
+            subs.append(
+                poly(
+                    [
+                        proj(0.0, (c - half) / half, (r - half) / half)
+                        for r, c in contour[::step]
+                    ]
+                )
+            )
+        if not subs:
+            continue
+        shape = (
+            f'<path d="{" ".join(subs)}" fill="url(#fcyl_bore)" fill-rule="evenodd" '
+            f'stroke="{front_col}" stroke-width="2" stroke-linejoin="round"'
+        )
+        if i == 0:
+            parts.append(shape + "/>")
+        else:
+            r = reveal_end * i / (n_frames - 1)
+            a = max(0.001, r - reveal_end / (n_frames - 1))
+            parts.append(
+                shape + ' opacity="0"><animate attributeName="opacity" '
+                f'values="0;0;1;1" keyTimes="0;{a:.4f};{r:.4f};1" dur="{DUR}" '
+                'repeatCount="indefinite"/></path>'
+            )
+
+    parts.append(
+        f'<text x="{(minx + maxx) / 2:.1f}" y="{maxy + 16:.1f}" text-anchor="middle" '
+        'font-size="13" fill="#3a3f47">Finocyl (3D)</text>'
+    )
+    parts.append("</svg>")
+    path.write_text("\n".join(parts) + "\n")
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     s = CircularPort(R=CORE_RADIUS, length=1.0, outer_diameter=1.0, map_dim=100)
@@ -298,6 +428,7 @@ def main():
 
     write_animation(OUT_DIR / "regression_animation.svg")
     write_geometry_animations(OUT_DIR / "geometry_animations.svg")
+    write_finocyl_3d_animation(OUT_DIR / "finocyl_3d.svg")
 
     print(
         f"web_thickness={s.get_web_thickness():.3f} web={web:.3f} "

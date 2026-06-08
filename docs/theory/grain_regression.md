@@ -12,8 +12,6 @@ However, for more complex geometries, the burn area may need to be determined th
 
 ![Complex port geometries regressing](../assets/theory/grain_regression/geometry_animations.svg)
 
-*Star, rod-and-tube, multi-port, and D-grain ports regressing to burnout, all driven by the same distance map: star points round off, separate ports merge, and the rod-and-tube's inner and outer fronts reach the center and the casing together.*
-
 Machwave uses the fast marching method (FMM) to compute the burn area for complex grain geometries.
 The FMM is a numerical algorithm for solving the Eikonal equation, which describes the evolution of a wavefront as it propagates through a medim.
 In the context of grain regression analysis, the wavefront represents the burning surface of the propellant, and the medium is the solid grain.
@@ -25,6 +23,8 @@ The number of cells in the map is determined by the map dimension. A higher map 
 
 The FMM algorithm then picks up this map and calculates the distance from the initial burning surface(s) to every point in the propellant grain.
 The result is a single regression map, that can be used to determine the perimeter of the burning surface at any web distance.
+
+Machwave currently supports both 2D and 3D FMM regression, for constant and varying cross-section grain geometries.
 
 Section 4.1 walks through the FMM implementation step by step, showing the arrays and visualizations at each stage.
 
@@ -128,10 +128,10 @@ Now the fast marching method runs. `skfmm.distance` fills every propellant cell 
 
 ![regression field gradient](../assets/theory/grain_regression/regression.svg)
 
-*Bright cells sit on the burning surface; the color darkens with depth into the web, so the gradient is the order in which the propellant burns.*
+*Yellow cells represent empty space. The color darkens with depth into the web.*
 
-**Read the grain at a web distance: [`get_face_map(w)`][machwave.models.grain.fmm.base.FMMGrainSegment.get_face_map].**
-To see the grain after it has burned a web `w`, keep the cells whose map value still exceeds `w`. Here `w = 0.094 m` (0.19 in radius units), so the cells at the `0.1` level have burned and the `0.2` level and beyond remain. `1` is solid, `0` has burned away, the dots are outside.
+**Grain map at a web distance: [`get_face_map(w)`][machwave.models.grain.fmm.base.FMMGrainSegment.get_face_map].**
+The face map of a web distance is can be obtained by thresholding the regression map at that specific web distance. Example at `w=0.2`:
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
@@ -164,6 +164,10 @@ The flame front is the boundary between the solid and burned cells above. It is 
 From the regressed grid Machwave reads everything the ballistics solver needs: the burning and port areas ([`get_burn_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area], [`get_port_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area]), the remaining volume, and the center of gravity and inertia tensor ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]). Repeating the threshold at each web distance traces these out across the whole burn.
 
 ## 4.2 Constant vs Varying Cross-Section
+
+![Finocyl grain regressing in 3D](../assets/theory/grain_regression/finocyl_3d.svg)
+
+*A finocyl grain (central bore plus radial fins over the aft section). Looking into the aft face, the six-fin port opens up as the propellant regresses, the fins rounding off as the front reaches the casing.*
 
 Many grains keep the same cross-section all the way down the tube, a port simply extruded along the length. One 2D slice then describes the whole grain, which is what [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] does: the burn area is the burning perimeter times the current length, plus any exposed end faces. When the port changes along the length, a finocyl whose fins cover only part of the span, or a cone, one slice is not enough, and [`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] solves the same map over the full volume. The differences, step by step:
 
