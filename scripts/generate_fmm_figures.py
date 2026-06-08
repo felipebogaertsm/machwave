@@ -135,6 +135,55 @@ def write_overview(path):
     path.write_text("\n".join(parts) + "\n")
 
 
+def write_animation(path):
+    """Looping animation of the burning surface regressing to burnout."""
+    width, height = 560, 320
+    cx, cy = 160, 160
+    r_case, r_prop, r_bore, r_max = 150, 140, 36, 138
+    front_col = "#e2683c"
+    anim = (
+        '<animate attributeName="r" '
+        f'values="{r_bore};{r_max};{r_max}" keyTimes="0;0.82;1" '
+        'dur="4s" repeatCount="indefinite"/>'
+    )
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
+        f'height="{height}" viewBox="0 0 {width} {height}" '
+        'font-family="sans-serif">',
+        f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="12" '
+        'fill="#ffffff" stroke="#e6e6e6"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_case}" fill="#454a52"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_prop}" fill="#cdbb92"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#f7f2ea">{anim}</circle>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="none" '
+        f'stroke="{front_col}" stroke-width="6">{anim}</circle>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_bore}" fill="#ffffff"/>',
+    ]
+    lx, y, rh = 344, 108, 46
+    rows = [
+        ("swatch", "#cdbb92", "Propellant grain"),
+        ("swatch", "#454a52", "Inhibited surface (casing)"),
+        ("line", front_col, "Burning surface"),
+    ]
+    for kind, col, text in rows:
+        if kind == "swatch":
+            parts.append(
+                f'<rect x="{lx}" y="{y - 14}" width="20" height="20" rx="3" '
+                f'fill="{col}" stroke="#bbbbbb"/>'
+            )
+        else:
+            parts.append(
+                f'<line x1="{lx}" y1="{y - 4}" x2="{lx + 20}" y2="{y - 4}" '
+                f'stroke="{col}" stroke-width="5"/>'
+            )
+        parts.append(
+            f'<text x="{lx + 30}" y="{y}" font-size="13" fill="#3a3f47">{text}</text>'
+        )
+        y += rh
+    parts.append("</svg>")
+    path.write_text("\n".join(parts) + "\n")
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     s = CircularPort(R=CORE_RADIUS, length=1.0, outer_diameter=1.0, map_dim=100)
@@ -199,6 +248,7 @@ def main():
     write_svg(OUT_DIR / "contours.svg", face_colors, polyline=polyline)
 
     write_overview(OUT_DIR / "regression_overview.svg")
+    write_animation(OUT_DIR / "regression_animation.svg")
 
     print(
         f"web_thickness={s.get_web_thickness():.3f} web={web:.3f} "

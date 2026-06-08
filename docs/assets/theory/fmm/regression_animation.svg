@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320" viewBox="0 0 560 320" font-family="sans-serif">
+<rect x="0.5" y="0.5" width="559" height="319" rx="12" fill="#ffffff" stroke="#e6e6e6"/>
+<circle cx="160" cy="160" r="150" fill="#454a52"/>
+<circle cx="160" cy="160" r="140" fill="#cdbb92"/>
+<circle cx="160" cy="160" r="36" fill="#f7f2ea"><animate attributeName="r" values="36;138;138" keyTimes="0;0.82;1" dur="4s" repeatCount="indefinite"/></circle>
+<circle cx="160" cy="160" r="36" fill="none" stroke="#e2683c" stroke-width="6"><animate attributeName="r" values="36;138;138" keyTimes="0;0.82;1" dur="4s" repeatCount="indefinite"/></circle>
+<circle cx="160" cy="160" r="36" fill="#ffffff"/>
+<rect x="344" y="94" width="20" height="20" rx="3" fill="#cdbb92" stroke="#bbbbbb"/>
+<text x="374" y="108" font-size="13" fill="#3a3f47">Propellant grain</text>
+<rect x="344" y="140" width="20" height="20" rx="3" fill="#454a52" stroke="#bbbbbb"/>
+<text x="374" y="154" font-size="13" fill="#3a3f47">Inhibited surface (casing)</text>
+<line x1="344" y1="196" x2="364" y2="196" stroke="#e2683c" stroke-width="5"/>
+<text x="374" y="200" font-size="13" fill="#3a3f47">Burning surface</text>
+</svg>
