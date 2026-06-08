@@ -49,6 +49,7 @@ nav:
       - 1. Thrust and Performance: theory/thrust.md
       - 2. Mass Balance: theory/mass_balance.md
       - 3. Nozzle Losses: theory/nozzle_losses.md
+      - 4. Regression Analysis: theory/fmm.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
