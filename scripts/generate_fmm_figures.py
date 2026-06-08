@@ -1,4 +1,4 @@
-"""Generate the SVG step figures for docs/theory/fmm.md.
+"""Generate the SVG step figures for docs/theory/grain_regression.md.
 
 Runs the real 2D FMM pipeline on a generic circular bore at a coarse map_dim
 (so the arrays match the matrices printed on the page) and writes one small
