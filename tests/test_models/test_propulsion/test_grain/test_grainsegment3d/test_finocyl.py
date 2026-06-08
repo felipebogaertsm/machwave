@@ -65,10 +65,7 @@ def test_burn_area_dedup_matches_per_slice_sum(finocyl_segment):
     map_dist = segment.normalize(segment.get_web_thickness() * 0.3)
 
     regression_map = segment.get_regression_map()
-    length_factor = (
-        segment.get_length(web_distance=float(segment.denormalize(map_dist)))
-        / segment.map_dim
-    )
+    length_factor = segment.length / segment.get_normalized_length()
 
     # Reference: trace every slice independently, with no caching.
     reference = 0.0
