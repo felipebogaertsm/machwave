@@ -134,6 +134,7 @@ class SolidPropellant(propellant_base.Propellant):
         return cea_service.create_cea_service(
             propellant_name=cea_service.normalize_custom_propellant_name(self.name),
             card_string=card_string,
+            has_condensed_phase=self.has_condensed_phase,
         )
 
     def evaluate(

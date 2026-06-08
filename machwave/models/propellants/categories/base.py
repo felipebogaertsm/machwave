@@ -7,6 +7,12 @@ import machwave.services.cea as cea_service
 from .. import components as propellant_components
 from .. import properties as propellant_properties
 
+# Elements that keep their CEA combustion products gaseous at chamber conditions
+# (above 1000K and 10 bar)
+GASEOUS_ONLY_ELEMENTS = frozenset(
+    {"H", "C", "N", "O", "F", "CL", "BR", "I", "HE", "NE", "AR", "KR", "XE"}
+)
+
 
 class PropellantValidationError(Exception):
     """Raised when propellant validation fails."""
@@ -56,6 +62,20 @@ class Propellant(abc.ABC):
     def thermochemical_service(self) -> cea_service.RocketCEAService:
         """Get thermochemical service, cached."""
         return self._get_thermochemical_service()
+
+    @property
+    def has_condensed_phase(self) -> bool:
+        """
+        Whether this propellant can form a condensed combustion phase.
+
+        A propellant built solely from elements in `GASEOUS_ONLY_ELEMENTS` cannot form a
+        condensed phase.
+        """
+        return any(
+            element.strip().upper() not in GASEOUS_ONLY_ELEMENTS
+            for component in self.components
+            for element in component.chemical_formula
+        )
 
     @abc.abstractmethod
     def _validate_components(self):

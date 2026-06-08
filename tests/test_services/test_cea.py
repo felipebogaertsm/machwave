@@ -526,6 +526,54 @@ def test_generate_card_string_utility():
         cea_service.generate_card_string([])
 
 
+class TestCondensedPhaseShortCircuit:
+    """Test skipping the condensed-phase query when there is no condensed phase."""
+
+    def _knsu_card(self) -> str:
+        return cea_service.generate_card_string(
+            [
+                {
+                    "name": "KNO3",
+                    "formula": {"K": 1.0, "N": 1.0, "O": 3.0},
+                    "weight_percent": 65.0,
+                    "heat_of_formation": -118200.0,
+                    "temperature": 298.15,
+                    "density": 2.109,
+                },
+                {
+                    "name": "Sucrose",
+                    "formula": {"C": 12.0, "H": 22.0, "O": 11.0},
+                    "weight_percent": 35.0,
+                    "heat_of_formation": -531900.0,
+                    "temperature": 298.15,
+                    "density": 1.587,
+                },
+            ]
+        )
+
+    def test_default_keeps_condensed_phase_query(self):
+        service = cea_service.create_cea_service(propellant_name="AP")
+        assert service.has_condensed_phase is True
+
+    def test_flag_off_overrides_real_condensed_phase(self):
+        # KNSU has a significant condensed phase when queried, but flagging it
+        # off must skip the query and report zero for the same composition.
+        card = self._knsu_card()
+
+        queried = cea_service.create_cea_service(
+            propellant_name="TEST_KNSU_QUERIED", card_string=card
+        )
+        skipped = cea_service.create_cea_service(
+            propellant_name="TEST_KNSU_SKIPPED",
+            card_string=card,
+            has_condensed_phase=False,
+        )
+
+        assert queried.get_condensed_phase_fractions(3e6, 8.0)[0] > 0.2
+        assert skipped.has_condensed_phase is False
+        assert skipped.get_condensed_phase_fractions(3e6, 8.0) == (0.0, 0.0)
+
+
 class TestMixtureRatioOverride:
     @pytest.fixture
     def lox_rp1_service(self):
