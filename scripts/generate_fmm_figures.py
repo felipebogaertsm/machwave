@@ -275,6 +275,9 @@ def write_finocyl_3d_animation(path):
     radius_px, axis_x, axis_y = 82.0, 178.0, -168.0
     reveal_end = 0.9
     face_col, edge_col, front_col = "#e0d1ab", "#5c5346", "#e2683c"
+    deep_col = "#100d09"  # deepest bore shadow
+    # recede a scaled copy of the port into the grain for a sense of depth
+    pscale, depth_x, depth_y = 0.55, 0.05 * 178.0, 0.05 * -168.0
 
     def proj(uf, nx, ny):
         # aft finned face is frontal (true shape); the axis recedes obliquely
@@ -311,8 +314,8 @@ def write_finocyl_3d_animation(path):
         '<stop offset="1" stop-color="#a89169"/></linearGradient>'
         f'<linearGradient id="fcyl_bore" gradientUnits="userSpaceOnUse" '
         f'x1="{cen[0]:.1f}" y1="{cen[1]:.1f}" x2="{axis_x:.1f}" y2="{axis_y:.1f}">'
-        '<stop offset="0" stop-color="#4a4236"/>'
-        '<stop offset="1" stop-color="#15120d"/></linearGradient></defs>',
+        '<stop offset="0" stop-color="#6c5e46"/>'
+        '<stop offset="1" stop-color="#1c1710"/></linearGradient></defs>',
         f'<rect x="{minx + 0.5:.1f}" y="{miny + 0.5:.1f}" width="{w_box - 1:.1f}" '
         f'height="{h_box - 1:.1f}" rx="12" fill="#ffffff" stroke="#e6e6e6"/>',
     ]
@@ -329,37 +332,40 @@ def write_finocyl_3d_animation(path):
         'stroke-width="1.5"/>'
     )
 
-    # aft port cross-section: a void that opens up to burnout
+    # aft port cross-section: a recessed void that opens up to burnout. The
+    # shaded wall (lit rim -> dark depth) plus a scaled, pushed-in floor give
+    # the bore a sense of perspective and a shadow down its core.
     for i in range(n_frames):
         w = web * 0.97 * i / (n_frames - 1)
-        subs = []
+        wall, floor = [], []
         for contour in seg.get_contours(w, aft):
             if len(contour) < 3:
                 continue
             step = max(1, (len(contour) - 1) // target_pts)
-            subs.append(
-                poly(
-                    [
-                        proj(0.0, (c - half) / half, (r - half) / half)
-                        for r, c in contour[::step]
-                    ]
-                )
+            pts = [
+                proj(0.0, (c - half) / half, (r - half) / half)
+                for r, c in contour[::step]
+            ]
+            wall.append(poly(pts))
+            floor.append(
+                poly([(pscale * x + depth_x, pscale * y + depth_y) for x, y in pts])
             )
-        if not subs:
+        if not wall:
             continue
-        shape = (
-            f'<path d="{" ".join(subs)}" fill="url(#fcyl_bore)" fill-rule="evenodd" '
-            f'stroke="{front_col}" stroke-width="2" stroke-linejoin="round"'
+        group = (
+            f'<path d="{" ".join(wall)}" fill="url(#fcyl_bore)" fill-rule="evenodd" '
+            f'stroke="{front_col}" stroke-width="2" stroke-linejoin="round"/>'
+            f'<path d="{" ".join(floor)}" fill="{deep_col}" fill-rule="evenodd"/>'
         )
         if i == 0:
-            parts.append(shape + "/>")
+            parts.append(f"<g>{group}</g>")
         else:
             r = reveal_end * i / (n_frames - 1)
             a = max(0.001, r - reveal_end / (n_frames - 1))
             parts.append(
-                shape + ' opacity="0"><animate attributeName="opacity" '
+                f'<g opacity="0">{group}<animate attributeName="opacity" '
                 f'values="0;0;1;1" keyTimes="0;{a:.4f};{r:.4f};1" dur="{DUR}" '
-                'repeatCount="indefinite"/></path>'
+                'repeatCount="indefinite"/></g>'
             )
 
     parts.append(
