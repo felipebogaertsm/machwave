@@ -172,7 +172,7 @@ def write_geometry_animations(path):
         ),
         ("D-grain", geometries.DGrainSegment, dict(slot_offset=0.06)),
     ]
-    gmap_dim, n_frames, target_pts = 120, 44, 64
+    gmap_dim, n_frames, target_pts = 120, 68, 64
     front_col, open_col, case_col, prop_col = "#e2683c", "#f7f2ea", "#454a52", "#cdbb92"
     pw, ph, pad, r_case, r_prop, disc_cy = 168, 196, 8, 70, 64, 84
     dur, reveal_end = "6s", 0.85
@@ -223,10 +223,12 @@ def write_geometry_animations(path):
                 parts.append(shape + "/>")
             else:
                 r = reveal_end * i / (n_frames - 1)
+                fade = reveal_end / (n_frames - 1)  # one-frame cross-dissolve
+                a = max(0.001, r - fade)
                 parts.append(
                     shape + ' opacity="0"><animate attributeName="opacity" '
-                    f'values="0;1;1" keyTimes="0;{r:.3f};1" dur="{dur}" '
-                    'calcMode="discrete" repeatCount="indefinite"/></path>'
+                    f'values="0;0;1;1" keyTimes="0;{a:.4f};{r:.4f};1" '
+                    f'dur="{dur}" repeatCount="indefinite"/></path>'
                 )
 
         parts.append(
