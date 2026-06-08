@@ -18,6 +18,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
         port_outer_diameter: float,
         port_angular_width: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -32,6 +33,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
             port_outer_diameter: Outer radial extent of each spoke port [m].
             port_angular_width: Angular width of each spoke port [deg].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.core_diameter = core_diameter
@@ -44,6 +46,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 

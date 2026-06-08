@@ -20,6 +20,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
         fin_axial_offset: float = 0.0,
         transition_length: float = 0.0,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -41,6 +42,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
                 applied at each interface between the finned and cylindrical
                 sections. A value of 0.0 gives an abrupt step [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.core_diameter = core_diameter
@@ -55,6 +57,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 

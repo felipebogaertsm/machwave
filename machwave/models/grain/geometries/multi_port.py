@@ -16,6 +16,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
         port_radial_count: float,
         port_level_count: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        map_dim: int = 100,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -28,6 +29,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
             port_radial_count: Number of ports per concentric ring.
             port_level_count: Number of concentric rings of ports.
             inhibited_surfaces: Surfaces inhibited from burning.
+            map_dim: Pixel resolution of the cross-section map.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.port_diameter = port_diameter
@@ -38,6 +40,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
+            map_dim=map_dim,
             density_ratio=density_ratio,
         )
 
