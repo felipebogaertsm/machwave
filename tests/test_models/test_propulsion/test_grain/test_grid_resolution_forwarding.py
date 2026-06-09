@@ -25,14 +25,14 @@ fmm_factories = pytest.mark.parametrize(
 
 
 @fmm_factories
-def test_map_dim_forwarded_to_segment(factory):
-    """The constructor forwards map_dim to the FMM base instead of dropping it."""
-    segment = factory.build(map_dim=120)
-    assert segment.map_dim == 120
+def test_grid_resolution_forwarded_to_segment(factory):
+    """The constructor forwards grid_resolution to the FMM base instead of dropping it."""
+    segment = factory.build(grid_resolution=120)
+    assert segment.grid_resolution == 120
 
 
 @fmm_factories
-def test_map_dim_defaults_to_100(factory):
-    """Omitting map_dim keeps the base default."""
+def test_grid_resolution_defaults_to_100(factory):
+    """Omitting grid_resolution keeps the base default."""
     segment = factory.build()
-    assert segment.map_dim == 100
+    assert segment.grid_resolution == 100

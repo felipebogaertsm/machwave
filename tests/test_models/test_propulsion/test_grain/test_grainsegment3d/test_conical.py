@@ -2,7 +2,7 @@
 Constant-bore conical burn area versus the analytical hollow cylinder.
 
 With inhibited ends the grain is a pure-radial burner whose lateral burning
-area is exactly pi * (core + 2 * web) * length. Results depend on map_dim; the
+area is exactly pi * (core + 2 * web) * length. Results depend on grid_resolution; the
 15% tolerance absorbs the marching-squares quantization and the Savitzky-Golay
 smoothing, and the sweep stops at 80% web.
 """
@@ -179,4 +179,4 @@ def test_three_axial_slices_is_accepted():
         upper_core_diameter=15e-3,
         lower_core_diameter=10e-3,
     )
-    assert segment.get_normalized_length() == 3
+    assert segment.get_axial_resolution() == 3

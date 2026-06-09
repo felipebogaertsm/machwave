@@ -19,7 +19,7 @@ In the context of grain regression analysis, the wavefront represents the burnin
 In short, Machwave builds a map of the grain with matrices (depending on the geometry).
 Each cell in the map represents either a 1. point in the propellant; 2. a point outside the outer diameter; or 3. an empty point.
 The burn surface is defined by the boundary between 1 and 3.
-The number of cells in the map is determined by the map dimension. A higher map dimension means a more accurate representation of the grain, but longer computation time.
+The number of cells in the map is determined by the grid resolution. A higher grid resolution means a more accurate representation of the grain, but longer computation time.
 
 The FMM algorithm then picks up this map and calculates the distance from the initial burning surface(s) to every point in the propellant grain.
 The result is a single regression map, that can be used to determine the perimeter of the burning surface at any web distance.
@@ -30,11 +30,11 @@ Section 4.1 walks through the 2D FMM implementation step by step, showing the ar
 
 ## 4.1 Step by Step
 
-This section walks through a single tubular grain regression with a map dimension of `n=13`, but the same steps apply to any other geometry.
+This section walks through a single tubular grain regression with a grid resolution of `n=13`, but the same steps apply to any other geometry.
 The map is kept this small for documentation only, real simulations have a lower limit of `n=100`.
 
-**Generate the coordinate maps: [`get_maps()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_maps].**
-Each cell is given a position `(x, y)` as a fraction of the grain radius, so the outer diameter sits at radius 1. The two maps are just the axis broadcast over the grid:
+**Generate the coordinate grids: [`get_coordinate_grids()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_coordinate_grids].**
+Each cell is given a position `(x, y)` as a fraction of the grain radius, so the outer diameter sits at radius 1. The two grids are just the axis values broadcast across the cross-section:
 
 ```
 x by column:  -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67  0.83  1.00
@@ -44,7 +44,7 @@ y by row:     -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67 
 ![map_x gradient](../assets/theory/grain_regression/coord_x.svg)
 ![map_y gradient](../assets/theory/grain_regression/coord_y.svg)
 
-**Mask the outer diameter: [`get_mask()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_mask].**
+**Mask the outer diameter: [`get_outer_diameter_mask()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_outer_diameter_mask].**
 A `1` marks a cell outside the outer diameter ($x^2 + y^2 > 1$); the `0` cells are propellant.
 
 ```
@@ -65,7 +65,7 @@ A `1` marks a cell outside the outer diameter ($x^2 + y^2 > 1$); the `0` cells a
 
 ![casing mask](../assets/theory/grain_regression/mask.svg)
 
-**Carve the core: [`get_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_initial_face_map].**
+**Carve the core: [`generate_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.generate_initial_face_map].**
 Each grain geometry draws its own shape here.
 This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
 
@@ -88,7 +88,7 @@ This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
 ![initial port](../assets/theory/grain_regression/initial_face.svg)
 
 **Apply the inhibitors: [`get_masked_face()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_masked_face].**
-Lays the initial face over the outer-diameter mask, then `_apply_inhibition` decides which of the grain's four surfaces are allowed to burn (an inhibited surface cannot burn).
+Lays the initial face over the outer-diameter mask, then `_apply_surface_inhibition` decides which of the grain's four surfaces are allowed to burn (an inhibited surface cannot burn).
 By default only the outer surface is inhibited.
 
 | Surface | Default | 2D | 3D |
@@ -160,7 +160,7 @@ The face map at a web distance is obtained by thresholding the regression map at
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
 **Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
-A closed-loop curve is traced by `get_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
+A closed-loop curve is traced by `get_iso_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
 Then, `get_length` sums the curve to calculate the burning perimeter, discounting any stretch that lies on the casing wall.
 
 ```
@@ -175,7 +175,7 @@ The contour gives the burning perimeter at a single web distance.
 The burn area is that perimeter times the current grain length, plus any uninhibited end faces.
 At each web step Machwave contours the front and evaluates that burn area, building the burn area as a function of web. The curve is then smoothed with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`).
 
-The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
+The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interpolator`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interpolator] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
 
 **Volume: [`get_volume(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_volume].**
 The volume is the current grain length times the face area, reusing the same cached, smoothed face-area curve that feeds the port area, so it adds no work of its own.
@@ -186,11 +186,11 @@ The port is the empty space inside the casing: the casing cross-section minus th
 ## 4.2 2D vs 3D FMM
 
 [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] describes a grain by a single cross-section extruded along its length.
-[`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] adds a `z` axis to the maps, split into `get_normalized_length()` slices, so each slice can carve its own core, needed for varying geometries like finocyl or conical grains.
+[`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] adds a `z` axis to the maps, split into `get_axial_resolution()` slices, so each slice can carve its own core, needed for varying geometries like finocyl or conical grains.
 The FMM runs once over the full volume.
-Since the slice count is rounded to an integer, `_regression_distance` passes a per-axis pitch (`dx=[axial_pitch, radial_pitch, radial_pitch]`) so distances stay consistent along `z` and across the cross-section.
+Since the slice count is rounded to an integer, `_compute_regression_distance` passes a per-axis grid spacing (`dx=[axial_grid_spacing, radial_grid_spacing, radial_grid_spacing]`) so distances stay consistent along `z` and across the cross-section.
 
-The regression map is generated differently for 2D and 3D. 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], using `skimage`'s `find_contours`). 3D meshes a surface with marching cubes ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func], `skimage`'s `marching_cubes`) and takes its area directly.
+The regression map is generated differently for 2D and 3D. 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], using `skimage`'s `find_contours`). 3D meshes a surface with marching cubes ([`get_burn_area_interpolator`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interpolator], `skimage`'s `marching_cubes`) and takes its area directly.
 
 For volume, 3D FMM counts the solid voxels in the entire map and multiplies by the volume of one voxel.
 
@@ -198,16 +198,16 @@ Since the port area in 3D varies along the grain, [`get_port_area(w, z)`][machwa
 
 ## 4.3 Call Flow
 
-The setup pipeline is shared by both implementations. They diverge only at how the burn area is measured and how volume and port area are read back. Methods marked `*` are overridden in 3D: `get_maps` adds a `z` axis, `_apply_inhibition` works slice by slice, and `_regression_distance` uses a per-axis pitch.
+The setup pipeline is shared by both implementations. They diverge only at how the burn area is measured and how volume and port area are read back. Methods marked `*` are overridden in 3D: `get_coordinate_grids` adds a `z` axis, `_apply_surface_inhibition` works slice by slice, and `_compute_regression_distance` uses a per-axis grid spacing.
 
 **Shared setup — `FMMGrainSegment`**
 
 ```mermaid
 flowchart TB
-    A["get_maps() *"] --> B["get_mask()"]
-    B --> C["get_initial_face_map()"]
-    C --> D["get_masked_face()<br/>applies _apply_inhibition *"]
-    D --> E["get_regression_map()<br/>via _regression_distance * → skfmm.distance"]
+    A["get_coordinate_grids() *"] --> B["get_outer_diameter_mask()"]
+    B --> C["generate_initial_face_map()"]
+    C --> D["get_masked_face()<br/>applies _apply_surface_inhibition *"]
+    D --> E["get_regression_map()<br/>via _compute_regression_distance * → skfmm.distance"]
     E --> F["get_web_thickness()"]
     E --> G["get_face_map(w)"]
 ```
@@ -216,8 +216,8 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    R(["regression map"]) --> BA["get_burn_area_interp_func()"]
-    R --> FA["get_face_area_interp_func()"]
+    R(["regression map"]) --> BA["get_burn_area_interpolator()"]
+    R --> FA["get_face_area_interpolator()"]
     BA --> CT["get_contours(w) → find_contours<br/>(marching squares), per web step"]
     CT --> LN["get_length()"]
     LN --> CO["perimeter × get_length(w)<br/>+ uninhibited end faces"]
@@ -232,8 +232,8 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    R(["regression map"]) --> BA["get_burn_area_interp_func()"]
-    BA --> MC["_measure_iso_surface_area() → marching_cubes<br/>per iso level"]
+    R(["regression map"]) --> BA["get_burn_area_interpolator()"]
+    BA --> MC["_compute_iso_surface_area() → marching_cubes<br/>per iso level"]
     MC --> SG["smooth_savitzky_golay → interp1d (cached)"]
     SG --> BR["get_burn_area(w)"]
     R --> PA["get_port_area(w, z)<br/>casing − slice solid area"]

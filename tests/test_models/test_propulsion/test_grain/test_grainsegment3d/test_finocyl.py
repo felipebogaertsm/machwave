@@ -1,7 +1,7 @@
 """
 Tests for the finocyl 3D FMM grain segment.
 
-NOTE: As with the other FMM grains, results depend on the map_dim parameter.
+NOTE: As with the other FMM grains, results depend on the grid_resolution parameter.
 The cross-section assertions here compare relative quantities (finned slices
 versus unfinned slices) rather than absolute analytical values, since the
 finocyl burn area has no simple closed form.
@@ -91,7 +91,7 @@ def test_finned_slice_has_less_solid_material_than_unfinned_slice(finocyl_segmen
     """At ignition, a finned cross-section retains fewer solid cells."""
     face_map = finocyl_segment.get_face_map(web_distance=0.0)
 
-    normalized_length = finocyl_segment.get_normalized_length()
+    normalized_length = finocyl_segment.get_axial_resolution()
     finned_index = int(round(Z_FINNED / LENGTH * (normalized_length - 1)))
     unfinned_index = int(round(Z_UNFINNED / LENGTH * (normalized_length - 1)))
 

@@ -24,30 +24,34 @@ class TestBatesSegmentMomentOfInertia:
             density_ratio=1.0,
         )
 
-        moi = segment.get_moment_of_inertia(
+        inertia_tensor = segment.get_moment_of_inertia(
             web_distance=0.0, ideal_density=ideal_density
         )
 
         # Check tensor is 3x3
-        assert moi.shape == (3, 3)
+        assert inertia_tensor.shape == (3, 3)
 
         # Check symmetry
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
         # For a hollow cylinder:
         # Ixx (axial) should be less than Iyy, Izz (radial)
         # because radial moments include length contribution
-        assert moi[0, 0] > 0  # Ixx > 0
-        assert moi[1, 1] > 0  # Iyy > 0
-        assert moi[2, 2] > 0  # Izz > 0
+        assert inertia_tensor[0, 0] > 0  # Ixx > 0
+        assert inertia_tensor[1, 1] > 0  # Iyy > 0
+        assert inertia_tensor[2, 2] > 0  # Izz > 0
 
         # For symmetric BATES, Iyy should equal Izz
-        np.testing.assert_almost_equal(moi[1, 1], moi[2, 2], decimal=10)
+        np.testing.assert_almost_equal(
+            inertia_tensor[1, 1], inertia_tensor[2, 2], decimal=10
+        )
 
         # Off-diagonal terms should be zero for axisymmetric grain
-        assert abs(moi[0, 1]) < 1e-10
-        assert abs(moi[0, 2]) < 1e-10
-        assert abs(moi[1, 2]) < 1e-10
+        assert abs(inertia_tensor[0, 1]) < 1e-10
+        assert abs(inertia_tensor[0, 2]) < 1e-10
+        assert abs(inertia_tensor[1, 2]) < 1e-10
 
     def test_segment_moi_increases_with_length(self):
         """Test that MOI increases with segment length."""
@@ -146,7 +150,7 @@ class TestBatesSegmentMomentOfInertia:
             density_ratio=1.0,
         )
 
-        moi = segment.get_moment_of_inertia(
+        inertia_tensor = segment.get_moment_of_inertia(
             web_distance=0.0, ideal_density=ideal_density
         )
 
@@ -162,9 +166,9 @@ class TestBatesSegmentMomentOfInertia:
         expected_Iyy = mass * (r_sum_sq / 4 + length**2 / 12)
 
         # Validate
-        np.testing.assert_almost_equal(moi[0, 0], expected_Ixx, decimal=8)
-        np.testing.assert_almost_equal(moi[1, 1], expected_Iyy, decimal=8)
-        np.testing.assert_almost_equal(moi[2, 2], expected_Iyy, decimal=8)
+        np.testing.assert_almost_equal(inertia_tensor[0, 0], expected_Ixx, decimal=8)
+        np.testing.assert_almost_equal(inertia_tensor[1, 1], expected_Iyy, decimal=8)
+        np.testing.assert_almost_equal(inertia_tensor[2, 2], expected_Iyy, decimal=8)
 
 
 class TestBatesGrainMomentOfInertia:
@@ -213,18 +217,24 @@ class TestBatesGrainMomentOfInertia:
         grain.add_segment(segment2)
 
         ideal_density = 1800.0
-        moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+        inertia_tensor = grain.get_moment_of_inertia(
+            web_distance=0.0, ideal_density=ideal_density
+        )
 
         # Check tensor is symmetric
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
         # Check diagonal values are positive
-        assert moi[0, 0] > 0
-        assert moi[1, 1] > 0
-        assert moi[2, 2] > 0
+        assert inertia_tensor[0, 0] > 0
+        assert inertia_tensor[1, 1] > 0
+        assert inertia_tensor[2, 2] > 0
 
         # For symmetric configuration, Iyy ≈ Izz
-        np.testing.assert_almost_equal(moi[1, 1], moi[2, 2], decimal=8)
+        np.testing.assert_almost_equal(
+            inertia_tensor[1, 1], inertia_tensor[2, 2], decimal=8
+        )
 
     def test_three_segments_with_spacing(self):
         """Test MOI for three BATES segments with spacing."""
@@ -240,15 +250,21 @@ class TestBatesGrainMomentOfInertia:
             grain.add_segment(segment)
 
         ideal_density = 1800.0
-        moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+        inertia_tensor = grain.get_moment_of_inertia(
+            web_distance=0.0, ideal_density=ideal_density
+        )
 
         # Basic validations
-        assert moi.shape == (3, 3)
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
-        assert np.all(np.diag(moi) > 0)
+        assert inertia_tensor.shape == (3, 3)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
+        assert np.all(np.diag(inertia_tensor) > 0)
 
         # For symmetric grain, Iyy ≈ Izz
-        np.testing.assert_almost_equal(moi[1, 1], moi[2, 2], decimal=6)
+        np.testing.assert_almost_equal(
+            inertia_tensor[1, 1], inertia_tensor[2, 2], decimal=6
+        )
 
     def test_moi_decreases_during_burn_multisegment(self):
         """Test that total MOI decreases as multi-segment grain burns."""
@@ -300,12 +316,16 @@ class TestBatesGrainMomentOfInertia:
         grain.add_segment(segment2)
 
         ideal_density = 1800.0
-        moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+        inertia_tensor = grain.get_moment_of_inertia(
+            web_distance=0.0, ideal_density=ideal_density
+        )
 
         # Basic checks
-        assert moi.shape == (3, 3)
-        assert np.all(np.diag(moi) > 0)
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        assert inertia_tensor.shape == (3, 3)
+        assert np.all(np.diag(inertia_tensor) > 0)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
     def test_parallel_axis_theorem_validation(self):
         """Validate that parallel axis theorem is correctly applied."""

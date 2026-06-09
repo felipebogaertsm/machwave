@@ -2,15 +2,16 @@ import numpy as np
 from skimage import measure
 
 
-def get_contours(
-    map: np.typing.NDArray[np.float64], map_dist: float, *args, **kwargs
+def get_iso_contours(
+    regression_field: np.typing.NDArray[np.float64], iso_level: float, *args, **kwargs
 ) -> list[np.typing.NDArray[np.float64]]:
     """
-    Finds contours in a 2D array at a specified iso-value (map_dist).
+    Finds contours in a 2D array at a specified iso-value (iso_level).
 
     Args:
-        map: The 2D NumPy array (float64) from which to extract contours.
-        map_dist: The iso-value level at which to trace contours.
+        regression_field: The 2D NumPy array (float64) from which to extract
+            contours.
+        iso_level: The iso-value level at which to trace contours.
         *args: Additional positional arguments passed to skimage.measure.find_contours.
         **kwargs: Additional keyword arguments passed to skimage.measure.find_contours.
 
@@ -18,35 +19,43 @@ def get_contours(
         A list of float64 arrays, where each array represents a contour.
         Each contour array is typically shaped (N, 2) with (row, col) coordinates.
     """
-    if np.ma.isMaskedArray(map):
+    if np.ma.isMaskedArray(regression_field):
         # Outside-casing cells read as 0, tracing a spurious contour along the
         # wall; lift them above every iso level so only real fronts are traced.
-        map = np.ma.filled(map, float(map.max()) + 1.0)
-    return measure.find_contours(map, map_dist, fully_connected="low", *args, **kwargs)
+        regression_field = np.ma.filled(
+            regression_field, float(regression_field.max()) + 1.0
+        )
+    return measure.find_contours(
+        regression_field, iso_level, fully_connected="low", *args, **kwargs
+    )
 
 
-def get_length(contour: np.ndarray, map_size: int, tolerance: float = 1.0) -> float:
+def get_length(
+    contour: np.ndarray, grid_resolution: int, tolerance: float = 1.0
+) -> float:
     """
     Return the total length of contour segments away from the disc edge.
 
-    Segments within `tolerance` of the edge of a circle of diameter `map_size`
-    are excluded, dropping the casing wall while keeping a burning front that
-    has regressed close to it.
+    Segments within `tolerance` of the edge of a circle of diameter
+    `grid_resolution` are excluded, dropping the casing wall while keeping a
+    burning front that has regressed close to it.
 
     Args:
         contour: The contour array.
-        map_size: The size of the map.
+        grid_resolution: Grid points per axis of the map.
         tolerance: The tolerance value. Defaults to 1.0.
 
     Returns:
         The total length of the segments.
     """
-    offset = np.roll(contour.T, 1, axis=1)
-    lengths = np.linalg.norm(contour.T - offset, axis=0)
+    shifted_vertices = np.roll(contour.T, 1, axis=1)
+    segment_lengths = np.linalg.norm(contour.T - shifted_vertices, axis=0)
 
-    center_offset = np.array([[map_size / 2, map_size / 2]])
-    radius = np.linalg.norm(contour - center_offset, axis=1)
+    center_position = np.array([[grid_resolution / 2, grid_resolution / 2]])
+    distance_from_center = np.linalg.norm(contour - center_position, axis=1)
 
-    valid = radius < (map_size / 2) - tolerance
+    is_interior_contour_segment = (
+        distance_from_center < (grid_resolution / 2) - tolerance
+    )
 
-    return np.sum(lengths[valid])
+    return np.sum(segment_lengths[is_interior_contour_segment])

@@ -240,7 +240,7 @@ def plot_3d_face_map_animated(
 
     Args:
         face_maps: 4D array of shape
-            ``(n_steps, normalized_length, map_dim, map_dim)`` with values
+            ``(n_steps, normalized_length, grid_resolution, grid_resolution)`` with values
             -1 (outside), 0 (burned), 1 (propellant).
         web_distances: 1D array of web distances [m] for each step.
 
@@ -256,9 +256,9 @@ def plot_3d_face_map_animated(
         raise ValueError("The number of frames must match the number of face maps.")
 
     n_z = face_maps.shape[1]
-    map_dim = face_maps.shape[2]
+    grid_resolution = face_maps.shape[2]
     mid_z = n_z // 2
-    mid_y = map_dim // 2
+    mid_y = grid_resolution // 2
 
     fig = make_subplots(
         rows=1,

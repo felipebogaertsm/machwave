@@ -9,42 +9,36 @@ from numpy.typing import NDArray
 import machwave.models.grain as grain
 import machwave.models.grain.base as grain_base
 
-MINIMUM_MAP_DIMENSION = 100
+MINIMUM_GRID_RESOLUTION = 100
+DEFAULT_GRID_RESOLUTION = 100
 
 
 class FMMGrainSegment(grain.GrainSegment, ABC):
-    """
-    Fast Marching Method (FMM) implementation of a grain segment.
-
-    This class was inspired by the Andrew Reilley's software openMotor, in
-    particular the fmm module.
-    openMotor's repository can be accessed at:
-    https://github.com/reilleya/openMotor
-    """
+    """Fast Marching Method (FMM) implementation of a grain segment."""
 
     def __init__(
         self,
-        map_dim: int,
         length: float,
         outer_diameter: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
+        grid_resolution: int = DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
         Initialize an FMM grain segment.
 
         Args:
-            map_dim: Pixel resolution of the cross-section map.
             length: Segment length [m].
             outer_diameter: Outer diameter [m].
             inhibited_surfaces: Surfaces inhibited from burning.
+            grid_resolution: Resolution of the face map, x and y axes.
             density_ratio: Ratio of real to ideal propellant density.
         """
-        self.map_dim = map_dim
+        self.grid_resolution = grid_resolution
 
         # "Cache" variables:
-        self.maps = None
-        self.mask = None
+        self.coordinate_grids = None
+        self.outer_diameter_mask = None
         self.masked_face = None
         self.regression_map = None
         self.web_thickness = None
@@ -56,52 +50,50 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             density_ratio=density_ratio,
         )
 
-    @abstractmethod
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """Method needs to be implemented for each and every geometry."""
-        pass
-
-    @abstractmethod
-    def get_maps(self) -> tuple:
-        """
-        Return the coordinate maps for the grain.
-
-        Returns:
-            `(map_x, map_y)` for 2D; `(map_x, map_y, map_z)` for 3D.
-        """
-        pass
-
-    @abstractmethod
-    def get_mask(self) -> np.ndarray:
-        """Implementation varies depending if the geometry is 2D or 3D."""
-        pass
-
     def validate(self) -> None:
         """
         Validate the internal geometry of the grain.
 
-        Ensures the grain map dimension meets the minimum required size.
-
         Raises:
-            GrainGeometryError: If the grain map dimension is below the valid
+            GrainGeometryError: If the grid resolution is below the valid
                 threshold.
         """
         super().validate()
-        if not self.map_dim >= MINIMUM_MAP_DIMENSION:
+
+        if not self.grid_resolution >= MINIMUM_GRID_RESOLUTION:
             raise grain.GrainGeometryError(
-                f"Map dimension must be at least {MINIMUM_MAP_DIMENSION}, "
-                f"got {self.map_dim}"
+                f"Grid resolution must be at least {MINIMUM_GRID_RESOLUTION}, "
+                f"got {self.grid_resolution}"
             )
+
+    @abstractmethod
+    def get_coordinate_grids(self) -> tuple:
+        """Return the coordinate grids for the grain, one per spatial axis."""
+        pass
+
+    @abstractmethod
+    def get_outer_diameter_mask(self) -> np.ndarray:
+        """Return a boolean mask of cells outside the outer-diameter boundary."""
+        pass
+
+    @abstractmethod
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+        """Generate the initial face map for the geometry (1 = propellant, 0 = void)."""
+        pass
+
+    def get_empty_face_map(self) -> np.ndarray:
+        """Return a face map of all ones, shaped like the first stored map."""
+        return np.ones_like(self.get_coordinate_grids()[0])
 
     def normalize(self, value: int | float) -> float:
         """
-        Convert a dimensional value to a fraction of the half-diameter.
+        Convert a dimensional value to a fraction of the outer radius.
 
         Args:
             value: Dimensional value (e.g., length) to normalize [m].
 
         Returns:
-            Value expressed as a fraction of the half-diameter.
+            Value expressed as a fraction of the outer radius.
         """
         return value / (0.5 * self.outer_diameter)
 
@@ -111,29 +103,11 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         """Convert a normalized input back into a dimensional value [m]."""
         return (value / 2) * (self.outer_diameter)
 
-    def map_to_area(
-        self, value: float | NDArray[np.float64]
-    ) -> float | NDArray[np.float64]:
-        """
-        Convert a pixel-area value to [m^2].
-
-        Scales by `outer_diameter^2 / map_dim^2`.
-
-        Args:
-            value: Area in pixel units.
-
-        Returns:
-            Area [m^2].
-        """
-        return (self.outer_diameter**2) * (value / (self.map_dim**2))
-
-    def map_to_length(
+    def cells_to_meters(
         self, value: float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
         """
         Convert a pixel-distance value to [m].
-
-        Scales by `outer_diameter / map_dim`.
 
         Args:
             value: Distance in pixel units.
@@ -141,73 +115,76 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         Returns:
             Distance [m].
         """
-        return self.outer_diameter * (value / self.map_dim)
+        return self.outer_diameter * (value / self.grid_resolution)
 
-    def get_empty_face_map(self) -> np.ndarray:
-        """Return a face map of all ones, shaped like the first stored map."""
-        return np.ones_like(self.get_maps()[0])
+    def cells_to_square_meters(
+        self, value: float | NDArray[np.float64]
+    ) -> float | NDArray[np.float64]:
+        """
+        Convert a pixel-area value to [m^2].
 
-    def _apply_inhibition(
+        Args:
+            value: Area in pixel units.
+
+        Returns:
+            Area [m^2].
+        """
+        return (self.outer_diameter**2) * (value / (self.grid_resolution**2))
+
+    def get_normalized_spacing(self) -> float:
+        """Return the cell size in normalized coordinates (`1 / grid_resolution`)."""
+        return 1 / self.grid_resolution
+
+    def _apply_surface_inhibition(
         self,
         face_map: NDArray[np.int_],
-        outside: NDArray[np.bool_],
+        excluded_mask: NDArray[np.bool_],
     ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
         """
-        Apply surface-inhibition adjustments to the face map and mask.
+        Apply surface inhibition maps.
 
-        Base implementation handles outer-surface inhibition. 2D and 3D
-        subclasses add their own logic for other inhibited surfaces.
+        Base implementation handles outer surface inhibition. 2D and 3D subclasses add
+        their own logic for other inhibited surfaces.
 
         Args:
             face_map: Mutable copy of the initial face map.
-            outside: Mutable copy of the circular boundary mask.
+            excluded_mask: Mutable copy of the outer diameter mask; cells excluded from
+                the burn domain, extended here with inhibited surfaces.
 
         Returns:
-            Tuple `(face_map, outside)` with inhibition applied.
+            `(face_map, excluded_mask)` with inhibition applied.
         """
         if not self.inhibited_surfaces.outer_surface:
-            inside = ~outside  # Invert the mask
+            inside = ~excluded_mask  # Invert the mask
             eroded = binary_erosion(inside)  # Erode the inside to find the boundary
-            boundary_ring = inside & np.logical_not(eroded)
-            face_map[boundary_ring] = 0
+            outer_surface_boundary = inside & np.logical_not(eroded)
+            face_map[outer_surface_boundary] = 0
 
-        return face_map, outside
+        return face_map, excluded_mask
 
     def get_masked_face(self) -> np.ndarray:
-        """
-        Return a masked representation of the face map.
-
-        The mask is circular and normalized to the map dimensions. Generated on
-        first access by combining the initial face map with the circular mask.
-        """
+        """Return a masked representation of the face map."""
         if self.masked_face is None:
-            face_map = self.get_initial_face_map().copy()
-            outside = self.get_mask().copy()
+            face_map = self.generate_initial_face_map().copy()
+            excluded_mask = self.get_outer_diameter_mask().copy()
 
-            face_map, outside = self._apply_inhibition(face_map, outside)
+            face_map, excluded_mask = self._apply_surface_inhibition(
+                face_map, excluded_mask
+            )
 
-            self.masked_face = np.ma.MaskedArray(face_map, outside)
+            self.masked_face = np.ma.MaskedArray(face_map, excluded_mask)
         return self.masked_face
-
-    def get_cell_size(self) -> float:
-        """Return the cell size in normalized coordinates (`1 / map_dim`)."""
-        return 1 / self.map_dim
 
     @property
     def has_cross_section_regression(self) -> bool:
-        """
-        Return whether the cross-section has any burning surface.
-
-        Inspects the masked face map for zero-valued (burning) cells. Returns
-        False when no burning front exists for the FMM to propagate from.
-        """
+        """Return whether the cross-section has any burning surface."""
         masked_face = self.get_masked_face()
         unmasked = ~np.ma.getmaskarray(masked_face)
         return bool(np.any(masked_face.data[np.asarray(unmasked, dtype=bool)] == 0))
 
-    def _regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
+    def _compute_regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
         """Return the regression distance from the burning surface in normalized web units."""
-        return skfmm.distance(masked_face, dx=self.get_cell_size()) * 2
+        return skfmm.distance(masked_face, dx=self.get_normalized_spacing()) * 2
 
     def get_regression_map(self):
         """
@@ -222,19 +199,21 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             masked_face = self.get_masked_face()
 
             if self.has_cross_section_regression:
-                self.regression_map = self._regression_distance(masked_face)
+                self.regression_map = self._compute_regression_distance(masked_face)
             else:
                 # End burner: web = length split across exposed ends. Fill the
                 # whole array with one constant (not 0 outside the mask) so the
                 # perimeter tracer finds no spurious contour.
-                exposed_ends = (not self.inhibited_surfaces.upper_end) + (
+                exposed_end_count = (not self.inhibited_surfaces.upper_end) + (
                     not self.inhibited_surfaces.lower_end
                 )
-                axial_web = (
-                    self.normalize(self.length / exposed_ends) if exposed_ends else 0.0
+                normalized_axial_web_distance = (
+                    self.normalize(self.length / exposed_end_count)
+                    if exposed_end_count
+                    else 0.0
                 )
                 self.regression_map = np.ma.MaskedArray(
-                    np.full(masked_face.shape, axial_web),
+                    np.full(masked_face.shape, normalized_axial_web_distance),
                     mask=np.ma.getmaskarray(masked_face),
                 )
         return self.regression_map
@@ -251,6 +230,34 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
                 self.denormalize(float(np.amax(self.get_regression_map())))
             )
         return float(self.web_thickness)
+
+    def get_face_map(self, web_distance: float) -> np.typing.NDArray[np.int64]:
+        """
+        Returns a matrix representing the grain face based on the given web distance.
+
+        The returned array can contain:
+        -1 for masked or invalid points,
+        0 for points below the threshold,
+        1 for points above the threshold.
+
+        Args:
+            web_distance: The distance traveled into the grain web.
+
+        Returns:
+            A NumPy array with -1, 0, or 1 indicating the grain face at the specified web distance.
+        """
+        web_distance_normalized = self.normalize(web_distance)
+        regression_map = self.get_regression_map()
+        excluded_mask = np.ma.getmaskarray(regression_map)
+
+        # Create a masked array, where excluded cells are masked out
+        occupancy_state = np.ma.MaskedArray(
+            (regression_map > web_distance_normalized).astype(np.int64),
+            mask=excluded_mask,
+        )
+
+        # Fill masked entries with -1, valid/true entries remain 1 or 0
+        return occupancy_state.filled(-1)
 
     @abstractmethod
     def get_contours(
@@ -271,31 +278,3 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             An array representing the computed contours of the grain regression.
         """
         pass
-
-    def get_face_map(self, web_distance: float) -> np.typing.NDArray[np.int64]:
-        """
-        Returns a matrix representing the grain face based on the given web distance.
-
-        The returned array can contain:
-        -1 for masked or invalid points,
-        0 for points below the threshold,
-        1 for points above the threshold.
-
-        Args:
-            web_distance: The distance traveled into the grain web.
-
-        Returns:
-            A NumPy array with -1, 0, or 1 indicating the grain face at the specified web distance.
-        """
-        web_distance_normalized = self.normalize(web_distance)
-        regression_map = self.get_regression_map()
-        invalid = np.ma.getmaskarray(regression_map)
-
-        # Create a masked array, where invalid cells are masked out
-        maskarr = np.ma.MaskedArray(
-            (regression_map > web_distance_normalized).astype(np.int64),
-            mask=invalid,
-        )
-
-        # Fill masked entries with -1, valid/true entries remain 1 or 0
-        return maskarr.filled(-1)

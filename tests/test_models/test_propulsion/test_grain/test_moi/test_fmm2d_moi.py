@@ -20,24 +20,30 @@ class TestFMM2DSegmentMomentOfInertia:
         ideal_density = 1800.0
 
         segment = segment_factory(length=length, outer_diameter=outer_diameter)
-        moi = segment.get_moment_of_inertia(
+        inertia_tensor = segment.get_moment_of_inertia(
             web_distance=0.0, ideal_density=ideal_density
         )
 
         # Check tensor is 3x3
-        assert moi.shape == (3, 3)
+        assert inertia_tensor.shape == (3, 3)
 
         # Check symmetry
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
         # All diagonal elements should be positive
-        assert moi[0, 0] > 0  # Ixx > 0
-        assert moi[1, 1] > 0  # Iyy > 0
-        assert moi[2, 2] > 0  # Izz > 0
+        assert inertia_tensor[0, 0] > 0  # Ixx > 0
+        assert inertia_tensor[1, 1] > 0  # Iyy > 0
+        assert inertia_tensor[2, 2] > 0  # Izz > 0
 
         # For roughly symmetric 2D grains, Iyy should be close to Izz
         # (though some geometries like D-grain may have slight asymmetry)
-        ratio = moi[1, 1] / moi[2, 2] if moi[2, 2] > 0 else 0
+        ratio = (
+            inertia_tensor[1, 1] / inertia_tensor[2, 2]
+            if inertia_tensor[2, 2] > 0
+            else 0
+        )
         assert 0.5 < ratio < 2.0  # Allow for some asymmetry
 
     def test_segment_moi_tensor_structure(self, segment_factory, geometry_name):
@@ -45,16 +51,18 @@ class TestFMM2DSegmentMomentOfInertia:
         segment = segment_factory(length=0.2, outer_diameter=0.1)
         ideal_density = 1800.0
 
-        moi = segment.get_moment_of_inertia(
+        inertia_tensor = segment.get_moment_of_inertia(
             web_distance=0.0, ideal_density=ideal_density
         )
 
         # Check it's a proper symmetric tensor
-        assert moi.shape == (3, 3)
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        assert inertia_tensor.shape == (3, 3)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
         # Diagonal elements should be positive
-        assert np.all(np.diag(moi) > 0)
+        assert np.all(np.diag(inertia_tensor) > 0)
 
     def test_segment_moi_decreases_with_burn(self, segment_factory, geometry_name):
         """Test that MOI decreases as propellant burns (mass decreases)."""
@@ -145,18 +153,26 @@ class TestFMM2DGrainMultiSegmentMomentOfInertia:
         grain.add_segment(segment2)
 
         ideal_density = 1800.0
-        moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+        inertia_tensor = grain.get_moment_of_inertia(
+            web_distance=0.0, ideal_density=ideal_density
+        )
 
         # Check tensor is symmetric
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
 
         # Check diagonal values are positive
-        assert moi[0, 0] > 0
-        assert moi[1, 1] > 0
-        assert moi[2, 2] > 0
+        assert inertia_tensor[0, 0] > 0
+        assert inertia_tensor[1, 1] > 0
+        assert inertia_tensor[2, 2] > 0
 
         # For roughly symmetric configuration, Iyy ≈ Izz
-        ratio = moi[1, 1] / moi[2, 2] if moi[2, 2] > 0 else 0
+        ratio = (
+            inertia_tensor[1, 1] / inertia_tensor[2, 2]
+            if inertia_tensor[2, 2] > 0
+            else 0
+        )
         assert 0.8 < ratio < 1.2  # Within 20% for symmetric grains
 
     def test_three_segments_with_spacing(self, segment_factory, geometry_name):
@@ -168,12 +184,16 @@ class TestFMM2DGrainMultiSegmentMomentOfInertia:
             grain.add_segment(segment)
 
         ideal_density = 1800.0
-        moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+        inertia_tensor = grain.get_moment_of_inertia(
+            web_distance=0.0, ideal_density=ideal_density
+        )
 
         # Basic validations
-        assert moi.shape == (3, 3)
-        np.testing.assert_array_almost_equal(moi, moi.T, decimal=10)
-        assert np.all(np.diag(moi) > 0)
+        assert inertia_tensor.shape == (3, 3)
+        np.testing.assert_array_almost_equal(
+            inertia_tensor, inertia_tensor.T, decimal=10
+        )
+        assert np.all(np.diag(inertia_tensor) > 0)
 
     def test_moi_decreases_during_burn_multisegment(
         self, segment_factory, geometry_name

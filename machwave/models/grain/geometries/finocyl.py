@@ -20,7 +20,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
         fin_axial_offset: float = 0.0,
         transition_length: float = 0.0,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -42,7 +42,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
                 applied at each interface between the finned and cylindrical
                 sections. A value of 0.0 gives an abrupt step [m].
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.core_diameter = core_diameter
@@ -57,7 +57,7 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -181,31 +181,31 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
         )
         return np.minimum(rise, fall)
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """Return the initial face map for the finocyl port."""
-        map_x, map_y, map_z = self.get_maps()
+        map_x, map_y, map_z = self.get_coordinate_grids()
         core_map = self.get_empty_face_map()
 
-        core_radius_norm = self.normalize(self.core_diameter) / 2
-        fin_width_norm = self.normalize(self.fin_width)
-        fin_length_norm = self.normalize(self.fin_length)
+        core_radius_normalized = self.normalize(self.core_diameter) / 2
+        fin_width_normalized = self.normalize(self.fin_width)
+        fin_length_normalized = self.normalize(self.fin_length)
 
         radius = np.sqrt(map_x**2 + map_y**2)
-        core_map[radius < core_radius_norm] = 0
+        core_map[radius < core_radius_normalized] = 0
 
         axial_position = (1 - map_z) * self.length
-        local_fin_tip_norm = core_radius_norm + (
-            self._fin_depth_fraction(axial_position) * fin_length_norm
+        local_fin_tip_normalized = core_radius_normalized + (
+            self._fin_depth_fraction(axial_position) * fin_length_normalized
         )
 
         for i in range(self.number_of_fins):
             theta = 2 * np.pi / self.number_of_fins * i
             within_width = (
                 np.abs(np.cos(theta) * map_x + np.sin(theta) * map_y)
-                < fin_width_norm / 2
+                < fin_width_normalized / 2
             )
             radial = np.sin(theta) * map_x - np.cos(theta) * map_y
-            within_length = (radial > 0) & (radial < local_fin_tip_norm)
+            within_length = (radial > 0) & (radial < local_fin_tip_normalized)
             core_map[within_width & within_length] = 0
 
         core_map[0] = 0
