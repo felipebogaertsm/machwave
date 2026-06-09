@@ -267,12 +267,10 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
 
     def _get_solid_mask(self, web_distance: float) -> NDArray[np.bool_]:
         """
-        Boolean mask of solid (unburned, in-domain) cells at a web distance.
+        Boolean mask of solid cells at a web distance.
 
-        Equivalent to `get_face_map(web_distance) == 1` but built as a plain
-        boolean array, skipping the int64/MaskedArray/`filled(-1)` path. The
-        per-step consumers (volume, indices) route through this instead of
-        `get_face_map`, whose -1/0/1 encoding is kept for plot consumers.
+        Memoized per web distance, since it is used for both volume, port area, center
+        of gravity and moment of inertia calculations.
         """
         if self._solid_mask is None or self._solid_mask_web != web_distance:
             regression_map = self.get_regression_map()
@@ -285,7 +283,7 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         return self._solid_mask
 
     def _get_solid_indices(self, web_distance: float) -> tuple[NDArray[np.int_], ...]:
-        """Indices of solid cells (`np.where` over the cached mask), memoized."""
+        """Indices of solid cells, memoized."""
         if self._solid_indices is None or self._solid_indices_web != web_distance:
             self._solid_indices = np.where(self._get_solid_mask(web_distance))
             self._solid_indices_web = web_distance
