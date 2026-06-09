@@ -7,13 +7,13 @@ Determining the shape of the burning surface as a function of how far it has rec
 
 ![Animated grain regression](../assets/theory/grain_regression/regression_animation.svg)
 
-For a tubular or BATES geometry, the burn area can be easily determined analytically as a function of the web distance distance traveled.
+For a tubular or BATES geometry, the burn area can be easily determined analytically as a function of the web distance traveled.
 However, for more complex geometries, the burn area may need to be determined through numerical methods.
 
 ![Complex port geometries regressing](../assets/theory/grain_regression/geometry_animations.svg)
 
 Machwave uses the fast marching method (FMM) to compute the burn area for complex grain geometries.
-The FMM is a numerical algorithm for solving the Eikonal equation, which describes the evolution of a wavefront as it propagates through a medim.
+The FMM is a numerical algorithm for solving the Eikonal equation, which describes the evolution of a wavefront as it propagates through a medium.
 In the context of grain regression analysis, the wavefront represents the burning surface of the propellant, and the medium is the solid grain.
 
 In short, Machwave builds a map of the grain with matrices (depending on the geometry).
@@ -26,11 +26,12 @@ The result is a single regression map, that can be used to determine the perimet
 
 Machwave currently supports both 2D and 3D FMM regression, for constant and varying cross-section grain geometries.
 
-Section 4.1 walks through the 2D FMM implementation step by step, showing the arrays and visualizations at each stage. Section 4.2 shows the differences between the 2D and 3D implementations, and how Machwave handles varying cross-section geometries.
+Section 4.1 walks through the 2D FMM implementation step by step, showing the arrays and visualizations at each stage. Section 4.2 shows the differences between the 2D and 3D implementations, and how Machwave handles varying cross-section geometries. Section 4.3 maps the full call flow for both.
 
 ## 4.1 Step by Step
 
-This section exemplifies a single tubular grain regression with a map dimension of `n=13`, but the same steps apply to any other geometry.
+This section walks through a single tubular grain regression with a map dimension of `n=13`, but the same steps apply to any other geometry.
+The map is kept this small for documentation only, real simulations have a lower limit of `n=100`.
 
 **Generate the coordinate maps: [`get_maps()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_maps].**
 Each cell is given a position `(x, y)` as a fraction of the grain radius, so the outer diameter sits at radius 1. The two maps are just the axis broadcast over the grid:
@@ -177,17 +178,64 @@ At each web step Machwave contours the front and evaluates that burn area, build
 The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
 
 **Volume: `get_volume(w)`.**
-The volume in function of web is calculated by counting the solid cells in the face map for the 2D FMM and multiplying by length.
-In the 3D FMM, the cell volume is simply multiplied by the number of solid voxels in the 3D face map.
+In 2D the volume is the current grain length times the face area, reusing the same cached, smoothed face-area curve that feeds the port area, so it adds no work of its own.
+In 3D the volume is the number of solid voxels in the 3D face map times the volume of one voxel.
 
 **Port area: [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
-The open port is the mirror of the solid: the casing cross-section minus that same face area. `get_port_area(w)` reads it straight from the cached face area, so it costs nothing past the lookup already paid for.
+The port is the empty space inside the casing: the casing cross-section minus the solid face area. In 2D it comes straight from the cached face area, so it needs no extra work. In 3D the port varies along the grain, so `get_port_area(w, z)` takes the cross-section at axial height `z` and subtracts its solid area from the casing.
 
 ## 4.2 2D vs 3D FMM
 
-A grain whose port is the same all the way down the tube is fully described by one cross-section, which is what [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] uses. When the port varies along the length, a finocyl finned over only part of its span, or a cone, one slice no longer captures it, and [`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] solves the same map over the full voxel volume.
+[`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] describes a grain by a single cross-section extruded along its length.
+[`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] adds a `z` axis to the maps, split into `get_normalized_length()` slices, so each slice can carve its own core, needed for varying geometries like finocyl or conical grains.
+The FMM runs once over the full volume.
+Since the slice count is rounded to an integer, `_regression_distance` passes a per-axis pitch (`dx=[axial_pitch, radial_pitch, radial_pitch]`) so distances stay consistent along `z` and across the cross-section.
 
-Either way the key step is reading the burning surface off the regression map, and the two do it the same way one dimension apart. In 2D the surface is a curve: [`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours] traces it with marching squares (`skimage`'s `find_contours`), walking every 2x2 block of cells and drawing the short line segment the front cuts through it, then stitching the segments into the closed burning perimeter. In 3D the surface is a true surface: the burn area comes from marching cubes (`skimage`'s `marching_cubes`, via [`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]), walking every 2x2x2 block of voxels and emitting the triangles the front cuts through it, building a watertight mesh whose area is the burning area. Same recipe, line segments in 2D and triangles in 3D.
+The burning surface is read off the regression map one dimension apart: 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], `skimage`'s `find_contours`); 3D meshes a surface with marching cubes ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func], `skimage`'s `marching_cubes`) and takes its area directly.
+
+## 4.3 Call Flow
+
+The setup pipeline is shared by both implementations. They diverge only at how the burn area is measured and how volume and port area are read back. Methods marked `*` are overridden in 3D: `get_maps` adds a `z` axis, `_apply_inhibition` works slice by slice, and `_regression_distance` uses a per-axis pitch.
+
+**Shared setup — `FMMGrainSegment`**
+
+```mermaid
+flowchart TB
+    A["get_maps() *"] --> B["get_mask()"]
+    B --> C["get_initial_face_map()"]
+    C --> D["get_masked_face()<br/>applies _apply_inhibition *"]
+    D --> E["get_regression_map()<br/>via _regression_distance * → skfmm.distance"]
+    E --> F["get_web_thickness()"]
+    E --> G["get_face_map(w)"]
+```
+
+**2D outputs — `FMMGrainSegment2D`**
+
+```mermaid
+flowchart TB
+    R(["regression map"]) --> BA["get_burn_area_interp_func()"]
+    R --> FA["get_face_area_interp_func()"]
+    BA --> CT["get_contours(w) → find_contours<br/>(marching squares), per web step"]
+    CT --> LN["get_length()"]
+    LN --> CO["perimeter × get_length(w)<br/>+ uninhibited end faces"]
+    CO --> SG["smooth_savitzky_golay → interp1d (cached)"]
+    SG --> BR["get_burn_area(w)"]
+    FA --> FV["get_face_area(w)"]
+    FV --> PA["get_port_area(w)"]
+    FV --> VO["get_volume(w) = length × face area"]
+```
+
+**3D outputs — `FMMGrainSegment3D`**
+
+```mermaid
+flowchart TB
+    R(["regression map"]) --> BA["get_burn_area_interp_func()"]
+    BA --> MC["_measure_iso_surface_area() → marching_cubes<br/>per iso level"]
+    MC --> SG["smooth_savitzky_golay → interp1d (cached)"]
+    SG --> BR["get_burn_area(w)"]
+    R --> PA["get_port_area(w, z)<br/>casing − slice solid area"]
+    R --> VO["get_volume(w) = solid voxels × cell volume"]
+```
 
 # References
 
