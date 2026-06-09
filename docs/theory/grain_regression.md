@@ -177,7 +177,7 @@ At each web step Machwave contours the front and evaluates that burn area, build
 
 The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
 
-**Volume: `get_volume(w)`.**
+**Volume: [`get_volume(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_volume].**
 The volume is the current grain length times the face area, reusing the same cached, smoothed face-area curve that feeds the port area, so it adds no work of its own.
 
 **Port area: [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
