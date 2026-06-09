@@ -27,7 +27,7 @@ def radial_tube():
         lower_core_diameter=CORE_DIAMETER,
         inhibited_surfaces=INHIBITED_ENDS,
     )
-    segment.map_dim = 150
+    segment.grid_resolution = 150
     return segment
 
 

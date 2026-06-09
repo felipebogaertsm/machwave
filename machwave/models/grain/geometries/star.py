@@ -16,7 +16,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
         point_length: float,
         point_width: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -29,7 +29,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
             point_length: Radial length of each point [m].
             point_width: Width of each point at the base [m].
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.number_of_points = int(number_of_points)
@@ -40,7 +40,7 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -69,18 +69,13 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
                 f"Point width must be positive, got {self.point_width}"
             )
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
-        """
-        Return the initial face map for a star grain segment.
-
-        References:
-            openMotor, https://github.com/reilleya/openMotor
-        """
-        map_x, map_y = self.get_maps()
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+        """Return the initial face map for a star grain segment."""
+        map_x, map_y = self.get_coordinate_grids()
         core_map = self.get_empty_face_map()
 
-        point_length_norm = self.normalize(self.point_length)
-        point_width_norm = self.normalize(self.point_width)
+        point_length_normalized = self.normalize(self.point_length)
+        point_width_normalized = self.normalize(self.point_width)
 
         radius = (map_x**2 + map_y**2) ** 0.5
 
@@ -88,7 +83,9 @@ class StarGrainSegment(grain_fmm.FMMGrainSegment2D):
             theta = 2 * np.pi / self.number_of_points * i
             rect = abs(np.cos(theta) * map_x + np.sin(theta) * map_y)
 
-            width = point_width_norm / 2 * (1 - (radius / point_length_norm))
+            width = (
+                point_width_normalized / 2 * (1 - (radius / point_length_normalized))
+            )
             vect = rect < width
             near = np.sin(theta) * map_x - np.cos(theta) * map_y > -0.025
 

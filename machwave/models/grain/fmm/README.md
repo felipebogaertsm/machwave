@@ -14,7 +14,7 @@ Here is a step by step flow of how it works:
 
 ### 1. Model the geometry
 
-1. The geometry is mapped onto a 2D or 3D grid (`get_initial_face_map`). Each grid
+1. The geometry is mapped onto a 2D or 3D grid (`generate_initial_face_map`). Each grid
    element is assigned a value: `1` means solid propellant; `0` means void. This method
    needs to be implemented by every geometry.
 
@@ -35,7 +35,7 @@ Here is a step by step flow of how it works:
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
    ```
 
-2. The circular outer boundary is enforced with a mask (`get_mask`). Elements outside
+2. The circular outer boundary is enforced with a mask (`get_outer_diameter_mask`). Elements outside
    the unit-radius circle in normalized coordinates are considered outside the grain
    (`-1`).
 
@@ -81,7 +81,7 @@ Here is a step by step flow of how it works:
 
 2. The Fast Marching Method is applied (`get_regression_map`) using `skfmm.distance` to
    calculate the distance from each solid propellant point to the nearest void. The
-   cell size is set to `1/map_dim` for proper scaling.
+   cell size is set to `1/grid_resolution` for proper scaling.
 
    Example regression map (normalized distances):
 
@@ -148,8 +148,8 @@ Here is a step by step flow of how it works:
 
 ### 4. Compute ballistic properties
 
-1. Interpolation functions are built (`get_face_area_interp_func`,
-   `get_burn_area_interp_func`) by sorting regression map values and applying smoothing
+1. Interpolation functions are built (`get_face_area_interpolator`,
+   `get_burn_area_interpolator`) by sorting regression map values and applying smoothing
    (Savitzky-Golay filter).
 2. Face area is calculated (`get_face_area`) using the interpolation function.
 3. Port area is calculated (`get_port_area`) by subtracting face area from total

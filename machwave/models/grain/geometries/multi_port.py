@@ -16,7 +16,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
         port_radial_count: float,
         port_level_count: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -29,7 +29,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
             port_radial_count: Number of ports per concentric ring.
             port_level_count: Number of concentric rings of ports.
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.port_diameter = port_diameter
@@ -40,7 +40,7 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -68,24 +68,26 @@ class MultiPortGrainSegment(grain_fmm.FMMGrainSegment2D):
                 f"Port radial count must be positive, got {self.port_radial_count}"
             )
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """NOTE: Still needs to correctly implement wagon wheel ports."""
-        map_x, map_y = self.get_maps()
+        map_x, map_y = self.get_coordinate_grids()
         core_map = self.get_empty_face_map()
 
-        od_norm = self.normalize(self.outer_diameter)
-        port_od_norm = self.normalize(self.port_diameter)
+        outer_diameter_normalized = self.normalize(self.outer_diameter)
+        port_diameter_normalized = self.normalize(self.port_diameter)
 
         for radius in range(self.port_radial_count):
             angle = np.pi * 2 * radius / self.port_radial_count
 
             for level in range(self.port_level_count):
-                radial_distance = od_norm * level / (self.port_level_count) / 2
+                radial_distance = (
+                    outer_diameter_normalized * level / (self.port_level_count) / 2
+                )
 
                 x_offset = radial_distance * np.cos(angle)
                 y_offset = radial_distance * np.sin(angle)
 
                 radius = np.sqrt((map_x - x_offset) ** 2 + (map_y - y_offset) ** 2)
-                core_map[radius < port_od_norm / 2] = 0
+                core_map[radius < port_diameter_normalized / 2] = 0
 
         return core_map

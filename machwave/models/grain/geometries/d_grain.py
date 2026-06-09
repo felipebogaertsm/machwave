@@ -14,7 +14,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
         outer_diameter: float,
         slot_offset: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -25,7 +25,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
             outer_diameter: Outer diameter [m].
             slot_offset: Distance from the grain center to the slot face [m].
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.slot_offset = slot_offset
@@ -34,7 +34,7 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -53,10 +53,10 @@ class DGrainSegment(grain_fmm.FMMGrainSegment2D):
                 f"half the outer diameter ({max_slot_offset})"
             )
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """Return the initial face map for the D-grain port."""
         slot_offset_normalized = self.normalize(self.slot_offset)
-        map_x = self.get_maps()[0]
+        map_x = self.get_coordinate_grids()[0]
         core_map = self.get_empty_face_map()
         core_map[map_x > slot_offset_normalized] = 0
         return core_map
