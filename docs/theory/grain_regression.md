@@ -159,8 +159,7 @@ The face map at a web distance is obtained by thresholding the regression map at
 
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
-**Solid cells at a web distance: `_get_solid_mask(w)`.**
-The `-1`/`0`/`1` face map above is for display. The per-timestep reads that only need *which cells are still solid* take a plain boolean mask of the `1` cells instead, `(regression map > w) & ~casing`. The center of gravity and moment of inertia read from this mask in both 2D and 3D, and the volume reads from it in 3D (2D volume stays analytic). Several of these run at the same web distance on a single timestep, so the boolean mask, and the solid-cell indices extracted from it, are cached per web distance: the regression map is thresholded once per step and every consumer reuses the result. The web distance only grows over a burn, so a single-entry cache is enough. The mask is a plain boolean array rather than the masked integer face map, which is also why it is cheaper to build and store.
+The mass-property reads, volume in 3D plus the center of gravity and moment of inertia in both 2D and 3D, need only the solid (`1`) cells of this map. They take those as a plain boolean mask from `_get_solid_mask`, cheaper to build and store than the masked integer map, which together with the solid-cell indices it feeds is cached per web distance. Several of these reads share one web distance on a single timestep, so the regression map is thresholded once and every consumer reuses the result. The web distance only grows over a burn, so a single-entry cache is enough.
 
 **Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
 A closed-loop curve is traced by `get_iso_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
