@@ -262,10 +262,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         return (float(self.denormalize(self.get_normalized_spacing())) * 2) ** 3
 
     def get_volume(self, web_distance: float) -> float:
-        face_map = self.get_face_map(web_distance=web_distance)
-        solid_voxel_count = np.count_nonzero(face_map == 1)
-        volume_per_element = self.get_voxel_volume()
-        return solid_voxel_count * volume_per_element
+        solid_voxel_count = int(np.count_nonzero(self._get_solid_mask(web_distance)))
+        return solid_voxel_count * self.get_voxel_volume()
 
     def _validate_web_distance(self, web_distance: float) -> None:
         """
@@ -295,9 +293,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         Raises:
             GrainGeometryError: If no active material is found.
         """
-        face_map = self.get_face_map(web_distance)
-        mask = face_map == 1  # active material only
-        z_indices, y_indices, x_indices = np.where(mask)
+        z_indices, y_indices, x_indices = self._get_solid_indices(web_distance)
 
         if len(x_indices) == 0:
             raise grain.GrainGeometryError(
@@ -385,13 +381,16 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             z_indices, y_indices, x_indices
         )
 
-        # Get the center of gravity
-        center_of_gravity = self.get_center_of_gravity(web_distance)
-
         # Convert to meters
-        x_denormalized = self.cells_to_meters(x_grid)
-        y_denormalized = self.cells_to_meters(y_grid)
-        z_denormalized = self.cells_to_meters(z_grid)
+        x_denormalized = np.asarray(self.cells_to_meters(x_grid), dtype=np.float64)
+        y_denormalized = np.asarray(self.cells_to_meters(y_grid), dtype=np.float64)
+        z_denormalized = np.asarray(self.cells_to_meters(z_grid), dtype=np.float64)
+
+        # CoG from the same coordinates (matches get_center_of_gravity, avoids
+        # re-extracting indices for this web distance)
+        center_of_gravity = mechanics.get_center_of_gravity(
+            x_denormalized, y_denormalized, z_denormalized
+        )
 
         # Coordinates relative to the center of gravity
         x_relative = x_denormalized - center_of_gravity[1]

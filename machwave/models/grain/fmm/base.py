@@ -43,6 +43,13 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         self.regression_map = None
         self.web_thickness = None
 
+        # Per-web-distance caches (maxsize-1; web is monotonic so each step
+        # evicts the previous entry, avoiding cross-scenario leaks).
+        self._solid_mask_web = None
+        self._solid_mask = None
+        self._solid_indices_web = None
+        self._solid_indices = None
+
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -258,6 +265,32 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
 
         # Fill masked entries with -1, valid/true entries remain 1 or 0
         return occupancy_state.filled(-1)
+
+    def _get_solid_mask(self, web_distance: float) -> NDArray[np.bool_]:
+        """
+        Boolean mask of solid (unburned, in-domain) cells at a web distance.
+
+        Equivalent to `get_face_map(web_distance) == 1` but built as a plain
+        boolean array, skipping the int64/MaskedArray/`filled(-1)` path. The
+        per-step consumers (volume, indices) route through this instead of
+        `get_face_map`, whose -1/0/1 encoding is kept for plot consumers.
+        """
+        if self._solid_mask is None or self._solid_mask_web != web_distance:
+            regression_map = self.get_regression_map()
+            web_distance_normalized = self.normalize(web_distance)
+            excluded_mask = np.ma.getmaskarray(regression_map)
+            self._solid_mask = (
+                np.ma.getdata(regression_map) > web_distance_normalized
+            ) & ~excluded_mask
+            self._solid_mask_web = web_distance
+        return self._solid_mask
+
+    def _get_solid_indices(self, web_distance: float) -> tuple[NDArray[np.int_], ...]:
+        """Indices of solid cells (`np.where` over the cached mask), memoized."""
+        if self._solid_indices is None or self._solid_indices_web != web_distance:
+            self._solid_indices = np.where(self._get_solid_mask(web_distance))
+            self._solid_indices_web = web_distance
+        return self._solid_indices
 
     @abstractmethod
     def get_contours(
