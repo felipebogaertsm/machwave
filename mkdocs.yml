@@ -49,6 +49,7 @@ nav:
       - 1. Thrust and Performance: theory/thrust.md
       - 2. Mass Balance: theory/mass_balance.md
       - 3. Nozzle Losses: theory/nozzle_losses.md
+      - 4. Grain Regression: theory/grain_regression.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
@@ -96,7 +97,11 @@ markdown_extensions:
   - admonition
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.details
   - pymdownx.arithmatex:
       generic: true
