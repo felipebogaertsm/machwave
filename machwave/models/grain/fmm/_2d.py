@@ -273,9 +273,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         Raises:
             GrainGeometryError: If no active material is found.
         """
-        face_map = self.get_face_map(web_distance)
-        mask = face_map == 1  # active material only
-        y_indices, x_indices = np.where(mask)
+        y_indices, x_indices = self._get_solid_indices(web_distance)
 
         if len(x_indices) == 0 or len(y_indices) == 0:
             raise grain.GrainGeometryError(
@@ -354,13 +352,17 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         y_indices, x_indices = self._find_solid_material_indices(web_distance)
         x_grid, y_grid = self._indices_to_grid_coordinates(y_indices, x_indices)
 
-        # Get the center of gravity to use as reference point
-        center_of_gravity = self.get_center_of_gravity(web_distance)
         current_length = self.get_length(web_distance)
 
         # Convert to meters
-        x_denormalized = self.cells_to_meters(x_grid)
-        y_denormalized = self.cells_to_meters(y_grid)
+        x_denormalized = np.asarray(self.cells_to_meters(x_grid), dtype=np.float64)
+        y_denormalized = np.asarray(self.cells_to_meters(y_grid), dtype=np.float64)
+
+        # Radial CoG from the same coordinates, avoiding an index re-extraction.
+        # Axial CoG is unused here: 2D elements have no axial spread.
+        center_of_gravity = mechanics.get_center_of_gravity(
+            x_denormalized, y_denormalized, np.zeros_like(x_denormalized)
+        )
 
         # Coordinates relative to the center of gravity
         x_relative = x_denormalized - center_of_gravity[1]

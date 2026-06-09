@@ -101,6 +101,26 @@ def test_finned_slice_has_less_solid_material_than_unfinned_slice(finocyl_segmen
     assert finned_solid < unfinned_solid
 
 
+def test_face_map_values_stay_in_minus_one_zero_one(finocyl_segment):
+    """get_face_map keeps its -1/0/1 encoding (plot consumers depend on it)."""
+    web_thickness = finocyl_segment.get_web_thickness()
+
+    for web_distance in np.linspace(0.0, web_thickness * 0.8, 4):
+        face_map = finocyl_segment.get_face_map(web_distance=web_distance)
+        assert set(np.unique(face_map)).issubset({-1, 0, 1})
+
+
+def test_solid_mask_matches_face_map_solid_cells(finocyl_segment):
+    """The boolean solid mask equals `get_face_map == 1` at every web distance."""
+    web_thickness = finocyl_segment.get_web_thickness()
+
+    for web_distance in np.linspace(0.0, web_thickness * 0.8, 4):
+        face_map = finocyl_segment.get_face_map(web_distance=web_distance)
+        solid_mask = finocyl_segment._get_solid_mask(web_distance)
+        assert solid_mask.dtype == bool
+        np.testing.assert_array_equal(solid_mask, face_map == 1)
+
+
 def test_unfinned_slice_matches_plain_core(finocyl_segment):
     """Outside the finned band the port is the plain circular bore."""
     # Compare against a conical segment with a constant (equal-diameter) core.

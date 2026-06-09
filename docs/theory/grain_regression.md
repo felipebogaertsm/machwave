@@ -159,6 +159,8 @@ The face map at a web distance is obtained by thresholding the regression map at
 
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
+The mass-property reads, volume in 3D plus the center of gravity and moment of inertia in both 2D and 3D, need only the solid (`1`) cells of this map. They take those as a plain boolean mask from `_get_solid_mask`, cheaper to build and store than the masked integer map, which together with the solid-cell indices it feeds is cached per web distance. Several of these reads share one web distance on a single timestep, so the regression map is thresholded once and every consumer reuses the result. The web distance only grows over a burn, so a single-entry cache is enough.
+
 **Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
 A closed-loop curve is traced by `get_iso_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
 Then, `get_length` sums the curve to calculate the burning perimeter, discounting any stretch that lies on the casing wall.
@@ -192,7 +194,7 @@ Since the slice count is rounded to an integer, `_compute_regression_distance` p
 
 The regression map is generated differently for 2D and 3D. 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], using `skimage`'s `find_contours`). 3D meshes a surface with marching cubes ([`get_burn_area_interpolator`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interpolator], `skimage`'s `marching_cubes`) and takes its area directly.
 
-For volume, 3D FMM counts the solid voxels in the entire map and multiplies by the volume of one voxel.
+For volume, 3D FMM counts the solid voxels in the cached solid mask and multiplies by the volume of one voxel. The center of gravity and moment of inertia read the same cached mask and its solid-cell indices, so the per-timestep mass properties all share a single threshold of the regression map instead of rebuilding it for each read.
 
 Since the port area in 3D varies along the grain, [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area] slices the cross-section at axial height `z` and subtracts the solid area from the outer diameter exterior.
 
@@ -236,8 +238,10 @@ flowchart TB
     BA --> MC["_compute_iso_surface_area() → marching_cubes<br/>per iso level"]
     MC --> SG["smooth_savitzky_golay → interp1d (cached)"]
     SG --> BR["get_burn_area(w)"]
+    R --> SM["_get_solid_mask(w)<br/>boolean threshold, cached per web"]
+    SM --> VO["get_volume(w) = solid voxels × cell volume"]
+    SM --> MP["center of gravity, moment of inertia<br/>via cached solid-cell indices"]
     R --> PA["get_port_area(w, z)<br/>casing − slice solid area"]
-    R --> VO["get_volume(w) = solid voxels × cell volume"]
 ```
 
 # References
