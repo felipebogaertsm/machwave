@@ -138,12 +138,13 @@ class SolidMotorState(simulation_states.MotorState):
             propellant_cog = self.motor.grain.get_center_of_gravity(
                 web_distance=web_distance
             )
-        else:  # no propellant left, CoG is undefined
+            propellant_moi = self.motor.grain.get_moment_of_inertia(
+                ideal_density=ideal_propellant_density, web_distance=web_distance
+            )
+        else:  # no propellant left: CoG is undefined and inertia is zero
             propellant_cog = np.full(3, np.nan)
+            propellant_moi = np.zeros((3, 3))
         self.propellant_cog.append(propellant_cog)
-        propellant_moi = self.motor.grain.get_moment_of_inertia(
-            ideal_density=ideal_propellant_density, web_distance=web_distance
-        )
         self.propellant_moi.append(propellant_moi)
 
         grain_segment_mass_flow = (
