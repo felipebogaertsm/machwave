@@ -131,7 +131,8 @@ Now the fast marching method runs. `skfmm.distance` fills every propellant cell 
 *Yellow cells represent empty space. The color darkens with depth into the web.*
 
 **Grain map at a web distance: [`get_face_map(w)`][machwave.models.grain.fmm.base.FMMGrainSegment.get_face_map].**
-The face map of a web distance is can be obtained by thresholding the regression map at that specific web distance. Example at `w=0.2`:
+The face map of a web distance is can be obtained by thresholding the regression map at that specific web distance.
+Example at `w=0.2`:
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
@@ -151,8 +152,9 @@ The face map of a web distance is can be obtained by thresholding the regression
 
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
-**Contour the front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
-The flame front is the boundary between the solid and burned cells above. It is traced as a curve (one closed loop of 29 points here, in `(row, col)`) by `get_contours` in `machwave.models.grain.fmm.contours`; `get_length` from that module sums the curve into the burning perimeter, dropping any stretch that lies on the casing wall.
+**Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
+A closed-loop curve is traced by `get_contours` in `machwave.models.grain.fmm.contours`.
+Then, `get_length` sums the curve to calculate the burning perimeter, discounting any stretch that lies on the casing wall.
 
 ```
 (9.0, 8.2) (8.2, 9.0) (8.0, 9.1) (7.0, 9.6) (6.0, 9.6) (5.0, 9.6) ...
@@ -161,9 +163,16 @@ The flame front is the boundary between the solid and burned cells above. It is 
 
 ![burning front contour](../assets/theory/grain_regression/contours.svg)
 
-From the regressed grid Machwave reads everything the ballistics solver needs: the burning and port areas ([`get_burn_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area], [`get_port_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area]), the remaining volume, and the center of gravity and inertia tensor ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]). Repeating the threshold at each web distance traces these out across the whole burn.
+**Burn area across the web: [`get_burn_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area].**
+The contour gives the burning perimeter at a single web distance; the burn area is that perimeter times the current grain length, plus any uninhibited end faces. To turn that into a function of web, Machwave sweeps the whole web once: at each step it contours the front, sums the perimeter with `get_length`, multiplies by the length, and adds the exposed end faces, building a burn-area-versus-web curve.
 
-These curves are read straight off a pixel grid, so they come out jagged: as the web advances cell by cell, the perimeter traced around the front jumps slightly each time it clears another row or column of cells, and the burn-area-versus-web curve inherits that stair-stepping. Before the curve is turned into a lookup table, Machwave smooths it with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`): a short window slides along the curve and a low-order polynomial is fitted to the points inside it, replacing each point with the value of that fit. Unlike a plain moving average, it keeps the height and location of real features such as the burn-area peak, so the areas vary smoothly with web distance instead of chattering.
+That curve is read off a pixel grid, so it comes out jagged: as the web advances cell by cell, the perimeter jumps slightly each time the front clears another row or column of cells. Before it becomes a lookup, Machwave smooths it with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`): a short window slides along the curve and a low-order polynomial is fitted to the points inside it, replacing each point with the value of that fit. Unlike a plain moving average, it keeps the height and location of real features such as the burn-area peak.
+
+**Remaining volume and port area: `get_volume(w)`, [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
+The open port area is the casing cross-section minus the solid cross-section (the face area, [`get_face_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_face_area]); the remaining propellant volume is that face area times the current grain length. The same regressed grid also feeds the mass properties ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]).
+
+**Cache once, look up forever.**
+None of this is recomputed during a burn. The coordinate maps, mask, masked face, and regression map are each solved once and cached, since they never change. The web-distance curves cost the most to build, so they too are swept once and stored as interpolators ([`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func], [`get_face_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_face_area_interp_func], built on `scipy`'s `interp1d`); after that, burn area, port area, and face area at any web distance are constant-time lookups. The fast marching method runs only once per grain segment, even though a full simulation queries these thousands of times.
 
 ## 4.2 Constant vs Varying Cross-Section
 
