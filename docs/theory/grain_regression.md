@@ -190,9 +190,11 @@ The port is the empty space inside the casing: the casing cross-section minus th
 The FMM runs once over the full volume.
 Since the slice count is rounded to an integer, `_regression_distance` passes a per-axis pitch (`dx=[axial_pitch, radial_pitch, radial_pitch]`) so distances stay consistent along `z` and across the cross-section.
 
-The burning surface is read off the regression map one dimension apart: 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], `skimage`'s `find_contours`); 3D meshes a surface with marching cubes ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func], `skimage`'s `marching_cubes`) and takes its area directly.
+The regression map is generated differently for 2D and 3D. 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], using `skimage`'s `find_contours`). 3D meshes a surface with marching cubes ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func], `skimage`'s `marching_cubes`) and takes its area directly.
 
-Volume and port area shift the same way. The 3D volume counts the solid voxels in the face map and multiplies by the volume of one voxel; the port area now varies along the grain, so [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area] slices the cross-section at axial height `z` and subtracts its solid area from the casing.
+For volume, 3D FMM counts the solid voxels in the entire map and multiplies by the volume of one voxel.
+
+Since the port area in 3D varies along the grain, [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area] slices the cross-section at axial height `z` and subtracts the solid area from the outer diameter exterior.
 
 ## 4.3 Call Flow
 
