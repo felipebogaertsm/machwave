@@ -160,7 +160,7 @@ The face map at a web distance is obtained by thresholding the regression map at
 ![regressed face map](../assets/theory/grain_regression/face_map.svg)
 
 **Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
-A closed-loop curve is traced by `get_contours` in `machwave.models.grain.fmm.contours`.
+A closed-loop curve is traced by `get_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
 Then, `get_length` sums the curve to calculate the burning perimeter, discounting any stretch that lies on the casing wall.
 
 ```
@@ -178,11 +178,10 @@ At each web step Machwave contours the front and evaluates that burn area, build
 The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
 
 **Volume: `get_volume(w)`.**
-In 2D the volume is the current grain length times the face area, reusing the same cached, smoothed face-area curve that feeds the port area, so it adds no work of its own.
-In 3D the volume is the number of solid voxels in the 3D face map times the volume of one voxel.
+The volume is the current grain length times the face area, reusing the same cached, smoothed face-area curve that feeds the port area, so it adds no work of its own.
 
 **Port area: [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
-The port is the empty space inside the casing: the casing cross-section minus the solid face area. In 2D it comes straight from the cached face area, so it needs no extra work. In 3D the port varies along the grain, so `get_port_area(w, z)` takes the cross-section at axial height `z` and subtracts its solid area from the casing.
+The port is the empty space inside the casing: the casing cross-section minus the solid face area. It comes straight from the cached face area, so it needs no extra work.
 
 ## 4.2 2D vs 3D FMM
 
@@ -192,6 +191,8 @@ The FMM runs once over the full volume.
 Since the slice count is rounded to an integer, `_regression_distance` passes a per-axis pitch (`dx=[axial_pitch, radial_pitch, radial_pitch]`) so distances stay consistent along `z` and across the cross-section.
 
 The burning surface is read off the regression map one dimension apart: 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], `skimage`'s `find_contours`); 3D meshes a surface with marching cubes ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func], `skimage`'s `marching_cubes`) and takes its area directly.
+
+Volume and port area shift the same way. The 3D volume counts the solid voxels in the face map and multiplies by the volume of one voxel; the port area now varies along the grain, so [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area] slices the cross-section at axial height `z` and subtracts its solid area from the casing.
 
 ## 4.3 Call Flow
 
