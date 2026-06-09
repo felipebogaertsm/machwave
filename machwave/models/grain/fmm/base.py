@@ -43,7 +43,7 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         self.regression_map = None
         self.web_thickness = None
 
-        # Cache variables dependent on web distance:
+        # Cache variables that only work for a specific web distance:
         self._solid_mask_web = None
         self._solid_mask = None
         self._solid_indices_web = None
