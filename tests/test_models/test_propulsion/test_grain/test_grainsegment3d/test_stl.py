@@ -41,8 +41,8 @@ def test_face_map_matches_the_fmm_grid_shape(tube_segment):
     Before the fix the raw voxel grid was off by a voxel on every axis, so the
     shape assertion hard-failed even for a correctly sized mesh.
     """
-    face_map = tube_segment.get_initial_face_map()
-    assert face_map.shape == tube_segment.get_maps()[0].shape
+    face_map = tube_segment.generate_initial_face_map()
+    assert face_map.shape == tube_segment.get_coordinate_grids()[0].shape
 
 
 def test_volume_matches_the_analytical_tube(tube_segment):
@@ -59,8 +59,9 @@ def test_volume_matches_the_analytical_tube(tube_segment):
         dict(outer_diameter=0.0),
         dict(outer_diameter=-1e-3),
         dict(length=0.0),
-        dict(map_dim=10),  # below the STL map-dimension floor of 20
-        dict(length=2e-3),  # axial map collapses below three slices
+        dict(grid_resolution=10),  # below the STL grid-resolution floor of 20
+        # short grain at a low resolution collapses the axial map below three slices
+        dict(length=2e-3, grid_resolution=50),
     ],
 )
 def test_invalid_geometry_raises(tube_stl_path, overrides):

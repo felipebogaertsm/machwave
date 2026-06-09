@@ -72,7 +72,7 @@ def test_center_of_gravity_is_on_the_axis(segment, case):
     """Six evenly spaced fins are radially symmetric, so the transverse center of
     gravity stays on the axis."""
     cog = segment.get_center_of_gravity(case["web"])
-    pixel = segment.map_to_length(1.0)
+    pixel = segment.cells_to_meters(1.0)
     assert abs(cog[1]) < pixel
     assert abs(cog[2]) < pixel
 
@@ -89,7 +89,7 @@ def test_moment_of_inertia_ratio_matches_solidworks(segment, case):
 @pytest.mark.parametrize("case", CASES)
 def test_finned_end_face_area_matches_solidworks(segment, case):
     face_map = segment.get_face_map(web_distance=case["web"])
-    pixel_area = segment.map_to_length(1.0) ** 2
+    pixel_area = segment.cells_to_meters(1.0) ** 2
     slice_areas = np.count_nonzero(face_map == 1, axis=(1, 2)) * pixel_area
     end_face = slice_areas[slice_areas > 0.5 * slice_areas.max()][0]
     assert end_face == pytest.approx(case["end_face"], rel=case["end_face_rel"])

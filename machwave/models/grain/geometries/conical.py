@@ -15,7 +15,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
         upper_core_diameter: float,
         lower_core_diameter: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -27,7 +27,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
             upper_core_diameter: Core diameter at the upper (bulkhead) end [m].
             lower_core_diameter: Core diameter at the lower (nozzle) end [m].
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.upper_core_diameter = upper_core_diameter
@@ -37,7 +37,7 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -64,17 +64,20 @@ class ConicalGrainSegment(grain_fmm.FMMGrainSegment3D):
                 f"outer diameter ({self.outer_diameter})"
             )
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """Return the initial face map for the conical port."""
-        map_x, map_y, map_z = self.get_maps()
+        map_x, map_y, map_z = self.get_coordinate_grids()
         core_map = self.get_empty_face_map()
 
-        upper_core_norm = self.normalize(self.upper_core_diameter)
-        lower_core_norm = self.normalize(self.lower_core_diameter)
+        upper_core_normalized = self.normalize(self.upper_core_diameter)
+        lower_core_normalized = self.normalize(self.lower_core_diameter)
 
         radius = np.sqrt(map_x**2 + map_y**2)
         # map_z is 1 at the aft (nozzle) slice and 0 at the forward (bulkhead) slice.
-        core_diameter = map_z * (lower_core_norm - upper_core_norm) + upper_core_norm
+        core_diameter = (
+            map_z * (lower_core_normalized - upper_core_normalized)
+            + upper_core_normalized
+        )
 
         core_map[radius < core_diameter / 2] = 0
         core_map[0] = 0  # Inhibit the bottom end

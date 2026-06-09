@@ -15,19 +15,27 @@ import machwave.models.grain.geometries.conical as conical_geometry
 import machwave.models.grain.geometries.star as star_geometry
 
 
-def print_inertia_tensor(moi: np.ndarray, title: str = "Moment of Inertia Tensor"):
+def print_inertia_tensor(
+    inertia_tensor: np.ndarray, title: str = "Moment of Inertia Tensor"
+):
     """Pretty print the inertia tensor."""
     print(f"\n{title}")
     print("=" * 60)
     print("Coordinate system: [axial, radial_x, radial_y]")
     print("\nInertia Tensor [kg⋅m²]:")
-    print(f"  [[{moi[0, 0]:9.6f}, {moi[0, 1]:9.6f}, {moi[0, 2]:9.6f}]")
-    print(f"   [{moi[1, 0]:9.6f}, {moi[1, 1]:9.6f}, {moi[1, 2]:9.6f}]")
-    print(f"   [{moi[2, 0]:9.6f}, {moi[2, 1]:9.6f}, {moi[2, 2]:9.6f}]]")
+    print(
+        f"  [[{inertia_tensor[0, 0]:9.6f}, {inertia_tensor[0, 1]:9.6f}, {inertia_tensor[0, 2]:9.6f}]"
+    )
+    print(
+        f"   [{inertia_tensor[1, 0]:9.6f}, {inertia_tensor[1, 1]:9.6f}, {inertia_tensor[1, 2]:9.6f}]"
+    )
+    print(
+        f"   [{inertia_tensor[2, 0]:9.6f}, {inertia_tensor[2, 1]:9.6f}, {inertia_tensor[2, 2]:9.6f}]]"
+    )
     print("\nPrincipal moments:")
-    print(f"  Ixx (axial/roll):    {moi[0, 0]:.6f} kg⋅m²")
-    print(f"  Iyy (radial/pitch):  {moi[1, 1]:.6f} kg⋅m²")
-    print(f"  Izz (radial/yaw):    {moi[2, 2]:.6f} kg⋅m²")
+    print(f"  Ixx (axial/roll):    {inertia_tensor[0, 0]:.6f} kg⋅m²")
+    print(f"  Iyy (radial/pitch):  {inertia_tensor[1, 1]:.6f} kg⋅m²")
+    print(f"  Izz (radial/yaw):    {inertia_tensor[2, 2]:.6f} kg⋅m²")
 
 
 def example_single_segment():
@@ -125,7 +133,7 @@ def example_burn_progression():
 
     for fraction in burn_stages:
         web_distance = web_thickness * fraction
-        moi = grain.get_moment_of_inertia(
+        inertia_tensor = grain.get_moment_of_inertia(
             web_distance=web_distance, ideal_density=ideal_density
         )
         mass = grain.get_propellant_mass(
@@ -133,7 +141,7 @@ def example_burn_progression():
         )
 
         print(
-            f"  {fraction * 100:5.0f}%   | {moi[0, 0]:11.8f} | {moi[1, 1]:11.8f} | {mass:8.4f}"
+            f"  {fraction * 100:5.0f}%   | {inertia_tensor[0, 0]:11.8f} | {inertia_tensor[1, 1]:11.8f} | {mass:8.4f}"
         )
 
 
@@ -165,9 +173,11 @@ def example_asymmetric_grain():
     grain.add_segment(segment2)
 
     ideal_density = 1800.0
-    moi = grain.get_moment_of_inertia(web_distance=0.0, ideal_density=ideal_density)
+    inertia_tensor = grain.get_moment_of_inertia(
+        web_distance=0.0, ideal_density=ideal_density
+    )
 
-    print_inertia_tensor(moi, "Asymmetric Grain MOI")
+    print_inertia_tensor(inertia_tensor, "Asymmetric Grain MOI")
 
     cog = grain.get_center_of_gravity(web_distance=0.0)
     print(
@@ -252,7 +262,7 @@ def example_3d_fmm_conical_grain():
 
     for fraction in [0.0, 0.25, 0.50, 0.75, 0.95]:
         web_distance = web_thickness * fraction
-        moi = conical_segment.get_moment_of_inertia(
+        inertia_tensor = conical_segment.get_moment_of_inertia(
             web_distance=web_distance, ideal_density=ideal_density
         )
         mass = conical_segment.get_mass(
@@ -260,8 +270,8 @@ def example_3d_fmm_conical_grain():
         )
 
         print(
-            f" {fraction * 100:5.0f}% | {moi[0, 0]:11.8f} | {moi[1, 1]:11.8f} | "
-            f"{moi[2, 2]:11.8f} | {mass:8.4f}"
+            f" {fraction * 100:5.0f}% | {inertia_tensor[0, 0]:11.8f} | {inertia_tensor[1, 1]:11.8f} | "
+            f"{inertia_tensor[2, 2]:11.8f} | {mass:8.4f}"
         )
 
     print(

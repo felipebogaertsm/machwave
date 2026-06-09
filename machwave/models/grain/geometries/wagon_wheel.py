@@ -18,7 +18,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
         port_outer_diameter: float,
         port_angular_width: float,
         inhibited_surfaces: grain_base.InhibitedSurfaces | None = None,
-        map_dim: int = 100,
+        grid_resolution: int = grain_fmm.DEFAULT_GRID_RESOLUTION,
         density_ratio: float = 1.0,
     ) -> None:
         """
@@ -33,7 +33,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
             port_outer_diameter: Outer radial extent of each spoke port [m].
             port_angular_width: Angular width of each spoke port [deg].
             inhibited_surfaces: Surfaces inhibited from burning.
-            map_dim: Pixel resolution of the cross-section map.
+            grid_resolution: Grid points per axis of the cross-section.
             density_ratio: Ratio of real to ideal propellant density.
         """
         self.core_diameter = core_diameter
@@ -46,7 +46,7 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
             length=length,
             outer_diameter=outer_diameter,
             inhibited_surfaces=inhibited_surfaces,
-            map_dim=map_dim,
+            grid_resolution=grid_resolution,
             density_ratio=density_ratio,
         )
 
@@ -91,18 +91,18 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
                 f"{max_angular_width} (360 / {self.number_of_ports})"
             )
 
-    def get_initial_face_map(self) -> np.typing.NDArray[np.int_]:
+    def generate_initial_face_map(self) -> np.typing.NDArray[np.int_]:
         """NOTE: Still needs to correctly implement wagon wheel ports."""
-        map_x, map_y = self.get_maps()
+        map_x, map_y = self.get_coordinate_grids()
         core_map = self.get_empty_face_map()
 
-        core_diameter_norm = self.normalize(self.core_diameter)
-        port_inner_diameter_norm = self.normalize(self.port_inner_diameter)
-        port_outer_diameter_norm = self.normalize(self.port_outer_diameter)
+        core_diameter_normalized = self.normalize(self.core_diameter)
+        port_inner_diameter_normalized = self.normalize(self.port_inner_diameter)
+        port_outer_diameter_normalized = self.normalize(self.port_outer_diameter)
 
         radius = np.sqrt(map_x**2 + map_y**2)
 
-        core_map[radius < core_diameter_norm / 2] = 0
+        core_map[radius < core_diameter_normalized / 2] = 0
 
         for port_index in range(int(self.number_of_ports)):
             displacement_angle = 2 * np.pi / self.number_of_ports * (port_index)
@@ -113,8 +113,8 @@ class WagonWheelGrainSegment(grain_fmm.FMMGrainSegment2D):
             map_x_y_arctan = np.arctan(map_y / map_x)
 
             core_map[
-                (radius < port_outer_diameter_norm / 2)
-                & (radius > port_inner_diameter_norm / 2)
+                (radius < port_outer_diameter_normalized / 2)
+                & (radius > port_inner_diameter_normalized / 2)
                 & (np.abs(map_x_y_arctan) < theta_2)
                 & (np.abs(map_x_y_arctan) > theta_1)
             ] = 0
