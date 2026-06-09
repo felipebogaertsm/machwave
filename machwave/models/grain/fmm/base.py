@@ -36,15 +36,14 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         """
         self.grid_resolution = grid_resolution
 
-        # "Cache" variables:
+        # Cache variables:
         self.coordinate_grids = None
         self.outer_diameter_mask = None
         self.masked_face = None
         self.regression_map = None
         self.web_thickness = None
 
-        # Per-web-distance caches (maxsize-1; web is monotonic so each step
-        # evicts the previous entry, avoiding cross-scenario leaks).
+        # Cache variables dependent on web distance:
         self._solid_mask_web = None
         self._solid_mask = None
         self._solid_indices_web = None
