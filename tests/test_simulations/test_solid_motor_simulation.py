@@ -125,3 +125,30 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
         return state.chamber_pressure[-1]
 
     assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)
+
+
+def test_moment_of_inertia_is_guarded_past_burnout() -> None:
+    """Past burnout the loop records a zero inertia tensor instead of crashing.
+
+    A 3D grain raises past its web thickness, and the simulation keeps advancing
+    the web after burnout until the flow un-chokes. The loop must skip the mass
+    property queries once the propellant is gone, mirroring the center-of-gravity
+    guard, rather than querying the grain out of range.
+    """
+    motor, params = motor_builders.build_finocyl_motor()
+    state = solid_simulation.SolidMotorState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+        other_losses=params.other_losses,
+    )
+    # Fully consumed: volume and mass are zero, and a direct moment-of-inertia
+    # query at this web would raise GrainGeometryError.
+    state.web = [motor.grain.segments[0].get_web_thickness() * 1.5]
+
+    # Small step so the one-shot chamber-pressure update stays well-behaved; the
+    # mass-property guard runs regardless of the step size.
+    state.run_timestep(d_t=1e-5, external_pressure=params.external_pressure)
+
+    np.testing.assert_array_equal(state.propellant_moi[-1], np.zeros((3, 3)))
+    assert np.all(np.isnan(state.propellant_cog[-1]))

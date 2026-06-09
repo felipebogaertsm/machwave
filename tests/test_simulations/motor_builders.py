@@ -20,6 +20,7 @@ from tests.factories import (
     BiliquidPropellantFactory,
     BipropellantInjectorFactory,
     CombustionChamberFactory,
+    FinocylGrainSegmentFactory,
     FuelComponentFactory,
     NozzleFactory,
     OxidizerComponentFactory,
@@ -147,6 +148,55 @@ def build_nero_motor() -> tuple[
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
+        igniter_pressure=1e6,
+        external_pressure=1e5,
+        other_losses=0.12,
+    )
+    return motor, params
+
+
+def build_finocyl_motor() -> tuple[
+    motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
+]:
+    """Small single-segment finocyl (3D fast marching method) motor.
+
+    Short grain so the fast marching method grid and per-step cost stay small,
+    for exercising the 3D solid path (including tail-off past burnout).
+    """
+    grain = grain_models.Grain()
+    grain.add_segment(
+        FinocylGrainSegmentFactory.build(
+            length=0.05,
+            outer_diameter=0.05,
+            core_diameter=0.02,
+            number_of_fins=4,
+            fin_length=0.008,
+            fin_width=0.003,
+        )
+    )
+
+    thrust_chamber = SolidMotorThrustChamberFactory.build(
+        nozzle=NozzleFactory.build(
+            inlet_diameter=0.045,
+            throat_diameter=0.012,
+            divergent_angle=12,
+            convergent_angle=45,
+            expansion_ratio=8,
+        ),
+        combustion_chamber=CombustionChamberFactory.build(
+            casing_inner_diameter=0.052,
+            casing_outer_diameter=0.06,
+            thermal_liner_thickness=0.002,
+            internal_length=grain.total_length + 0.01,
+        ),
+    )
+    motor = SolidMotorFactory.build(
+        grain=grain,
+        propellant=solid_propellants.KNDX,
+        thrust_chamber=thrust_chamber,
+    )
+    params = machwave_simulation.InternalBallisticsSimulationParams(
+        d_t=0.005,
         igniter_pressure=1e6,
         external_pressure=1e5,
         other_losses=0.12,
