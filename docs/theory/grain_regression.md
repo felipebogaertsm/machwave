@@ -87,9 +87,14 @@ This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
 ![initial port](../assets/theory/grain_regression/initial_face.svg)
 
 **Apply the inhibitors: [`get_masked_face()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_masked_face].**
-`get_masked_face` lays the initial face over the outer-diameter mask, then `_apply_inhibition` decides which surfaces are allowed to burn (an inhibited surface is coated and cannot burn). The rule shared by 2D and 3D covers the two radial surfaces: if the outer (casing) surface is not inhibited, the ring of cells just inside the wall is opened so it burns inward; if the inner (bore) surface is inhibited, the bore cells are masked out so no front starts there. This grain is case-bonded, the default, with only the outer surface inhibited, so just the bore burns (the dots are outside the casing).
+Lays the initial face over the outer-diameter mask, then `_apply_inhibition` decides which of the grain's four surfaces are allowed to burn (an inhibited surface cannot burn).
+By default only the outer surface is inhibited.
 
-2D works from a single cross-section, so those two surfaces are all there is. 3D ([`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D]) adds the two end faces: its first and last axial slices start open so the ends burn, and inhibiting an end resets that end's cells back to solid to protect it; the bore is detected slice by slice, skipping those end layers.
+| Surface | Default | 2D | 3D |
+|---|---|---|---|
+| Outer | inhibited | ring inside the wall opens if uninhibited | same |
+| Core | burns | core cells masked if inhibited | core masked slice by slice |
+| End faces | burn | modeled by the grain length shrinking as they regress | first and last slices filled with zeros to expose them |
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
@@ -165,29 +170,24 @@ Then, `get_length` sums the curve to calculate the burning perimeter, discountin
 ![burning front contour](../assets/theory/grain_regression/contours.svg)
 
 **Burn area across the web: [`get_burn_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area].**
-The contour gives the burning perimeter at a single web distance; the burn area is that perimeter times the current grain length, plus any uninhibited end faces. To turn that into a function of web, Machwave sweeps the whole web once: at each step it contours the front, sums the perimeter with `get_length`, multiplies by the length, and adds the exposed end faces, building a burn-area-versus-web curve.
+The contour gives the burning perimeter at a single web distance.
+The burn area is that perimeter times the current grain length, plus any uninhibited end faces.
+At each web step Machwave contours the front and evaluates that burn area, building the burn area as a function of web. The curve is then smoothed with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`).
 
-That curve is read off a pixel grid, so it comes out jagged: as the web advances cell by cell, the perimeter jumps slightly each time the front clears another row or column of cells. Before it becomes a lookup, Machwave smooths it with a Savitzky-Golay filter (`smooth_savitzky_golay` in `machwave.core.filters`): a short window slides along the curve and a low-order polynomial is fitted to the points inside it, replacing each point with the value of that fit. Unlike a plain moving average, it keeps the height and location of real features such as the burn-area peak.
+The burn area curve is interpolated with `scipy`'s `interp1d` by [`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func] and then cached. So `get_burn_area(w)` does not run the FMM at all, just a quick lookup and interpolation.
 
-**Remaining volume and port area: `get_volume(w)`, [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
-The open port area is the casing cross-section minus the solid cross-section (the face area, [`get_face_area`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_face_area]); the remaining propellant volume is that face area times the current grain length. The same regressed grid also feeds the mass properties ([`get_center_of_gravity`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_moment_of_inertia]).
+**Volume: `get_volume(w)`.**
+The volume in function of web is calculated by counting the solid cells in the face map for the 2D FMM and multiplying by length.
+In the 3D FMM, the cell volume is simply multiplied by the number of solid voxels in the 3D face map.
 
-**Cache once, look up forever.**
-None of this is recomputed during a burn. The coordinate maps, mask, masked face, and regression map are each solved once and cached, since they never change. The web-distance curves cost the most to build, so they too are swept once and stored as interpolators ([`get_burn_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area_interp_func], [`get_face_area_interp_func`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_face_area_interp_func], built on `scipy`'s `interp1d`); after that, burn area, port area, and face area at any web distance are constant-time lookups. The fast marching method runs only once per grain segment, even though a full simulation queries these thousands of times.
+**Port area: [`get_port_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_port_area].**
+The open port is the mirror of the solid: the casing cross-section minus that same face area. `get_port_area(w)` reads it straight from the cached face area, so it costs nothing past the lookup already paid for.
 
-## 4.2 Constant vs Varying Cross-Section
+## 4.2 2D vs 3D FMM
 
-Many grains keep the same cross-section all the way down the tube, a port simply extruded along the length. One 2D slice then describes the whole grain, which is what [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] does: the burn area is the burning perimeter times the current length, plus any exposed end faces. When the port changes along the length, a finocyl whose fins cover only part of the span, or a cone, one slice is not enough, and [`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] solves the same map over the full volume. The differences, step by step:
+A grain whose port is the same all the way down the tube is fully described by one cross-section, which is what [`FMMGrainSegment2D`][machwave.models.grain.fmm._2d.FMMGrainSegment2D] uses. When the port varies along the length, a finocyl finned over only part of its span, or a cone, one slice no longer captures it, and [`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D] solves the same map over the full voxel volume.
 
-- **Grid.** `get_maps` adds a `map_z` axis, so each array gains a leading slice index over `L = floor(map_dim * length / outer_diameter)` slices (`get_normalized_length`, required `>= 3`). The port may change along the length, and the two end layers are opened so the end faces burn.
-- **Inhibitors.** Both can inhibit the inner surface; 3D additionally protects the end faces when an end is inhibited.
-- **The map.** 2D solves with one isotropic cell spacing; 3D uses anisotropic spacing `[axial, radial, radial]`, because the voxel grid is taller along the axis than it is wide across the radius.
-- **Front and port area.** 2D traces the whole slice and reads a single port area; 3D works one slice at a time, taking an axial index in `get_contours(w, z)` and [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area].
-- **Burn area.** 2D extrudes the burning perimeter over the length and adds the exposed end faces. 3D measures the burning surface directly, as a marching-cubes mesh of the regression iso-surface ([`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]), which captures the port walls and the end faces together.
-- **Volume.** 2D is length times face area; 3D counts the solid voxels and multiplies by the voxel volume (`get_volume_per_element`).
-- **Mass properties.** 2D works from the single cross-section, placing it along the axis and adding a uniform-rod term for the length; 3D feeds the real voxel cloud straight to the inertia routines ([`get_center_of_gravity`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_center_of_gravity], [`get_moment_of_inertia`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_moment_of_inertia]).
-
-The heart of that difference is how each one reads the burning surface off the regression map, and the two do it the same way, one dimension apart. In 2D the burning surface is a curve, and [`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours] traces it with **marching squares** (`skimage`'s `find_contours`): the algorithm walks every 2x2 block of cells and, from which corners fall inside or outside the front, draws the short line segment that the front cuts through that block; the segments stitch together into the closed burning perimeter. In 3D the burning surface is an actual surface, and the burn area is measured with **marching cubes** (`skimage`'s `marching_cubes`, via [`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]): it walks every 2x2x2 block of voxels and emits the triangles that the front cuts through it, building a watertight mesh whose total area is the burning area. Same look-up-and-stitch recipe, line segments in 2D and triangles in 3D.
+Either way the key step is reading the burning surface off the regression map, and the two do it the same way one dimension apart. In 2D the surface is a curve: [`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours] traces it with marching squares (`skimage`'s `find_contours`), walking every 2x2 block of cells and drawing the short line segment the front cuts through it, then stitching the segments into the closed burning perimeter. In 3D the surface is a true surface: the burn area comes from marching cubes (`skimage`'s `marching_cubes`, via [`get_burn_area_interp_func`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interp_func]), walking every 2x2x2 block of voxels and emitting the triangles the front cuts through it, building a watertight mesh whose area is the burning area. Same recipe, line segments in 2D and triangles in 3D.
 
 # References
 
