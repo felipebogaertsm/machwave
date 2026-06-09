@@ -87,7 +87,9 @@ This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
 ![initial port](../assets/theory/grain_regression/initial_face.svg)
 
 **Apply the inhibitors: [`get_masked_face()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_masked_face].**
-Mask the initial face with the outer diameter, then apply the inihbitors with `_apply_inhibition`.
+`get_masked_face` lays the initial face over the outer-diameter mask, then `_apply_inhibition` decides which surfaces are allowed to burn (an inhibited surface is coated and cannot burn). The rule shared by 2D and 3D covers the two radial surfaces: if the outer (casing) surface is not inhibited, the ring of cells just inside the wall is opened so it burns inward; if the inner (bore) surface is inhibited, the bore cells are masked out so no front starts there. This grain is case-bonded, the default, with only the outer surface inhibited, so just the bore burns (the dots are outside the casing).
+
+2D works from a single cross-section, so those two surfaces are all there is. 3D ([`FMMGrainSegment3D`][machwave.models.grain.fmm._3d.FMMGrainSegment3D]) adds the two end faces: its first and last axial slices start open so the ends burn, and inhibiting an end resets that end's cells back to solid to protect it; the bore is detected slice by slice, skipping those end layers.
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
@@ -131,8 +133,7 @@ Now the fast marching method runs. `skfmm.distance` fills every propellant cell 
 *Yellow cells represent empty space. The color darkens with depth into the web.*
 
 **Grain map at a web distance: [`get_face_map(w)`][machwave.models.grain.fmm.base.FMMGrainSegment.get_face_map].**
-The face map of a web distance is can be obtained by thresholding the regression map at that specific web distance.
-Example at `w=0.2`:
+The face map at a web distance is obtained by thresholding the regression map at that web distance. `1` is solid propellant, `0` has burned away, and the dots are outside the casing. Example at `w=0.2`:
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
