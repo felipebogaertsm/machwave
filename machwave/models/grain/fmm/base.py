@@ -269,8 +269,8 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         """
         Boolean mask of solid cells at a web distance.
 
-        Memoized per web distance, since it is used for both volume, port area, center
-        of gravity and moment of inertia calculations.
+        Memoized per web distance, since it is used for volume, center of gravity
+        and moment of inertia calculations.
         """
         if self._solid_mask is None or self._solid_mask_web != web_distance:
             regression_map = self.get_regression_map()
