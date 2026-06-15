@@ -42,6 +42,9 @@ class Propellant(abc.ABC):
     # Chamber pressure is quantized to this width [Pa] before evaluation.
     CHAMBER_PRESSURE_QUANTIZATION_PA: float = 200.0
 
+    # Mixture ratio (O/F) is quantized to this width before evaluation.
+    MIXTURE_RATIO_QUANTIZATION: float = 1e-3
+
     def __init__(
         self,
         name: str,
@@ -160,8 +163,9 @@ class Propellant(abc.ABC):
         """
         Evaluate thermochemical properties at given conditions.
 
-        Chamber pressure is quantized to `CHAMBER_PRESSURE_QUANTIZATION_PA` and the
-        result is cached per `(chamber_pressure, expansion_ratio, mixture_ratio)`.
+        Chamber pressure is quantized to `CHAMBER_PRESSURE_QUANTIZATION_PA` and
+        mixture ratio to `MIXTURE_RATIO_QUANTIZATION`; the result is cached per
+        `(chamber_pressure, expansion_ratio, mixture_ratio)`.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].
@@ -178,7 +182,17 @@ class Propellant(abc.ABC):
             round(chamber_pressure / self.CHAMBER_PRESSURE_QUANTIZATION_PA)
             * self.CHAMBER_PRESSURE_QUANTIZATION_PA
         )
-        cache_key = (quantized_chamber_pressure, expansion_ratio, mixture_ratio)
+        quantized_mixture_ratio = (
+            round(mixture_ratio / self.MIXTURE_RATIO_QUANTIZATION)
+            * self.MIXTURE_RATIO_QUANTIZATION
+            if mixture_ratio is not None
+            else None
+        )
+        cache_key = (
+            quantized_chamber_pressure,
+            expansion_ratio,
+            quantized_mixture_ratio,
+        )
         cached_properties = self._evaluation_cache.get(cache_key)
         if cached_properties is not None:
             return cached_properties
@@ -186,7 +200,7 @@ class Propellant(abc.ABC):
         properties = self._compute_thermochemical_properties(
             chamber_pressure=quantized_chamber_pressure,
             expansion_ratio=expansion_ratio,
-            mixture_ratio=mixture_ratio,
+            mixture_ratio=quantized_mixture_ratio,
         )
         self._evaluation_cache[cache_key] = properties
         return properties

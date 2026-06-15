@@ -61,6 +61,26 @@ class TestBiliquidEvaluateMixtureRatio:
         lox_rp1_propellant.evaluate(chamber_pressure=3e6, mixture_ratio=1.5)
         assert lox_rp1_propellant.oxidizer_to_fuel_ratio == 2.5
 
+    def test_nearby_mixture_ratios_share_cache_entry(self, lox_rp1_propellant):
+        quantization = lox_rp1_propellant.MIXTURE_RATIO_QUANTIZATION
+        first = lox_rp1_propellant.evaluate(chamber_pressure=3e6, mixture_ratio=2.5)
+        second = lox_rp1_propellant.evaluate(
+            chamber_pressure=3e6, mixture_ratio=2.5 + quantization / 4
+        )
+        assert second is first
+        assert len(lox_rp1_propellant._evaluation_cache) == 1
+
+    def test_distinct_mixture_ratios_use_separate_cache_entries(
+        self, lox_rp1_propellant
+    ):
+        quantization = lox_rp1_propellant.MIXTURE_RATIO_QUANTIZATION
+        first = lox_rp1_propellant.evaluate(chamber_pressure=3e6, mixture_ratio=2.5)
+        second = lox_rp1_propellant.evaluate(
+            chamber_pressure=3e6, mixture_ratio=2.5 + 2 * quantization
+        )
+        assert second is not first
+        assert len(lox_rp1_propellant._evaluation_cache) == 2
+
 
 def _biliquid_with_fuel_formula(
     fuel_formula: dict[str, int],
