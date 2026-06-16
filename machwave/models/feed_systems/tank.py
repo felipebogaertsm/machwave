@@ -63,8 +63,7 @@ class Tank:
         )
         # Single phase density at the tank temperature, memoized per pressure.
         self._density_by_pressure: dict[float, float | None] = {}
-        # All-vapor pressure at the tank temperature, memoized per fluid mass:
-        # the feed system queries the same mass several times per timestep.
+        # Vapor pressure at the tank temperature, memoized per fluid mass.
         self._pressure_by_mass: dict[float, float] = {}
 
         self._check_not_overfilled()
