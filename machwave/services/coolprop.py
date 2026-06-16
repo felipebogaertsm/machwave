@@ -48,6 +48,18 @@ class CoolPropService:
         """
         return CP.PropsSI("D", "T", temperature, "Q", 0, self.fluid_name)
 
+    def get_saturated_vapor_density(self, temperature: float) -> float:
+        """
+        Get the saturated-vapor density at a given temperature.
+
+        Args:
+            temperature: Temperature [K].
+
+        Returns:
+            Saturated-vapor density [kg/m^3].
+        """
+        return CP.PropsSI("D", "T", temperature, "Q", 1, self.fluid_name)
+
     def get_saturated_liquid_enthalpy(self, temperature: float) -> float:
         """
         Get the saturated-liquid specific enthalpy at a given temperature.
@@ -86,6 +98,21 @@ class CoolPropService:
             Density [kg/m^3].
         """
         return CP.PropsSI("D", "T", temperature, "P", pressure, self.fluid_name)
+
+    def get_pressure_at_temperature_density(
+        self, temperature: float, density: float
+    ) -> float:
+        """
+        Get the single-phase pressure at a given temperature and density.
+
+        Args:
+            temperature: Temperature [K].
+            density: Density [kg/m^3].
+
+        Returns:
+            Pressure [Pa].
+        """
+        return CP.PropsSI("P", "T", temperature, "D", density, self.fluid_name)
 
     def get_enthalpy_at_temperature_pressure(
         self, temperature: float, pressure: float

@@ -1,4 +1,3 @@
-import machwave.core.ideal_gas as ideal_gas
 import machwave.services.coolprop as coolprop_service
 
 
@@ -14,7 +13,8 @@ class Tank:
     Assumptions:
       - Constant temperature (isothermal).
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
-      - If insufficient mass for liquid, treat it as an ideal gas.
+      - If insufficient mass for liquid, treat it as single-phase vapor via
+        the real-gas equation of state.
       - Ignores temperature changes upon phase change (no thermal balance).
     """
 
@@ -54,13 +54,17 @@ class Tank:
 
         # The tank is isothermal with a fixed fluid, so these properties are constant
         # and cached
-        self.molar_mass = self._coolprop.get_molar_mass()  # kg/mol
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
             temperature
         )
+        self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
+            temperature
+        )
         # Single phase density at the tank temperature, memoized per pressure.
         self._density_by_pressure: dict[float, float | None] = {}
+        # Vapor pressure at the tank temperature, memoized per fluid mass.
+        self._pressure_by_mass: dict[float, float] = {}
 
         self._check_not_overfilled()
 
@@ -108,11 +112,14 @@ class Tank:
         """
         Return the tank pressure [Pa] for a given fluid mass.
 
-        1) Compute the saturation pressure at the given temperature.
-        2) If the fluid mass is larger than the mass if all vapor at the saturation
-            pressure, the tank is partially liquid and the pressure is the saturation
+        1) An empty tank has zero pressure.
+        2) If the fluid mass exceeds the mass of saturated vapor that fills the
+            tank, the tank is partially liquid and the pressure is the saturation
             pressure.
-        3) Otherwise, the tank is all vapor and behaves like an ideal gas.
+        3) Otherwise, the tank is all sub-saturated vapor and the pressure
+            follows the real-gas equation of state at the bulk density. This
+            matches the saturation pressure at the phase boundary, so pressure
+            stays continuous as the tank crosses out of the two-phase regime.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -120,27 +127,30 @@ class Tank:
         Returns:
             Tank pressure [Pa].
         """
-        max_vapor_mass = ideal_gas.get_mass(
-            self.saturation_pressure, self.volume, self.temperature, self.molar_mass
-        )
+        if fluid_mass <= 0:
+            return 0.0
 
-        if fluid_mass > max_vapor_mass:
+        if fluid_mass > self.saturated_vapor_density * self.volume:
             return self.saturation_pressure
-        else:
-            return ideal_gas.get_pressure(
-                fluid_mass, self.volume, self.temperature, self.molar_mass
+
+        if fluid_mass not in self._pressure_by_mass:
+            self._pressure_by_mass[fluid_mass] = (
+                self._coolprop.get_pressure_at_temperature_density(
+                    self.temperature, fluid_mass / self.volume
+                )
             )
+        return self._pressure_by_mass[fluid_mass]
 
     def get_density(self, fluid_mass: float, pressure: float | None = None) -> float:
         """
         Return fluid density [kg/m^3] for a given fluid mass.
 
         1) An empty tank has zero density.
-        2) Away from saturation the single-phase density follows directly from
-            temperature and pressure.
-        3) At saturation that lookup is ambiguous: a partially liquid tank
+        2) With a pressure override the single-phase density follows directly
+            from temperature and pressure.
+        3) Otherwise the fill state fixes the density: a partially liquid tank
             returns the saturated liquid density (the feed system pulls liquid
-            from the bottom), otherwise it falls back to the bulk density.
+            from the bottom), and an all-vapor tank returns the bulk density.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -153,16 +163,12 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        tank_pressure = self.get_pressure(fluid_mass) if pressure is None else pressure
+        if pressure is not None:
+            single_phase_density = self._single_phase_density(pressure)
+            if single_phase_density is not None:
+                return single_phase_density
 
-        single_phase_density = self._single_phase_density(tank_pressure)
-        if single_phase_density is not None:
-            return single_phase_density
-
-        max_vapor_mass = ideal_gas.get_mass(
-            tank_pressure, self.volume, self.temperature, self.molar_mass
-        )
-        if fluid_mass > max_vapor_mass:
+        if fluid_mass > self.saturated_vapor_density * self.volume:
             return self.saturated_liquid_density
         return fluid_mass / self.volume
 
