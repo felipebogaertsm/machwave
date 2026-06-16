@@ -62,6 +62,9 @@ class Tank:
         )
         # Single phase density at the tank temperature, memoized per pressure.
         self._density_by_pressure: dict[float, float | None] = {}
+        # All-vapor pressure at the tank temperature, memoized per fluid mass:
+        # the feed system queries the same mass several times per timestep.
+        self._pressure_by_mass: dict[float, float] = {}
 
         self._check_not_overfilled()
 
@@ -127,25 +130,27 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        max_vapor_mass = self.saturated_vapor_density * self.volume
-
-        if fluid_mass > max_vapor_mass:
+        if fluid_mass > self.saturated_vapor_density * self.volume:
             return self.saturation_pressure
-        else:
-            return self._coolprop.get_pressure_at_temperature_density(
-                self.temperature, fluid_mass / self.volume
+
+        if fluid_mass not in self._pressure_by_mass:
+            self._pressure_by_mass[fluid_mass] = (
+                self._coolprop.get_pressure_at_temperature_density(
+                    self.temperature, fluid_mass / self.volume
+                )
             )
+        return self._pressure_by_mass[fluid_mass]
 
     def get_density(self, fluid_mass: float, pressure: float | None = None) -> float:
         """
         Return fluid density [kg/m^3] for a given fluid mass.
 
         1) An empty tank has zero density.
-        2) Away from saturation the single-phase density follows directly from
-            temperature and pressure.
-        3) At saturation that lookup is ambiguous: a partially liquid tank
+        2) With a pressure override the single-phase density follows directly
+            from temperature and pressure.
+        3) Otherwise the fill state fixes the density: a partially liquid tank
             returns the saturated liquid density (the feed system pulls liquid
-            from the bottom), otherwise it falls back to the bulk density.
+            from the bottom), and an all-vapor tank returns the bulk density.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -158,14 +163,12 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        tank_pressure = self.get_pressure(fluid_mass) if pressure is None else pressure
+        if pressure is not None:
+            single_phase_density = self._single_phase_density(pressure)
+            if single_phase_density is not None:
+                return single_phase_density
 
-        single_phase_density = self._single_phase_density(tank_pressure)
-        if single_phase_density is not None:
-            return single_phase_density
-
-        max_vapor_mass = self.saturated_vapor_density * self.volume
-        if fluid_mass > max_vapor_mass:
+        if fluid_mass > self.saturated_vapor_density * self.volume:
             return self.saturated_liquid_density
         return fluid_mass / self.volume
 
