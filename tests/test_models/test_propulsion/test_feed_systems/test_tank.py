@@ -30,10 +30,8 @@ def test_saturated_condition(fluid_name, temperature):
     #    This might fail if T is out of range for the fluid.
     p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
 
-    # 2) Calculate how much mass is vapor only at p_sat.
-    molar_mass = CP.PropsSI("M", fluid_name)  # kg/mol
-    R_universal = scipy.constants.R
-    m_vap = (p_sat * volume * molar_mass) / (R_universal * temperature)
+    # 2) Mass of saturated vapor that just fills the tank.
+    m_vap = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name) * volume
 
     # 3) Put more mass than m_vap => ensures there's liquid
     fluid_mass = 2.0 * m_vap  # definitely more than needed for vapor only
@@ -53,16 +51,13 @@ def test_saturated_condition(fluid_name, temperature):
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
 def test_all_vapor_condition(fluid_name, temperature):
     """
-    If the tank doesn't have enough mass to sustain liquid, it should be all vapor
-    and the pressure should follow the ideal gas law.
+    If the tank doesn't have enough mass to sustain liquid, it should be all
+    vapor and the pressure should follow the real-gas equation of state.
     """
     volume = 0.01  # m^3
-    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
-    molar_mass = CP.PropsSI("M", fluid_name)
-    R_universal = scipy.constants.R
 
-    # m_vap_sat = mass of vapor at p_sat (all vapor)
-    m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
+    # m_vap_sat = mass of saturated vapor that just fills the tank
+    m_vap_sat = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name) * volume
 
     # Put slightly less than that => ensures no liquid
     mass = 0.5 * m_vap_sat
@@ -73,13 +68,45 @@ def test_all_vapor_condition(fluid_name, temperature):
         initial_fluid_mass=mass,
     )
 
-    # Ideal gas law pressure => P_ideal = (n * R * T)/V
-    n_moles = mass / molar_mass
-    p_ideal = (n_moles * R_universal * temperature) / volume
-
-    assert tank.get_pressure(mass) == pytest.approx(p_ideal, rel=1e-3), (
-        f"Expected ideal-gas pressure for {fluid_name} at T={temperature} K with insufficient mass."
+    p_real = CP.PropsSI("P", "T", temperature, "D", mass / volume, fluid_name)
+    assert tank.get_pressure(mass) == pytest.approx(p_real, rel=1e-3), (
+        f"Expected real-gas pressure for {fluid_name} at T={temperature} K with insufficient mass."
     )
+
+
+def test_near_critical_vapor_not_misclassified_as_two_phase():
+    """
+    Near the critical point the saturated-vapor density far exceeds the
+    ideal-gas value, so a fill between the two is still single-phase vapor.
+    The phase split must use the real saturated-vapor density; the ideal-gas
+    threshold would wrongly report the saturation pressure here.
+    """
+    fluid_name, temperature, volume = "N2O", 298.0, 0.01  # T_c = 309.5 K
+
+    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
+    molar_mass = CP.PropsSI("M", fluid_name)
+    rho_vapor = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name)
+    rho_vapor_ideal = p_sat * molar_mass / (scipy.constants.R * temperature)
+    assert rho_vapor > 1.5 * rho_vapor_ideal  # genuinely near-critical
+
+    # Fill between the ideal-gas and real saturated-vapor masses: above the old
+    # (ideal-gas) threshold, below the real one.
+    mass = 0.5 * (rho_vapor_ideal + rho_vapor) * volume
+    assert rho_vapor_ideal * volume < mass < rho_vapor * volume
+
+    tank = tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=mass,
+    )
+
+    # Single-phase vapor: the pressure is the real-gas value and stays strictly
+    # below saturation. The old ideal-gas threshold would have reported p_sat.
+    p_real = CP.PropsSI("P", "T", temperature, "D", mass / volume, fluid_name)
+    pressure = tank.get_pressure(mass)
+    assert pressure == pytest.approx(p_real, rel=1e-3)
+    assert pressure < p_sat
 
 
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
@@ -109,10 +136,7 @@ def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
     density under-predicts ṁ as the tank empties.
     """
     volume = 0.01
-    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
-    molar_mass = CP.PropsSI("M", fluid_name)
-    R_universal = scipy.constants.R
-    m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
+    m_vap_sat = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name) * volume
 
     fluid_mass = 2.0 * m_vap_sat
     tank = tank_models.Tank(
@@ -134,21 +158,20 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
     bulk mixture.
     """
     volume = 0.01
-    p_sat = CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
-    molar_mass = CP.PropsSI("M", fluid_name)
-    R_universal = scipy.constants.R
-    m_vap_sat = (p_sat * volume * molar_mass) / (R_universal * temperature)
+    m_vap_sat = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name) * volume
 
     tank = tank_models.Tank(
         fluid_name=fluid_name,
         volume=volume,
         temperature=temperature,
-        initial_fluid_mass=5.0 * m_vap_sat,
+        initial_fluid_mass=2.5 * m_vap_sat,
     )
 
     # Both masses leave the tank two-phase (> m_vap_sat), so density is invariant.
-    higher_mass = 5.0 * m_vap_sat
-    lower_mass = 4.0 * m_vap_sat
+    # Multipliers stay below the liquid/vapor density ratio to avoid overfill for
+    # near-critical fluids like N2O.
+    higher_mass = 2.5 * m_vap_sat
+    lower_mass = 1.5 * m_vap_sat
     assert lower_mass > m_vap_sat
     assert tank.get_density(lower_mass) == pytest.approx(
         tank.get_density(higher_mass), rel=1e-6

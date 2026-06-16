@@ -1,4 +1,3 @@
-import machwave.core.ideal_gas as ideal_gas
 import machwave.services.coolprop as coolprop_service
 
 
@@ -54,9 +53,11 @@ class Tank:
 
         # The tank is isothermal with a fixed fluid, so these properties are constant
         # and cached
-        self.molar_mass = self._coolprop.get_molar_mass()  # kg/mol
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
+            temperature
+        )
+        self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
         # Single phase density at the tank temperature, memoized per pressure.
@@ -108,11 +109,14 @@ class Tank:
         """
         Return the tank pressure [Pa] for a given fluid mass.
 
-        1) Compute the saturation pressure at the given temperature.
-        2) If the fluid mass is larger than the mass if all vapor at the saturation
-            pressure, the tank is partially liquid and the pressure is the saturation
+        1) An empty tank has zero pressure.
+        2) If the fluid mass exceeds the mass of saturated vapor that fills the
+            tank, the tank is partially liquid and the pressure is the saturation
             pressure.
-        3) Otherwise, the tank is all vapor and behaves like an ideal gas.
+        3) Otherwise, the tank is all sub-saturated vapor and the pressure
+            follows the real-gas equation of state at the bulk density. This
+            matches the saturation pressure at the phase boundary, so pressure
+            stays continuous as the tank crosses out of the two-phase regime.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -120,15 +124,16 @@ class Tank:
         Returns:
             Tank pressure [Pa].
         """
-        max_vapor_mass = ideal_gas.get_mass(
-            self.saturation_pressure, self.volume, self.temperature, self.molar_mass
-        )
+        if fluid_mass <= 0:
+            return 0.0
+
+        max_vapor_mass = self.saturated_vapor_density * self.volume
 
         if fluid_mass > max_vapor_mass:
             return self.saturation_pressure
         else:
-            return ideal_gas.get_pressure(
-                fluid_mass, self.volume, self.temperature, self.molar_mass
+            return self._coolprop.get_pressure_at_temperature_density(
+                self.temperature, fluid_mass / self.volume
             )
 
     def get_density(self, fluid_mass: float, pressure: float | None = None) -> float:
@@ -159,9 +164,7 @@ class Tank:
         if single_phase_density is not None:
             return single_phase_density
 
-        max_vapor_mass = ideal_gas.get_mass(
-            tank_pressure, self.volume, self.temperature, self.molar_mass
-        )
+        max_vapor_mass = self.saturated_vapor_density * self.volume
         if fluid_mass > max_vapor_mass:
             return self.saturated_liquid_density
         return fluid_mass / self.volume
