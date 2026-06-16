@@ -13,7 +13,8 @@ class Tank:
     Assumptions:
       - Constant temperature (isothermal).
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
-      - If insufficient mass for liquid, treat it as an ideal gas.
+      - If insufficient mass for liquid, treat it as single-phase vapor via
+        the real-gas equation of state.
       - Ignores temperature changes upon phase change (no thermal balance).
     """
 
