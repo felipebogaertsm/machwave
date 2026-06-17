@@ -2,6 +2,8 @@ import numpy as np
 
 import machwave.core.geometric as geometric
 
+DEFAULT_SEPARATION_PRESSURE_RATIO = 0.4  # typically between 0.3 and 0.4
+
 
 class Nozzle:
     """Converging-diverging nozzle geometry and loss coefficients."""
@@ -16,6 +18,7 @@ class Nozzle:
         c_1: float = 0.00506,
         c_2: float = 0.0,
         discharge_coefficient: float = 1.0,
+        separation_pressure_ratio: float = DEFAULT_SEPARATION_PRESSURE_RATIO,
     ) -> None:
         """
         Initialize a nozzle.
@@ -29,6 +32,8 @@ class Nozzle:
             c_1: Boundary-layer loss coefficient (see notes below).
             c_2: Boundary-layer loss coefficient (see notes below).
             discharge_coefficient: Throat discharge coefficient.
+            separation_pressure_ratio: Pressure ratio at which the overexpanded flow
+                separates from the nozzle wall (Summerfield criterion).
 
         Notes:
             Boundary-layer loss correction coefficients (ref. a015140) are used
@@ -47,6 +52,7 @@ class Nozzle:
         self.c_1 = c_1
         self.c_2 = c_2
         self.discharge_coefficient = discharge_coefficient
+        self.separation_pressure_ratio = separation_pressure_ratio
 
     @property
     def outlet_diameter(self) -> float:

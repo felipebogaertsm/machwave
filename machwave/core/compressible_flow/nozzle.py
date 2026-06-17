@@ -1,4 +1,9 @@
+from typing import cast
+
 import numpy as np
+import scipy.optimize
+
+import machwave.core.compressible_flow.isentropic as isentropic
 
 
 def get_optimal_expansion_ratio(
@@ -23,6 +28,61 @@ def get_optimal_expansion_ratio(
             * (1 - (atmospheric_pressure / chamber_pressure) ** ((k - 1) / k))
         )
     ) ** -1
+
+
+def get_separated_exit_conditions(
+    k_exhaust: float,
+    expansion_ratio: float,
+    chamber_pressure: float,
+    external_pressure: float,
+    separation_pressure_ratio: float,
+) -> tuple[float, float]:
+    """
+    Get the effective exit conditions accounting for flow separation.
+
+    The model implemented is based on the work of Summerfield et al. (1954) and assumes
+    that flow separation occurs when the exit pressure is below a certain fraction of
+    the ambient pressure.
+
+    Args:
+        k_exhaust: Isentropic exponent at exit.
+        expansion_ratio: Geometric expansion ratio.
+        chamber_pressure: Chamber pressure [Pa].
+        external_pressure: Ambient pressure [Pa].
+        separation_pressure_ratio: Separation-to-ambient pressure ratio.
+
+    Returns:
+        Effective expansion ratio and effective exit pressure [Pa].
+
+    References:
+        Summerfield, M., Foster, C. R., & Swan, W. C. (1954). Flow separation in
+        overexpanded supersonic exhaust nozzles.
+    """
+    exit_pressure = isentropic.get_exit_pressure(
+        k_exhaust, expansion_ratio, chamber_pressure
+    )
+    separation_pressure = separation_pressure_ratio * external_pressure
+    if exit_pressure >= separation_pressure:
+        return expansion_ratio, exit_pressure
+
+    sonic_pressure = chamber_pressure * isentropic.get_critical_pressure_ratio(
+        k_exhaust
+    )
+    if separation_pressure >= sonic_pressure:
+        return 1.0, sonic_pressure
+
+    effective_expansion_ratio = cast(
+        float,
+        scipy.optimize.brentq(
+            lambda ratio: (
+                isentropic.get_exit_pressure(k_exhaust, ratio, chamber_pressure)
+                - separation_pressure
+            ),
+            a=1.001,
+            b=expansion_ratio,
+        ),
+    )
+    return effective_expansion_ratio, separation_pressure
 
 
 def get_ideal_thrust_coefficient(
