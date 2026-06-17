@@ -100,6 +100,10 @@ def test_chamber_pressure_and_thrust_are_physically_plausible(
     assert 100.0 < peak_thrust < 1.0e4, (
         f"peak thrust {peak_thrust:.2e} N outside [100, 1e4]"
     )
+    # Flow separation bounds the overexpanded pressure-thrust term, so thrust
+    # stays non-negative through tail-off.
+    min_thrust = float(np.min(simulation_result.thrust))
+    assert min_thrust >= 0.0, f"thrust dips negative: {min_thrust:.2e} N"
 
 
 def test_recorded_per_timestep_arrays_are_aligned(

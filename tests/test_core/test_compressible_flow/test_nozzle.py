@@ -1,5 +1,6 @@
 import pytest
 
+import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.compressible_flow.nozzle as core_nozzle
 
 
@@ -12,6 +13,64 @@ def test_get_optimal_expansion_ratio():
     )
 
     assert optimal_expansion_ratio == pytest.approx(9.37, rel=1e-2)
+
+
+def test_get_separated_exit_conditions_attached():
+    # High chamber pressure: the nozzle flows full and conditions are unchanged.
+    k_exhaust = 1.2
+    expansion_ratio = 8.0
+    chamber_pressure = 7e6
+    external_pressure = 1e5
+    effective_expansion_ratio, exit_pressure = (
+        core_nozzle.get_separated_exit_conditions(
+            k_exhaust, expansion_ratio, chamber_pressure, external_pressure, 0.4
+        )
+    )
+
+    assert effective_expansion_ratio == expansion_ratio
+    assert exit_pressure == pytest.approx(
+        isentropic.get_exit_pressure(k_exhaust, expansion_ratio, chamber_pressure)
+    )
+
+
+def test_get_separated_exit_conditions_separated():
+    # Low chamber pressure: the flow separates upstream of the geometric exit.
+    k_exhaust = 1.2
+    expansion_ratio = 8.0
+    chamber_pressure = 3e5
+    external_pressure = 1e5
+    separation_pressure_ratio = 0.4
+    effective_expansion_ratio, exit_pressure = (
+        core_nozzle.get_separated_exit_conditions(
+            k_exhaust,
+            expansion_ratio,
+            chamber_pressure,
+            external_pressure,
+            separation_pressure_ratio,
+        )
+    )
+
+    assert 1.0 < effective_expansion_ratio < expansion_ratio
+    assert exit_pressure == pytest.approx(separation_pressure_ratio * external_pressure)
+
+
+def test_get_separated_exit_conditions_unchoked_limit():
+    # Near-ambient chamber pressure: separation reaches the throat, so the
+    # effective exit collapses to sonic conditions.
+    k_exhaust = 1.2
+    expansion_ratio = 8.0
+    chamber_pressure = 6e4
+    external_pressure = 1e5
+    effective_expansion_ratio, exit_pressure = (
+        core_nozzle.get_separated_exit_conditions(
+            k_exhaust, expansion_ratio, chamber_pressure, external_pressure, 0.4
+        )
+    )
+
+    assert effective_expansion_ratio == 1.0
+    assert exit_pressure == pytest.approx(
+        chamber_pressure * isentropic.get_critical_pressure_ratio(k_exhaust)
+    )
 
 
 def test_get_ideal_thrust_coefficient():

@@ -1,6 +1,7 @@
 import pytest
 
 import machwave.core.geometric as geometric
+import machwave.models.thrust_chamber.nozzle as nozzle_model
 
 from tests.factories import NozzleFactory
 
@@ -77,3 +78,15 @@ class TestNozzleGeometry:
         """Throat discharge coefficient can be overridden."""
         n = NozzleFactory.build(discharge_coefficient=0.95)
         assert n.discharge_coefficient == pytest.approx(0.95, rel=1e-9)
+
+    def test_default_separation_pressure_ratio(self, nozzle):
+        """Separation pressure ratio defaults to the Summerfield value."""
+        assert (
+            nozzle.separation_pressure_ratio
+            == nozzle_model.DEFAULT_SEPARATION_PRESSURE_RATIO
+        )
+
+    def test_custom_separation_pressure_ratio(self):
+        """Separation pressure ratio can be overridden."""
+        n = NozzleFactory.build(separation_pressure_ratio=0.35)
+        assert n.separation_pressure_ratio == pytest.approx(0.35, rel=1e-9)
