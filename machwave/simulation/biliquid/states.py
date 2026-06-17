@@ -1,15 +1,69 @@
 from __future__ import annotations
 
+import functools
+from typing import Callable
+
 import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.compressible_flow.losses as losses
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
+import machwave.models.feed_systems as feed_systems
 import machwave.models.motors as motors
 import machwave.models.propellants.properties as propellant_properties_models
+import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
+
+
+def get_injector_mass_flows(
+    chamber_pressure: float,
+    *,
+    feed_system: feed_systems.FeedSystem,
+    injector: injector_models.BipropellantInjector,
+    fuel_mass: float,
+    oxidizer_mass: float,
+    fuel_tank_pressure: float,
+    oxidizer_tank_pressure: float,
+    is_feeding: bool,
+    d_t: float,
+) -> tuple[float, float]:
+    """Fuel and oxidizer injector flows at the given chamber pressure [kg/s]."""
+    if not is_feeding:
+        return 0.0, 0.0
+    fuel_flow = (
+        feed_system.get_mass_flow_fuel(
+            chamber_pressure=chamber_pressure,
+            injector=injector,
+            fuel_mass=fuel_mass,
+            oxidizer_mass=oxidizer_mass,
+        )
+        if fuel_tank_pressure > chamber_pressure
+        else 0.0
+    )
+    oxidizer_flow = (
+        feed_system.get_mass_flow_ox(
+            chamber_pressure=chamber_pressure,
+            injector=injector,
+            oxidizer_mass=oxidizer_mass,
+        )
+        if oxidizer_tank_pressure > chamber_pressure
+        else 0.0
+    )
+    return (
+        min(fuel_flow, fuel_mass / d_t),
+        min(oxidizer_flow, oxidizer_mass / d_t),
+    )
+
+
+def get_total_injector_mass_flow(
+    chamber_pressure: float,
+    *,
+    injector_flows: Callable[[float], tuple[float, float]],
+) -> float:
+    """Total injector mass flow (fuel + oxidizer) at the given pressure [kg/s]."""
+    return sum(injector_flows(chamber_pressure))
 
 
 class BiliquidEngineState(simulation_states.MotorState):
@@ -56,10 +110,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.oxidizer_tank_pressure: simulation_states.SimulationStateArray = []
         self.nozzle_correction_factor: simulation_states.SimulationStateArray = []
 
-    def get_m_dot_in(self) -> float:
-        """Return the total inlet mass flow (fuel + oxidizer) [kg/s]."""
-        return self.fuel_mass_flow_rate[-1] + self.oxidizer_mass_flow_rate[-1]
-
     def _evaluate_propellant_properties(
         self,
         chamber_pressure: float,
@@ -85,7 +135,6 @@ class BiliquidEngineState(simulation_states.MotorState):
             external_pressure: External pressure.
         """
         nozzle = self.motor.thrust_chamber.nozzle
-        injector = self.motor.thrust_chamber.injector
         feed_system = self.motor.feed_system
 
         time = self.time[-1]
@@ -105,28 +154,23 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
         self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
 
-        can_feed = (
+        is_feeding = (
             propellant_mass > 0
             and fuel_tank_pressure > chamber_pressure
             and oxidizer_tank_pressure > chamber_pressure
         )
-        if can_feed:
-            m_dot_fuel = feed_system.get_mass_flow_fuel(
-                chamber_pressure=chamber_pressure,
-                injector=injector,
-                fuel_mass=fuel_mass,
-                oxidizer_mass=oxidizer_mass,
-            )
-            m_dot_ox = feed_system.get_mass_flow_ox(
-                chamber_pressure=chamber_pressure,
-                injector=injector,
-                oxidizer_mass=oxidizer_mass,
-            )
-        else:
-            m_dot_fuel = m_dot_ox = 0.0
-
-        m_dot_fuel = min(m_dot_fuel, fuel_mass / d_t)
-        m_dot_ox = min(m_dot_ox, oxidizer_mass / d_t)
+        injector_flows = functools.partial(
+            get_injector_mass_flows,
+            feed_system=feed_system,
+            injector=self.motor.thrust_chamber.injector,
+            fuel_mass=fuel_mass,
+            oxidizer_mass=oxidizer_mass,
+            fuel_tank_pressure=fuel_tank_pressure,
+            oxidizer_tank_pressure=oxidizer_tank_pressure,
+            is_feeding=is_feeding,
+            d_t=d_t,
+        )
+        m_dot_fuel, m_dot_ox = injector_flows(chamber_pressure)
         self.fuel_mass_flow_rate.append(m_dot_fuel)
         self.oxidizer_mass_flow_rate.append(m_dot_ox)
         fuel_consumed = m_dot_fuel * d_t
@@ -189,7 +233,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.thrust.append(thrust)
 
         if (
-            not can_feed
+            not is_feeding
             or fuel_consumed >= fuel_mass
             or oxidizer_consumed >= oxidizer_mass
         ) and not self.end_burn:
@@ -209,20 +253,21 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         new_time = time + d_t
         self.time.append(new_time)
-        self.fuel_mass.append(fuel_mass - fuel_consumed)
-        self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": chamber_pressure},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,
             external_pressure=external_pressure,
-            mass_flow_in=self.get_m_dot_in(),
+            mass_flow_in=functools.partial(
+                get_total_injector_mass_flow, injector_flows=injector_flows
+            ),
             free_chamber_volume=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
             flame_temperature=propellant_properties.adiabatic_flame_temperature,
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
-            free_chamber_volume_rate=0.0,
         )[0]
         self.chamber_pressure.append(new_chamber_pressure)
+        self.fuel_mass.append(fuel_mass - fuel_consumed)
+        self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)

@@ -5,6 +5,7 @@ simulation. A single control-volume mass balance covers both choked and
 sub-critical nozzle flow (Seidel 1965, Eq. 35), and is shared by the solid-motor
 and biliquid-engine state integrations — the caller supplies the appropriate
 \(\dot{m}_{in}\) (propellant regression for a solid motor, summed injector flows
-for a biliquid engine).
+for a biliquid engine) as a callable evaluated at each Runge-Kutta stage
+pressure, so the inflow stays consistent with the outflow.
 
 ::: machwave.core.mass_balance

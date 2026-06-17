@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import functools
+from typing import Callable
+
 import numpy as np
 import numpy.typing as npt
 
@@ -11,8 +14,44 @@ import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
+import machwave.models.propellants as propellants
 import machwave.simulation.solid.results as solid_results
 import machwave.simulation.states as simulation_states
+
+
+def get_grain_mass_flow_per_segment(
+    chamber_pressure: float,
+    *,
+    propellant: propellants.SolidPropellant,
+    burn_area_per_segment: npt.NDArray[np.float64],
+    segment_density_ratios: npt.NDArray[np.float64],
+) -> npt.NDArray[np.float64]:
+    """Per-segment grain mass generation rate at the given chamber pressure [kg/s]."""
+    return (
+        propellant.ideal_density
+        * propellant.get_burn_rate(chamber_pressure)
+        * burn_area_per_segment
+        * segment_density_ratios
+    )
+
+
+def get_grain_mass_flow(
+    chamber_pressure: float,
+    *,
+    mass_flow_per_segment: Callable[[float], npt.NDArray[np.float64]],
+) -> float:
+    """Total grain mass generation rate at the given chamber pressure [kg/s]."""
+    return float(np.sum(mass_flow_per_segment(chamber_pressure)))
+
+
+def get_free_chamber_volume_rate(
+    chamber_pressure: float,
+    *,
+    propellant: propellants.SolidPropellant,
+    burn_area: float,
+) -> float:
+    """Free chamber volume growth rate at the given chamber pressure [m^3/s]."""
+    return propellant.get_burn_rate(chamber_pressure) * burn_area
 
 
 class SolidMotorState(simulation_states.MotorState):
@@ -81,10 +120,6 @@ class SolidMotorState(simulation_states.MotorState):
         self.two_phase_loss: simulation_states.SimulationStateArray = []
         self.nozzle_efficiency: simulation_states.SimulationStateArray = []
 
-    def get_m_dot_in(self) -> float:
-        """Return the propellant mass generation rate from the grain [kg/s]."""
-        return float(np.sum(self.grain_segment_mass_flow[-1]))
-
     def run_timestep(
         self,
         d_t: float,
@@ -110,6 +145,19 @@ class SolidMotorState(simulation_states.MotorState):
         burn_area = float(np.sum(burn_area_per_segment))
         self.burn_area.append(burn_area)
 
+        # Pressure-dependent inflow: recorded at start-of-step, re-evaluated per stage.
+        mass_flow_per_segment = functools.partial(
+            get_grain_mass_flow_per_segment,
+            propellant=self.motor.propellant,
+            burn_area_per_segment=burn_area_per_segment,
+            segment_density_ratios=self.segment_density_ratios,
+        )
+        free_chamber_volume_rate = functools.partial(
+            get_free_chamber_volume_rate,
+            propellant=self.motor.propellant,
+            burn_area=burn_area,
+        )
+
         propellant_volume_per_segment = (
             self.motor.grain.get_propellant_volume_per_segment(web_distance)
         )
@@ -123,8 +171,7 @@ class SolidMotorState(simulation_states.MotorState):
 
         free_chamber_volume = self.motor.get_free_chamber_volume(propellant_volume)
         self.free_chamber_volume.append(free_chamber_volume)
-        free_chamber_volume_rate = burn_rate * burn_area
-        self.free_chamber_volume_rate.append(free_chamber_volume_rate)
+        self.free_chamber_volume_rate.append(free_chamber_volume_rate(chamber_pressure))
         propellant_mass_per_segment = (
             propellant_volume_per_segment
             * self.segment_density_ratios
@@ -147,13 +194,7 @@ class SolidMotorState(simulation_states.MotorState):
         self.propellant_cog.append(propellant_cog)
         self.propellant_moi.append(propellant_moi)
 
-        grain_segment_mass_flow = (
-            ideal_propellant_density
-            * burn_rate
-            * burn_area_per_segment
-            * self.segment_density_ratios
-        )
-        self.grain_segment_mass_flow.append(grain_segment_mass_flow)
+        self.grain_segment_mass_flow.append(mass_flow_per_segment(chamber_pressure))
 
         effective_expansion_ratio, exit_pressure = (
             nozzle_core.get_separated_exit_conditions(
@@ -247,12 +288,15 @@ class SolidMotorState(simulation_states.MotorState):
             adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
             combustion_efficiency=self.motor.combustion_efficiency,
         )
+
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": self.chamber_pressure[-1]},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,
             external_pressure=external_pressure,
-            mass_flow_in=self.get_m_dot_in(),
+            mass_flow_in=functools.partial(
+                get_grain_mass_flow, mass_flow_per_segment=mass_flow_per_segment
+            ),
             free_chamber_volume=free_chamber_volume,
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
