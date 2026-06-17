@@ -155,10 +155,14 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.grain_segment_mass_flow.append(grain_segment_mass_flow)
 
-        exit_pressure = isentropic.get_exit_pressure(
-            propellant_properties.k_exhaust,
-            nozzle.expansion_ratio,
-            chamber_pressure,
+        effective_expansion_ratio, exit_pressure = (
+            nozzle_core.get_separated_exit_conditions(
+                propellant_properties.k_exhaust,
+                nozzle.expansion_ratio,
+                chamber_pressure,
+                external_pressure,
+                nozzle.separation_pressure_ratio,
+            )
         )
         self.exit_pressure.append(exit_pressure)
 
@@ -207,7 +211,7 @@ class SolidMotorState(simulation_states.MotorState):
             chamber_pressure,
             exit_pressure,
             external_pressure,
-            nozzle.expansion_ratio,
+            effective_expansion_ratio,
             propellant_properties.k_exhaust,
         )
         self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)

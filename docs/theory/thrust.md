@@ -40,7 +40,30 @@ where:
 
 Implemented in [`get_ideal_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient].
 
-## 1.3 Nozzle Efficiency
+## 1.3 Flow Separation
+
+The ideal thrust coefficient above assumes the nozzle flows full, with the exhaust attached to the wall all the way to the geometric exit.
+As the chamber pressure decays during tail-off the nozzle becomes increasingly overexpanded ($P_e \ll P_\text{ext}$), and below a threshold the boundary layer can no longer sustain the adverse pressure gradient.
+The flow then separates from the wall upstream of the geometric exit, shrinking the effective exit area and pinning the realized exit pressure near the separation pressure.
+
+Machwave applies a simple **Summerfield criterion**: separation occurs once the isentropic exit pressure drops below a fixed fraction of the ambient pressure,
+
+$$
+P_e < P_\text{sep} = f_\text{sep}\, P_\text{ext}, \qquad f_\text{sep} \approx 0.4
+$$
+
+Past that point the **effective expansion ratio** $\varepsilon_\text{eff}$ is the area ratio at which the isentropic wall pressure equals $P_\text{sep}$, and both $\varepsilon_\text{eff}$ and $P_\text{sep}$ feed the ideal thrust coefficient in place of the geometric values.
+This bounds the pressure-thrust term so tail-off thrust decays smoothly toward zero instead of diverging negative.
+
+where:
+
+- $P_\text{sep}$ is the separation pressure [Pa]
+- $f_\text{sep}$ is the separation-to-ambient pressure ratio (dimensionless)
+- $\varepsilon_\text{eff}$ is the effective expansion ratio at separation (dimensionless)
+
+Implemented in [`get_separated_exit_conditions`][machwave.core.compressible_flow.nozzle.get_separated_exit_conditions].
+
+## 1.4 Nozzle Efficiency
 
 Real nozzles deviate from the ideal assumptions baked into the ideal thrust coefficient.
 Machwave lumps these deviations into a single **nozzle efficiency** $\eta_\text{nozzle}$ applied multiplicatively to the ideal coefficient:
@@ -61,7 +84,7 @@ Implemented in
 with the efficiency from
 [`get_overall_nozzle_efficiency`][machwave.core.compressible_flow.losses.get_overall_nozzle_efficiency].
 
-## 1.4 Total Impulse and Specific Impulse
+## 1.5 Total Impulse and Specific Impulse
 
 After the thrust is calculated, the total impulse is obtained by integrating it over the thrust time:
 
@@ -97,3 +120,4 @@ Implemented in
 # References
 
 1. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley. Ch. 2-3.
+2. Summerfield, M., Foster, C. R., & Swan, W. C. (1954). Flow separation in overexpanded supersonic exhaust nozzles. *Jet Propulsion*, 24(5), 319-321.
