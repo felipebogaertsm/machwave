@@ -8,6 +8,7 @@ import machwave.core.compressible_flow.losses as losses
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
+import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.feed_systems as feed_systems
 import machwave.models.motors as motors
@@ -108,7 +109,9 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
         self.fuel_tank_pressure: simulation_states.SimulationStateArray = []
         self.oxidizer_tank_pressure: simulation_states.SimulationStateArray = []
-        self.nozzle_correction_factor: simulation_states.SimulationStateArray = []
+        self.divergent_loss: simulation_states.SimulationStateArray = []
+        self.kinetics_loss: simulation_states.SimulationStateArray = []
+        self.nozzle_efficiency: simulation_states.SimulationStateArray = []
 
     def _evaluate_propellant_properties(
         self,
@@ -212,8 +215,9 @@ class BiliquidEngineState(simulation_states.MotorState):
         nozzle_efficiency = losses.get_overall_nozzle_efficiency(
             divergent_loss, kinetics_loss, 0.0, 0.0, other_losses=self.other_losses
         )
-        nozzle_correction_factor = nozzle_efficiency * self.motor.combustion_efficiency
-        self.nozzle_correction_factor.append(nozzle_correction_factor)
+        self.divergent_loss.append(divergent_loss)
+        self.kinetics_loss.append(kinetics_loss)
+        self.nozzle_efficiency.append(nozzle_efficiency)
 
         ideal_thrust_coefficient_components = (
             nozzle_core.get_ideal_thrust_coefficient_components(
@@ -227,7 +231,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         ideal_thrust_coefficient = sum(ideal_thrust_coefficient_components)
         self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
         thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
-            ideal_thrust_coefficient, nozzle_correction_factor
+            ideal_thrust_coefficient, nozzle_efficiency
         )
         self.thrust_coefficient.append(thrust_coefficient)
         thrust = nozzle_core.get_thrust_from_thrust_coefficient(
@@ -256,6 +260,10 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         new_time = time + d_t
         self.time.append(new_time)
+        effective_flame_temperature = performance.get_effective_flame_temperature(
+            adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            combustion_efficiency=self.motor.combustion_efficiency,
+        )
         new_chamber_pressure = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": chamber_pressure},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
@@ -268,7 +276,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
-            flame_temperature=propellant_properties.adiabatic_flame_temperature,
+            flame_temperature=effective_flame_temperature,
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
         )[0]
         self.chamber_pressure.append(new_chamber_pressure)

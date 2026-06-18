@@ -19,7 +19,9 @@ class BiliquidSimulationResult(
 
     oxidizer_mass: simulation_results.SimulationResultArray
     fuel_mass: simulation_results.SimulationResultArray
-    nozzle_correction_factor: simulation_results.SimulationResultArray
+    divergent_loss: simulation_results.SimulationResultArray
+    kinetics_loss: simulation_results.SimulationResultArray
+    nozzle_efficiency: simulation_results.SimulationResultArray
     fuel_tank_pressure: simulation_results.SimulationResultArray
     oxidizer_tank_pressure: simulation_results.SimulationResultArray
     final_oxidizer_mass: float
@@ -34,7 +36,9 @@ class BiliquidSimulationResult(
         return {
             "oxidizer_mass": oxidizer_mass,
             "fuel_mass": fuel_mass,
-            "nozzle_correction_factor": np.asarray(state.nozzle_correction_factor),
+            "divergent_loss": np.asarray(state.divergent_loss),
+            "kinetics_loss": np.asarray(state.kinetics_loss),
+            "nozzle_efficiency": np.asarray(state.nozzle_efficiency),
             "fuel_tank_pressure": np.asarray(state.fuel_tank_pressure),
             "oxidizer_tank_pressure": np.asarray(state.oxidizer_tank_pressure),
             "final_oxidizer_mass": float(oxidizer_mass[-1]),
@@ -65,6 +69,20 @@ class BiliquidSimulationResult(
         print("\nIMPULSE AND I_SP", file=file)
         print(f"  Total impulse: {self.total_impulse:.4f} N-s", file=file)
         print(f"  Specific impulse: {self.specific_impulse:.4f} s", file=file)
+
+        print("\nNOZZLE", file=file)
+        print(
+            f"  Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}",
+            file=file,
+        )
+        print(
+            f"  Divergent nozzle loss fraction: {np.mean(self.divergent_loss):.3%}",
+            file=file,
+        )
+        print(
+            f"  Average kinetics loss fraction: {np.mean(self.kinetics_loss):.3%}",
+            file=file,
+        )
 
         print("\nPROPELLANT REMAINING (kg)", file=file)
         print(f"  Oxidizer: {self.final_oxidizer_mass:.4f}", file=file)
