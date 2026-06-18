@@ -9,7 +9,7 @@ import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.feed_systems as feed_systems
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors
 import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber.injector as injector_models
@@ -206,7 +206,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
-        loss_context = losses.LossEvaluationContext(
+        loss_context = nozzle_losses.LossEvaluationContext(
             time=time,
             chamber_pressure=chamber_pressure,
             nozzle=nozzle,

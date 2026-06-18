@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-import machwave.core.compressible_flow.losses as losses
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 CHAMBER_PRESSURES_PSI = (
     150,
@@ -29,7 +29,7 @@ for P_ch, (i_sp_frozen, i_sp_shifting) in product(
     CHAMBER_PRESSURES_PSI,
     ISP_TH_PAIRS,
 ):
-    kinetics_loss = losses.get_kinetics_loss_fraction(
+    kinetics_loss = spp1975.get_kinetics_loss_fraction(
         i_sp_th_frozen=i_sp_frozen,
         i_sp_th_shifting=i_sp_shifting,
         chamber_pressure_psi=P_ch,

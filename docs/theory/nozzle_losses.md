@@ -33,7 +33,7 @@ $$
 Applicable to **conical nozzles only**.
 Contoured (bell) nozzles can achieve near-zero divergence loss by design.
 Implemented in
-[`get_nozzle_divergent_loss_fraction`][machwave.core.compressible_flow.losses.get_nozzle_divergent_loss_fraction].
+[`get_nozzle_divergent_loss_fraction`][machwave.models.nozzle_losses.components.divergent.get_nozzle_divergent_loss_fraction].
 
 *Applies to: solid and biliquid motors.*
 
@@ -62,7 +62,7 @@ where:
 - $P_0$ is the chamber pressure [psi]
 
 Implemented in
-[`get_kinetics_loss_fraction`][machwave.core.compressible_flow.losses.get_kinetics_loss_fraction].
+[`get_kinetics_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_kinetics_loss_fraction].
 
 *Applies to: solid and biliquid motors.*
 
@@ -90,7 +90,7 @@ where:
 
 The 0.01 factor converts the classical percent-form expression to the fraction convention used here.
 Implemented in
-[`get_boundary_layer_loss_fraction`][machwave.core.compressible_flow.losses.get_boundary_layer_loss_fraction].
+[`get_boundary_layer_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_boundary_layer_loss_fraction].
 
 *Applies to: solid motors only* (the empirical constants $C_1, C_2$ are calibrated against a BATES motor; the biliquid engine state passes $\eta_{BL} = 0$).
 
@@ -129,7 +129,7 @@ where:
 
 The 0.01 factor converts the percent-form expression to the fraction convention used here.
 Implemented in
-[`get_two_phase_flow_loss_fraction`][machwave.core.compressible_flow.losses.get_two_phase_flow_loss_fraction].
+[`get_two_phase_flow_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_two_phase_flow_loss_fraction].
 
 *Applies to: solid motors only.*
 Biliquid propellants typically produce gas-phase products with no condensed phase, so the biliquid engine state passes $\eta_{2p} = 0$.
@@ -152,8 +152,8 @@ where:
 - $\eta_{other}$ is any additional, user-specified loss fraction (dimensionless)
 - $C_{f,ideal}$ and $C_{f,real}$ are the ideal and real thrust coefficients (dimensionless)
 
-Each loss is a [`LossComponent`][machwave.models.losses.LossComponent] that derates the momentum term, the pressure term, or both of the decoupled thrust coefficient — the nozzle divergence loss derates the momentum term only.
-The components are composed by [`NozzleLossModel`][machwave.models.losses.NozzleLossModel], owned by the motor; when every loss derates both terms this reduces to the scalar form above.
+Each loss is a [`LossComponent`][machwave.models.nozzle_losses.LossComponent] that derates the momentum term, the pressure term, or both of the decoupled thrust coefficient — the nozzle divergence loss derates the momentum term only.
+The components are composed by [`NozzleLossModel`][machwave.models.nozzle_losses.NozzleLossModel], owned by the motor; when every loss derates both terms this reduces to the scalar form above.
 
 # References
 

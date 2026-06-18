@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 import numpy as np
 
 import machwave.core.compressible_flow.nozzle as nozzle_core
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
 
@@ -20,7 +20,7 @@ class Motor(Generic[P, T], ABC):
         propellant: P,
         thrust_chamber: T,
         combustion_efficiency: float = 0.95,
-        nozzle_loss_model: losses.NozzleLossModel | None = None,
+        nozzle_loss_model: nozzle_losses.NozzleLossModel | None = None,
     ) -> None:
         """
         Initialize attributes common to any motor or engine.

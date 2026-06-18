@@ -1,7 +1,7 @@
 import numpy as np
 
 import machwave.models.feed_systems.base as feed_system_base
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
 
@@ -24,7 +24,7 @@ class BiliquidEngine(
         oxidizer_tank_cog: float | None = None,
         fuel_tank_cog: float | None = None,
         combustion_efficiency: float = 0.95,
-        nozzle_loss_model: losses.NozzleLossModel | None = None,
+        nozzle_loss_model: nozzle_losses.NozzleLossModel | None = None,
     ) -> None:
         """
         Initialize a biliquid rocket engine.
@@ -50,7 +50,8 @@ class BiliquidEngine(
             propellant,
             thrust_chamber,
             combustion_efficiency,
-            nozzle_loss_model=nozzle_loss_model or losses.spp1975_biliquid_loss_model(),
+            nozzle_loss_model=nozzle_loss_model
+            or nozzle_losses.presets.spp1975_biliquid_loss_model(),
         )
         self.feed_system = feed_system
         self.oxidizer_tank_cog = oxidizer_tank_cog

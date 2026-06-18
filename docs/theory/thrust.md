@@ -80,7 +80,7 @@ $$
 where each $\eta_i$ is a loss fraction accounting for one or more of the idealized assumptions.
 Which and how many losses are included depends on the motor/engine category (see [nozzle losses](nozzle_losses.md)).
 
-Each loss is composed by [`NozzleLossModel`][machwave.models.losses.NozzleLossModel] and may derate the momentum term, the pressure term, or both of the thrust coefficient; the equation above is the case where every loss derates both terms.
+Each loss is composed by [`NozzleLossModel`][machwave.models.nozzle_losses.NozzleLossModel] and may derate the momentum term, the pressure term, or both of the thrust coefficient; the equation above is the case where every loss derates both terms.
 
 ## 1.5 Total Impulse and Specific Impulse
 

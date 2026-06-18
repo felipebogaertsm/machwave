@@ -1,5 +1,5 @@
-import machwave.models.losses.base as losses_base
-import machwave.models.losses.components as losses_components
+import machwave.models.nozzle_losses.base as losses_base
+import machwave.models.nozzle_losses.components as losses_components
 import machwave.models.propellants as propellants
 
 _SOLID = propellants.MixtureType.SOLID

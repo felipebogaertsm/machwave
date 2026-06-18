@@ -12,7 +12,7 @@ from typing import Callable
 import numpy as np
 import pytest
 
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
 import machwave.models.propellants as propellants
 import machwave.simulation as machwave_simulation
@@ -141,13 +141,15 @@ def test_all_both_targets_match_legacy_scalar_correction() -> None:
     single-scalar correction.
     """
     motor, params = motor_builders.build_nero_motor()
-    motor.nozzle_loss_model = losses.NozzleLossModel(
+    motor.nozzle_loss_model = nozzle_losses.NozzleLossModel(
         [
-            losses.DivergenceLoss(target=losses.ThrustCoefficientTermTarget.BOTH),
-            losses.KineticsLoss(),
-            losses.BoundaryLayerLoss(),
-            losses.TwoPhaseFlowLoss(),
-            losses.ConstantFractionLoss(0.12, name="other_losses"),
+            nozzle_losses.DivergenceLoss(
+                target=nozzle_losses.ThrustCoefficientTermTarget.BOTH
+            ),
+            nozzle_losses.KineticsLoss(),
+            nozzle_losses.BoundaryLayerLoss(),
+            nozzle_losses.TwoPhaseFlowLoss(),
+            nozzle_losses.ConstantFractionLoss(0.12, name="other_losses"),
         ],
         mixture_type=propellants.MixtureType.SOLID,
     )

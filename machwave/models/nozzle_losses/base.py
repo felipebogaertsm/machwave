@@ -1,13 +1,18 @@
-import abc
+from __future__ import annotations
+
 import dataclasses
 import enum
 import functools
+import typing
 
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants
 import machwave.models.propellants.properties as propellant_properties
 import machwave.models.thrust_chamber as thrust_chamber_models
+
+if typing.TYPE_CHECKING:
+    import machwave.models.nozzle_losses.components.base as components_base
 
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
@@ -46,32 +51,6 @@ class LossEvaluationContext:
         )
 
 
-class LossComponent(abc.ABC):
-    """A single nozzle thrust-coefficient loss; wraps one core loss formula."""
-
-    name: str
-    applicable_mixture_types: frozenset[propellants.MixtureType]
-    default_target: ThrustCoefficientTermTarget
-
-    def __init__(self, *, target: ThrustCoefficientTermTarget | None = None) -> None:
-        """
-        Initialize a loss component.
-
-        Args:
-            target: Thrust-coefficient term to derate. Defaults to the
-                component's `default_target`.
-        """
-        self.target = target if target is not None else self.default_target
-
-    @abc.abstractmethod
-    def get_loss_fraction(self, context: LossEvaluationContext) -> float:
-        """Return the loss as a fraction in [0, 1] for the given step."""
-
-    def applies_to(self, mixture_type: propellants.MixtureType) -> bool:
-        """Whether the component is valid for the given mixture type."""
-        return mixture_type in self.applicable_mixture_types
-
-
 @dataclasses.dataclass(frozen=True)
 class NozzleLossResult:
     """Outcome of applying a loss model to the decoupled thrust coefficient."""
@@ -87,7 +66,7 @@ class NozzleLossModel:
 
     def __init__(
         self,
-        components: list[LossComponent],
+        components: list[components_base.LossComponent],
         *,
         mixture_type: propellants.MixtureType,
     ) -> None:

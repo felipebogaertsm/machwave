@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-import machwave.core.compressible_flow.losses as losses
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 CHAMBER_PRESSURES = (
     150,
@@ -49,13 +49,13 @@ for P_ch, d_t, x_c, eps, l_star in product(
     EXPANSION_RATIOS,
     CHARACTERISTIC_LENGTHS,
 ):
-    d_p_um = losses._get_two_phase_phase_loss_particle_size(
+    d_p_um = spp1975._get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi=P_ch,
         mass_fraction_of_condensed_phase=x_c,
         throat_diameter_inch=d_t,
         characteristic_length_inch=l_star,
     )
-    two_phase_loss = losses.get_two_phase_flow_loss_fraction(
+    two_phase_loss = spp1975.get_two_phase_flow_loss_fraction(
         chamber_pressure_psi=P_ch,
         mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,

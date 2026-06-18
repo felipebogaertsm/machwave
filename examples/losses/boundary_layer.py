@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-import machwave.core.compressible_flow.losses as losses
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 CHAMBER_PRESSURES = (
     150,
@@ -59,7 +59,7 @@ for (
     TIMES,
     C1_C2_VALUES,
 ):
-    boundary_layer_loss = losses.get_boundary_layer_loss_fraction(
+    boundary_layer_loss = spp1975.get_boundary_layer_loss_fraction(
         chamber_pressure_psi=P_ch,
         throat_diameter_inch=d_t,
         expansion_ratio=eps,

@@ -1,34 +1,8 @@
 import pytest
 
-import machwave.core.compressible_flow.losses as losses
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
-
-
-@pytest.mark.parametrize(
-    "divergent_angle, expected_loss_fraction",
-    [
-        (0.0, 0.0000),
-        (2.0, 0.0003),
-        (4.0, 0.0012),
-        (6.0, 0.0028),
-        (8.0, 0.0049),
-        (10.0, 0.0076),
-        (12.0, 0.0110),
-        (15.0, 0.0170),
-        (20.0, 0.0302),
-        (24.0, 0.0433),
-    ],
-)
-def test_get_nozzle_divergent_loss_fraction(divergent_angle, expected_loss_fraction):
-    """
-    Parameters obtained from Sutton (originally tabulated as percentages,
-    here divided by 100 to match the fraction convention).
-    """
-    divergent_loss = losses.get_nozzle_divergent_loss_fraction(
-        divergent_angle=divergent_angle
-    )
-    assert divergent_loss == pytest.approx(expected_loss_fraction, abs=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -48,7 +22,7 @@ def test_get_nozzle_divergent_loss_fraction(divergent_angle, expected_loss_fract
 def test_get_kinetics_loss_fraction(
     i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_loss_fraction
 ):
-    kinetics_loss = losses.get_kinetics_loss_fraction(
+    kinetics_loss = spp1975.get_kinetics_loss_fraction(
         i_sp_th_frozen=i_sp_th_frozen,
         i_sp_th_shifting=i_sp_th_shifting,
         chamber_pressure_psi=chamber_pressure_psi,
@@ -80,7 +54,7 @@ def test_get_boundary_layer_loss_fraction(
     c2,
     expected_loss_fraction,
 ):
-    boundary_layer_loss = losses.get_boundary_layer_loss_fraction(
+    boundary_layer_loss = spp1975.get_boundary_layer_loss_fraction(
         chamber_pressure_psi=chamber_pressure_psi,
         throat_diameter_inch=throat_diam_in,
         expansion_ratio=expansion_ratio,
@@ -108,7 +82,7 @@ def test_get_boundary_layer_loss_fraction(
 def test_get_two_phase_phase_loss_particle_size(
     P_psi, xi, d_throat_in, L_c_in, expected_um
 ):
-    size_um = losses._get_two_phase_phase_loss_particle_size(
+    size_um = spp1975._get_two_phase_phase_loss_particle_size(
         chamber_pressure_psi=P_psi,
         mass_fraction_of_condensed_phase=xi,
         throat_diameter_inch=d_throat_in,
@@ -165,12 +139,12 @@ def test_get_two_phase_flow_loss_fraction(
 ):
     # Patch the private helper to return a controlled particle size.
     monkeypatch.setattr(
-        losses,
+        spp1975,
         "_get_two_phase_phase_loss_particle_size",
         lambda *_a, **_kw: mock_particle_um,
     )
 
-    two_phase_loss = losses.get_two_phase_flow_loss_fraction(
+    two_phase_loss = spp1975.get_two_phase_flow_loss_fraction(
         chamber_pressure_psi=chamber_psi,
         mass_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,

@@ -1,7 +1,7 @@
 import numpy as np
 
 import machwave.models.grain as grain
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber
 
@@ -21,7 +21,7 @@ class SolidMotor(
         propellant: propellants.SolidPropellant,
         thrust_chamber: thrust_chamber.SolidMotorThrustChamber,
         combustion_efficiency: float = 0.95,
-        nozzle_loss_model: losses.NozzleLossModel | None = None,
+        nozzle_loss_model: nozzle_losses.NozzleLossModel | None = None,
     ) -> None:
         """
         Initialize a solid rocket motor.
@@ -39,7 +39,8 @@ class SolidMotor(
             propellant,
             thrust_chamber,
             combustion_efficiency,
-            nozzle_loss_model=nozzle_loss_model or losses.spp1975_solid_loss_model(),
+            nozzle_loss_model=nozzle_loss_model
+            or nozzle_losses.presets.spp1975_solid_loss_model(),
         )
 
         self.grain = grain

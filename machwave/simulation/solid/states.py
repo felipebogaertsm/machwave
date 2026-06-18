@@ -11,7 +11,7 @@ import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors
 import machwave.models.propellants as propellants
 import machwave.simulation.solid.results as solid_results
@@ -207,7 +207,7 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
-        loss_context = losses.LossEvaluationContext(
+        loss_context = nozzle_losses.LossEvaluationContext(
             time=time,
             chamber_pressure=chamber_pressure,
             nozzle=nozzle,

@@ -1,28 +1,23 @@
 """Composable nozzle thrust-coefficient loss models."""
 
-from machwave.models.losses.base import (
-    LossComponent,
+from machwave.models.nozzle_losses import presets
+from machwave.models.nozzle_losses.base import (
     LossEvaluationContext,
     NozzleLossModel,
     NozzleLossResult,
     ThrustCoefficientTermTarget,
 )
-from machwave.models.losses.components import (
+from machwave.models.nozzle_losses.components import (
     BoundaryLayerLoss,
     ConstantFractionLoss,
     DivergenceLoss,
     KineticsLoss,
+    LossComponent,
     TwoPhaseFlowLoss,
-)
-from machwave.models.losses.models import (
-    DEFAULT_OTHER_LOSSES,
-    constant_efficiency_loss_model,
-    no_loss_model,
-    spp1975_biliquid_loss_model,
-    spp1975_solid_loss_model,
 )
 
 __all__ = [
+    "presets",
     "LossComponent",
     "LossEvaluationContext",
     "NozzleLossModel",
@@ -33,9 +28,4 @@ __all__ = [
     "DivergenceLoss",
     "KineticsLoss",
     "TwoPhaseFlowLoss",
-    "DEFAULT_OTHER_LOSSES",
-    "constant_efficiency_loss_model",
-    "no_loss_model",
-    "spp1975_biliquid_loss_model",
-    "spp1975_solid_loss_model",
 ]

@@ -14,12 +14,6 @@ from .isentropic import (
     get_expansion_ratio_from_exit_mach,
     is_flow_choked,
 )
-from .losses import (
-    get_boundary_layer_loss_fraction,
-    get_kinetics_loss_fraction,
-    get_nozzle_divergent_loss_fraction,
-    get_two_phase_flow_loss_fraction,
-)
 
 __all__ = [
     # nozzle
@@ -34,9 +28,4 @@ __all__ = [
     "get_exit_mach_from_expansion_ratio",
     "get_exit_pressure",
     "is_flow_choked",
-    # losses
-    "get_nozzle_divergent_loss_fraction",
-    "get_kinetics_loss_fraction",
-    "get_boundary_layer_loss_fraction",
-    "get_two_phase_flow_loss_fraction",
 ]

@@ -1,6 +1,6 @@
 import pytest
 
-import machwave.models.losses as losses
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.properties as propellant_properties
 import machwave.models.thrust_chamber as thrust_chamber
 
@@ -34,8 +34,8 @@ def properties() -> propellant_properties.ThermochemicalProperties:
 
 
 @pytest.fixture
-def loss_context(nozzle, properties) -> losses.LossEvaluationContext:
-    return losses.LossEvaluationContext(
+def loss_context(nozzle, properties) -> nozzle_losses.LossEvaluationContext:
+    return nozzle_losses.LossEvaluationContext(
         time=1.0,
         chamber_pressure=7e6,
         nozzle=nozzle,

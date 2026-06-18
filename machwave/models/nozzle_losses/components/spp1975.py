@@ -1,7 +1,7 @@
 """
-Losses and correction factors for rocket engine performance.
+Solid Performance Program 1975 nozzle loss correlations and components.
 
-All functions return a loss as a fraction in [0, 1].
+Each correlation returns a loss as a fraction in [0, 1].
 
 References:
     Coats, D. E., Levine, J. N., Nickerson, G. R., Tyson, T. J.,
@@ -14,6 +14,9 @@ References:
 import numpy as np
 
 import machwave.common.decorators as decorators
+import machwave.models.nozzle_losses.base as losses_base
+import machwave.models.nozzle_losses.components.base as components_base
+import machwave.models.propellants as propellants
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 
@@ -21,28 +24,10 @@ KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 # tightened where experience and validation cases warranted it.
 
 TYPICAL_RANGES = {
-    "divergent_loss": {"lower": 0.0075, "upper": 0.05},
     "kinetics_loss": {"lower": 0.001, "upper": 0.05},
     "boundary_layer_loss": {"lower": 0.001, "upper": 0.03},
     "two_phase_flow_loss": {"lower": 0.001, "upper": 0.05},
 }
-
-
-@decorators.check_bounds(lower=0.0, upper=1.0)
-@decorators.warn_if_outside_range(**TYPICAL_RANGES["divergent_loss"])
-def get_nozzle_divergent_loss_fraction(divergent_angle: float) -> float:
-    """
-    Return the divergent nozzle loss fraction given the half angle.
-
-    Only applicable for a conical convergent-divergent nozzle.
-
-    Args:
-        divergent_angle: Half angle of the divergent nozzle [deg].
-
-    Returns:
-        Divergent loss fraction in [0, 1].
-    """
-    return 0.5 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
@@ -234,3 +219,55 @@ def get_two_phase_flow_loss_fraction(
     )
 
     return 0.01 * c_3 * numerator / denominator
+
+
+class KineticsLoss(components_base.LossComponent):
+    """Finite-rate chemistry (nozzle kinetics) loss."""
+
+    name = "kinetics_loss"
+    applicable_mixture_types = frozenset(
+        {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
+    )
+    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+
+    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+        return get_kinetics_loss_fraction(
+            i_sp_th_frozen=context.properties.i_sp_frozen,
+            i_sp_th_shifting=context.properties.i_sp_shifting,
+            chamber_pressure_psi=context.chamber_pressure_psi,
+        )
+
+
+class BoundaryLayerLoss(components_base.LossComponent):
+    """Boundary-layer loss, calibrated for solid motors."""
+
+    name = "boundary_layer_loss"
+    applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
+    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+
+    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+        return get_boundary_layer_loss_fraction(
+            chamber_pressure_psi=context.chamber_pressure_psi,
+            throat_diameter_inch=context.throat_diameter_inch,
+            expansion_ratio=context.nozzle.expansion_ratio,
+            time=context.time,
+            c_1=context.nozzle.c_1,
+            c_2=context.nozzle.c_2,
+        )
+
+
+class TwoPhaseFlowLoss(components_base.LossComponent):
+    """Two-phase (condensed-phase) flow loss, for solid motors."""
+
+    name = "two_phase_loss"
+    applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
+    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+
+    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+        return get_two_phase_flow_loss_fraction(
+            chamber_pressure_psi=context.chamber_pressure_psi,
+            mass_fraction_of_condensed_phase=context.properties.qsi_chamber,
+            expansion_ratio=context.nozzle.expansion_ratio,
+            throat_diameter_inch=context.throat_diameter_inch,
+            characteristic_length_inch=context.characteristic_length_inch,
+        )
