@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import functools
 import typing
 
 import machwave.core.compressible_flow.nozzle as nozzle_core
-import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants
-import machwave.models.propellants.properties as propellant_properties_models
-import machwave.models.thrust_chamber as thrust_chamber_models
 
 if typing.TYPE_CHECKING:
     import machwave.models.nozzle_losses.components.base as components_base
+    import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
@@ -23,34 +20,6 @@ class ThrustCoefficientTermTarget(enum.StrEnum):
     BOTH = "both"
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class NozzleLossEvaluationContext:
-    """Instantaneous parameters that a nozzle loss component may read."""
-
-    time: float
-    chamber_pressure: float
-    nozzle: thrust_chamber_models.Nozzle
-    propellant_properties: propellant_properties_models.ThermochemicalProperties
-    free_chamber_volume: float
-
-    @functools.cached_property
-    def chamber_pressure_psi(self) -> float:
-        """Chamber pressure [psi]."""
-        return conversions.convert_pa_to_psi(self.chamber_pressure)
-
-    @functools.cached_property
-    def throat_diameter_inch(self) -> float:
-        """Nozzle throat diameter [in]."""
-        return conversions.convert_meter_to_inch(self.nozzle.throat_diameter)
-
-    @functools.cached_property
-    def characteristic_length_inch(self) -> float:
-        """Chamber characteristic length [in]."""
-        return conversions.convert_meter_to_inch(
-            self.free_chamber_volume / self.nozzle.get_throat_area()
-        )
-
-
 @dataclasses.dataclass(frozen=True)
 class NozzleLossEvaluationResult:
     """Outcome of applying a loss model to the decoupled thrust coefficient."""
@@ -58,7 +27,7 @@ class NozzleLossEvaluationResult:
     momentum_term: float
     pressure_term: float
     nozzle_efficiency: float
-    fractions: dict[str, float]
+    loss_fractions: dict[str, float]
 
 
 class NozzleLossModel:
@@ -102,7 +71,7 @@ class NozzleLossModel:
         self,
         momentum_term: float,
         pressure_term: float,
-        context: NozzleLossEvaluationContext,
+        context: evaluation_context.NozzleLossEvaluationContext,
     ) -> NozzleLossEvaluationResult:
         """
         Apply every component to the decoupled thrust-coefficient terms.
@@ -119,7 +88,7 @@ class NozzleLossModel:
         Raises:
             ValueError: If the losses derate either term below zero.
         """
-        fractions = {
+        loss_fractions = {
             component.name: component.get_loss_fraction(context)
             for component in self.components
         }
@@ -127,7 +96,7 @@ class NozzleLossModel:
         pressure_factor = 1.0
 
         for component in self.components:
-            fraction = fractions[component.name]
+            fraction = loss_fractions[component.name]
             if component.target in (
                 ThrustCoefficientTermTarget.MOMENTUM,
                 ThrustCoefficientTermTarget.BOTH,
@@ -145,13 +114,18 @@ class NozzleLossModel:
                 f"momentum factor {momentum_factor}, pressure factor "
                 f"{pressure_factor}."
             )
+
+        corrected_momentum_term = nozzle_core.apply_thrust_coefficient_correction(
+            momentum_term, momentum_factor
+        )
+        corrected_pressure_term = nozzle_core.apply_thrust_coefficient_correction(
+            pressure_term, pressure_factor
+        )
+        nozzle_efficiency = 1.0 - sum(loss_fractions.values())
+
         return NozzleLossEvaluationResult(
-            momentum_term=nozzle_core.apply_thrust_coefficient_correction(
-                momentum_term, momentum_factor
-            ),
-            pressure_term=nozzle_core.apply_thrust_coefficient_correction(
-                pressure_term, pressure_factor
-            ),
-            nozzle_efficiency=1.0 - sum(fractions.values()),
-            fractions=fractions,
+            momentum_term=corrected_momentum_term,
+            pressure_term=corrected_pressure_term,
+            nozzle_efficiency=nozzle_efficiency,
+            loss_fractions=loss_fractions,
         )

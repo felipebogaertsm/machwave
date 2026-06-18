@@ -2,10 +2,12 @@
 
 from machwave.models.nozzle_losses import components, presets
 from machwave.models.nozzle_losses.base import (
-    NozzleLossEvaluationContext,
     NozzleLossEvaluationResult,
     NozzleLossModel,
     ThrustCoefficientTermTarget,
+)
+from machwave.models.nozzle_losses.evaluation_context import (
+    NozzleLossEvaluationContext,
 )
 
 __all__ = [

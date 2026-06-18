@@ -1,6 +1,7 @@
 import abc
 
 import machwave.models.nozzle_losses.base as losses_base
+import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.propellants as propellants
 
 
@@ -13,7 +14,7 @@ class LossComponent(abc.ABC):
 
     @abc.abstractmethod
     def get_loss_fraction(
-        self, context: losses_base.NozzleLossEvaluationContext
+        self, context: evaluation_context.NozzleLossEvaluationContext
     ) -> float:
         """Return the loss as a fraction in [0, 1] for the given context."""
 

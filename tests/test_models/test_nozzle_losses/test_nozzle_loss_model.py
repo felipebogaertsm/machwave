@@ -14,7 +14,7 @@ def test_no_loss_model_passes_terms_through(loss_context):
     assert result.momentum_term == 1.2
     assert result.pressure_term == 0.3
     assert result.nozzle_efficiency == 1.0
-    assert result.fractions == {}
+    assert result.loss_fractions == {}
 
 
 def test_constant_efficiency_derates_both_terms(loss_context):
@@ -41,7 +41,7 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
     )
     momentum, pressure = 1.4, 0.2
     result = model.evaluate(momentum, pressure, loss_context)
-    efficiency = 1.0 - sum(result.fractions.values())
+    efficiency = 1.0 - sum(result.loss_fractions.values())
 
     assert result.momentum_term == pytest.approx(momentum * efficiency)
     assert result.pressure_term == pytest.approx(pressure * efficiency)
@@ -61,8 +61,8 @@ def test_momentum_only_target_spares_pressure_term(loss_context):
     )
     momentum, pressure = 1.0, 1.0
     result = model.evaluate(momentum, pressure, loss_context)
-    divergent = result.fractions["divergent_loss"]
-    kinetics = result.fractions["kinetics_loss"]
+    divergent = result.loss_fractions["divergent_loss"]
+    kinetics = result.loss_fractions["kinetics_loss"]
 
     assert result.momentum_term == pytest.approx(
         momentum * (1.0 - divergent - kinetics)
@@ -121,7 +121,7 @@ def test_spp1975_biliquid_model_components():
 def test_other_losses_factory_kwarg_flows_through(loss_context):
     model = nozzle_losses.presets.spp1975_biliquid_loss_model(other_losses=0.12)
     result = model.evaluate(1.0, 1.0, loss_context)
-    assert result.fractions["other_losses"] == 0.12
+    assert result.loss_fractions["other_losses"] == 0.12
 
 
 @pytest.mark.parametrize(

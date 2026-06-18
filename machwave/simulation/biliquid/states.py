@@ -219,7 +219,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             momentum_term, pressure_term, loss_context
         )
         self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
-        for name, fraction in loss_result.fractions.items():
+        for name, fraction in loss_result.loss_fractions.items():
             self.loss_fractions[name].append(fraction)
 
         thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term

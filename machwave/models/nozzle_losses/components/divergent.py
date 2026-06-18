@@ -2,6 +2,7 @@ import numpy as np
 
 import machwave.common.decorators as decorators
 import machwave.models.nozzle_losses.base as losses_base
+import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
 
@@ -35,7 +36,7 @@ class DivergentLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
 
     def get_loss_fraction(
-        self, context: losses_base.NozzleLossEvaluationContext
+        self, context: evaluation_context.NozzleLossEvaluationContext
     ) -> float:
         return get_divergent_loss_fraction(
             divergent_angle=context.nozzle.divergent_angle

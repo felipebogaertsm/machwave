@@ -15,6 +15,7 @@ import numpy as np
 
 import machwave.common.decorators as decorators
 import machwave.models.nozzle_losses.base as losses_base
+import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
 
@@ -231,7 +232,7 @@ class KineticsLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: losses_base.NozzleLossEvaluationContext
+        self, context: evaluation_context.NozzleLossEvaluationContext
     ) -> float:
         return get_kinetics_loss_fraction(
             i_sp_th_frozen=context.propellant_properties.i_sp_frozen,
@@ -248,7 +249,7 @@ class BoundaryLayerLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: losses_base.NozzleLossEvaluationContext
+        self, context: evaluation_context.NozzleLossEvaluationContext
     ) -> float:
         return get_boundary_layer_loss_fraction(
             chamber_pressure_psi=context.chamber_pressure_psi,
@@ -268,7 +269,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: losses_base.NozzleLossEvaluationContext
+        self, context: evaluation_context.NozzleLossEvaluationContext
     ) -> float:
         return get_two_phase_flow_loss_fraction(
             chamber_pressure_psi=context.chamber_pressure_psi,
