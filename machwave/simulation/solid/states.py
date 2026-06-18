@@ -211,7 +211,7 @@ class SolidMotorState(simulation_states.MotorState):
             time=time,
             chamber_pressure=chamber_pressure,
             nozzle=nozzle,
-            properties=propellant_properties,
+            propellant_properties=propellant_properties,
             free_chamber_volume=free_chamber_volume,
         )
         loss_result = self.motor.nozzle_loss_model.evaluate(

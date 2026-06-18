@@ -143,9 +143,6 @@ def test_all_both_targets_match_legacy_scalar_correction() -> None:
     motor, params = motor_builders.build_nero_motor()
     motor.nozzle_loss_model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(
-                target=nozzle_losses.ThrustCoefficientTermTarget.BOTH
-            ),
             nozzle_losses.components.KineticsLoss(),
             nozzle_losses.components.BoundaryLayerLoss(),
             nozzle_losses.components.TwoPhaseFlowLoss(),

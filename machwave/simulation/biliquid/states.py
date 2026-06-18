@@ -210,7 +210,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             time=time,
             chamber_pressure=chamber_pressure,
             nozzle=nozzle,
-            properties=propellant_properties,
+            propellant_properties=propellant_properties,
             free_chamber_volume=(
                 self.motor.thrust_chamber.combustion_chamber.internal_volume
             ),

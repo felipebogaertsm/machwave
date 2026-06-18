@@ -20,8 +20,8 @@ def test_kinetics_loss_matches_core(loss_context):
     assert component.get_loss_fraction(
         loss_context
     ) == spp1975.get_kinetics_loss_fraction(
-        i_sp_th_frozen=loss_context.properties.i_sp_frozen,
-        i_sp_th_shifting=loss_context.properties.i_sp_shifting,
+        i_sp_th_frozen=loss_context.propellant_properties.i_sp_frozen,
+        i_sp_th_shifting=loss_context.propellant_properties.i_sp_shifting,
         chamber_pressure_psi=loss_context.chamber_pressure_psi,
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.BOTH
@@ -47,7 +47,7 @@ def test_two_phase_flow_loss_matches_core(loss_context):
         loss_context
     ) == spp1975.get_two_phase_flow_loss_fraction(
         chamber_pressure_psi=loss_context.chamber_pressure_psi,
-        mass_fraction_of_condensed_phase=loss_context.properties.qsi_chamber,
+        mass_fraction_of_condensed_phase=loss_context.propellant_properties.qsi_chamber,
         expansion_ratio=loss_context.nozzle.expansion_ratio,
         throat_diameter_inch=loss_context.throat_diameter_inch,
         characteristic_length_inch=loss_context.characteristic_length_inch,

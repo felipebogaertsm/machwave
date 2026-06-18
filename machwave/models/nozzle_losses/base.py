@@ -8,7 +8,7 @@ import typing
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants
-import machwave.models.propellants.properties as propellant_properties
+import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber as thrust_chamber_models
 
 if typing.TYPE_CHECKING:
@@ -30,7 +30,7 @@ class NozzleLossEvaluationContext:
     time: float
     chamber_pressure: float
     nozzle: thrust_chamber_models.Nozzle
-    properties: propellant_properties.ThermochemicalProperties
+    propellant_properties: propellant_properties_models.ThermochemicalProperties
     free_chamber_volume: float
 
     @functools.cached_property
@@ -62,7 +62,7 @@ class NozzleLossEvaluationResult:
 
 
 class NozzleLossModel:
-    """Composes nozzle thrust-coefficient loss components for one engine."""
+    """Models a nozzle loss composition."""
 
     def __init__(
         self,
@@ -74,7 +74,7 @@ class NozzleLossModel:
         Initialize a nozzle loss model.
 
         Args:
-            components: Loss components applied to the thrust coefficient.
+            components: Loss components.
             mixture_type: Engine mixture type the model is built for.
 
         Raises:
@@ -108,13 +108,13 @@ class NozzleLossModel:
         Apply every component to the decoupled thrust-coefficient terms.
 
         Args:
-            momentum_term: Ideal momentum term of the thrust coefficient.
-            pressure_term: Ideal pressure term of the thrust coefficient.
-            context: Per-step inputs for the components.
+            momentum_term: Momentum term of the ideal thrust coefficient.
+            pressure_term: Pressure term of the ideal thrust coefficient.
+            context: Instantaneous parameters for the components.
 
         Returns:
-            The corrected terms, the diagnostic nozzle efficiency, and each
-            component's loss fraction.
+            The corrected terms, the diagnostic nozzle efficiency, and each component's
+            loss fraction.
 
         Raises:
             ValueError: If the losses derate either term below zero.
@@ -125,6 +125,7 @@ class NozzleLossModel:
         }
         momentum_factor = 1.0
         pressure_factor = 1.0
+
         for component in self.components:
             fraction = fractions[component.name]
             if component.target in (
@@ -137,6 +138,7 @@ class NozzleLossModel:
                 ThrustCoefficientTermTarget.BOTH,
             ):
                 pressure_factor -= fraction
+
         if momentum_factor < 0.0 or pressure_factor < 0.0:
             raise ValueError(
                 "Nozzle losses derate the thrust coefficient below zero: "

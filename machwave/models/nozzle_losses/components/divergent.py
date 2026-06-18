@@ -32,7 +32,7 @@ class DivergentLoss(components_base.LossComponent):
     applicable_mixture_types = frozenset(
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
     )
-    default_target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
+    target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
 
     def get_loss_fraction(
         self, context: losses_base.NozzleLossEvaluationContext

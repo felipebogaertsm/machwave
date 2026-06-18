@@ -5,7 +5,6 @@ import machwave.models.propellants as propellants
 
 SOLID = propellants.MixtureType.SOLID
 BILIQUID = propellants.MixtureType.BILIQUID
-BOTH = nozzle_losses.ThrustCoefficientTermTarget.BOTH
 
 
 def test_no_loss_model_passes_terms_through(loss_context):
@@ -34,7 +33,6 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
     # (momentum + pressure) * (1 - sum(fractions)).
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(target=BOTH),
             nozzle_losses.components.KineticsLoss(),
             nozzle_losses.components.BoundaryLayerLoss(),
             nozzle_losses.components.TwoPhaseFlowLoss(),

@@ -39,6 +39,6 @@ def loss_context(nozzle, properties) -> nozzle_losses.NozzleLossEvaluationContex
         time=1.0,
         chamber_pressure=7e6,
         nozzle=nozzle,
-        properties=properties,
+        propellant_properties=properties,
         free_chamber_volume=1e-3,
     )

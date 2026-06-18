@@ -228,14 +228,14 @@ class KineticsLoss(components_base.LossComponent):
     applicable_mixture_types = frozenset(
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
     )
-    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+    target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
         self, context: losses_base.NozzleLossEvaluationContext
     ) -> float:
         return get_kinetics_loss_fraction(
-            i_sp_th_frozen=context.properties.i_sp_frozen,
-            i_sp_th_shifting=context.properties.i_sp_shifting,
+            i_sp_th_frozen=context.propellant_properties.i_sp_frozen,
+            i_sp_th_shifting=context.propellant_properties.i_sp_shifting,
             chamber_pressure_psi=context.chamber_pressure_psi,
         )
 
@@ -245,7 +245,7 @@ class BoundaryLayerLoss(components_base.LossComponent):
 
     name = "boundary_layer_loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
-    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+    target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
         self, context: losses_base.NozzleLossEvaluationContext
@@ -265,14 +265,14 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
 
     name = "two_phase_loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
-    default_target = losses_base.ThrustCoefficientTermTarget.BOTH
+    target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
         self, context: losses_base.NozzleLossEvaluationContext
     ) -> float:
         return get_two_phase_flow_loss_fraction(
             chamber_pressure_psi=context.chamber_pressure_psi,
-            mass_fraction_of_condensed_phase=context.properties.qsi_chamber,
+            mass_fraction_of_condensed_phase=context.propellant_properties.qsi_chamber,
             expansion_ratio=context.nozzle.expansion_ratio,
             throat_diameter_inch=context.throat_diameter_inch,
             characteristic_length_inch=context.characteristic_length_inch,
