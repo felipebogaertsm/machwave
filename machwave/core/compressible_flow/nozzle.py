@@ -85,15 +85,15 @@ def get_separated_exit_conditions(
     return effective_expansion_ratio, separation_pressure
 
 
-def get_ideal_thrust_coefficient(
+def get_ideal_thrust_coefficient_components(
     chamber_pressure: float,
     exit_pressure: float,
     external_pressure: float,
     expansion_ratio: float,
     k_exhaust: float,
-) -> float:
+) -> tuple[float, float]:
     """
-    Get ideal thrust coefficient for DeLaval nozzle.
+    Get the momentum and pressure terms of the ideal thrust coefficient.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -103,20 +103,22 @@ def get_ideal_thrust_coefficient(
         k_exhaust: Isentropic exponent at exit.
 
     Returns:
-        Ideal thrust coefficient.
+        Momentum term then pressure term. The pressure term is positive when under
+        expanded and negative when over expanded.
 
     References:
         https://www.nakka-rocketry.net/th_thrst.html
     """
     pressure_ratio = exit_pressure / chamber_pressure
-    return (
-        np.sqrt(
-            (2 * (k_exhaust**2) / (k_exhaust - 1))
-            * ((2 / (k_exhaust + 1)) ** ((k_exhaust + 1) / (k_exhaust - 1)))
-            * (1 - (pressure_ratio ** ((k_exhaust - 1) / k_exhaust)))
-        )
-        + expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
+    momentum_term = np.sqrt(
+        (2 * (k_exhaust**2) / (k_exhaust - 1))
+        * ((2 / (k_exhaust + 1)) ** ((k_exhaust + 1) / (k_exhaust - 1)))
+        * (1 - (pressure_ratio ** ((k_exhaust - 1) / k_exhaust)))
     )
+    pressure_term = (
+        expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
+    )
+    return momentum_term, pressure_term
 
 
 def apply_thrust_coefficient_correction(

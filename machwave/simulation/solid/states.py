@@ -248,13 +248,16 @@ class SolidMotorState(simulation_states.MotorState):
         self.two_phase_loss.append(two_phase_loss)
         self.nozzle_efficiency.append(nozzle_efficiency)
 
-        ideal_thrust_coefficient = nozzle_core.get_ideal_thrust_coefficient(
-            chamber_pressure,
-            exit_pressure,
-            external_pressure,
-            effective_expansion_ratio,
-            propellant_properties.k_exhaust,
+        ideal_thrust_coefficient_components = (
+            nozzle_core.get_ideal_thrust_coefficient_components(
+                chamber_pressure,
+                exit_pressure,
+                external_pressure,
+                effective_expansion_ratio,
+                propellant_properties.k_exhaust,
+            )
         )
+        ideal_thrust_coefficient = sum(ideal_thrust_coefficient_components)
         self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
         thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
             ideal_thrust_coefficient, nozzle_efficiency
