@@ -125,7 +125,6 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
             motor=motor,
             igniter_pressure=params.igniter_pressure,
             external_pressure=params.external_pressure,
-            other_losses=params.other_losses,
         )
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
         return state.chamber_pressure[-1]
@@ -174,7 +173,6 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
-        other_losses=params.other_losses,
     )
     # Fully consumed: volume and mass are zero, and a direct moment-of-inertia
     # query at this web would raise GrainGeometryError.

@@ -77,7 +77,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         motor: motors.BiliquidEngine,
         igniter_pressure: float,
         external_pressure: float,
-        other_losses: float,
     ) -> None:
         """
         Initialize a biliquid engine state.
@@ -86,14 +85,11 @@ class BiliquidEngineState(simulation_states.MotorState):
             motor: Biliquid engine to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
-            other_losses: Fractional losses not covered by specific
-                mechanisms, in [0, 1].
         """
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
             external_pressure=external_pressure,
-            other_losses=other_losses,
         )
 
         self.oxidizer_mass: simulation_states.SimulationStateArray = [

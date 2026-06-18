@@ -118,7 +118,6 @@ def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
-        other_losses=params.other_losses,
     )
 
 
@@ -148,7 +147,6 @@ def test_live_mixture_ratio_drives_cea() -> None:
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
-        other_losses=params.other_losses,
     )
 
     design_ratio = motor.propellant.oxidizer_to_fuel_ratio
@@ -211,7 +209,6 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
             motor=motor,
             igniter_pressure=params.igniter_pressure,
             external_pressure=params.external_pressure,
-            other_losses=params.other_losses,
         )
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
         return state

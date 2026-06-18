@@ -64,7 +64,6 @@ class SolidMotorState(simulation_states.MotorState):
         motor: motors.SolidMotor,
         igniter_pressure: float,
         external_pressure: float,
-        other_losses: float,
     ) -> None:
         """
         Initialize a solid motor state.
@@ -73,8 +72,6 @@ class SolidMotorState(simulation_states.MotorState):
             motor: Solid motor to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
-            other_losses: Fractional losses not covered by specific
-                mechanisms, in [0, 1].
 
         Raises:
             ValueError: If the motor's propellant has no thermochemical
@@ -92,7 +89,6 @@ class SolidMotorState(simulation_states.MotorState):
             motor=motor,
             igniter_pressure=igniter_pressure,
             external_pressure=external_pressure,
-            other_losses=other_losses,
         )
 
         self.propellant_properties = propellant_properties

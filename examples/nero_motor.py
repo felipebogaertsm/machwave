@@ -6,6 +6,7 @@ maximum operating pressure of 7 MPa.
 
 import machwave.common.decorators as decorators
 import machwave.models.grain as grain_models
+import machwave.models.losses as losses
 import machwave.models.motors as motors_models
 import machwave.models.propellants.formulations as formulations
 import machwave.models.thrust_chamber as thrust_chamber_models
@@ -56,13 +57,13 @@ def main():
         propellant=propellant,
         thrust_chamber=thrust_chamber,
         combustion_efficiency=0.95,
+        nozzle_loss_model=losses.spp1975_solid_loss_model(other_losses=0.12),
     )
 
     params = simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)

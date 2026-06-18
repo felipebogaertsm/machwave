@@ -21,7 +21,6 @@ class MotorState(ABC):
         motor: motors.Motor,
         igniter_pressure: float,
         external_pressure: float,
-        other_losses: float,
     ) -> None:
         """
         Initialize a motor state.
@@ -30,12 +29,9 @@ class MotorState(ABC):
             motor: Motor to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
-            other_losses: Fractional losses not covered by specific
-                mechanisms, in [0, 1].
         """
         self.motor = motor
         self.external_pressure = external_pressure
-        self.other_losses = other_losses
 
         self.time: SimulationStateArray = [0.0]
         self.chamber_pressure: SimulationStateArray = [igniter_pressure]
