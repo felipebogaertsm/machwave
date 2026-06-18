@@ -18,7 +18,6 @@ from .losses import (
     get_boundary_layer_loss_fraction,
     get_kinetics_loss_fraction,
     get_nozzle_divergent_loss_fraction,
-    get_overall_nozzle_efficiency,
     get_two_phase_flow_loss_fraction,
 )
 
@@ -40,5 +39,4 @@ __all__ = [
     "get_kinetics_loss_fraction",
     "get_boundary_layer_loss_fraction",
     "get_two_phase_flow_loss_fraction",
-    "get_overall_nozzle_efficiency",
 ]

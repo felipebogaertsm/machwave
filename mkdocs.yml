@@ -73,6 +73,7 @@ nav:
               - Overview: api/models/grain.md
               - fmm: api/models/grain/fmm.md
               - geometries: api/models/grain/geometries.md
+          - losses: api/models/losses.md
           - motors: api/models/motors.md
           - propellants:
               - Overview: api/models/propellants.md

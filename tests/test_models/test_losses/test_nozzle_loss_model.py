@@ -112,3 +112,30 @@ def test_other_losses_factory_kwarg_flows_through(loss_context):
     model = losses.spp1975_biliquid_loss_model(other_losses=0.12)
     result = model.evaluate(1.0, 1.0, loss_context)
     assert result.fractions["other_losses"] == 0.12
+
+
+@pytest.mark.parametrize(
+    "boundary_layer, divergent, kinetics, two_phase, expected_efficiency",
+    [
+        # JANNAF / AFRPL-TR-75-36 Table 4-5 (percentages transcribed to fractions).
+        (0.015, 0.017, 0.002, 0.021, 0.945),  # A Bates
+        (0.020, 0.017, 0.002, 0.020, 0.941),  # B Bates
+        (0.017, 0.017, 0.002, 0.012, 0.952),  # A Bates (no fins)
+        (0.004, 0.017, 0.003, 0.003, 0.973),  # Antares 1
+        (0.009, 0.030, 0.003, 0.021, 0.937),  # Spartan 2
+    ],
+)
+def test_table_4_5_simplified_method(
+    boundary_layer, divergent, kinetics, two_phase, expected_efficiency, loss_context
+):
+    model = losses.NozzleLossModel(
+        [
+            losses.ConstantFractionLoss(divergent, name="divergent_loss"),
+            losses.ConstantFractionLoss(kinetics, name="kinetics_loss"),
+            losses.ConstantFractionLoss(boundary_layer, name="boundary_layer_loss"),
+            losses.ConstantFractionLoss(two_phase, name="two_phase_loss"),
+        ],
+        mixture_type=SOLID,
+    )
+    result = model.evaluate(1.0, 0.0, loss_context)
+    assert result.nozzle_efficiency == pytest.approx(expected_efficiency, abs=1e-3)

@@ -234,36 +234,3 @@ def get_two_phase_flow_loss_fraction(
     )
 
     return 0.01 * c_3 * numerator / denominator
-
-
-@decorators.check_bounds(lower=0.0, upper=1.0)
-def get_overall_nozzle_efficiency(
-    divergent_loss: float,
-    kinetics_loss: float,
-    boundary_layer_loss: float,
-    two_phase_loss: float,
-    other_losses: float,
-) -> float:
-    """
-    Return the overall nozzle efficiency.
-
-    Combines individual loss fractions into a single efficiency. All inputs are
-    fractions in [0, 1] (not percentages).
-
-    Args:
-        divergent_loss: Divergent nozzle loss fraction.
-        kinetics_loss: Kinetics loss fraction.
-        boundary_layer_loss: Boundary layer loss fraction.
-        two_phase_loss: Two-phase flow loss fraction.
-        other_losses: Additional losses as a fraction in [0, 1].
-
-    Returns:
-        Overall nozzle efficiency as a fraction in [0, 1].
-    """
-    return 1.0 - (
-        divergent_loss
-        + kinetics_loss
-        + boundary_layer_loss
-        + two_phase_loss
-        + other_losses
-    )

@@ -152,10 +152,8 @@ where:
 - $\eta_{other}$ is any additional, user-specified loss fraction (dimensionless)
 - $C_{f,ideal}$ and $C_{f,real}$ are the ideal and real thrust coefficients (dimensionless)
 
-Implemented in
-[`get_overall_nozzle_efficiency`][machwave.core.compressible_flow.losses.get_overall_nozzle_efficiency]
-and applied via
-[`apply_thrust_coefficient_correction`][machwave.core.compressible_flow.nozzle.apply_thrust_coefficient_correction].
+Each loss is a [`LossComponent`][machwave.models.losses.LossComponent] that derates the momentum term, the pressure term, or both of the decoupled thrust coefficient — the nozzle divergence loss derates the momentum term only.
+The components are composed by [`NozzleLossModel`][machwave.models.losses.NozzleLossModel], owned by the motor; when every loss derates both terms this reduces to the scalar form above.
 
 # References
 
