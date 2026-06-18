@@ -14,7 +14,11 @@ def rk4th_ode_solver(
         variables: Mapping of variable name to current value.
         equation: Callable returning the derivatives of the variables.
         d_t: Time step [s].
-        **kwargs: Additional keyword arguments forwarded to `equation`.
+        **kwargs: Additional keyword arguments forwarded to `equation`. These
+            are held constant across all four stages, while `variables` are
+            advanced; a term that depends on a `variables` entry must be
+            computed inside `equation` (or passed as a callable it resolves)
+            so it stays consistent across the stages.
 
     Returns:
         Tuple containing the new values of the variables followed by the

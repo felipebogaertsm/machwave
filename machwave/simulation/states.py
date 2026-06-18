@@ -53,10 +53,6 @@ class MotorState(ABC):
         self.end_burn: bool = False
 
     @abstractmethod
-    def get_m_dot_in(self) -> float:
-        """Mass flow rate into the combustion chamber [kg/s]."""
-
-    @abstractmethod
     def run_timestep(self, *args, **kwargs) -> None:
         """Advance the per-step accumulators by one time increment."""
 

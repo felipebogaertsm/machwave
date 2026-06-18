@@ -65,7 +65,7 @@ $$
 
 where:
 
-- $C_d$ is the throat discharge coefficient (dimensionless; set to 1 for the biliquid engine)
+- $C_d$ is the throat discharge coefficient (dimensionless)
 - $A_t$ is the nozzle throat area [m$^2$]
 - $H$ is the dimensionless flow function, set by the throat regime
 
@@ -102,6 +102,7 @@ $$
 
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
 It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
+Both source terms are evaluated at the chamber pressure of each Runge–Kutta stage: $\dot{m}_{out}$ is linear in $P_0$, and $\dot{m}_{in}$ carries the pressure dependence of the burn rate (solid motor) or of the injector pressure drop (biliquid engine), so the integrator advances the true coupled $(\dot{m}_{in} - \dot{m}_{out})$ slope instead of freezing the inflow at the start of the step.
 The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
 
 ## 2.1 Solid Rocket Motor
