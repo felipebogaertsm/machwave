@@ -35,5 +35,7 @@ class ConstantFractionLoss(components_base.LossComponent):
         self.name = name
         self.fraction = fraction
 
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
         return self.fraction

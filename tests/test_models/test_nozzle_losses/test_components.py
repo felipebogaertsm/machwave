@@ -6,17 +6,17 @@ import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 
 def test_divergence_loss_matches_core(loss_context):
-    component = nozzle_losses.DivergenceLoss()
+    component = nozzle_losses.components.DivergentLoss()
     assert component.get_loss_fraction(
         loss_context
-    ) == divergent.get_nozzle_divergent_loss_fraction(
+    ) == divergent.get_divergent_loss_fraction(
         divergent_angle=loss_context.nozzle.divergent_angle
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
 
 
 def test_kinetics_loss_matches_core(loss_context):
-    component = nozzle_losses.KineticsLoss()
+    component = nozzle_losses.components.KineticsLoss()
     assert component.get_loss_fraction(
         loss_context
     ) == spp1975.get_kinetics_loss_fraction(
@@ -28,7 +28,7 @@ def test_kinetics_loss_matches_core(loss_context):
 
 
 def test_boundary_layer_loss_matches_core(loss_context):
-    component = nozzle_losses.BoundaryLayerLoss()
+    component = nozzle_losses.components.BoundaryLayerLoss()
     assert component.get_loss_fraction(
         loss_context
     ) == spp1975.get_boundary_layer_loss_fraction(
@@ -42,7 +42,7 @@ def test_boundary_layer_loss_matches_core(loss_context):
 
 
 def test_two_phase_flow_loss_matches_core(loss_context):
-    component = nozzle_losses.TwoPhaseFlowLoss()
+    component = nozzle_losses.components.TwoPhaseFlowLoss()
     assert component.get_loss_fraction(
         loss_context
     ) == spp1975.get_two_phase_flow_loss_fraction(
@@ -62,7 +62,7 @@ def test_context_conversions(loss_context):
 
 
 def test_constant_fraction_loss_returns_fixed_value(loss_context):
-    component = nozzle_losses.ConstantFractionLoss(0.07, name="other_losses")
+    component = nozzle_losses.components.ConstantFractionLoss(0.07, name="other_losses")
     assert component.get_loss_fraction(loss_context) == 0.07
     assert component.name == "other_losses"
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.BOTH
@@ -70,4 +70,4 @@ def test_constant_fraction_loss_returns_fixed_value(loss_context):
 
 def test_constant_fraction_loss_rejects_out_of_range():
     with pytest.raises(ValueError):
-        nozzle_losses.ConstantFractionLoss(1.5, name="x")
+        nozzle_losses.components.ConstantFractionLoss(1.5, name="x")

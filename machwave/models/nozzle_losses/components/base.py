@@ -26,7 +26,9 @@ class LossComponent(abc.ABC):
         self.target = target if target is not None else self.default_target
 
     @abc.abstractmethod
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
         """Return the loss as a fraction in [0, 1] for the given step."""
 
     def applies_to(self, mixture_type: propellants.MixtureType) -> bool:

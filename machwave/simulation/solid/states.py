@@ -207,7 +207,7 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
-        loss_context = nozzle_losses.LossEvaluationContext(
+        loss_context = nozzle_losses.NozzleLossEvaluationContext(
             time=time,
             chamber_pressure=chamber_pressure,
             nozzle=nozzle,

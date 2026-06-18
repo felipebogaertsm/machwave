@@ -33,7 +33,7 @@ $$
 Applicable to **conical nozzles only**.
 Contoured (bell) nozzles can achieve near-zero divergence loss by design.
 Implemented in
-[`get_nozzle_divergent_loss_fraction`][machwave.models.nozzle_losses.components.divergent.get_nozzle_divergent_loss_fraction].
+[`get_divergent_loss_fraction`][machwave.models.nozzle_losses.components.divergent.get_divergent_loss_fraction].
 
 *Applies to: solid and biliquid motors.*
 
@@ -152,7 +152,7 @@ where:
 - $\eta_{other}$ is any additional, user-specified loss fraction (dimensionless)
 - $C_{f,ideal}$ and $C_{f,real}$ are the ideal and real thrust coefficients (dimensionless)
 
-Each loss is a [`LossComponent`][machwave.models.nozzle_losses.LossComponent] that derates the momentum term, the pressure term, or both of the decoupled thrust coefficient — the nozzle divergence loss derates the momentum term only.
+Each loss is a [`LossComponent`][machwave.models.nozzle_losses.components.LossComponent] that derates the momentum term, the pressure term, or both of the decoupled thrust coefficient — the nozzle divergence loss derates the momentum term only.
 The components are composed by [`NozzleLossModel`][machwave.models.nozzle_losses.NozzleLossModel], owned by the motor; when every loss derates both terms this reduces to the scalar form above.
 
 # References

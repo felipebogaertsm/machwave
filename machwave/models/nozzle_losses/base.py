@@ -24,8 +24,8 @@ class ThrustCoefficientTermTarget(enum.StrEnum):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class LossEvaluationContext:
-    """Per-step inputs a nozzle loss component may read, built once per step."""
+class NozzleLossEvaluationContext:
+    """Instantaneous parameters that a nozzle loss component may read."""
 
     time: float
     chamber_pressure: float
@@ -52,7 +52,7 @@ class LossEvaluationContext:
 
 
 @dataclasses.dataclass(frozen=True)
-class NozzleLossResult:
+class NozzleLossEvaluationResult:
     """Outcome of applying a loss model to the decoupled thrust coefficient."""
 
     momentum_term: float
@@ -102,8 +102,8 @@ class NozzleLossModel:
         self,
         momentum_term: float,
         pressure_term: float,
-        context: LossEvaluationContext,
-    ) -> NozzleLossResult:
+        context: NozzleLossEvaluationContext,
+    ) -> NozzleLossEvaluationResult:
         """
         Apply every component to the decoupled thrust-coefficient terms.
 
@@ -143,7 +143,7 @@ class NozzleLossModel:
                 f"momentum factor {momentum_factor}, pressure factor "
                 f"{pressure_factor}."
             )
-        return NozzleLossResult(
+        return NozzleLossEvaluationResult(
             momentum_term=nozzle_core.apply_thrust_coefficient_correction(
                 momentum_term, momentum_factor
             ),

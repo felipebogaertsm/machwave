@@ -34,10 +34,10 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
     # (momentum + pressure) * (1 - sum(fractions)).
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.DivergenceLoss(target=BOTH),
-            nozzle_losses.KineticsLoss(),
-            nozzle_losses.BoundaryLayerLoss(),
-            nozzle_losses.TwoPhaseFlowLoss(),
+            nozzle_losses.components.DivergentLoss(target=BOTH),
+            nozzle_losses.components.KineticsLoss(),
+            nozzle_losses.components.BoundaryLayerLoss(),
+            nozzle_losses.components.TwoPhaseFlowLoss(),
         ],
         mixture_type=SOLID,
     )
@@ -55,7 +55,10 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
 
 def test_momentum_only_target_spares_pressure_term(loss_context):
     model = nozzle_losses.NozzleLossModel(
-        [nozzle_losses.DivergenceLoss(), nozzle_losses.KineticsLoss()],
+        [
+            nozzle_losses.components.DivergentLoss(),
+            nozzle_losses.components.KineticsLoss(),
+        ],
         mixture_type=SOLID,
     )
     momentum, pressure = 1.0, 1.0
@@ -72,14 +75,17 @@ def test_momentum_only_target_spares_pressure_term(loss_context):
 def test_rejects_component_not_applicable_to_mixture():
     with pytest.raises(ValueError):
         nozzle_losses.NozzleLossModel(
-            [nozzle_losses.BoundaryLayerLoss()], mixture_type=BILIQUID
+            [nozzle_losses.components.BoundaryLayerLoss()], mixture_type=BILIQUID
         )
 
 
 def test_rejects_duplicate_component_names():
     with pytest.raises(ValueError):
         nozzle_losses.NozzleLossModel(
-            [nozzle_losses.DivergenceLoss(), nozzle_losses.DivergenceLoss()],
+            [
+                nozzle_losses.components.DivergentLoss(),
+                nozzle_losses.components.DivergentLoss(),
+            ],
             mixture_type=SOLID,
         )
 
@@ -87,8 +93,8 @@ def test_rejects_duplicate_component_names():
 def test_rejects_losses_derating_below_zero(loss_context):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.ConstantFractionLoss(0.6, name="a"),
-            nozzle_losses.ConstantFractionLoss(0.6, name="b"),
+            nozzle_losses.components.ConstantFractionLoss(0.6, name="a"),
+            nozzle_losses.components.ConstantFractionLoss(0.6, name="b"),
         ],
         mixture_type=SOLID,
     )
@@ -136,12 +142,18 @@ def test_table_4_5_simplified_method(
 ):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.ConstantFractionLoss(divergent, name="divergent_loss"),
-            nozzle_losses.ConstantFractionLoss(kinetics, name="kinetics_loss"),
-            nozzle_losses.ConstantFractionLoss(
+            nozzle_losses.components.ConstantFractionLoss(
+                divergent, name="divergent_loss"
+            ),
+            nozzle_losses.components.ConstantFractionLoss(
+                kinetics, name="kinetics_loss"
+            ),
+            nozzle_losses.components.ConstantFractionLoss(
                 boundary_layer, name="boundary_layer_loss"
             ),
-            nozzle_losses.ConstantFractionLoss(two_phase, name="two_phase_loss"),
+            nozzle_losses.components.ConstantFractionLoss(
+                two_phase, name="two_phase_loss"
+            ),
         ],
         mixture_type=SOLID,
     )

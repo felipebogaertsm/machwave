@@ -230,7 +230,9 @@ class KineticsLoss(components_base.LossComponent):
     )
     default_target = losses_base.ThrustCoefficientTermTarget.BOTH
 
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
         return get_kinetics_loss_fraction(
             i_sp_th_frozen=context.properties.i_sp_frozen,
             i_sp_th_shifting=context.properties.i_sp_shifting,
@@ -245,7 +247,9 @@ class BoundaryLayerLoss(components_base.LossComponent):
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     default_target = losses_base.ThrustCoefficientTermTarget.BOTH
 
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
         return get_boundary_layer_loss_fraction(
             chamber_pressure_psi=context.chamber_pressure_psi,
             throat_diameter_inch=context.throat_diameter_inch,
@@ -263,7 +267,9 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     default_target = losses_base.ThrustCoefficientTermTarget.BOTH
 
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
         return get_two_phase_flow_loss_fraction(
             chamber_pressure_psi=context.chamber_pressure_psi,
             mass_fraction_of_condensed_phase=context.properties.qsi_chamber,

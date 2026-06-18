@@ -25,7 +25,7 @@ DIVERGENT_ANGLES = (
 records: list[dict[str, float]] = []
 
 for angle in DIVERGENT_ANGLES:
-    divergent_loss = divergent.get_nozzle_divergent_loss_fraction(divergent_angle=angle)
+    divergent_loss = divergent.get_divergent_loss_fraction(divergent_angle=angle)
 
     records.append(
         {

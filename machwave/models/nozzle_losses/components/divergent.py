@@ -10,7 +10,7 @@ TYPICAL_RANGE = {"lower": 0.0075, "upper": 0.05}  # fraction
 
 @decorators.check_bounds(lower=0.0, upper=1.0)
 @decorators.warn_if_outside_range(**TYPICAL_RANGE)
-def get_nozzle_divergent_loss_fraction(divergent_angle: float) -> float:
+def get_divergent_loss_fraction(divergent_angle: float) -> float:
     """
     Return the divergent nozzle loss fraction given the half angle.
 
@@ -25,7 +25,7 @@ def get_nozzle_divergent_loss_fraction(divergent_angle: float) -> float:
     return 0.5 * (1 - np.cos(np.deg2rad(divergent_angle)))
 
 
-class DivergenceLoss(components_base.LossComponent):
+class DivergentLoss(components_base.LossComponent):
     """Nozzle divergence loss; derates the momentum term only."""
 
     name = "divergent_loss"
@@ -34,7 +34,9 @@ class DivergenceLoss(components_base.LossComponent):
     )
     default_target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
 
-    def get_loss_fraction(self, context: losses_base.LossEvaluationContext) -> float:
-        return get_nozzle_divergent_loss_fraction(
+    def get_loss_fraction(
+        self, context: losses_base.NozzleLossEvaluationContext
+    ) -> float:
+        return get_divergent_loss_fraction(
             divergent_angle=context.nozzle.divergent_angle
         )

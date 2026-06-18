@@ -34,8 +34,8 @@ def properties() -> propellant_properties.ThermochemicalProperties:
 
 
 @pytest.fixture
-def loss_context(nozzle, properties) -> nozzle_losses.LossEvaluationContext:
-    return nozzle_losses.LossEvaluationContext(
+def loss_context(nozzle, properties) -> nozzle_losses.NozzleLossEvaluationContext:
+    return nozzle_losses.NozzleLossEvaluationContext(
         time=1.0,
         chamber_pressure=7e6,
         nozzle=nozzle,

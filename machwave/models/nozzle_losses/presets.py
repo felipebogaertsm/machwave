@@ -14,7 +14,7 @@ def spp1975_solid_loss_model(
     """Solid Performance Program 1975 nozzle loss set for a solid motor."""
     return losses_base.NozzleLossModel(
         [
-            losses_components.DivergenceLoss(),
+            losses_components.DivergentLoss(),
             losses_components.KineticsLoss(),
             losses_components.BoundaryLayerLoss(),
             losses_components.TwoPhaseFlowLoss(),
@@ -30,7 +30,7 @@ def spp1975_biliquid_loss_model(
     """Solid Performance Program 1975 nozzle loss subset for a biliquid engine."""
     return losses_base.NozzleLossModel(
         [
-            losses_components.DivergenceLoss(),
+            losses_components.DivergentLoss(),
             losses_components.KineticsLoss(),
             losses_components.ConstantFractionLoss(other_losses, name="other_losses"),
         ],
