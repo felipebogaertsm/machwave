@@ -193,16 +193,18 @@ def test_simulation_runs_through_burnout_without_crashing(
     assert simulation_result.propellant_mass[-1] <= simulation_result.propellant_mass[0]
 
 
-def test_nozzle_correction_factor_uses_motor_combustion_efficiency() -> None:
-    """The biliquid read site sources combustion efficiency from the motor.
+def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
+    """Combustion efficiency acts on the chamber side, not the thrust coefficient.
 
-    ``nozzle_correction_factor = nozzle_efficiency * motor.combustion_efficiency``.
-    The nozzle efficiency depends only on geometry and losses, which are identical
-    across the two runs' first step, so the recorded correction factor must scale
-    linearly with the motor's combustion efficiency.
+    The nozzle efficiency applied to the thrust coefficient depends only on
+    geometry and nozzle losses, so it is independent of the motor's combustion
+    efficiency. Combustion efficiency instead derates the flame temperature fed
+    to the chamber-pressure solver, so the chamber-pressure path responds to it.
     """
 
-    def first_nozzle_correction(combustion_efficiency: float) -> float:
+    def first_step(
+        combustion_efficiency: float,
+    ) -> biliquid_simulation.BiliquidEngineState:
         motor, params = motor_builders.build_1kn_biliquid_engine()
         motor.combustion_efficiency = combustion_efficiency
         state = biliquid_simulation.BiliquidEngineState(
@@ -212,8 +214,10 @@ def test_nozzle_correction_factor_uses_motor_combustion_efficiency() -> None:
             other_losses=params.other_losses,
         )
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
-        return state.nozzle_correction_factor[-1]
+        return state
 
-    assert first_nozzle_correction(1.0) == pytest.approx(
-        first_nozzle_correction(0.5) * 2.0
-    )
+    full = first_step(1.0)
+    derated = first_step(0.5)
+
+    assert derated.nozzle_efficiency[-1] == pytest.approx(full.nozzle_efficiency[-1])
+    assert derated.chamber_pressure[-1] != pytest.approx(full.chamber_pressure[-1])
