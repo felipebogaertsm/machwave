@@ -15,6 +15,16 @@ SimulationResultArray: TypeAlias = npt.NDArray[np.float64]
 
 StateT = TypeVar("StateT", bound=simulation_states.MotorState)
 
+# Human-readable report labels for the nozzle loss component series.
+_LOSS_LABELS = {
+    "divergent_loss": "divergent nozzle loss",
+    "kinetics_loss": "kinetics loss",
+    "boundary_layer_loss": "boundary layer loss",
+    "two_phase_loss": "two-phase flow loss",
+    "other_losses": "other losses",
+    "constant_efficiency_loss": "constant efficiency loss",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SimulationResult(ABC, Generic[StateT]):
@@ -27,6 +37,8 @@ class SimulationResult(ABC, Generic[StateT]):
     thrust_coefficient: SimulationResultArray
     ideal_thrust_coefficient: SimulationResultArray
     thrust: SimulationResultArray
+    nozzle_efficiency: SimulationResultArray
+    loss_fractions: dict[str, SimulationResultArray]
     burn_time: float
     thrust_time: float
     end_thrust: bool
@@ -57,6 +69,11 @@ class SimulationResult(ABC, Generic[StateT]):
             "thrust_coefficient": np.asarray(state.thrust_coefficient),
             "ideal_thrust_coefficient": np.asarray(state.ideal_thrust_coefficient),
             "thrust": thrust,
+            "nozzle_efficiency": np.asarray(state.nozzle_efficiency),
+            "loss_fractions": {
+                name: np.asarray(series)
+                for name, series in state.loss_fractions.items()
+            },
             "burn_time": state.burn_time,
             "thrust_time": state.thrust_time,
             "end_thrust": state.end_thrust,
@@ -82,6 +99,17 @@ class SimulationResult(ABC, Generic[StateT]):
     @abstractmethod
     def _report_body(self, file: IO) -> None:
         """Print the subclass-specific portion of the report."""
+
+    def _report_nozzle_losses(self, file: IO) -> None:
+        """Print the nozzle efficiency and each loss component's mean fraction."""
+        print("\nNOZZLE", file=file)
+        print(
+            f"  Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}",
+            file=file,
+        )
+        for name, series in self.loss_fractions.items():
+            label = _LOSS_LABELS.get(name, name.replace("_", " "))
+            print(f"  Average {label} fraction: {np.mean(series):.3%}", file=file)
 
     def summary(self) -> dict[str, float]:
         """Return a mapping of headline scalar metrics for this result."""

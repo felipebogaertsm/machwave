@@ -10,6 +10,7 @@ stay independent of the example layer.
 from __future__ import annotations
 
 import machwave.models.grain as grain_models
+import machwave.models.losses as losses
 import machwave.models.motors as motors_models
 import machwave.models.propellants.formulations.solid as solid_propellants
 import machwave.simulation as machwave_simulation
@@ -63,12 +64,12 @@ def build_apcp_motor() -> tuple[
         grain=grain,
         propellant=solid_propellants.MIT_CHERRY_LIMEADE,
         thrust_chamber=thrust_chamber,
+        nozzle_loss_model=losses.spp1975_solid_loss_model(other_losses=0.12),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
     return motor, params
 
@@ -104,12 +105,12 @@ def build_kappa_rnakka_motor() -> tuple[
         grain=grain,
         propellant=solid_propellants.KNDX,
         thrust_chamber=thrust_chamber,
+        nozzle_loss_model=losses.spp1975_solid_loss_model(other_losses=0.12),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.001,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
     return motor, params
 
@@ -145,12 +146,12 @@ def build_nero_motor() -> tuple[
         grain=grain,
         propellant=solid_propellants.KNDX,
         thrust_chamber=thrust_chamber,
+        nozzle_loss_model=losses.spp1975_solid_loss_model(other_losses=0.12),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
     return motor, params
 
@@ -194,12 +195,12 @@ def build_finocyl_motor() -> tuple[
         grain=grain,
         propellant=solid_propellants.KNDX,
         thrust_chamber=thrust_chamber,
+        nozzle_loss_model=losses.spp1975_solid_loss_model(other_losses=0.12),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=0.005,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
     return motor, params
 
@@ -259,11 +260,11 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
         combustion_efficiency=0.98,
+        nozzle_loss_model=losses.spp1975_biliquid_loss_model(other_losses=0.12),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(
         d_t=1e-4,
         igniter_pressure=1e6,
         external_pressure=1e5,
-        other_losses=0.12,
     )
     return motor, params

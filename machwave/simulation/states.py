@@ -45,6 +45,10 @@ class MotorState(ABC):
         self.ideal_thrust_coefficient: SimulationStateArray = []
         self.thrust_coefficient: SimulationStateArray = []
         self.thrust: SimulationStateArray = []
+        self.nozzle_efficiency: SimulationStateArray = []
+        self.loss_fractions: dict[str, SimulationStateArray] = {
+            name: [] for name in motor.nozzle_loss_model.component_names
+        }
 
         self._thrust_time: float | None = None
         self._burn_time: float | None = None

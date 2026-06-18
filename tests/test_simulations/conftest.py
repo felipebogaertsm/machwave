@@ -41,6 +41,15 @@ def assert_recorded_arrays_aligned(
         if field.metadata.get("non_aligned", False):
             continue
         value = getattr(result, field.name)
+        if isinstance(value, dict):
+            # Per-component loss series, keyed by component name.
+            for key, series in value.items():
+                if isinstance(series, np.ndarray) and series.ndim >= 1:
+                    assert series.shape[0] == expected_length, (
+                        f"recorded array `{field.name}[{key}]` has length "
+                        f"{series.shape[0]}, expected {expected_length}"
+                    )
+            continue
         if not isinstance(value, np.ndarray) or value.ndim < 1:
             continue
         actual_length = value.shape[0]

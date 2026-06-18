@@ -12,7 +12,9 @@ from typing import Callable
 import numpy as np
 import pytest
 
+import machwave.models.losses as losses
 import machwave.models.motors as motors_models
+import machwave.models.propellants as propellants
 import machwave.simulation as machwave_simulation
 import machwave.simulation.solid as solid_simulation
 from tests.test_simulations import motor_builders
@@ -129,6 +131,34 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
         return state.chamber_pressure[-1]
 
     assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)
+
+
+def test_all_both_targets_match_legacy_scalar_correction() -> None:
+    """With every loss on both thrust-coefficient terms, the per-term model
+    reduces to the legacy ideal C_F times the nozzle efficiency.
+
+    This guards the boundary-layer and two-phase numerics (which read the
+    geometric expansion ratio) and the composition math against the previous
+    single-scalar correction.
+    """
+    motor, params = motor_builders.build_nero_motor()
+    motor.nozzle_loss_model = losses.NozzleLossModel(
+        [
+            losses.DivergenceLoss(target=losses.ThrustCoefficientTermTarget.BOTH),
+            losses.KineticsLoss(),
+            losses.BoundaryLayerLoss(),
+            losses.TwoPhaseFlowLoss(),
+            losses.ConstantFractionLoss(0.12, name="other_losses"),
+        ],
+        mixture_type=propellants.MixtureType.SOLID,
+    )
+    result = run_simulation(motor, params)
+
+    np.testing.assert_allclose(
+        result.thrust_coefficient,
+        result.ideal_thrust_coefficient * result.nozzle_efficiency,
+        rtol=1e-12,
+    )
 
 
 def test_moment_of_inertia_is_guarded_past_burnout() -> None:

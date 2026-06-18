@@ -7,12 +7,11 @@ import numpy as np
 import numpy.typing as npt
 
 import machwave.core.compressible_flow.isentropic as isentropic
-import machwave.core.compressible_flow.losses as losses
 import machwave.core.compressible_flow.nozzle as nozzle_core
-import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
+import machwave.models.losses as losses
 import machwave.models.motors as motors
 import machwave.models.propellants as propellants
 import machwave.simulation.solid.results as solid_results
@@ -114,12 +113,6 @@ class SolidMotorState(simulation_states.MotorState):
         self.propellant_cog: list[npt.NDArray[np.float64]] = []
         self.propellant_moi: list[npt.NDArray[np.float64]] = []
 
-        self.divergent_loss: simulation_states.SimulationStateArray = []
-        self.kinetics_loss: simulation_states.SimulationStateArray = []
-        self.boundary_layer_loss: simulation_states.SimulationStateArray = []
-        self.two_phase_loss: simulation_states.SimulationStateArray = []
-        self.nozzle_efficiency: simulation_states.SimulationStateArray = []
-
     def run_timestep(
         self,
         d_t: float,
@@ -207,48 +200,7 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.exit_pressure.append(exit_pressure)
 
-        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
-        throat_diameter_inch = conversions.convert_meter_to_inch(nozzle.throat_diameter)
-        divergent_loss = losses.get_nozzle_divergent_loss_fraction(
-            divergent_angle=nozzle.divergent_angle,
-        )
-        kinetics_loss = losses.get_kinetics_loss_fraction(
-            i_sp_th_frozen=propellant_properties.i_sp_frozen,
-            i_sp_th_shifting=propellant_properties.i_sp_shifting,
-            chamber_pressure_psi=chamber_pressure_psi,
-        )
-        boundary_layer_loss = losses.get_boundary_layer_loss_fraction(
-            chamber_pressure_psi=chamber_pressure_psi,
-            throat_diameter_inch=throat_diameter_inch,
-            expansion_ratio=nozzle.expansion_ratio,
-            time=time,
-            c_1=nozzle.c_1,
-            c_2=nozzle.c_2,
-        )
-        characteristic_length_inch = conversions.convert_meter_to_inch(
-            free_chamber_volume / nozzle.get_throat_area()
-        )
-        two_phase_loss = losses.get_two_phase_flow_loss_fraction(
-            chamber_pressure_psi=chamber_pressure_psi,
-            mass_fraction_of_condensed_phase=propellant_properties.qsi_chamber,
-            expansion_ratio=nozzle.expansion_ratio,
-            throat_diameter_inch=throat_diameter_inch,
-            characteristic_length_inch=characteristic_length_inch,
-        )
-        nozzle_efficiency = losses.get_overall_nozzle_efficiency(
-            divergent_loss,
-            kinetics_loss,
-            boundary_layer_loss,
-            two_phase_loss,
-            other_losses=self.other_losses,
-        )
-        self.divergent_loss.append(divergent_loss)
-        self.kinetics_loss.append(kinetics_loss)
-        self.boundary_layer_loss.append(boundary_layer_loss)
-        self.two_phase_loss.append(two_phase_loss)
-        self.nozzle_efficiency.append(nozzle_efficiency)
-
-        ideal_thrust_coefficient_components = (
+        momentum_term, pressure_term = (
             nozzle_core.get_ideal_thrust_coefficient_components(
                 chamber_pressure,
                 exit_pressure,
@@ -257,11 +209,23 @@ class SolidMotorState(simulation_states.MotorState):
                 propellant_properties.k_exhaust,
             )
         )
-        ideal_thrust_coefficient = sum(ideal_thrust_coefficient_components)
-        self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
-        thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
-            ideal_thrust_coefficient, nozzle_efficiency
+        self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
+
+        loss_context = losses.LossEvaluationContext(
+            time=time,
+            chamber_pressure=chamber_pressure,
+            nozzle=nozzle,
+            properties=propellant_properties,
+            free_chamber_volume=free_chamber_volume,
         )
+        loss_result = self.motor.nozzle_loss_model.evaluate(
+            momentum_term, pressure_term, loss_context
+        )
+        self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
+        for name, fraction in loss_result.fractions.items():
+            self.loss_fractions[name].append(fraction)
+
+        thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term
         self.thrust_coefficient.append(thrust_coefficient)
         thrust = nozzle_core.get_thrust_from_thrust_coefficient(
             thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
