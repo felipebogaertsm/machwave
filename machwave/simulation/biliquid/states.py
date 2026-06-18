@@ -215,13 +215,16 @@ class BiliquidEngineState(simulation_states.MotorState):
         nozzle_correction_factor = nozzle_efficiency * self.motor.combustion_efficiency
         self.nozzle_correction_factor.append(nozzle_correction_factor)
 
-        ideal_thrust_coefficient = nozzle_core.get_ideal_thrust_coefficient(
-            chamber_pressure,
-            exit_pressure,
-            external_pressure,
-            effective_expansion_ratio,
-            propellant_properties.k_exhaust,
+        ideal_thrust_coefficient_components = (
+            nozzle_core.get_ideal_thrust_coefficient_components(
+                chamber_pressure,
+                exit_pressure,
+                external_pressure,
+                effective_expansion_ratio,
+                propellant_properties.k_exhaust,
+            )
         )
+        ideal_thrust_coefficient = sum(ideal_thrust_coefficient_components)
         self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
         thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
             ideal_thrust_coefficient, nozzle_correction_factor
