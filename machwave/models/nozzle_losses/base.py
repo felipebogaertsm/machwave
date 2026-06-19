@@ -11,6 +11,9 @@ if typing.TYPE_CHECKING:
     import machwave.models.nozzle_losses.components.base as components_base
     import machwave.simulation.states as simulation_states
 
+# Below this ideal thrust coefficient the realized efficiency ratio is singular.
+_IDEAL_THRUST_COEFFICIENT_EPSILON = 1e-9
+
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
     """Which term of the thrust coefficient a nozzle loss derates."""
@@ -107,7 +110,8 @@ class NozzleLossModel:
 
         Returns:
             The corrected terms, the realized nozzle efficiency (corrected over ideal
-            thrust coefficient), and each component's loss fraction.
+            thrust coefficient, falling back to the momentum-term factor when the
+            ideal thrust coefficient is ~0), and each component's loss fraction.
 
         Raises:
             ValueError: If the losses derate either term below zero.
@@ -137,9 +141,15 @@ class NozzleLossModel:
         corrected_pressure_term = nozzle_core.apply_thrust_coefficient_correction(
             pressure_term, pressure_factor
         )
-        nozzle_efficiency = (corrected_momentum_term + corrected_pressure_term) / (
-            momentum_term + pressure_term
-        )
+        ideal_thrust_coefficient = momentum_term + pressure_term
+        if ideal_thrust_coefficient > _IDEAL_THRUST_COEFFICIENT_EPSILON:
+            nozzle_efficiency = (
+                corrected_momentum_term + corrected_pressure_term
+            ) / ideal_thrust_coefficient
+        else:
+            # Net ideal thrust coefficient ~0 (deep over-expansion): the realized
+            # efficiency ratio is singular, so report the momentum-term factor.
+            nozzle_efficiency = momentum_factor
 
         return NozzleLossEvaluationResult(
             momentum_term=corrected_momentum_term,

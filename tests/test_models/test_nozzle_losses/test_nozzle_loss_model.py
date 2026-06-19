@@ -76,6 +76,52 @@ def test_momentum_only_target_spares_pressure_term(timestep_conditions):
     )
 
 
+def test_negative_pressure_term_uses_realized_ratio(timestep_conditions):
+    model = nozzle_losses.NozzleLossModel(
+        [
+            nozzle_losses.components.DivergentLoss(),
+            nozzle_losses.components.KineticsLoss(),
+        ],
+        mixture_type=SOLID,
+    )
+    momentum, pressure = 1.2, -0.1  # over-expanded: negative pressure term
+    result = model.evaluate(momentum, pressure, timestep_conditions)
+    divergent = result.loss_fractions["divergent_loss"]
+    kinetics = result.loss_fractions["kinetics_loss"]
+
+    assert result.momentum_term == pytest.approx(
+        momentum * (1.0 - divergent - kinetics)
+    )
+    assert result.pressure_term == pytest.approx(pressure * (1.0 - kinetics))
+    # Net ideal coefficient 1.1 > 0, so the realized ratio is used, not the fallback.
+    assert result.nozzle_efficiency == pytest.approx(
+        (result.momentum_term + result.pressure_term) / (momentum + pressure)
+    )
+
+
+def test_zero_ideal_thrust_coefficient_does_not_divide(timestep_conditions):
+    model = nozzle_losses.presets.no_loss_model(mixture_type=SOLID)
+    result = model.evaluate(0.0, 0.0, timestep_conditions)
+    # No ZeroDivisionError; efficiency falls back to the momentum-term factor.
+    assert result.nozzle_efficiency == 1.0
+
+
+def test_canceling_terms_fall_back_to_momentum_factor(timestep_conditions):
+    model = nozzle_losses.presets.constant_efficiency_loss_model(
+        0.8, mixture_type=SOLID
+    )
+    result = model.evaluate(1.0, -1.0, timestep_conditions)
+    # Ideal thrust coefficient is 0, so efficiency is the momentum-term factor.
+    assert result.nozzle_efficiency == pytest.approx(0.8)
+
+
+def test_negative_ideal_thrust_coefficient_falls_back(timestep_conditions):
+    model = nozzle_losses.presets.no_loss_model(mixture_type=SOLID)
+    result = model.evaluate(1.0, -1.5, timestep_conditions)
+    # Net ideal coefficient is negative; efficiency stays finite (no sign flip).
+    assert result.nozzle_efficiency == 1.0
+
+
 @pytest.mark.parametrize(
     "component_factory",
     [
