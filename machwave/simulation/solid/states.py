@@ -8,7 +8,6 @@ import numpy as np
 import numpy.typing as npt
 
 import machwave.core.compressible_flow.isentropic as isentropic
-import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
@@ -196,27 +195,11 @@ class SolidMotorState(simulation_states.MotorState):
 
         self.grain_segment_mass_flow.append(mass_flow_per_segment(chamber_pressure))
 
-        effective_expansion_ratio, exit_pressure = (
-            nozzle_core.get_separated_exit_conditions(
-                propellant_properties.k_exhaust,
-                nozzle.expansion_ratio,
-                chamber_pressure,
-                external_pressure,
-                nozzle.separation_pressure_ratio,
+        effective_expansion_ratio, exit_pressure, momentum_term, pressure_term = (
+            self._ideal_thrust_coefficient_terms(
+                propellant_properties.k_exhaust, chamber_pressure, external_pressure
             )
         )
-        self.exit_pressure.append(exit_pressure)
-
-        momentum_term, pressure_term = (
-            nozzle_core.get_ideal_thrust_coefficient_components(
-                chamber_pressure,
-                exit_pressure,
-                external_pressure,
-                effective_expansion_ratio,
-                propellant_properties.k_exhaust,
-            )
-        )
-        self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
         timestep_conditions = SolidTimestepConditions(
             time=time,

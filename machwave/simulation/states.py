@@ -60,6 +60,51 @@ class MotorState(ABC):
     def run_timestep(self, *args, **kwargs) -> None:
         """Advance the per-step accumulators by one time increment."""
 
+    def _ideal_thrust_coefficient_terms(
+        self,
+        k_exhaust: float,
+        chamber_pressure: float,
+        external_pressure: float,
+    ) -> tuple[float, float, float, float]:
+        """
+        Resolve the separated exit conditions and ideal thrust-coefficient terms.
+
+        Appends the effective exit pressure and the ideal thrust coefficient for the
+        timestep.
+
+        Args:
+            k_exhaust: Isentropic exponent at the nozzle exit.
+            chamber_pressure: Chamber pressure [Pa].
+            external_pressure: Ambient pressure [Pa].
+
+        Returns:
+            The effective expansion ratio, effective exit pressure [Pa], and the
+            momentum and pressure terms of the ideal thrust coefficient.
+        """
+        nozzle = self.motor.thrust_chamber.nozzle
+        effective_expansion_ratio, exit_pressure = (
+            nozzle_core.get_separated_exit_conditions(
+                k_exhaust,
+                nozzle.expansion_ratio,
+                chamber_pressure,
+                external_pressure,
+                nozzle.separation_pressure_ratio,
+            )
+        )
+        self.exit_pressure.append(exit_pressure)
+
+        momentum_term, pressure_term = (
+            nozzle_core.get_ideal_thrust_coefficient_components(
+                chamber_pressure,
+                exit_pressure,
+                external_pressure,
+                effective_expansion_ratio,
+                k_exhaust,
+            )
+        )
+        self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
+        return effective_expansion_ratio, exit_pressure, momentum_term, pressure_term
+
     def _apply_nozzle_losses(
         self,
         momentum_term: float,

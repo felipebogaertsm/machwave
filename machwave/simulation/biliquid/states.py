@@ -5,7 +5,6 @@ import functools
 from typing import Callable
 
 import machwave.core.compressible_flow.isentropic as isentropic
-import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
@@ -197,27 +196,11 @@ class BiliquidEngineState(simulation_states.MotorState):
             mixture_ratio=oxidizer_to_fuel_ratio,
         )
 
-        effective_expansion_ratio, exit_pressure = (
-            nozzle_core.get_separated_exit_conditions(
-                propellant_properties.k_exhaust,
-                nozzle.expansion_ratio,
-                chamber_pressure,
-                external_pressure,
-                nozzle.separation_pressure_ratio,
+        effective_expansion_ratio, exit_pressure, momentum_term, pressure_term = (
+            self._ideal_thrust_coefficient_terms(
+                propellant_properties.k_exhaust, chamber_pressure, external_pressure
             )
         )
-        self.exit_pressure.append(exit_pressure)
-
-        momentum_term, pressure_term = (
-            nozzle_core.get_ideal_thrust_coefficient_components(
-                chamber_pressure,
-                exit_pressure,
-                external_pressure,
-                effective_expansion_ratio,
-                propellant_properties.k_exhaust,
-            )
-        )
-        self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
         timestep_conditions = BiliquidTimestepConditions(
             time=time,
