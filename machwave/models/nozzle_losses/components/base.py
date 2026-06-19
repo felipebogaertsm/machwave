@@ -88,7 +88,9 @@ class LossComponent(abc.ABC):
 
         Raises:
             ValueError: If the loss fraction is outside [0, 1].
-            Warning: If the loss fraction is outside `typical_range`, if defined.
+
+        Warns:
+            UserWarning: If the loss fraction is outside `typical_range`, if defined.
         """
         parameters = self._parse_timestep_conditions(timestep_conditions)
         fraction = self.loss_fraction(**parameters)
