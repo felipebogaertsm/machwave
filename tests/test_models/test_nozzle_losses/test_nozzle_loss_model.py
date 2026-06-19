@@ -14,6 +14,26 @@ def test_apply_multiplicative_correction_factor():
     ) == pytest.approx(1.219605)
 
 
+def test_accumulate_loss_factors_targets_each_factor(timestep_conditions):
+    # DivergentLoss is momentum-only and the constant is on both, so the two factors
+    # diverge: the constant hits both, the divergent loss only the momentum factor.
+    model = nozzle_losses.NozzleLossModel(
+        [
+            nozzle_losses.components.DivergentLoss(),
+            nozzle_losses.components.ConstantFractionLoss(0.1, name="other"),
+        ],
+        mixture_type=SOLID,
+    )
+    loss_fractions, momentum_factor, pressure_factor = model._accumulate_loss_factors(
+        timestep_conditions
+    )
+    divergent = loss_fractions["divergent_loss"]
+
+    assert loss_fractions["other"] == pytest.approx(0.1)
+    assert momentum_factor == pytest.approx(1.0 - divergent - 0.1)
+    assert pressure_factor == pytest.approx(1.0 - 0.1)
+
+
 def test_no_loss_model_passes_terms_through(timestep_conditions):
     model = nozzle_losses.presets.no_loss_model(mixture_type=SOLID)
     result = model.evaluate(1.2, 0.3, timestep_conditions)

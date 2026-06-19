@@ -116,17 +116,9 @@ class NozzleLossModel:
         Raises:
             ValueError: If the losses derate either term below zero.
         """
-        loss_fractions: dict[str, float] = {}
-        momentum_factor = 1.0
-        pressure_factor = 1.0
-
-        for component in self.components:
-            fraction = component.get_loss_fraction(timestep_conditions)
-            loss_fractions[component.name] = fraction
-            if component.target.affects_momentum:
-                momentum_factor -= fraction
-            if component.target.affects_pressure:
-                pressure_factor -= fraction
+        loss_fractions, momentum_factor, pressure_factor = (
+            self._accumulate_loss_factors(timestep_conditions)
+        )
 
         if momentum_factor < 0.0 or pressure_factor < 0.0:
             raise ValueError(
@@ -147,8 +139,10 @@ class NozzleLossModel:
                 corrected_momentum_term + corrected_pressure_term
             ) / ideal_thrust_coefficient
         else:
-            # Net ideal thrust coefficient ~0 (deep over-expansion): the realized
-            # efficiency ratio is singular, so report the momentum term factor.
+            # If the pressure term is deeply negative and cancels out the momentum term,
+            # the ideal thrust coefficient is near zero so efficiency shoots to
+            # infinity. In this case, the nozzle efficiency is defined only by the
+            # momentum factor.
             nozzle_efficiency = momentum_factor
 
         return NozzleLossEvaluationResult(
@@ -157,6 +151,32 @@ class NozzleLossModel:
             nozzle_efficiency=nozzle_efficiency,
             loss_fractions=loss_fractions,
         )
+
+    def _accumulate_loss_factors(
+        self, timestep_conditions: simulation_states.TimestepConditions
+    ) -> tuple[dict[str, float], float, float]:
+        """
+        Sum the component loss fractions into the momentum and pressure factors.
+
+        Each factor starts at one and is reduced by every fraction whose component
+        targets that term.
+
+        Returns:
+            The per-component loss fractions and the momentum and pressure factors.
+        """
+        loss_fractions: dict[str, float] = {}
+        momentum_factor = 1.0
+        pressure_factor = 1.0
+
+        for component in self.components:
+            fraction = component.get_loss_fraction(timestep_conditions)
+            loss_fractions[component.name] = fraction
+            if component.target.affects_momentum:
+                momentum_factor -= fraction
+            if component.target.affects_pressure:
+                pressure_factor -= fraction
+
+        return loss_fractions, momentum_factor, pressure_factor
 
     @staticmethod
     def _apply_multiplicative_correction_factor(
