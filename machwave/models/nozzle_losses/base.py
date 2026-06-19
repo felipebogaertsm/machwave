@@ -57,9 +57,18 @@ class NozzleLossModel:
             mixture_type: Engine mixture type the model is built for.
 
         Raises:
-            ValueError: If two components share a name, or a component is not
-                applicable to `mixture_type`.
+            ValueError: If a component lacks a non-empty `name` or `label`, two
+                components share a name, or a component is not applicable to
+                `mixture_type`.
         """
+        for component in components:
+            for attribute in ("name", "label"):
+                value = getattr(component, attribute, None)
+                if not isinstance(value, str) or not value:
+                    raise ValueError(
+                        f"{type(component).__name__} must define a non-empty "
+                        f"`{attribute}`."
+                    )
         names = [component.name for component in components]
         if len(names) != len(set(names)):
             raise ValueError(f"Duplicate loss component names: {names}.")

@@ -1,6 +1,7 @@
 import pytest
 
 import machwave.models.nozzle_losses as nozzle_losses
+import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
 
 SOLID = propellants.MixtureType.SOLID
@@ -94,6 +95,36 @@ def test_accepts_divergent_loss_for_biliquid(timestep_conditions):
     )
     result = model.evaluate(1.0, 1.0, timestep_conditions)
     assert "divergent_loss" in result.loss_fractions
+
+
+def test_rejects_component_with_empty_name():
+    with pytest.raises(ValueError, match="non-empty"):
+        nozzle_losses.NozzleLossModel(
+            [nozzle_losses.components.ConstantFractionLoss(0.05, name="")],
+            mixture_type=SOLID,
+        )
+
+
+def test_rejects_component_with_empty_label():
+    with pytest.raises(ValueError, match="non-empty"):
+        nozzle_losses.NozzleLossModel(
+            [nozzle_losses.components.ConstantFractionLoss(0.05, name="x", label="")],
+            mixture_type=SOLID,
+        )
+
+
+def test_rejects_component_missing_name():
+    class NamelessLoss(components_base.LossComponent):
+        label = "nameless"
+        applicable_mixture_types = frozenset({SOLID})
+        target = nozzle_losses.ThrustCoefficientTermTarget.BOTH
+
+        @staticmethod
+        def loss_fraction() -> float:
+            return 0.0
+
+    with pytest.raises(ValueError, match="non-empty"):
+        nozzle_losses.NozzleLossModel([NamelessLoss()], mixture_type=SOLID)
 
 
 def test_rejects_duplicate_component_names():
