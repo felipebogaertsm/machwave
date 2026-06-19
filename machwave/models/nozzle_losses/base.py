@@ -10,8 +10,9 @@ if typing.TYPE_CHECKING:
     import machwave.models.nozzle_losses.components.base as components_base
     import machwave.simulation.states as simulation_states
 
-# Below this ideal thrust coefficient the realized efficiency ratio is singular.
-_IDEAL_THRUST_COEFFICIENT_EPSILON = 1e-9
+# Smallest ideal thrust coefficient with a well-defined efficiency ratio; below it
+# the denominator is effectively zero and the ratio is singular.
+_MINIMUM_IDEAL_THRUST_COEFFICIENT = 1e-9
 
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
@@ -141,13 +142,13 @@ class NozzleLossModel:
             pressure_term, pressure_factor
         )
         ideal_thrust_coefficient = momentum_term + pressure_term
-        if ideal_thrust_coefficient > _IDEAL_THRUST_COEFFICIENT_EPSILON:
+        if ideal_thrust_coefficient > _MINIMUM_IDEAL_THRUST_COEFFICIENT:
             nozzle_efficiency = (
                 corrected_momentum_term + corrected_pressure_term
             ) / ideal_thrust_coefficient
         else:
             # Net ideal thrust coefficient ~0 (deep over-expansion): the realized
-            # efficiency ratio is singular, so report the momentum-term factor.
+            # efficiency ratio is singular, so report the momentum term factor.
             nozzle_efficiency = momentum_factor
 
         return NozzleLossEvaluationResult(
