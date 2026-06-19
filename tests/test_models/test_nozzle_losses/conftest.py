@@ -1,8 +1,8 @@
 import pytest
 
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.properties as propellant_properties
 import machwave.models.thrust_chamber as thrust_chamber
+import machwave.simulation.solid.states as solid_states
 
 
 @pytest.fixture
@@ -34,11 +34,21 @@ def properties() -> propellant_properties.ThermochemicalProperties:
 
 
 @pytest.fixture
-def loss_context(nozzle, properties) -> nozzle_losses.NozzleLossEvaluationContext:
-    return nozzle_losses.NozzleLossEvaluationContext(
+def timestep_conditions(nozzle, properties) -> solid_states.SolidTimestepConditions:
+    return solid_states.SolidTimestepConditions(
         time=1.0,
         chamber_pressure=7e6,
+        external_pressure=1e5,
+        exit_pressure=1.2e5,
+        effective_expansion_ratio=8.0,
+        free_chamber_volume=1e-3,
+        propellant_mass=2.0,
+        propellant_mass_flow_rate=1.5,
         nozzle=nozzle,
         propellant_properties=properties,
-        free_chamber_volume=1e-3,
+        burn_area=0.05,
+        burn_rate=0.006,
+        propellant_volume=8e-4,
+        web_distance=0.01,
+        free_chamber_volume_rate=3e-4,
     )

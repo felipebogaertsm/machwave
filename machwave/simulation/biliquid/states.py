@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import functools
 from typing import Callable
 
@@ -9,8 +10,8 @@ import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.feed_systems as feed_systems
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors
+import machwave.models.propellants as propellants
 import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
@@ -64,6 +65,23 @@ def get_total_injector_mass_flow(
 ) -> float:
     """Total injector mass flow (fuel + oxidizer) at the given pressure [kg/s]."""
     return sum(injector_flows(chamber_pressure))
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class BiliquidTimestepConditions(simulation_states.TimestepConditions):
+    """Timestep conditions for a biliquid engine."""
+
+    fuel_mass: float
+    oxidizer_mass: float
+    fuel_mass_flow_rate: float
+    oxidizer_mass_flow_rate: float
+    oxidizer_to_fuel_ratio: float
+    fuel_tank_pressure: float
+    oxidizer_tank_pressure: float
+
+    @property
+    def mixture_type(self) -> propellants.MixtureType:
+        return propellants.MixtureType.BILIQUID
 
 
 class BiliquidEngineState(simulation_states.MotorState):
@@ -206,17 +224,29 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
-        loss_context = nozzle_losses.NozzleLossEvaluationContext(
+        timestep_conditions = BiliquidTimestepConditions(
             time=time,
             chamber_pressure=chamber_pressure,
-            nozzle=nozzle,
-            propellant_properties=propellant_properties,
+            external_pressure=external_pressure,
+            exit_pressure=exit_pressure,
+            effective_expansion_ratio=effective_expansion_ratio,
             free_chamber_volume=(
                 self.motor.thrust_chamber.combustion_chamber.internal_volume
             ),
+            propellant_mass=propellant_mass,
+            propellant_mass_flow_rate=m_dot_fuel + m_dot_ox,
+            nozzle=nozzle,
+            propellant_properties=propellant_properties,
+            fuel_mass=fuel_mass,
+            oxidizer_mass=oxidizer_mass,
+            fuel_mass_flow_rate=m_dot_fuel,
+            oxidizer_mass_flow_rate=m_dot_ox,
+            oxidizer_to_fuel_ratio=oxidizer_to_fuel_ratio,
+            fuel_tank_pressure=fuel_tank_pressure,
+            oxidizer_tank_pressure=oxidizer_tank_pressure,
         )
         loss_result = self.motor.nozzle_loss_model.evaluate(
-            momentum_term, pressure_term, loss_context
+            momentum_term, pressure_term, timestep_conditions
         )
         self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
         for name, fraction in loss_result.loss_fractions.items():

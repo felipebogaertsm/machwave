@@ -7,9 +7,9 @@ SOLID = propellants.MixtureType.SOLID
 BILIQUID = propellants.MixtureType.BILIQUID
 
 
-def test_no_loss_model_passes_terms_through(loss_context):
+def test_no_loss_model_passes_terms_through(timestep_conditions):
     model = nozzle_losses.presets.no_loss_model(mixture_type=SOLID)
-    result = model.evaluate(1.2, 0.3, loss_context)
+    result = model.evaluate(1.2, 0.3, timestep_conditions)
 
     assert result.momentum_term == 1.2
     assert result.pressure_term == 0.3
@@ -17,18 +17,18 @@ def test_no_loss_model_passes_terms_through(loss_context):
     assert result.loss_fractions == {}
 
 
-def test_constant_efficiency_derates_both_terms(loss_context):
+def test_constant_efficiency_derates_both_terms(timestep_conditions):
     model = nozzle_losses.presets.constant_efficiency_loss_model(
         0.8, mixture_type=BILIQUID
     )
-    result = model.evaluate(1.0, 0.5, loss_context)
+    result = model.evaluate(1.0, 0.5, timestep_conditions)
 
     assert result.momentum_term == pytest.approx(0.8)
     assert result.pressure_term == pytest.approx(0.4)
     assert result.nozzle_efficiency == pytest.approx(0.8)
 
 
-def test_all_both_targets_reduce_to_scalar_correction(loss_context):
+def test_all_both_targets_reduce_to_scalar_correction(timestep_conditions):
     # Every component on BOTH must reproduce the legacy
     # (momentum + pressure) * (1 - sum(fractions)).
     model = nozzle_losses.NozzleLossModel(
@@ -40,7 +40,7 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
         mixture_type=SOLID,
     )
     momentum, pressure = 1.4, 0.2
-    result = model.evaluate(momentum, pressure, loss_context)
+    result = model.evaluate(momentum, pressure, timestep_conditions)
     efficiency = 1.0 - sum(result.loss_fractions.values())
 
     assert result.momentum_term == pytest.approx(momentum * efficiency)
@@ -51,7 +51,7 @@ def test_all_both_targets_reduce_to_scalar_correction(loss_context):
     assert result.nozzle_efficiency == pytest.approx(efficiency)
 
 
-def test_momentum_only_target_spares_pressure_term(loss_context):
+def test_momentum_only_target_spares_pressure_term(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
             nozzle_losses.components.DivergentLoss(),
@@ -60,7 +60,7 @@ def test_momentum_only_target_spares_pressure_term(loss_context):
         mixture_type=SOLID,
     )
     momentum, pressure = 1.0, 1.0
-    result = model.evaluate(momentum, pressure, loss_context)
+    result = model.evaluate(momentum, pressure, timestep_conditions)
     divergent = result.loss_fractions["divergent_loss"]
     kinetics = result.loss_fractions["kinetics_loss"]
 
@@ -88,7 +88,7 @@ def test_rejects_duplicate_component_names():
         )
 
 
-def test_rejects_losses_derating_below_zero(loss_context):
+def test_rejects_losses_derating_below_zero(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
             nozzle_losses.components.ConstantFractionLoss(0.6, name="a"),
@@ -97,7 +97,7 @@ def test_rejects_losses_derating_below_zero(loss_context):
         mixture_type=SOLID,
     )
     with pytest.raises(ValueError):
-        model.evaluate(1.0, 1.0, loss_context)
+        model.evaluate(1.0, 1.0, timestep_conditions)
 
 
 def test_spp1975_solid_model_components():
@@ -118,9 +118,9 @@ def test_spp1975_biliquid_model_components():
     assert model.mixture_type is BILIQUID
 
 
-def test_other_losses_factory_kwarg_flows_through(loss_context):
+def test_other_losses_factory_kwarg_flows_through(timestep_conditions):
     model = nozzle_losses.presets.spp1975_biliquid_loss_model(other_losses=0.12)
-    result = model.evaluate(1.0, 1.0, loss_context)
+    result = model.evaluate(1.0, 1.0, timestep_conditions)
     assert result.loss_fractions["other_losses"] == 0.12
 
 
@@ -136,7 +136,12 @@ def test_other_losses_factory_kwarg_flows_through(loss_context):
     ],
 )
 def test_table_4_5_simplified_method(
-    boundary_layer, divergent, kinetics, two_phase, expected_efficiency, loss_context
+    boundary_layer,
+    divergent,
+    kinetics,
+    two_phase,
+    expected_efficiency,
+    timestep_conditions,
 ):
     model = nozzle_losses.NozzleLossModel(
         [
@@ -155,5 +160,5 @@ def test_table_4_5_simplified_method(
         ],
         mixture_type=SOLID,
     )
-    result = model.evaluate(1.0, 0.0, loss_context)
+    result = model.evaluate(1.0, 0.0, timestep_conditions)
     assert result.nozzle_efficiency == pytest.approx(expected_efficiency, abs=1e-3)

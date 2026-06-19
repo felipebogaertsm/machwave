@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+import typing
+
 import numpy as np
 
 import machwave.common.decorators as decorators
 import machwave.models.nozzle_losses.base as losses_base
-import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
+
+if typing.TYPE_CHECKING:
+    import machwave.simulation.states as simulation_states
 
 TYPICAL_RANGE = {"lower": 0.0075, "upper": 0.05}  # fraction
 
@@ -36,8 +42,8 @@ class DivergentLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
 
     def get_loss_fraction(
-        self, context: evaluation_context.NozzleLossEvaluationContext
+        self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         return get_divergent_loss_fraction(
-            divergent_angle=context.nozzle.divergent_angle
+            divergent_angle=timestep_conditions.nozzle.divergent_angle
         )

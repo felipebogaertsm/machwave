@@ -5,65 +5,65 @@ import machwave.models.nozzle_losses.components.divergent as divergent
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 
-def test_divergence_loss_matches_core(loss_context):
+def test_divergence_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.DivergentLoss()
     assert component.get_loss_fraction(
-        loss_context
+        timestep_conditions
     ) == divergent.get_divergent_loss_fraction(
-        divergent_angle=loss_context.nozzle.divergent_angle
+        divergent_angle=timestep_conditions.nozzle.divergent_angle
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
 
 
-def test_kinetics_loss_matches_core(loss_context):
+def test_kinetics_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.KineticsLoss()
     assert component.get_loss_fraction(
-        loss_context
+        timestep_conditions
     ) == spp1975.get_kinetics_loss_fraction(
-        i_sp_th_frozen=loss_context.propellant_properties.i_sp_frozen,
-        i_sp_th_shifting=loss_context.propellant_properties.i_sp_shifting,
-        chamber_pressure_psi=loss_context.chamber_pressure_psi,
+        i_sp_th_frozen=timestep_conditions.propellant_properties.i_sp_frozen,
+        i_sp_th_shifting=timestep_conditions.propellant_properties.i_sp_shifting,
+        chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.BOTH
 
 
-def test_boundary_layer_loss_matches_core(loss_context):
+def test_boundary_layer_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.BoundaryLayerLoss()
     assert component.get_loss_fraction(
-        loss_context
+        timestep_conditions
     ) == spp1975.get_boundary_layer_loss_fraction(
-        chamber_pressure_psi=loss_context.chamber_pressure_psi,
-        throat_diameter_inch=loss_context.throat_diameter_inch,
-        expansion_ratio=loss_context.nozzle.expansion_ratio,
-        time=loss_context.time,
-        c_1=loss_context.nozzle.c_1,
-        c_2=loss_context.nozzle.c_2,
+        chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
+        throat_diameter_inch=timestep_conditions.throat_diameter_inch,
+        expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
+        time=timestep_conditions.time,
+        c_1=timestep_conditions.nozzle.c_1,
+        c_2=timestep_conditions.nozzle.c_2,
     )
 
 
-def test_two_phase_flow_loss_matches_core(loss_context):
+def test_two_phase_flow_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.TwoPhaseFlowLoss()
     assert component.get_loss_fraction(
-        loss_context
+        timestep_conditions
     ) == spp1975.get_two_phase_flow_loss_fraction(
-        chamber_pressure_psi=loss_context.chamber_pressure_psi,
-        mass_fraction_of_condensed_phase=loss_context.propellant_properties.qsi_chamber,
-        expansion_ratio=loss_context.nozzle.expansion_ratio,
-        throat_diameter_inch=loss_context.throat_diameter_inch,
-        characteristic_length_inch=loss_context.characteristic_length_inch,
+        chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
+        mass_fraction_of_condensed_phase=timestep_conditions.propellant_properties.qsi_chamber,
+        expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
+        throat_diameter_inch=timestep_conditions.throat_diameter_inch,
+        characteristic_length_inch=timestep_conditions.characteristic_length_inch,
     )
 
 
-def test_context_conversions(loss_context):
-    # The context centralizes the psi/inch conversions the formulas need.
-    assert loss_context.chamber_pressure_psi == pytest.approx(1015.3, rel=1e-3)
-    assert loss_context.throat_diameter_inch == pytest.approx(0.7874, rel=1e-3)
-    assert loss_context.characteristic_length_inch > 0.0
+def test_timestep_conditions_conversions(timestep_conditions):
+    # The timestep conditions centralize the psi/inch conversions the formulas need.
+    assert timestep_conditions.chamber_pressure_psi == pytest.approx(1015.3, rel=1e-3)
+    assert timestep_conditions.throat_diameter_inch == pytest.approx(0.7874, rel=1e-3)
+    assert timestep_conditions.characteristic_length_inch > 0.0
 
 
-def test_constant_fraction_loss_returns_fixed_value(loss_context):
+def test_constant_fraction_loss_returns_fixed_value(timestep_conditions):
     component = nozzle_losses.components.ConstantFractionLoss(0.07, name="other_losses")
-    assert component.get_loss_fraction(loss_context) == 0.07
+    assert component.get_loss_fraction(timestep_conditions) == 0.07
     assert component.name == "other_losses"
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.BOTH
 

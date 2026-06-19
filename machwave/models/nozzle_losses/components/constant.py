@@ -1,7 +1,13 @@
+from __future__ import annotations
+
+import typing
+
 import machwave.models.nozzle_losses.base as losses_base
-import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
+
+if typing.TYPE_CHECKING:
+    import machwave.simulation.states as simulation_states
 
 
 class ConstantFractionLoss(components_base.LossComponent):
@@ -29,6 +35,6 @@ class ConstantFractionLoss(components_base.LossComponent):
         self.fraction = fraction
 
     def get_loss_fraction(
-        self, context: evaluation_context.NozzleLossEvaluationContext
+        self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         return self.fraction

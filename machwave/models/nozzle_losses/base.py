@@ -9,7 +9,7 @@ import machwave.models.propellants as propellants
 
 if typing.TYPE_CHECKING:
     import machwave.models.nozzle_losses.components.base as components_base
-    import machwave.models.nozzle_losses.evaluation_context as evaluation_context
+    import machwave.simulation.states as simulation_states
 
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
@@ -71,7 +71,7 @@ class NozzleLossModel:
         self,
         momentum_term: float,
         pressure_term: float,
-        context: evaluation_context.NozzleLossEvaluationContext,
+        timestep_conditions: simulation_states.TimestepConditions,
     ) -> NozzleLossEvaluationResult:
         """
         Apply every component to the decoupled thrust-coefficient terms.
@@ -79,7 +79,7 @@ class NozzleLossModel:
         Args:
             momentum_term: Momentum term of the ideal thrust coefficient.
             pressure_term: Pressure term of the ideal thrust coefficient.
-            context: Instantaneous parameters for the components.
+            timestep_conditions: Engine conditions at this timestep for the components.
 
         Returns:
             The corrected terms, the diagnostic nozzle efficiency, and each component's
@@ -89,7 +89,7 @@ class NozzleLossModel:
             ValueError: If the losses derate either term below zero.
         """
         loss_fractions = {
-            component.name: component.get_loss_fraction(context)
+            component.name: component.get_loss_fraction(timestep_conditions)
             for component in self.components
         }
         momentum_factor = 1.0

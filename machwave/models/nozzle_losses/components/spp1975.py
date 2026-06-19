@@ -11,13 +11,19 @@ References:
     AD-A015 140). Air Force Rocket Propulsion Laboratory, Edwards AFB, CA.
 """
 
+from __future__ import annotations
+
+import typing
+
 import numpy as np
 
 import machwave.common.decorators as decorators
 import machwave.models.nozzle_losses.base as losses_base
-import machwave.models.nozzle_losses.evaluation_context as evaluation_context
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
+
+if typing.TYPE_CHECKING:
+    import machwave.simulation.states as simulation_states
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 
@@ -232,12 +238,12 @@ class KineticsLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: evaluation_context.NozzleLossEvaluationContext
+        self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         return get_kinetics_loss_fraction(
-            i_sp_th_frozen=context.propellant_properties.i_sp_frozen,
-            i_sp_th_shifting=context.propellant_properties.i_sp_shifting,
-            chamber_pressure_psi=context.chamber_pressure_psi,
+            i_sp_th_frozen=timestep_conditions.propellant_properties.i_sp_frozen,
+            i_sp_th_shifting=timestep_conditions.propellant_properties.i_sp_shifting,
+            chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
         )
 
 
@@ -249,15 +255,15 @@ class BoundaryLayerLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: evaluation_context.NozzleLossEvaluationContext
+        self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         return get_boundary_layer_loss_fraction(
-            chamber_pressure_psi=context.chamber_pressure_psi,
-            throat_diameter_inch=context.throat_diameter_inch,
-            expansion_ratio=context.nozzle.expansion_ratio,
-            time=context.time,
-            c_1=context.nozzle.c_1,
-            c_2=context.nozzle.c_2,
+            chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
+            throat_diameter_inch=timestep_conditions.throat_diameter_inch,
+            expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
+            time=timestep_conditions.time,
+            c_1=timestep_conditions.nozzle.c_1,
+            c_2=timestep_conditions.nozzle.c_2,
         )
 
 
@@ -269,12 +275,12 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
     target = losses_base.ThrustCoefficientTermTarget.BOTH
 
     def get_loss_fraction(
-        self, context: evaluation_context.NozzleLossEvaluationContext
+        self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         return get_two_phase_flow_loss_fraction(
-            chamber_pressure_psi=context.chamber_pressure_psi,
-            mass_fraction_of_condensed_phase=context.propellant_properties.qsi_chamber,
-            expansion_ratio=context.nozzle.expansion_ratio,
-            throat_diameter_inch=context.throat_diameter_inch,
-            characteristic_length_inch=context.characteristic_length_inch,
+            chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
+            mass_fraction_of_condensed_phase=timestep_conditions.propellant_properties.qsi_chamber,
+            expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
+            throat_diameter_inch=timestep_conditions.throat_diameter_inch,
+            characteristic_length_inch=timestep_conditions.characteristic_length_inch,
         )

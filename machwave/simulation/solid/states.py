@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import functools
 from typing import Callable
 
@@ -11,7 +12,6 @@ import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors
 import machwave.models.propellants as propellants
 import machwave.simulation.solid.results as solid_results
@@ -51,6 +51,21 @@ def get_free_chamber_volume_rate(
 ) -> float:
     """Free chamber volume growth rate at the given chamber pressure [m^3/s]."""
     return propellant.get_burn_rate(chamber_pressure) * burn_area
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class SolidTimestepConditions(simulation_states.TimestepConditions):
+    """Timestep conditions for a solid motor."""
+
+    burn_area: float
+    burn_rate: float
+    propellant_volume: float
+    web_distance: float
+    free_chamber_volume_rate: float
+
+    @property
+    def mixture_type(self) -> propellants.MixtureType:
+        return propellants.MixtureType.SOLID
 
 
 class SolidMotorState(simulation_states.MotorState):
@@ -207,15 +222,25 @@ class SolidMotorState(simulation_states.MotorState):
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
 
-        loss_context = nozzle_losses.NozzleLossEvaluationContext(
+        timestep_conditions = SolidTimestepConditions(
             time=time,
             chamber_pressure=chamber_pressure,
+            external_pressure=external_pressure,
+            exit_pressure=exit_pressure,
+            effective_expansion_ratio=effective_expansion_ratio,
+            free_chamber_volume=free_chamber_volume,
+            propellant_mass=propellant_mass,
+            propellant_mass_flow_rate=float(np.sum(self.grain_segment_mass_flow[-1])),
             nozzle=nozzle,
             propellant_properties=propellant_properties,
-            free_chamber_volume=free_chamber_volume,
+            burn_area=burn_area,
+            burn_rate=burn_rate,
+            propellant_volume=propellant_volume,
+            web_distance=web_distance,
+            free_chamber_volume_rate=self.free_chamber_volume_rate[-1],
         )
         loss_result = self.motor.nozzle_loss_model.evaluate(
-            momentum_term, pressure_term, loss_context
+            momentum_term, pressure_term, timestep_conditions
         )
         self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
         for name, fraction in loss_result.loss_fractions.items():
