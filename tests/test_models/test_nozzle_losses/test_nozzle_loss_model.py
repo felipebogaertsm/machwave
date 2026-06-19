@@ -68,9 +68,11 @@ def test_momentum_only_target_spares_pressure_term(timestep_conditions):
         momentum * (1.0 - divergent - kinetics)
     )
     assert result.pressure_term == pytest.approx(pressure * (1.0 - kinetics))
-    # The diagnostic efficiency is the additive sum over all fractions, regardless
-    # of each component's target.
-    assert result.nozzle_efficiency == pytest.approx(1.0 - divergent - kinetics)
+    # nozzle_efficiency is the realized corrected-over-ideal ratio, so the
+    # momentum-only divergent loss is weighted by the momentum term, not the whole.
+    assert result.nozzle_efficiency == pytest.approx(
+        (result.momentum_term + result.pressure_term) / (momentum + pressure)
+    )
 
 
 @pytest.mark.parametrize(

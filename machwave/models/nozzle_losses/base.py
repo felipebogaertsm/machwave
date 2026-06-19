@@ -19,6 +19,16 @@ class ThrustCoefficientTermTarget(enum.StrEnum):
     PRESSURE = "pressure"
     BOTH = "both"
 
+    @property
+    def affects_momentum(self) -> bool:
+        """Whether this target derates the momentum term."""
+        return self in (self.MOMENTUM, self.BOTH)
+
+    @property
+    def affects_pressure(self) -> bool:
+        """Whether this target derates the pressure term."""
+        return self in (self.PRESSURE, self.BOTH)
+
 
 @dataclasses.dataclass(frozen=True)
 class NozzleLossEvaluationResult:
@@ -87,30 +97,22 @@ class NozzleLossModel:
             timestep_conditions: Engine conditions at this timestep for the components.
 
         Returns:
-            The corrected terms, the diagnostic nozzle efficiency, and each component's
-            loss fraction.
+            The corrected terms, the realized nozzle efficiency (corrected over ideal
+            thrust coefficient), and each component's loss fraction.
 
         Raises:
             ValueError: If the losses derate either term below zero.
         """
-        loss_fractions = {
-            component.name: component.get_loss_fraction(timestep_conditions)
-            for component in self.components
-        }
+        loss_fractions: dict[str, float] = {}
         momentum_factor = 1.0
         pressure_factor = 1.0
 
         for component in self.components:
-            fraction = loss_fractions[component.name]
-            if component.target in (
-                ThrustCoefficientTermTarget.MOMENTUM,
-                ThrustCoefficientTermTarget.BOTH,
-            ):
+            fraction = component.get_loss_fraction(timestep_conditions)
+            loss_fractions[component.name] = fraction
+            if component.target.affects_momentum:
                 momentum_factor -= fraction
-            if component.target in (
-                ThrustCoefficientTermTarget.PRESSURE,
-                ThrustCoefficientTermTarget.BOTH,
-            ):
+            if component.target.affects_pressure:
                 pressure_factor -= fraction
 
         if momentum_factor < 0.0 or pressure_factor < 0.0:
@@ -126,7 +128,9 @@ class NozzleLossModel:
         corrected_pressure_term = nozzle_core.apply_thrust_coefficient_correction(
             pressure_term, pressure_factor
         )
-        nozzle_efficiency = 1.0 - sum(loss_fractions.values())
+        nozzle_efficiency = (corrected_momentum_term + corrected_pressure_term) / (
+            momentum_term + pressure_term
+        )
 
         return NozzleLossEvaluationResult(
             momentum_term=corrected_momentum_term,
