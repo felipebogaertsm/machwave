@@ -24,14 +24,14 @@ class LossComponent(abc.ABC):
     the range for a given timestep condition.
 
     Attributes:
-        name: Diagnostic series name for the loss.
+        name: Name of the loss.
         applicable_mixture_types: Mixture types the loss is valid for.
-        target: Thrust-coefficient term the loss derates.
+        target: Thrust coefficient term the loss derates.
         timestep_parameter_map: Maps each `loss_fraction` parameter to a dotted
-            attribute path resolved against the timestep conditions.
-        typical_range: Optional range (fraction) the loss is expected to fall
-            within; a result outside it triggers a warning.
-        loss_fraction: Static method computing the loss fraction, defined by each
+            attribute path resolved in the timestep conditions.
+        typical_range: Optional range (fraction) the loss is expected to fall within.
+            A result outside it triggers a warning.
+        loss_fraction: Static method computing the loss fraction, defined by every
             subclass.
     """
 
