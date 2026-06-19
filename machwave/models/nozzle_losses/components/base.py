@@ -21,8 +21,9 @@ class LossComponent(abc.ABC):
     `timestep_parameter_map` binding each of its parameters to a dotted attribute path
     on the timestep conditions. The inherited `get_loss_fraction` resolves the map,
     calls `loss_fraction`, validates the result lies in [0, 1], and warns when it
-    falls outside `typical_range`. Condition-independent losses take no parameters and
-    leave `timestep_parameter_map` empty.
+    falls outside `typical_range`. A condition-independent loss leaves
+    `timestep_parameter_map` empty and may override `_loss_fraction_parameters` to
+    supply its own parameters.
 
     Attributes:
         name: Identifier for the loss series.
@@ -52,22 +53,15 @@ class LossComponent(abc.ABC):
         if not callable(getattr(cls, "loss_fraction", None)):
             raise TypeError(f"{cls.__name__} must define a `loss_fraction` method.")
 
-    def _parse_timestep_conditions(
+    def _loss_fraction_parameters(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
         """
-        Resolve `timestep_parameter_map` against `timestep_conditions`.
+        Resolve the keyword arguments for `loss_fraction`.
 
-        Each value is a dotted attribute path. For the map
-        {
-            "i_sp_frozen": "propellant_properties.i_sp_frozen",
-            "chamber_pressure": "chamber_pressure",
-        }
-        this returns
-        {
-            "i_sp_frozen": timestep_conditions.propellant_properties.i_sp_frozen,
-            "chamber_pressure": timestep_conditions.chamber_pressure,
-        }
+        The default resolves each `timestep_parameter_map` entry, a dotted attribute
+        path, against `timestep_conditions`. A condition-independent loss can override
+        this to supply parameters from its own configuration.
         """
         return {
             parameter: functools.reduce(getattr, path.split("."), timestep_conditions)
@@ -92,7 +86,7 @@ class LossComponent(abc.ABC):
         Warns:
             UserWarning: If the loss fraction is outside `typical_range`, if defined.
         """
-        parameters = self._parse_timestep_conditions(timestep_conditions)
+        parameters = self._loss_fraction_parameters(timestep_conditions)
         fraction = self.loss_fraction(**parameters)
 
         if not 0.0 <= fraction <= 1.0:
