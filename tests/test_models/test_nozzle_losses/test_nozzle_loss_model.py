@@ -68,13 +68,30 @@ def test_momentum_only_target_spares_pressure_term(timestep_conditions):
         momentum * (1.0 - divergent - kinetics)
     )
     assert result.pressure_term == pytest.approx(pressure * (1.0 - kinetics))
+    # The diagnostic efficiency is the additive sum over all fractions, regardless
+    # of each component's target.
+    assert result.nozzle_efficiency == pytest.approx(1.0 - divergent - kinetics)
 
 
-def test_rejects_component_not_applicable_to_mixture():
+@pytest.mark.parametrize(
+    "component_factory",
+    [
+        nozzle_losses.components.KineticsLoss,
+        nozzle_losses.components.BoundaryLayerLoss,
+        nozzle_losses.components.TwoPhaseFlowLoss,
+    ],
+)
+def test_rejects_solid_only_component_for_biliquid(component_factory):
     with pytest.raises(ValueError):
-        nozzle_losses.NozzleLossModel(
-            [nozzle_losses.components.BoundaryLayerLoss()], mixture_type=BILIQUID
-        )
+        nozzle_losses.NozzleLossModel([component_factory()], mixture_type=BILIQUID)
+
+
+def test_accepts_divergent_loss_for_biliquid(timestep_conditions):
+    model = nozzle_losses.NozzleLossModel(
+        [nozzle_losses.components.DivergentLoss()], mixture_type=BILIQUID
+    )
+    result = model.evaluate(1.0, 1.0, timestep_conditions)
+    assert "divergent_loss" in result.loss_fractions
 
 
 def test_rejects_duplicate_component_names():
@@ -106,7 +123,7 @@ def test_spp1975_solid_model_components():
         "divergent_loss",
         "kinetics_loss",
         "boundary_layer_loss",
-        "two_phase_loss",
+        "two_phase_flow_loss",
         "other_losses",
     ]
     assert model.mixture_type is SOLID
@@ -159,7 +176,7 @@ def test_table_4_5_simplified_method(
                 boundary_layer, name="boundary_layer_loss"
             ),
             nozzle_losses.components.ConstantFractionLoss(
-                two_phase, name="two_phase_loss"
+                two_phase, name="two_phase_flow_loss"
             ),
         ],
         mixture_type=SOLID,

@@ -7,6 +7,8 @@ from textwrap import dedent
 
 import pandas as pd
 
+import machwave.core.conversions as conversions
+import machwave.core.geometric as geometric
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 CHAMBER_PRESSURES = (
@@ -55,12 +57,17 @@ for P_ch, d_t, x_c, eps, l_star in product(
         throat_diameter_inch=d_t,
         characteristic_length_inch=l_star,
     )
+    throat_diameter_m = conversions.convert_inch_to_meter(d_t)
+    # Free chamber volume that yields the swept characteristic length L*.
+    free_chamber_volume = conversions.convert_inch_to_meter(
+        l_star
+    ) * geometric.get_circle_area(throat_diameter_m)
     two_phase_loss = spp1975.TwoPhaseFlowLoss.loss_fraction(
-        chamber_pressure_psi=P_ch,
+        chamber_pressure=conversions.convert_psi_to_pa(P_ch),
         mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,
-        throat_diameter_inch=d_t,
-        characteristic_length_inch=l_star,
+        throat_diameter=throat_diameter_m,
+        free_chamber_volume=free_chamber_volume,
     )
 
     records.append(

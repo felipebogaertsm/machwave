@@ -3,6 +3,7 @@ import machwave.models.nozzle_losses.components as losses_components
 import machwave.models.propellants as propellants
 
 _SOLID = propellants.MixtureType.SOLID
+_CONSTANT_EFFICIENCY_LOSS_NAME = "constant_efficiency_loss"
 
 DEFAULT_OTHER_LOSSES = 0.05
 DEFAULT_NOZZLE_EFFICIENCY = 0.95
@@ -31,7 +32,7 @@ def constant_efficiency_loss_model(
     return losses_base.NozzleLossModel(
         [
             losses_components.ConstantFractionLoss(
-                1.0 - efficiency, name="constant_efficiency_loss"
+                1.0 - efficiency, name=_CONSTANT_EFFICIENCY_LOSS_NAME
             )
         ],
         mixture_type=mixture_type,
@@ -47,7 +48,7 @@ def constant_plus_divergent_efficiency_loss_model(
     return losses_base.NozzleLossModel(
         [
             losses_components.ConstantFractionLoss(
-                1.0 - efficiency, name="constant_efficiency_loss"
+                1.0 - efficiency, name=_CONSTANT_EFFICIENCY_LOSS_NAME
             ),
             losses_components.DivergentLoss(),
         ],

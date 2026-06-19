@@ -67,6 +67,11 @@ class NozzleLossModel:
         """Component names, in evaluation order."""
         return [component.name for component in self.components]
 
+    @property
+    def component_labels(self) -> dict[str, str]:
+        """Map each component name to its human-readable report label."""
+        return {component.name: component.label for component in self.components}
+
     def evaluate(
         self,
         momentum_term: float,

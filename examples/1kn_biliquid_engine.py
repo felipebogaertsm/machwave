@@ -4,8 +4,8 @@ Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 
 import machwave.models.feed_systems as feed_systems
 import machwave.models.feed_systems.tank as tank
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.services.plots.internal_ballistics as internal_ballistics_plots

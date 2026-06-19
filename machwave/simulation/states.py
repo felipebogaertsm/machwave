@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
-import machwave.core.conversions as conversions
 import machwave.models.motors as motors
 
 if TYPE_CHECKING:
-    import machwave.models.propellants as propellants
     import machwave.models.propellants.properties as propellant_properties_models
     import machwave.models.thrust_chamber as thrust_chamber_models
     import machwave.simulation.results as simulation_results
@@ -97,14 +94,15 @@ class MotorState(ABC):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class TimestepConditions(ABC):
+class TimestepConditions:
     """
-    Engine conditions at one simulation timestep.
+    Engine conditions at one simulation timestep, in SI units.
 
     Holds the scalar operating quantities every engine type computes for the
     step, minus the performance outputs derived from them (thrust, thrust
     coefficient, nozzle efficiency). A nozzle loss component reads whatever it
-    needs from here. Each engine type provides its own concrete subclass.
+    needs from here, applying its own unit conversions. Each engine type
+    provides its own concrete subclass with the extra quantities it tracks.
     """
 
     time: float
@@ -118,25 +116,3 @@ class TimestepConditions(ABC):
     propellant_mass_flow_rate: float
     nozzle: thrust_chamber_models.Nozzle
     propellant_properties: propellant_properties_models.ThermochemicalProperties
-
-    @property
-    @abstractmethod
-    def mixture_type(self) -> propellants.MixtureType:
-        """Engine mixture type these conditions describe."""
-
-    @functools.cached_property
-    def chamber_pressure_psi(self) -> float:
-        """Chamber pressure [psi]."""
-        return conversions.convert_pa_to_psi(self.chamber_pressure)
-
-    @functools.cached_property
-    def throat_diameter_inch(self) -> float:
-        """Nozzle throat diameter [in]."""
-        return conversions.convert_meter_to_inch(self.nozzle.throat_diameter)
-
-    @functools.cached_property
-    def characteristic_length_inch(self) -> float:
-        """Chamber characteristic length [in]."""
-        return conversions.convert_meter_to_inch(
-            self.free_chamber_volume / self.nozzle.get_throat_area()
-        )

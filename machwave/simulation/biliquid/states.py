@@ -11,7 +11,6 @@ import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.feed_systems as feed_systems
 import machwave.models.motors as motors
-import machwave.models.propellants as propellants
 import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
@@ -78,10 +77,6 @@ class BiliquidTimestepConditions(simulation_states.TimestepConditions):
     oxidizer_to_fuel_ratio: float
     fuel_tank_pressure: float
     oxidizer_tank_pressure: float
-
-    @property
-    def mixture_type(self) -> propellants.MixtureType:
-        return propellants.MixtureType.BILIQUID
 
 
 class BiliquidEngineState(simulation_states.MotorState):

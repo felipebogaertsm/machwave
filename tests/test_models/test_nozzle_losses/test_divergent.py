@@ -18,7 +18,7 @@ import machwave.models.nozzle_losses.components.divergent as divergent
         (24.0, 0.0433),
     ],
 )
-def test_get_divergent_loss_fraction(divergent_angle, expected_loss_fraction):
+def test_divergent_loss_fraction(divergent_angle, expected_loss_fraction):
     """
     Parameters obtained from Sutton (originally tabulated as percentages,
     here divided by 100 to match the fraction convention).

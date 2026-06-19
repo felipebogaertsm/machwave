@@ -16,49 +16,58 @@ class LossComponent(abc.ABC):
     """
     A single nozzle thrust coefficient loss.
 
-    Each component must define a `loss_fraction` static method as a function of scalar
-    inputs. In case the `loss_fraction` requires one or more parameters,
-    `timestep_parameter_map` must be defined.
-
-    Defining `typical_range` throws a warning if the evaluated loss fraction is outside
-    the range for a given timestep condition.
+    Every subclass defines a `loss_fraction` method that returns the fraction from
+    scalar inputs (applying any unit conversions itself), and a
+    `timestep_parameter_map` binding each of its parameters to a dotted attribute path
+    on the timestep conditions. The inherited `get_loss_fraction` resolves the map,
+    calls `loss_fraction`, validates the result lies in [0, 1], and warns when it
+    falls outside `typical_range`. Condition-independent losses take no parameters and
+    leave `timestep_parameter_map` empty.
 
     Attributes:
-        name: Name of the loss.
+        name: Identifier for the loss series.
+        label: Human-readable name used in reports.
         applicable_mixture_types: Mixture types the loss is valid for.
         target: Thrust coefficient term the loss derates.
         timestep_parameter_map: Maps each `loss_fraction` parameter to a dotted
-            attribute path resolved in the timestep conditions.
-        typical_range: Optional range (fraction) the loss is expected to fall within.
-            A result outside it triggers a warning.
-        loss_fraction: Static method computing the loss fraction, defined by every
-            subclass.
+            attribute path resolved against the timestep conditions.
+        typical_range: Optional (lower, upper) fraction the loss is expected to fall
+            within. A result outside it triggers a warning.
+        loss_fraction: Computes the loss fraction; defined by every subclass.
     """
 
     name: str
+    label: str
     applicable_mixture_types: frozenset[propellants.MixtureType]
     target: losses_base.ThrustCoefficientTermTarget
     timestep_parameter_map: typing.ClassVar[dict[str, str]] = {}
     typical_range: typing.ClassVar[tuple[float, float] | None] = None
     loss_fraction: typing.ClassVar[typing.Callable[..., float]]
 
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        super().__init_subclass__(**kwargs)
+        for required in ("applicable_mixture_types", "target"):
+            if not hasattr(cls, required):
+                raise TypeError(f"{cls.__name__} must define `{required}`.")
+        if not callable(getattr(cls, "loss_fraction", None)):
+            raise TypeError(f"{cls.__name__} must define a `loss_fraction` method.")
+
     def _parse_timestep_conditions(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
         """
-        Uses `timestep_parameter_map` to extract params from `timestep_conditions`.
+        Resolve `timestep_parameter_map` against `timestep_conditions`.
 
-        Example:
-            For `timestep_parameter_map`
-            {
-                "i_sp_th_frozen": "propellant_properties.i_sp_frozen",
-                "chamber_pressure_psi": "chamber_pressure_psi",
-            }
-            Then return
-            {
-                "i_sp_th_frozen": timestep_conditions.propellant_properties.i_sp_frozen,
-                "chamber_pressure_psi": timestep_conditions.chamber_pressure_psi,
-            }
+        Each value is a dotted attribute path. For the map
+        {
+            "i_sp_frozen": "propellant_properties.i_sp_frozen",
+            "chamber_pressure": "chamber_pressure",
+        }
+        this returns
+        {
+            "i_sp_frozen": timestep_conditions.propellant_properties.i_sp_frozen,
+            "chamber_pressure": timestep_conditions.chamber_pressure,
+        }
         """
         return {
             parameter: functools.reduce(getattr, path.split("."), timestep_conditions)
@@ -68,7 +77,19 @@ class LossComponent(abc.ABC):
     def get_loss_fraction(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
-        """Return the loss as a fraction in [0, 1] for the timestep conditions."""
+        """
+        Return the loss as a fraction in [0, 1] for the timestep conditions.
+
+        Args:
+            timestep_conditions: Timestep conditions to evaluate the loss fraction at.
+
+        Returns:
+            Loss fraction in [0, 1].
+
+        Raises:
+            ValueError: If the loss fraction is outside [0, 1].
+            Warning: If the loss fraction is outside `typical_range`, if defined.
+        """
         parameters = self._parse_timestep_conditions(timestep_conditions)
         fraction = self.loss_fraction(**parameters)
 

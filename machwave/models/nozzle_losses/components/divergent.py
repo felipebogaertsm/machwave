@@ -6,9 +6,15 @@ import machwave.models.propellants as propellants
 
 
 class DivergentLoss(components_base.LossComponent):
-    """Nozzle divergence loss; derates the momentum term only."""
+    """
+    Nozzle divergence loss.
+
+    Only applicable for a conical convergent-divergent nozzle. Derates the momentum
+    term only.
+    """
 
     name = "divergent_loss"
+    label = "divergent nozzle loss"
     applicable_mixture_types = frozenset(
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
     )
@@ -20,8 +26,6 @@ class DivergentLoss(components_base.LossComponent):
     def loss_fraction(divergent_angle: float) -> float:
         """
         Return the divergent nozzle loss fraction given the half angle.
-
-        Only applicable for a conical convergent-divergent nozzle.
 
         Args:
             divergent_angle: Half angle of the divergent nozzle [deg].

@@ -63,10 +63,6 @@ class SolidTimestepConditions(simulation_states.TimestepConditions):
     web_distance: float
     free_chamber_volume_rate: float
 
-    @property
-    def mixture_type(self) -> propellants.MixtureType:
-        return propellants.MixtureType.SOLID
-
 
 class SolidMotorState(simulation_states.MotorState):
     """State for a Solid Rocket Motor."""

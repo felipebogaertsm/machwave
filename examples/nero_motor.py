@@ -6,8 +6,8 @@ maximum operating pressure of 7 MPa.
 
 import machwave.common.decorators as decorators
 import machwave.models.grain as grain_models
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.formulations as formulations
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.services.plots.internal_ballistics as internal_ballistics_plots

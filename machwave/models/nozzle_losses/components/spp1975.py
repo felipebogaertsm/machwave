@@ -11,6 +11,8 @@ References:
 
 import numpy as np
 
+import machwave.core.conversions as conversions
+import machwave.core.geometric as geometric
 import machwave.models.nozzle_losses.base as losses_base
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
@@ -19,47 +21,45 @@ KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
 
 
 class KineticsLoss(components_base.LossComponent):
-    """Finite-rate chemistry (nozzle kinetics) loss."""
+    """
+    Chemical kinetics loss.
+
+    Kinetics loss accounts for the decrement in performance due to incomplete heat
+    transfer of latent to sensible heat caused by the finite time required for the
+    gas-phase chemical reactions to occur. Both specific impulses must be evaluated at
+    the same expansion ratio.
+
+    A pressure correction dampens the kinetics loss above 1.379 MPa (200 psi).
+    """
 
     name = "kinetics_loss"
-    applicable_mixture_types = frozenset(
-        {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
-    )
+    label = "kinetics loss"
+    applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     target = losses_base.ThrustCoefficientTermTarget.BOTH
     timestep_parameter_map = {
-        "i_sp_th_frozen": "propellant_properties.i_sp_frozen",
-        "i_sp_th_shifting": "propellant_properties.i_sp_shifting",
-        "chamber_pressure_psi": "chamber_pressure_psi",
+        "i_sp_frozen": "propellant_properties.i_sp_frozen",
+        "i_sp_shifting": "propellant_properties.i_sp_shifting",
+        "chamber_pressure": "chamber_pressure",
     }
     typical_range = (0.001, 0.05)  # fraction
 
     @staticmethod
     def loss_fraction(
-        i_sp_th_frozen: float, i_sp_th_shifting: float, chamber_pressure_psi: float
+        i_sp_frozen: float, i_sp_shifting: float, chamber_pressure: float
     ) -> float:
         """
         Return the kinetics loss fraction.
 
-        Kinetics loss accounts for the decrement in performance due to incomplete
-        heat transfer of latent to sensible heat caused by the finite time required
-        for the gas-phase chemical reactions to occur. Valid for biliquid, solid,
-        and hybrid propellants; `i_sp_th_frozen` and `i_sp_th_shifting` must share
-        the same expansion ratio.
-
-        A pressure correction dampens the kinetics loss above 1.379 MPa (200 psi).
-
-        The source AFRPL-TR-75-36 expresses this as a percentage; here it is
-        returned as a fraction in [0, 1].
-
         Args:
-            i_sp_th_frozen: Specific impulse of the frozen flow [s].
-            i_sp_th_shifting: Specific impulse of the shifting flow [s].
-            chamber_pressure_psi: Chamber pressure [psi].
+            i_sp_frozen: Specific impulse of the frozen flow [s].
+            i_sp_shifting: Specific impulse of the shifting flow [s].
+            chamber_pressure: Chamber pressure [Pa].
 
         Returns:
             Kinetics loss fraction in [0, 1].
         """
-        i_sp_th_ratio = i_sp_th_frozen / i_sp_th_shifting
+        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
+        i_sp_ratio = i_sp_frozen / i_sp_shifting
 
         if chamber_pressure_psi < KINETICS_LOSS_PRESSURE_THRESHOLD_PSI:
             pressure_correction = 1.0
@@ -68,18 +68,33 @@ class KineticsLoss(components_base.LossComponent):
                 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI / chamber_pressure_psi
             )
 
-        return 0.333 * (1 - i_sp_th_ratio) * pressure_correction
+        return 0.333 * (1 - i_sp_ratio) * pressure_correction
 
 
 class BoundaryLayerLoss(components_base.LossComponent):
-    """Boundary-layer loss, calibrated for solid motors."""
+    """
+    Boundary layer loss, calibrated for solid motors.
+
+    Boundary layer loss accounts for the decrement in performance due to viscous and
+    heat-transfer effects on the nozzle walls. It is time dependent: the exponential
+    transient is important in motors with short burn durations (under 4 s). Dependence
+    on expansion ratio represents the effect of the amount of nozzle surface area.
+
+    Time constant `c_2` comes from analysis of the transient heating of a BATES motor.
+    Time constant `c_1` was obtained from a direct measurement of the heat loss in a
+    BATES motor, among other things. Typical values:
+
+    - Ordinary nozzle: `c_1 = 0.003650`, `c_2 = 0.000937`.
+    - Solid steel nozzle with thick walls: `c_1 = 0.005060`, `c_2 = 0.0`.
+    """
 
     name = "boundary_layer_loss"
+    label = "boundary layer loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     target = losses_base.ThrustCoefficientTermTarget.BOTH
     timestep_parameter_map = {
-        "chamber_pressure_psi": "chamber_pressure_psi",
-        "throat_diameter_inch": "throat_diameter_inch",
+        "chamber_pressure": "chamber_pressure",
+        "throat_diameter": "nozzle.throat_diameter",
         "expansion_ratio": "nozzle.expansion_ratio",
         "time": "time",
         "c_1": "nozzle.c_1",
@@ -89,8 +104,8 @@ class BoundaryLayerLoss(components_base.LossComponent):
 
     @staticmethod
     def loss_fraction(
-        chamber_pressure_psi: float,
-        throat_diameter_inch: float,
+        chamber_pressure: float,
+        throat_diameter: float,
         expansion_ratio: float,
         time: float,
         c_1: float,
@@ -99,25 +114,9 @@ class BoundaryLayerLoss(components_base.LossComponent):
         """
         Return the boundary layer loss fraction.
 
-        Boundary layer loss accounts for the decrement in performance due to
-        viscous and heat-transfer effects on the nozzle walls. It is time
-        dependent: the exponential transient is important in motors with short
-        burn durations (under 4 s). Dependence on expansion ratio represents the
-        effect of the amount of nozzle surface area. Valid for solid propellants.
-
-        Time constant `c_2` comes from analysis of the transient heating of a
-        BATES motor. Time constant `c_1` was obtained from a direct measurement
-        of the heat loss in a BATES motor, among other things. Typical values:
-
-        - Ordinary nozzle: `c_1 = 0.003650`, `c_2 = 0.000937`.
-        - Solid steel nozzle with thick walls: `c_1 = 0.005060`, `c_2 = 0.0`.
-
-        The source AFRPL-TR-75-36 expresses this as a percentage; here it is
-        returned as a fraction in [0, 1].
-
         Args:
-            chamber_pressure_psi: Chamber pressure [psi].
-            throat_diameter_inch: Throat diameter [in].
+            chamber_pressure: Chamber pressure [Pa].
+            throat_diameter: Throat diameter [m].
             expansion_ratio: Nozzle expansion ratio.
             time: Time [s].
             c_1: First boundary-layer loss coefficient.
@@ -126,6 +125,9 @@ class BoundaryLayerLoss(components_base.LossComponent):
         Returns:
             Boundary layer loss fraction in [0, 1].
         """
+        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
+        throat_diameter_inch = conversions.convert_meter_to_inch(throat_diameter)
+
         term_1 = c_1 * (chamber_pressure_psi**0.8) / (throat_diameter_inch**0.2)
         term_2 = 1 + 2 * np.exp(
             (-c_2 * chamber_pressure_psi**0.8 * time) / (throat_diameter_inch**0.2)
@@ -136,48 +138,53 @@ class BoundaryLayerLoss(components_base.LossComponent):
 
 
 class TwoPhaseFlowLoss(components_base.LossComponent):
-    """Two-phase (condensed-phase) flow loss, for solid motors."""
+    """
+    Two-phase (condensed-phase) flow loss, for solid motors.
 
-    name = "two_phase_loss"
+    Two-phase flow loss accounts for the decrement in performance due to the presence
+    of a condensed phase in the combustion products.
+    """
+
+    name = "two_phase_flow_loss"
+    label = "two-phase flow loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     target = losses_base.ThrustCoefficientTermTarget.BOTH
     timestep_parameter_map = {
-        "chamber_pressure_psi": "chamber_pressure_psi",
+        "chamber_pressure": "chamber_pressure",
         "mass_fraction_of_condensed_phase": "propellant_properties.qsi_chamber",
         "expansion_ratio": "nozzle.expansion_ratio",
-        "throat_diameter_inch": "throat_diameter_inch",
-        "characteristic_length_inch": "characteristic_length_inch",
+        "throat_diameter": "nozzle.throat_diameter",
+        "free_chamber_volume": "free_chamber_volume",
     }
     typical_range = (0.001, 0.05)  # fraction
 
     @staticmethod
     def loss_fraction(
-        chamber_pressure_psi: float,
+        chamber_pressure: float,
         mass_fraction_of_condensed_phase: float,
         expansion_ratio: float,
-        throat_diameter_inch: float,
-        characteristic_length_inch: float,
+        throat_diameter: float,
+        free_chamber_volume: float,
     ) -> float:
         """
         Return the two-phase flow loss fraction.
 
-        Two-phase flow loss accounts for the decrement in performance due to the
-        presence of a condensed phase in the combustion products. Valid for solid
-        and hybrid propellants.
-
-        The source AFRPL-TR-75-36 expresses this as a percentage; here it is
-        returned as a fraction in [0, 1].
-
         Args:
-            chamber_pressure_psi: Chamber pressure [psi].
+            chamber_pressure: Chamber pressure [Pa].
             mass_fraction_of_condensed_phase: Mass fraction of the condensed phase.
             expansion_ratio: Nozzle expansion ratio.
-            throat_diameter_inch: Throat diameter [in].
-            characteristic_length_inch: Characteristic length [in].
+            throat_diameter: Throat diameter [m].
+            free_chamber_volume: Free chamber volume [m^3].
 
         Returns:
             Two-phase flow loss fraction in [0, 1].
         """
+        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
+        throat_diameter_inch = conversions.convert_meter_to_inch(throat_diameter)
+        characteristic_length_inch = conversions.convert_meter_to_inch(
+            free_chamber_volume / geometric.get_circle_area(throat_diameter)
+        )
+
         particle_size_um: float = TwoPhaseFlowLoss._average_particle_size(
             chamber_pressure_psi,
             mass_fraction_of_condensed_phase,

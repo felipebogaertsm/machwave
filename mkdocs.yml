@@ -48,8 +48,7 @@ nav:
   - Rocket Theory:
       - 1. Thrust and Performance: theory/thrust.md
       - 2. Mass Balance: theory/mass_balance.md
-      - 3. Nozzle Losses: theory/nozzle_losses.md
-      - 4. Grain Regression: theory/grain_regression.md
+      - 3. Grain Regression: theory/grain_regression.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
@@ -73,7 +72,6 @@ nav:
               - Overview: api/models/grain.md
               - fmm: api/models/grain/fmm.md
               - geometries: api/models/grain/geometries.md
-          - nozzle_losses: api/models/nozzle_losses.md
           - motors: api/models/motors.md
           - propellants:
               - Overview: api/models/propellants.md

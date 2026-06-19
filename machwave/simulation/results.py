@@ -15,16 +15,6 @@ SimulationResultArray: TypeAlias = npt.NDArray[np.float64]
 
 StateT = TypeVar("StateT", bound=simulation_states.MotorState)
 
-# Human-readable report labels for the nozzle loss component series.
-_LOSS_LABELS = {
-    "divergent_loss": "divergent nozzle loss",
-    "kinetics_loss": "kinetics loss",
-    "boundary_layer_loss": "boundary layer loss",
-    "two_phase_loss": "two-phase flow loss",
-    "other_losses": "other losses",
-    "constant_efficiency_loss": "constant efficiency loss",
-}
-
 
 @dataclass(frozen=True, kw_only=True)
 class SimulationResult(ABC, Generic[StateT]):
@@ -39,6 +29,7 @@ class SimulationResult(ABC, Generic[StateT]):
     thrust: SimulationResultArray
     nozzle_efficiency: SimulationResultArray
     loss_fractions: dict[str, SimulationResultArray]
+    loss_labels: dict[str, str]
     burn_time: float
     thrust_time: float
     end_thrust: bool
@@ -74,6 +65,7 @@ class SimulationResult(ABC, Generic[StateT]):
                 name: np.asarray(series)
                 for name, series in state.loss_fractions.items()
             },
+            "loss_labels": dict(state.motor.nozzle_loss_model.component_labels),
             "burn_time": state.burn_time,
             "thrust_time": state.thrust_time,
             "end_thrust": state.end_thrust,
@@ -108,7 +100,7 @@ class SimulationResult(ABC, Generic[StateT]):
             file=file,
         )
         for name, series in self.loss_fractions.items():
-            label = _LOSS_LABELS.get(name, name.replace("_", " "))
+            label = self.loss_labels.get(name, name.replace("_", " "))
             print(f"  Average {label} fraction: {np.mean(series):.3%}", file=file)
 
     def summary(self) -> dict[str, float]:

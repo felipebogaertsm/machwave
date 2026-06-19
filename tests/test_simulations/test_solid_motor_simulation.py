@@ -110,6 +110,19 @@ def test_recorded_per_timestep_arrays_are_aligned(
     assert_recorded_arrays_aligned(simulation_result)
 
 
+def test_loss_fraction_series_match_model_components() -> None:
+    """The result exposes one named, in-range loss series per model component."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+
+    component_names = set(motor.nozzle_loss_model.component_names)
+    assert set(result.loss_fractions) == component_names
+    assert set(result.loss_labels) == component_names
+    for series in result.loss_fractions.values():
+        assert np.all(np.isfinite(series))
+        assert np.all((series >= 0.0) & (series <= 1.0))
+
+
 def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
     """The solid read site sources combustion efficiency from the motor.
 
