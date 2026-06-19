@@ -4,6 +4,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
+import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.models.motors as motors
 
 if TYPE_CHECKING:
@@ -58,6 +59,40 @@ class MotorState(ABC):
     @abstractmethod
     def run_timestep(self, *args, **kwargs) -> None:
         """Advance the per-step accumulators by one time increment."""
+
+    def _apply_nozzle_losses(
+        self,
+        momentum_term: float,
+        pressure_term: float,
+        timestep_conditions: TimestepConditions,
+        chamber_pressure: float,
+    ) -> None:
+        """
+        Derate the ideal thrust-coefficient terms and record the loss outputs.
+
+        Appends the realized nozzle efficiency, each component loss fraction, the
+        corrected thrust coefficient, and the thrust for the timestep.
+
+        Args:
+            momentum_term: Momentum term of the ideal thrust coefficient.
+            pressure_term: Pressure term of the ideal thrust coefficient.
+            timestep_conditions: Engine conditions for the loss components.
+            chamber_pressure: Chamber pressure [Pa].
+        """
+        nozzle = self.motor.thrust_chamber.nozzle
+        loss_result = self.motor.nozzle_loss_model.evaluate(
+            momentum_term, pressure_term, timestep_conditions
+        )
+        self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
+        for name, fraction in loss_result.loss_fractions.items():
+            self.loss_fractions[name].append(fraction)
+
+        thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term
+        self.thrust_coefficient.append(thrust_coefficient)
+        thrust = nozzle_core.get_thrust_from_thrust_coefficient(
+            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
+        )
+        self.thrust.append(thrust)
 
     def build_result(self) -> "simulation_results.SimulationResult":
         """Return a frozen ``SimulationResult`` snapshot of this state."""

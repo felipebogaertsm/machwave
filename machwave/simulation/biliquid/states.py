@@ -240,19 +240,9 @@ class BiliquidEngineState(simulation_states.MotorState):
             fuel_tank_pressure=fuel_tank_pressure,
             oxidizer_tank_pressure=oxidizer_tank_pressure,
         )
-        loss_result = self.motor.nozzle_loss_model.evaluate(
-            momentum_term, pressure_term, timestep_conditions
+        self._apply_nozzle_losses(
+            momentum_term, pressure_term, timestep_conditions, chamber_pressure
         )
-        self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
-        for name, fraction in loss_result.loss_fractions.items():
-            self.loss_fractions[name].append(fraction)
-
-        thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term
-        self.thrust_coefficient.append(thrust_coefficient)
-        thrust = nozzle_core.get_thrust_from_thrust_coefficient(
-            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
-        )
-        self.thrust.append(thrust)
 
         if (
             not is_feeding
