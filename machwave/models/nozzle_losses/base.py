@@ -162,7 +162,7 @@ class NozzleLossModel:
         targets that term.
 
         Returns:
-            The per-component loss fractions and the momentum and pressure factors.
+            The loss fractions and the momentum and pressure factors for each component.
         """
         loss_fractions: dict[str, float] = {}
         momentum_factor = 1.0
