@@ -164,7 +164,7 @@ def test_accepts_divergent_loss_for_biliquid(timestep_conditions):
 
 
 def test_rejects_component_with_empty_name():
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
             [nozzle_losses.components.ConstantFractionLoss(0.05, name="")],
             mixture_type=SOLID,
@@ -172,7 +172,7 @@ def test_rejects_component_with_empty_name():
 
 
 def test_rejects_component_with_empty_label():
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
             [nozzle_losses.components.ConstantFractionLoss(0.05, name="x", label="")],
             mixture_type=SOLID,
@@ -189,13 +189,13 @@ def test_rejects_component_missing_name():
         def loss_fraction() -> float:
             return 0.0
 
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel([NamelessLoss()], mixture_type=SOLID)
 
 
 def test_rejects_later_component_with_empty_name():
     # A malformed component anywhere in the list must be rejected, not just the first.
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
             [
                 nozzle_losses.components.ConstantFractionLoss(0.05, name="a"),
@@ -208,7 +208,7 @@ def test_rejects_later_component_with_empty_name():
 def test_rejects_component_with_non_string_name():
     component = nozzle_losses.components.ConstantFractionLoss(0.05, name="x")
     component.name = 123  # type: ignore[assignment]
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel([component], mixture_type=SOLID)
 
 

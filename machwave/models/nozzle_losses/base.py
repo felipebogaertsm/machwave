@@ -16,7 +16,12 @@ _IDEAL_THRUST_COEFFICIENT_EPSILON = 1e-9
 
 
 class ThrustCoefficientTermTarget(enum.StrEnum):
-    """Which term of the thrust coefficient a nozzle loss derates."""
+    """
+    Which term of the thrust coefficient a nozzle loss derates.
+
+    There can only be two thrust coefficient terms, momentum and pressure, so this class
+    is not extensible.
+    """
 
     MOMENTUM = "momentum"
     PRESSURE = "pressure"
@@ -35,7 +40,7 @@ class ThrustCoefficientTermTarget(enum.StrEnum):
 
 @dataclasses.dataclass(frozen=True)
 class NozzleLossEvaluationResult:
-    """Outcome of applying a loss model to the decoupled thrust coefficient."""
+    """Outcome of applying a loss model to each thrust coefficient term."""
 
     momentum_term: float
     pressure_term: float
@@ -53,28 +58,29 @@ class NozzleLossModel:
         mixture_type: propellants.MixtureType,
     ) -> None:
         """
-        Initialize a nozzle loss model.
+        Initialize a nozzle loss model, frozen after initialization.
 
         Args:
-            components: Loss components.
+            components: Loss components to be evaluated and applied.
             mixture_type: Engine mixture type the model is built for.
 
         Raises:
-            ValueError: If a component lacks a non-empty `name` or `label`, two
-                components share a name, or a component is not applicable to
-                `mixture_type`.
+            ValueError: If a component lacks a `name` or `label`, two components share a
+                name, or a component is not applicable to `mixture_type`.
         """
         for component in components:
             for attribute in ("name", "label"):
                 value = getattr(component, attribute, None)
                 if not isinstance(value, str) or not value:
                     raise ValueError(
-                        f"{type(component).__name__} must define a non-empty "
+                        f"{type(component).__name__} must define a non empty "
                         f"`{attribute}`."
                     )
+
         names = [component.name for component in components]
         if len(names) != len(set(names)):
             raise ValueError(f"Duplicate loss component names: {names}.")
+
         for component in components:
             if not component.applies_to(mixture_type):
                 raise ValueError(
@@ -84,15 +90,11 @@ class NozzleLossModel:
         self.components = components
         self.mixture_type = mixture_type
 
-    @property
-    def component_names(self) -> list[str]:
-        """Component names, in evaluation order."""
-        return [component.name for component in self.components]
-
-    @property
-    def component_labels(self) -> dict[str, str]:
-        """Map each component name to its human-readable report label."""
-        return {component.name: component.label for component in self.components}
+        # Components are frozen, so names and labels are cached
+        self.component_names = names
+        self.component_labels = {
+            component.name: component.label for component in components
+        }
 
     def evaluate(
         self,
@@ -101,7 +103,7 @@ class NozzleLossModel:
         timestep_conditions: simulation_states.TimestepConditions,
     ) -> NozzleLossEvaluationResult:
         """
-        Apply every component to the decoupled thrust-coefficient terms.
+        Apply every loss component to the decoupled thrust coefficient terms.
 
         Args:
             momentum_term: Momentum term of the ideal thrust coefficient.
@@ -109,9 +111,7 @@ class NozzleLossModel:
             timestep_conditions: Engine conditions at this timestep for the components.
 
         Returns:
-            The corrected terms, the realized nozzle efficiency (corrected over ideal
-            thrust coefficient, falling back to the momentum-term factor when the
-            ideal thrust coefficient is ~0), and each component's loss fraction.
+            The corrected terms, the nozzle efficiency and the loss fractions.
 
         Raises:
             ValueError: If the losses derate either term below zero.
