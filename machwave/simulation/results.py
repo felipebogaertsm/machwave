@@ -100,7 +100,7 @@ class SimulationResult(ABC, Generic[StateT]):
             file=file,
         )
         for name, series in self.loss_fractions.items():
-            label = self.loss_labels.get(name, name.replace("_", " "))
+            label = self.loss_labels[name]
             print(f"  Average {label} fraction: {np.mean(series):.3%}", file=file)
 
     def summary(self) -> dict[str, float]:
