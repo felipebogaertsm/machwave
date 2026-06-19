@@ -9,7 +9,6 @@ from machwave.models.nozzle_losses.base import (
 
 __all__ = [
     "components",
-    "presets",
     "NozzleLossEvaluationResult",
     "NozzleLossModel",
     "ThrustCoefficientTermTarget",
