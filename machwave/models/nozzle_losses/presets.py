@@ -3,15 +3,15 @@ import machwave.models.nozzle_losses.components as losses_components
 import machwave.models.propellants as propellants
 
 _SOLID = propellants.MixtureType.SOLID
-_BILIQUID = propellants.MixtureType.BILIQUID
 
 DEFAULT_OTHER_LOSSES = 0.05
+DEFAULT_NOZZLE_EFFICIENCY = 0.95
 
 
 def spp1975_solid_loss_model(
     *, other_losses: float = DEFAULT_OTHER_LOSSES
 ) -> losses_base.NozzleLossModel:
-    """Solid Performance Program 1975 nozzle loss set for a solid motor."""
+    """Solid Performance Program 1975 nozzle loss set."""
     return losses_base.NozzleLossModel(
         [
             losses_components.DivergentLoss(),
@@ -24,20 +24,6 @@ def spp1975_solid_loss_model(
     )
 
 
-def spp1975_biliquid_loss_model(
-    *, other_losses: float = DEFAULT_OTHER_LOSSES
-) -> losses_base.NozzleLossModel:
-    """Solid Performance Program 1975 nozzle loss subset for a biliquid engine."""
-    return losses_base.NozzleLossModel(
-        [
-            losses_components.DivergentLoss(),
-            losses_components.KineticsLoss(),
-            losses_components.ConstantFractionLoss(other_losses, name="other_losses"),
-        ],
-        mixture_type=_BILIQUID,
-    )
-
-
 def constant_efficiency_loss_model(
     efficiency: float, *, mixture_type: propellants.MixtureType
 ) -> losses_base.NozzleLossModel:
@@ -47,6 +33,23 @@ def constant_efficiency_loss_model(
             losses_components.ConstantFractionLoss(
                 1.0 - efficiency, name="constant_efficiency_loss"
             )
+        ],
+        mixture_type=mixture_type,
+    )
+
+
+def constant_plus_divergent_efficiency_loss_model(
+    efficiency: float = DEFAULT_NOZZLE_EFFICIENCY,
+    *,
+    mixture_type: propellants.MixtureType,
+) -> losses_base.NozzleLossModel:
+    """A flat efficiency plus the geometric nozzle divergence loss."""
+    return losses_base.NozzleLossModel(
+        [
+            losses_components.ConstantFractionLoss(
+                1.0 - efficiency, name="constant_efficiency_loss"
+            ),
+            losses_components.DivergentLoss(),
         ],
         mixture_type=mixture_type,
     )

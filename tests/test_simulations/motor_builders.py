@@ -12,6 +12,7 @@ from __future__ import annotations
 import machwave.models.grain as grain_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
+import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
 import machwave.simulation as machwave_simulation
 from tests.factories import (
@@ -268,8 +269,8 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
         combustion_efficiency=0.98,
-        nozzle_loss_model=nozzle_losses.presets.spp1975_biliquid_loss_model(
-            other_losses=0.12
+        nozzle_loss_model=nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+            efficiency=0.88, mixture_type=propellants.MixtureType.BILIQUID
         ),
     )
     params = machwave_simulation.InternalBallisticsSimulationParams(

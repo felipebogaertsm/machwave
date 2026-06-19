@@ -9,7 +9,7 @@ def test_divergence_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.DivergentLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == divergent.get_divergent_loss_fraction(
+    ) == divergent.DivergentLoss.loss_fraction(
         divergent_angle=timestep_conditions.nozzle.divergent_angle
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
@@ -19,7 +19,7 @@ def test_kinetics_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.KineticsLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.get_kinetics_loss_fraction(
+    ) == spp1975.KineticsLoss.loss_fraction(
         i_sp_th_frozen=timestep_conditions.propellant_properties.i_sp_frozen,
         i_sp_th_shifting=timestep_conditions.propellant_properties.i_sp_shifting,
         chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
@@ -31,7 +31,7 @@ def test_boundary_layer_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.BoundaryLayerLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.get_boundary_layer_loss_fraction(
+    ) == spp1975.BoundaryLayerLoss.loss_fraction(
         chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
         throat_diameter_inch=timestep_conditions.throat_diameter_inch,
         expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
@@ -45,7 +45,7 @@ def test_two_phase_flow_loss_matches_core(timestep_conditions):
     component = nozzle_losses.components.TwoPhaseFlowLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.get_two_phase_flow_loss_fraction(
+    ) == spp1975.TwoPhaseFlowLoss.loss_fraction(
         chamber_pressure_psi=timestep_conditions.chamber_pressure_psi,
         mass_fraction_of_condensed_phase=timestep_conditions.propellant_properties.qsi_chamber,
         expansion_ratio=timestep_conditions.nozzle.expansion_ratio,

@@ -29,7 +29,7 @@ for P_ch, (i_sp_frozen, i_sp_shifting) in product(
     CHAMBER_PRESSURES_PSI,
     ISP_TH_PAIRS,
 ):
-    kinetics_loss = spp1975.get_kinetics_loss_fraction(
+    kinetics_loss = spp1975.KineticsLoss.loss_fraction(
         i_sp_th_frozen=i_sp_frozen,
         i_sp_th_shifting=i_sp_shifting,
         chamber_pressure_psi=P_ch,

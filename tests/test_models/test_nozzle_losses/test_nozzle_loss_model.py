@@ -112,16 +112,20 @@ def test_spp1975_solid_model_components():
     assert model.mixture_type is SOLID
 
 
-def test_spp1975_biliquid_model_components():
-    model = nozzle_losses.presets.spp1975_biliquid_loss_model()
-    assert model.component_names == ["divergent_loss", "kinetics_loss", "other_losses"]
+def test_constant_plus_divergent_model_components():
+    model = nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+        mixture_type=BILIQUID
+    )
+    assert model.component_names == ["constant_efficiency_loss", "divergent_loss"]
     assert model.mixture_type is BILIQUID
 
 
-def test_other_losses_factory_kwarg_flows_through(timestep_conditions):
-    model = nozzle_losses.presets.spp1975_biliquid_loss_model(other_losses=0.12)
+def test_constant_efficiency_kwarg_flows_through(timestep_conditions):
+    model = nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+        efficiency=0.88, mixture_type=BILIQUID
+    )
     result = model.evaluate(1.0, 1.0, timestep_conditions)
-    assert result.loss_fractions["other_losses"] == 0.12
+    assert result.loss_fractions["constant_efficiency_loss"] == pytest.approx(0.12)
 
 
 @pytest.mark.parametrize(

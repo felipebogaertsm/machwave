@@ -2,8 +2,6 @@ import pytest
 
 import machwave.models.nozzle_losses.components.divergent as divergent
 
-pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
-
 
 @pytest.mark.parametrize(
     "divergent_angle, expected_loss_fraction",
@@ -25,7 +23,7 @@ def test_get_divergent_loss_fraction(divergent_angle, expected_loss_fraction):
     Parameters obtained from Sutton (originally tabulated as percentages,
     here divided by 100 to match the fraction convention).
     """
-    divergent_loss = divergent.get_divergent_loss_fraction(
+    divergent_loss = divergent.DivergentLoss.loss_fraction(
         divergent_angle=divergent_angle
     )
     assert divergent_loss == pytest.approx(expected_loss_fraction, abs=1e-4)

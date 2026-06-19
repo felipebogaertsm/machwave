@@ -33,7 +33,7 @@ $$
 Applicable to **conical nozzles only**.
 Contoured (bell) nozzles can achieve near-zero divergence loss by design.
 Implemented in
-[`get_divergent_loss_fraction`][machwave.models.nozzle_losses.components.divergent.get_divergent_loss_fraction].
+[`DivergentLoss.loss_fraction`][machwave.models.nozzle_losses.components.divergent.DivergentLoss.loss_fraction].
 
 *Applies to: solid and biliquid motors.*
 
@@ -62,7 +62,7 @@ where:
 - $P_0$ is the chamber pressure [psi]
 
 Implemented in
-[`get_kinetics_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_kinetics_loss_fraction].
+[`KineticsLoss.loss_fraction`][machwave.models.nozzle_losses.components.spp1975.KineticsLoss.loss_fraction].
 
 *Applies to: solid and biliquid motors.*
 
@@ -90,7 +90,7 @@ where:
 
 The 0.01 factor converts the classical percent-form expression to the fraction convention used here.
 Implemented in
-[`get_boundary_layer_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_boundary_layer_loss_fraction].
+[`BoundaryLayerLoss.loss_fraction`][machwave.models.nozzle_losses.components.spp1975.BoundaryLayerLoss.loss_fraction].
 
 *Applies to: solid motors only* (the empirical constants $C_1, C_2$ are calibrated against a BATES motor; the biliquid engine state passes $\eta_{BL} = 0$).
 
@@ -129,7 +129,7 @@ where:
 
 The 0.01 factor converts the percent-form expression to the fraction convention used here.
 Implemented in
-[`get_two_phase_flow_loss_fraction`][machwave.models.nozzle_losses.components.spp1975.get_two_phase_flow_loss_fraction].
+[`TwoPhaseFlowLoss.loss_fraction`][machwave.models.nozzle_losses.components.spp1975.TwoPhaseFlowLoss.loss_fraction].
 
 *Applies to: solid motors only.*
 Biliquid propellants typically produce gas-phase products with no condensed phase, so the biliquid engine state passes $\eta_{2p} = 0$.

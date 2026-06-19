@@ -2,8 +2,6 @@ import pytest
 
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
-pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
-
 
 @pytest.mark.parametrize(
     "i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_loss_fraction",
@@ -22,7 +20,7 @@ pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 def test_get_kinetics_loss_fraction(
     i_sp_th_frozen, i_sp_th_shifting, chamber_pressure_psi, expected_loss_fraction
 ):
-    kinetics_loss = spp1975.get_kinetics_loss_fraction(
+    kinetics_loss = spp1975.KineticsLoss.loss_fraction(
         i_sp_th_frozen=i_sp_th_frozen,
         i_sp_th_shifting=i_sp_th_shifting,
         chamber_pressure_psi=chamber_pressure_psi,
@@ -54,7 +52,7 @@ def test_get_boundary_layer_loss_fraction(
     c2,
     expected_loss_fraction,
 ):
-    boundary_layer_loss = spp1975.get_boundary_layer_loss_fraction(
+    boundary_layer_loss = spp1975.BoundaryLayerLoss.loss_fraction(
         chamber_pressure_psi=chamber_pressure_psi,
         throat_diameter_inch=throat_diam_in,
         expansion_ratio=expansion_ratio,
@@ -79,10 +77,8 @@ def test_get_boundary_layer_loss_fraction(
         (1000.0, 0.05, 1.0, 10.0, 6.853280891354e-2),  # High chamber pressure
     ],
 )
-def test_get_two_phase_phase_loss_particle_size(
-    P_psi, xi, d_throat_in, L_c_in, expected_um
-):
-    size_um = spp1975._get_two_phase_phase_loss_particle_size(
+def test_two_phase_average_particle_size(P_psi, xi, d_throat_in, L_c_in, expected_um):
+    size_um = spp1975.TwoPhaseFlowLoss._average_particle_size(
         chamber_pressure_psi=P_psi,
         mass_fraction_of_condensed_phase=xi,
         throat_diameter_inch=d_throat_in,
@@ -139,12 +135,12 @@ def test_get_two_phase_flow_loss_fraction(
 ):
     # Patch the private helper to return a controlled particle size.
     monkeypatch.setattr(
-        spp1975,
-        "_get_two_phase_phase_loss_particle_size",
+        spp1975.TwoPhaseFlowLoss,
+        "_average_particle_size",
         lambda *_a, **_kw: mock_particle_um,
     )
 
-    two_phase_loss = spp1975.get_two_phase_flow_loss_fraction(
+    two_phase_loss = spp1975.TwoPhaseFlowLoss.loss_fraction(
         chamber_pressure_psi=chamber_psi,
         mass_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,

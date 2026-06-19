@@ -43,15 +43,17 @@ class BiliquidEngine(
                 default estimate.
             combustion_efficiency: Ratio of the actual flame temperature to the ideal
                 adiabatic flame temperature (0, 1].
-            nozzle_loss_model: Nozzle loss model. Defaults to the Solid
-                Performance Program 1975 biliquid set.
+            nozzle_loss_model: Nozzle loss model. Defaults to a flat efficiency
+                plus the geometric nozzle divergence loss.
         """
         super().__init__(
             propellant,
             thrust_chamber,
             combustion_efficiency,
             nozzle_loss_model=nozzle_loss_model
-            or nozzle_losses.presets.spp1975_biliquid_loss_model(),
+            or nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+                mixture_type=propellants.MixtureType.BILIQUID
+            ),
         )
         self.feed_system = feed_system
         self.oxidizer_tank_cog = oxidizer_tank_cog

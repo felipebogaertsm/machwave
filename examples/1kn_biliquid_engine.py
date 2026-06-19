@@ -92,8 +92,8 @@ def main():
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
         combustion_efficiency=0.98,
-        nozzle_loss_model=nozzle_losses.presets.spp1975_biliquid_loss_model(
-            other_losses=0.12
+        nozzle_loss_model=nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+            efficiency=0.88, mixture_type=propellants.MixtureType.BILIQUID
         ),
     )
 
