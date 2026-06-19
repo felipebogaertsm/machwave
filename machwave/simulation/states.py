@@ -93,14 +93,12 @@ class MotorState(ABC):
         )
         self.exit_pressure.append(exit_pressure)
 
-        momentum_term, pressure_term = (
-            nozzle_core.get_ideal_thrust_coefficient_components(
-                chamber_pressure,
-                exit_pressure,
-                external_pressure,
-                effective_expansion_ratio,
-                k_exhaust,
-            )
+        momentum_term, pressure_term = nozzle_core.get_ideal_thrust_coefficient_terms(
+            chamber_pressure,
+            exit_pressure,
+            external_pressure,
+            effective_expansion_ratio,
+            k_exhaust,
         )
         self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
         return effective_expansion_ratio, exit_pressure, momentum_term, pressure_term

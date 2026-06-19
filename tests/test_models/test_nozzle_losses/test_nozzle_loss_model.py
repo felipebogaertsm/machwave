@@ -8,6 +8,12 @@ SOLID = propellants.MixtureType.SOLID
 BILIQUID = propellants.MixtureType.BILIQUID
 
 
+def test_apply_multiplicative_correction_factor():
+    assert nozzle_losses.NozzleLossModel._apply_multiplicative_correction_factor(
+        1.524507, 0.8
+    ) == pytest.approx(1.219605)
+
+
 def test_no_loss_model_passes_terms_through(timestep_conditions):
     model = nozzle_losses.presets.no_loss_model(mixture_type=SOLID)
     result = model.evaluate(1.2, 0.3, timestep_conditions)

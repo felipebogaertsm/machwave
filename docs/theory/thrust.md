@@ -38,7 +38,7 @@ where:
 - $P_\text{ext}$ is the external (ambient) pressure [Pa]
 - $\varepsilon$ is the expansion ratio (dimensionless)
 
-The momentum term and the pressure term are returned separately by [`get_ideal_thrust_coefficient_components`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient_components].
+The momentum term and the pressure term are returned separately by [`get_ideal_thrust_coefficient_terms`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient_terms].
 This way, nozzle losses can act on either term separately.
 
 ## 1.3 Flow Separation

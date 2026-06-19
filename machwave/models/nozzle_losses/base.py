@@ -4,7 +4,6 @@ import dataclasses
 import enum
 import typing
 
-import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.models.propellants as propellants
 
 if typing.TYPE_CHECKING:
@@ -135,10 +134,10 @@ class NozzleLossModel:
                 f"{pressure_factor}."
             )
 
-        corrected_momentum_term = nozzle_core.apply_thrust_coefficient_correction(
+        corrected_momentum_term = self._apply_multiplicative_correction_factor(
             momentum_term, momentum_factor
         )
-        corrected_pressure_term = nozzle_core.apply_thrust_coefficient_correction(
+        corrected_pressure_term = self._apply_multiplicative_correction_factor(
             pressure_term, pressure_factor
         )
         ideal_thrust_coefficient = momentum_term + pressure_term
@@ -157,3 +156,10 @@ class NozzleLossModel:
             nozzle_efficiency=nozzle_efficiency,
             loss_fractions=loss_fractions,
         )
+
+    @staticmethod
+    def _apply_multiplicative_correction_factor(
+        term: float, correction_factor: float
+    ) -> float:
+        """Derate a thrust-coefficient term by a multiplicative correction factor."""
+        return term * correction_factor

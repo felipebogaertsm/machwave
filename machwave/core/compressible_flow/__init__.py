@@ -1,8 +1,7 @@
 """Compressible flow theory and analysis."""
 
 from .nozzle import (
-    apply_thrust_coefficient_correction,
-    get_ideal_thrust_coefficient_components,
+    get_ideal_thrust_coefficient_terms,
     get_optimal_expansion_ratio,
     get_separated_exit_conditions,
     get_thrust_from_thrust_coefficient,
@@ -19,8 +18,7 @@ __all__ = [
     # nozzle
     "get_optimal_expansion_ratio",
     "get_separated_exit_conditions",
-    "get_ideal_thrust_coefficient_components",
-    "apply_thrust_coefficient_correction",
+    "get_ideal_thrust_coefficient_terms",
     "get_thrust_from_thrust_coefficient",
     # isentropic
     "get_critical_pressure_ratio",

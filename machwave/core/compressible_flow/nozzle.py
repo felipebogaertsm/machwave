@@ -85,7 +85,7 @@ def get_separated_exit_conditions(
     return effective_expansion_ratio, separation_pressure
 
 
-def get_ideal_thrust_coefficient_components(
+def get_ideal_thrust_coefficient_terms(
     chamber_pressure: float,
     exit_pressure: float,
     external_pressure: float,
@@ -119,23 +119,6 @@ def get_ideal_thrust_coefficient_components(
         expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
     )
     return momentum_term, pressure_term
-
-
-def apply_thrust_coefficient_correction(
-    ideal_thrust_coefficient: float,
-    nozzle_correction_factor: float,
-) -> float:
-    """
-    Apply nozzle efficiency correction to thrust coefficient.
-
-    Args:
-        ideal_thrust_coefficient: Ideal thrust coefficient.
-        nozzle_correction_factor: Nozzle efficiency (0-1).
-
-    Returns:
-        Corrected thrust coefficient.
-    """
-    return ideal_thrust_coefficient * nozzle_correction_factor
 
 
 def get_thrust_from_thrust_coefficient(
