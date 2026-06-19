@@ -122,6 +122,26 @@ def test_negative_ideal_thrust_coefficient_falls_back(timestep_conditions):
     assert result.nozzle_efficiency == 1.0
 
 
+def test_singular_fallback_is_the_momentum_factor(timestep_conditions):
+    # DivergentLoss is momentum-only and the constant is on both, so the momentum
+    # and pressure factors differ; the fallback must be the momentum-term factor.
+    model = nozzle_losses.NozzleLossModel(
+        [
+            nozzle_losses.components.DivergentLoss(),
+            nozzle_losses.components.ConstantFractionLoss(0.1, name="other"),
+        ],
+        mixture_type=SOLID,
+    )
+    result = model.evaluate(1.0, -1.0, timestep_conditions)  # ideal coefficient is 0
+    divergent = result.loss_fractions["divergent_loss"]
+    momentum_factor = 1.0 - divergent - 0.1
+    pressure_factor = 1.0 - 0.1
+
+    assert result.nozzle_efficiency == pytest.approx(momentum_factor)
+    assert result.nozzle_efficiency != pytest.approx(pressure_factor)
+    assert result.nozzle_efficiency != pytest.approx(1.0)
+
+
 @pytest.mark.parametrize(
     "component_factory",
     [
@@ -171,6 +191,25 @@ def test_rejects_component_missing_name():
 
     with pytest.raises(ValueError, match="non-empty"):
         nozzle_losses.NozzleLossModel([NamelessLoss()], mixture_type=SOLID)
+
+
+def test_rejects_later_component_with_empty_name():
+    # A malformed component anywhere in the list must be rejected, not just the first.
+    with pytest.raises(ValueError, match="non-empty"):
+        nozzle_losses.NozzleLossModel(
+            [
+                nozzle_losses.components.ConstantFractionLoss(0.05, name="a"),
+                nozzle_losses.components.ConstantFractionLoss(0.05, name=""),
+            ],
+            mixture_type=SOLID,
+        )
+
+
+def test_rejects_component_with_non_string_name():
+    component = nozzle_losses.components.ConstantFractionLoss(0.05, name="x")
+    component.name = 123  # type: ignore[assignment]
+    with pytest.raises(ValueError, match="non-empty"):
+        nozzle_losses.NozzleLossModel([component], mixture_type=SOLID)
 
 
 def test_rejects_duplicate_component_names():

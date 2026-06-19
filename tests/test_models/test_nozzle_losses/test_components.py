@@ -1,3 +1,5 @@
+import dataclasses
+import inspect
 import warnings
 
 import pytest
@@ -7,6 +9,7 @@ import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.nozzle_losses.components.divergent as divergent
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 import machwave.models.propellants as propellants
+import machwave.models.thrust_chamber as thrust_chamber
 
 BOTH = nozzle_losses.ThrustCoefficientTermTarget.BOTH
 SOLID = propellants.MixtureType.SOLID
@@ -150,3 +153,127 @@ def test_subclass_missing_target_is_rejected():
             @staticmethod
             def loss_fraction() -> float:
                 return 0.0
+
+
+def test_typical_range_warning_omits_fraction_value(timestep_conditions):
+    class NarrowRangeLoss(components_base.LossComponent):
+        name = "narrow_range"
+        label = "narrow range"
+        applicable_mixture_types = frozenset({SOLID})
+        target = BOTH
+        typical_range = (0.0, 0.01)
+
+        @staticmethod
+        def loss_fraction() -> float:
+            return 0.5
+
+    with pytest.warns(UserWarning) as record:
+        NarrowRangeLoss().get_loss_fraction(timestep_conditions)
+
+    message = str(record[0].message)
+    assert "0.5" not in message  # the per-call value is gone so warnings dedup
+    assert "[0.0, 0.01]" in message  # the constant bounds stay for context
+
+
+def test_typical_range_warning_deduplicates_across_drifting_fractions(
+    timestep_conditions,
+):
+    class DriftingLoss(components_base.LossComponent):
+        name = "drifting"
+        label = "drifting"
+        applicable_mixture_types = frozenset({SOLID})
+        target = BOTH
+        typical_range = (0.0, 0.01)
+        timestep_parameter_map = {"chamber_pressure": "chamber_pressure"}
+
+        @staticmethod
+        def loss_fraction(chamber_pressure: float) -> float:
+            return min(0.5, chamber_pressure / 1.0e8)
+
+    component = DriftingLoss()
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("default", UserWarning)
+        for chamber_pressure in (7.0e6, 8.0e6, 9.0e6, 7.0e6):
+            component.get_loss_fraction(
+                dataclasses.replace(
+                    timestep_conditions, chamber_pressure=chamber_pressure
+                )
+            )
+
+    # Distinct fractions used to produce distinct messages; now one per component.
+    assert len(recorded) == 1
+
+
+def _replace_properties(conditions, **changes):
+    return dataclasses.replace(
+        conditions,
+        propellant_properties=dataclasses.replace(
+            conditions.propellant_properties, **changes
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "component, make_conditions",
+    [
+        (
+            nozzle_losses.components.KineticsLoss(),
+            lambda c: _replace_properties(c, i_sp_frozen=250.0, i_sp_shifting=250.0),
+        ),
+        (
+            nozzle_losses.components.BoundaryLayerLoss(),
+            lambda c: dataclasses.replace(c, chamber_pressure=2.0e7),
+        ),
+        (
+            nozzle_losses.components.TwoPhaseFlowLoss(),
+            lambda c: dataclasses.replace(
+                _replace_properties(c, qsi_chamber=0.45), free_chamber_volume=5.0e-2
+            ),
+        ),
+    ],
+    ids=["kinetics", "boundary_layer", "two_phase"],
+)
+def test_real_component_warns_outside_typical_range(
+    component, make_conditions, timestep_conditions
+):
+    with pytest.warns(UserWarning, match="typical"):
+        component.get_loss_fraction(make_conditions(timestep_conditions))
+
+
+def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
+    base = timestep_conditions.nozzle
+    wide_nozzle = thrust_chamber.Nozzle(
+        inlet_diameter=base.inlet_diameter,
+        throat_diameter=base.throat_diameter,
+        divergent_angle=30.0,  # ~0.067 fraction, above the 0.05 upper bound
+        convergent_angle=base.convergent_angle,
+        expansion_ratio=base.expansion_ratio,
+        c_1=base.c_1,
+        c_2=base.c_2,
+        discharge_coefficient=base.discharge_coefficient,
+        separation_pressure_ratio=base.separation_pressure_ratio,
+    )
+    conditions = dataclasses.replace(timestep_conditions, nozzle=wide_nozzle)
+    with pytest.warns(UserWarning, match="typical"):
+        nozzle_losses.components.DivergentLoss().get_loss_fraction(conditions)
+
+
+@pytest.mark.parametrize(
+    "component_class",
+    [
+        nozzle_losses.components.ConstantFractionLoss,
+        nozzle_losses.components.DivergentLoss,
+        nozzle_losses.components.KineticsLoss,
+        nozzle_losses.components.BoundaryLayerLoss,
+        nozzle_losses.components.TwoPhaseFlowLoss,
+    ],
+)
+def test_loss_fraction_is_static_on_every_component(component_class):
+    assert isinstance(
+        inspect.getattr_static(component_class, "loss_fraction"), staticmethod
+    )
+
+
+def test_constant_fraction_loss_static_call():
+    # The constant shares the physics components' pure static-call contract.
+    assert nozzle_losses.components.ConstantFractionLoss.loss_fraction(0.07) == 0.07

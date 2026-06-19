@@ -112,6 +112,55 @@ def test_recorded_per_timestep_arrays_are_aligned(
     assert_recorded_arrays_aligned(simulation_result)
 
 
+def test_loss_fraction_series_match_model_components(
+    simulated_motor_and_result: tuple[
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
+    ],
+) -> None:
+    """The result exposes one named, in-range loss series per model component."""
+    motor, result = simulated_motor_and_result
+    component_names = set(motor.nozzle_loss_model.component_names)
+    assert set(result.loss_fractions) == component_names
+    assert set(result.loss_labels) == component_names
+    for series in result.loss_fractions.values():
+        assert np.all(np.isfinite(series))
+        assert np.all((series >= 0.0) & (series <= 1.0))
+
+
+def test_thrust_coefficient_is_ideal_times_nozzle_efficiency(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    # The recorded thrust coefficient must be the corrected (derated) terms, so it
+    # equals the ideal coefficient scaled by the realized nozzle efficiency.
+    np.testing.assert_allclose(
+        simulation_result.thrust_coefficient,
+        simulation_result.ideal_thrust_coefficient
+        * simulation_result.nozzle_efficiency,
+        rtol=1e-9,
+    )
+
+
+def test_thrust_equals_thrust_coefficient_times_chamber_pressure_times_throat_area(
+    simulated_motor_and_result: tuple[
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
+    ],
+) -> None:
+    motor, result = simulated_motor_and_result
+    throat_area = motor.thrust_chamber.nozzle.get_throat_area()
+    np.testing.assert_allclose(
+        result.thrust,
+        result.thrust_coefficient * result.chamber_pressure * throat_area,
+        rtol=1e-9,
+    )
+
+
+def test_exit_pressure_is_finite_and_positive(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    assert np.all(np.isfinite(simulation_result.exit_pressure))
+    assert np.all(simulation_result.exit_pressure > 0.0)
+
+
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
     motor, params = motor_builders.build_1kn_biliquid_engine()
     return biliquid_simulation.BiliquidEngineState(
