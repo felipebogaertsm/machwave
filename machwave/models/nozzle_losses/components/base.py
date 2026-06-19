@@ -101,7 +101,7 @@ class LossComponent(abc.ABC):
             lower, upper = self.typical_range
             if not lower <= fraction <= upper:
                 warnings.warn(
-                    f"{self.name} loss fraction {fraction} is outside its typical "
+                    f"{self.name} loss fraction is outside its typical "
                     f"range [{lower}, {upper}]."
                 )
         return fraction
