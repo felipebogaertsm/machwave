@@ -26,7 +26,7 @@ class KineticsLoss(components_base.LossComponent):
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
     )
     target = losses_base.ThrustCoefficientTermTarget.BOTH
-    timestep_parameter_sources = {
+    timestep_parameter_map = {
         "i_sp_th_frozen": "propellant_properties.i_sp_frozen",
         "i_sp_th_shifting": "propellant_properties.i_sp_shifting",
         "chamber_pressure_psi": "chamber_pressure_psi",
@@ -77,7 +77,7 @@ class BoundaryLayerLoss(components_base.LossComponent):
     name = "boundary_layer_loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     target = losses_base.ThrustCoefficientTermTarget.BOTH
-    timestep_parameter_sources = {
+    timestep_parameter_map = {
         "chamber_pressure_psi": "chamber_pressure_psi",
         "throat_diameter_inch": "throat_diameter_inch",
         "expansion_ratio": "nozzle.expansion_ratio",
@@ -141,7 +141,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
     name = "two_phase_loss"
     applicable_mixture_types = frozenset({propellants.MixtureType.SOLID})
     target = losses_base.ThrustCoefficientTermTarget.BOTH
-    timestep_parameter_sources = {
+    timestep_parameter_map = {
         "chamber_pressure_psi": "chamber_pressure_psi",
         "mass_fraction_of_condensed_phase": "propellant_properties.qsi_chamber",
         "expansion_ratio": "nozzle.expansion_ratio",

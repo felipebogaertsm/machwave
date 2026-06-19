@@ -15,7 +15,7 @@ Composable nozzle thrust-coefficient loss models.
 
 ## Components
 
-The empirical correlations (Solid Performance Program 1975, AFRPL-TR-75-36) live as `loss_fraction` static methods on the component classes below: pure functions of scalar inputs that are callable and testable on their own. Each component declares `timestep_parameter_sources`, a mapping from every `loss_fraction` parameter to the dotted attribute path it is read from on the per-step [`TimestepConditions`](../simulation.md); the inherited `get_loss_fraction` resolves those paths and feeds the correlation.
+The empirical correlations (Solid Performance Program 1975, AFRPL-TR-75-36) live as `loss_fraction` static methods on the component classes below: pure functions of scalar inputs that are callable and testable on their own. Each component declares `timestep_parameter_map`, a mapping from every `loss_fraction` parameter to the dotted attribute path it is read from on the per-step [`TimestepConditions`](../simulation.md); the inherited `get_loss_fraction` resolves those paths and feeds the correlation.
 
 ::: machwave.models.nozzle_losses.components
 

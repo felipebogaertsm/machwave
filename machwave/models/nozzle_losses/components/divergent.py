@@ -13,7 +13,7 @@ class DivergentLoss(components_base.LossComponent):
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
     )
     target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
-    timestep_parameter_sources = {"divergent_angle": "nozzle.divergent_angle"}
+    timestep_parameter_map = {"divergent_angle": "nozzle.divergent_angle"}
     typical_range = (0.0075, 0.05)  # fraction
 
     @staticmethod

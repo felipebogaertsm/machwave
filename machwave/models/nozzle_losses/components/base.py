@@ -18,34 +18,38 @@ class LossComponent(abc.ABC):
 
     Each component must define a `loss_fraction` static method as a function of scalar
     inputs. In case the `loss_fraction` requires one or more parameters,
-    `timestep_parameter_sources` must be defined.
+    `timestep_parameter_map` must be defined.
 
     Defining `typical_range` throws a warning if the evaluated loss fraction is outside
     the range for a given timestep condition.
+
+    Attributes:
+        name: Diagnostic series name for the loss.
+        applicable_mixture_types: Mixture types the loss is valid for.
+        target: Thrust-coefficient term the loss derates.
+        timestep_parameter_map: Maps each `loss_fraction` parameter to a dotted
+            attribute path resolved against the timestep conditions.
+        typical_range: Optional range (fraction) the loss is expected to fall
+            within; a result outside it triggers a warning.
+        loss_fraction: Static method computing the loss fraction, defined by each
+            subclass.
     """
 
     name: str
     applicable_mixture_types: frozenset[propellants.MixtureType]
     target: losses_base.ThrustCoefficientTermTarget
-
-    # Maps each loss_fraction parameter to a dotted attribute path resolved
-    # against the timestep conditions.
-    timestep_parameter_sources: typing.ClassVar[dict[str, str]] = {}
-
-    # Range (fractions) the loss is expected to fall within
+    timestep_parameter_map: typing.ClassVar[dict[str, str]] = {}
     typical_range: typing.ClassVar[tuple[float, float] | None] = None
-
-    # Must be defined by each subclass
     loss_fraction: typing.ClassVar[typing.Callable[..., float]]
 
     def _parse_timestep_conditions(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
         """
-        Uses `timestep_parameter_sources` to extract params from `timestep_conditions`.
+        Uses `timestep_parameter_map` to extract params from `timestep_conditions`.
 
         Example:
-            For `timestep_parameter_sources`
+            For `timestep_parameter_map`
             {
                 "i_sp_th_frozen": "propellant_properties.i_sp_frozen",
                 "chamber_pressure_psi": "chamber_pressure_psi",
@@ -58,7 +62,7 @@ class LossComponent(abc.ABC):
         """
         return {
             parameter: functools.reduce(getattr, path.split("."), timestep_conditions)
-            for parameter, path in self.timestep_parameter_sources.items()
+            for parameter, path in self.timestep_parameter_map.items()
         }
 
     def get_loss_fraction(
