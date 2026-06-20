@@ -110,6 +110,9 @@ def test_two_phase_average_particle_size(P_psi, xi, d_throat_in, L_c_in, expecte
         (250.0, 0.12, 12.0, 3.0, 6.0, 0.034185173799418895),
         # throat >= 2 in, particle > 8 um
         (250.0, 0.12, 12.0, 3.0, 9.0, 0.037947076355546048),
+        # throat >= 2 in, particle exactly on the 4 um and 8 um branch edges
+        (250.0, 0.12, 12.0, 3.0, 4.0, 0.024715237319304646),
+        (250.0, 0.12, 12.0, 3.0, 8.0, 0.043031727540636104),
         # - xi < 0.09 branch
         # throat < 1 in
         (150.0, 0.05, 9.0, 0.8, 5.0, 0.03708669962078615),

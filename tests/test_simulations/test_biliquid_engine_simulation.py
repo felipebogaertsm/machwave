@@ -121,7 +121,7 @@ def test_loss_fraction_series_match_model_components(
     motor, result = simulated_motor_and_result
     component_names = set(motor.nozzle_loss_model.component_names)
     assert set(result.loss_fractions) == component_names
-    assert set(result.loss_labels) == component_names
+    assert result.loss_labels == motor.nozzle_loss_model.component_labels
     for series in result.loss_fractions.values():
         assert np.all(np.isfinite(series))
         assert np.all((series >= 0.0) & (series <= 1.0))

@@ -271,6 +271,24 @@ def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
         nozzle_losses.components.DivergentLoss().get_loss_fraction(conditions)
 
 
+def test_divergent_loss_warns_below_typical_range(timestep_conditions):
+    base = timestep_conditions.nozzle
+    narrow_nozzle = thrust_chamber.Nozzle(
+        inlet_diameter=base.inlet_diameter,
+        throat_diameter=base.throat_diameter,
+        divergent_angle=5.0,  # ~0.0019 fraction, below the 0.0075 lower bound
+        convergent_angle=base.convergent_angle,
+        expansion_ratio=base.expansion_ratio,
+        c_1=base.c_1,
+        c_2=base.c_2,
+        discharge_coefficient=base.discharge_coefficient,
+        separation_pressure_ratio=base.separation_pressure_ratio,
+    )
+    conditions = dataclasses.replace(timestep_conditions, nozzle=narrow_nozzle)
+    with pytest.warns(UserWarning, match="typical"):
+        nozzle_losses.components.DivergentLoss().get_loss_fraction(conditions)
+
+
 @pytest.mark.parametrize(
     "component_class",
     [

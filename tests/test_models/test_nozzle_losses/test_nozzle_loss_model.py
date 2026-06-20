@@ -257,6 +257,30 @@ def test_rejects_losses_derating_below_zero(timestep_conditions):
         model.evaluate(1.0, 1.0, timestep_conditions)
 
 
+def test_rejects_single_factor_derating_below_zero(timestep_conditions):
+    # A momentum-only loss plus a both-targets loss drives only the momentum factor
+    # negative while the pressure factor stays positive.
+    class MomentumOnlyLoss(components_base.LossComponent):
+        name = "momentum_only"
+        label = "momentum only"
+        applicable_mixture_types = frozenset({SOLID})
+        target = nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
+
+        @staticmethod
+        def loss_fraction() -> float:
+            return 0.6
+
+    model = nozzle_losses.NozzleLossModel(
+        [
+            nozzle_losses.components.ConstantFractionLoss(0.5, name="both"),
+            MomentumOnlyLoss(),
+        ],
+        mixture_type=SOLID,
+    )
+    with pytest.raises(ValueError, match="momentum factor"):
+        model.evaluate(1.0, 1.0, timestep_conditions)
+
+
 def test_spp1975_solid_model_components():
     model = nozzle_losses.presets.spp1975_solid_loss_model()
     assert model.component_names == [
