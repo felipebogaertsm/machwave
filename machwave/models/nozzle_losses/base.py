@@ -10,8 +10,6 @@ if typing.TYPE_CHECKING:
     import machwave.models.nozzle_losses.components.base as components_base
     import machwave.simulation.states as simulation_states
 
-# Smallest ideal thrust coefficient with a well-defined efficiency ratio; below it
-# the denominator is effectively zero and the ratio is singular.
 _MINIMUM_IDEAL_THRUST_COEFFICIENT = 1e-9
 
 
@@ -96,6 +94,39 @@ class NozzleLossModel:
             component.name: component.label for component in components
         }
 
+    def _accumulate_loss_factors(
+        self, timestep_conditions: simulation_states.TimestepConditions
+    ) -> tuple[dict[str, float], float, float]:
+        """
+        Sum the component loss fractions into the momentum and pressure factors.
+
+        Each factor starts at one and is reduced by every fraction whose component
+        targets that term.
+
+        Returns:
+            The loss fractions and the momentum and pressure factors for each component.
+        """
+        loss_fractions: dict[str, float] = {}
+        momentum_factor = 1.0
+        pressure_factor = 1.0
+
+        for component in self.components:
+            fraction = component.get_loss_fraction(timestep_conditions)
+            loss_fractions[component.name] = fraction
+            if component.target.affects_momentum:
+                momentum_factor -= fraction
+            if component.target.affects_pressure:
+                pressure_factor -= fraction
+
+        return loss_fractions, momentum_factor, pressure_factor
+
+    @staticmethod
+    def _apply_multiplicative_correction_factor(
+        term: float, correction_factor: float
+    ) -> float:
+        """Derate a thrust-coefficient term by a multiplicative correction factor."""
+        return term * correction_factor
+
     def evaluate(
         self,
         momentum_term: float,
@@ -151,36 +182,3 @@ class NozzleLossModel:
             nozzle_efficiency=nozzle_efficiency,
             loss_fractions=loss_fractions,
         )
-
-    def _accumulate_loss_factors(
-        self, timestep_conditions: simulation_states.TimestepConditions
-    ) -> tuple[dict[str, float], float, float]:
-        """
-        Sum the component loss fractions into the momentum and pressure factors.
-
-        Each factor starts at one and is reduced by every fraction whose component
-        targets that term.
-
-        Returns:
-            The loss fractions and the momentum and pressure factors for each component.
-        """
-        loss_fractions: dict[str, float] = {}
-        momentum_factor = 1.0
-        pressure_factor = 1.0
-
-        for component in self.components:
-            fraction = component.get_loss_fraction(timestep_conditions)
-            loss_fractions[component.name] = fraction
-            if component.target.affects_momentum:
-                momentum_factor -= fraction
-            if component.target.affects_pressure:
-                pressure_factor -= fraction
-
-        return loss_fractions, momentum_factor, pressure_factor
-
-    @staticmethod
-    def _apply_multiplicative_correction_factor(
-        term: float, correction_factor: float
-    ) -> float:
-        """Derate a thrust-coefficient term by a multiplicative correction factor."""
-        return term * correction_factor
