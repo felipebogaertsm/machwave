@@ -6,7 +6,7 @@ _SOLID = propellants.MixtureType.SOLID
 _CONSTANT_EFFICIENCY_LOSS_NAME = "constant_efficiency_loss"
 
 DEFAULT_OTHER_LOSSES = 0.05
-DEFAULT_NOZZLE_EFFICIENCY = 0.95
+DEFAULT_NOZZLE_EFFICIENCY = 0.85
 
 
 def spp1975_solid_loss_model(
