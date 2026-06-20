@@ -7,6 +7,7 @@ they can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import io
 from typing import Callable
 
 import numpy as np
@@ -163,6 +164,20 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
         return state.chamber_pressure[-1]
 
     assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)
+
+
+def test_report_includes_nozzle_losses() -> None:
+    """The printed report includes the nozzle efficiency and every loss label."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+
+    buffer = io.StringIO()
+    result.report(file=buffer)
+    output = buffer.getvalue()
+
+    assert "Average nozzle efficiency" in output
+    for label in motor.nozzle_loss_model.component_labels.values():
+        assert label in output
 
 
 def test_all_both_targets_match_legacy_scalar_correction() -> None:

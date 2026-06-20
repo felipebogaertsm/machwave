@@ -8,6 +8,7 @@ it can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import io
 import warnings
 
 import numpy as np
@@ -125,6 +126,22 @@ def test_loss_fraction_series_match_model_components(
     for series in result.loss_fractions.values():
         assert np.all(np.isfinite(series))
         assert np.all((series >= 0.0) & (series <= 1.0))
+
+
+def test_report_includes_nozzle_losses(
+    simulated_motor_and_result: tuple[
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
+    ],
+) -> None:
+    """The printed report includes the nozzle efficiency and every loss label."""
+    motor, result = simulated_motor_and_result
+    buffer = io.StringIO()
+    result.report(file=buffer)
+    output = buffer.getvalue()
+
+    assert "Average nozzle efficiency" in output
+    for label in motor.nozzle_loss_model.component_labels.values():
+        assert label in output
 
 
 def test_thrust_coefficient_is_ideal_times_nozzle_efficiency(
