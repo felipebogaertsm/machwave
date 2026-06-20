@@ -72,7 +72,7 @@ class LossComponent(abc.ABC):
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> float:
         """
-        Return the loss as a fraction in [0, 1] for the timestep conditions.
+        Return the loss fraction for the timestep conditions, validated to [0, 1].
 
         Args:
             timestep_conditions: Timestep conditions to evaluate the loss fraction at.
