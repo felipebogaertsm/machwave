@@ -56,7 +56,7 @@ class NozzleLossModel:
         mixture_type: propellants.MixtureType,
     ) -> None:
         """
-        Initialize a nozzle loss model, frozen after initialization.
+        Initialize a nozzle loss model.
 
         Args:
             components: Loss components to be evaluated and applied.
@@ -88,11 +88,15 @@ class NozzleLossModel:
         self.components = components
         self.mixture_type = mixture_type
 
-        # Components are frozen, so names and labels are cached
-        self.component_names = names
-        self.component_labels = {
-            component.name: component.label for component in components
-        }
+    @property
+    def component_names(self) -> list[str]:
+        """Names of the configured components, in evaluation order."""
+        return [component.name for component in self.components]
+
+    @property
+    def component_labels(self) -> dict[str, str]:
+        """Map each component name to its report label."""
+        return {component.name: component.label for component in self.components}
 
     def _accumulate_loss_factors(
         self, timestep_conditions: simulation_states.TimestepConditions
