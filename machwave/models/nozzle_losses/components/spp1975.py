@@ -9,6 +9,8 @@ References:
     Rocket Propulsion Laboratory, Edwards AFB, CA.
 """
 
+from __future__ import annotations
+
 import numpy as np
 
 import machwave.core.conversions as conversions
@@ -17,7 +19,7 @@ import machwave.models.nozzle_losses.base as losses_base
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
 
-KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200  # psi
+KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200
 
 
 class KineticsLoss(components_base.LossComponent):
@@ -41,7 +43,7 @@ class KineticsLoss(components_base.LossComponent):
         "i_sp_shifting": "propellant_properties.i_sp_shifting",
         "chamber_pressure": "chamber_pressure",
     }
-    typical_range = (0.001, 0.05)  # fraction
+    typical_range = (0.001, 0.05)
 
     @staticmethod
     def loss_fraction(
@@ -100,7 +102,7 @@ class BoundaryLayerLoss(components_base.LossComponent):
         "c_1": "nozzle.c_1",
         "c_2": "nozzle.c_2",
     }
-    typical_range = (0.001, 0.03)  # fraction
+    typical_range = (0.001, 0.03)
 
     @staticmethod
     def loss_fraction(
@@ -156,7 +158,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
         "throat_diameter": "nozzle.throat_diameter",
         "free_chamber_volume": "free_chamber_volume",
     }
-    typical_range = (0.001, 0.05)  # fraction
+    typical_range = (0.001, 0.05)
 
     @staticmethod
     def loss_fraction(
@@ -198,7 +200,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
                 c_3, c_5, c_6 = 9.0, 1.0, 1.0
             elif throat_diameter_inch < 2.0:
                 c_3, c_5, c_6 = 9.0, 1.0, 0.8
-            else:  # throat_diameter_inch >= 2
+            else:
                 if particle_size_um < 4.0:
                     c_3, c_5, c_6 = 13.4, 0.8, 0.8
                 elif particle_size_um <= 8.0:
@@ -211,7 +213,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
                 c_3, c_5, c_6 = 30.0, 1.0, 1.0
             elif throat_diameter_inch < 2.0:
                 c_3, c_5, c_6 = 30.0, 1.0, 0.8
-            else:  # throat_diameter_inch >= 2
+            else:
                 if particle_size_um < 4.0:
                     c_3, c_5, c_6 = 44.5, 0.8, 0.8
                 elif particle_size_um <= 8.0:

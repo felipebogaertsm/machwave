@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 import machwave.models.nozzle_losses.base as losses_base
@@ -20,7 +22,7 @@ class DivergentLoss(components_base.LossComponent):
     )
     target = losses_base.ThrustCoefficientTermTarget.MOMENTUM
     timestep_parameter_map = {"divergent_angle": "nozzle.divergent_angle"}
-    typical_range = (0.0075, 0.05)  # fraction
+    typical_range = (0.0075, 0.05)
 
     @staticmethod
     def loss_fraction(divergent_angle: float) -> float:

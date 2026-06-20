@@ -135,11 +135,11 @@ class BiliquidEngineState(simulation_states.MotorState):
         external_pressure: float,
     ) -> None:
         """
-        Advance simulation by time step d_t under external pressure.
+        Iterate the engine operation by calculating operational parameters.
 
         Args:
-            d_t: Time step.
-            external_pressure: External pressure.
+            d_t: Time increment [s].
+            external_pressure: External pressure [Pa].
         """
         nozzle = self.motor.thrust_chamber.nozzle
         feed_system = self.motor.feed_system

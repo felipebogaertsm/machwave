@@ -104,7 +104,8 @@ class NozzleLossModel:
         targets that term.
 
         Returns:
-            The loss fractions and the momentum and pressure factors for each component.
+            The per-component loss fractions and the aggregate momentum and pressure
+            factors.
         """
         loss_fractions: dict[str, float] = {}
         momentum_factor = 1.0
@@ -155,15 +156,16 @@ class NozzleLossModel:
         corrected_pressure_term = pressure_term * pressure_factor
         ideal_thrust_coefficient = momentum_term + pressure_term
         if ideal_thrust_coefficient > _MINIMUM_IDEAL_THRUST_COEFFICIENT:
-            nozzle_efficiency = (
-                corrected_momentum_term + corrected_pressure_term
-            ) / ideal_thrust_coefficient
+            nozzle_efficiency = float(
+                (corrected_momentum_term + corrected_pressure_term)
+                / ideal_thrust_coefficient
+            )
         else:
             # If the pressure term is deeply negative and cancels out the momentum term,
             # the ideal thrust coefficient is near zero so efficiency shoots to
             # infinity. In this case, the nozzle efficiency is defined only by the
             # momentum factor.
-            nozzle_efficiency = momentum_factor
+            nozzle_efficiency = float(momentum_factor)
 
         return NozzleLossEvaluationResult(
             momentum_term=corrected_momentum_term,
