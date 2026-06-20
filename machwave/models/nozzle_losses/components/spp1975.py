@@ -47,7 +47,7 @@ class KineticsLoss(components_base.LossComponent):
     typical_range = (0.001, 0.05)
 
     @staticmethod
-    def loss_fraction(
+    def loss_fraction_formula(
         i_sp_frozen: float, i_sp_shifting: float, chamber_pressure: float
     ) -> float:
         """
@@ -106,7 +106,7 @@ class BoundaryLayerLoss(components_base.LossComponent):
     typical_range = (0.001, 0.03)
 
     @staticmethod
-    def loss_fraction(
+    def loss_fraction_formula(
         chamber_pressure: float,
         throat_diameter: float,
         expansion_ratio: float,
@@ -162,7 +162,7 @@ class TwoPhaseFlowLoss(components_base.LossComponent):
     typical_range = (0.001, 0.05)
 
     @staticmethod
-    def loss_fraction(
+    def loss_fraction_formula(
         chamber_pressure: float,
         mass_fraction_of_condensed_phase: float,
         expansion_ratio: float,

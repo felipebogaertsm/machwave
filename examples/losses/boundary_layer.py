@@ -60,7 +60,7 @@ for (
     TIMES,
     C1_C2_VALUES,
 ):
-    boundary_layer_loss = spp1975.BoundaryLayerLoss.loss_fraction(
+    boundary_layer_loss = spp1975.BoundaryLayerLoss.loss_fraction_formula(
         chamber_pressure=conversions.convert_psi_to_pa(P_ch),
         throat_diameter=conversions.convert_inch_to_meter(d_t),
         expansion_ratio=eps,

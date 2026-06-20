@@ -23,7 +23,7 @@ def test_divergent_loss_fraction(divergent_angle, expected_loss_fraction):
     Parameters obtained from Sutton (originally tabulated as percentages,
     here divided by 100 to match the fraction convention).
     """
-    divergent_loss = divergent.DivergentLoss.loss_fraction(
+    divergent_loss = divergent.DivergentLoss.loss_fraction_formula(
         divergent_angle=divergent_angle
     )
     assert divergent_loss == pytest.approx(expected_loss_fraction, abs=1e-4)

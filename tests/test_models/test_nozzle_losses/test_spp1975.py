@@ -21,7 +21,7 @@ import machwave.models.nozzle_losses.components.spp1975 as spp1975
 def test_kinetics_loss_fraction(
     i_sp_frozen, i_sp_shifting, chamber_pressure_psi, expected_loss_fraction
 ):
-    kinetics_loss = spp1975.KineticsLoss.loss_fraction(
+    kinetics_loss = spp1975.KineticsLoss.loss_fraction_formula(
         i_sp_frozen=i_sp_frozen,
         i_sp_shifting=i_sp_shifting,
         chamber_pressure=conversions.convert_psi_to_pa(chamber_pressure_psi),
@@ -53,7 +53,7 @@ def test_boundary_layer_loss_fraction(
     c2,
     expected_loss_fraction,
 ):
-    boundary_layer_loss = spp1975.BoundaryLayerLoss.loss_fraction(
+    boundary_layer_loss = spp1975.BoundaryLayerLoss.loss_fraction_formula(
         chamber_pressure=conversions.convert_psi_to_pa(chamber_pressure_psi),
         throat_diameter=conversions.convert_inch_to_meter(throat_diam_in),
         expansion_ratio=expansion_ratio,
@@ -143,7 +143,7 @@ def test_two_phase_flow_loss_fraction(
         lambda *_a, **_kw: mock_particle_um,
     )
 
-    two_phase_loss = spp1975.TwoPhaseFlowLoss.loss_fraction(
+    two_phase_loss = spp1975.TwoPhaseFlowLoss.loss_fraction_formula(
         chamber_pressure=conversions.convert_psi_to_pa(chamber_psi),
         mass_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,

@@ -37,11 +37,11 @@ class ConstantFractionLoss(components_base.LossComponent):
         self.fraction = fraction
 
     @staticmethod
-    def loss_fraction(fraction: float) -> float:
+    def loss_fraction_formula(fraction: float) -> float:
         return fraction
 
-    def _loss_fraction_parameters(
+    def _parse_loss_fraction_formula_arguments(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
-        """Supply the configured constant fraction to `loss_fraction`."""
+        """Supply the configured constant fraction to `loss_fraction_formula`."""
         return {"fraction": self.fraction}

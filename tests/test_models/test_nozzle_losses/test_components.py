@@ -20,7 +20,7 @@ def test_divergent_loss_resolves_timestep_conditions(timestep_conditions):
     component = divergent.DivergentLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == divergent.DivergentLoss.loss_fraction(
+    ) == divergent.DivergentLoss.loss_fraction_formula(
         divergent_angle=timestep_conditions.nozzle.divergent_angle
     )
     assert component.target is nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
@@ -30,7 +30,7 @@ def test_kinetics_loss_resolves_timestep_conditions(timestep_conditions):
     component = spp1975.KineticsLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.KineticsLoss.loss_fraction(
+    ) == spp1975.KineticsLoss.loss_fraction_formula(
         i_sp_frozen=timestep_conditions.propellant_properties.i_sp_frozen,
         i_sp_shifting=timestep_conditions.propellant_properties.i_sp_shifting,
         chamber_pressure=timestep_conditions.chamber_pressure,
@@ -42,7 +42,7 @@ def test_boundary_layer_loss_resolves_timestep_conditions(timestep_conditions):
     component = spp1975.BoundaryLayerLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.BoundaryLayerLoss.loss_fraction(
+    ) == spp1975.BoundaryLayerLoss.loss_fraction_formula(
         chamber_pressure=timestep_conditions.chamber_pressure,
         throat_diameter=timestep_conditions.nozzle.throat_diameter,
         expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
@@ -56,7 +56,7 @@ def test_two_phase_flow_loss_resolves_timestep_conditions(timestep_conditions):
     component = spp1975.TwoPhaseFlowLoss()
     assert component.get_loss_fraction(
         timestep_conditions
-    ) == spp1975.TwoPhaseFlowLoss.loss_fraction(
+    ) == spp1975.TwoPhaseFlowLoss.loss_fraction_formula(
         chamber_pressure=timestep_conditions.chamber_pressure,
         mass_fraction_of_condensed_phase=(
             timestep_conditions.propellant_properties.qsi_chamber
@@ -102,7 +102,7 @@ def test_get_loss_fraction_rejects_out_of_range(timestep_conditions):
         target = BOTH
 
         @staticmethod
-        def loss_fraction() -> float:
+        def loss_fraction_formula() -> float:
             return 1.5
 
     with pytest.raises(ValueError, match="outside"):
@@ -118,7 +118,7 @@ def test_loss_fraction_outside_typical_range_warns(timestep_conditions):
         typical_range = (0.0, 0.01)
 
         @staticmethod
-        def loss_fraction() -> float:
+        def loss_fraction_formula() -> float:
             return 0.5
 
     with pytest.warns(UserWarning, match="typical"):
@@ -134,7 +134,7 @@ def test_loss_fraction_inside_typical_range_does_not_warn(timestep_conditions):
 
 
 def test_subclass_missing_loss_fraction_is_rejected():
-    with pytest.raises(TypeError, match="loss_fraction"):
+    with pytest.raises(TypeError, match="loss_fraction_formula"):
 
         class MissingLossFraction(components_base.LossComponent):
             name = "missing"
@@ -152,7 +152,7 @@ def test_subclass_non_static_loss_fraction_is_rejected():
             applicable_mixture_types = frozenset({SOLID})
             target = BOTH
 
-            def loss_fraction(self) -> float:
+            def loss_fraction_formula(self) -> float:
                 return 0.0
 
 
@@ -165,7 +165,7 @@ def test_subclass_missing_target_is_rejected():
             applicable_mixture_types = frozenset({SOLID})
 
             @staticmethod
-            def loss_fraction() -> float:
+            def loss_fraction_formula() -> float:
                 return 0.0
 
 
@@ -178,7 +178,7 @@ def test_typical_range_warning_omits_fraction_value(timestep_conditions):
         typical_range = (0.0, 0.01)
 
         @staticmethod
-        def loss_fraction() -> float:
+        def loss_fraction_formula() -> float:
             return 0.5
 
     with pytest.warns(UserWarning) as record:
@@ -201,7 +201,7 @@ def test_typical_range_warning_deduplicates_across_drifting_fractions(
         timestep_parameter_map = {"chamber_pressure": "chamber_pressure"}
 
         @staticmethod
-        def loss_fraction(chamber_pressure: float) -> float:
+        def loss_fraction_formula(chamber_pressure: float) -> float:
             return min(0.5, chamber_pressure / 1.0e8)
 
     component = DriftingLoss()
@@ -302,10 +302,10 @@ def test_divergent_loss_warns_below_typical_range(timestep_conditions):
 )
 def test_loss_fraction_is_static_on_every_component(component_class):
     assert isinstance(
-        inspect.getattr_static(component_class, "loss_fraction"), staticmethod
+        inspect.getattr_static(component_class, "loss_fraction_formula"), staticmethod
     )
 
 
 def test_constant_fraction_loss_static_call():
     # The constant shares the physics components' pure static-call contract.
-    assert constant.ConstantFractionLoss.loss_fraction(0.07) == 0.07
+    assert constant.ConstantFractionLoss.loss_fraction_formula(0.07) == 0.07

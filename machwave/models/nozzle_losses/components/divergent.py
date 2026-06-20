@@ -25,7 +25,7 @@ class DivergentLoss(components_base.LossComponent):
     typical_range = (0.0075, 0.05)
 
     @staticmethod
-    def loss_fraction(divergent_angle: float) -> float:
+    def loss_fraction_formula(divergent_angle: float) -> float:
         """
         Return the divergent nozzle loss fraction given the half angle.
 
