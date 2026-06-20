@@ -142,6 +142,19 @@ def test_subclass_missing_loss_fraction_is_rejected():
             target = BOTH
 
 
+def test_subclass_non_static_loss_fraction_is_rejected():
+    with pytest.raises(TypeError, match="static or class method"):
+
+        class InstanceMethodLoss(components_base.LossComponent):
+            name = "instance_method"
+            label = "instance method"
+            applicable_mixture_types = frozenset({SOLID})
+            target = BOTH
+
+            def loss_fraction(self) -> float:
+                return 0.0
+
+
 def test_subclass_missing_target_is_rejected():
     with pytest.raises(TypeError, match="target"):
 

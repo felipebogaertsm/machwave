@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import functools
+import inspect
 import typing
 import warnings
 
@@ -39,8 +40,8 @@ class LossComponent(abc.ABC):
 
     name: str
     label: str
-    applicable_mixture_types: frozenset[propellants.MixtureType]
-    target: losses_base.ThrustCoefficientTermTarget
+    applicable_mixture_types: typing.ClassVar[frozenset[propellants.MixtureType]]
+    target: typing.ClassVar[losses_base.ThrustCoefficientTermTarget]
     timestep_parameter_map: typing.ClassVar[dict[str, str]] = {}
     typical_range: typing.ClassVar[tuple[float, float] | None] = None
     loss_fraction: typing.ClassVar[typing.Callable[..., float]]
@@ -50,8 +51,12 @@ class LossComponent(abc.ABC):
         for required in ("applicable_mixture_types", "target"):
             if not hasattr(cls, required):
                 raise TypeError(f"{cls.__name__} must define `{required}`.")
-        if not callable(getattr(cls, "loss_fraction", None)):
-            raise TypeError(f"{cls.__name__} must define a `loss_fraction` method.")
+        loss_fraction = inspect.getattr_static(cls, "loss_fraction", None)
+        if not isinstance(loss_fraction, (staticmethod, classmethod)):
+            raise TypeError(
+                f"{cls.__name__} must define `loss_fraction` as a static or class "
+                "method."
+            )
 
     def _loss_fraction_parameters(
         self, timestep_conditions: simulation_states.TimestepConditions
