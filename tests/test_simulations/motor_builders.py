@@ -10,8 +10,8 @@ stay independent of the example layer.
 from __future__ import annotations
 
 import machwave.models.grain as grain_models
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
 import machwave.simulation as machwave_simulation

@@ -12,8 +12,8 @@ from typing import Callable
 import numpy as np
 import pytest
 
-import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.simulation as machwave_simulation
 import machwave.simulation.solid as solid_simulation
