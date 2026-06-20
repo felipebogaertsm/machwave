@@ -45,8 +45,9 @@ def test_no_loss_model_passes_terms_through(timestep_conditions):
 
 
 def test_constant_efficiency_derates_both_terms(timestep_conditions):
-    model = nozzle_losses.presets.constant_efficiency_loss_model(
-        0.8, mixture_type=BILIQUID
+    model = nozzle_losses.NozzleLossModel(
+        [nozzle_losses.components.ConstantFractionLoss(0.2, name="constant")],
+        mixture_type=BILIQUID,
     )
     result = model.evaluate(1.0, 0.5, timestep_conditions)
 
@@ -133,8 +134,9 @@ def test_zero_ideal_thrust_coefficient_does_not_divide(timestep_conditions):
 
 
 def test_canceling_terms_fall_back_to_momentum_factor(timestep_conditions):
-    model = nozzle_losses.presets.constant_efficiency_loss_model(
-        0.8, mixture_type=SOLID
+    model = nozzle_losses.NozzleLossModel(
+        [nozzle_losses.components.ConstantFractionLoss(0.2, name="constant")],
+        mixture_type=SOLID,
     )
     result = model.evaluate(1.0, -1.0, timestep_conditions)
     # Ideal thrust coefficient is 0, so efficiency is the momentum-term factor.
@@ -273,16 +275,14 @@ def test_spp1975_solid_model_components():
     assert model.mixture_type is SOLID
 
 
-def test_constant_plus_divergent_model_components():
-    model = nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
-        mixture_type=BILIQUID
-    )
+def test_constant_efficiency_model_components():
+    model = nozzle_losses.presets.constant_efficiency_loss_model(mixture_type=BILIQUID)
     assert model.component_names == ["constant_efficiency_loss", "divergent_loss"]
     assert model.mixture_type is BILIQUID
 
 
 def test_constant_efficiency_kwarg_flows_through(timestep_conditions):
-    model = nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+    model = nozzle_losses.presets.constant_efficiency_loss_model(
         efficiency=0.88, mixture_type=BILIQUID
     )
     result = model.evaluate(1.0, 1.0, timestep_conditions)

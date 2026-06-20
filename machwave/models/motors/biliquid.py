@@ -51,7 +51,7 @@ class BiliquidEngine(
             thrust_chamber,
             combustion_efficiency,
             nozzle_loss_model=nozzle_loss_model
-            or nozzle_losses.presets.constant_plus_divergent_efficiency_loss_model(
+            or nozzle_losses.presets.constant_efficiency_loss_model(
                 mixture_type=propellants.MixtureType.BILIQUID
             ),
         )

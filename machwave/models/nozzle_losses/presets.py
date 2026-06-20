@@ -26,20 +26,6 @@ def spp1975_solid_loss_model(
 
 
 def constant_efficiency_loss_model(
-    efficiency: float, *, mixture_type: propellants.MixtureType
-) -> losses_base.NozzleLossModel:
-    """A flat nozzle efficiency applied to the whole thrust coefficient."""
-    return losses_base.NozzleLossModel(
-        [
-            losses_components.ConstantFractionLoss(
-                1.0 - efficiency, name=_CONSTANT_EFFICIENCY_LOSS_NAME
-            )
-        ],
-        mixture_type=mixture_type,
-    )
-
-
-def constant_plus_divergent_efficiency_loss_model(
     efficiency: float = DEFAULT_NOZZLE_EFFICIENCY,
     *,
     mixture_type: propellants.MixtureType,
