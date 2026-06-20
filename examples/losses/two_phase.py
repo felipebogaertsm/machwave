@@ -62,7 +62,7 @@ for P_ch, d_t, x_c, eps, l_star in product(
     free_chamber_volume = conversions.convert_inch_to_meter(
         l_star
     ) * geometric.get_circle_area(throat_diameter_m)
-    two_phase_loss = spp1975.TwoPhaseFlowLoss.loss_fraction_formula(
+    two_phase_loss = spp1975.TwoPhaseFlowLoss.compute_loss_fraction(
         chamber_pressure=conversions.convert_psi_to_pa(P_ch),
         mass_fraction_of_condensed_phase=x_c,
         expansion_ratio=eps,

@@ -17,25 +17,25 @@ class LossComponent(abc.ABC):
     """
     A single nozzle thrust coefficient loss.
 
-    Every subclass must define a `loss_fraction_formula` method that returns the
+    Every subclass must define a `compute_loss_fraction` method that returns the
     fraction from scalar inputs (applying any unit conversions itself), and a
     `timestep_parameter_map` binding each of its parameters to a dotted attribute
     path on the timestep conditions. The inherited `get_loss_fraction` resolves the
-    map, calls `loss_fraction_formula`, validates the result lies in [0, 1], and
+    map, calls `compute_loss_fraction`, validates the result lies in [0, 1], and
     warns when it falls outside `typical_range`. A condition-independent loss leaves
     `timestep_parameter_map` empty and may override
-    `_parse_loss_fraction_formula_arguments` to supply its own parameters.
+    `_parse_compute_loss_fraction_arguments` to supply its own parameters.
 
     Attributes:
         name: Identifier for the loss series.
         label: Human-readable name used in reports.
         applicable_mixture_types: Mixture types the loss is valid for.
         target: Thrust coefficient term the loss derates.
-        timestep_parameter_map: Maps each `loss_fraction_formula` parameter to a dotted
+        timestep_parameter_map: Maps each `compute_loss_fraction` parameter to a dotted
             attribute path resolved against the timestep conditions.
         typical_range: Optional (lower, upper) fraction the loss is expected to fall
             within. A result outside it triggers a warning.
-        loss_fraction_formula: Computes the loss fraction; defined by every subclass.
+        compute_loss_fraction: Computes the loss fraction; defined by every subclass.
     """
 
     name: str
@@ -44,27 +44,27 @@ class LossComponent(abc.ABC):
     target: typing.ClassVar[losses_base.ThrustCoefficientTermTarget]
     timestep_parameter_map: typing.ClassVar[dict[str, str]] = {}
     typical_range: typing.ClassVar[tuple[float, float] | None] = None
-    loss_fraction_formula: typing.ClassVar[typing.Callable[..., float]]
+    compute_loss_fraction: typing.ClassVar[typing.Callable[..., float]]
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         super().__init_subclass__(**kwargs)
         for required in ("applicable_mixture_types", "target"):
             if not hasattr(cls, required):
                 raise TypeError(f"{cls.__name__} must define `{required}`.")
-        loss_fraction_formula = inspect.getattr_static(
-            cls, "loss_fraction_formula", None
+        compute_loss_fraction = inspect.getattr_static(
+            cls, "compute_loss_fraction", None
         )
-        if not isinstance(loss_fraction_formula, (staticmethod, classmethod)):
+        if not isinstance(compute_loss_fraction, (staticmethod, classmethod)):
             raise TypeError(
-                f"{cls.__name__} must define `loss_fraction_formula` as a "
+                f"{cls.__name__} must define `compute_loss_fraction` as a "
                 "static or class method."
             )
 
-    def _parse_loss_fraction_formula_arguments(
+    def _parse_compute_loss_fraction_arguments(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
         """
-        Resolve the keyword arguments for `loss_fraction_formula`.
+        Resolve the keyword arguments for `compute_loss_fraction`.
 
         The default resolves each `timestep_parameter_map` entry, a dotted attribute
         path, against `timestep_conditions`. A condition-independent loss can override
@@ -93,8 +93,8 @@ class LossComponent(abc.ABC):
         Warns:
             UserWarning: If the loss fraction is outside `typical_range`, if defined.
         """
-        arguments = self._parse_loss_fraction_formula_arguments(timestep_conditions)
-        fraction = self.loss_fraction_formula(**arguments)
+        arguments = self._parse_compute_loss_fraction_arguments(timestep_conditions)
+        fraction = self.compute_loss_fraction(**arguments)
 
         if not 0.0 <= fraction <= 1.0:
             raise ValueError(f"{self.name} loss fraction {fraction} is outside [0, 1].")

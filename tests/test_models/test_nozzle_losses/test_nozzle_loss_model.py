@@ -211,7 +211,7 @@ def test_rejects_component_missing_name():
         target = nozzle_losses.ThrustCoefficientTermTarget.BOTH
 
         @staticmethod
-        def loss_fraction_formula() -> float:
+        def compute_loss_fraction() -> float:
             return 0.0
 
     with pytest.raises(ValueError, match="must define"):
@@ -270,7 +270,7 @@ def test_rejects_single_factor_derating_below_zero(timestep_conditions):
         target = nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM
 
         @staticmethod
-        def loss_fraction_formula() -> float:
+        def compute_loss_fraction() -> float:
             return 0.6
 
     model = nozzle_losses.NozzleLossModel(
