@@ -2,6 +2,9 @@ import pytest
 
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.nozzle_losses.components.base as components_base
+import machwave.models.nozzle_losses.components.constant as constant
+import machwave.models.nozzle_losses.components.divergent as divergent_loss
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 import machwave.models.propellants as propellants
 
 SOLID = propellants.MixtureType.SOLID
@@ -13,8 +16,8 @@ def test_accumulate_loss_factors_targets_each_factor(timestep_conditions):
     # diverge: the constant hits both, the divergent loss only the momentum factor.
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(),
-            nozzle_losses.components.ConstantFractionLoss(0.1, name="other"),
+            divergent_loss.DivergentLoss(),
+            constant.ConstantFractionLoss(0.1, name="other"),
         ],
         mixture_type=SOLID,
     )
@@ -40,7 +43,7 @@ def test_no_loss_model_passes_terms_through(timestep_conditions):
 
 def test_constant_efficiency_derates_both_terms(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
-        [nozzle_losses.components.ConstantFractionLoss(0.2, name="constant")],
+        [constant.ConstantFractionLoss(0.2, name="constant")],
         mixture_type=BILIQUID,
     )
     result = model.evaluate(1.0, 0.5, timestep_conditions)
@@ -55,9 +58,9 @@ def test_all_both_targets_reduce_to_scalar_correction(timestep_conditions):
     # (momentum + pressure) * (1 - sum(fractions)).
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.KineticsLoss(),
-            nozzle_losses.components.BoundaryLayerLoss(),
-            nozzle_losses.components.TwoPhaseFlowLoss(),
+            spp1975.KineticsLoss(),
+            spp1975.BoundaryLayerLoss(),
+            spp1975.TwoPhaseFlowLoss(),
         ],
         mixture_type=SOLID,
     )
@@ -76,8 +79,8 @@ def test_all_both_targets_reduce_to_scalar_correction(timestep_conditions):
 def test_momentum_only_target_spares_pressure_term(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(),
-            nozzle_losses.components.KineticsLoss(),
+            divergent_loss.DivergentLoss(),
+            spp1975.KineticsLoss(),
         ],
         mixture_type=SOLID,
     )
@@ -100,8 +103,8 @@ def test_momentum_only_target_spares_pressure_term(timestep_conditions):
 def test_negative_pressure_term_uses_realized_ratio(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(),
-            nozzle_losses.components.KineticsLoss(),
+            divergent_loss.DivergentLoss(),
+            spp1975.KineticsLoss(),
         ],
         mixture_type=SOLID,
     )
@@ -129,7 +132,7 @@ def test_zero_ideal_thrust_coefficient_does_not_divide(timestep_conditions):
 
 def test_canceling_terms_fall_back_to_momentum_factor(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
-        [nozzle_losses.components.ConstantFractionLoss(0.2, name="constant")],
+        [constant.ConstantFractionLoss(0.2, name="constant")],
         mixture_type=SOLID,
     )
     result = model.evaluate(1.0, -1.0, timestep_conditions)
@@ -149,8 +152,8 @@ def test_singular_fallback_is_the_momentum_factor(timestep_conditions):
     # and pressure factors differ; the fallback must be the momentum-term factor.
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.DivergentLoss(),
-            nozzle_losses.components.ConstantFractionLoss(0.1, name="other"),
+            divergent_loss.DivergentLoss(),
+            constant.ConstantFractionLoss(0.1, name="other"),
         ],
         mixture_type=SOLID,
     )
@@ -167,9 +170,9 @@ def test_singular_fallback_is_the_momentum_factor(timestep_conditions):
 @pytest.mark.parametrize(
     "component_factory",
     [
-        nozzle_losses.components.KineticsLoss,
-        nozzle_losses.components.BoundaryLayerLoss,
-        nozzle_losses.components.TwoPhaseFlowLoss,
+        spp1975.KineticsLoss,
+        spp1975.BoundaryLayerLoss,
+        spp1975.TwoPhaseFlowLoss,
     ],
 )
 def test_rejects_solid_only_component_for_biliquid(component_factory):
@@ -179,7 +182,7 @@ def test_rejects_solid_only_component_for_biliquid(component_factory):
 
 def test_accepts_divergent_loss_for_biliquid(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
-        [nozzle_losses.components.DivergentLoss()], mixture_type=BILIQUID
+        [divergent_loss.DivergentLoss()], mixture_type=BILIQUID
     )
     result = model.evaluate(1.0, 1.0, timestep_conditions)
     assert "divergent_loss" in result.loss_fractions
@@ -188,7 +191,7 @@ def test_accepts_divergent_loss_for_biliquid(timestep_conditions):
 def test_rejects_component_with_empty_name():
     with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
-            [nozzle_losses.components.ConstantFractionLoss(0.05, name="")],
+            [constant.ConstantFractionLoss(0.05, name="")],
             mixture_type=SOLID,
         )
 
@@ -196,7 +199,7 @@ def test_rejects_component_with_empty_name():
 def test_rejects_component_with_empty_label():
     with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
-            [nozzle_losses.components.ConstantFractionLoss(0.05, name="x", label="")],
+            [constant.ConstantFractionLoss(0.05, name="x", label="")],
             mixture_type=SOLID,
         )
 
@@ -220,15 +223,15 @@ def test_rejects_later_component_with_empty_name():
     with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel(
             [
-                nozzle_losses.components.ConstantFractionLoss(0.05, name="a"),
-                nozzle_losses.components.ConstantFractionLoss(0.05, name=""),
+                constant.ConstantFractionLoss(0.05, name="a"),
+                constant.ConstantFractionLoss(0.05, name=""),
             ],
             mixture_type=SOLID,
         )
 
 
 def test_rejects_component_with_non_string_name():
-    component = nozzle_losses.components.ConstantFractionLoss(0.05, name="x")
+    component = constant.ConstantFractionLoss(0.05, name="x")
     component.name = 123  # type: ignore[assignment]
     with pytest.raises(ValueError, match="must define"):
         nozzle_losses.NozzleLossModel([component], mixture_type=SOLID)
@@ -238,8 +241,8 @@ def test_rejects_duplicate_component_names():
     with pytest.raises(ValueError):
         nozzle_losses.NozzleLossModel(
             [
-                nozzle_losses.components.DivergentLoss(),
-                nozzle_losses.components.DivergentLoss(),
+                divergent_loss.DivergentLoss(),
+                divergent_loss.DivergentLoss(),
             ],
             mixture_type=SOLID,
         )
@@ -248,8 +251,8 @@ def test_rejects_duplicate_component_names():
 def test_rejects_losses_derating_below_zero(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.ConstantFractionLoss(0.6, name="a"),
-            nozzle_losses.components.ConstantFractionLoss(0.6, name="b"),
+            constant.ConstantFractionLoss(0.6, name="a"),
+            constant.ConstantFractionLoss(0.6, name="b"),
         ],
         mixture_type=SOLID,
     )
@@ -272,7 +275,7 @@ def test_rejects_single_factor_derating_below_zero(timestep_conditions):
 
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.ConstantFractionLoss(0.5, name="both"),
+            constant.ConstantFractionLoss(0.5, name="both"),
             MomentumOnlyLoss(),
         ],
         mixture_type=SOLID,
@@ -328,18 +331,10 @@ def test_table_4_5_simplified_method(
 ):
     model = nozzle_losses.NozzleLossModel(
         [
-            nozzle_losses.components.ConstantFractionLoss(
-                divergent, name="divergent_loss"
-            ),
-            nozzle_losses.components.ConstantFractionLoss(
-                kinetics, name="kinetics_loss"
-            ),
-            nozzle_losses.components.ConstantFractionLoss(
-                boundary_layer, name="boundary_layer_loss"
-            ),
-            nozzle_losses.components.ConstantFractionLoss(
-                two_phase, name="two_phase_flow_loss"
-            ),
+            constant.ConstantFractionLoss(divergent, name="divergent_loss"),
+            constant.ConstantFractionLoss(kinetics, name="kinetics_loss"),
+            constant.ConstantFractionLoss(boundary_layer, name="boundary_layer_loss"),
+            constant.ConstantFractionLoss(two_phase, name="two_phase_flow_loss"),
         ],
         mixture_type=SOLID,
     )

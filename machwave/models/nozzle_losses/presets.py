@@ -1,5 +1,7 @@
 import machwave.models.nozzle_losses.base as losses_base
-import machwave.models.nozzle_losses.components as losses_components
+import machwave.models.nozzle_losses.components.constant as constant
+import machwave.models.nozzle_losses.components.divergent as divergent
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
 import machwave.models.propellants as propellants
 
 _SOLID = propellants.MixtureType.SOLID
@@ -15,11 +17,11 @@ def spp1975_solid_loss_model(
     """Solid Performance Program 1975 nozzle loss set."""
     return losses_base.NozzleLossModel(
         [
-            losses_components.DivergentLoss(),
-            losses_components.KineticsLoss(),
-            losses_components.BoundaryLayerLoss(),
-            losses_components.TwoPhaseFlowLoss(),
-            losses_components.ConstantFractionLoss(other_losses, name="other_losses"),
+            divergent.DivergentLoss(),
+            spp1975.KineticsLoss(),
+            spp1975.BoundaryLayerLoss(),
+            spp1975.TwoPhaseFlowLoss(),
+            constant.ConstantFractionLoss(other_losses, name="other_losses"),
         ],
         mixture_type=_SOLID,
     )
@@ -33,10 +35,10 @@ def constant_efficiency_loss_model(
     """A flat efficiency plus the geometric nozzle divergence loss."""
     return losses_base.NozzleLossModel(
         [
-            losses_components.ConstantFractionLoss(
+            constant.ConstantFractionLoss(
                 1.0 - efficiency, name=_CONSTANT_EFFICIENCY_LOSS_NAME
             ),
-            losses_components.DivergentLoss(),
+            divergent.DivergentLoss(),
         ],
         mixture_type=mixture_type,
     )

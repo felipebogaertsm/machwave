@@ -6,6 +6,7 @@ import pytest
 
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.nozzle_losses.components.base as components_base
+import machwave.models.nozzle_losses.components.constant as constant
 import machwave.models.nozzle_losses.components.divergent as divergent
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 import machwave.models.propellants as propellants
@@ -16,7 +17,7 @@ SOLID = propellants.MixtureType.SOLID
 
 
 def test_divergent_loss_resolves_timestep_conditions(timestep_conditions):
-    component = nozzle_losses.components.DivergentLoss()
+    component = divergent.DivergentLoss()
     assert component.get_loss_fraction(
         timestep_conditions
     ) == divergent.DivergentLoss.loss_fraction(
@@ -26,7 +27,7 @@ def test_divergent_loss_resolves_timestep_conditions(timestep_conditions):
 
 
 def test_kinetics_loss_resolves_timestep_conditions(timestep_conditions):
-    component = nozzle_losses.components.KineticsLoss()
+    component = spp1975.KineticsLoss()
     assert component.get_loss_fraction(
         timestep_conditions
     ) == spp1975.KineticsLoss.loss_fraction(
@@ -38,7 +39,7 @@ def test_kinetics_loss_resolves_timestep_conditions(timestep_conditions):
 
 
 def test_boundary_layer_loss_resolves_timestep_conditions(timestep_conditions):
-    component = nozzle_losses.components.BoundaryLayerLoss()
+    component = spp1975.BoundaryLayerLoss()
     assert component.get_loss_fraction(
         timestep_conditions
     ) == spp1975.BoundaryLayerLoss.loss_fraction(
@@ -52,7 +53,7 @@ def test_boundary_layer_loss_resolves_timestep_conditions(timestep_conditions):
 
 
 def test_two_phase_flow_loss_resolves_timestep_conditions(timestep_conditions):
-    component = nozzle_losses.components.TwoPhaseFlowLoss()
+    component = spp1975.TwoPhaseFlowLoss()
     assert component.get_loss_fraction(
         timestep_conditions
     ) == spp1975.TwoPhaseFlowLoss.loss_fraction(
@@ -67,14 +68,14 @@ def test_two_phase_flow_loss_resolves_timestep_conditions(timestep_conditions):
 
 
 def test_component_labels():
-    assert nozzle_losses.components.DivergentLoss().label == "divergent nozzle loss"
-    assert nozzle_losses.components.KineticsLoss().label == "kinetics loss"
-    assert nozzle_losses.components.BoundaryLayerLoss().label == "boundary layer loss"
-    assert nozzle_losses.components.TwoPhaseFlowLoss().label == "two-phase flow loss"
+    assert divergent.DivergentLoss().label == "divergent nozzle loss"
+    assert spp1975.KineticsLoss().label == "kinetics loss"
+    assert spp1975.BoundaryLayerLoss().label == "boundary layer loss"
+    assert spp1975.TwoPhaseFlowLoss().label == "two-phase flow loss"
 
 
 def test_constant_fraction_loss_returns_fixed_value(timestep_conditions):
-    component = nozzle_losses.components.ConstantFractionLoss(0.07, name="other_losses")
+    component = constant.ConstantFractionLoss(0.07, name="other_losses")
     assert component.get_loss_fraction(timestep_conditions) == 0.07
     assert component.name == "other_losses"
     assert component.label == "other losses"
@@ -82,7 +83,7 @@ def test_constant_fraction_loss_returns_fixed_value(timestep_conditions):
 
 
 def test_constant_fraction_loss_custom_label():
-    component = nozzle_losses.components.ConstantFractionLoss(
+    component = constant.ConstantFractionLoss(
         0.05, name="other_losses", label="other nozzle losses"
     )
     assert component.label == "other nozzle losses"
@@ -90,7 +91,7 @@ def test_constant_fraction_loss_custom_label():
 
 def test_constant_fraction_loss_rejects_out_of_range():
     with pytest.raises(ValueError):
-        nozzle_losses.components.ConstantFractionLoss(1.5, name="x")
+        constant.ConstantFractionLoss(1.5, name="x")
 
 
 def test_get_loss_fraction_rejects_out_of_range(timestep_conditions):
@@ -126,7 +127,7 @@ def test_loss_fraction_outside_typical_range_warns(timestep_conditions):
 
 def test_loss_fraction_inside_typical_range_does_not_warn(timestep_conditions):
     # The fixture's 15 deg half-angle gives ~0.017, inside DivergentLoss's range.
-    component = nozzle_losses.components.DivergentLoss()
+    component = divergent.DivergentLoss()
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
         component.get_loss_fraction(timestep_conditions)
@@ -230,15 +231,15 @@ def _replace_properties(conditions, **changes):
     "component, make_conditions",
     [
         (
-            nozzle_losses.components.KineticsLoss(),
+            spp1975.KineticsLoss(),
             lambda c: _replace_properties(c, i_sp_frozen=250.0, i_sp_shifting=250.0),
         ),
         (
-            nozzle_losses.components.BoundaryLayerLoss(),
+            spp1975.BoundaryLayerLoss(),
             lambda c: dataclasses.replace(c, chamber_pressure=2.0e7),
         ),
         (
-            nozzle_losses.components.TwoPhaseFlowLoss(),
+            spp1975.TwoPhaseFlowLoss(),
             lambda c: dataclasses.replace(
                 _replace_properties(c, qsi_chamber=0.45), free_chamber_volume=5.0e-2
             ),
@@ -268,7 +269,7 @@ def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
     )
     conditions = dataclasses.replace(timestep_conditions, nozzle=wide_nozzle)
     with pytest.warns(UserWarning, match="typical"):
-        nozzle_losses.components.DivergentLoss().get_loss_fraction(conditions)
+        divergent.DivergentLoss().get_loss_fraction(conditions)
 
 
 def test_divergent_loss_warns_below_typical_range(timestep_conditions):
@@ -286,17 +287,17 @@ def test_divergent_loss_warns_below_typical_range(timestep_conditions):
     )
     conditions = dataclasses.replace(timestep_conditions, nozzle=narrow_nozzle)
     with pytest.warns(UserWarning, match="typical"):
-        nozzle_losses.components.DivergentLoss().get_loss_fraction(conditions)
+        divergent.DivergentLoss().get_loss_fraction(conditions)
 
 
 @pytest.mark.parametrize(
     "component_class",
     [
-        nozzle_losses.components.ConstantFractionLoss,
-        nozzle_losses.components.DivergentLoss,
-        nozzle_losses.components.KineticsLoss,
-        nozzle_losses.components.BoundaryLayerLoss,
-        nozzle_losses.components.TwoPhaseFlowLoss,
+        constant.ConstantFractionLoss,
+        divergent.DivergentLoss,
+        spp1975.KineticsLoss,
+        spp1975.BoundaryLayerLoss,
+        spp1975.TwoPhaseFlowLoss,
     ],
 )
 def test_loss_fraction_is_static_on_every_component(component_class):
@@ -307,4 +308,4 @@ def test_loss_fraction_is_static_on_every_component(component_class):
 
 def test_constant_fraction_loss_static_call():
     # The constant shares the physics components' pure static-call contract.
-    assert nozzle_losses.components.ConstantFractionLoss.loss_fraction(0.07) == 0.07
+    assert constant.ConstantFractionLoss.loss_fraction(0.07) == 0.07
