@@ -8,12 +8,6 @@ SOLID = propellants.MixtureType.SOLID
 BILIQUID = propellants.MixtureType.BILIQUID
 
 
-def test_apply_multiplicative_correction_factor():
-    assert nozzle_losses.NozzleLossModel._apply_multiplicative_correction_factor(
-        1.524507, 0.8
-    ) == pytest.approx(1.219605)
-
-
 def test_accumulate_loss_factors_targets_each_factor(timestep_conditions):
     # DivergentLoss is momentum-only and the constant is on both, so the two factors
     # diverge: the constant hits both, the divergent loss only the momentum factor.

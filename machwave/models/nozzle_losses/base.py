@@ -120,13 +120,6 @@ class NozzleLossModel:
 
         return loss_fractions, momentum_factor, pressure_factor
 
-    @staticmethod
-    def _apply_multiplicative_correction_factor(
-        term: float, correction_factor: float
-    ) -> float:
-        """Derate a thrust-coefficient term by a multiplicative correction factor."""
-        return term * correction_factor
-
     def evaluate(
         self,
         momentum_term: float,
@@ -158,12 +151,8 @@ class NozzleLossModel:
                 f"{pressure_factor}."
             )
 
-        corrected_momentum_term = self._apply_multiplicative_correction_factor(
-            momentum_term, momentum_factor
-        )
-        corrected_pressure_term = self._apply_multiplicative_correction_factor(
-            pressure_term, pressure_factor
-        )
+        corrected_momentum_term = momentum_term * momentum_factor
+        corrected_pressure_term = pressure_term * pressure_factor
         ideal_thrust_coefficient = momentum_term + pressure_term
         if ideal_thrust_coefficient > _MINIMUM_IDEAL_THRUST_COEFFICIENT:
             nozzle_efficiency = (
