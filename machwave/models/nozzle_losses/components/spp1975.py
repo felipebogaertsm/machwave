@@ -31,7 +31,8 @@ class KineticsLoss(components_base.LossComponent):
     gas-phase chemical reactions to occur. Both specific impulses must be evaluated at
     the same expansion ratio.
 
-    A pressure correction dampens the kinetics loss above 1.379 MPa (200 psi).
+    A pressure correction dampens the kinetics loss above
+    `KINETICS_LOSS_PRESSURE_THRESHOLD_PSI`.
     """
 
     name = "kinetics_loss"
