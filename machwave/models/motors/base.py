@@ -43,10 +43,12 @@ class Motor(Generic[P, T], ABC):
                 "combustion_efficiency must be in the range (0, 1], got "
                 f"{combustion_efficiency}"
             )
+
         if nozzle_loss_model is None:
             raise ValueError(
                 "nozzle_loss_model must be provided; motor subclasses supply a default."
             )
+
         if nozzle_loss_model.mixture_type != propellant.mixture_type:
             raise ValueError(
                 "nozzle_loss_model mixture type "
