@@ -1,6 +1,6 @@
 """Composable nozzle thrust-coefficient loss models."""
 
-from machwave.models.nozzle_losses import components, presets
+from machwave.models.nozzle_losses import presets
 from machwave.models.nozzle_losses.base import (
     NozzleLossEvaluationResult,
     NozzleLossModel,
@@ -8,7 +8,6 @@ from machwave.models.nozzle_losses.base import (
 )
 
 __all__ = [
-    "components",
     "NozzleLossEvaluationResult",
     "NozzleLossModel",
     "ThrustCoefficientTermTarget",
