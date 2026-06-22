@@ -13,8 +13,6 @@ def nozzle() -> thrust_chamber.Nozzle:
         divergent_angle=15.0,
         convergent_angle=30.0,
         expansion_ratio=8.0,
-        c_1=0.00365,
-        c_2=0.000937,
     )
 
 
