@@ -58,7 +58,6 @@ for P_ch, d_t, x_c, eps, l_star in product(
         characteristic_length_inch=l_star,
     )
     throat_diameter_m = conversions.convert_inch_to_meter(d_t)
-    # Free chamber volume that yields the swept characteristic length L*.
     free_chamber_volume = conversions.convert_inch_to_meter(
         l_star
     ) * geometric.get_circle_area(throat_diameter_m)
