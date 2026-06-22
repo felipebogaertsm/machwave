@@ -100,6 +100,41 @@ def test_momentum_only_target_spares_pressure_term(timestep_conditions):
     )
 
 
+def test_pressure_only_target_spares_momentum_term(timestep_conditions):
+    class PressureOnlyLoss(components_base.LossComponent):
+        name = "pressure_only"
+        label = "pressure only"
+        applicable_mixture_types = frozenset({SOLID})
+        target = nozzle_losses.ThrustCoefficientTermTarget.PRESSURE
+
+        @staticmethod
+        def compute_loss_fraction() -> float:
+            return 0.1
+
+    model = nozzle_losses.NozzleLossModel([PressureOnlyLoss()], mixture_type=SOLID)
+    momentum, pressure = 1.0, 1.0
+    result = model.evaluate(momentum, pressure, timestep_conditions)
+
+    assert result.momentum_term == pytest.approx(momentum)  # untouched
+    assert result.pressure_term == pytest.approx(pressure * 0.9)
+    assert result.nozzle_efficiency == pytest.approx(
+        (result.momentum_term + result.pressure_term) / (momentum + pressure)
+    )
+
+
+@pytest.mark.parametrize(
+    "target, affects_momentum, affects_pressure",
+    [
+        (nozzle_losses.ThrustCoefficientTermTarget.MOMENTUM, True, False),
+        (nozzle_losses.ThrustCoefficientTermTarget.PRESSURE, False, True),
+        (nozzle_losses.ThrustCoefficientTermTarget.BOTH, True, True),
+    ],
+)
+def test_target_affects_each_term(target, affects_momentum, affects_pressure):
+    assert target.affects_momentum is affects_momentum
+    assert target.affects_pressure is affects_pressure
+
+
 def test_negative_pressure_term_uses_realized_ratio(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
