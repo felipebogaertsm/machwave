@@ -183,18 +183,14 @@ class TimestepConditions:
     """
     Engine conditions at one simulation timestep, in SI units.
 
-    Holds the scalar operating quantities every engine type computes for the
-    step, minus the performance outputs derived from them (thrust, thrust
-    coefficient, nozzle efficiency). A nozzle loss component reads whatever it
-    needs from here, applying its own unit conversions. Each engine type
-    provides its own concrete subclass with the extra quantities it tracks.
+    Holds the scalar operating quantities every engine/motor type computes for the step,
+    except the performance-related ones (thrust, thrust coefficient, nozzle efficiency).
     """
 
     time: float
     chamber_pressure: float
     external_pressure: float
     exit_pressure: float
-    # Post-separation value; distinct from nozzle.expansion_ratio (geometric).
     effective_expansion_ratio: float
     free_chamber_volume: float
     propellant_mass: float
