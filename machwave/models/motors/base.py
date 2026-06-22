@@ -3,7 +3,6 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
@@ -90,22 +89,3 @@ class Motor(Generic[P, T], ABC):
     def initial_propellant_mass(self) -> float:
         """Return the initial propellant mass [kg]."""
         pass
-
-    def get_thrust(self, cf: float, chamber_pressure: float) -> float:
-        """
-        Return the instantaneous thrust [N].
-
-        Uses the nozzle throat area from the thrust chamber.
-
-        Args:
-            cf: Instantaneous thrust coefficient (dimensionless).
-            chamber_pressure: Instantaneous chamber pressure [Pa].
-
-        Returns:
-            Instantaneous thrust [N].
-        """
-        return nozzle_core.get_thrust_from_thrust_coefficient(
-            cf,
-            chamber_pressure,
-            self.thrust_chamber.nozzle.get_throat_area(),
-        )
