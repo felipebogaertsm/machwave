@@ -14,6 +14,19 @@ def convert_pa_to_psi(pressure_pa: float) -> float:
     return pressure_pa / scipy.constants.psi
 
 
+def convert_psi_to_pa(pressure_psi: float) -> float:
+    """
+    Converts pressure in psi to Pascal.
+
+    Args:
+        pressure_psi: Pressure [psi].
+
+    Returns:
+        Pressure [Pa].
+    """
+    return pressure_psi * scipy.constants.psi
+
+
 def convert_pa_to_mpa(pressure_pa: float) -> float:
     """
     Converts pressure in Pascal to MPa.
@@ -104,6 +117,19 @@ def convert_meter_to_inch(measure: float) -> float:
         Distance in inches.
     """
     return measure / 0.0254
+
+
+def convert_inch_to_meter(measure: float) -> float:
+    """
+    Converts distance in inches to meters.
+
+    Args:
+        measure: Distance [in].
+
+    Returns:
+        Distance in meters.
+    """
+    return measure * 0.0254
 
 
 def convert_meter_to_micrometer(measure: float) -> float:

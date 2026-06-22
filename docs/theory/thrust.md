@@ -1,8 +1,9 @@
 # 1. Thrust and Performance
 
 Machwave calculates the **thrust** of a rocket motor/engine using the **thrust coefficient formulation**, which is derived from the idealized flow through a rocket nozzle.
-The ideal thrust coefficient is calculated and multiplied by the **nozzle efficiency** to obtain the real thrust coefficient.
-The nozzle efficiency accounts for the deviations from the idealized assumptions, such as boundary layer losses, chemical kinetic losses, and more.
+The ideal thrust coefficient has two terms, a momentum term which dominates and a pressure term.
+Each term is calculated and multiplied by the **nozzle efficiency** to obtain the real thrust coefficient.
+The nozzle efficiency can be applied independently to each term, and accounts for the deviations from the idealized assumptions, such as boundary layer losses, chemical kinetic losses, and more.
 
 ## 1.1 Thrust Coefficient
 
@@ -26,7 +27,7 @@ Implemented in [`get_thrust_from_thrust_coefficient`][machwave.core.compressible
 The **ideal thrust coefficient** is given by:
 
 $$
-C_{f,\text{ideal}} = \sqrt{\frac{2k_e^2}{k_e-1}\left(\frac{2}{k_e+1}\right)^{(k_e+1)/(k_e-1)}\!\left[1-\left(\frac{P_e}{P_0}\right)^{(k_e-1)/k_e}\right]} + \varepsilon\,\frac{P_e - P_\text{ext}}{P_0}
+C_{f,\text{ideal}} = \underbrace{\sqrt{\frac{2k_e^2}{k_e-1}\left(\frac{2}{k_e+1}\right)^{(k_e+1)/(k_e-1)}\!\left[1-\left(\frac{P_e}{P_0}\right)^{(k_e-1)/k_e}\right]}}_{\text{momentum term}} + \underbrace{\varepsilon\,\frac{P_e - P_\text{ext}}{P_0}}_{\text{pressure term}}
 $$
 
 (Sutton & Biblarz, Eq. 3-30)
@@ -38,7 +39,7 @@ where:
 - $P_\text{ext}$ is the external (ambient) pressure [Pa]
 - $\varepsilon$ is the expansion ratio (dimensionless)
 
-The momentum term and the pressure term are returned separately by [`get_ideal_thrust_coefficient_components`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient_components].
+The momentum term and the pressure term are returned separately by [`get_ideal_thrust_coefficient_terms`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient_terms].
 This way, nozzle losses can act on either term separately.
 
 ## 1.3 Flow Separation
@@ -78,12 +79,10 @@ $$
 $$
 
 where each $\eta_i$ is a loss fraction accounting for one or more of the idealized assumptions.
-Which and how many losses are included depends on the motor/engine category (see [nozzle losses](nozzle_losses.md)).
+Which and how many losses are included depends on the motor/engine category.
 
-Implemented in
-[`apply_thrust_coefficient_correction`][machwave.core.compressible_flow.nozzle.apply_thrust_coefficient_correction],
-with the efficiency from
-[`get_overall_nozzle_efficiency`][machwave.core.compressible_flow.losses.get_overall_nozzle_efficiency].
+Each loss is composed by the `Motor`'s nozzle loss model and may derate the momentum term, the pressure term, or both of the thrust coefficient.
+The equation above is the case where every loss derates both terms.
 
 ## 1.5 Total Impulse and Specific Impulse
 

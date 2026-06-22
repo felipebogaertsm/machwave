@@ -7,12 +7,17 @@ they can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import io
 from typing import Callable
 
 import numpy as np
 import pytest
 
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
+import machwave.models.nozzle_losses.components.constant as constant
+import machwave.models.nozzle_losses.components.spp1975 as spp1975
+import machwave.models.propellants as propellants
 import machwave.simulation as machwave_simulation
 import machwave.simulation.solid as solid_simulation
 from tests.test_simulations import motor_builders
@@ -108,6 +113,37 @@ def test_recorded_per_timestep_arrays_are_aligned(
     assert_recorded_arrays_aligned(simulation_result)
 
 
+def test_exit_pressure_is_finite_and_positive(
+    simulation_result: solid_simulation.SolidSimulationResult,
+) -> None:
+    assert np.all(np.isfinite(simulation_result.exit_pressure))
+    assert np.all(simulation_result.exit_pressure > 0.0)
+
+
+def test_thrust_equals_thrust_coefficient_times_chamber_pressure_times_throat_area():
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+    throat_area = motor.thrust_chamber.nozzle.get_throat_area()
+    np.testing.assert_allclose(
+        result.thrust,
+        result.thrust_coefficient * result.chamber_pressure * throat_area,
+        rtol=1e-9,
+    )
+
+
+def test_loss_fraction_series_match_model_components() -> None:
+    """The result exposes one named, in-range loss series per model component."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+
+    component_names = set(motor.nozzle_loss_model.component_names)
+    assert set(result.loss_fractions) == component_names
+    assert result.loss_labels == motor.nozzle_loss_model.component_labels
+    for series in result.loss_fractions.values():
+        assert np.all(np.isfinite(series))
+        assert np.all((series >= 0.0) & (series <= 1.0))
+
+
 def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
     """The solid read site sources combustion efficiency from the motor.
 
@@ -123,12 +159,52 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
             motor=motor,
             igniter_pressure=params.igniter_pressure,
             external_pressure=params.external_pressure,
-            other_losses=params.other_losses,
         )
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
         return state.chamber_pressure[-1]
 
     assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)
+
+
+def test_report_includes_nozzle_losses() -> None:
+    """The printed report includes the nozzle efficiency and every loss label."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+
+    buffer = io.StringIO()
+    result.report(file=buffer)
+    output = buffer.getvalue()
+
+    assert "Average nozzle efficiency" in output
+    for label in motor.nozzle_loss_model.component_labels.values():
+        assert label in output
+
+
+def test_all_both_targets_match_legacy_scalar_correction() -> None:
+    """With every loss on both thrust coefficient terms, the per-term model
+    reduces to the legacy ideal C_F times the nozzle efficiency.
+
+    This guards the boundary-layer and two-phase numerics (which read the
+    geometric expansion ratio) and the composition math against the previous
+    single-scalar correction.
+    """
+    motor, params = motor_builders.build_nero_motor()
+    motor.nozzle_loss_model = nozzle_losses.NozzleLossModel(
+        [
+            spp1975.KineticsLoss(),
+            spp1975.BoundaryLayerLoss(),
+            spp1975.TwoPhaseFlowLoss(),
+            constant.ConstantFractionLoss(0.12, name="other_losses"),
+        ],
+        mixture_type=propellants.MixtureType.SOLID,
+    )
+    result = run_simulation(motor, params)
+
+    np.testing.assert_allclose(
+        result.thrust_coefficient,
+        result.ideal_thrust_coefficient * result.nozzle_efficiency,
+        rtol=1e-12,
+    )
 
 
 def test_moment_of_inertia_is_guarded_past_burnout() -> None:
@@ -144,7 +220,6 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
         motor=motor,
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
-        other_losses=params.other_losses,
     )
     # Fully consumed: volume and mass are zero, and a direct moment-of-inertia
     # query at this web would raise GrainGeometryError.

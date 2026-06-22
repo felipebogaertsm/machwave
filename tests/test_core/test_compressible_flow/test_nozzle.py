@@ -81,14 +81,12 @@ def test_get_separated_exit_conditions_unchoked_limit():
         pytest.param(2e5, -0.09142857142857143, id="over_expanded"),
     ],
 )
-def test_get_ideal_thrust_coefficient_components(
-    external_pressure, expected_pressure_term
-):
+def test_get_ideal_thrust_coefficient_terms(external_pressure, expected_pressure_term):
     chamber_pressure = 7e6
     exit_pressure = 1.2e5
     expansion_ratio = 8.0
     k_exhaust = 1.4
-    momentum_term, pressure_term = core_nozzle.get_ideal_thrust_coefficient_components(
+    momentum_term, pressure_term = core_nozzle.get_ideal_thrust_coefficient_terms(
         chamber_pressure,
         exit_pressure,
         external_pressure,
@@ -103,16 +101,6 @@ def test_get_ideal_thrust_coefficient_components(
     assert pressure_term == pytest.approx(
         expansion_ratio * (exit_pressure - external_pressure) / chamber_pressure
     )
-
-
-def test_apply_thrust_coefficient_correction():
-    ideal_thrust_coefficient = 1.524507
-    nozzle_correction_factor = 0.8
-    thrust_coefficient = core_nozzle.apply_thrust_coefficient_correction(
-        ideal_thrust_coefficient, nozzle_correction_factor
-    )
-
-    assert thrust_coefficient == pytest.approx(1.219605)
 
 
 def test_get_thrust_from_thrust_coefficient():

@@ -7,7 +7,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-import machwave.core.compressible_flow.losses as losses
+import machwave.models.nozzle_losses.components.divergent as divergent
 
 DIVERGENT_ANGLES = (
     0.0,
@@ -25,7 +25,9 @@ DIVERGENT_ANGLES = (
 records: list[dict[str, float]] = []
 
 for angle in DIVERGENT_ANGLES:
-    divergent_loss = losses.get_nozzle_divergent_loss_fraction(divergent_angle=angle)
+    divergent_loss = divergent.DivergentLoss.compute_loss_fraction(
+        divergent_angle=angle
+    )
 
     records.append(
         {

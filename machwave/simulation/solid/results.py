@@ -27,11 +27,6 @@ class SolidSimulationResult(
     propellant_volume_per_segment: simulation_results.SimulationResultArray
     propellant_mass_per_segment: simulation_results.SimulationResultArray
     burn_rate: simulation_results.SimulationResultArray
-    divergent_loss: simulation_results.SimulationResultArray
-    kinetics_loss: simulation_results.SimulationResultArray
-    boundary_layer_loss: simulation_results.SimulationResultArray
-    two_phase_loss: simulation_results.SimulationResultArray
-    nozzle_efficiency: simulation_results.SimulationResultArray
     propellant_cog: simulation_results.SimulationResultArray
     propellant_moi: simulation_results.SimulationResultArray
     # klemmung is filtered to burn_area > 0, so its length is < len(time).
@@ -77,11 +72,6 @@ class SolidSimulationResult(
             ),
             "propellant_mass_per_segment": np.stack(state.propellant_mass_per_segment),
             "burn_rate": burn_rate,
-            "divergent_loss": np.asarray(state.divergent_loss),
-            "kinetics_loss": np.asarray(state.kinetics_loss),
-            "boundary_layer_loss": np.asarray(state.boundary_layer_loss),
-            "two_phase_loss": np.asarray(state.two_phase_loss),
-            "nozzle_efficiency": np.asarray(state.nozzle_efficiency),
             "propellant_cog": np.stack(
                 [np.asarray(cog) for cog in state.propellant_cog]
             ),
@@ -201,24 +191,4 @@ class SolidSimulationResult(
             file=file,
         )
 
-        print("\nNOZZLE DESIGN", file=file)
-        print(
-            f" Average nozzle efficiency: {np.mean(self.nozzle_efficiency):.3%}",
-            file=file,
-        )
-        print(
-            f" Divergent nozzle loss fraction: {np.mean(self.divergent_loss):.3%}",
-            file=file,
-        )
-        print(
-            f" Average kinetics loss fraction: {np.mean(self.kinetics_loss):.3%}",
-            file=file,
-        )
-        print(
-            f" Average boundary layer loss fraction: {np.mean(self.boundary_layer_loss):.3%}",
-            file=file,
-        )
-        print(
-            f" Average two-phase flow loss fraction: {np.mean(self.two_phase_loss):.3%}",
-            file=file,
-        )
+        self._report_nozzle_losses(file)
