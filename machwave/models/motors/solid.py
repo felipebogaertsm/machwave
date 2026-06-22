@@ -32,8 +32,7 @@ class SolidMotor(
             thrust_chamber: Thrust chamber model.
             combustion_efficiency: Ratio of the actual flame temperature to the ideal
                 adiabatic flame temperature (0, 1].
-            nozzle_loss_model: Nozzle loss model. Defaults to the Solid
-                Performance Program 1975 solid set.
+            nozzle_loss_model: Nozzle loss model.
         """
         super().__init__(
             propellant,

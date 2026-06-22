@@ -43,8 +43,7 @@ class BiliquidEngine(
                 default estimate.
             combustion_efficiency: Ratio of the actual flame temperature to the ideal
                 adiabatic flame temperature (0, 1].
-            nozzle_loss_model: Nozzle loss model. Defaults to a flat efficiency
-                plus the geometric nozzle divergence loss.
+            nozzle_loss_model: Nozzle loss model.
         """
         super().__init__(
             propellant,
