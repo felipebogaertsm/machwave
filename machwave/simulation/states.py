@@ -67,7 +67,7 @@ class MotorState(ABC):
         external_pressure: float,
     ) -> tuple[float, float, float, float]:
         """
-        Resolve the separated exit conditions and ideal thrust-coefficient terms.
+        Resolve the separated exit conditions and ideal thrust coefficient terms.
 
         Appends the effective exit pressure and the ideal thrust coefficient for the
         timestep.
@@ -118,7 +118,7 @@ class MotorState(ABC):
         chamber_pressure: float,
     ) -> None:
         """
-        Derate the ideal thrust-coefficient terms and record the loss outputs.
+        Derate the ideal thrust coefficient terms and record the loss outputs.
 
         Appends the realized nozzle efficiency, each component loss fraction, the
         corrected thrust coefficient, and the thrust for the timestep.
