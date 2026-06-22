@@ -11,6 +11,8 @@ References:
 
 from __future__ import annotations
 
+import typing
+
 import numpy as np
 
 import machwave.core.conversions as conversions
@@ -18,6 +20,9 @@ import machwave.core.geometric as geometric
 import machwave.models.nozzle_losses.base as losses_base
 import machwave.models.nozzle_losses.components.base as components_base
 import machwave.models.propellants as propellants
+
+if typing.TYPE_CHECKING:
+    import machwave.simulation.states as simulation_states
 
 KINETICS_LOSS_PRESSURE_THRESHOLD_PSI = 200
 
@@ -97,10 +102,30 @@ class BoundaryLayerLoss(components_base.LossComponent):
         "throat_diameter": "nozzle.throat_diameter",
         "expansion_ratio": "nozzle.expansion_ratio",
         "time": "time",
-        "c_1": "nozzle.c_1",
-        "c_2": "nozzle.c_2",
     }
     typical_range = (0.001, 0.03)
+
+    def __init__(self, c_1: float = 0.00506, c_2: float = 0.0) -> None:
+        """
+        Initialize the boundary layer loss.
+
+        Args:
+            c_1: First boundary layer loss coefficient. Defaults to the
+                thick-walled steel-nozzle value.
+            c_2: Second boundary layer loss coefficient. Defaults to the
+                thick-walled steel-nozzle value.
+        """
+        self.c_1 = c_1
+        self.c_2 = c_2
+
+    def _parse_compute_loss_fraction_arguments(
+        self, timestep_conditions: simulation_states.TimestepConditions
+    ) -> dict[str, typing.Any]:
+        """Add the coefficients to the arguments."""
+        arguments = super()._parse_compute_loss_fraction_arguments(timestep_conditions)
+        arguments["c_1"] = self.c_1
+        arguments["c_2"] = self.c_2
+        return arguments
 
     @staticmethod
     def compute_loss_fraction(

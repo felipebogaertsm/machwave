@@ -39,7 +39,7 @@ def test_kinetics_loss_resolves_timestep_conditions(timestep_conditions):
 
 
 def test_boundary_layer_loss_resolves_timestep_conditions(timestep_conditions):
-    component = spp1975.BoundaryLayerLoss()
+    component = spp1975.BoundaryLayerLoss(c_1=0.00365, c_2=0.000937)
     assert component.get_loss_fraction(
         timestep_conditions
     ) == spp1975.BoundaryLayerLoss.compute_loss_fraction(
@@ -47,9 +47,15 @@ def test_boundary_layer_loss_resolves_timestep_conditions(timestep_conditions):
         throat_diameter=timestep_conditions.nozzle.throat_diameter,
         expansion_ratio=timestep_conditions.nozzle.expansion_ratio,
         time=timestep_conditions.time,
-        c_1=timestep_conditions.nozzle.c_1,
-        c_2=timestep_conditions.nozzle.c_2,
+        c_1=0.00365,
+        c_2=0.000937,
     )
+
+
+def test_boundary_layer_loss_defaults_to_thick_walled_steel_coefficients():
+    component = spp1975.BoundaryLayerLoss()
+    assert component.c_1 == pytest.approx(0.00506, rel=1e-3)
+    assert component.c_2 == pytest.approx(0.0, abs=1e-9)
 
 
 def test_two_phase_flow_loss_resolves_timestep_conditions(timestep_conditions):
@@ -262,8 +268,6 @@ def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
         divergent_angle=30.0,  # ~0.067 fraction, above the 0.05 upper bound
         convergent_angle=base.convergent_angle,
         expansion_ratio=base.expansion_ratio,
-        c_1=base.c_1,
-        c_2=base.c_2,
         discharge_coefficient=base.discharge_coefficient,
         separation_pressure_ratio=base.separation_pressure_ratio,
     )
@@ -280,8 +284,6 @@ def test_divergent_loss_warns_below_typical_range(timestep_conditions):
         divergent_angle=5.0,  # ~0.0019 fraction, below the 0.0075 lower bound
         convergent_angle=base.convergent_angle,
         expansion_ratio=base.expansion_ratio,
-        c_1=base.c_1,
-        c_2=base.c_2,
         discharge_coefficient=base.discharge_coefficient,
         separation_pressure_ratio=base.separation_pressure_ratio,
     )
