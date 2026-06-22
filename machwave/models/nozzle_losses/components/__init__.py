@@ -1,1 +1,1 @@
-"""Nozzle thrust-coefficient loss components."""
+"""Nozzle thrust coefficient loss components."""

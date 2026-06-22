@@ -29,7 +29,7 @@ class Motor(Generic[P, T], ABC):
             thrust_chamber: Thrust chamber of the motor.
             combustion_efficiency: Ratio of the actual flame temperature to the ideal
                 adiabatic flame temperature (0, 1].
-            nozzle_loss_model: Nozzle thrust-coefficient loss model. Motor
+            nozzle_loss_model: Nozzle thrust coefficient loss model. Motor
                 subclasses supply an engine-appropriate default.
 
         Raises:

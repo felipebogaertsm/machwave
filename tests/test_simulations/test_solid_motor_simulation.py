@@ -181,7 +181,7 @@ def test_report_includes_nozzle_losses() -> None:
 
 
 def test_all_both_targets_match_legacy_scalar_correction() -> None:
-    """With every loss on both thrust-coefficient terms, the per-term model
+    """With every loss on both thrust coefficient terms, the per-term model
     reduces to the legacy ideal C_F times the nozzle efficiency.
 
     This guards the boundary-layer and two-phase numerics (which read the
