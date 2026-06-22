@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
 
 
 class ConstantFractionLoss(components_base.LossComponent):
-    """A fixed loss fraction, independent of operating conditions."""
+    """A fixed loss fraction."""
 
     applicable_mixture_types = frozenset(
         {propellants.MixtureType.SOLID, propellants.MixtureType.BILIQUID}
@@ -32,6 +32,7 @@ class ConstantFractionLoss(components_base.LossComponent):
         """
         if not 0.0 <= fraction <= 1.0:
             raise ValueError(f"loss fraction must be in [0, 1], got {fraction}.")
+
         self.name = name
         self.label = label if label is not None else name.replace("_", " ")
         self.fraction = fraction
