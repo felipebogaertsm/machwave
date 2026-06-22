@@ -17,25 +17,22 @@ class LossComponent(abc.ABC):
     """
     A single nozzle thrust coefficient loss.
 
-    Every subclass must define a `compute_loss_fraction` method that returns the
-    fraction from scalar inputs (applying any unit conversions itself), and a
-    `timestep_parameter_map` binding each of its parameters to a dotted attribute
-    path on the timestep conditions. The inherited `get_loss_fraction` resolves the
-    map, calls `compute_loss_fraction`, validates the result lies in [0, 1], and
-    warns when it falls outside `typical_range`. A condition-independent loss leaves
-    `timestep_parameter_map` empty and may override
-    `_parse_compute_loss_fraction_arguments` to supply its own parameters.
+    Every subclass must define:
+    1. a `compute_loss_fraction` method that returns the fraction from scalar inputs
+    (applying any unit conversions itself);
+    2. a `timestep_parameter_map` binding each of the `compute_loss_fraction` parameters
+    to a dotted attribute path on the timestep conditions.
 
     Attributes:
-        name: Identifier for the loss series.
-        label: Human-readable name used in reports.
+        name: Identifier for the loss.
+        label: Display name.
         applicable_mixture_types: Mixture types the loss is valid for.
-        target: Thrust coefficient term the loss derates.
-        timestep_parameter_map: Maps each `compute_loss_fraction` parameter to a dotted
-            attribute path resolved against the timestep conditions.
-        typical_range: Optional (lower, upper) fraction the loss is expected to fall
-            within. A result outside it triggers a warning.
-        compute_loss_fraction: Computes the loss fraction; defined by every subclass.
+        target: Thrust coefficient term(s) the loss derates.
+        timestep_parameter_map: Maps each `compute_loss_fraction` argument to an
+            attribute path of timestep conditions.
+        typical_range: (lower, upper) fraction the loss is expected to fall within.
+        compute_loss_fraction: Computes the loss fraction. Must be defined by every
+            subclass.
     """
 
     name: str
@@ -48,28 +45,24 @@ class LossComponent(abc.ABC):
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         super().__init_subclass__(**kwargs)
+
         for required in ("applicable_mixture_types", "target"):
             if not hasattr(cls, required):
                 raise TypeError(f"{cls.__name__} must define `{required}`.")
+
         compute_loss_fraction = inspect.getattr_static(
             cls, "compute_loss_fraction", None
         )
         if not isinstance(compute_loss_fraction, (staticmethod, classmethod)):
             raise TypeError(
-                f"{cls.__name__} must define `compute_loss_fraction` as a "
-                "static or class method."
+                f"{cls.__name__} must define `compute_loss_fraction` as a static or "
+                "class method."
             )
 
     def _parse_compute_loss_fraction_arguments(
         self, timestep_conditions: simulation_states.TimestepConditions
     ) -> dict[str, typing.Any]:
-        """
-        Resolve the keyword arguments for `compute_loss_fraction`.
-
-        The default resolves each `timestep_parameter_map` entry, a dotted attribute
-        path, against `timestep_conditions`. A condition-independent loss can override
-        this to supply parameters from its own configuration.
-        """
+        """Resolve the keyword arguments for `compute_loss_fraction` for a given timestep."""
         return {
             argument: functools.reduce(getattr, path.split("."), timestep_conditions)
             for argument, path in self.timestep_parameter_map.items()
