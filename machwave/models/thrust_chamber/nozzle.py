@@ -6,7 +6,7 @@ DEFAULT_SEPARATION_PRESSURE_RATIO = 0.4  # typically between 0.3 and 0.4
 
 
 class Nozzle:
-    """Converging-diverging nozzle geometry and loss coefficients."""
+    """Converging-diverging nozzle geometry."""
 
     def __init__(
         self,
@@ -15,8 +15,6 @@ class Nozzle:
         divergent_angle: float,
         convergent_angle: float,
         expansion_ratio: float,
-        c_1: float = 0.00506,
-        c_2: float = 0.0,
         discharge_coefficient: float = 1.0,
         separation_pressure_ratio: float = DEFAULT_SEPARATION_PRESSURE_RATIO,
     ) -> None:
@@ -29,28 +27,15 @@ class Nozzle:
             divergent_angle: Divergent half-angle [deg].
             convergent_angle: Convergent half-angle [deg].
             expansion_ratio: Area ratio of exit to throat.
-            c_1: Boundary-layer loss coefficient (see notes below).
-            c_2: Boundary-layer loss coefficient (see notes below).
             discharge_coefficient: Throat discharge coefficient.
             separation_pressure_ratio: Pressure ratio at which the overexpanded flow
                 separates from the nozzle wall (Summerfield criterion).
-
-        Notes:
-            Boundary-layer loss correction coefficients (ref. a015140) are used
-            in the boundary-layer percentage loss calculation to account for
-            viscous and heat-transfer effects on the nozzle walls. Typical
-            values:
-
-            - Ordinary nozzle: `c_1 = 0.003650`, `c_2 = 0.000937`.
-            - Thick-walled solid steel nozzle: `c_1 = 0.005060`, `c_2 = 0.0`.
         """
         self.inlet_diameter = inlet_diameter
         self.throat_diameter = throat_diameter
         self.divergent_angle = divergent_angle
         self.convergent_angle = convergent_angle
         self.expansion_ratio = expansion_ratio
-        self.c_1 = c_1
-        self.c_2 = c_2
         self.discharge_coefficient = discharge_coefficient
         self.separation_pressure_ratio = separation_pressure_ratio
 

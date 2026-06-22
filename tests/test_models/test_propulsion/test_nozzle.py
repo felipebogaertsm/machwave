@@ -59,17 +59,6 @@ class TestNozzleGeometry:
     def test_stores_expansion_ratio(self, nozzle):
         assert nozzle.expansion_ratio == 4
 
-    def test_default_boundary_layer_coefficients(self, nozzle):
-        """Default c_1/c_2 are for a thick-walled steel nozzle."""
-        assert nozzle.c_1 == pytest.approx(0.00506, rel=1e-3)
-        assert nozzle.c_2 == pytest.approx(0.0, abs=1e-9)
-
-    def test_custom_boundary_layer_coefficients(self):
-        """Ordinary nozzle coefficients can be overridden."""
-        n = NozzleFactory.build(c_1=0.003650, c_2=0.000937)
-        assert n.c_1 == pytest.approx(0.003650, rel=1e-3)
-        assert n.c_2 == pytest.approx(0.000937, rel=1e-3)
-
     def test_default_discharge_coefficient(self, nozzle):
         """Throat discharge coefficient defaults to 1.0 (ideal nozzle)."""
         assert nozzle.discharge_coefficient == pytest.approx(1.0, rel=1e-9)

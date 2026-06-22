@@ -59,7 +59,7 @@ def test_all_both_targets_reduce_to_scalar_correction(timestep_conditions):
     model = nozzle_losses.NozzleLossModel(
         [
             spp1975.KineticsLoss(),
-            spp1975.BoundaryLayerLoss(),
+            spp1975.BoundaryLayerLoss(c_1=0.00365, c_2=0.000937),
             spp1975.TwoPhaseFlowLoss(),
         ],
         mixture_type=SOLID,
