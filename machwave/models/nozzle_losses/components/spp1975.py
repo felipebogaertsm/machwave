@@ -26,10 +26,9 @@ class KineticsLoss(components_base.LossComponent):
     """
     Chemical kinetics loss.
 
-    Kinetics loss accounts for the decrement in performance due to incomplete heat
-    transfer of latent to sensible heat caused by the finite time required for the
-    gas-phase chemical reactions to occur. Both specific impulses must be evaluated at
-    the same expansion ratio.
+    Accounts for the decrement in performance due to incomplete heat transfer of latent
+    to sensible heat caused by the finite time required for the gas phase chemical
+    reactions to occur.
 
     A pressure correction dampens the kinetics loss above
     `KINETICS_LOSS_PRESSURE_THRESHOLD_PSI`.
@@ -78,15 +77,13 @@ class BoundaryLayerLoss(components_base.LossComponent):
     """
     Boundary layer loss, calibrated for solid motors.
 
-    Boundary layer loss accounts for the decrement in performance due to viscous and
-    heat-transfer effects on the nozzle walls. It is time dependent: the exponential
-    transient is important in motors with short burn durations (under 4 s). Dependence
-    on expansion ratio represents the effect of the amount of nozzle surface area.
+    Accounts for the decrement in performance due to viscous and heat transfer effects
+    on the nozzle walls.
 
-    Time constant `c_2` comes from analysis of the transient heating of a BATES motor.
-    Time constant `c_1` was obtained from a direct measurement of the heat loss in a
-    BATES motor, among other things. Typical values:
+    It is time dependent: the exponential transient is important in motors with short
+    burn durations (under 4 s).
 
+    Typical values for `c_1` and `c_2` are:
     - Ordinary nozzle: `c_1 = 0.003650`, `c_2 = 0.000937`.
     - Solid steel nozzle with thick walls: `c_1 = 0.005060`, `c_2 = 0.0`.
     """
@@ -122,8 +119,8 @@ class BoundaryLayerLoss(components_base.LossComponent):
             throat_diameter: Throat diameter [m].
             expansion_ratio: Nozzle expansion ratio.
             time: Time [s].
-            c_1: First boundary-layer loss coefficient.
-            c_2: Second boundary-layer loss coefficient.
+            c_1: First boundary layer loss coefficient.
+            c_2: Second boundary layer loss coefficient.
 
         Returns:
             Boundary layer loss fraction in [0, 1].
@@ -142,10 +139,10 @@ class BoundaryLayerLoss(components_base.LossComponent):
 
 class TwoPhaseFlowLoss(components_base.LossComponent):
     """
-    Two-phase (condensed-phase) flow loss, for solid motors.
+    Two-phase flow loss.
 
-    Two-phase flow loss accounts for the decrement in performance due to the presence
-    of a condensed phase in the combustion products.
+    Accounts for the decrement in performance due to the presence of condensed phase
+    particles in the combustion products.
     """
 
     name = "two_phase_flow_loss"
