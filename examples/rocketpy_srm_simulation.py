@@ -12,6 +12,7 @@ import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.common.decorators as decorators
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.formulations as formulations
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation as simulation
@@ -60,6 +61,9 @@ def main():
         propellant=propellant,
         thrust_chamber=thrust_chamber,
         combustion_efficiency=0.95,
+        nozzle_loss_model=nozzle_losses.presets.spp1975_solid_loss_model(
+            other_losses=0.12
+        ),
     )
 
     # 2. Run machwave internal ballistics simulation
@@ -67,7 +71,6 @@ def main():
         d_t=0.01,
         igniter_pressure=1e6,
         external_pressure=1.013e5,
-        other_losses=0.12,
     )
 
     sim = simulation.InternalBallisticsSimulation(motor=motor, params=params)

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
+import dataclasses
 import functools
 from typing import Callable
 
 import machwave.core.compressible_flow.isentropic as isentropic
-import machwave.core.compressible_flow.losses as losses
-import machwave.core.compressible_flow.nozzle as nozzle_core
-import machwave.core.conversions as conversions
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
@@ -67,6 +65,19 @@ def get_total_injector_mass_flow(
     return sum(injector_flows(chamber_pressure))
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class BiliquidTimestepConditions(simulation_states.TimestepConditions):
+    """Timestep conditions for a biliquid engine."""
+
+    fuel_mass: float
+    oxidizer_mass: float
+    fuel_mass_flow_rate: float
+    oxidizer_mass_flow_rate: float
+    oxidizer_to_fuel_ratio: float
+    fuel_tank_pressure: float
+    oxidizer_tank_pressure: float
+
+
 class BiliquidEngineState(simulation_states.MotorState):
     """State for a biliquid rocket engine."""
 
@@ -78,7 +89,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         motor: motors.BiliquidEngine,
         igniter_pressure: float,
         external_pressure: float,
-        other_losses: float,
     ) -> None:
         """
         Initialize a biliquid engine state.
@@ -87,14 +97,11 @@ class BiliquidEngineState(simulation_states.MotorState):
             motor: Biliquid engine to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
-            other_losses: Fractional losses not covered by specific
-                mechanisms, in [0, 1].
         """
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
             external_pressure=external_pressure,
-            other_losses=other_losses,
         )
 
         self.oxidizer_mass: simulation_states.SimulationStateArray = [
@@ -109,9 +116,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
         self.fuel_tank_pressure: simulation_states.SimulationStateArray = []
         self.oxidizer_tank_pressure: simulation_states.SimulationStateArray = []
-        self.divergent_loss: simulation_states.SimulationStateArray = []
-        self.kinetics_loss: simulation_states.SimulationStateArray = []
-        self.nozzle_efficiency: simulation_states.SimulationStateArray = []
 
     def _evaluate_propellant_properties(
         self,
@@ -131,11 +135,11 @@ class BiliquidEngineState(simulation_states.MotorState):
         external_pressure: float,
     ) -> None:
         """
-        Advance simulation by time step d_t under external pressure.
+        Iterate the engine operation by calculating operational parameters.
 
         Args:
-            d_t: Time step.
-            external_pressure: External pressure.
+            d_t: Time increment [s].
+            external_pressure: External pressure [Pa].
         """
         nozzle = self.motor.thrust_chamber.nozzle
         feed_system = self.motor.feed_system
@@ -192,52 +196,42 @@ class BiliquidEngineState(simulation_states.MotorState):
             mixture_ratio=oxidizer_to_fuel_ratio,
         )
 
-        effective_expansion_ratio, exit_pressure = (
-            nozzle_core.get_separated_exit_conditions(
-                propellant_properties.k_exhaust,
-                nozzle.expansion_ratio,
-                chamber_pressure,
-                external_pressure,
-                nozzle.separation_pressure_ratio,
-            )
+        (
+            effective_expansion_ratio,
+            exit_pressure,
+            ideal_momentum_term,
+            ideal_pressure_term,
+        ) = self._ideal_thrust_coefficient_terms(
+            propellant_properties.k_exhaust, chamber_pressure, external_pressure
         )
-        self.exit_pressure.append(exit_pressure)
 
-        chamber_pressure_psi = conversions.convert_pa_to_psi(chamber_pressure)
-        divergent_loss = losses.get_nozzle_divergent_loss_fraction(
-            divergent_angle=nozzle.divergent_angle,
+        timestep_conditions = BiliquidTimestepConditions(
+            time=time,
+            chamber_pressure=chamber_pressure,
+            external_pressure=external_pressure,
+            exit_pressure=exit_pressure,
+            effective_expansion_ratio=effective_expansion_ratio,
+            free_chamber_volume=(
+                self.motor.thrust_chamber.combustion_chamber.internal_volume
+            ),
+            propellant_mass=propellant_mass,
+            propellant_mass_flow_rate=m_dot_fuel + m_dot_ox,
+            nozzle=nozzle,
+            propellant_properties=propellant_properties,
+            fuel_mass=fuel_mass,
+            oxidizer_mass=oxidizer_mass,
+            fuel_mass_flow_rate=m_dot_fuel,
+            oxidizer_mass_flow_rate=m_dot_ox,
+            oxidizer_to_fuel_ratio=oxidizer_to_fuel_ratio,
+            fuel_tank_pressure=fuel_tank_pressure,
+            oxidizer_tank_pressure=oxidizer_tank_pressure,
         )
-        kinetics_loss = losses.get_kinetics_loss_fraction(
-            i_sp_th_frozen=propellant_properties.i_sp_frozen,
-            i_sp_th_shifting=propellant_properties.i_sp_shifting,
-            chamber_pressure_psi=chamber_pressure_psi,
+        self._apply_nozzle_losses(
+            ideal_momentum_term,
+            ideal_pressure_term,
+            timestep_conditions,
+            chamber_pressure,
         )
-        nozzle_efficiency = losses.get_overall_nozzle_efficiency(
-            divergent_loss, kinetics_loss, 0.0, 0.0, other_losses=self.other_losses
-        )
-        self.divergent_loss.append(divergent_loss)
-        self.kinetics_loss.append(kinetics_loss)
-        self.nozzle_efficiency.append(nozzle_efficiency)
-
-        ideal_thrust_coefficient_components = (
-            nozzle_core.get_ideal_thrust_coefficient_components(
-                chamber_pressure,
-                exit_pressure,
-                external_pressure,
-                effective_expansion_ratio,
-                propellant_properties.k_exhaust,
-            )
-        )
-        ideal_thrust_coefficient = sum(ideal_thrust_coefficient_components)
-        self.ideal_thrust_coefficient.append(ideal_thrust_coefficient)
-        thrust_coefficient = nozzle_core.apply_thrust_coefficient_correction(
-            ideal_thrust_coefficient, nozzle_efficiency
-        )
-        self.thrust_coefficient.append(thrust_coefficient)
-        thrust = nozzle_core.get_thrust_from_thrust_coefficient(
-            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
-        )
-        self.thrust.append(thrust)
 
         if (
             not is_feeding

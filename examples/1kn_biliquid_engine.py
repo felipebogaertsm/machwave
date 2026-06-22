@@ -5,6 +5,7 @@ Sample 1kN biliquid rocket engine, similar to HalfCat's Sphinx.
 import machwave.models.feed_systems as feed_systems
 import machwave.models.feed_systems.tank as tank
 import machwave.models.motors as motors_models
+import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.services.plots.internal_ballistics as internal_ballistics_plots
@@ -91,10 +92,13 @@ def main():
         oxidizer_tank_cog=0.5,
         fuel_tank_cog=0.4,
         combustion_efficiency=0.98,
+        nozzle_loss_model=nozzle_losses.presets.constant_efficiency_loss_model(
+            efficiency=0.88, mixture_type=propellants.MixtureType.BILIQUID
+        ),
     )
 
     sim_params = simulation_module.InternalBallisticsSimulationParams(
-        d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5, other_losses=0.12
+        d_t=1e-4, igniter_pressure=1e6, external_pressure=1e5
     )
     simulation = simulation_module.InternalBallisticsSimulation(
         motor=engine, params=sim_params
