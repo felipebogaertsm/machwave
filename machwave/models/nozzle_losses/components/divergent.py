@@ -11,8 +11,8 @@ class DivergentLoss(components_base.LossComponent):
     """
     Nozzle divergence loss.
 
-    Only applicable for a conical convergent-divergent nozzle. Derates the momentum
-    term only.
+    Applicable for conical convergent-divergent nozzle.
+    Derates the momentum term only.
     """
 
     name = "divergent_loss"
