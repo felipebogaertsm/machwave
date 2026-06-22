@@ -195,10 +195,13 @@ class SolidMotorState(simulation_states.MotorState):
 
         self.grain_segment_mass_flow.append(mass_flow_per_segment(chamber_pressure))
 
-        effective_expansion_ratio, exit_pressure, momentum_term, pressure_term = (
-            self._ideal_thrust_coefficient_terms(
-                propellant_properties.k_exhaust, chamber_pressure, external_pressure
-            )
+        (
+            effective_expansion_ratio,
+            exit_pressure,
+            ideal_momentum_term,
+            ideal_pressure_term,
+        ) = self._ideal_thrust_coefficient_terms(
+            propellant_properties.k_exhaust, chamber_pressure, external_pressure
         )
 
         timestep_conditions = SolidTimestepConditions(
@@ -219,7 +222,10 @@ class SolidMotorState(simulation_states.MotorState):
             free_chamber_volume_rate=self.free_chamber_volume_rate[-1],
         )
         self._apply_nozzle_losses(
-            momentum_term, pressure_term, timestep_conditions, chamber_pressure
+            ideal_momentum_term,
+            ideal_pressure_term,
+            timestep_conditions,
+            chamber_pressure,
         )
 
         if propellant_mass <= 0 and not self.end_burn:

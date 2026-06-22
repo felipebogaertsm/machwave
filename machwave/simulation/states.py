@@ -93,20 +93,27 @@ class MotorState(ABC):
         )
         self.exit_pressure.append(exit_pressure)
 
-        momentum_term, pressure_term = nozzle_core.get_ideal_thrust_coefficient_terms(
-            chamber_pressure,
-            exit_pressure,
-            external_pressure,
-            effective_expansion_ratio,
-            k_exhaust,
+        ideal_momentum_term, ideal_pressure_term = (
+            nozzle_core.get_ideal_thrust_coefficient_terms(
+                chamber_pressure,
+                exit_pressure,
+                external_pressure,
+                effective_expansion_ratio,
+                k_exhaust,
+            )
         )
-        self.ideal_thrust_coefficient.append(momentum_term + pressure_term)
-        return effective_expansion_ratio, exit_pressure, momentum_term, pressure_term
+        self.ideal_thrust_coefficient.append(ideal_momentum_term + ideal_pressure_term)
+        return (
+            effective_expansion_ratio,
+            exit_pressure,
+            ideal_momentum_term,
+            ideal_pressure_term,
+        )
 
     def _apply_nozzle_losses(
         self,
-        momentum_term: float,
-        pressure_term: float,
+        ideal_momentum_term: float,
+        ideal_pressure_term: float,
         timestep_conditions: TimestepConditions,
         chamber_pressure: float,
     ) -> None:
@@ -117,14 +124,14 @@ class MotorState(ABC):
         corrected thrust coefficient, and the thrust for the timestep.
 
         Args:
-            momentum_term: Momentum term of the ideal thrust coefficient.
-            pressure_term: Pressure term of the ideal thrust coefficient.
+            ideal_momentum_term: Momentum term of the ideal thrust coefficient.
+            ideal_pressure_term: Pressure term of the ideal thrust coefficient.
             timestep_conditions: Engine conditions for the loss components.
             chamber_pressure: Chamber pressure [Pa].
         """
         nozzle = self.motor.thrust_chamber.nozzle
         loss_result = self.motor.nozzle_loss_model.evaluate(
-            momentum_term, pressure_term, timestep_conditions
+            ideal_momentum_term, ideal_pressure_term, timestep_conditions
         )
         self.nozzle_efficiency.append(loss_result.nozzle_efficiency)
         for name, fraction in loss_result.loss_fractions.items():

@@ -196,10 +196,13 @@ class BiliquidEngineState(simulation_states.MotorState):
             mixture_ratio=oxidizer_to_fuel_ratio,
         )
 
-        effective_expansion_ratio, exit_pressure, momentum_term, pressure_term = (
-            self._ideal_thrust_coefficient_terms(
-                propellant_properties.k_exhaust, chamber_pressure, external_pressure
-            )
+        (
+            effective_expansion_ratio,
+            exit_pressure,
+            ideal_momentum_term,
+            ideal_pressure_term,
+        ) = self._ideal_thrust_coefficient_terms(
+            propellant_properties.k_exhaust, chamber_pressure, external_pressure
         )
 
         timestep_conditions = BiliquidTimestepConditions(
@@ -224,7 +227,10 @@ class BiliquidEngineState(simulation_states.MotorState):
             oxidizer_tank_pressure=oxidizer_tank_pressure,
         )
         self._apply_nozzle_losses(
-            momentum_term, pressure_term, timestep_conditions, chamber_pressure
+            ideal_momentum_term,
+            ideal_pressure_term,
+            timestep_conditions,
+            chamber_pressure,
         )
 
         if (
