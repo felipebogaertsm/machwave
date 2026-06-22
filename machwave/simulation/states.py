@@ -126,7 +126,7 @@ class MotorState(ABC):
         Args:
             ideal_momentum_term: Momentum term of the ideal thrust coefficient.
             ideal_pressure_term: Pressure term of the ideal thrust coefficient.
-            timestep_conditions: Engine conditions for the loss components.
+            timestep_conditions: Engine conditions at a point in time.
             chamber_pressure: Chamber pressure [Pa].
         """
         nozzle = self.motor.thrust_chamber.nozzle
