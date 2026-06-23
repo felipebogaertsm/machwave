@@ -29,6 +29,13 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         density_ratio: float = 1.0,
     ) -> None:
         self.burn_area_interpolator: Callable[[float], float] | None = None
+
+        # Cache center of gravity and moment of inertia shared moments per web distance
+        self._mask_moments_web: float | None = None
+        self._mask_moments: tuple[NDArray[np.float64], NDArray[np.float64]] | None = (
+            None
+        )
+
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -278,52 +285,83 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 "segment's web thickness."
             )
 
-    def _find_solid_material_indices(
+    def _solid_mask_moments(
         self, web_distance: float
-    ) -> tuple[NDArray[np.int_], NDArray[np.int_], NDArray[np.int_]]:
-        """
-        Get indices of active material at given web distance.
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None:
+        """Centroid and second moments of the solid voxels, memoized per web."""
+        if self._mask_moments_web != web_distance:
+            self._mask_moments = self._compute_solid_mask_moments(web_distance)
+            self._mask_moments_web = web_distance
+        return self._mask_moments
 
-        Args:
-            web_distance: Web distance traveled [m].
+    def _compute_solid_mask_moments(
+        self, web_distance: float
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None:
+        """
+        Centroid and centered second moments of the solid voxels.
+
+        Reduces the cached boolean solid mask onto each coordinate plane and
+        takes the moments as dot products with the per-axis coordinate vectors,
+        so the per-voxel index arrays and conversions are never built.
+        Coordinates match the index path: x and y are centered on the grid, z is
+        measured from the port end.
 
         Returns:
-            Tuple of (z_indices, y_indices, x_indices) for active material.
-
-        Raises:
-            GrainGeometryError: If no active material is found.
+            Tuple of the centroid [z, x, y] [m] and the 3x3 symmetric matrix of
+            summed (r_i - cog_i)(r_j - cog_j) over the voxels, axes ordered
+            [x, y, z] [m^2]. None when no solid voxels remain.
         """
-        z_indices, y_indices, x_indices = self._get_solid_indices(web_distance)
+        mask = self._get_solid_mask(web_distance)
+        count = int(np.count_nonzero(mask))
+        if count == 0:
+            return None
 
-        if len(x_indices) == 0:
-            raise grain.GrainGeometryError(
-                "No active material found at the given web distance."
-            )
+        axial_count, y_count, x_count = mask.shape
+        grid_center = self.grid_resolution / 2
+        x = np.asarray(
+            self.cells_to_meters(np.arange(x_count) - grid_center), dtype=np.float64
+        )
+        y = np.asarray(
+            self.cells_to_meters(np.arange(y_count) - grid_center), dtype=np.float64
+        )
+        z = np.asarray(self.cells_to_meters(np.arange(axial_count)), dtype=np.float64)
 
-        return z_indices, y_indices, x_indices
+        # Voxel counts projected onto each coordinate plane.
+        projection_yx = mask.sum(axis=0)  # over z -> (y, x)
+        projection_zx = mask.sum(axis=1)  # over y -> (z, x)
+        projection_zy = mask.sum(axis=2)  # over x -> (z, y)
 
-    def _indices_to_grid_coordinates(
-        self,
-        z_indices: NDArray[np.int_],
-        y_indices: NDArray[np.int_],
-        x_indices: NDArray[np.int_],
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
-        """
-        Convert indices to normalized coordinates centered at origin.
+        count_x = projection_yx.sum(axis=0)
+        count_y = projection_yx.sum(axis=1)
+        count_z = projection_zx.sum(axis=1)
 
-        Args:
-            z_indices: Z-axis (axial) indices from face map.
-            y_indices: Y-axis indices from face map.
-            x_indices: X-axis indices from face map.
+        # First moments: sum of each physical coordinate over the voxels.
+        sum_x = count_x @ x
+        sum_y = count_y @ y
+        sum_z = count_z @ z
+        centroid = np.array([sum_z, sum_x, sum_y], dtype=np.float64) / count
 
-        Returns:
-            Tuple of (x_grid, y_grid, z_grid) in normalized units.
-        """
-        grid_center_index = self.grid_resolution / 2
-        x_grid = (x_indices - grid_center_index).astype(np.float64)
-        y_grid = (y_indices - grid_center_index).astype(np.float64)
-        z_grid = z_indices.astype(np.float64)
-        return x_grid, y_grid, z_grid
+        # Second moments about the origin; the cross terms need the planar
+        # projections because their two axes are coupled.
+        sum_xx = count_x @ (x * x)
+        sum_yy = count_y @ (y * y)
+        sum_zz = count_z @ (z * z)
+        sum_xy = y @ projection_yx @ x
+        sum_xz = z @ projection_zx @ x
+        sum_yz = z @ projection_zy @ y
+
+        # Shift to the centroid (parallel-axis theorem on the summed moments).
+        central = np.array(
+            [
+                [sum_xx, sum_xy, sum_xz],
+                [sum_xy, sum_yy, sum_yz],
+                [sum_xz, sum_yz, sum_zz],
+            ],
+            dtype=np.float64,
+        )
+        first = np.array([sum_x, sum_y, sum_z], dtype=np.float64)
+        central -= np.outer(first, first) / count
+        return centroid, central
 
     def get_center_of_gravity(self, web_distance: float) -> NDArray[np.float64]:
         """
@@ -340,21 +378,14 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 if no active material is found.
         """
         self._validate_web_distance(web_distance)
-        z_indices, y_indices, x_indices = self._find_solid_material_indices(
-            web_distance
-        )
-        x_grid, y_grid, z_grid = self._indices_to_grid_coordinates(
-            z_indices, y_indices, x_indices
-        )
-
-        # Convert normalized coordinates into physical meters
-        x_denormalized = np.asarray(self.cells_to_meters(x_grid), dtype=np.float64)
-        y_denormalized = np.asarray(self.cells_to_meters(y_grid), dtype=np.float64)
-        z_denormalized = np.asarray(self.cells_to_meters(z_grid), dtype=np.float64)
-
-        return mechanics.get_center_of_gravity(
-            x_denormalized, y_denormalized, z_denormalized
-        )
+        moments = self._solid_mask_moments(web_distance)
+        if moments is None:
+            raise grain.GrainGeometryError(
+                "No active material found at the given web distance."
+            )
+        centroid, _ = moments
+        # Copy so callers cannot mutate the per-web cached array.
+        return centroid.copy()
 
     def get_moment_of_inertia(
         self, ideal_density: float, web_distance: float = 0.0
@@ -374,34 +405,14 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 if no active material is found.
         """
         self._validate_web_distance(web_distance)
-        z_indices, y_indices, x_indices = self._find_solid_material_indices(
-            web_distance
-        )
-        x_grid, y_grid, z_grid = self._indices_to_grid_coordinates(
-            z_indices, y_indices, x_indices
-        )
+        moments = self._solid_mask_moments(web_distance)
+        if moments is None:
+            raise grain.GrainGeometryError(
+                "No active material found at the given web distance."
+            )
+        _, central_second_moments = moments
 
-        # Convert to meters
-        x_denormalized = np.asarray(self.cells_to_meters(x_grid), dtype=np.float64)
-        y_denormalized = np.asarray(self.cells_to_meters(y_grid), dtype=np.float64)
-        z_denormalized = np.asarray(self.cells_to_meters(z_grid), dtype=np.float64)
-
-        # CoG from the same coordinates (matches get_center_of_gravity, avoids
-        # re-extracting indices for this web distance)
-        center_of_gravity = mechanics.get_center_of_gravity(
-            x_denormalized, y_denormalized, z_denormalized
-        )
-
-        # Coordinates relative to the center of gravity
-        x_relative = x_denormalized - center_of_gravity[1]
-        y_relative = y_denormalized - center_of_gravity[2]
-        z_relative = z_denormalized - center_of_gravity[0]
-
-        # Calculate element mass
-        element_volume = self.get_voxel_volume()
-        element_mass = element_volume * ideal_density * self.density_ratio
-
-        # Use core function to compute inertia tensor
-        return mechanics.get_moment_of_inertia_tensor(
-            x_relative, y_relative, z_relative, element_mass
+        element_mass = self.get_voxel_volume() * ideal_density * self.density_ratio
+        return mechanics.get_moment_of_inertia_tensor_from_central_moments(
+            central_second_moments, element_mass
         )
