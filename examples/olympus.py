@@ -54,11 +54,9 @@ def main():
     )
 
     thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
-        dry_mass=19.0,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
         nozzle_exit_to_grain_port_distance=0.01,
-        center_of_gravity_coordinate=(0.5, 0.0, 0.0),
     )
 
     motor = motors_models.SolidMotor(

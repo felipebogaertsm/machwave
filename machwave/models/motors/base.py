@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-import numpy as np
-
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.thrust_chamber as thrust_chamber_models
@@ -59,30 +57,6 @@ class Motor(Generic[P, T], ABC):
         self.thrust_chamber = thrust_chamber
         self.combustion_efficiency = combustion_efficiency
         self.nozzle_loss_model = nozzle_loss_model
-
-    @abstractmethod
-    def get_launch_mass(self) -> float:
-        """Return the total mass of the motor before launch [kg]."""
-        pass
-
-    @abstractmethod
-    def get_dry_mass(self) -> float:
-        """Return the dry mass of the motor [kg]."""
-        pass
-
-    @abstractmethod
-    def get_center_of_gravity(self, *args, **kwargs) -> np.typing.NDArray[np.float64]:
-        """
-        Return the center of gravity of the propulsion system.
-
-        The coordinate system origin corresponds to the combustion chamber axis
-        at the nozzle exit plane, with positive x pointing toward the bulkhead.
-
-        Returns:
-            1D array of shape `(3,)` containing the `[x, y, z]` coordinates of
-            the center of gravity [m].
-        """
-        pass
 
     @property
     @abstractmethod
