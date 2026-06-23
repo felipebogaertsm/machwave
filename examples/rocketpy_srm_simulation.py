@@ -10,6 +10,7 @@ This example demonstrates how to:
 
 import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.common.decorators as decorators
+import machwave.common.mass_properties as mass_properties
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
@@ -53,7 +54,7 @@ def main():
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
         nozzle_exit_to_grain_port_distance=0.01,
-        dry_mass_properties=thrust_chamber_models.DryMassProperties(
+        dry_mass_properties=mass_properties.DryMassProperties(
             dry_mass=6.0,
             center_of_gravity_coordinate=(0.35, 0.0, 0.0),
             moment_of_inertia=(0.19, 0.19, 0.008),

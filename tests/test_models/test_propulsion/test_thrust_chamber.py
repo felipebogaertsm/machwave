@@ -1,6 +1,6 @@
 import pytest
 
-from machwave.models.thrust_chamber import DryMassProperties
+from machwave.common.mass_properties import DryMassProperties
 
 from tests.factories import (
     CombustionChamberFactory,

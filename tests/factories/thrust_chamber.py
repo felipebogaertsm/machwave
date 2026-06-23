@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import machwave.common.mass_properties as mass_properties
 import machwave.models.thrust_chamber as thrust_chamber_models
 
 _DRY_MASS_PROPERTIES_SENTINEL = object()
@@ -9,7 +10,7 @@ _DRY_MASS_PROPERTIES_SENTINEL = object()
 
 def _resolve_dry_mass_properties(
     overrides: dict[str, Any], **defaults: Any
-) -> thrust_chamber_models.DryMassProperties | None:
+) -> mass_properties.DryMassProperties | None:
     """
     Build a DryMassProperties from flat factory overrides.
 
@@ -21,7 +22,7 @@ def _resolve_dry_mass_properties(
     if explicit is not _DRY_MASS_PROPERTIES_SENTINEL:
         return explicit
 
-    return thrust_chamber_models.DryMassProperties(
+    return mass_properties.DryMassProperties(
         dry_mass=overrides.pop("dry_mass", defaults["dry_mass"]),
         center_of_gravity_coordinate=overrides.pop(
             "center_of_gravity_coordinate", defaults["center_of_gravity_coordinate"]

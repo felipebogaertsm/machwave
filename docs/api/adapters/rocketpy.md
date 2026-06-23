@@ -33,6 +33,7 @@ from machwave import (
     thrust_chamber as thrust_chamber_models,
 )
 from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
+from machwave.common.mass_properties import DryMassProperties
 from rocketpy import Environment, Flight, Rocket
 
 propellant = formulations.solid.KNSB_NAKKA
@@ -66,7 +67,7 @@ thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
 	nozzle=nozzle,
 	combustion_chamber=combustion_chamber,
 	nozzle_exit_to_grain_port_distance=0.01,
-	dry_mass_properties=thrust_chamber_models.DryMassProperties(
+	dry_mass_properties=DryMassProperties(
 		dry_mass=6.0,
 		center_of_gravity_coordinate=(0.35, 0.0, 0.0),
 		moment_of_inertia=(0.19, 0.19, 0.008),
