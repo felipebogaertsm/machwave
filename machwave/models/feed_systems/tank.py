@@ -61,8 +61,6 @@ class Tank:
         self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
-        # Single phase density at the tank temperature, memoized per pressure.
-        self._density_by_pressure: dict[float, float | None] = {}
         # Vapor pressure at the tank temperature, memoized per fluid mass.
         self._pressure_by_mass: dict[float, float] = {}
 
@@ -113,13 +111,12 @@ class Tank:
         Return the tank pressure [Pa] for a given fluid mass.
 
         1) An empty tank has zero pressure.
-        2) If the fluid mass exceeds the mass of saturated vapor that fills the
-            tank, the tank is partially liquid and the pressure is the saturation
-            pressure.
-        3) Otherwise, the tank is all sub-saturated vapor and the pressure
-            follows the real-gas equation of state at the bulk density. This
-            matches the saturation pressure at the phase boundary, so pressure
-            stays continuous as the tank crosses out of the two-phase regime.
+        2) If the fluid mass exceeds the mass of saturated vapor that fills the tank,
+            the tank is partially liquid and the pressure is the saturation pressure.
+        3) Otherwise, the tank is all sub-saturated vapor and the pressure follows the
+            real-gas equation of state at the bulk density. This matches the saturation
+            pressure at the phase boundary, so pressure stays continuous as the tank
+            crosses out of the two-phase regime.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -141,21 +138,17 @@ class Tank:
             )
         return self._pressure_by_mass[fluid_mass]
 
-    def get_density(self, fluid_mass: float, pressure: float | None = None) -> float:
+    def get_density(self, fluid_mass: float) -> float:
         """
         Return fluid density [kg/m^3] for a given fluid mass.
 
         1) An empty tank has zero density.
-        2) With a pressure override the single-phase density follows directly
-            from temperature and pressure.
-        3) Otherwise the fill state fixes the density: a partially liquid tank
-            returns the saturated liquid density (the feed system pulls liquid
-            from the bottom), and an all-vapor tank returns the bulk density.
+        2) Otherwise the fill state fixes the density: a partially liquid tank returns
+            the saturated liquid density (the feed system pulls liquid from the bottom),
+            and an all-vapor tank returns the bulk density.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
-            pressure: Tank pressure override [Pa], e.g. for a piston-pressurized
-                stacked-tank system. Defaults to the tank's own pressure.
 
         Returns:
             Fluid density [kg/m^3].
@@ -163,29 +156,6 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        if pressure is not None:
-            single_phase_density = self._single_phase_density(pressure)
-            if single_phase_density is not None:
-                return single_phase_density
-
         if fluid_mass > self.saturated_vapor_density * self.volume:
             return self.saturated_liquid_density
         return fluid_mass / self.volume
-
-    def _single_phase_density(self, pressure: float) -> float | None:
-        """
-        Return the memoized single-phase density [kg/m^3] at the tank temperature.
-
-        Returns None when the (temperature, pressure) lookup is undefined at the
-        saturation boundary, which the caller resolves from the fill state.
-        """
-        if pressure not in self._density_by_pressure:
-            try:
-                self._density_by_pressure[pressure] = (
-                    self._coolprop.get_density_at_temperature_pressure(
-                        self.temperature, pressure
-                    )
-                )
-            except ValueError:
-                self._density_by_pressure[pressure] = None
-        return self._density_by_pressure[pressure]
