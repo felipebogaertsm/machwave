@@ -53,15 +53,6 @@ def test_biliquid_engine_rejects_solid_loss_model():
 class _BareMotor(motors_base.Motor):
     """Minimal concrete motor to reach the base-class guards directly."""
 
-    def get_launch_mass(self) -> float:
-        return 0.0
-
-    def get_dry_mass(self) -> float:
-        return 0.0
-
-    def get_center_of_gravity(self, *args, **kwargs):
-        return None
-
     @property
     def initial_propellant_mass(self) -> float:
         return 0.0

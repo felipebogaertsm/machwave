@@ -14,6 +14,7 @@ from tests.factories import (
     MultiPortGrainSegmentFactory,
     RodAndTubeGrainSegmentFactory,
     SolidMotorFactory,
+    SolidMotorThrustChamberFactory,
     StarGrainSegmentFactory,
     WagonWheelGrainSegmentFactory,
 )
@@ -81,3 +82,28 @@ def test_bates_geometry_produces_expected_keys() -> None:
     assert attrs["throat_radius"] == pytest.approx(
         motor.thrust_chamber.nozzle.throat_diameter / 2
     )
+
+
+def test_missing_dry_mass_properties_raises_value_error() -> None:
+    thrust_chamber = SolidMotorThrustChamberFactory.build(dry_mass_properties=None)
+    motor = SolidMotorFactory.build(thrust_chamber=thrust_chamber)
+    adapter = _build_adapter_without_init(motor)
+
+    with pytest.raises(ValueError, match="Dry mass properties are not defined"):
+        adapter._get_rocketpy_attributes()
+
+
+def test_dry_mass_properties_are_forwarded() -> None:
+    thrust_chamber = SolidMotorThrustChamberFactory.build(
+        dry_mass=1.5,
+        center_of_gravity_coordinate=(0.2, 0.0, 0.0),
+        moment_of_inertia=(0.12, 0.12, 0.03),
+    )
+    motor = SolidMotorFactory.build(thrust_chamber=thrust_chamber)
+    adapter = _build_adapter_without_init(motor)
+
+    attrs = adapter._get_rocketpy_attributes()
+
+    assert attrs["dry_mass"] == pytest.approx(1.5)
+    assert attrs["center_of_dry_mass_position"] == pytest.approx(0.2)
+    assert attrs["dry_inertia"] == pytest.approx((0.12, 0.12, 0.03))

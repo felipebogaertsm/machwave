@@ -61,8 +61,6 @@ class BiliquidEngineFactory:
             propellant=propellant,
             thrust_chamber=thrust_chamber,
             feed_system=feed_system,
-            oxidizer_tank_cog=0.5,
-            fuel_tank_cog=0.4,
         )
         kwargs.update(overrides)
         return motors_models.BiliquidEngine(**kwargs)

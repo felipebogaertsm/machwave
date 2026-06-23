@@ -2,7 +2,35 @@ from __future__ import annotations
 
 from typing import Any
 
+import machwave.common.mass_properties as mass_properties
 import machwave.models.thrust_chamber as thrust_chamber_models
+
+_DRY_MASS_PROPERTIES_SENTINEL = object()
+
+
+def _resolve_dry_mass_properties(
+    overrides: dict[str, Any], **defaults: Any
+) -> mass_properties.DryMassProperties | None:
+    """
+    Build a DryMassProperties from flat factory overrides.
+
+    Passing `dry_mass_properties` (including None) takes precedence; otherwise
+    the flat `dry_mass`/`center_of_gravity_coordinate`/`moment_of_inertia`
+    overrides are merged onto the defaults.
+    """
+    explicit = overrides.pop("dry_mass_properties", _DRY_MASS_PROPERTIES_SENTINEL)
+    if explicit is not _DRY_MASS_PROPERTIES_SENTINEL:
+        return explicit
+
+    return mass_properties.DryMassProperties(
+        dry_mass=overrides.pop("dry_mass", defaults["dry_mass"]),
+        center_of_gravity_coordinate=overrides.pop(
+            "center_of_gravity_coordinate", defaults["center_of_gravity_coordinate"]
+        ),
+        moment_of_inertia=overrides.pop(
+            "moment_of_inertia", defaults["moment_of_inertia"]
+        ),
+    )
 
 
 class NozzleFactory:
@@ -53,12 +81,17 @@ class SolidMotorThrustChamberFactory:
             overrides.pop("combustion_chamber", None)
             or CombustionChamberFactory.build()
         )
+        dry_mass_properties = _resolve_dry_mass_properties(
+            overrides,
+            dry_mass=0.85,
+            center_of_gravity_coordinate=(0.04, 0.0, 0.0),
+            moment_of_inertia=(0.02, 0.02, 0.005),
+        )
         kwargs: dict[str, Any] = dict(
             nozzle=nozzle,
             combustion_chamber=combustion_chamber,
-            dry_mass=0.85,
             nozzle_exit_to_grain_port_distance=0.01,
-            center_of_gravity_coordinate=(0.04, 0.0, 0.0),
+            dry_mass_properties=dry_mass_properties,
         )
         kwargs.update(overrides)
         return thrust_chamber_models.SolidMotorThrustChamber(**kwargs)
@@ -77,12 +110,17 @@ class BiliquidEngineThrustChamberFactory:
             overrides.pop("combustion_chamber", None)
             or CombustionChamberFactory.build()
         )
+        dry_mass_properties = _resolve_dry_mass_properties(
+            overrides,
+            dry_mass=2.0,
+            center_of_gravity_coordinate=(0.02, 0.0, 0.0),
+            moment_of_inertia=(0.05, 0.05, 0.01),
+        )
         kwargs: dict[str, Any] = dict(
             nozzle=nozzle,
             injector=injector,
             combustion_chamber=combustion_chamber,
-            dry_mass=2.0,
-            center_of_gravity_coordinate=(0.02, 0.0, 0.0),
+            dry_mass_properties=dry_mass_properties,
         )
         kwargs.update(overrides)
         return thrust_chamber_models.BiliquidEngineThrustChamber(**kwargs)

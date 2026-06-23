@@ -266,8 +266,6 @@ def build_1kn_biliquid_engine() -> tuple[
         propellant=propellant,
         feed_system=feed_system,
         thrust_chamber=thrust_chamber,
-        oxidizer_tank_cog=0.5,
-        fuel_tank_cog=0.4,
         combustion_efficiency=0.98,
         nozzle_loss_model=nozzle_losses.presets.constant_efficiency_loss_model(
             efficiency=0.88, mixture_type=propellants.MixtureType.BILIQUID

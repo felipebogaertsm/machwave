@@ -33,6 +33,7 @@ from machwave import (
     thrust_chamber as thrust_chamber_models,
 )
 from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
+from machwave.common.mass_properties import DryMassProperties
 from rocketpy import Environment, Flight, Rocket
 
 propellant = formulations.solid.KNSB_NAKKA
@@ -61,12 +62,16 @@ combustion_chamber = thrust_chamber_models.CombustionChamber(
 	internal_length=grain.total_length + 0.01,
 )
 
+# Trajectory simulations require the dry mass properties
 thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
-	dry_mass=6.0,
 	nozzle=nozzle,
 	combustion_chamber=combustion_chamber,
 	nozzle_exit_to_grain_port_distance=0.01,
-	center_of_gravity_coordinate=(0.35, 0.0, 0.0),
+	dry_mass_properties=DryMassProperties(
+		dry_mass=6.0,
+		center_of_gravity_coordinate=(0.35, 0.0, 0.0),
+		moment_of_inertia=(0.19, 0.19, 0.008),
+	),
 )
 
 motor = motors.SolidMotor(
@@ -119,7 +124,7 @@ and its simulation result. The adapter currently provides:
 
 - thrust curve from Machwave time history
 - burn-time interval
-- dry mass and dry-mass center of gravity
+- dry mass, dry-mass center of gravity, and dry-mass moments of inertia
 - nozzle radius and throat radius
 - propellant initial mass
 - propellant center of mass over time
@@ -131,7 +136,7 @@ and its simulation result. The adapter currently provides:
 - `RocketPySolidMotorAdapter` is the currently implemented adapter.
 - RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
 - The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
-- Dry inertia is currently passed as `(0.0, 0.0, 0.0)`.
+- The thrust chamber must define `dry_mass_properties`; the adapter raises `ValueError` otherwise.
 - The coordinate system orientation is `nozzle_to_combustion_chamber`.
 
 ## API Reference
