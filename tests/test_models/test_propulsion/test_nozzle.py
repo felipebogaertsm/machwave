@@ -79,3 +79,45 @@ class TestNozzleGeometry:
         """Separation pressure ratio can be overridden."""
         n = NozzleFactory.build(separation_pressure_ratio=0.35)
         assert n.separation_pressure_ratio == pytest.approx(0.35, rel=1e-9)
+
+
+class TestNozzleValidation:
+    @pytest.mark.parametrize("inlet_diameter", [0.0, -1e-3])
+    def test_non_positive_inlet_diameter(self, inlet_diameter):
+        with pytest.raises(ValueError, match="inlet_diameter"):
+            NozzleFactory.build(inlet_diameter=inlet_diameter)
+
+    @pytest.mark.parametrize("throat_diameter", [0.0, -1e-3])
+    def test_non_positive_throat_diameter(self, throat_diameter):
+        with pytest.raises(ValueError, match="throat_diameter"):
+            NozzleFactory.build(throat_diameter=throat_diameter)
+
+    @pytest.mark.parametrize("throat_diameter", [25e-3, 30e-3])
+    def test_throat_not_smaller_than_inlet(self, throat_diameter):
+        with pytest.raises(ValueError, match="smaller than"):
+            NozzleFactory.build(inlet_diameter=25e-3, throat_diameter=throat_diameter)
+
+    @pytest.mark.parametrize("expansion_ratio", [1.0, 0.5, -1.0])
+    def test_expansion_ratio_not_above_one(self, expansion_ratio):
+        with pytest.raises(ValueError, match="expansion_ratio"):
+            NozzleFactory.build(expansion_ratio=expansion_ratio)
+
+    @pytest.mark.parametrize("discharge_coefficient", [0.0, -0.1, 1.5])
+    def test_discharge_coefficient_out_of_range(self, discharge_coefficient):
+        with pytest.raises(ValueError, match="discharge_coefficient"):
+            NozzleFactory.build(discharge_coefficient=discharge_coefficient)
+
+    @pytest.mark.parametrize("separation_pressure_ratio", [0.0, -0.1, 1.0, 1.5])
+    def test_separation_pressure_ratio_out_of_range(self, separation_pressure_ratio):
+        with pytest.raises(ValueError, match="separation_pressure_ratio"):
+            NozzleFactory.build(separation_pressure_ratio=separation_pressure_ratio)
+
+    @pytest.mark.parametrize("divergent_angle", [0, -5, 90, 120])
+    def test_divergent_angle_out_of_range(self, divergent_angle):
+        with pytest.raises(ValueError, match="divergent_angle"):
+            NozzleFactory.build(divergent_angle=divergent_angle)
+
+    @pytest.mark.parametrize("convergent_angle", [0, -5, 90, 120])
+    def test_convergent_angle_out_of_range(self, convergent_angle):
+        with pytest.raises(ValueError, match="convergent_angle"):
+            NozzleFactory.build(convergent_angle=convergent_angle)
