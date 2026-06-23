@@ -111,13 +111,12 @@ class Tank:
         Return the tank pressure [Pa] for a given fluid mass.
 
         1) An empty tank has zero pressure.
-        2) If the fluid mass exceeds the mass of saturated vapor that fills the
-            tank, the tank is partially liquid and the pressure is the saturation
-            pressure.
-        3) Otherwise, the tank is all sub-saturated vapor and the pressure
-            follows the real-gas equation of state at the bulk density. This
-            matches the saturation pressure at the phase boundary, so pressure
-            stays continuous as the tank crosses out of the two-phase regime.
+        2) If the fluid mass exceeds the mass of saturated vapor that fills the tank,
+            the tank is partially liquid and the pressure is the saturation pressure.
+        3) Otherwise, the tank is all sub-saturated vapor and the pressure follows the
+            real-gas equation of state at the bulk density. This matches the saturation
+            pressure at the phase boundary, so pressure stays continuous as the tank
+            crosses out of the two-phase regime.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -144,9 +143,9 @@ class Tank:
         Return fluid density [kg/m^3] for a given fluid mass.
 
         1) An empty tank has zero density.
-        2) Otherwise the fill state fixes the density: a partially liquid tank
-            returns the saturated liquid density (the feed system pulls liquid
-            from the bottom), and an all-vapor tank returns the bulk density.
+        2) Otherwise the fill state fixes the density: a partially liquid tank returns
+            the saturated liquid density (the feed system pulls liquid from the bottom),
+            and an all-vapor tank returns the bulk density.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
