@@ -49,6 +49,45 @@ def get_center_of_gravity(
     return np.array([z_cog, x_cog, y_cog], dtype=np.float64)
 
 
+def get_moment_of_inertia_tensor_from_central_moments(
+    central_second_moments: npt.NDArray[np.float64],
+    element_mass: float,
+) -> npt.NDArray[np.float64]:
+    """
+    Build the inertia tensor from centroid-relative second moments.
+
+    Equivalent to get_moment_of_inertia_tensor but takes the already summed second
+    moments of the elements instead of per-element coordinates, so the caller can supply
+    them without materializing one coordinate per element.
+
+    Args:
+        central_second_moments: 3x3 symmetric matrix whose entry (i, j) is the sum over
+            elements of (r_i - cog_i)(r_j - cog_j), axes ordered [x, y, z] [m^2].
+        element_mass: Mass per element [kg].
+
+    Returns:
+        3x3 symmetric inertia tensor [kg-m^2] in coordinate system [z, x, y].
+    """
+    s_xx = central_second_moments[0, 0]
+    s_yy = central_second_moments[1, 1]
+    s_zz = central_second_moments[2, 2]
+    s_xy = central_second_moments[0, 1]
+    s_xz = central_second_moments[0, 2]
+    s_yz = central_second_moments[1, 2]
+
+    Ixx = element_mass * (s_yy + s_zz)
+    Iyy = element_mass * (s_xx + s_zz)
+    Izz = element_mass * (s_xx + s_yy)
+
+    Ixy = -element_mass * s_xy
+    Ixz = -element_mass * s_xz
+    Iyz = -element_mass * s_yz
+
+    return np.array(
+        [[Izz, Ixz, Iyz], [Ixz, Ixx, Ixy], [Iyz, Ixy, Iyy]], dtype=np.float64
+    )
+
+
 def get_moment_of_inertia_tensor(
     x_coords: npt.NDArray[np.float64],
     y_coords: npt.NDArray[np.float64],
@@ -78,18 +117,16 @@ def get_moment_of_inertia_tensor(
     if not (len(x_coords) == len(y_coords) == len(z_coords)):
         raise ValueError("All coordinate arrays must have the same length")
 
-    x_sq = x_coords**2
-    y_sq = y_coords**2
-    z_sq = z_coords**2
+    s_xx = np.sum(x_coords * x_coords)
+    s_yy = np.sum(y_coords * y_coords)
+    s_zz = np.sum(z_coords * z_coords)
+    s_xy = np.sum(x_coords * y_coords)
+    s_xz = np.sum(x_coords * z_coords)
+    s_yz = np.sum(y_coords * z_coords)
 
-    Ixx = element_mass * np.sum(y_sq + z_sq)
-    Iyy = element_mass * np.sum(x_sq + z_sq)
-    Izz = element_mass * np.sum(x_sq + y_sq)
-
-    Ixy = -element_mass * np.sum(x_coords * y_coords)
-    Ixz = -element_mass * np.sum(x_coords * z_coords)
-    Iyz = -element_mass * np.sum(y_coords * z_coords)
-
-    return np.array(
-        [[Izz, Ixz, Iyz], [Ixz, Ixx, Ixy], [Iyz, Ixy, Iyy]], dtype=np.float64
+    central_second_moments = np.array(
+        [[s_xx, s_xy, s_xz], [s_xy, s_yy, s_yz], [s_xz, s_yz, s_zz]], dtype=np.float64
+    )
+    return get_moment_of_inertia_tensor_from_central_moments(
+        central_second_moments, element_mass
     )

@@ -164,3 +164,46 @@ class TestGetMomentOfInertiaTensor:
         assert result[1, 1] == pytest.approx(2.0)  # Ixx_physical in [z,x,y] tensor
         assert result[2, 2] == pytest.approx(2.0)  # Iyy_physical
         assert result[0, 0] == pytest.approx(4.0)  # Izz_physical
+
+
+class TestGetMomentOfInertiaTensorFromCentralMoments:
+    def test_matches_per_element_path(self):
+        """The moment form reproduces the per-element tensor for any cloud."""
+        rng = np.random.default_rng(0)
+        x, y, z = rng.normal(size=(3, 50))
+        # Center on the cloud so the per-element path takes relative coordinates.
+        x, y, z = x - x.mean(), y - y.mean(), z - z.mean()
+        mass = 0.3
+
+        per_element = core_mechanics.get_moment_of_inertia_tensor(x, y, z, mass)
+
+        central = np.array(
+            [
+                [np.sum(x * x), np.sum(x * y), np.sum(x * z)],
+                [np.sum(x * y), np.sum(y * y), np.sum(y * z)],
+                [np.sum(x * z), np.sum(y * z), np.sum(z * z)],
+            ]
+        )
+        from_moments = core_mechanics.get_moment_of_inertia_tensor_from_central_moments(
+            central, mass
+        )
+        np.testing.assert_allclose(from_moments, per_element)
+
+    def test_returns_symmetric_3x3(self):
+        central = np.array([[2.0, 0.5, -0.3], [0.5, 1.0, 0.2], [-0.3, 0.2, 3.0]])
+        result = core_mechanics.get_moment_of_inertia_tensor_from_central_moments(
+            central, element_mass=1.0
+        )
+        assert result.shape == (3, 3)
+        assert result.dtype == np.float64
+        np.testing.assert_allclose(result, result.T)
+
+    def test_products_of_inertia_are_negated_cross_moments(self):
+        """Off-diagonals equal -mass * cross moment, axes [z, x, y]."""
+        central = np.zeros((3, 3))
+        central[0, 1] = central[1, 0] = 4.0  # x-y cross moment
+        result = core_mechanics.get_moment_of_inertia_tensor_from_central_moments(
+            central, element_mass=0.5
+        )
+        assert result[1, 2] == pytest.approx(-2.0)  # Ixy slot in [z, x, y]
+        assert result[2, 1] == pytest.approx(-2.0)
