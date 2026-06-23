@@ -56,6 +56,34 @@ class TestBipropellantInjectorInstantiation:
             BipropellantInjectorFactory.build(mass_flow_model_fuel="foo")
 
 
+class TestBipropellantInjectorValidation:
+    @pytest.mark.parametrize("area_fuel", [0.0, -1e-6])
+    def test_non_positive_fuel_area(self, area_fuel):
+        with pytest.raises(ValueError, match="area_fuel"):
+            BipropellantInjectorFactory.build(area_fuel=area_fuel)
+
+    @pytest.mark.parametrize("area_ox", [0.0, -1e-6])
+    def test_non_positive_oxidizer_area(self, area_ox):
+        with pytest.raises(ValueError, match="area_ox"):
+            BipropellantInjectorFactory.build(area_ox=area_ox)
+
+    @pytest.mark.parametrize("discharge_coefficient_fuel", [0.0, -0.1, 1.2])
+    def test_fuel_discharge_coefficient_out_of_range(self, discharge_coefficient_fuel):
+        with pytest.raises(ValueError, match="discharge_coefficient_fuel"):
+            BipropellantInjectorFactory.build(
+                discharge_coefficient_fuel=discharge_coefficient_fuel
+            )
+
+    @pytest.mark.parametrize("discharge_coefficient_oxidizer", [0.0, -0.1, 1.2])
+    def test_oxidizer_discharge_coefficient_out_of_range(
+        self, discharge_coefficient_oxidizer
+    ):
+        with pytest.raises(ValueError, match="discharge_coefficient_oxidizer"):
+            BipropellantInjectorFactory.build(
+                discharge_coefficient_oxidizer=discharge_coefficient_oxidizer
+            )
+
+
 class TestBipropellantInjectorMassFlow:
     def test_hem_predicts_lower_oxidizer_flow_than_spi_for_saturated_n2o(self):
         """For saturated N2O, HEM under-predicts SPI."""

@@ -38,6 +38,25 @@ class ThrustChamber(abc.ABC):
             else None
         )
 
+        self._validate()
+
+    def _validate(self) -> None:
+        """
+        Validate the assembly inputs and that the components fit together.
+
+        Raises:
+            ValueError: If the dry mass is non-positive or the nozzle inlet does
+                not fit within the combustion chamber bore.
+        """
+        if self.dry_mass <= 0.0:
+            raise ValueError(f"dry_mass must be strictly positive, got {self.dry_mass}")
+        if self.nozzle.inlet_diameter > self.combustion_chamber.casing_inner_diameter:
+            raise ValueError(
+                f"nozzle inlet_diameter ({self.nozzle.inlet_diameter}) does not fit "
+                "within combustion chamber casing_inner_diameter "
+                f"({self.combustion_chamber.casing_inner_diameter})"
+            )
+
 
 class SolidMotorThrustChamber(ThrustChamber):
     """Thrust chamber assembly specialized for solid rocket motors."""
@@ -68,6 +87,12 @@ class SolidMotorThrustChamber(ThrustChamber):
             nozzle, combustion_chamber, dry_mass, center_of_gravity_coordinate
         )
         self.nozzle_exit_to_grain_port_distance = nozzle_exit_to_grain_port_distance
+
+        if nozzle_exit_to_grain_port_distance < 0.0:
+            raise ValueError(
+                "nozzle_exit_to_grain_port_distance must be non-negative, got "
+                f"{nozzle_exit_to_grain_port_distance}"
+            )
 
 
 class BiliquidEngineThrustChamber(ThrustChamber):

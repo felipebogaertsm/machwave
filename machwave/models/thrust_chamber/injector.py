@@ -61,6 +61,32 @@ class BipropellantInjector:
         self.mass_flow_model_fuel = MassFlowModel(mass_flow_model_fuel)
         self.mass_flow_model_oxidizer = MassFlowModel(mass_flow_model_oxidizer)
 
+        self._validate()
+
+    def _validate(self) -> None:
+        """
+        Validate the injector inputs.
+
+        Raises:
+            ValueError: If any field is outside its valid physical range.
+        """
+        if self.area_fuel <= 0.0:
+            raise ValueError(
+                f"area_fuel must be strictly positive, got {self.area_fuel}"
+            )
+        if self.area_ox <= 0.0:
+            raise ValueError(f"area_ox must be strictly positive, got {self.area_ox}")
+        if not 0.0 < self.discharge_coefficient_fuel <= 1.0:
+            raise ValueError(
+                "discharge_coefficient_fuel must be in (0, 1], got "
+                f"{self.discharge_coefficient_fuel}"
+            )
+        if not 0.0 < self.discharge_coefficient_oxidizer <= 1.0:
+            raise ValueError(
+                "discharge_coefficient_oxidizer must be in (0, 1], got "
+                f"{self.discharge_coefficient_oxidizer}"
+            )
+
     def get_mass_flow_fuel(
         self,
         *,

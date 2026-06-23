@@ -6,6 +6,9 @@ import machwave.simulation.results as simulation_results
 import machwave.simulation.solid.states as solid_states
 import machwave.simulation.states as simulation_states
 
+MAX_TIME_STEP = 0.01  # s
+SEA_LEVEL_PRESSURE = 101_325.0  # Pa
+
 
 @dataclass
 class InternalBallisticsSimulationParams:
@@ -13,14 +16,35 @@ class InternalBallisticsSimulationParams:
     Parameters for an internal ballistics simulation.
 
     Attributes:
-        d_t: Time step.
-        igniter_pressure: Igniter pressure.
-        external_pressure: External pressure.
+        d_t: Time step [s].
+        igniter_pressure: Igniter pressure [Pa].
+        external_pressure: External pressure [Pa].
     """
 
     d_t: float
     igniter_pressure: float
     external_pressure: float
+
+    def __post_init__(self) -> None:
+        """
+        Validate the simulation parameters.
+
+        Raises:
+            ValueError: If any field is outside its valid physical range.
+        """
+        if not 0.0 < self.d_t <= MAX_TIME_STEP:
+            raise ValueError(f"d_t must be in (0, {MAX_TIME_STEP}] s, got {self.d_t}")
+
+        if self.igniter_pressure < SEA_LEVEL_PRESSURE:
+            raise ValueError(
+                f"igniter_pressure must be at least {SEA_LEVEL_PRESSURE} Pa, got "
+                f"{self.igniter_pressure}"
+            )
+
+        if self.external_pressure < 0.0:
+            raise ValueError(
+                f"external_pressure must be non-negative, got {self.external_pressure}"
+            )
 
 
 class InternalBallisticsSimulation:

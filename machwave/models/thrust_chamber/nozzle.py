@@ -39,6 +39,51 @@ class Nozzle:
         self.discharge_coefficient = discharge_coefficient
         self.separation_pressure_ratio = separation_pressure_ratio
 
+        self._validate()
+
+    def _validate(self) -> None:
+        """
+        Validate the nozzle geometry.
+
+        Raises:
+            ValueError: If any field is outside its valid physical range.
+        """
+        if self.inlet_diameter <= 0.0:
+            raise ValueError(
+                f"inlet_diameter must be strictly positive, got {self.inlet_diameter}"
+            )
+        if self.throat_diameter <= 0.0:
+            raise ValueError(
+                f"throat_diameter must be strictly positive, got {self.throat_diameter}"
+            )
+        if self.throat_diameter >= self.inlet_diameter:
+            raise ValueError(
+                f"throat_diameter ({self.throat_diameter}) must be smaller than "
+                f"inlet_diameter ({self.inlet_diameter})"
+            )
+        if self.expansion_ratio <= 1.0:
+            raise ValueError(
+                f"expansion_ratio must be greater than 1, got {self.expansion_ratio}"
+            )
+        if not 0.0 < self.discharge_coefficient <= 1.0:
+            raise ValueError(
+                "discharge_coefficient must be in (0, 1], got "
+                f"{self.discharge_coefficient}"
+            )
+        if not 0.0 < self.separation_pressure_ratio < 1.0:
+            raise ValueError(
+                "separation_pressure_ratio must be in (0, 1), got "
+                f"{self.separation_pressure_ratio}"
+            )
+        if not 0.0 < self.divergent_angle < 90.0:
+            raise ValueError(
+                f"divergent_angle must be in (0, 90) deg, got {self.divergent_angle}"
+            )
+        if not 0.0 < self.convergent_angle < 90.0:
+            raise ValueError(
+                f"convergent_angle must be in (0, 90) deg, got {self.convergent_angle}"
+            )
+
     @property
     def outlet_diameter(self) -> float:
         """Return the nozzle exit diameter [m]."""

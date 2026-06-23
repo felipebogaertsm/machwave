@@ -27,6 +27,40 @@ class CombustionChamber:
         self.internal_length = internal_length
         self.thermal_liner_thickness = thermal_liner_thickness
 
+        self._validate()
+
+    def _validate(self) -> None:
+        """
+        Validate the combustion chamber geometry.
+
+        Raises:
+            ValueError: If any field is outside its valid physical range.
+        """
+        if self.casing_inner_diameter <= 0.0:
+            raise ValueError(
+                "casing_inner_diameter must be strictly positive, got "
+                f"{self.casing_inner_diameter}"
+            )
+        if self.casing_outer_diameter <= self.casing_inner_diameter:
+            raise ValueError(
+                f"casing_outer_diameter ({self.casing_outer_diameter}) must be larger "
+                f"than casing_inner_diameter ({self.casing_inner_diameter})"
+            )
+        if self.internal_length <= 0.0:
+            raise ValueError(
+                f"internal_length must be strictly positive, got {self.internal_length}"
+            )
+        if self.thermal_liner_thickness < 0.0:
+            raise ValueError(
+                "thermal_liner_thickness must be non-negative, got "
+                f"{self.thermal_liner_thickness}"
+            )
+        if self.thermal_liner_thickness >= 0.5 * self.casing_inner_diameter:
+            raise ValueError(
+                f"thermal_liner_thickness ({self.thermal_liner_thickness}) leaves no "
+                f"open bore for casing_inner_diameter ({self.casing_inner_diameter})"
+            )
+
     @property
     def inner_diameter(self) -> float:
         """Inner diameter of the combustion chamber [m]."""
