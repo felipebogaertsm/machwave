@@ -8,5 +8,6 @@ Thrust chamber assembly and sub-components.
 - `MassFlowModel` — Enum selecting the orifice flow model. `SPI` (single-phase incompressible) for subcooled liquid propellants; `HEM` (homogeneous-equilibrium two-phase) for self-pressurized propellants such as nitrous oxide, where flow can choke on the two-phase sound speed.
 - `SolidMotorThrustChamber` — Bundles nozzle + chamber + the distance from nozzle exit to grain port.
 - `BiliquidEngineThrustChamber` — Bundles nozzle + chamber + injector.
+- `DryMassProperties` — Optional dry mass, center of gravity, and principal moments of inertia bundle passed to a thrust chamber; consumed only by the RocketPy trajectory adapter, not by internal ballistics.
 
 ::: machwave.models.thrust_chamber

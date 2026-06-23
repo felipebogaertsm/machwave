@@ -1,5 +1,6 @@
 from machwave.models.thrust_chamber.base import (
     BiliquidEngineThrustChamber,
+    DryMassProperties,
     SolidMotorThrustChamber,
     ThrustChamber,
 )
@@ -14,6 +15,7 @@ from machwave.models.thrust_chamber.nozzle import Nozzle
 
 __all__ = [
     "BiliquidEngineThrustChamber",
+    "DryMassProperties",
     "SolidMotorThrustChamber",
     "ThrustChamber",
     "BipropellantInjector",

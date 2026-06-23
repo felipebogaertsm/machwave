@@ -48,12 +48,16 @@ def main():
         internal_length=grain.total_length + 0.01,
     )
 
+    # Dry mass properties are only needed for the RocketPy trajectory step.
     thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
-        dry_mass=6.0,
         nozzle=nozzle,
         combustion_chamber=combustion_chamber,
         nozzle_exit_to_grain_port_distance=0.01,
-        center_of_gravity_coordinate=(0.35, 0.0, 0.0),
+        dry_mass_properties=thrust_chamber_models.DryMassProperties(
+            dry_mass=6.0,
+            center_of_gravity_coordinate=(0.35, 0.0, 0.0),
+            moment_of_inertia=(0.19, 0.19, 0.008),
+        ),
     )
 
     motor = motors_models.SolidMotor(

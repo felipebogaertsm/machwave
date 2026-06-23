@@ -74,21 +74,22 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         thrust_source = np.column_stack((time, thrust))
 
-        # Axial position of the dry mass center of gravity.
+        # 6DOF simulations need the dry mass properties
+        dry_mass_properties = thrust_chamber.require_dry_mass_properties()
+
         # Both machwave and RocketPy use nozzle exit as origin, positive toward the
         # bulkhead ("nozzle_to_combustion_chamber" orientation).
-        center_of_dry_mass_position = (
-            thrust_chamber.center_of_gravity_coordinate[0]
-            if thrust_chamber.center_of_gravity_coordinate is not None
-            else 0.0
-        )
+        center_of_gravity = dry_mass_properties.center_of_gravity_coordinate
+        center_of_dry_mass_position = center_of_gravity[0]
+
+        dry_inertia = tuple(dry_mass_properties.moment_of_inertia)
 
         return {
             "thrust_source": thrust_source,
-            "dry_inertia": (0.0, 0.0, 0.0),  # TODO: Calculate dry mass inertia tensor
+            "dry_inertia": dry_inertia,
             "nozzle_radius": nozzle.outlet_diameter / 2,
             "center_of_dry_mass_position": center_of_dry_mass_position,
-            "dry_mass": self.motor.get_dry_mass(),
+            "dry_mass": dry_mass_properties.dry_mass,
             "nozzle_position": 0.0,
             "burn_time": (time[0], self.simulation_result.thrust_time),
             "reshape_thrust_curve": RESHAPE_THRUST_CURVE,
