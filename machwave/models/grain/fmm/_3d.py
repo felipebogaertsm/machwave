@@ -29,6 +29,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         density_ratio: float = 1.0,
     ) -> None:
         self.burn_area_interpolator: Callable[[float], float] | None = None
+        self.volume_interpolator: Callable[[float], float] | None = None
 
         # Cache center of gravity and moment of inertia shared moments per web distance
         self._mask_moments_web: float | None = None
@@ -268,9 +269,58 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def get_voxel_volume(self) -> float:
         return (float(self.denormalize(self.get_normalized_spacing())) * 2) ** 3
 
+    def get_volume_interpolator(self) -> Callable[[float], float]:
+        """Return a cached interpolator for volume [m^3] for a web distance."""
+        if self.volume_interpolator is None:
+            regression_map = self.get_regression_map()
+            regression_distances_sorted = np.asarray(
+                regression_map[~np.ma.getmaskarray(regression_map)], dtype=np.float64
+            ).ravel()
+            regression_distances_sorted.sort()
+            max_regression_distance = (
+                float(regression_distances_sorted[-1])
+                if regression_distances_sorted.size
+                else 0.0
+            )
+            if max_regression_distance <= 0.0:
+                self.volume_interpolator = interp1d(
+                    np.asarray([0.0], dtype=np.float64),
+                    np.asarray([0.0], dtype=np.float64),
+                    bounds_error=False,
+                    fill_value=0.0,
+                    assume_sorted=True,
+                )
+                return self.volume_interpolator
+
+            iso_level_count = int(max_regression_distance * self.grid_resolution) + 2
+            iso_levels_normalized = (
+                np.arange(iso_level_count, dtype=np.float64) / self.grid_resolution
+            )
+
+            count_at_or_below_level = np.searchsorted(
+                regression_distances_sorted, iso_levels_normalized, side="right"
+            )
+            solid_voxel_count = float(
+                regression_distances_sorted.size
+            ) - count_at_or_below_level.astype(np.float64)
+            volume_per_iso_level = solid_voxel_count * self.get_voxel_volume()
+
+            self.volume_interpolator = interp1d(
+                iso_levels_normalized,
+                volume_per_iso_level,
+                bounds_error=False,
+                fill_value=(
+                    float(volume_per_iso_level[0]),
+                    float(volume_per_iso_level[-1]),
+                ),  # type: ignore[arg-type]
+                assume_sorted=True,
+            )
+
+        return self.volume_interpolator
+
     def get_volume(self, web_distance: float) -> float:
-        solid_voxel_count = int(np.count_nonzero(self._get_solid_mask(web_distance)))
-        return solid_voxel_count * self.get_voxel_volume()
+        web_distance_normalized = self.normalize(web_distance)
+        return max(0.0, float(self.get_volume_interpolator()(web_distance_normalized)))
 
     def _validate_web_distance(self, web_distance: float) -> None:
         """

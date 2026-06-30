@@ -194,7 +194,12 @@ Since the slice count is rounded to an integer, `_compute_regression_distance` p
 
 The regression map is generated differently for 2D and 3D. 2D traces a perimeter with marching squares ([`get_contours`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours], using `skimage`'s `find_contours`). 3D meshes a surface with marching cubes ([`get_burn_area_interpolator`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_burn_area_interpolator], `skimage`'s `marching_cubes`) and takes its area directly.
 
-For volume, 3D FMM counts the solid voxels in the cached solid mask and multiplies by the volume of one voxel. The center of gravity and moment of inertia reduce that same cached mask to its voxel-index moments: the voxel count and first moments give the centroid, and the centroid-relative second moments give the inertia tensor. Those moments come from projecting the mask onto each coordinate plane and contracting with the per-axis coordinate vectors, so no per-voxel index or coordinate array is built. Both reads share one cached set of moments per web distance, so the per-timestep mass properties all reuse a single threshold of the regression map instead of rebuilding it for each read.
+For volume, 3D FMM precomputes a volume-web curve once, the same way the burn area is precomputed.
+[`get_volume_interpolator`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_volume_interpolator] sorts the unmasked regression distances and uses `np.searchsorted` to count the solid voxels above each web level, then caches an `interp1d` lookup.
+So `get_volume(w)` is a cached lookup rather than a full grid voxel scan on every call, and its cost no longer grows with the grid.
+The center of gravity and moment of inertia still reduce the cached solid mask to its voxel-index moments: the voxel count and first moments give the centroid, and the centroid-relative second moments give the inertia tensor.
+Those moments come from projecting the mask onto each coordinate plane and contracting with the per-axis coordinate vectors, so no per-voxel index or coordinate array is built.
+The two reads share one cached set of moments per web distance, so the per-timestep center of gravity and moment of inertia reuse a single threshold of the regression map instead of rebuilding it for each read.
 
 Since the port area in 3D varies along the grain, [`get_port_area(w, z)`][machwave.models.grain.fmm._3d.FMMGrainSegment3D.get_port_area] slices the cross-section at axial height `z` and subtracts the solid area from the outer diameter exterior.
 
@@ -238,8 +243,9 @@ flowchart TB
     BA --> MC["_compute_iso_surface_area() → marching_cubes<br/>per iso level"]
     MC --> SG["smooth_savitzky_golay → interp1d (cached)"]
     SG --> BR["get_burn_area(w)"]
+    R --> VI["get_volume_interpolator()<br/>sorted distances + searchsorted → interp1d (cached)"]
+    VI --> VO["get_volume(w)"]
     R --> SM["_get_solid_mask(w)<br/>boolean threshold, cached per web"]
-    SM --> VO["get_volume(w) = solid voxels × cell volume"]
     SM --> MP["center of gravity, moment of inertia<br/>via cached mask moments"]
     R --> PA["get_port_area(w, z)<br/>casing − slice solid area"]
 ```
