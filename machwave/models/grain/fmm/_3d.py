@@ -270,14 +270,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         return (float(self.denormalize(self.get_normalized_spacing())) * 2) ** 3
 
     def get_volume_interpolator(self) -> Callable[[float], float]:
-        """
-        Return a cached interpolator for volume [m^3] vs normalized web distance.
-
-        Mirrors the 2D face-area precompute (``get_face_area_interpolator``): the
-        unmasked regression distances are sorted once, and ``np.searchsorted``
-        yields the count of solid voxels above each iso level, so each lookup
-        avoids the per-timestep full-grid scan of ``_get_solid_mask``.
-        """
+        """Return a cached interpolator for volume [m^3] for a web distance."""
         if self.volume_interpolator is None:
             regression_map = self.get_regression_map()
             regression_distances_sorted = np.asarray(
