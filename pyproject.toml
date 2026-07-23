@@ -24,7 +24,7 @@ dependencies = [
     "scikit-fmm==2025.6.23",
     "trimesh>=4.6.4,<5.0.0",
     "rocketcea>=1.2.1,<2.0.0",
-    "coolprop>=6.7.0,<8.0.0",
+    "coolprop>=6.7.0,<9.0.0",
 ]
 
 [project.optional-dependencies]
