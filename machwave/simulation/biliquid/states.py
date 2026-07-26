@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import math
 from typing import Callable
 
 import machwave.core.compressible_flow.isentropic as isentropic
@@ -162,7 +163,9 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
 
         is_feeding = (
-            propellant_mass > 0
+            not self.end_burn
+            and fuel_mass > 0
+            and oxidizer_mass > 0
             and fuel_tank_pressure > chamber_pressure
             and oxidizer_tank_pressure > chamber_pressure
         )
@@ -183,17 +186,16 @@ class BiliquidEngineState(simulation_states.MotorState):
         fuel_consumed = m_dot_fuel * d_t
         oxidizer_consumed = m_dot_ox * d_t
 
-        if m_dot_fuel > 0.0:
-            oxidizer_to_fuel_ratio = m_dot_ox / m_dot_fuel
-        else:
-            design_ratio = self.motor.propellant.oxidizer_to_fuel_ratio
-            assert design_ratio is not None
-            oxidizer_to_fuel_ratio = design_ratio
+        # Without both flows strictly positive, the OF ratio is NaN
+        mixture_ratio = (
+            m_dot_ox / m_dot_fuel if m_dot_fuel > 0.0 and m_dot_ox > 0.0 else None
+        )
+        oxidizer_to_fuel_ratio = math.nan if mixture_ratio is None else mixture_ratio
         self.oxidizer_to_fuel_ratio.append(oxidizer_to_fuel_ratio)
 
         propellant_properties = self._evaluate_propellant_properties(
             chamber_pressure=chamber_pressure,
-            mixture_ratio=oxidizer_to_fuel_ratio,
+            mixture_ratio=mixture_ratio,
         )
 
         (
