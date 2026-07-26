@@ -68,11 +68,7 @@ def get_total_injector_mass_flow(
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class BiliquidTimestepConditions(simulation_states.TimestepConditions):
-    """
-    Timestep conditions for a biliquid engine.
-
-    `oxidizer_to_fuel_ratio` is NaN whenever either propellant is not flowing.
-    """
+    """Timestep conditions for a biliquid engine."""
 
     fuel_mass: float
     oxidizer_mass: float
@@ -190,8 +186,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         fuel_consumed = m_dot_fuel * d_t
         oxidizer_consumed = m_dot_ox * d_t
 
-        # Without both flows there is no live mixture ratio: record it as undefined and
-        # let the propellant card stand in for the residual combustion gas.
+        # Without both flows strictly positive, the OF ratio is NaN
         mixture_ratio = (
             m_dot_ox / m_dot_fuel if m_dot_fuel > 0.0 and m_dot_ox > 0.0 else None
         )
