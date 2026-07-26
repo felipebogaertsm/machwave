@@ -207,6 +207,54 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     assert state.burn_time == pytest.approx(state.time[-1])
 
 
+def test_flows_stop_after_fuel_exhausts() -> None:
+    """The oxidizer is not burned on its own once the fuel is gone."""
+    state = _build_state_for_burnout_test()
+    state.fuel_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+    assert state.end_burn is True
+    oxidizer_mass_at_burnout = state.oxidizer_mass[-1]
+    assert oxidizer_mass_at_burnout > 0.0
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.fuel_mass_flow_rate[-1] == 0.0
+    assert state.oxidizer_mass_flow_rate[-1] == 0.0
+    assert np.isnan(state.oxidizer_to_fuel_ratio[-1])
+    assert state.oxidizer_mass[-1] == oxidizer_mass_at_burnout
+
+
+def test_flows_stop_after_oxidizer_exhausts() -> None:
+    """The fuel is not burned on its own once the oxidizer is gone."""
+    state = _build_state_for_burnout_test()
+    state.oxidizer_mass[-1] = 1e-9
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+    assert state.end_burn is True
+    fuel_mass_at_burnout = state.fuel_mass[-1]
+    assert fuel_mass_at_burnout > 0.0
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.fuel_mass_flow_rate[-1] == 0.0
+    assert state.oxidizer_mass_flow_rate[-1] == 0.0
+    assert np.isnan(state.oxidizer_to_fuel_ratio[-1])
+    assert state.fuel_mass[-1] == fuel_mass_at_burnout
+
+
+def test_surviving_propellant_stops_draining_after_burnout(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    """Tail-off is a blowdown: neither tank feeds the chamber past burnout."""
+    after_burnout = simulation_result.time >= simulation_result.burn_time
+    assert after_burnout.sum() > 1, "run ended at burnout, tail-off not exercised"
+
+    for series_name in ("fuel_mass", "oxidizer_mass"):
+        series = getattr(simulation_result, series_name)[after_burnout]
+        assert (series == series[0]).all(), f"{series_name} kept draining after burnout"
+
+
 def test_live_mixture_ratio_drives_cea() -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
     state = biliquid_simulation.BiliquidEngineState(
