@@ -2,6 +2,8 @@
 
 Main entry point for running internal ballistics simulations. `InternalBallisticsSimulation` takes a motor model and simulation parameters (time step, igniter pressure, external pressure), then marches through time using an RK4 solver.
 
+The run marches until thrust terminates, on whichever comes first: the nozzle un-chokes (chamber pressure falls to the critical ratio of the ambient pressure), or a burnt out motor tails off (thrust falls to `TAIL_OFF_THRUST_FRACTION` of its peak). Tail-off is what ends a vacuum or upper stage run, where the nozzle stays choked as the chamber pressure decays toward zero. It sits well below the un-choking pressure at any realistic ambient, so it does not affect runs against an atmosphere.
+
 `run()` returns a frozen `SimulationResult` (subclassed per motor type — `SolidSimulationResult`, `BiliquidSimulationResult`) carrying the full time-series data (thrust, chamber pressure, propellant mass, efficiency losses, …) along with derived scalars (total impulse, specific impulse, burn time). Each result class provides a `report()` method to print a human-readable summary and a `summary()` method that returns the scalar metrics as a dict.
 
 The per-step accumulator state used by the integrator (`MotorState` and its subclasses `SolidMotorState`, `BiliquidEngineState`) lives in this same package — it is rarely consumed directly outside the simulation loop. Alongside it, the abstract `TimestepConditions` and its per-engine subclasses `SolidTimestepConditions`, `BiliquidTimestepConditions` snapshot the operating quantities of one timestep and are handed to the nozzle loss model.

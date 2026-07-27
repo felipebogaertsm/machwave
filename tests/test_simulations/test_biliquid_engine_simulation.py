@@ -16,6 +16,7 @@ import pytest
 
 import machwave.models.motors as motors_models
 import machwave.simulation.biliquid as biliquid_simulation
+import machwave.simulation.states as simulation_states
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
@@ -253,6 +254,22 @@ def test_surviving_propellant_stops_draining_after_burnout(
     for series_name in ("fuel_mass", "oxidizer_mass"):
         series = getattr(simulation_result, series_name)[after_burnout]
         assert (series == series[0]).all(), f"{series_name} kept draining after burnout"
+
+
+def test_tail_off_terminates_thrust_against_zero_ambient_pressure() -> None:
+    """Against zero ambient pressure the nozzle stays choked, so tail-off ends it."""
+    state = _build_state_for_burnout_test()
+    state.fuel_mass[-1] = 1e-9
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        while not state.end_thrust:
+            state.run_timestep(d_t=1e-4, external_pressure=0.0)
+
+    assert state.end_burn is True
+    assert state.thrust[-1] < (
+        simulation_states.TAIL_OFF_THRUST_FRACTION * state.peak_thrust
+    )
 
 
 def test_live_mixture_ratio_drives_cea() -> None:

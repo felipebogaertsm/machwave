@@ -4,6 +4,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
+import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.compressible_flow.nozzle as nozzle_core
 import machwave.models.motors as motors
 
@@ -13,6 +14,8 @@ if TYPE_CHECKING:
     import machwave.simulation.results as simulation_results
 
 SimulationStateArray: TypeAlias = list[float]
+
+TAIL_OFF_THRUST_FRACTION = 0.001
 
 
 class MotorState(ABC):
@@ -45,6 +48,7 @@ class MotorState(ABC):
         self.ideal_thrust_coefficient: SimulationStateArray = []
         self.thrust_coefficient: SimulationStateArray = []
         self.thrust: SimulationStateArray = []
+        self.peak_thrust: float = 0.0
         self.nozzle_efficiency: SimulationStateArray = []
         self.loss_fractions: dict[str, SimulationStateArray] = {
             name: [] for name in motor.nozzle_loss_model.component_names
@@ -143,6 +147,48 @@ class MotorState(ABC):
             thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
         )
         self.thrust.append(thrust)
+        self.peak_thrust = max(self.peak_thrust, thrust)
+
+    def _update_thrust_termination(
+        self,
+        time: float,
+        chamber_pressure: float,
+        external_pressure: float,
+        k_chamber: float,
+    ) -> bool:
+        """
+        Flag thrust termination once the nozzle un-chokes or the tail-off ends.
+
+        Loss of choking never fires against a vacuum, where the nozzle stays choked
+        for any chamber pressure, so a burnt out motor also terminates once its
+        thrust decays to ``TAIL_OFF_THRUST_FRACTION`` of the peak.
+
+        Args:
+            time: Time at the start of the timestep [s].
+            chamber_pressure: Chamber pressure [Pa].
+            external_pressure: Ambient pressure [Pa].
+            k_chamber: Isentropic exponent in the chamber.
+
+        Returns:
+            True if thrust has terminated on this timestep.
+        """
+        is_choked = isentropic.is_flow_choked(
+            chamber_pressure,
+            external_pressure,
+            isentropic.get_critical_pressure_ratio(k_chamber),
+        )
+        has_tailed_off = (
+            self.end_burn
+            and self.thrust[-1] < TAIL_OFF_THRUST_FRACTION * self.peak_thrust
+        )
+        if is_choked and not has_tailed_off:
+            return False
+
+        if self._burn_time is None:
+            self._burn_time = time
+        self._thrust_time = time
+        self.end_thrust = True
+        return True
 
     def build_result(self) -> "simulation_results.SimulationResult":
         """Return a frozen ``SimulationResult`` snapshot of this state."""
