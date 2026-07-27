@@ -7,12 +7,14 @@ they can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 from typing import Callable
 
 import numpy as np
 import pytest
 
+import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.nozzle_losses.components.constant as constant
@@ -20,6 +22,7 @@ import machwave.models.nozzle_losses.components.spp1975 as spp1975
 import machwave.models.propellants as propellants
 import machwave.simulation as machwave_simulation
 import machwave.simulation.solid as solid_simulation
+import machwave.simulation.states as simulation_states
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
     assert_recorded_arrays_aligned,
@@ -205,6 +208,34 @@ def test_all_both_targets_match_legacy_scalar_correction() -> None:
         result.ideal_thrust_coefficient * result.nozzle_efficiency,
         rtol=1e-12,
     )
+
+
+def test_vacuum_run_terminates_on_tail_off() -> None:
+    """Against zero ambient pressure the nozzle stays choked, so tail-off ends it."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, dataclasses.replace(params, external_pressure=0.0))
+
+    assert result.end_thrust is True
+    assert result.end_burn is True
+    assert result.thrust_time > result.burn_time
+    peak_thrust = float(np.max(result.thrust))
+    assert result.thrust[-1] < simulation_states.TAIL_OFF_THRUST_FRACTION * peak_thrust
+
+
+def test_sea_level_run_still_ends_on_loss_of_choking() -> None:
+    """Tail-off sits far below the un-choking pressure, so it never preempts it."""
+    motor, params = motor_builders.build_nero_motor()
+    result = run_simulation(motor, params)
+
+    propellant_properties = motor.propellant.properties
+    assert propellant_properties is not None
+    assert not isentropic.is_flow_choked(
+        float(result.chamber_pressure[-1]),
+        params.external_pressure,
+        isentropic.get_critical_pressure_ratio(propellant_properties.k_chamber),
+    )
+    peak_thrust = float(np.max(result.thrust))
+    assert result.thrust[-1] > simulation_states.TAIL_OFF_THRUST_FRACTION * peak_thrust
 
 
 def test_moment_of_inertia_is_guarded_past_burnout() -> None:

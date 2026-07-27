@@ -7,7 +7,6 @@ from typing import Callable
 import numpy as np
 import numpy.typing as npt
 
-import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
@@ -232,15 +231,12 @@ class SolidMotorState(simulation_states.MotorState):
             self._burn_time = time
             self.end_burn = True
 
-        if not isentropic.is_flow_choked(
+        if self._update_thrust_termination(
+            time,
             chamber_pressure,
             external_pressure,
-            isentropic.get_critical_pressure_ratio(propellant_properties.k_chamber),
+            propellant_properties.k_chamber,
         ):
-            if self._burn_time is None:
-                self._burn_time = time
-            self._thrust_time = time
-            self.end_thrust = True
             return
 
         new_time = time + d_t
