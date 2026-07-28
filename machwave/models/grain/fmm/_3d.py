@@ -60,7 +60,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             )
 
     def get_axial_resolution(self) -> int:
-        return int(self.grid_resolution * self.length / self.outer_diameter)
+        return round(self.grid_resolution * self.length / self.outer_diameter)
 
     def get_coordinate_grids(
         self,
