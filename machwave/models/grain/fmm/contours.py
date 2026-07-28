@@ -30,32 +30,20 @@ def get_iso_contours(
     )
 
 
-def get_length(
-    contour: np.ndarray, grid_resolution: int, tolerance: float = 1.0
-) -> float:
+def get_length(contour: np.ndarray) -> float:
     """
-    Return the total length of contour segments away from the disc edge.
+    Return the total length of a closed contour, in cells.
 
-    Segments within `tolerance` of the edge of a circle of diameter
-    `grid_resolution` are excluded, dropping the casing wall while keeping a
-    burning front that has regressed close to it.
+    Cells outside the casing are lifted above every iso level before tracing,
+    so a contour follows the burning front only, right up to the casing.
 
     Args:
         contour: The contour array.
-        grid_resolution: Grid points per axis of the map.
-        tolerance: The tolerance value. Defaults to 1.0.
 
     Returns:
-        The total length of the segments.
+        The total length of the contour segments, in cells.
     """
     shifted_vertices = np.roll(contour.T, 1, axis=1)
     segment_lengths = np.linalg.norm(contour.T - shifted_vertices, axis=0)
 
-    center_position = np.array([[grid_resolution / 2, grid_resolution / 2]])
-    distance_from_center = np.linalg.norm(contour - center_position, axis=1)
-
-    is_interior_contour_segment = (
-        distance_from_center < (grid_resolution / 2) - tolerance
-    )
-
-    return np.sum(segment_lengths[is_interior_contour_segment])
+    return float(np.sum(segment_lengths))
