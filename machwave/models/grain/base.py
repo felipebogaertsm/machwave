@@ -67,6 +67,23 @@ class GrainSegment(ABC):
 
         self.validate()
 
+    @property
+    def exposed_end_count(self) -> int:
+        """Return the number of uninhibited end faces."""
+        return (not self.inhibited_surfaces.upper_end) + (
+            not self.inhibited_surfaces.lower_end
+        )
+
+    def get_axial_web_thickness(self) -> float:
+        """
+        Return the web distance at which the end faces consume the segment [m].
+
+        Infinite when both ends are inhibited, since no end face regresses.
+        """
+        if self.exposed_end_count == 0:
+            return math.inf
+        return self.length / self.exposed_end_count
+
     @abstractmethod
     def get_web_thickness(self) -> float:
         """Return the total web thickness of the segment [m]."""
@@ -242,10 +259,7 @@ class GrainSegment2D(GrainSegment, ABC):
 
     def get_length(self, web_distance: float) -> float:
         """Return the segment length at a given web distance [m]."""
-        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
-            not self.inhibited_surfaces.lower_end
-        )
-        return self.length - web_distance * exposed_ends
+        return max(0.0, self.length - web_distance * self.exposed_end_count)
 
     def get_burn_area(self, web_distance: float) -> float:
         """Return the segment burn area at a given web distance [m^2]."""
@@ -258,10 +272,7 @@ class GrainSegment2D(GrainSegment, ABC):
             else self.get_core_area(web_distance=web_distance)
         )
         single_face_area = self.get_face_area(web_distance=web_distance)
-        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
-            not self.inhibited_surfaces.lower_end
-        )
-        total_face_area = exposed_ends * single_face_area
+        total_face_area = self.exposed_end_count * single_face_area
         return core_area + total_face_area
 
     def get_volume(self, web_distance: float) -> float:
@@ -311,10 +322,7 @@ class GrainSegment3D(GrainSegment, ABC):
 
     def get_length(self, web_distance: float) -> float:
         """Return the segment length at a given web distance [m]."""
-        exposed_ends = (not self.inhibited_surfaces.upper_end) + (
-            not self.inhibited_surfaces.lower_end
-        )
-        return self.length - web_distance * exposed_ends
+        return max(0.0, self.length - web_distance * self.exposed_end_count)
 
 
 class Grain:
