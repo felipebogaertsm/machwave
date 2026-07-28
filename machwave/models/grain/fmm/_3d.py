@@ -367,7 +367,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             return None
 
         axial_count, y_count, x_count = mask.shape
-        grid_center = self.grid_resolution / 2
+        grid_center = (self.grid_resolution - 1) / 2
         x = np.asarray(
             self.cells_to_meters(np.arange(x_count) - grid_center), dtype=np.float64
         )

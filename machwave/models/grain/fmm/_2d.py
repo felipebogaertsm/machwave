@@ -295,7 +295,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         Returns:
             Tuple of (x_grid, y_grid) in normalized units.
         """
-        grid_center_index = self.grid_resolution / 2
+        grid_center_index = (self.grid_resolution - 1) / 2
         x_grid = (x_indices - grid_center_index).astype(np.float64)
         y_grid = (y_indices - grid_center_index).astype(np.float64)
         return x_grid, y_grid
