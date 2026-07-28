@@ -77,9 +77,14 @@ class BatesSegment(grain.GrainSegment2D):
         """
         Return the BATES web thickness [m].
 
+        The segment is consumed by whichever comes first: the radial wall
+        between the core and the outer surface, or the uninhibited end faces
+        meeting axially.
+
         See: https://www.nakka-rocketry.net/design1.html.
         """
-        return 0.5 * (self.outer_diameter - self.core_diameter)
+        radial_web_thickness = 0.5 * (self.outer_diameter - self.core_diameter)
+        return min(radial_web_thickness, self.get_axial_web_thickness())
 
     def get_optimal_length(self) -> float:
         """
