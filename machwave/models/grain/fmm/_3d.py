@@ -135,12 +135,39 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         )
         return distance * (2.0 / self.outer_diameter)
 
+    def get_axial_index(self, axial_position_normalized: float) -> int:
+        """
+        Return the slice index for an axial position, clamped to the grid.
+
+        Args:
+            axial_position_normalized: Axial position as a fraction of the
+                segment length, measured from the aft (nozzle) end.
+
+        Returns:
+            Index of the nearest axial slice, within `[0, axial_resolution - 1]`.
+        """
+        max_index = self.get_axial_resolution() - 1
+        axial_index = int(round(axial_position_normalized * max_index))
+        return min(max(axial_index, 0), max_index)
+
     def get_contours(
         self, web_distance: float, axial_position_normalized: float
     ) -> list[NDArray[np.float64]]:
+        """
+        Return the contours of one axial slice at a given web distance.
+
+        Args:
+            web_distance: Distance traveled into the grain web [m].
+            axial_position_normalized: Axial position as a fraction of the
+                segment length, measured from the aft (nozzle) end.
+
+        Returns:
+            Contour arrays of the slice, each an `(N, 2)` array of points.
+        """
         iso_level = self.normalize(web_distance)
-        axial_index = int(round(axial_position_normalized))
-        axial_slice = self.get_regression_map()[axial_index]
+        axial_slice = self.get_regression_map()[
+            self.get_axial_index(axial_position_normalized)
+        ]
         return fmm_contours.get_iso_contours(axial_slice, iso_level)
 
     def get_burn_area_interpolator(self) -> Callable[[float], float]:
@@ -252,14 +279,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         valid = np.logical_not(self.get_outer_diameter_mask())
         solid = np.logical_and(self.get_regression_map() > iso_level, valid)
 
-        normalized_z = z / self.length
-        max_index = self.get_axial_resolution() - 1
-        axial_index = int(round(normalized_z * max_index))
-        axial_index = (
-            0
-            if axial_index < 0
-            else (max_index if axial_index > max_index else axial_index)
-        )
+        axial_index = self.get_axial_index(z / self.length)
 
         face_area = float(
             self.cells_to_square_meters(float(np.count_nonzero(solid[axial_index])))
