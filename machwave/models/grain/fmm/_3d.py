@@ -266,6 +266,29 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         )
         return geometric.get_circle_area(self.outer_diameter) - face_area
 
+    def get_minimum_port_area(self, web_distance: float) -> float:
+        """
+        Return the smallest port area along the segment [m^2].
+
+        The cross section of a 3D segment varies along its length, so the flow
+        passes a bottleneck: the station holding the most solid propellant.
+
+        Args:
+            web_distance: The distance traveled into the grain web.
+
+        Returns:
+            Smallest port area along the segment [m^2].
+        """
+        iso_level = self.normalize(web_distance)
+        valid = np.logical_not(self.get_outer_diameter_mask())
+        solid = np.logical_and(self.get_regression_map() > iso_level, valid)
+
+        solid_cells_per_slice = np.count_nonzero(solid, axis=(1, 2))
+        face_area = float(
+            self.cells_to_square_meters(float(solid_cells_per_slice.max()))
+        )
+        return geometric.get_circle_area(self.outer_diameter) - face_area
+
     def get_voxel_volume(self) -> float:
         return (float(self.denormalize(self.get_normalized_spacing())) * 2) ** 3
 
