@@ -112,6 +112,22 @@ class GrainSegment(ABC):
         """
         pass
 
+    def get_minimum_port_area(self, web_distance: float) -> float:
+        """
+        Return the smallest port area along the segment [m^2].
+
+        The cross section of a segment with no axial variation is the same at
+        every station, so this is its port area. Segments whose cross section
+        varies along the length must override this.
+
+        Args:
+            web_distance: Distance traveled into the grain web [m].
+
+        Returns:
+            Smallest port area along the segment [m^2].
+        """
+        return self.get_port_area(web_distance)
+
     @abstractmethod
     def get_burn_area(self, web_distance: float) -> float:
         """
@@ -621,7 +637,7 @@ class Grain:
 
         for j in range(self.segment_count):  # iterating through each segment
             for i in range(np.size(burn_rate)):
-                core_area = self.segments[j].get_port_area(web_distance[i])
+                core_area = self.segments[j].get_minimum_port_area(web_distance[i])
                 burn_area = 0
 
                 for k in range(j + 1):
