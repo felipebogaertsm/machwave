@@ -420,13 +420,10 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
 
         axial_count, y_count, x_count = mask.shape
         grid_center = (self.grid_resolution - 1) / 2
-        x = np.asarray(
-            self.cells_to_meters(np.arange(x_count) - grid_center), dtype=np.float64
-        )
-        y = np.asarray(
-            self.cells_to_meters(np.arange(y_count) - grid_center), dtype=np.float64
-        )
-        z = np.asarray(self.cells_to_meters(np.arange(axial_count)), dtype=np.float64)
+        radial_grid_spacing = self.get_radial_grid_spacing()
+        x = (np.arange(x_count, dtype=np.float64) - grid_center) * radial_grid_spacing
+        y = (np.arange(y_count, dtype=np.float64) - grid_center) * radial_grid_spacing
+        z = np.arange(axial_count, dtype=np.float64) * self.get_axial_grid_spacing()
 
         # Voxel counts projected onto each coordinate plane.
         projection_yx = mask.sum(axis=0)  # over z -> (y, x)
