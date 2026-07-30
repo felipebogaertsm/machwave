@@ -62,6 +62,14 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def get_axial_resolution(self) -> int:
         return round(self.grid_resolution * self.length / self.outer_diameter)
 
+    def get_axial_grid_spacing(self) -> float:
+        """Distance between adjacent axial slices [m]."""
+        return self.length / max(self.get_axial_resolution() - 1, 1)
+
+    def get_radial_grid_spacing(self) -> float:
+        """Distance between adjacent cross-section cells [m]."""
+        return self.outer_diameter / (self.grid_resolution - 1)
+
     def get_coordinate_grids(
         self,
     ) -> tuple[
@@ -127,8 +135,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def _compute_regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
         # Regression speed needs to be calibrated for the z axes separately from the x
         # and y axes, because the 3D grid is anisotropic
-        axial_grid_spacing = self.length / max(self.get_axial_resolution() - 1, 1)
-        radial_grid_spacing = self.outer_diameter / (self.grid_resolution - 1)
+        axial_grid_spacing = self.get_axial_grid_spacing()
+        radial_grid_spacing = self.get_radial_grid_spacing()
         distance = skfmm.distance(
             masked_face,
             dx=[axial_grid_spacing, radial_grid_spacing, radial_grid_spacing],  # type: ignore[arg-type]
@@ -166,8 +174,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             # Lift the inhibited casing above every iso level so marching cubes
             # meshes only the burning front, not the wall.
             distance_field = np.ma.filled(regression_map, max_iso_level + 1.0)
-            axial_grid_spacing = self.length / max(self.get_axial_resolution() - 1, 1)
-            radial_grid_spacing = self.outer_diameter / (self.grid_resolution - 1)
+            axial_grid_spacing = self.get_axial_grid_spacing()
+            radial_grid_spacing = self.get_radial_grid_spacing()
             grid_spacing = (
                 axial_grid_spacing,
                 radial_grid_spacing,
@@ -290,7 +298,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         return geometric.get_circle_area(self.outer_diameter) - face_area
 
     def get_voxel_volume(self) -> float:
-        return (float(self.denormalize(self.get_normalized_spacing())) * 2) ** 3
+        """Volume of one cell of the anisotropic grid [m^3]."""
+        return self.get_radial_grid_spacing() ** 2 * self.get_axial_grid_spacing()
 
     def get_volume_interpolator(self) -> Callable[[float], float]:
         """Return a cached interpolator for volume [m^3] for a web distance."""
