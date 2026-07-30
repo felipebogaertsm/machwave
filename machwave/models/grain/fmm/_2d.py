@@ -179,9 +179,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
                 contours = fmm_contours.get_iso_contours(regression_map, float(dist))
                 core_perimeter_per_iso_level[i] = float(
                     sum(
-                        self.cells_to_meters(
-                            fmm_contours.get_length(contour, self.grid_resolution)
-                        )
+                        self.cells_to_meters(fmm_contours.get_length(contour))
                         for contour in contours
                     )
                 )
@@ -231,9 +229,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         contours = self.get_contours(web_distance)
         return float(
             sum(
-                self.cells_to_meters(
-                    fmm_contours.get_length(contour, self.grid_resolution)
-                )
+                self.cells_to_meters(fmm_contours.get_length(contour))
                 for contour in contours
             )
         )
