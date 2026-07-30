@@ -163,7 +163,7 @@ The mass-property reads, volume in 3D plus the center of gravity and moment of i
 
 **Contour the burn front: [`get_contours(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_contours].**
 A closed-loop curve is traced by `get_iso_contours` in `machwave.models.grain.fmm.contours`, for a given web distance.
-Then, `get_length` sums the curve to calculate the burning perimeter, discounting any stretch that lies on the casing wall.
+Then, `get_length` sums the curve to calculate the burning perimeter. Cells outside the casing are lifted above every iso level before tracing, so the curve follows the burning front only, right up to the casing.
 
 ```
 (9.0, 8.2) (8.2, 9.0) (8.0, 9.1) (7.0, 9.6) (6.0, 9.6) (5.0, 9.6) ...
