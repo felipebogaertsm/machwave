@@ -51,23 +51,16 @@ def _boundary_ring_cells(masked_face) -> int:
     return int(np.sum(boundary))
 
 
-def _end_burning_cells(masked_face_3d, idx: int) -> int:
+def _is_burning_end(segment, idx: int) -> bool:
     """
-    Count burning propellant cells on an end slice, excluding the bore opening.
+    Report whether the end face at slice `idx` burns.
 
-    The bore opening is identified as the burning (0-valued) cells in the
-    adjacent interior slice — this matches how the FMM code defines inner_surface_inhibited_cells.
+    An exposed end face leaves its whole slice one axial step from the burning
+    surface; an inhibited one regresses from the bore, like the interior.
     """
-    sl = masked_face_3d[idx]
-    unmasked = ~np.ma.getmaskarray(sl)
-
-    # Bore opening = cells that are burning in the first interior slice
-    interior_idx = 1 if idx == 0 else -2
-    interior_sl = masked_face_3d[interior_idx]
-    interior_unmasked = ~np.ma.getmaskarray(interior_sl)
-    bore_at_end = (interior_sl.data == 0) & interior_unmasked
-
-    return int(np.sum((sl.data == 0) & unmasked & ~bore_at_end))
+    end_slice_depth = float(segment.get_regression_map()[idx].max())
+    axial_step = segment.normalize(segment.get_axial_grid_spacing())
+    return end_slice_depth <= 1.5 * axial_step
 
 
 # ── 2D: outer surface ─────────────────────────────────────────────────────────
@@ -159,64 +152,55 @@ def test_2d_outer_exposed_inner_inhibited():
 
 
 def test_3d_upper_end_exposed_by_default():
-    """Default: UE=F → upper end slice has burning cells beyond the bore."""
+    """Default: UE=F → the upper end face burns."""
     seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
         inhibited_surfaces=grain_models.InhibitedSurfaces(outer_surface=False),
     )
-    mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, -1) > 0, "Upper end should be burning by default."
+    assert _is_burning_end(seg, -1), "Upper end should be burning by default."
 
 
 def test_3d_upper_end_inhibited():
-    """UE=T → upper end slice has no burning cells beyond the bore."""
+    """UE=T → the upper end face does not burn."""
     seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
         inhibited_surfaces=grain_models.InhibitedSurfaces(
             outer_surface=False, upper_end=True
         ),
     )
-    mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, -1) == 0, (
-        "Upper end inhibited but still has burning cells."
-    )
+    assert not _is_burning_end(seg, -1), "Upper end inhibited but still burning."
 
 
 def test_3d_lower_end_exposed_by_default():
-    """Default: LE=F → lower end slice has burning cells beyond the bore."""
+    """Default: LE=F → the lower end face burns."""
     seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
         inhibited_surfaces=grain_models.InhibitedSurfaces(outer_surface=False),
     )
-    mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, 0) > 0, "Lower end should be burning by default."
+    assert _is_burning_end(seg, 0), "Lower end should be burning by default."
 
 
 def test_3d_lower_end_inhibited():
-    """LE=T → lower end slice has no burning cells beyond the bore."""
+    """LE=T → the lower end face does not burn."""
     seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
         inhibited_surfaces=grain_models.InhibitedSurfaces(
             outer_surface=False, lower_end=True
         ),
     )
-    mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, 0) == 0, (
-        "Lower end inhibited but still has burning cells."
-    )
+    assert not _is_burning_end(seg, 0), "Lower end inhibited but still burning."
 
 
 def test_3d_both_ends_inhibited():
-    """UE=T, LE=T → neither end slice has burning cells beyond the bore."""
+    """UE=T, LE=T → neither end face burns."""
     seg = grain_geometries.ConicalGrainSegment(
         **CONICAL_PARAMS,
         inhibited_surfaces=grain_models.InhibitedSurfaces(
             outer_surface=False, upper_end=True, lower_end=True
         ),
     )
-    mf = seg.get_masked_face()
-    assert _end_burning_cells(mf, -1) == 0, "Upper end inhibited but still burning."
-    assert _end_burning_cells(mf, 0) == 0, "Lower end inhibited but still burning."
+    assert not _is_burning_end(seg, -1), "Upper end inhibited but still burning."
+    assert not _is_burning_end(seg, 0), "Lower end inhibited but still burning."
 
 
 # ── 3D: OD=F + end inhibition interaction ────────────────────────────────────
@@ -242,7 +226,7 @@ def test_3d_outer_exposed_upper_end_inhibited():
     assert np.any((sl.data == 0) & boundary), (
         "OD=F: outer boundary at mid-slice should be burning."
     )
-    assert _end_burning_cells(mf, -1) == 0, "UE=T: upper end should not be burning."
+    assert not _is_burning_end(seg, -1), "UE=T: upper end should not be burning."
 
 
 def test_3d_outer_exposed_lower_end_inhibited():
@@ -265,4 +249,4 @@ def test_3d_outer_exposed_lower_end_inhibited():
     assert np.any((sl.data == 0) & boundary), (
         "OD=F: outer boundary at mid-slice should be burning."
     )
-    assert _end_burning_cells(mf, 0) == 0, "LE=T: lower end should not be burning."
+    assert not _is_burning_end(seg, 0), "LE=T: lower end should not be burning."

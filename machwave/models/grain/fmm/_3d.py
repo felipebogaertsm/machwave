@@ -5,6 +5,7 @@ import numpy as np
 import skfmm
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
+from scipy.ndimage import binary_erosion
 from skimage import measure
 
 import machwave.core.filters as filters
@@ -30,6 +31,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     ) -> None:
         self.burn_area_interpolator: Callable[[float], float] | None = None
         self.volume_interpolator: Callable[[float], float] | None = None
+        self.padded_regression_map: np.ndarray | None = None
 
         # Cache center of gravity and moment of inertia shared moments per web distance
         self._mask_moments_web: float | None = None
@@ -63,8 +65,12 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         return round(self.grid_resolution * self.length / self.outer_diameter)
 
     def get_axial_grid_spacing(self) -> float:
-        """Distance between adjacent axial slices [m]."""
-        return self.length / max(self.get_axial_resolution() - 1, 1)
+        """
+        Return the thickness of one axial slice [m].
+
+        The slices tile the length, so each one carries a full share of it.
+        """
+        return self.length / self.get_axial_resolution()
 
     def get_coordinate_grids(
         self,
@@ -74,9 +80,12 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         NDArray[np.float64],
     ]:
         if self.coordinate_grids is None:
+            # Slice centers, half a slice in from each end face.
+            axial_resolution = self.get_axial_resolution()
+            half_slice = 0.5 / axial_resolution
             map_y, map_z, map_x = np.meshgrid(
                 np.linspace(-1, 1, self.grid_resolution),
-                np.linspace(1, 0, self.get_axial_resolution()),  # z axis
+                np.linspace(1 - half_slice, half_slice, axial_resolution),  # z axis
                 np.linspace(-1, 1, self.grid_resolution),
             )
 
@@ -96,37 +105,59 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         face_map: NDArray[np.int_],
         excluded_mask: NDArray[np.bool_],
     ) -> tuple[NDArray[np.int_], NDArray[np.bool_]]:
-        if face_map.shape[0] <= 2:
-            return face_map, excluded_mask
+        inner_surface_inhibited_cells = face_map == 0
 
-        inner_surface_inhibited_cells = np.zeros_like(face_map, dtype=bool)
-        inner_surface_inhibited_cells[1:-1] = face_map[1:-1] == 0
-        inner_surface_inhibited_cells[0] = inner_surface_inhibited_cells[1]
-        inner_surface_inhibited_cells[-1] = inner_surface_inhibited_cells[-2]
-
-        # super() runs binary_erosion on the full 3D volume, which includes the
-        # end-face layers in the outer_surface_boundary. Apply end inhibition AFTER so
-        # those cells are not overwritten back to 0 by the outer-surface logic.
-        face_map, excluded_mask = super()._apply_surface_inhibition(
-            face_map, excluded_mask
-        )
-
-        if self.inhibited_surfaces.upper_end:
-            end_face_inhibited_cells = (
-                face_map[-1] == 0
-            ) & ~inner_surface_inhibited_cells[-1]
-            face_map[-1][end_face_inhibited_cells] = 1
-
-        if self.inhibited_surfaces.lower_end:
-            end_face_inhibited_cells = (
-                face_map[0] == 0
-            ) & ~inner_surface_inhibited_cells[0]
-            face_map[0][end_face_inhibited_cells] = 1
+        if not self.inhibited_surfaces.outer_surface:
+            # Erode with the end faces padded as inside, so the boundary the
+            # erosion finds is the casing wall and not the end slices.
+            inside = ~excluded_mask
+            padded_inside = np.pad(
+                inside, ((1, 1), (0, 0), (0, 0)), constant_values=True
+            )
+            eroded = binary_erosion(padded_inside)[1:-1]
+            face_map[inside & np.logical_not(eroded)] = 0
 
         if self.inhibited_surfaces.inner_surface:
             excluded_mask = excluded_mask | inner_surface_inhibited_cells
 
         return face_map, excluded_mask
+
+    @property
+    def has_cross_section_regression(self) -> bool:
+        """An exposed end face burns even when the cross section holds no core."""
+        return super().has_cross_section_regression or self.exposed_end_count > 0
+
+    def _get_exposed_end_padding(self) -> tuple[int, int]:
+        """Slices to add beyond the aft and forward end faces, one if exposed."""
+        return (
+            int(not self.inhibited_surfaces.lower_end),
+            int(not self.inhibited_surfaces.upper_end),
+        )
+
+    def _pad_exposed_ends(self, masked_face: np.ndarray) -> np.ndarray:
+        """
+        Place a void slice beyond each exposed end face.
+
+        The burning surface is the boundary between propellant and void, so an
+        end face only burns if there is void past it. Padding puts that void
+        outside the segment, which keeps the end slices as propellant.
+        """
+        lower, upper = self._get_exposed_end_padding()
+        if not (lower or upper):
+            return masked_face
+
+        pad_width = ((lower, upper), (0, 0), (0, 0))
+        data = np.pad(np.ma.getdata(masked_face), pad_width, constant_values=0)
+        # The casing runs past the end faces, so the pad carries its mask.
+        mask = np.pad(np.ma.getmaskarray(masked_face), pad_width, mode="edge")
+        return np.ma.MaskedArray(data, mask)
+
+    def _strip_exposed_ends(self, volume: np.ndarray) -> np.ndarray:
+        """Drop the padding slices, leaving the segment itself."""
+        lower, upper = self._get_exposed_end_padding()
+        if not (lower or upper):
+            return volume
+        return volume[lower : volume.shape[0] - upper]
 
     def _compute_regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
         # Regression speed needs to be calibrated for the z axes separately from the x
@@ -134,10 +165,19 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         axial_grid_spacing = self.get_axial_grid_spacing()
         radial_grid_spacing = self.get_radial_grid_spacing()
         distance = skfmm.distance(
-            masked_face,
+            self._pad_exposed_ends(masked_face),
             dx=[axial_grid_spacing, radial_grid_spacing, radial_grid_spacing],  # type: ignore[arg-type]
         )
-        return distance * (2.0 / self.outer_diameter)
+        # The padded field keeps the end faces closed for the burn area mesh.
+        self.padded_regression_map = distance * (2.0 / self.outer_diameter)
+        return self._strip_exposed_ends(self.padded_regression_map)
+
+    def get_padded_regression_map(self) -> np.ndarray:
+        """Return the regression map including the void slice past each exposed end."""
+        regression_map = self.get_regression_map()
+        if self.padded_regression_map is None:
+            return regression_map
+        return self.padded_regression_map
 
     def get_axial_index(self, axial_position_normalized: float) -> int:
         """
@@ -148,11 +188,12 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 segment length, measured from the aft (nozzle) end.
 
         Returns:
-            Index of the nearest axial slice, within `[0, axial_resolution - 1]`.
+            Index of the slice holding that position, within
+            `[0, axial_resolution - 1]`.
         """
-        max_index = self.get_axial_resolution() - 1
-        axial_index = int(round(axial_position_normalized * max_index))
-        return min(max(axial_index, 0), max_index)
+        axial_resolution = self.get_axial_resolution()
+        axial_index = int(np.floor(axial_position_normalized * axial_resolution))
+        return min(max(axial_index, 0), axial_resolution - 1)
 
     def get_contours(
         self, web_distance: float, axial_position_normalized: float
@@ -177,7 +218,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
     def get_burn_area_interpolator(self) -> Callable[[float], float]:
         """Return a cached interpolator for burn area [m^2] vs web distance [m]."""
         if self.burn_area_interpolator is None:
-            regression_map = self.get_regression_map()
+            regression_map = self.get_padded_regression_map()
             regression_values = np.asarray(
                 regression_map[~np.ma.getmaskarray(regression_map)], dtype=np.float64
             )
@@ -419,7 +460,9 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         radial_grid_spacing = self.get_radial_grid_spacing()
         x = (np.arange(x_count, dtype=np.float64) - grid_center) * radial_grid_spacing
         y = (np.arange(y_count, dtype=np.float64) - grid_center) * radial_grid_spacing
-        z = np.arange(axial_count, dtype=np.float64) * self.get_axial_grid_spacing()
+        z = (
+            np.arange(axial_count, dtype=np.float64) + 0.5
+        ) * self.get_axial_grid_spacing()
 
         # Voxel counts projected onto each coordinate plane.
         projection_yx = mask.sum(axis=0)  # over z -> (y, x)
