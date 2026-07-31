@@ -280,7 +280,7 @@ class GrainSegment2D(GrainSegment, ABC):
     def get_burn_area(self, web_distance: float) -> float:
         """Return the segment burn area at a given web distance [m^2]."""
         if web_distance > self.get_web_thickness():
-            return 0
+            return 0.0
 
         core_area = (
             0.0
@@ -293,12 +293,12 @@ class GrainSegment2D(GrainSegment, ABC):
 
     def get_volume(self, web_distance: float) -> float:
         """Return the segment volume at a given web distance [m^3]."""
-        if self.get_web_thickness() >= web_distance:
-            return self.get_length(web_distance=web_distance) * self.get_face_area(
-                web_distance=web_distance
-            )
-        else:
-            return 0
+        if web_distance > self.get_web_thickness():
+            return 0.0
+
+        return self.get_length(web_distance=web_distance) * self.get_face_area(
+            web_distance=web_distance
+        )
 
 
 class GrainSegment3D(GrainSegment, ABC):
