@@ -12,6 +12,7 @@ Temporary Items
 
 # IDE
 .idea/
+.vscode/
 workspace.code-workspace
 
 # Temporary files:
@@ -74,4 +75,6 @@ machwave/_version.py
 .pytest_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
+coverage.xml
