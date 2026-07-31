@@ -95,7 +95,7 @@ By default only the outer surface is inhibited.
 |---|---|---|---|
 | Outer | inhibited | ring inside the wall opens if uninhibited | same |
 | Core | burns | core cells masked if inhibited | core masked slice by slice |
-| End faces | burn | modeled by the grain length shrinking as they regress | first and last slices filled with zeros to expose them |
+| End faces | burn | modeled by the grain length shrinking as they regress | a void slice placed past each exposed end, outside the segment |
 
 ```
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
