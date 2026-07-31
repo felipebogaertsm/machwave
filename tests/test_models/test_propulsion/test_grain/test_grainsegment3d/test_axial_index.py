@@ -34,11 +34,11 @@ def _bore_width_in_cells(segment, axial_position_normalized):
 
 
 def test_axial_index_spans_the_grid(tapered_segment):
-    last_index = tapered_segment.get_axial_resolution() - 1
+    axial_resolution = tapered_segment.get_axial_resolution()
 
     assert tapered_segment.get_axial_index(0.0) == 0
-    assert tapered_segment.get_axial_index(1.0) == last_index
-    assert tapered_segment.get_axial_index(0.5) == round(last_index / 2)
+    assert tapered_segment.get_axial_index(1.0) == axial_resolution - 1
+    assert tapered_segment.get_axial_index(0.5) == axial_resolution // 2
 
 
 def test_axial_index_clamps_positions_outside_the_segment(tapered_segment):

@@ -208,7 +208,4 @@ class FinocylGrainSegment(grain_fmm.FMMGrainSegment3D):
             within_length = (radial > 0) & (radial < local_fin_tip_normalized)
             core_map[within_width & within_length] = 0
 
-        core_map[0] = 0
-        core_map[-1] = 0
-
         return core_map
