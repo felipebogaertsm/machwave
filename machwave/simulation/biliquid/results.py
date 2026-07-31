@@ -49,7 +49,7 @@ class BiliquidSimulationResult(
         print("\nBILIQUID ENGINE OPERATION RESULTS", file=file)
 
         print(f"Initial propellant mass: {self.propellant_mass[0]:.4f} kg", file=file)
-        print(f"Burnout time: {self.burn_time:.4f} s", file=file)
+        print(f"Burnout time: {self._format_burn_time(decimals=4)}", file=file)
         print(f"Thrust time: {self.thrust_time:.4f} s", file=file)
 
         print("\nCHAMBER PRESSURE (MPa)", file=file)

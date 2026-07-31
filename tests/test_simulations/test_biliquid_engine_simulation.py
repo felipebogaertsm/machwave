@@ -248,6 +248,7 @@ def test_surviving_propellant_stops_draining_after_burnout(
     simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     """Tail-off is a blowdown: neither tank feeds the chamber past burnout."""
+    assert simulation_result.burn_time is not None
     after_burnout = simulation_result.time >= simulation_result.burn_time
     assert after_burnout.sum() > 1, "run ended at burnout, tail-off not exercised"
 
@@ -270,6 +271,29 @@ def test_tail_off_terminates_thrust_against_zero_ambient_pressure() -> None:
     assert state.thrust[-1] < (
         simulation_states.TAIL_OFF_THRUST_FRACTION * state.peak_thrust
     )
+
+
+def test_unchoked_run_with_propellant_remaining_leaves_burn_time_undefined() -> None:
+    """Thrust termination on its own never defines a burn time."""
+    state = _build_state_for_burnout_test()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        state.run_timestep(d_t=1e-4, external_pressure=1e5)
+        # Un-chokes the nozzle while both tanks still hold propellant.
+        state.run_timestep(d_t=1e-4, external_pressure=state.chamber_pressure[-1])
+
+    assert state.end_thrust is True
+    assert state.end_burn is False
+    assert state.propellant_mass[-1] > 0.0
+    assert state.burn_time is None
+
+    result = state.build_result()
+    assert result.burn_time is None
+
+    buffer = io.StringIO()
+    result.report(file=buffer)
+    assert "Burnout time: not reached" in buffer.getvalue()
 
 
 def test_live_mixture_ratio_drives_cea() -> None:
