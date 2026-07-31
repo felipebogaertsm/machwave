@@ -52,7 +52,12 @@ def get_separated_exit_conditions(
         separation_pressure_ratio: Separation-to-ambient pressure ratio.
 
     Returns:
-        Effective expansion ratio and effective exit pressure [Pa].
+        Effective expansion ratio and effective exit pressure [Pa]. The effective
+        expansion ratio never falls below the throat value of unity.
+
+    Raises:
+        ValueError: If the geometric expansion ratio lies outside the range the
+            supersonic branch of the area-Mach relation covers.
 
     References:
         Summerfield, M., Foster, C. R., & Swan, W. C. (1954). Flow separation in
@@ -71,6 +76,8 @@ def get_separated_exit_conditions(
     if separation_pressure >= sonic_pressure:
         return 1.0, sonic_pressure
 
+    # The exit pressure falls monotonically from the sonic throat to the geometric
+    # exit, so bracketing from the throat always contains the separation point.
     effective_expansion_ratio = cast(
         float,
         scipy.optimize.brentq(
@@ -78,7 +85,7 @@ def get_separated_exit_conditions(
                 isentropic.get_exit_pressure(k_exhaust, ratio, chamber_pressure)
                 - separation_pressure
             ),
-            a=1.001,
+            a=1.0,
             b=expansion_ratio,
         ),
     )
