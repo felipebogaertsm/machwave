@@ -294,3 +294,104 @@ def test_init_rejects_invalid_inputs(overrides, match):
 
     with pytest.raises(ValueError, match=match):
         tank_models.Tank(**kwargs)
+
+
+@pytest.mark.parametrize("fluid_name", ["N2O", "Ethanol"])
+def test_init_rejects_supercritical_temperature(fluid_name):
+    """
+    Above the critical temperature no distinct liquid phase exists, so the
+    saturation lookups have no answer and the tank must reject the input with a
+    clean error instead of letting CoolProp fail.
+    """
+    temperature = CP.PropsSI("Tcrit", fluid_name) + 50.0
+
+    with pytest.raises(ValueError, match="outside the two-phase range"):
+        tank_models.Tank(
+            fluid_name=fluid_name,
+            volume=0.01,
+            temperature=temperature,
+            initial_fluid_mass=0.5,
+        )
+
+
+@pytest.mark.parametrize("fluid_name", ["N2O", "Ethanol"])
+def test_init_rejects_critical_temperature(fluid_name):
+    """
+    The critical temperature itself is excluded: liquid and vapor are already
+    indistinguishable there, which the two-phase model cannot represent.
+    """
+    temperature = CP.PropsSI("Tcrit", fluid_name)
+
+    with pytest.raises(ValueError, match="outside the two-phase range"):
+        tank_models.Tank(
+            fluid_name=fluid_name,
+            volume=0.01,
+            temperature=temperature,
+            initial_fluid_mass=0.5,
+        )
+
+
+@pytest.mark.parametrize("fluid_name", ["N2O", "Ethanol"])
+def test_init_rejects_temperature_below_triple_point(fluid_name):
+    """
+    Below the triple point the fluid is solid, so the saturated-liquid lookups
+    are undefined and the tank must reject the input.
+    """
+    temperature = CP.PropsSI("Ttriple", fluid_name) - 10.0
+
+    with pytest.raises(ValueError, match="outside the two-phase range"):
+        tank_models.Tank(
+            fluid_name=fluid_name,
+            volume=0.01,
+            temperature=temperature,
+            initial_fluid_mass=0.5,
+        )
+
+
+@pytest.mark.parametrize("fluid_name", ["N2O", "Ethanol"])
+def test_init_accepts_triple_point_temperature(fluid_name):
+    """
+    The triple point is the inclusive lower end of the range: liquid and vapor
+    still coexist there, so the tank must accept it and resolve saturation.
+    """
+    temperature = CP.PropsSI("Ttriple", fluid_name)
+
+    tank = tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=0.01,
+        temperature=temperature,
+        initial_fluid_mass=0.5,
+    )
+
+    assert tank.saturation_pressure > 0.0
+    assert tank.saturated_liquid_density > tank.saturated_vapor_density
+
+
+@pytest.mark.parametrize("fluid_name", ["N2O", "Ethanol"])
+def test_init_accepts_temperature_inside_two_phase_range(fluid_name):
+    """A temperature between the two bounds stays valid."""
+    triple_point_temperature = CP.PropsSI("Ttriple", fluid_name)
+    critical_temperature = CP.PropsSI("Tcrit", fluid_name)
+    temperature = 0.5 * (triple_point_temperature + critical_temperature)
+
+    tank = tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=0.01,
+        temperature=temperature,
+        initial_fluid_mass=0.5,
+    )
+
+    assert tank.saturation_pressure == pytest.approx(
+        CP.PropsSI("P", "T", temperature, "Q", 0, fluid_name)
+    )
+
+
+def test_init_rejects_unknown_fluid():
+    """An unrecognized fluid must surface as a clean error, not a CoolProp one."""
+    with pytest.raises(ValueError, match="recognized by CoolProp"):
+        tank_models.Tank(
+            fluid_name="Unobtainium",
+            volume=0.01,
+            temperature=298.0,
+            initial_fluid_mass=0.5,
+        )
