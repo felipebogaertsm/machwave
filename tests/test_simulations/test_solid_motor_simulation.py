@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 import io
+import warnings
 from typing import Callable
 
 import numpy as np
@@ -68,6 +69,8 @@ def test_simulation_completes_with_terminal_state(
 def test_burn_time_and_thrust_time_are_finite_and_ordered(
     simulation_result: solid_simulation.SolidSimulationResult,
 ) -> None:
+    # These motors burn out before the nozzle un-chokes, so burnout is defined.
+    assert simulation_result.burn_time is not None
     assert np.isfinite(simulation_result.burn_time)
     assert np.isfinite(simulation_result.thrust_time)
     assert simulation_result.burn_time > 0.0
@@ -217,6 +220,7 @@ def test_vacuum_run_terminates_on_tail_off() -> None:
 
     assert result.end_thrust is True
     assert result.end_burn is True
+    assert result.burn_time is not None
     assert result.thrust_time > result.burn_time
     peak_thrust = float(np.max(result.thrust))
     assert result.thrust[-1] < simulation_states.TAIL_OFF_THRUST_FRACTION * peak_thrust
@@ -236,6 +240,54 @@ def test_sea_level_run_still_ends_on_loss_of_choking() -> None:
     )
     peak_thrust = float(np.max(result.thrust))
     assert result.thrust[-1] > simulation_states.TAIL_OFF_THRUST_FRACTION * peak_thrust
+
+
+def _run_until_unchoked_with_propellant_remaining() -> solid_simulation.SolidMotorState:
+    """Step a solid motor until the nozzle un-chokes with grain left to burn.
+
+    Raising the ambient pressure to the chamber pressure un-chokes the nozzle
+    and terminates thrust long before the propellant is consumed.
+    """
+    motor, params = motor_builders.build_nero_motor()
+    state = solid_simulation.SolidMotorState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        for _ in range(3):
+            state.run_timestep(
+                d_t=params.d_t, external_pressure=params.external_pressure
+            )
+        state.run_timestep(d_t=params.d_t, external_pressure=state.chamber_pressure[-1])
+    return state
+
+
+def test_unchoked_run_with_propellant_remaining_leaves_burn_time_undefined() -> None:
+    """Thrust termination on its own never defines a burn time."""
+    state = _run_until_unchoked_with_propellant_remaining()
+
+    assert state.end_thrust is True
+    assert state.end_burn is False
+    assert state.propellant_mass[-1] > 0.0
+    assert state.burn_time is None
+    assert state.thrust_time > 0.0
+
+
+def test_undefined_burn_time_still_builds_a_result_and_a_report() -> None:
+    """A run that never burns out reports the thrust time and no burnout time."""
+    result = _run_until_unchoked_with_propellant_remaining().build_result()
+
+    assert result.burn_time is None
+    assert result.summary()["burn_time"] is None
+
+    buffer = io.StringIO()
+    result.report(file=buffer)
+    output = buffer.getvalue()
+
+    assert "Burnout time: not reached" in output
+    assert f"thrust time: {result.thrust_time:.3f} s" in output
 
 
 def test_moment_of_inertia_is_guarded_past_burnout() -> None:

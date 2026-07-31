@@ -184,8 +184,6 @@ class MotorState(ABC):
         if is_choked and not has_tailed_off:
             return False
 
-        if self._burn_time is None:
-            self._burn_time = time
         self._thrust_time = time
         self.end_thrust = True
         return True
@@ -212,15 +210,13 @@ class MotorState(ABC):
         return self._thrust_time
 
     @property
-    def burn_time(self) -> float:
+    def burn_time(self) -> float | None:
         """
-        Return the burn time [s].
+        Return the burn time [s], or None if burnout was never reached.
 
-        Raises:
-            ValueError: If the simulation has not yet completed.
+        Only propellant depletion defines a burn time: a run whose thrust
+        terminates with propellant remaining leaves it undefined.
         """
-        if self._burn_time is None:
-            raise ValueError("Burn time has not been set, run the simulation.")
         return self._burn_time
 
 
