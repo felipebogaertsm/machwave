@@ -73,6 +73,32 @@ def test_get_separated_exit_conditions_unchoked_limit():
     )
 
 
+@pytest.mark.parametrize("chamber_pressure", [71000, 72000, 73000, 73400])
+def test_get_separated_exit_conditions_near_sonic_separation(chamber_pressure):
+    # These chamber pressures put the separation pressure just below the sonic one.
+    k_exhaust = 1.2
+    expansion_ratio = 8.0
+    external_pressure = 1e5
+    separation_pressure_ratio = 0.4
+    effective_expansion_ratio, exit_pressure = (
+        core_nozzle.get_separated_exit_conditions(
+            k_exhaust,
+            expansion_ratio,
+            chamber_pressure,
+            external_pressure,
+            separation_pressure_ratio,
+        )
+    )
+
+    assert 1.0 < effective_expansion_ratio < 1.001
+    assert exit_pressure == pytest.approx(separation_pressure_ratio * external_pressure)
+
+
+def test_get_separated_exit_conditions_below_throat():
+    with pytest.raises(ValueError, match="no supersonic solution"):
+        core_nozzle.get_separated_exit_conditions(1.2, 0.9, 7e6, 1e5, 0.4)
+
+
 @pytest.mark.parametrize(
     "external_pressure, expected_pressure_term",
     [
