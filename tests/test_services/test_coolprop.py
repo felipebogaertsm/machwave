@@ -18,6 +18,14 @@ def test_get_molar_mass(service):
     assert service.get_molar_mass() == CP.PropsSI("M", FLUID_NAME)
 
 
+def test_get_triple_point_temperature(service):
+    assert service.get_triple_point_temperature() == CP.PropsSI("Ttriple", FLUID_NAME)
+
+
+def test_get_critical_temperature(service):
+    assert service.get_critical_temperature() == CP.PropsSI("Tcrit", FLUID_NAME)
+
+
 def test_get_saturation_pressure(service):
     assert service.get_saturation_pressure(TEMPERATURE) == CP.PropsSI(
         "P", "T", TEMPERATURE, "Q", 0, FLUID_NAME

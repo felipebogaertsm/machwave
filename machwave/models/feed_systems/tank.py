@@ -39,8 +39,9 @@ class Tank:
                 density, e.g. 0.01 = 1% (>=0).
 
         Raises:
-            ValueError: If any argument is outside its valid physical range, or
-                if the initial fill is denser than the saturated liquid.
+            ValueError: If the fluid is unknown to CoolProp, if any argument is
+                outside its valid physical range, or if the initial fill is
+                denser than the saturated liquid.
         """
         self.fluid_name = fluid_name
         self.volume = volume
@@ -48,9 +49,9 @@ class Tank:
         self.initial_fluid_mass = initial_fluid_mass
         self.overfill_tolerance = overfill_tolerance
 
-        self._validate()
-
         self._coolprop = coolprop_service.CoolPropService(fluid_name)
+
+        self._validate()
 
         # The tank is isothermal with a fixed fluid, so these properties are constant
         # and cached
@@ -88,6 +89,37 @@ class Tank:
             raise ValueError(
                 "overfill_tolerance must be non-negative, got "
                 f"{self.overfill_tolerance}"
+            )
+
+        self._validate_temperature_range()
+
+    def _validate_temperature_range(self) -> None:
+        """
+        Validate the temperature against the two-phase range of the fluid.
+
+        The range spans the triple point up to, but not including, the critical
+        temperature: at and above the critical point the liquid and vapor phases
+        are no longer distinct, so the saturation model does not hold.
+
+        Raises:
+            ValueError: If the fluid is unknown to CoolProp, or if the
+                temperature lies outside the two-phase range of the fluid.
+        """
+        try:
+            triple_point_temperature = self._coolprop.get_triple_point_temperature()
+            critical_temperature = self._coolprop.get_critical_temperature()
+        except ValueError as error:
+            raise ValueError(
+                "fluid_name must be a fluid recognized by CoolProp, got "
+                f"{self.fluid_name!r}"
+            ) from error
+
+        if not triple_point_temperature <= self.temperature < critical_temperature:
+            raise ValueError(
+                f"temperature {self.temperature} K is outside the two-phase range "
+                f"of {self.fluid_name}, which spans {triple_point_temperature} K "
+                f"(triple point) up to but excluding {critical_temperature} K "
+                f"(critical point)"
             )
 
     def _check_not_overfilled(self) -> None:

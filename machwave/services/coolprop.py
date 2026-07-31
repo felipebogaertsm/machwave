@@ -24,6 +24,24 @@ class CoolPropService:
         """
         return CP.PropsSI("M", self.fluid_name)
 
+    def get_triple_point_temperature(self) -> float:
+        """
+        Get the triple point temperature of the fluid.
+
+        Returns:
+            Triple point temperature [K].
+        """
+        return CP.PropsSI("Ttriple", self.fluid_name)
+
+    def get_critical_temperature(self) -> float:
+        """
+        Get the critical temperature of the fluid.
+
+        Returns:
+            Critical temperature [K].
+        """
+        return CP.PropsSI("Tcrit", self.fluid_name)
+
     def get_saturation_pressure(self, temperature: float) -> float:
         """
         Get the saturation pressure on the liquid side of the saturation curve.
