@@ -30,7 +30,8 @@ class SimulationResult(ABC, Generic[StateT]):
     nozzle_efficiency: SimulationResultArray
     loss_fractions: dict[str, SimulationResultArray]
     loss_labels: dict[str, str]
-    burn_time: float
+    # None when the run terminated with propellant remaining.
+    burn_time: float | None
     thrust_time: float
     end_thrust: bool
     end_burn: bool
@@ -103,7 +104,13 @@ class SimulationResult(ABC, Generic[StateT]):
             label = self.loss_labels[name]
             print(f"  Average {label} fraction: {np.mean(series):.3%}", file=file)
 
-    def summary(self) -> dict[str, float]:
+    def _format_burn_time(self, decimals: int = 3) -> str:
+        """Format the burn time for a report, or flag it as never reached."""
+        if self.burn_time is None:
+            return "not reached"
+        return f"{self.burn_time:.{decimals}f} s"
+
+    def summary(self) -> dict[str, float | None]:
         """Return a mapping of headline scalar metrics for this result."""
         return {
             "burn_time": self.burn_time,

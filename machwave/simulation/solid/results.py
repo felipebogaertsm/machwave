@@ -187,7 +187,8 @@ class SolidSimulationResult(
             file=file,
         )
         print(
-            f" Burnout time, thrust time: {self.burn_time:.3f}, {self.thrust_time:.3f} s",
+            f" Burnout time: {self._format_burn_time()}, "
+            f"thrust time: {self.thrust_time:.3f} s",
             file=file,
         )
 
