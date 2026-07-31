@@ -66,10 +66,6 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         """Distance between adjacent axial slices [m]."""
         return self.length / max(self.get_axial_resolution() - 1, 1)
 
-    def get_radial_grid_spacing(self) -> float:
-        """Distance between adjacent cross-section cells [m]."""
-        return self.outer_diameter / (self.grid_resolution - 1)
-
     def get_coordinate_grids(
         self,
     ) -> tuple[

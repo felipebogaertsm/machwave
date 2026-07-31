@@ -109,37 +109,42 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
         """Convert a normalized input back into a dimensional value [m]."""
         return (value / 2) * (self.outer_diameter)
 
+    def get_radial_grid_spacing(self) -> float:
+        """
+        Return the distance between adjacent cross-section cells [m].
+
+        The grid spans the outer diameter over `grid_resolution` samples, so it
+        holds `grid_resolution - 1` intervals.
+        """
+        return self.outer_diameter / (self.grid_resolution - 1)
+
     def cells_to_meters(
         self, value: float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
         """
-        Convert a pixel-distance value to [m].
+        Convert a cell-distance value to [m].
 
         Args:
-            value: Distance in pixel units.
+            value: Distance in cell units.
 
         Returns:
             Distance [m].
         """
-        return self.outer_diameter * (value / self.grid_resolution)
+        return value * self.get_radial_grid_spacing()
 
     def cells_to_square_meters(
         self, value: float | NDArray[np.float64]
     ) -> float | NDArray[np.float64]:
         """
-        Convert a pixel-area value to [m^2].
+        Convert a cell-area value to [m^2].
 
         Args:
-            value: Area in pixel units.
+            value: Area in cell units.
 
         Returns:
             Area [m^2].
         """
-        return (self.outer_diameter**2) * (value / (self.grid_resolution**2))
-
-    def get_normalized_spacing(self) -> float:
-        """Return the cell size in normalized coordinates (`1 / grid_resolution`)."""
-        return 1 / self.grid_resolution
+        return value * self.get_radial_grid_spacing() ** 2
 
     def _apply_surface_inhibition(
         self,
@@ -190,7 +195,8 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
 
     def _compute_regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
         """Return the regression distance from the burning surface in normalized web units."""
-        return skfmm.distance(masked_face, dx=self.get_normalized_spacing()) * 2
+        distance = skfmm.distance(masked_face, dx=self.get_radial_grid_spacing())
+        return distance * (2.0 / self.outer_diameter)
 
     def get_regression_map(self):
         """
