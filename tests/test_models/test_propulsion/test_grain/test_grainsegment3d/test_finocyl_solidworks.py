@@ -16,7 +16,7 @@ GEOMETRIC_PARAMS = dict(
     core_diameter=0.03556,  # 1.4 in
     number_of_fins=6,
     fin_length=0.0127,  # 0.5 in
-    fin_width=0.003175,  # 1/8 in
+    fin_width=0.00635,  # 1/4 in
     finned_length=0.127,  # 5 in, includes the transition
     transition_length=0.0254,  # 1 in
     fin_axial_offset=0.0,  # fins flush against the aft end
@@ -27,19 +27,18 @@ CASES = [  # only includes web distance of 0.0 mm (initial)
         dict(
             web=0.0,
             burn_area=65738.2e-6,
-            burn_rel=0.02,  # 2%
+            burn_rel=0.01,
             volume=2112634.15e-9,
-            volume_rel=0.03,  # 3%
+            volume_rel=0.01,
             cog_axial=154.91e-3,
-            cog_rel=0.02,  # 2%
+            cog_rel=0.005,
             moi_ratio=17763076.55 / 3108025.60,
-            moi_rel=0.04,  # 4%
+            moi_rel=0.01,
             end_face=6626.69e-6,
-            # 4%: the traced slice sits within 0.2% of the modelled cross-section
-            # (bore annulus less six rectangular fins) at any grid resolution, and
-            # that cross-section is 3.5% above the CAD one, whose fins take more
-            # material at their root.
-            end_face_rel=0.04,
+            # The bore annulus less six rectangular fin slots comes to 6626.6 mm^2,
+            # matching the CAD cross-section, and the traced slice stays within 0.4%
+            # of it at grid resolutions 100 through 200.
+            end_face_rel=0.01,
         ),
         id="web=0",
     ),
