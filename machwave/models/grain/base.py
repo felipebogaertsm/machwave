@@ -181,13 +181,20 @@ class GrainSegment(ABC):
         """
         pass
 
-    def get_mass(self, web_distance: float, ideal_density: float) -> float:
+    def get_mass(
+        self,
+        web_distance: float,
+        ideal_density: float,
+        volume: float | None = None,
+    ) -> float:
         """
         Return the mass of the segment at a given web distance.
 
         Args:
             web_distance: Web distance traveled [m].
             ideal_density: Ideal propellant density [kg/m^3].
+            volume: Segment volume at `web_distance` [m^3], for callers that
+                already hold it. Computed here when omitted.
 
         Returns:
             Mass of the segment [kg].
@@ -195,7 +202,10 @@ class GrainSegment(ABC):
         if ideal_density <= 0:
             raise ValueError(f"ideal_density must be > 0 (got {ideal_density})")
 
-        return self.get_volume(web_distance) * ideal_density * self.density_ratio
+        if volume is None:
+            volume = self.get_volume(web_distance)
+
+        return volume * ideal_density * self.density_ratio
 
     def validate(self) -> None:
         """
@@ -422,7 +432,10 @@ class Grain:
         return len(self.segments)
 
     def get_center_of_gravity(
-        self, web_distance: float
+        self,
+        web_distance: float,
+        *,
+        volume_per_segment: np.typing.NDArray[np.float64] | None = None,
     ) -> np.typing.NDArray[np.float64]:
         """
         Return the center of gravity of the grain.
@@ -432,6 +445,8 @@ class Grain:
 
         Args:
             web_distance: Web distance traveled [m].
+            volume_per_segment: Per-segment volume at `web_distance` [m^3], for
+                callers that already hold it. Computed here when omitted.
 
         Returns:
             A 1D array of shape (3,) with the [x, y, z] coordinates of the
@@ -444,12 +459,20 @@ class Grain:
         if not self.segments:
             raise ValueError("No segments found, cannot compute CoG.")
 
+        volumes = (
+            self.get_propellant_volume_per_segment(web_distance)
+            if volume_per_segment is None
+            else volume_per_segment
+        )
+        density_ratios = self.get_density_ratio_per_segment()
+
         weighted_cogs = []
         global_cogs = []
         # Iterate segments in reverse order (last added is closest to port)
         axial_position = 0.0
 
-        for segment in reversed(self.segments):
+        for index in reversed(range(self.segment_count)):
+            segment = self.segments[index]
             # Segment's local CoG, relative to its own port
             local_cog = segment.get_center_of_gravity(web_distance=web_distance)
 
@@ -458,13 +481,10 @@ class Grain:
             global_cog[0] = axial_position + local_cog[0]
             global_cogs.append(global_cog)
 
-            mass = segment.get_volume(web_distance=web_distance) * segment.density_ratio
-            weighted_cogs.append(global_cog * mass)
+            weighted_cogs.append(global_cog * (volumes[index] * density_ratios[index]))
 
             axial_position += segment.length + self.spacing
 
-        volumes = self.get_propellant_volume_per_segment(web_distance)
-        density_ratios = self.get_density_ratio_per_segment()
         total_mass_normalized = float(np.sum(volumes * density_ratios))
 
         if total_mass_normalized <= 0.0:
@@ -479,7 +499,12 @@ class Grain:
         return (total_weighted_cogs / total_mass_normalized).astype(np.float64)
 
     def get_moment_of_inertia(
-        self, ideal_density: float, web_distance: float = 0.0
+        self,
+        ideal_density: float,
+        web_distance: float = 0.0,
+        *,
+        volume_per_segment: np.typing.NDArray[np.float64] | None = None,
+        center_of_gravity: np.typing.NDArray[np.float64] | None = None,
     ) -> np.typing.NDArray[np.float64]:
         """
         Combine the inertia tensors of all grain segments.
@@ -490,6 +515,10 @@ class Grain:
         Args:
             ideal_density: Propellant ideal density [kg/m^3].
             web_distance: Web distance traveled [m].
+            volume_per_segment: Per-segment volume at `web_distance` [m^3], for
+                callers that already hold it. Computed here when omitted.
+            center_of_gravity: Grain center of gravity at `web_distance` [m],
+                for callers that already hold it. Computed here when omitted.
 
         Returns:
             A 3x3 inertia tensor [kg-m^2] at the grain's center of gravity:
@@ -508,18 +537,30 @@ class Grain:
         if not self.segments:
             raise ValueError("No segments found, cannot compute moment of inertia.")
 
-        grain_cog = self.get_center_of_gravity(web_distance)
+        volumes = (
+            self.get_propellant_volume_per_segment(web_distance)
+            if volume_per_segment is None
+            else volume_per_segment
+        )
+        grain_cog = (
+            self.get_center_of_gravity(web_distance, volume_per_segment=volumes)
+            if center_of_gravity is None
+            else center_of_gravity
+        )
         total_inertia = np.zeros((3, 3), dtype=np.float64)
 
         axial_position = 0.0
-        for segment in reversed(self.segments):  # last added is closest to port
+        for index in reversed(range(self.segment_count)):  # last added is at the port
+            segment = self.segments[index]
             local_cog = segment.get_center_of_gravity(web_distance=web_distance)
 
             global_cog = local_cog.copy()
             global_cog[0] = axial_position + local_cog[0]
 
             segment_mass = segment.get_mass(
-                web_distance=web_distance, ideal_density=ideal_density
+                web_distance=web_distance,
+                ideal_density=ideal_density,
+                volume=float(volumes[index]),
             )
             segment_moi = segment.get_moment_of_inertia(
                 web_distance=web_distance, ideal_density=ideal_density
