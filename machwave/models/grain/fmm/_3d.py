@@ -1,3 +1,7 @@
+import concurrent.futures
+import math
+import multiprocessing
+import os
 from abc import ABC
 from collections.abc import Callable
 
@@ -16,6 +20,136 @@ import machwave.models.grain.base as grain_base
 
 from . import base as fmm_base
 from . import contours as fmm_contours
+
+ISO_LEVEL_COUNT = 80
+
+# Meshing the iso-levels costs about a second per two million cells of the
+# distance field, so the cell count decides whether a process pool earns its
+# keep. A forking pool starts in milliseconds and hands the field to its workers
+# through copy-on-write; a spawning pool starts a fresh interpreter and pickles
+# the field once per worker, a few seconds of overhead no matter the field size.
+FORK_PARALLEL_CELL_COUNT = 2_000_000
+SPAWN_PARALLEL_CELL_COUNT = 12_000_000
+
+_worker_distance_field: NDArray[np.float64] | None = None
+_worker_grid_spacing: tuple[float, float, float] | None = None
+
+
+def _compute_iso_surface_area(
+    distance_field: NDArray[np.float64],
+    level: float,
+    grid_spacing: tuple[float, float, float],
+) -> float:
+    """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
+    try:
+        vertices, faces, _, _ = measure.marching_cubes(
+            distance_field, level=level, spacing=grid_spacing
+        )
+    except (ValueError, RuntimeError):
+        return 0.0
+    return float(measure.mesh_surface_area(vertices, faces))
+
+
+def _load_iso_surface_worker(
+    distance_field: NDArray[np.float64],
+    grid_spacing: tuple[float, float, float],
+) -> None:
+    """Hold the distance field in a worker process, sent once at start-up."""
+    global _worker_distance_field, _worker_grid_spacing
+    _worker_distance_field = distance_field
+    _worker_grid_spacing = grid_spacing
+
+
+def _compute_iso_surface_area_in_worker(level: float) -> float:
+    """Mesh one iso-level against the field the worker was started with."""
+    if _worker_distance_field is None or _worker_grid_spacing is None:
+        raise RuntimeError("Iso-surface worker was not given a distance field.")
+    return _compute_iso_surface_area(
+        _worker_distance_field, level, _worker_grid_spacing
+    )
+
+
+def _is_parallel_meshing_worthwhile(cell_count: int) -> bool:
+    """
+    Whether a process pool beats meshing the iso-levels in this process.
+
+    A worker process never starts a pool of its own: nesting them oversubscribes
+    the machine, and a spawned worker would re-import the caller's script to do
+    it.
+    """
+    if multiprocessing.parent_process() is not None:
+        return False
+
+    if multiprocessing.get_start_method() == "fork":
+        return cell_count >= FORK_PARALLEL_CELL_COUNT
+    return cell_count >= SPAWN_PARALLEL_CELL_COUNT
+
+
+def _compute_iso_surface_areas_in_parallel(
+    distance_field: NDArray[np.float64],
+    iso_levels: NDArray[np.float64],
+    grid_spacing: tuple[float, float, float],
+) -> NDArray[np.float64] | None:
+    """
+    Mesh every iso-level across a process pool.
+
+    The levels are independent, so they split cleanly across processes. The
+    distance field goes to each worker once at start-up instead of riding along
+    with every level, which holds the transfer cost to one copy per worker.
+
+    Returns:
+        Areas [m^2] aligned with `iso_levels`, or None when no pool could be
+        started and the caller should mesh the levels itself.
+    """
+    worker_count = min(len(iso_levels), os.cpu_count() or 1)
+    if worker_count < 2:
+        return None
+
+    levels = [float(level) for level in iso_levels]
+    chunk_size = math.ceil(len(levels) / worker_count)
+    try:
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=worker_count,
+            initializer=_load_iso_surface_worker,
+            initargs=(distance_field, grid_spacing),
+        ) as executor:
+            areas = list(
+                executor.map(
+                    _compute_iso_surface_area_in_worker, levels, chunksize=chunk_size
+                )
+            )
+    except (OSError, ValueError, RuntimeError, concurrent.futures.BrokenExecutor):
+        return None
+
+    return np.asarray(areas, dtype=np.float64)
+
+
+def _compute_iso_surface_areas(
+    distance_field: NDArray[np.float64],
+    iso_levels: NDArray[np.float64],
+    grid_spacing: tuple[float, float, float],
+) -> NDArray[np.float64]:
+    """
+    Marching-cubes area [m^2] of every regression iso-level.
+
+    This is the largest one-time setup cost of a 3D segment and it grows with
+    the grid, so fine grids spread the levels over worker processes. Coarse
+    grids, and any grid whose pool fails to start, mesh the levels here.
+    """
+    if _is_parallel_meshing_worthwhile(distance_field.size):
+        iso_surface_areas = _compute_iso_surface_areas_in_parallel(
+            distance_field, iso_levels, grid_spacing
+        )
+        if iso_surface_areas is not None:
+            return iso_surface_areas
+
+    return np.array(
+        [
+            _compute_iso_surface_area(distance_field, float(level), grid_spacing)
+            for level in iso_levels
+        ],
+        dtype=np.float64,
+    )
 
 
 class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
@@ -248,18 +382,11 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
 
             # The iso-surface at level 0 lies on the voxelized initial face and is
             # degenerate, so sample above it and hold the first area back to web 0.
-            iso_level_count = 80
             iso_levels = np.linspace(
-                max_iso_level / iso_level_count, max_iso_level, iso_level_count
+                max_iso_level / ISO_LEVEL_COUNT, max_iso_level, ISO_LEVEL_COUNT
             )
-            iso_surface_areas = np.array(
-                [
-                    self._compute_iso_surface_area(
-                        distance_field, float(level), grid_spacing
-                    )
-                    for level in iso_levels
-                ],
-                dtype=np.float64,
+            iso_surface_areas = _compute_iso_surface_areas(
+                distance_field, iso_levels, grid_spacing
             )
             web_distances_denormalized = np.concatenate(
                 ([0.0], np.asarray(self.denormalize(iso_levels), dtype=np.float64))
@@ -283,21 +410,6 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             )
 
         return self.burn_area_interpolator
-
-    @staticmethod
-    def _compute_iso_surface_area(
-        distance_field: NDArray[np.float64],
-        level: float,
-        grid_spacing: tuple[float, float, float],
-    ) -> float:
-        """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
-        try:
-            vertices, faces, _, _ = measure.marching_cubes(
-                distance_field, level=level, spacing=grid_spacing
-            )
-        except (ValueError, RuntimeError):
-            return 0.0
-        return float(measure.mesh_surface_area(vertices, faces))
 
     def get_burn_area(self, web_distance: float) -> float:
         if web_distance > self.get_web_thickness():
