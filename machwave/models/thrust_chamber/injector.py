@@ -94,6 +94,7 @@ class BipropellantInjector:
         pressure_upstream: float,
         chamber_pressure: float,
         fluid_mass: float,
+        internal_energy: float | None = None,
     ) -> float:
         """
         Compute the fuel-side mass flow rate through this injector.
@@ -103,6 +104,8 @@ class BipropellantInjector:
             pressure_upstream: Upstream stagnation pressure [Pa].
             chamber_pressure: Chamber pressure [Pa].
             fluid_mass: Current fuel mass in the tank [kg].
+            internal_energy: Current internal energy of the fuel [J]. Required
+                for a tank running an energy balance, unused otherwise.
 
         Returns:
             Fuel mass flow rate [kg/s].
@@ -115,6 +118,7 @@ class BipropellantInjector:
             injector_area=self.area_fuel,
             mass_flow_model=self.mass_flow_model_fuel,
             fluid_mass=fluid_mass,
+            internal_energy=internal_energy,
         )
 
     def get_mass_flow_ox(
@@ -124,6 +128,7 @@ class BipropellantInjector:
         pressure_upstream: float,
         chamber_pressure: float,
         fluid_mass: float,
+        internal_energy: float | None = None,
     ) -> float:
         """
         Compute the oxidizer-side mass flow rate through this injector.
@@ -133,6 +138,9 @@ class BipropellantInjector:
             pressure_upstream: Upstream stagnation pressure [Pa].
             chamber_pressure: Chamber pressure [Pa].
             fluid_mass: Current oxidizer mass in the tank [kg].
+            internal_energy: Current internal energy of the oxidizer [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
@@ -145,6 +153,7 @@ class BipropellantInjector:
             injector_area=self.area_ox,
             mass_flow_model=self.mass_flow_model_oxidizer,
             fluid_mass=fluid_mass,
+            internal_energy=internal_energy,
         )
 
     @staticmethod
@@ -157,6 +166,7 @@ class BipropellantInjector:
         injector_area: float,
         mass_flow_model: MassFlowModel,
         fluid_mass: float,
+        internal_energy: float | None = None,
     ) -> float:
         """
         Dispatch a mass flow calculation through the requested model.
@@ -169,6 +179,9 @@ class BipropellantInjector:
             injector_area: Effective flow area [m^2].
             mass_flow_model: Mass flow model for this side.
             fluid_mass: Current mass of fluid in the tank [kg].
+            internal_energy: Current internal energy of that fluid [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
 
         Returns:
             Mass flow rate [kg/s].
@@ -176,7 +189,7 @@ class BipropellantInjector:
         if mass_flow_model == MassFlowModel.HEM:
             mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
                 fluid_name=tank.fluid_name,
-                temperature_upstream=tank.temperature,
+                temperature_upstream=tank.get_temperature(fluid_mass, internal_energy),
                 pressure_downstream=chamber_pressure,
                 pressure_upstream=pressure_upstream,
             )
@@ -185,7 +198,7 @@ class BipropellantInjector:
             return incompressible_flow.get_mass_flow_orifice(
                 discharge_coefficient=discharge_coefficient,
                 area=injector_area,
-                density=tank.get_density(fluid_mass),
+                density=tank.get_density(fluid_mass, internal_energy),
                 pressure_upstream=pressure_upstream,
                 pressure_downstream=chamber_pressure,
             )
