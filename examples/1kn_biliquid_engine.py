@@ -47,13 +47,11 @@ def main():
     )
 
     feed_system = feed_systems.StackedTankPressureFedFeedSystem(
-        oxidizer_line_diameter=7.925e-3,
-        oxidizer_line_length=0.5,
-        fuel_line_diameter=5.715e-3,
-        fuel_line_length=0.5,
         oxidizer_tank=oxidizer_tank,
         fuel_tank=fuel_tank,
         piston_loss=1e5,
+        oxidizer_line_loss=2e5,
+        fuel_line_loss=2e5,
     )
 
     nozzle = thrust_chamber_models.Nozzle(
