@@ -146,8 +146,12 @@ class SolidPropellant(propellant_base.Propellant):
         """
         Evaluate thermochemical properties.
 
-        If properties are pre-defined, returns them directly. Otherwise,
-        evaluates using the thermochemical service via the parent class.
+        Pre-defined properties are a fixed override: they are returned as given
+        for every chamber pressure, so a propellant carrying them holds the same
+        flame temperature, isentropic exponents, molecular weights and condensed
+        phase fractions for a whole burn. Without them the thermochemical
+        service is queried at the chamber pressure through the parent class, and
+        the properties follow it.
 
         Args:
             chamber_pressure: Chamber pressure [Pa].

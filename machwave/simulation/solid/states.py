@@ -12,6 +12,7 @@ import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.motors as motors
 import machwave.models.propellants as propellants
+import machwave.models.propellants.properties as propellant_properties_models
 import machwave.simulation.solid.results as solid_results
 import machwave.simulation.states as simulation_states
 
@@ -81,26 +82,13 @@ class SolidMotorState(simulation_states.MotorState):
             motor: Solid motor to track.
             igniter_pressure: Initial chamber pressure from the igniter [Pa].
             external_pressure: Ambient pressure [Pa].
-
-        Raises:
-            ValueError: If the motor's propellant has no thermochemical
-                properties. Solid propellant properties are fixed for the
-                entire run, so a missing value is a configuration error and
-                the simulation refuses to start.
         """
-        propellant_properties = motor.propellant.properties
-        if propellant_properties is None:
-            raise ValueError(
-                "Propellant properties must be defined to run the simulation."
-            )
-
         super().__init__(
             motor=motor,
             igniter_pressure=igniter_pressure,
             external_pressure=external_pressure,
         )
 
-        self.propellant_properties = propellant_properties
         self.segment_density_ratios = motor.grain.get_density_ratio_per_segment()
 
         self.web: simulation_states.SimulationStateArray = [0.0]
@@ -118,6 +106,16 @@ class SolidMotorState(simulation_states.MotorState):
         self.propellant_cog: list[npt.NDArray[np.float64]] = []
         self.propellant_moi: list[npt.NDArray[np.float64]] = []
 
+    def _evaluate_propellant_properties(
+        self,
+        chamber_pressure: float,
+    ) -> propellant_properties_models.ThermochemicalProperties:
+        """Evaluate the propellant at the chamber pressure."""
+        return self.motor.propellant.evaluate(
+            chamber_pressure=chamber_pressure,
+            expansion_ratio=self.motor.thrust_chamber.nozzle.expansion_ratio,
+        )
+
     def run_timestep(
         self,
         d_t: float,
@@ -130,13 +128,16 @@ class SolidMotorState(simulation_states.MotorState):
             d_t: Time increment [s].
             external_pressure: External pressure [Pa].
         """
-        propellant_properties = self.propellant_properties
         nozzle = self.motor.thrust_chamber.nozzle
         ideal_propellant_density = self.motor.propellant.ideal_density
 
         time = self.time[-1]
         web_distance = self.web[-1]
         chamber_pressure = self.chamber_pressure[-1]
+
+        propellant_properties = self._evaluate_propellant_properties(
+            chamber_pressure=chamber_pressure
+        )
 
         burn_area_per_segment = self.motor.grain.get_burn_area_per_segment(web_distance)
         self.burn_area_per_segment.append(burn_area_per_segment)
