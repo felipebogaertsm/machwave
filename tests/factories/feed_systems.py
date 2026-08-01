@@ -33,10 +33,6 @@ class StackedTankPressureFedFeedSystemFactory:
         kwargs: dict[str, Any] = dict(
             oxidizer_tank=oxidizer_tank,
             fuel_tank=fuel_tank,
-            oxidizer_line_diameter=0.01,
-            oxidizer_line_length=0.5,
-            fuel_line_diameter=0.008,
-            fuel_line_length=0.5,
         )
         kwargs.update(overrides)
         return feed_systems_models.StackedTankPressureFedFeedSystem(**kwargs)
