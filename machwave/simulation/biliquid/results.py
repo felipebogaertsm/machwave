@@ -21,6 +21,9 @@ class BiliquidSimulationResult(
     fuel_mass: simulation_results.SimulationResultArray
     fuel_tank_pressure: simulation_results.SimulationResultArray
     oxidizer_tank_pressure: simulation_results.SimulationResultArray
+    # Flat for an isothermal tank, decaying for one running an energy balance.
+    fuel_tank_temperature: simulation_results.SimulationResultArray
+    oxidizer_tank_temperature: simulation_results.SimulationResultArray
     final_oxidizer_mass: float
     final_fuel_mass: float
 
@@ -35,6 +38,8 @@ class BiliquidSimulationResult(
             "fuel_mass": fuel_mass,
             "fuel_tank_pressure": np.asarray(state.fuel_tank_pressure),
             "oxidizer_tank_pressure": np.asarray(state.oxidizer_tank_pressure),
+            "fuel_tank_temperature": np.asarray(state.fuel_tank_temperature),
+            "oxidizer_tank_temperature": np.asarray(state.oxidizer_tank_temperature),
             "final_oxidizer_mass": float(oxidizer_mass[-1]),
             "final_fuel_mass": float(fuel_mass[-1]),
         }

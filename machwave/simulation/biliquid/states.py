@@ -9,6 +9,7 @@ import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
 import machwave.models.feed_systems as feed_systems
+import machwave.models.feed_systems.tank as tank_models
 import machwave.models.motors as motors
 import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber.injector as injector_models
@@ -23,6 +24,8 @@ def get_injector_mass_flows(
     injector: injector_models.BipropellantInjector,
     fuel_mass: float,
     oxidizer_mass: float,
+    fuel_internal_energy: float | None,
+    oxidizer_internal_energy: float | None,
     fuel_tank_pressure: float,
     oxidizer_tank_pressure: float,
     is_feeding: bool,
@@ -37,6 +40,8 @@ def get_injector_mass_flows(
             injector=injector,
             fuel_mass=fuel_mass,
             oxidizer_mass=oxidizer_mass,
+            fuel_internal_energy=fuel_internal_energy,
+            oxidizer_internal_energy=oxidizer_internal_energy,
         )
         if fuel_tank_pressure > chamber_pressure
         else 0.0
@@ -46,6 +51,7 @@ def get_injector_mass_flows(
             chamber_pressure=chamber_pressure,
             injector=injector,
             oxidizer_mass=oxidizer_mass,
+            oxidizer_internal_energy=oxidizer_internal_energy,
         )
         if oxidizer_tank_pressure > chamber_pressure
         else 0.0
@@ -76,6 +82,8 @@ class BiliquidTimestepConditions(simulation_states.TimestepConditions):
     oxidizer_to_fuel_ratio: float
     fuel_tank_pressure: float
     oxidizer_tank_pressure: float
+    fuel_tank_temperature: float
+    oxidizer_tank_temperature: float
 
 
 class BiliquidEngineState(simulation_states.MotorState):
@@ -104,18 +112,32 @@ class BiliquidEngineState(simulation_states.MotorState):
             external_pressure=external_pressure,
         )
 
+        oxidizer_tank = motor.feed_system.oxidizer_tank
+        fuel_tank = motor.feed_system.fuel_tank
+
         self.oxidizer_mass: simulation_states.SimulationStateArray = [
-            motor.feed_system.oxidizer_tank.initial_fluid_mass
+            oxidizer_tank.initial_fluid_mass
         ]
         self.fuel_mass: simulation_states.SimulationStateArray = [
-            motor.feed_system.fuel_tank.initial_fluid_mass
+            fuel_tank.initial_fluid_mass
         ]
+
+        # Second state variable of a tank running an energy balance, which the
+        # integrator carries beside the mass. An isothermal tank has none.
+        self.oxidizer_internal_energy: float | None = (
+            None if oxidizer_tank.isothermal else oxidizer_tank.initial_internal_energy
+        )
+        self.fuel_internal_energy: float | None = (
+            None if fuel_tank.isothermal else fuel_tank.initial_internal_energy
+        )
 
         self.fuel_mass_flow_rate: simulation_states.SimulationStateArray = []
         self.oxidizer_mass_flow_rate: simulation_states.SimulationStateArray = []
         self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
         self.fuel_tank_pressure: simulation_states.SimulationStateArray = []
         self.oxidizer_tank_pressure: simulation_states.SimulationStateArray = []
+        self.fuel_tank_temperature: simulation_states.SimulationStateArray = []
+        self.oxidizer_tank_temperature: simulation_states.SimulationStateArray = []
 
     def _evaluate_propellant_properties(
         self,
@@ -148,18 +170,33 @@ class BiliquidEngineState(simulation_states.MotorState):
         chamber_pressure = self.chamber_pressure[-1]
         fuel_mass = self.fuel_mass[-1]
         oxidizer_mass = self.oxidizer_mass[-1]
+        fuel_internal_energy = self.fuel_internal_energy
+        oxidizer_internal_energy = self.oxidizer_internal_energy
 
         propellant_mass = fuel_mass + oxidizer_mass
         self.propellant_mass.append(propellant_mass)
 
         fuel_tank_pressure = feed_system.get_fuel_tank_pressure(
-            oxidizer_mass=oxidizer_mass, fuel_mass=fuel_mass
+            oxidizer_mass=oxidizer_mass,
+            fuel_mass=fuel_mass,
+            fuel_internal_energy=fuel_internal_energy,
+            oxidizer_internal_energy=oxidizer_internal_energy,
         )
         self.fuel_tank_pressure.append(fuel_tank_pressure)
         oxidizer_tank_pressure = feed_system.get_oxidizer_tank_pressure(
-            oxidizer_mass=oxidizer_mass
+            oxidizer_mass=oxidizer_mass,
+            oxidizer_internal_energy=oxidizer_internal_energy,
         )
         self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
+
+        fuel_tank_temperature = feed_system.fuel_tank.get_temperature(
+            fuel_mass, fuel_internal_energy
+        )
+        self.fuel_tank_temperature.append(fuel_tank_temperature)
+        oxidizer_tank_temperature = feed_system.oxidizer_tank.get_temperature(
+            oxidizer_mass, oxidizer_internal_energy
+        )
+        self.oxidizer_tank_temperature.append(oxidizer_tank_temperature)
 
         is_feeding = (
             not self.end_burn
@@ -174,6 +211,8 @@ class BiliquidEngineState(simulation_states.MotorState):
             injector=self.motor.thrust_chamber.injector,
             fuel_mass=fuel_mass,
             oxidizer_mass=oxidizer_mass,
+            fuel_internal_energy=fuel_internal_energy,
+            oxidizer_internal_energy=oxidizer_internal_energy,
             fuel_tank_pressure=fuel_tank_pressure,
             oxidizer_tank_pressure=oxidizer_tank_pressure,
             is_feeding=is_feeding,
@@ -226,6 +265,8 @@ class BiliquidEngineState(simulation_states.MotorState):
             oxidizer_to_fuel_ratio=oxidizer_to_fuel_ratio,
             fuel_tank_pressure=fuel_tank_pressure,
             oxidizer_tank_pressure=oxidizer_tank_pressure,
+            fuel_tank_temperature=fuel_tank_temperature,
+            oxidizer_tank_temperature=oxidizer_tank_temperature,
         )
         self._apply_nozzle_losses(
             ideal_momentum_term,
@@ -274,3 +315,43 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.chamber_pressure.append(new_chamber_pressure)
         self.fuel_mass.append(fuel_mass - fuel_consumed)
         self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)
+
+        self.fuel_internal_energy = self._drain_internal_energy(
+            tank=feed_system.fuel_tank,
+            internal_energy=fuel_internal_energy,
+            fluid_mass=fuel_mass,
+            mass_drained=fuel_consumed,
+        )
+        self.oxidizer_internal_energy = self._drain_internal_energy(
+            tank=feed_system.oxidizer_tank,
+            internal_energy=oxidizer_internal_energy,
+            fluid_mass=oxidizer_mass,
+            mass_drained=oxidizer_consumed,
+        )
+
+    @staticmethod
+    def _drain_internal_energy(
+        *,
+        tank: tank_models.Tank,
+        internal_energy: float | None,
+        fluid_mass: float,
+        mass_drained: float,
+    ) -> float | None:
+        """
+        Take the enthalpy the drained fluid carries out of the tank [J].
+
+        The tank is adiabatic and does no work on anything but the fluid it
+        pushes out, so its internal energy falls by the enthalpy of what left.
+        The fluid behind boils to refill the ullage and cools doing it, which
+        is what walks the saturation pressure down over the burn.
+
+        Returns:
+            The internal energy left in the tank [J], or None for an
+            isothermal tank, which runs no energy balance.
+        """
+        if internal_energy is None or mass_drained <= 0.0:
+            return internal_energy
+
+        return internal_energy - mass_drained * tank.get_outflow_specific_enthalpy(
+            fluid_mass, internal_energy
+        )

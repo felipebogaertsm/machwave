@@ -105,6 +105,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         *,
         injector: injector_models.BipropellantInjector,
         oxidizer_mass: float,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Compute the current oxidizer mass flow rate by delegating to the injector.
@@ -113,6 +114,9 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             chamber_pressure: Chamber pressure [Pa].
             injector: Bipropellant injector handling the orifice dispatch.
             oxidizer_mass: Current oxidizer mass in the tank [kg].
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
@@ -123,10 +127,13 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
                 pressure_upstream=pressure_upstream,
                 chamber_pressure=chamber_pressure,
                 fluid_mass=oxidizer_mass,
+                internal_energy=oxidizer_internal_energy,
             ),
             get_delivered_pressure=lambda mass_flow_rate: (
                 self.get_oxidizer_tank_pressure(
-                    oxidizer_mass=oxidizer_mass, mass_flow_rate=mass_flow_rate
+                    oxidizer_mass=oxidizer_mass,
+                    mass_flow_rate=mass_flow_rate,
+                    oxidizer_internal_energy=oxidizer_internal_energy,
                 )
             ),
             chamber_pressure=chamber_pressure,
@@ -139,6 +146,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         injector: injector_models.BipropellantInjector,
         fuel_mass: float,
         oxidizer_mass: float,
+        fuel_internal_energy: float | None = None,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Compute the current fuel mass flow rate by delegating to the injector.
@@ -151,6 +160,12 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             injector: Bipropellant injector handling the orifice dispatch.
             fuel_mass: Current fuel mass in the tank [kg].
             oxidizer_mass: Current oxidizer mass in the tank [kg].
+            fuel_internal_energy: Current internal energy of the fuel [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J], which pressurizes the fuel through the piston. Required
+                for a tank running an energy balance, unused otherwise.
 
         Returns:
             Fuel mass flow rate [kg/s].
@@ -161,17 +176,24 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
                 pressure_upstream=pressure_upstream,
                 chamber_pressure=chamber_pressure,
                 fluid_mass=fuel_mass,
+                internal_energy=fuel_internal_energy,
             ),
             get_delivered_pressure=lambda mass_flow_rate: self.get_fuel_tank_pressure(
                 oxidizer_mass=oxidizer_mass,
                 fuel_mass=fuel_mass,
                 mass_flow_rate=mass_flow_rate,
+                fuel_internal_energy=fuel_internal_energy,
+                oxidizer_internal_energy=oxidizer_internal_energy,
             ),
             chamber_pressure=chamber_pressure,
         )
 
     def get_oxidizer_tank_pressure(
-        self, *, oxidizer_mass: float, mass_flow_rate: float = 0.0
+        self,
+        *,
+        oxidizer_mass: float,
+        mass_flow_rate: float = 0.0,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Returns the oxidizer-side pressure delivered to the injector [Pa].
@@ -183,12 +205,16 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             mass_flow_rate: Oxidizer flow through the line [kg/s].
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
         """
         return self.oxidizer_tank.get_pressure(
-            oxidizer_mass
+            oxidizer_mass, oxidizer_internal_energy
         ) - self._get_line_pressure_drop(
             propellant_tank=self.oxidizer_tank,
             fluid_mass=oxidizer_mass,
+            internal_energy=oxidizer_internal_energy,
             mass_flow_rate=mass_flow_rate,
             length=self.oxidizer_line_length,
             diameter=self.oxidizer_line_diameter,
@@ -196,7 +222,13 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         )
 
     def get_fuel_tank_pressure(
-        self, *, oxidizer_mass: float, fuel_mass: float, mass_flow_rate: float = 0.0
+        self,
+        *,
+        oxidizer_mass: float,
+        fuel_mass: float,
+        mass_flow_rate: float = 0.0,
+        fuel_internal_energy: float | None = None,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Returns the fuel-side pressure delivered to the injector [Pa].
@@ -211,13 +243,20 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             fuel_mass: Current fuel mass in the tank [kg].
             mass_flow_rate: Fuel flow through the line [kg/s].
+            fuel_internal_energy: Current internal energy of the fuel [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J], which sets the pressure the piston passes on. Required for
+                a tank running an energy balance, unused otherwise.
         """
         return (
-            self.oxidizer_tank.get_pressure(oxidizer_mass)
+            self.oxidizer_tank.get_pressure(oxidizer_mass, oxidizer_internal_energy)
             - self.piston_loss
             - self._get_line_pressure_drop(
                 propellant_tank=self.fuel_tank,
                 fluid_mass=fuel_mass,
+                internal_energy=fuel_internal_energy,
                 mass_flow_rate=mass_flow_rate,
                 length=self.fuel_line_length,
                 diameter=self.fuel_line_diameter,
@@ -230,6 +269,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         *,
         propellant_tank: tank.Tank,
         fluid_mass: float,
+        internal_energy: float | None,
         mass_flow_rate: float,
         length: float,
         diameter: float,
@@ -239,17 +279,19 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         if mass_flow_rate <= 0.0 or length <= 0.0:
             return 0.0
 
-        if not propellant_tank.is_delivering_liquid(fluid_mass):
+        if not propellant_tank.is_delivering_liquid(fluid_mass, internal_energy):
             # A tank down to its vapor feeds a compressible flow, which this
             # incompressible line model has nothing to say about.
             return 0.0
 
         return incompressible_flow.get_pipe_pressure_drop(
-            density=propellant_tank.get_density(fluid_mass),
+            density=propellant_tank.get_density(fluid_mass, internal_energy),
             mass_flow_rate=mass_flow_rate,
             length=length,
             diameter=diameter,
-            dynamic_viscosity=propellant_tank.get_dynamic_viscosity(fluid_mass),
+            dynamic_viscosity=propellant_tank.get_dynamic_viscosity(
+                fluid_mass, internal_energy
+            ),
             loss_coefficient=loss_coefficient,
         )
 
