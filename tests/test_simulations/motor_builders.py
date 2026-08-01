@@ -238,11 +238,9 @@ def build_1kn_biliquid_engine() -> tuple[
             temperature=300,
             initial_fluid_mass=1.55,
         ),
-        oxidizer_line_diameter=7.925e-3,
-        oxidizer_line_length=0.5,
-        fuel_line_diameter=5.715e-3,
-        fuel_line_length=0.5,
         piston_loss=1e5,
+        oxidizer_line_loss=2e5,
+        fuel_line_loss=2e5,
     )
 
     thrust_chamber = BiliquidEngineThrustChamberFactory.build(

@@ -14,37 +14,54 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
 
     def __init__(
         self,
-        oxidizer_line_diameter: float,
-        oxidizer_line_length: float,
-        fuel_line_diameter: float,
-        fuel_line_length: float,
         fuel_tank: tank.Tank,
         oxidizer_tank: tank.Tank,
         piston_loss: float = 0.0,
+        oxidizer_line_loss: float = 0.0,
+        fuel_line_loss: float = 0.0,
     ):
         """
         Initialize the StackedTankPressureFedFeedSystem.
 
         Args:
-            oxidizer_line_diameter: Diameter of the oxidizer feedline [m].
-            oxidizer_line_length: Length of the oxidizer feedline [m].
-            fuel_line_diameter: Diameter of the fuel feedline [m].
-            fuel_line_length: Length of the fuel feedline [m].
             fuel_tank: An instance representing the fuel tank.
             oxidizer_tank: An instance representing the oxidizer tank.
             piston_loss: Pressure loss across the piston [Pa]. Default is 0.0.
+            oxidizer_line_loss: Pressure loss along the oxidizer feedline [Pa],
+                stated for the design flow rather than computed from it.
+                Default is 0.0, no line.
+            fuel_line_loss: Pressure loss along the fuel feedline [Pa], stated
+                for the design flow rather than computed from it. Default is
+                0.0, no line.
+
+        Raises:
+            ValueError: If any pressure loss is negative.
         """
         super().__init__(fuel_tank, oxidizer_tank)
 
-        self.oxidizer_line_diameter = oxidizer_line_diameter
-        self.oxidizer_line_length = oxidizer_line_length
-        self.fuel_line_diameter = fuel_line_diameter
-        self.fuel_line_length = fuel_line_length
-
         self.piston_loss = piston_loss
+        self.oxidizer_line_loss = oxidizer_line_loss
+        self.fuel_line_loss = fuel_line_loss
 
         self.fuel_tank = fuel_tank
         self.oxidizer_tank = oxidizer_tank
+
+        self._validate()
+
+    def _validate(self) -> None:
+        """
+        Validate the pressure losses.
+
+        Raises:
+            ValueError: If any pressure loss is negative.
+        """
+        for name, value in (
+            ("piston_loss", self.piston_loss),
+            ("oxidizer_line_loss", self.oxidizer_line_loss),
+            ("fuel_line_loss", self.fuel_line_loss),
+        ):
+            if value < 0.0:
+                raise ValueError(f"{name} must be non-negative, got {value}")
 
     def get_mass_flow_ox(
         self,
@@ -106,20 +123,27 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         )
 
     def get_oxidizer_tank_pressure(self, *, oxidizer_mass: float) -> float:
-        """Returns the tank pressure [Pa]."""
-        return self.oxidizer_tank.get_pressure(oxidizer_mass)
+        """
+        Returns the oxidizer-side pressure delivered to the injector [Pa].
+
+        The tank pressure less what the oxidizer line takes.
+        """
+        return self.oxidizer_tank.get_pressure(oxidizer_mass) - self.oxidizer_line_loss
 
     def get_fuel_tank_pressure(
         self, *, oxidizer_mass: float, fuel_mass: float
     ) -> float:
         """
-        Returns the fuel-side upstream pressure [Pa].
+        Returns the fuel-side pressure delivered to the injector [Pa].
 
         In a stacked-tank system the fuel is pressurized by the oxidizer
-        through the piston, so the fuel-side pressure is the oxidizer tank
-        pressure minus the piston pressure loss; ``fuel_mass`` is unused here.
+        through the piston, so the fuel side starts from the oxidizer tank
+        pressure less the piston pressure loss, and then loses what the fuel
+        line takes. The oxidizer line is not on this path, and ``fuel_mass`` is
+        unused here.
         """
         return (
-            self.get_oxidizer_tank_pressure(oxidizer_mass=oxidizer_mass)
+            self.oxidizer_tank.get_pressure(oxidizer_mass)
             - self.piston_loss
+            - self.fuel_line_loss
         )
