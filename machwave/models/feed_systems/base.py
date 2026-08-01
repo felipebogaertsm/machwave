@@ -70,7 +70,10 @@ class FeedSystem(ABC):
     @abstractmethod
     def get_oxidizer_tank_pressure(self, *, oxidizer_mass: float) -> float:
         """
-        Compute and return the current oxidizer tank pressure [Pa].
+        Compute and return the oxidizer pressure at the injector inlet [Pa].
+
+        Whatever the feed system takes between the tank and the injector comes
+        off here, so the value is what the injector has to push with.
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
@@ -82,7 +85,10 @@ class FeedSystem(ABC):
         self, *, oxidizer_mass: float, fuel_mass: float
     ) -> float:
         """
-        Compute and return the current fuel-side upstream pressure [Pa].
+        Compute and return the fuel pressure at the injector inlet [Pa].
+
+        Whatever the feed system takes between the tank and the injector comes
+        off here, so the value is what the injector has to push with.
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
