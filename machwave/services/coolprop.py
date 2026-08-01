@@ -132,6 +132,66 @@ class CoolPropService:
         """
         return CP.PropsSI("P", "T", temperature, "D", density, self.fluid_name)
 
+    def get_internal_energy_at_temperature_density(
+        self, temperature: float, density: float
+    ) -> float:
+        """
+        Get the specific internal energy at a given temperature and density.
+
+        Args:
+            temperature: Temperature [K].
+            density: Density [kg/m^3].
+
+        Returns:
+            Specific internal energy [J/kg].
+        """
+        return CP.PropsSI("U", "T", temperature, "D", density, self.fluid_name)
+
+    def get_temperature_at_density_internal_energy(
+        self, density: float, internal_energy: float
+    ) -> float:
+        """
+        Get the temperature at a given density and specific internal energy.
+
+        Args:
+            density: Density [kg/m^3].
+            internal_energy: Specific internal energy [J/kg].
+
+        Returns:
+            Temperature [K].
+        """
+        return CP.PropsSI("T", "D", density, "U", internal_energy, self.fluid_name)
+
+    def get_pressure_at_density_internal_energy(
+        self, density: float, internal_energy: float
+    ) -> float:
+        """
+        Get the pressure at a given density and specific internal energy.
+
+        Args:
+            density: Density [kg/m^3].
+            internal_energy: Specific internal energy [J/kg].
+
+        Returns:
+            Pressure [Pa].
+        """
+        return CP.PropsSI("P", "D", density, "U", internal_energy, self.fluid_name)
+
+    def get_enthalpy_at_temperature_density(
+        self, temperature: float, density: float
+    ) -> float:
+        """
+        Get the specific enthalpy at a given temperature and density.
+
+        Args:
+            temperature: Temperature [K].
+            density: Density [kg/m^3].
+
+        Returns:
+            Specific enthalpy [J/kg].
+        """
+        return CP.PropsSI("H", "T", temperature, "D", density, self.fluid_name)
+
     def get_enthalpy_at_temperature_pressure(
         self, temperature: float, pressure: float
     ) -> float:

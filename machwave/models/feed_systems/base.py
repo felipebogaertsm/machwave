@@ -29,6 +29,7 @@ class FeedSystem(ABC):
         *,
         injector: injector_models.BipropellantInjector,
         oxidizer_mass: float,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Compute and return the current oxidizer mass flow rate [kg/s].
@@ -37,6 +38,9 @@ class FeedSystem(ABC):
             chamber_pressure: Chamber pressure [Pa].
             injector: Bipropellant injector handling the orifice dispatch.
             oxidizer_mass: Current oxidizer mass in the tank [kg].
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
@@ -51,6 +55,8 @@ class FeedSystem(ABC):
         injector: injector_models.BipropellantInjector,
         fuel_mass: float,
         oxidizer_mass: float,
+        fuel_internal_energy: float | None = None,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Compute and return the current fuel mass flow rate [kg/s].
@@ -61,6 +67,12 @@ class FeedSystem(ABC):
             fuel_mass: Current fuel mass in the tank [kg].
             oxidizer_mass: Current oxidizer mass in the tank [kg]. Needed because
                 some feed systems pressurize the fuel from the oxidizer side.
+            fuel_internal_energy: Current internal energy of the fuel [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
 
         Returns:
             Fuel mass flow rate [kg/s].
@@ -68,7 +80,9 @@ class FeedSystem(ABC):
         pass
 
     @abstractmethod
-    def get_oxidizer_tank_pressure(self, *, oxidizer_mass: float) -> float:
+    def get_oxidizer_tank_pressure(
+        self, *, oxidizer_mass: float, oxidizer_internal_energy: float | None = None
+    ) -> float:
         """
         Compute and return the oxidizer pressure at the injector inlet [Pa].
 
@@ -77,12 +91,20 @@ class FeedSystem(ABC):
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
         """
         pass
 
     @abstractmethod
     def get_fuel_tank_pressure(
-        self, *, oxidizer_mass: float, fuel_mass: float
+        self,
+        *,
+        oxidizer_mass: float,
+        fuel_mass: float,
+        fuel_internal_energy: float | None = None,
+        oxidizer_internal_energy: float | None = None,
     ) -> float:
         """
         Compute and return the fuel pressure at the injector inlet [Pa].
@@ -93,5 +115,11 @@ class FeedSystem(ABC):
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             fuel_mass: Current fuel mass in the tank [kg].
+            fuel_internal_energy: Current internal energy of the fuel [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            oxidizer_internal_energy: Current internal energy of the oxidizer
+                [J]. Required for a tank running an energy balance, unused
+                otherwise.
         """
         pass

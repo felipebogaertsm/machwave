@@ -49,7 +49,11 @@ def compute_chamber_pressure_mass_balance(
     volume_rate = free_chamber_volume_rate(chamber_pressure)
 
     critical_pressure_ratio = get_critical_pressure_ratio(k=k)
-    pressure_ratio = external_pressure / chamber_pressure
+    # A chamber at or below ambient drives nothing out of the nozzle. Holding
+    # the ratio at one takes the sub-critical branch to zero outflow there,
+    # rather than to the root of a negative number; flow back in through the
+    # nozzle is not modeled.
+    pressure_ratio = min(external_pressure / chamber_pressure, 1.0)
 
     if pressure_ratio <= critical_pressure_ratio:  # choked
         isentropic_flow_function = (k**0.5) * (2 / (k + 1)) ** (
