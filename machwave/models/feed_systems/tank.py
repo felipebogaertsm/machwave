@@ -1,3 +1,5 @@
+import functools
+
 import machwave.services.coolprop as coolprop_service
 
 
@@ -25,6 +27,7 @@ class Tank:
         temperature: float,
         initial_fluid_mass: float,
         overfill_tolerance: float = 0.01,
+        dynamic_viscosity: float | None = None,
     ) -> None:
         """
         Initialize a two-phase tank model.
@@ -37,6 +40,9 @@ class Tank:
                 the tank's loading; the integrator owns the mass thereafter.
             overfill_tolerance: Allowed fraction over the saturated liquid
                 density, e.g. 0.01 = 1% (>=0).
+            dynamic_viscosity: Dynamic viscosity of the delivered fluid [Pa-s]
+                (>0). Taken from CoolProp when omitted, which some fluids
+                (nitrous oxide among them) have no transport model for.
 
         Raises:
             ValueError: If the fluid is unknown to CoolProp, if any argument is
@@ -48,6 +54,7 @@ class Tank:
         self.temperature = temperature
         self.initial_fluid_mass = initial_fluid_mass
         self.overfill_tolerance = overfill_tolerance
+        self.dynamic_viscosity = dynamic_viscosity
 
         self._coolprop = coolprop_service.CoolPropService(fluid_name)
 
@@ -64,6 +71,8 @@ class Tank:
         )
         # Vapor pressure at the tank temperature, memoized per fluid mass.
         self._pressure_by_mass: dict[float, float] = {}
+        # Vapor viscosity at the tank temperature, memoized per fluid mass.
+        self._viscosity_by_mass: dict[float, float] = {}
 
         self._check_not_overfilled()
 
@@ -89,6 +98,11 @@ class Tank:
             raise ValueError(
                 "overfill_tolerance must be non-negative, got "
                 f"{self.overfill_tolerance}"
+            )
+        if self.dynamic_viscosity is not None and self.dynamic_viscosity <= 0.0:
+            raise ValueError(
+                "dynamic_viscosity must be strictly positive, got "
+                f"{self.dynamic_viscosity}"
             )
 
         self._validate_temperature_range()
@@ -138,6 +152,21 @@ class Tank:
                 f"{self.fluid_name} at {self.temperature} K"
             )
 
+    def is_delivering_liquid(self, fluid_mass: float) -> bool:
+        """
+        Whether the tank still holds liquid to feed, rather than vapor alone.
+
+        True while the fluid mass exceeds the mass of saturated vapor that
+        fills the tank, which is where the two-phase equilibrium holds.
+
+        Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
+
+        Returns:
+            True if liquid remains in the tank.
+        """
+        return fluid_mass > self.saturated_vapor_density * self.volume
+
     def get_pressure(self, fluid_mass: float) -> float:
         """
         Return the tank pressure [Pa] for a given fluid mass.
@@ -159,7 +188,7 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        if fluid_mass > self.saturated_vapor_density * self.volume:
+        if self.is_delivering_liquid(fluid_mass):
             return self.saturation_pressure
 
         if fluid_mass not in self._pressure_by_mass:
@@ -169,6 +198,70 @@ class Tank:
                 )
             )
         return self._pressure_by_mass[fluid_mass]
+
+    @functools.cached_property
+    def saturated_liquid_viscosity(self) -> float:
+        """
+        Dynamic viscosity of the saturated liquid at the tank temperature [Pa-s].
+
+        Resolved on first use rather than at construction, so a fluid CoolProp
+        holds no transport model for only stops the callers that need one.
+        """
+        return self._get_coolprop_viscosity(
+            lambda: self._coolprop.get_saturated_liquid_viscosity(self.temperature)
+        )
+
+    def _get_coolprop_viscosity(self, query) -> float:
+        """
+        Run a CoolProp viscosity query, naming the way out if it has none.
+
+        Raises:
+            ValueError: If CoolProp carries no transport model for the fluid.
+        """
+        try:
+            return query()
+        except ValueError as error:
+            raise ValueError(
+                f"CoolProp has no viscosity model for {self.fluid_name!r}. Pass "
+                "dynamic_viscosity to the tank to model anything that needs it, "
+                "such as a feed line pressure drop."
+            ) from error
+
+    def get_dynamic_viscosity(self, fluid_mass: float) -> float:
+        """
+        Return the dynamic viscosity [Pa-s] of the fluid the tank delivers.
+
+        A viscosity given to the tank stands for every fill state, the tank
+        being isothermal. Otherwise this follows the same fill states as
+        `get_density`: a partially liquid tank delivers saturated liquid, and an
+        all-vapor tank delivers vapor at the bulk density.
+
+        Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
+
+        Returns:
+            Dynamic viscosity [Pa-s].
+
+        Raises:
+            ValueError: If no viscosity was given and CoolProp carries no
+                transport model for the fluid.
+        """
+        if fluid_mass <= 0:
+            return 0.0
+
+        if self.dynamic_viscosity is not None:
+            return self.dynamic_viscosity
+
+        if self.is_delivering_liquid(fluid_mass):
+            return self.saturated_liquid_viscosity
+
+        if fluid_mass not in self._viscosity_by_mass:
+            self._viscosity_by_mass[fluid_mass] = self._get_coolprop_viscosity(
+                lambda: self._coolprop.get_viscosity_at_temperature_density(
+                    self.temperature, fluid_mass / self.volume
+                )
+            )
+        return self._viscosity_by_mass[fluid_mass]
 
     def get_density(self, fluid_mass: float) -> float:
         """
@@ -188,6 +281,6 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        if fluid_mass > self.saturated_vapor_density * self.volume:
+        if self.is_delivering_liquid(fluid_mass):
             return self.saturated_liquid_density
         return fluid_mass / self.volume

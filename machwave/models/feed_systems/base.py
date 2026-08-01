@@ -68,24 +68,35 @@ class FeedSystem(ABC):
         pass
 
     @abstractmethod
-    def get_oxidizer_tank_pressure(self, *, oxidizer_mass: float) -> float:
+    def get_oxidizer_tank_pressure(
+        self, *, oxidizer_mass: float, mass_flow_rate: float = 0.0
+    ) -> float:
         """
-        Compute and return the current oxidizer tank pressure [Pa].
+        Compute and return the oxidizer pressure at the injector inlet [Pa].
+
+        Whatever the feed system takes between the tank and the injector comes
+        off here, so the value is what the injector has to push with.
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
+            mass_flow_rate: Oxidizer flow drawn from the tank [kg/s]. Losses
+                that grow with the flow vanish at the default of no flow,
+                leaving the resting pressure.
         """
         pass
 
     @abstractmethod
     def get_fuel_tank_pressure(
-        self, *, oxidizer_mass: float, fuel_mass: float
+        self, *, oxidizer_mass: float, fuel_mass: float, mass_flow_rate: float = 0.0
     ) -> float:
         """
-        Compute and return the current fuel-side upstream pressure [Pa].
+        Compute and return the fuel pressure at the injector inlet [Pa].
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             fuel_mass: Current fuel mass in the tank [kg].
+            mass_flow_rate: Fuel flow drawn from the tank [kg/s]. Losses that
+                grow with the flow vanish at the default of no flow, leaving
+                the resting pressure.
         """
         pass

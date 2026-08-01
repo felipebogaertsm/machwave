@@ -34,7 +34,9 @@ class StackedTankPressureFedFeedSystemFactory:
             oxidizer_tank=oxidizer_tank,
             fuel_tank=fuel_tank,
             oxidizer_line_diameter=0.01,
-            oxidizer_line_length=0.5,
+            # The default oxidizer is nitrous oxide, which CoolProp holds no
+            # viscosity model for, so the default oxidizer line is not modeled.
+            oxidizer_line_length=0.0,
             fuel_line_diameter=0.008,
             fuel_line_length=0.5,
         )

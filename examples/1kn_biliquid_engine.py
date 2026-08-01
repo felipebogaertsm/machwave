@@ -48,7 +48,9 @@ def main():
 
     feed_system = feed_systems.StackedTankPressureFedFeedSystem(
         oxidizer_line_diameter=7.925e-3,
-        oxidizer_line_length=0.5,
+        # CoolProp has no viscosity model for nitrous oxide, so this line stays
+        # out of the pressure budget until the tank is given one.
+        oxidizer_line_length=0.0,
         fuel_line_diameter=5.715e-3,
         fuel_line_length=0.5,
         oxidizer_tank=oxidizer_tank,

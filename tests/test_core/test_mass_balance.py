@@ -205,3 +205,44 @@ def test_staged_inflow_tracks_refined_reference_better_than_freezing():
 
     assert np.all(staged > 0.0)
     assert staged_error < 0.2 * frozen_error
+
+
+class TestChamberBelowAmbient:
+    """A chamber that falls to ambient stops driving the nozzle.
+
+    The sub-critical branch takes the square root of one minus a power of the
+    pressure ratio, which turns negative once the chamber drops below ambient.
+    A blowdown reaches that on the way out, and the derivative has to stay a
+    number for the integrator to land there.
+    """
+
+    @pytest.mark.parametrize(
+        "chamber_pressure",
+        [BASE_KWARGS["external_pressure"], 5.0e4, 1.0e3],
+    )
+    def test_derivative_stays_finite(self, chamber_pressure):
+        (derivative,) = mass_balance.compute_chamber_pressure_mass_balance(
+            chamber_pressure=chamber_pressure,
+            mass_flow_in=constant(0.0),
+            **BASE_KWARGS,
+        )
+
+        assert np.isfinite(derivative)
+
+    def test_no_inflow_leaves_the_pressure_alone(self):
+        (derivative,) = mass_balance.compute_chamber_pressure_mass_balance(
+            chamber_pressure=BASE_KWARGS["external_pressure"],
+            mass_flow_in=constant(0.0),
+            **BASE_KWARGS,
+        )
+
+        assert derivative == pytest.approx(0.0)
+
+    def test_inflow_still_raises_the_pressure(self):
+        (derivative,) = mass_balance.compute_chamber_pressure_mass_balance(
+            chamber_pressure=5.0e4,
+            mass_flow_in=constant(0.01),
+            **BASE_KWARGS,
+        )
+
+        assert derivative > 0.0

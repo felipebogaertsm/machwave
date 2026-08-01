@@ -395,3 +395,79 @@ def test_init_rejects_unknown_fluid():
             temperature=298.0,
             initial_fluid_mass=0.5,
         )
+
+
+class TestDynamicViscosity:
+    def test_empty_tank_has_no_viscosity(self):
+        tank = tank_models.Tank(
+            fluid_name="Ethanol",
+            volume=0.01,
+            temperature=298.0,
+            initial_fluid_mass=0.0,
+        )
+        assert tank.get_dynamic_viscosity(0.0) == 0.0
+
+    def test_two_phase_tank_delivers_saturated_liquid(self):
+        temperature = 298.0
+        tank = tank_models.Tank(
+            fluid_name="Ethanol",
+            volume=0.01,
+            temperature=temperature,
+            initial_fluid_mass=5.0,
+        )
+        assert tank.get_dynamic_viscosity(5.0) == pytest.approx(
+            CP.PropsSI("V", "T", temperature, "Q", 0, "Ethanol")
+        )
+
+    def test_all_vapor_tank_delivers_vapor(self):
+        temperature = 298.0
+        volume = 0.01
+        tank = tank_models.Tank(
+            fluid_name="Ethanol",
+            volume=volume,
+            temperature=temperature,
+            initial_fluid_mass=1e-4,
+        )
+        assert tank.get_dynamic_viscosity(1e-4) == pytest.approx(
+            CP.PropsSI("V", "T", temperature, "D", 1e-4 / volume, "Ethanol")
+        )
+
+    def test_given_viscosity_wins_over_coolprop(self):
+        tank = tank_models.Tank(
+            fluid_name="Ethanol",
+            volume=0.01,
+            temperature=298.0,
+            initial_fluid_mass=5.0,
+            dynamic_viscosity=1.5e-4,
+        )
+        assert tank.get_dynamic_viscosity(5.0) == 1.5e-4
+
+    def test_given_viscosity_serves_a_fluid_coolprop_has_none_for(self):
+        tank = tank_models.Tank(
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=5.0,
+            dynamic_viscosity=1e-4,
+        )
+        assert tank.get_dynamic_viscosity(5.0) == 1e-4
+
+    def test_missing_viscosity_model_names_the_way_out(self):
+        tank = tank_models.Tank(
+            fluid_name="N2O",
+            volume=0.01,
+            temperature=293.0,
+            initial_fluid_mass=5.0,
+        )
+        with pytest.raises(ValueError, match="no viscosity model for 'N2O'"):
+            tank.get_dynamic_viscosity(5.0)
+
+    def test_init_rejects_non_positive_viscosity(self):
+        with pytest.raises(ValueError, match="dynamic_viscosity"):
+            tank_models.Tank(
+                fluid_name="Ethanol",
+                volume=0.01,
+                temperature=298.0,
+                initial_fluid_mass=5.0,
+                dynamic_viscosity=0.0,
+            )

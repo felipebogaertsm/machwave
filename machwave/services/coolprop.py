@@ -102,6 +102,33 @@ class CoolPropService:
         """
         return CP.PropsSI("S", "T", temperature, "Q", 0, self.fluid_name)
 
+    def get_saturated_liquid_viscosity(self, temperature: float) -> float:
+        """
+        Get the saturated-liquid dynamic viscosity at a given temperature.
+
+        Args:
+            temperature: Temperature [K].
+
+        Returns:
+            Saturated-liquid dynamic viscosity [Pa-s].
+        """
+        return CP.PropsSI("V", "T", temperature, "Q", 0, self.fluid_name)
+
+    def get_viscosity_at_temperature_density(
+        self, temperature: float, density: float
+    ) -> float:
+        """
+        Get the single-phase dynamic viscosity at a temperature and density.
+
+        Args:
+            temperature: Temperature [K].
+            density: Density [kg/m^3].
+
+        Returns:
+            Dynamic viscosity [Pa-s].
+        """
+        return CP.PropsSI("V", "T", temperature, "D", density, self.fluid_name)
+
     def get_density_at_temperature_pressure(
         self, temperature: float, pressure: float
     ) -> float:
