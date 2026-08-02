@@ -124,7 +124,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         Uses pre-computed values from the simulation result, extracts the
         x-coordinate (axial position) from the propellant's center of gravity
-        over time.
+        over time, already measured from the nozzle exit.
 
         Returns:
             `rocketpy.Function` with (time, position) data [m].

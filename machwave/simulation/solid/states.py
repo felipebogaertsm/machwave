@@ -191,6 +191,10 @@ class SolidMotorState(simulation_states.MotorState):
                 volume_per_segment=propellant_volume_per_segment,
                 center_of_gravity=propellant_cog,
             )
+            # Shift after the parallel axis step, which needs the grain frame.
+            propellant_cog[0] += (
+                self.motor.thrust_chamber.nozzle_exit_to_grain_port_distance
+            )
         else:  # no propellant left: CoG is undefined and inertia is zero
             propellant_cog = np.full(3, np.nan)
             propellant_moi = np.zeros((3, 3))

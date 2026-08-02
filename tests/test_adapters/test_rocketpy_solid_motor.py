@@ -107,3 +107,18 @@ def test_dry_mass_properties_are_forwarded() -> None:
     assert attrs["dry_mass"] == pytest.approx(1.5)
     assert attrs["center_of_dry_mass_position"] == pytest.approx(0.2)
     assert attrs["dry_inertia"] == pytest.approx((0.12, 0.12, 0.03))
+
+
+@pytest.mark.parametrize("offset", [0.0, 0.01, 0.25])
+def test_grain_center_of_mass_is_measured_from_the_nozzle_exit(offset) -> None:
+    thrust_chamber = SolidMotorThrustChamberFactory.build(
+        nozzle_exit_to_grain_port_distance=offset
+    )
+    motor = SolidMotorFactory.build(thrust_chamber=thrust_chamber)
+    adapter = _build_adapter_without_init(motor)
+
+    attrs = adapter._get_rocketpy_attributes()
+
+    assert attrs["grains_center_of_mass_position"] == pytest.approx(
+        motor.grain.get_center_of_gravity(web_distance=0.0)[0] + offset
+    )

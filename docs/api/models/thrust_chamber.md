@@ -9,4 +9,19 @@ Thrust chamber assembly and sub-components.
 - `SolidMotorThrustChamber` — Bundles nozzle + chamber + the distance from nozzle exit to grain port.
 - `BiliquidEngineThrustChamber` — Bundles nozzle + chamber + injector.
 
+## Center Of Gravity Frames
+
+Machwave measures axial positions along three nested frames, all with positive x
+pointing toward the bulkhead:
+
+| Frame | Origin | Where it appears |
+| --- | --- | --- |
+| Grain segment | That segment's own port face, closest to the nozzle | `GrainSegment.get_center_of_gravity` |
+| Grain | The grain port face, closest to the nozzle | `Grain.get_center_of_gravity` |
+| Motor | The nozzle exit plane | `SolidSimulationResult.propellant_cog`, `DryMassProperties.center_of_gravity_coordinate` |
+
+`nozzle_exit_to_grain_port_distance` on `SolidMotorThrustChamber` is what carries
+the grain frame into the motor frame. A segment origin is the initial position of
+its port face and stays fixed as that face regresses.
+
 ::: machwave.models.thrust_chamber
