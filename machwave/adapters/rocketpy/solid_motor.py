@@ -48,9 +48,10 @@ class RocketPySolidMotorAdapter(
         grain_initial_height = first_segment.length
         grain_initial_inner_radius = first_segment.core_diameter / 2
         throat_radius = motor.thrust_chamber.nozzle.throat_diameter / 2
-        grains_center_of_mass_position = motor.grain.get_center_of_gravity(
-            web_distance=0.0
-        )[0]
+        grains_center_of_mass_position = (
+            motor.grain.get_center_of_gravity(web_distance=0.0)[0]
+            + motor.thrust_chamber.nozzle_exit_to_grain_port_distance
+        )
 
         # RocketPy handles real density internally
         grain_density = motor.propellant.ideal_density

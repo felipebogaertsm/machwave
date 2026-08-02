@@ -27,6 +27,7 @@ class SolidSimulationResult(
     propellant_volume_per_segment: simulation_results.SimulationResultArray
     propellant_mass_per_segment: simulation_results.SimulationResultArray
     burn_rate: simulation_results.SimulationResultArray
+    # propellant_cog is measured from the nozzle exit, positive toward the bulkhead.
     propellant_cog: simulation_results.SimulationResultArray
     propellant_moi: simulation_results.SimulationResultArray
     # klemmung is filtered to burn_area > 0, so its length is < len(time).

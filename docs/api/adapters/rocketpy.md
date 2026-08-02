@@ -137,7 +137,7 @@ and its simulation result. The adapter currently provides:
 - RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
 - The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
 - The thrust chamber must define `dry_mass_properties`; the adapter raises `ValueError` otherwise.
-- The coordinate system orientation is `nozzle_to_combustion_chamber`.
+- The coordinate system orientation is `nozzle_to_combustion_chamber`, and `nozzle_position` is zero, so RocketPy measures from the nozzle exit. Machwave's motor frame shares that origin, so the propellant and dry mass positions pass through unchanged.
 
 ## API Reference
 

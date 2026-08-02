@@ -77,7 +77,8 @@ class SolidMotorThrustChamber(ThrustChamber):
             nozzle: Nozzle instance.
             combustion_chamber: Combustion chamber instance.
             nozzle_exit_to_grain_port_distance: Axial distance from the nozzle
-                exit plane to the grain port [m].
+                exit plane to the grain port [m]. Shifts grain mass properties
+                into the motor frame, whose origin is the nozzle exit.
             dry_mass_properties: Dry mass properties of the assembly. Optional;
                 only consumed by the RocketPy trajectory adapter. Internal
                 ballistics simulations do not require it.

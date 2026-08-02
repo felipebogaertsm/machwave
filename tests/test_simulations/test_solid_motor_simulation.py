@@ -314,3 +314,37 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
 
     np.testing.assert_array_equal(state.propellant_moi[-1], np.zeros((3, 3)))
     assert np.all(np.isnan(state.propellant_cog[-1]))
+
+
+def test_propellant_center_of_gravity_is_measured_from_the_nozzle_exit() -> None:
+    """The recorded center of gravity sits in the motor frame, not the grain frame."""
+    motor, params = motor_builders.build_apcp_motor()
+    state = solid_simulation.SolidMotorState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+
+    state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+
+    assert state.propellant_cog[-1][0] == pytest.approx(
+        motor.grain.get_center_of_gravity(web_distance=0.0)[0]
+        + motor.thrust_chamber.nozzle_exit_to_grain_port_distance
+    )
+
+
+def test_propellant_moment_of_inertia_is_unchanged_by_the_nozzle_exit_offset() -> None:
+    """The offset must land after the parallel axis step, leaving inertia alone."""
+    tensors = []
+    for offset in (0.0, 0.25):
+        motor, params = motor_builders.build_apcp_motor()
+        motor.thrust_chamber.nozzle_exit_to_grain_port_distance = offset
+        state = solid_simulation.SolidMotorState(
+            motor=motor,
+            igniter_pressure=params.igniter_pressure,
+            external_pressure=params.external_pressure,
+        )
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+        tensors.append(state.propellant_moi[-1])
+
+    np.testing.assert_allclose(tensors[0], tensors[1])

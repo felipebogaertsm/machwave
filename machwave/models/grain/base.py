@@ -159,8 +159,10 @@ class GrainSegment(ABC):
         """
         Return the center of gravity of the segment.
 
-        The coordinate system origin is at the port, closest to the nozzle,
-        with positive x-direction pointing toward the bulkhead.
+        Implementations must place the origin at the segment's own port face,
+        the one closest to the nozzle, with positive x pointing toward the
+        bulkhead. The origin is the initial position of that face and does not
+        move as the face regresses.
 
         Returns:
             Center of gravity of the segment as `(x, y, z)` [m].
@@ -451,7 +453,9 @@ class Grain:
         Returns:
             A 1D array of shape (3,) with the [x, y, z] coordinates of the
             center of gravity [m]. Origin is at the port of the grain (closest
-            to nozzle), with positive x pointing toward bulkhead.
+            to nozzle), with positive x pointing toward bulkhead. Add
+            `SolidMotorThrustChamber.nozzle_exit_to_grain_port_distance` to
+            reach the motor frame, which is measured from the nozzle exit.
 
         Raises:
             ValueError: If no segments are found in the grain.
