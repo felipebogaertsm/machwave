@@ -5,10 +5,10 @@ import functools
 import math
 from typing import Callable
 
+import machwave.common.fluid_state as fluid_state_models
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
-import machwave.models.feed_systems as feed_systems
 import machwave.models.feed_systems.tank as tank_models
 import machwave.models.motors as motors
 import machwave.models.propellants.properties as propellant_properties_models
@@ -20,14 +20,11 @@ import machwave.simulation.states as simulation_states
 def get_injector_mass_flows(
     chamber_pressure: float,
     *,
-    feed_system: feed_systems.FeedSystem,
     injector: injector_models.BipropellantInjector,
+    fuel_inlet: fluid_state_models.FluidState,
+    oxidizer_inlet: fluid_state_models.FluidState,
     fuel_mass: float,
     oxidizer_mass: float,
-    fuel_internal_energy: float | None,
-    oxidizer_internal_energy: float | None,
-    fuel_tank_pressure: float,
-    oxidizer_tank_pressure: float,
     is_feeding: bool,
     d_t: float,
 ) -> tuple[float, float]:
@@ -35,25 +32,19 @@ def get_injector_mass_flows(
     if not is_feeding:
         return 0.0, 0.0
     fuel_flow = (
-        feed_system.get_mass_flow_fuel(
+        injector.get_mass_flow_fuel(
+            inlet=fuel_inlet,
             chamber_pressure=chamber_pressure,
-            injector=injector,
-            fuel_mass=fuel_mass,
-            oxidizer_mass=oxidizer_mass,
-            fuel_internal_energy=fuel_internal_energy,
-            oxidizer_internal_energy=oxidizer_internal_energy,
         )
-        if fuel_tank_pressure > chamber_pressure
+        if fuel_inlet.pressure > chamber_pressure
         else 0.0
     )
     oxidizer_flow = (
-        feed_system.get_mass_flow_ox(
+        injector.get_mass_flow_ox(
+            inlet=oxidizer_inlet,
             chamber_pressure=chamber_pressure,
-            injector=injector,
-            oxidizer_mass=oxidizer_mass,
-            oxidizer_internal_energy=oxidizer_internal_energy,
         )
-        if oxidizer_tank_pressure > chamber_pressure
+        if oxidizer_inlet.pressure > chamber_pressure
         else 0.0
     )
     return (
@@ -176,6 +167,17 @@ class BiliquidEngineState(simulation_states.MotorState):
         propellant_mass = fuel_mass + oxidizer_mass
         self.propellant_mass.append(propellant_mass)
 
+        fuel_inlet = feed_system.get_fuel_inlet_state(
+            oxidizer_mass=oxidizer_mass,
+            fuel_mass=fuel_mass,
+            fuel_internal_energy=fuel_internal_energy,
+            oxidizer_internal_energy=oxidizer_internal_energy,
+        )
+        oxidizer_inlet = feed_system.get_oxidizer_inlet_state(
+            oxidizer_mass=oxidizer_mass,
+            oxidizer_internal_energy=oxidizer_internal_energy,
+        )
+
         fuel_tank_pressure = feed_system.get_fuel_tank_pressure(
             oxidizer_mass=oxidizer_mass,
             fuel_mass=fuel_mass,
@@ -207,14 +209,11 @@ class BiliquidEngineState(simulation_states.MotorState):
         )
         injector_flows = functools.partial(
             get_injector_mass_flows,
-            feed_system=feed_system,
             injector=self.motor.thrust_chamber.injector,
+            fuel_inlet=fuel_inlet,
+            oxidizer_inlet=oxidizer_inlet,
             fuel_mass=fuel_mass,
             oxidizer_mass=oxidizer_mass,
-            fuel_internal_energy=fuel_internal_energy,
-            oxidizer_internal_energy=oxidizer_internal_energy,
-            fuel_tank_pressure=fuel_tank_pressure,
-            oxidizer_tank_pressure=oxidizer_tank_pressure,
             is_feeding=is_feeding,
             d_t=d_t,
         )

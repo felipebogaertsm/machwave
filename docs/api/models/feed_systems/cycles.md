@@ -22,7 +22,7 @@ Additional cycles are under active development as separate work items: electric-
                    /regenerative-jacket specs)
 ```
 
-The cycle reads tank state via the [`Tank`][machwave.models.feed_systems.tank.Tank] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to evaluate mass flow through the injector. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_mass_flow_ox` and `get_mass_flow_fuel` once per integration step with the current `chamber_pressure` and the injector geometry from the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector].
+The cycle reads tank state via the [`Tank`][machwave.models.feed_systems.tank.Tank] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to say what reaches the injector face. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_oxidizer_inlet_state` and `get_fuel_inlet_state` once per integration step and hands the results to the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] at each chamber pressure the solver tries.
 
 ---
 
@@ -47,7 +47,7 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Mass-flow model.** The feed system supplies the upstream pressure for each side and delegates the orifice dispatch to the injector. Upstream pressure is the oxidizer tank pressure for the oxidizer branch and `oxidizer_tank_pressure - piston_loss` for the fuel branch; downstream pressure is `chamber_pressure`. The injector picks SPI or HEM per side from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]:
+**Mass-flow model.** The feed system supplies the inlet state for each side and the injector does the orifice dispatch. Inlet pressure is the oxidizer tank pressure for the oxidizer branch and `oxidizer_tank_pressure - piston_loss` for the fuel branch; downstream pressure is `chamber_pressure`. The injector picks SPI or HEM per side from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]:
 
 - **SPI** (single-phase incompressible) — `get_mass_flow_orifice` in [`machwave.core.incompressible_flow`](../../core.md):
 
@@ -55,7 +55,7 @@ feed_system = StackedTankPressureFedFeedSystem(
     \dot{m} = C_d \cdot A \cdot \sqrt{2 \rho \left(P_\text{up} - P_\text{down}\right)}
     \]
 
-    with $\rho$ the saturated-liquid density returned by [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density].
+    with $\rho$ the inlet density, which this cycle takes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density] — the saturated-liquid density while liquid remains.
 
 - **HEM** (homogeneous-equilibrium two-phase) — `get_homogeneous_equilibrium_mass_flux` in [`machwave.core.two_phase_flow`](../../core.md), required for self-pressurized propellants such as nitrous oxide where the upstream saturated liquid flashes across the orifice and the flow can choke on the two-phase sound speed. The injector multiplies the returned mass flux by $C_d \cdot A$.
 

@@ -1,6 +1,5 @@
 import machwave.models.feed_systems.base as feed_system_base
 import machwave.models.feed_systems.tank as tank
-import machwave.models.thrust_chamber.injector as injector_models
 
 
 class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
@@ -62,83 +61,6 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         ):
             if value < 0.0:
                 raise ValueError(f"{name} must be non-negative, got {value}")
-
-    def get_mass_flow_ox(
-        self,
-        chamber_pressure: float,
-        *,
-        injector: injector_models.BipropellantInjector,
-        oxidizer_mass: float,
-        oxidizer_internal_energy: float | None = None,
-    ) -> float:
-        """
-        Compute the current oxidizer mass flow rate by delegating to the injector.
-
-        Args:
-            chamber_pressure: Chamber pressure [Pa].
-            injector: Bipropellant injector handling the orifice dispatch.
-            oxidizer_mass: Current oxidizer mass in the tank [kg].
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J]. Required for a tank running an energy balance, unused
-                otherwise.
-
-        Returns:
-            Oxidizer mass flow rate [kg/s].
-        """
-        return injector.get_mass_flow_ox(
-            tank=self.oxidizer_tank,
-            pressure_upstream=self.get_oxidizer_tank_pressure(
-                oxidizer_mass=oxidizer_mass,
-                oxidizer_internal_energy=oxidizer_internal_energy,
-            ),
-            chamber_pressure=chamber_pressure,
-            fluid_mass=oxidizer_mass,
-            internal_energy=oxidizer_internal_energy,
-        )
-
-    def get_mass_flow_fuel(
-        self,
-        chamber_pressure: float,
-        *,
-        injector: injector_models.BipropellantInjector,
-        fuel_mass: float,
-        oxidizer_mass: float,
-        fuel_internal_energy: float | None = None,
-        oxidizer_internal_energy: float | None = None,
-    ) -> float:
-        """
-        Compute the current fuel mass flow rate by delegating to the injector.
-
-        The upstream pressure is the oxidizer tank pressure minus the piston
-        loss, since this models a stacked tank pressurized through the piston.
-
-        Args:
-            chamber_pressure: Chamber pressure [Pa].
-            injector: Bipropellant injector handling the orifice dispatch.
-            fuel_mass: Current fuel mass in the tank [kg].
-            oxidizer_mass: Current oxidizer mass in the tank [kg].
-            fuel_internal_energy: Current internal energy of the fuel [J].
-                Required for a tank running an energy balance, unused
-                otherwise.
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J], which pressurizes the fuel through the piston. Required
-                for a tank running an energy balance, unused otherwise.
-
-        Returns:
-            Fuel mass flow rate [kg/s].
-        """
-        return injector.get_mass_flow_fuel(
-            tank=self.fuel_tank,
-            pressure_upstream=self.get_fuel_tank_pressure(
-                oxidizer_mass=oxidizer_mass,
-                fuel_mass=fuel_mass,
-                fuel_internal_energy=fuel_internal_energy,
-                oxidizer_internal_energy=oxidizer_internal_energy,
-            ),
-            chamber_pressure=chamber_pressure,
-            fluid_mass=fuel_mass,
-            internal_energy=fuel_internal_energy,
-        )
 
     def get_oxidizer_tank_pressure(
         self, *, oxidizer_mass: float, oxidizer_internal_energy: float | None = None
