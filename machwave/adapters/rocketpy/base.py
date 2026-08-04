@@ -74,8 +74,9 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         thrust_source = np.column_stack((time, thrust))
 
-        # 6DOF simulations need the dry mass properties
-        dry_mass_properties = thrust_chamber.require_dry_mass_properties()
+        dry_mass_properties = thrust_chamber.dry_mass_properties
+        if dry_mass_properties is None:
+            raise ValueError("RocketPy's 6DOF simulation requires dry mass properties")
 
         # Both machwave and RocketPy use nozzle exit as origin, positive toward the
         # bulkhead ("nozzle_to_combustion_chamber" orientation).
