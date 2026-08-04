@@ -73,19 +73,6 @@ class BipropellantInjectorFactory:
         return thrust_chamber_models.BipropellantInjector(**kwargs)
 
 
-class InjectorInletStateFactory:
-    @classmethod
-    def build(cls, **overrides: Any) -> thrust_chamber_models.InjectorInletState:
-        kwargs: dict[str, Any] = dict(
-            fluid_name="N2O",
-            pressure=50e5,
-            temperature=293.0,
-            density=743.0,
-        )
-        kwargs.update(overrides)
-        return thrust_chamber_models.InjectorInletState(**kwargs)
-
-
 class SolidMotorThrustChamberFactory:
     @classmethod
     def build(cls, **overrides: Any) -> thrust_chamber_models.SolidMotorThrustChamber:

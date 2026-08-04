@@ -4,6 +4,7 @@ sub-component construction to lower-level factories so overrides apply at any
 layer.
 """
 
+from tests.factories.common import FluidStateFactory
 from tests.factories.feed_systems import (
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
@@ -33,7 +34,6 @@ from tests.factories.thrust_chamber import (
     BiliquidEngineThrustChamberFactory,
     BipropellantInjectorFactory,
     CombustionChamberFactory,
-    InjectorInletStateFactory,
     NozzleFactory,
     SolidMotorThrustChamberFactory,
 )
@@ -49,8 +49,8 @@ __all__ = [
     "ConicalGrainSegmentFactory",
     "DGrainSegmentFactory",
     "FinocylGrainSegmentFactory",
+    "FluidStateFactory",
     "FuelComponentFactory",
-    "InjectorInletStateFactory",
     "MultiPortGrainSegmentFactory",
     "NozzleFactory",
     "OxidizerComponentFactory",

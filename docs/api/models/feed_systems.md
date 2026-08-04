@@ -20,12 +20,12 @@ Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.b
 
 From those, the base class assembles the state each side of the injector is fed with:
 
-- `get_oxidizer_inlet_state(*, oxidizer_mass) -> InjectorInletState`
-- `get_fuel_inlet_state(*, oxidizer_mass, fuel_mass) -> InjectorInletState`
+- `get_oxidizer_inlet_state(*, oxidizer_mass) -> FluidState`
+- `get_fuel_inlet_state(*, oxidizer_mass, fuel_mass) -> FluidState`
 
 The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides the inlet-state method to say so.
 
-The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). The [`InjectorInletState`][machwave.models.thrust_chamber.injector.InjectorInletState] is the whole of what passes between them, so neither side has to know how the other works.
+The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). A [`FluidState`][machwave.common.fluid_state.FluidState] is the whole of what passes between them, so neither package imports the other — both depend only on the shared value object.
 
 [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads both inlet states once per integration step, then calls [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] with them at each chamber pressure the solver tries.
 

@@ -5,6 +5,7 @@ import functools
 import math
 from typing import Callable
 
+import machwave.common.fluid_state as fluid_state_models
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
@@ -20,8 +21,8 @@ def get_injector_mass_flows(
     chamber_pressure: float,
     *,
     injector: injector_models.BipropellantInjector,
-    fuel_inlet: injector_models.InjectorInletState,
-    oxidizer_inlet: injector_models.InjectorInletState,
+    fuel_inlet: fluid_state_models.FluidState,
+    oxidizer_inlet: fluid_state_models.FluidState,
     fuel_mass: float,
     oxidizer_mass: float,
     is_feeding: bool,

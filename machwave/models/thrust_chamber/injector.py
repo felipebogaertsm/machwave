@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import dataclasses
 import enum
 
+import machwave.common.fluid_state as fluid_state_models
 import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
 
@@ -22,31 +22,14 @@ class MassFlowModel(enum.StrEnum):
     HEM = "hem"
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
-class InjectorInletState:
-    """
-    The propellant one side of the injector is fed with.
-
-    The state at the injector face, after whatever the feed system takes
-    between the tank and the injector. What the orifice sees is all the
-    injector needs, so anything upstream of the face is the feed system's to
-    account for.
-
-    Attributes:
-        fluid_name: Name of the fluid in the CoolProp database.
-        pressure: Stagnation pressure at the injector inlet [Pa].
-        temperature: Stagnation temperature at the injector inlet [K].
-        density: Fluid density at the injector inlet [kg/m^3].
-    """
-
-    fluid_name: str
-    pressure: float
-    temperature: float
-    density: float
-
-
 class BipropellantInjector:
-    """A simple injector class for a biliquid rocket engine."""
+    """
+    A simple injector class for a biliquid rocket engine.
+
+    Each side is fed a stagnation state at the injector face. What the orifice
+    sees is all the injector needs, so anything upstream of the face is the
+    feed system's to account for.
+    """
 
     def __init__(
         self,
@@ -110,7 +93,7 @@ class BipropellantInjector:
     def get_mass_flow_fuel(
         self,
         *,
-        inlet: InjectorInletState,
+        inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
     ) -> float:
         """
@@ -134,7 +117,7 @@ class BipropellantInjector:
     def get_mass_flow_ox(
         self,
         *,
-        inlet: InjectorInletState,
+        inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
     ) -> float:
         """
@@ -158,7 +141,7 @@ class BipropellantInjector:
     @staticmethod
     def _get_mass_flow(
         *,
-        inlet: InjectorInletState,
+        inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
         discharge_coefficient: float,
         injector_area: float,

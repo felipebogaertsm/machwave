@@ -4,7 +4,7 @@ import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
 import machwave.services.coolprop as coolprop_service
 from machwave.models.thrust_chamber import MassFlowModel
-from tests.factories import BipropellantInjectorFactory, InjectorInletStateFactory
+from tests.factories import BipropellantInjectorFactory, FluidStateFactory
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def saturated_nitrous_oxide_inlet():
     """Nitrous oxide at the saturated liquid state, as a tank would deliver it."""
     coolprop = coolprop_service.CoolPropService("N2O")
     temperature = 293.0
-    return InjectorInletStateFactory.build(
+    return FluidStateFactory.build(
         fluid_name="N2O",
         pressure=coolprop.get_saturation_pressure(temperature),
         temperature=temperature,
@@ -127,7 +127,7 @@ class TestBipropellantInjectorMassFlow:
 
     def test_spi_dispatch_matches_core_orifice_helper(self):
         """SPI dispatch equals `Cd * A * sqrt(2 * rho * dP)` from the core helper."""
-        inlet = InjectorInletStateFactory.build()
+        inlet = FluidStateFactory.build()
         injector = BipropellantInjectorFactory.build(
             mass_flow_model_oxidizer=MassFlowModel.SPI,
         )
@@ -173,7 +173,7 @@ class TestBipropellantInjectorMassFlow:
 
     def test_fuel_side_dispatch_uses_fuel_attributes(self):
         """Fuel dispatch uses fuel-side Cd, area, and model — not the ox-side ones."""
-        inlet = InjectorInletStateFactory.build(
+        inlet = FluidStateFactory.build(
             fluid_name="Ethanol",
             pressure=30e5,
             temperature=298.0,

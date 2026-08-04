@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
+import machwave.common.fluid_state as fluid_state_models
 import machwave.models.feed_systems.tank as tank
-import machwave.models.thrust_chamber.injector as injector_models
 
 
 class FeedSystem(ABC):
@@ -27,7 +27,7 @@ class FeedSystem(ABC):
         *,
         oxidizer_mass: float,
         oxidizer_internal_energy: float | None = None,
-    ) -> injector_models.InjectorInletState:
+    ) -> fluid_state_models.FluidState:
         """
         Return the oxidizer state delivered to the injector inlet.
 
@@ -42,7 +42,7 @@ class FeedSystem(ABC):
                 [J]. Required for a tank running an energy balance, unused
                 otherwise.
         """
-        return injector_models.InjectorInletState(
+        return fluid_state_models.FluidState(
             fluid_name=self.oxidizer_tank.fluid_name,
             pressure=self.get_oxidizer_tank_pressure(
                 oxidizer_mass=oxidizer_mass,
@@ -63,7 +63,7 @@ class FeedSystem(ABC):
         fuel_mass: float,
         fuel_internal_energy: float | None = None,
         oxidizer_internal_energy: float | None = None,
-    ) -> injector_models.InjectorInletState:
+    ) -> fluid_state_models.FluidState:
         """
         Return the fuel state delivered to the injector inlet.
 
@@ -84,7 +84,7 @@ class FeedSystem(ABC):
                 [J]. Required for a tank running an energy balance, unused
                 otherwise.
         """
-        return injector_models.InjectorInletState(
+        return fluid_state_models.FluidState(
             fluid_name=self.fuel_tank.fluid_name,
             pressure=self.get_fuel_tank_pressure(
                 oxidizer_mass=oxidizer_mass,
