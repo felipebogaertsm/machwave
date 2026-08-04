@@ -166,8 +166,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         propellant_mass = fuel_mass + oxidizer_mass
         self.propellant_mass.append(propellant_mass)
 
-        # The injector inlet states hold over the whole step, so the tank reads
-        # behind them stay out of the chamber pressure solve.
         fuel_inlet = feed_system.get_fuel_inlet_state(
             oxidizer_mass=oxidizer_mass,
             fuel_mass=fuel_mass,
