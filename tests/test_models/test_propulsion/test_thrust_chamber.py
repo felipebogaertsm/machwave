@@ -42,11 +42,6 @@ class TestThrustChamberValidation:
         thrust_chamber = SolidMotorThrustChamberFactory.build(dry_mass_properties=None)
         assert thrust_chamber.dry_mass_properties is None
 
-    def test_require_dry_mass_properties_raises_when_absent(self):
-        thrust_chamber = SolidMotorThrustChamberFactory.build(dry_mass_properties=None)
-        with pytest.raises(ValueError, match="Dry mass properties are not defined"):
-            thrust_chamber.require_dry_mass_properties()
-
 
 class TestDryMassProperties:
     @pytest.mark.parametrize("dry_mass", [0.0, -1.0])

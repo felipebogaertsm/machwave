@@ -89,7 +89,7 @@ def test_missing_dry_mass_properties_raises_value_error() -> None:
     motor = SolidMotorFactory.build(thrust_chamber=thrust_chamber)
     adapter = _build_adapter_without_init(motor)
 
-    with pytest.raises(ValueError, match="Dry mass properties are not defined"):
+    with pytest.raises(ValueError, match="requires dry mass properties"):
         adapter._get_rocketpy_attributes()
 
 

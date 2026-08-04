@@ -18,7 +18,7 @@ class ComponentRole(enum.StrEnum):
     ADDITIVE = "additive"
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class PropellantComponent:
     """
     Chemical component of a propellant formulation.
