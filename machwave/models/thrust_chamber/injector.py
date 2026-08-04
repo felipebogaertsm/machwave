@@ -23,13 +23,7 @@ class MassFlowModel(enum.StrEnum):
 
 
 class BipropellantInjector:
-    """
-    A simple injector class for a biliquid rocket engine.
-
-    Each side is fed a stagnation state at the injector face. What the orifice
-    sees is all the injector needs, so anything upstream of the face is the
-    feed system's to account for.
-    """
+    """Represents an injector for a biliquid rocket engine."""
 
     def __init__(
         self,
