@@ -1,35 +1,26 @@
+import dataclasses
+
 import numpy as np
 
 
+@dataclasses.dataclass(kw_only=True)
 class CombustionChamber:
-    """Geometry model of a cylindrical combustion-chamber."""
+    """
+    Represents a cylindrical combustion chamber.
 
-    def __init__(
-        self,
-        casing_inner_diameter: float,
-        casing_outer_diameter: float,
-        internal_length: float,
-        thermal_liner_thickness: float = 0.0,
-    ) -> None:
-        """
-        Create a new CombustionChamber instance.
+    Attributes:
+        casing_inner_diameter: Internal diameter [m].
+        casing_outer_diameter: Outer diameter [m].
+        internal_length: Distance from combustion chamber inlet to nozzle inlet [m].
+        thermal_liner_thickness: Thermal liner thickness [m]. Defaults to 0.0.
+    """
 
-        Args:
-            casing_inner_diameter: Internal diameter [m].
-            casing_outer_diameter: Outer diameter [m].
-            internal_length: Distance from combustion chamber inlet to
-                nozzle inlet [m].
-            thermal_liner_thickness: Thermal liner thickness [m].
-                Defaults to 0.0.
-        """
-        self.casing_inner_diameter = casing_inner_diameter
-        self.casing_outer_diameter = casing_outer_diameter
-        self.internal_length = internal_length
-        self.thermal_liner_thickness = thermal_liner_thickness
+    casing_inner_diameter: float
+    casing_outer_diameter: float
+    internal_length: float
+    thermal_liner_thickness: float = 0.0
 
-        self._validate()
-
-    def _validate(self) -> None:
+    def __post_init__(self) -> None:
         """
         Validate the combustion chamber geometry.
 
