@@ -31,11 +31,6 @@ class FeedSystem(ABC):
         """
         Return the oxidizer state delivered to the injector inlet.
 
-        The tank fluid at the tank temperature and density, at whatever
-        pressure survives the path to the injector. A cycle that heats or
-        pressurizes the oxidizer on the way, such as one running it through a
-        regenerative jacket, overrides this.
-
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             oxidizer_internal_energy: Current internal energy of the oxidizer
@@ -66,11 +61,6 @@ class FeedSystem(ABC):
     ) -> fluid_state_models.FluidState:
         """
         Return the fuel state delivered to the injector inlet.
-
-        The tank fluid at the tank temperature and density, at whatever
-        pressure survives the path to the injector. A cycle that heats or
-        pressurizes the fuel on the way, such as one running it through a
-        regenerative jacket, overrides this.
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg]. Needed
@@ -103,9 +93,6 @@ class FeedSystem(ABC):
         """
         Compute and return the oxidizer pressure at the injector inlet [Pa].
 
-        Whatever the feed system takes between the tank and the injector comes
-        off here, so the value is what the injector has to push with.
-
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
             oxidizer_internal_energy: Current internal energy of the oxidizer
@@ -125,9 +112,6 @@ class FeedSystem(ABC):
     ) -> float:
         """
         Compute and return the fuel pressure at the injector inlet [Pa].
-
-        Whatever the feed system takes between the tank and the injector comes
-        off here, so the value is what the injector has to push with.
 
         Args:
             oxidizer_mass: Current oxidizer mass in the tank [kg].
