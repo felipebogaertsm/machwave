@@ -33,6 +33,7 @@ from tests.factories.thrust_chamber import (
     BiliquidEngineThrustChamberFactory,
     BipropellantInjectorFactory,
     CombustionChamberFactory,
+    InjectorInletStateFactory,
     NozzleFactory,
     SolidMotorThrustChamberFactory,
 )
@@ -49,6 +50,7 @@ __all__ = [
     "DGrainSegmentFactory",
     "FinocylGrainSegmentFactory",
     "FuelComponentFactory",
+    "InjectorInletStateFactory",
     "MultiPortGrainSegmentFactory",
     "NozzleFactory",
     "OxidizerComponentFactory",

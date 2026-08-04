@@ -1,13 +1,10 @@
 from __future__ import annotations
 
+import dataclasses
 import enum
-from typing import TYPE_CHECKING
 
 import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
-
-if TYPE_CHECKING:
-    import machwave.models.feed_systems.tank as tank_models
 
 
 class MassFlowModel(enum.StrEnum):
@@ -23,6 +20,29 @@ class MassFlowModel(enum.StrEnum):
 
     SPI = "spi"
     HEM = "hem"
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+class InjectorInletState:
+    """
+    The propellant one side of the injector is fed with.
+
+    The state at the injector face, after whatever the feed system takes
+    between the tank and the injector. What the orifice sees is all the
+    injector needs, so anything upstream of the face is the feed system's to
+    account for.
+
+    Attributes:
+        fluid_name: Name of the fluid in the CoolProp database.
+        pressure: Stagnation pressure at the injector inlet [Pa].
+        temperature: Stagnation temperature at the injector inlet [K].
+        density: Fluid density at the injector inlet [kg/m^3].
+    """
+
+    fluid_name: str
+    pressure: float
+    temperature: float
+    density: float
 
 
 class BipropellantInjector:
@@ -90,116 +110,87 @@ class BipropellantInjector:
     def get_mass_flow_fuel(
         self,
         *,
-        tank: tank_models.Tank,
-        pressure_upstream: float,
+        inlet: InjectorInletState,
         chamber_pressure: float,
-        fluid_mass: float,
-        internal_energy: float | None = None,
     ) -> float:
         """
         Compute the fuel-side mass flow rate through this injector.
 
         Args:
-            tank: Tank supplying the fuel.
-            pressure_upstream: Upstream stagnation pressure [Pa].
+            inlet: Fuel state at the injector inlet.
             chamber_pressure: Chamber pressure [Pa].
-            fluid_mass: Current fuel mass in the tank [kg].
-            internal_energy: Current internal energy of the fuel [J]. Required
-                for a tank running an energy balance, unused otherwise.
 
         Returns:
             Fuel mass flow rate [kg/s].
         """
         return self._get_mass_flow(
-            tank=tank,
-            pressure_upstream=pressure_upstream,
+            inlet=inlet,
             chamber_pressure=chamber_pressure,
             discharge_coefficient=self.discharge_coefficient_fuel,
             injector_area=self.area_fuel,
             mass_flow_model=self.mass_flow_model_fuel,
-            fluid_mass=fluid_mass,
-            internal_energy=internal_energy,
         )
 
     def get_mass_flow_ox(
         self,
         *,
-        tank: tank_models.Tank,
-        pressure_upstream: float,
+        inlet: InjectorInletState,
         chamber_pressure: float,
-        fluid_mass: float,
-        internal_energy: float | None = None,
     ) -> float:
         """
         Compute the oxidizer-side mass flow rate through this injector.
 
         Args:
-            tank: Tank supplying the oxidizer.
-            pressure_upstream: Upstream stagnation pressure [Pa].
+            inlet: Oxidizer state at the injector inlet.
             chamber_pressure: Chamber pressure [Pa].
-            fluid_mass: Current oxidizer mass in the tank [kg].
-            internal_energy: Current internal energy of the oxidizer [J].
-                Required for a tank running an energy balance, unused
-                otherwise.
 
         Returns:
             Oxidizer mass flow rate [kg/s].
         """
         return self._get_mass_flow(
-            tank=tank,
-            pressure_upstream=pressure_upstream,
+            inlet=inlet,
             chamber_pressure=chamber_pressure,
             discharge_coefficient=self.discharge_coefficient_oxidizer,
             injector_area=self.area_ox,
             mass_flow_model=self.mass_flow_model_oxidizer,
-            fluid_mass=fluid_mass,
-            internal_energy=internal_energy,
         )
 
     @staticmethod
     def _get_mass_flow(
         *,
-        tank: tank_models.Tank,
-        pressure_upstream: float,
+        inlet: InjectorInletState,
         chamber_pressure: float,
         discharge_coefficient: float,
         injector_area: float,
         mass_flow_model: MassFlowModel,
-        fluid_mass: float,
-        internal_energy: float | None = None,
     ) -> float:
         """
         Dispatch a mass flow calculation through the requested model.
 
         Args:
-            tank: Tank supplying the propellant.
-            pressure_upstream: Upstream stagnation pressure [Pa].
+            inlet: Propellant state at the injector inlet.
             chamber_pressure: Chamber pressure [Pa].
             discharge_coefficient: Discharge coefficient (dimensionless).
             injector_area: Effective flow area [m^2].
             mass_flow_model: Mass flow model for this side.
-            fluid_mass: Current mass of fluid in the tank [kg].
-            internal_energy: Current internal energy of that fluid [J].
-                Required for a tank running an energy balance, unused
-                otherwise.
 
         Returns:
             Mass flow rate [kg/s].
         """
         if mass_flow_model == MassFlowModel.HEM:
             mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
-                fluid_name=tank.fluid_name,
-                temperature_upstream=tank.get_temperature(fluid_mass, internal_energy),
+                fluid_name=inlet.fluid_name,
+                temperature_upstream=inlet.temperature,
                 pressure_downstream=chamber_pressure,
-                pressure_upstream=pressure_upstream,
+                pressure_upstream=inlet.pressure,
             )
             return discharge_coefficient * injector_area * mass_flux
         elif mass_flow_model == MassFlowModel.SPI:
             return incompressible_flow.get_mass_flow_orifice(
                 discharge_coefficient=discharge_coefficient,
                 area=injector_area,
-                density=tank.get_density(fluid_mass, internal_energy),
-                pressure_upstream=pressure_upstream,
+                density=inlet.density,
+                pressure_upstream=inlet.pressure,
                 pressure_downstream=chamber_pressure,
             )
 

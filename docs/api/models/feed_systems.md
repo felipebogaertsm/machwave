@@ -13,16 +13,21 @@ organised around three concerns:
 
 ## The `FeedSystem` contract
 
-Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] and exposes four methods used by the simulation loop:
+Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] and supplies the pressure it delivers to each side of the injector:
 
-- `get_mass_flow_ox(chamber_pressure, *, injector, oxidizer_mass) -> float`
-- `get_mass_flow_fuel(chamber_pressure, *, injector, fuel_mass, oxidizer_mass) -> float`
 - `get_oxidizer_tank_pressure(*, oxidizer_mass) -> float`
 - `get_fuel_tank_pressure(*, oxidizer_mass, fuel_mass) -> float`
 
-The mass-flow methods take a [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] and delegate the orifice dispatch to it. The feed system is responsible for computing the upstream pressure (tank state, piston losses, pump discharge); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). This split lets pump-fed cycles substitute a different upstream-pressure source without touching orifice physics.
+From those, the base class assembles the state each side of the injector is fed with:
 
-The concrete propellant mass-flow consumer is [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls these methods once per integration step with the current `chamber_pressure` and the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] from the thrust chamber.
+- `get_oxidizer_inlet_state(*, oxidizer_mass) -> InjectorInletState`
+- `get_fuel_inlet_state(*, oxidizer_mass, fuel_mass) -> InjectorInletState`
+
+The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides the inlet-state method to say so.
+
+The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). The [`InjectorInletState`][machwave.models.thrust_chamber.injector.InjectorInletState] is the whole of what passes between them, so neither side has to know how the other works.
+
+[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads both inlet states once per integration step, then calls [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] with them at each chamber pressure the solver tries.
 
 ## Public surface
 
