@@ -20,7 +20,7 @@ from tests.factories import (
     BiliquidEngineFactory,
     BiliquidEngineThrustChamberFactory,
     BiliquidPropellantFactory,
-    BipropellantInjectorFactory,
+    InjectorFactory,
     CombustionChamberFactory,
     FinocylGrainSegmentFactory,
     FuelComponentFactory,
@@ -251,7 +251,7 @@ def build_1kn_biliquid_engine() -> tuple[
             convergent_angle=45,
             expansion_ratio=4,
         ),
-        injector=BipropellantInjectorFactory.build(),
+        injector=InjectorFactory.build(),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=70e-3,
             casing_outer_diameter=76e-3,

@@ -60,17 +60,29 @@ class CombustionChamberFactory:
         return thrust_chamber_models.CombustionChamber(**kwargs)
 
 
-class BipropellantInjectorFactory:
+class InjectorElementFactory:
     @classmethod
-    def build(cls, **overrides: Any) -> thrust_chamber_models.BipropellantInjector:
+    def build(cls, **overrides: Any) -> thrust_chamber_models.InjectorElement:
         kwargs: dict[str, Any] = dict(
-            discharge_coefficient_fuel=0.48,
-            discharge_coefficient_oxidizer=0.48,
-            area_fuel=8.2e-6 / 0.48,
-            area_ox=1.4e-5 / 0.48,
+            discharge_coefficient=0.48,
+            area=8.2e-6 / 0.48,
         )
         kwargs.update(overrides)
-        return thrust_chamber_models.BipropellantInjector(**kwargs)
+        return thrust_chamber_models.InjectorElement(**kwargs)
+
+
+class InjectorFactory:
+    """Builds the two-element injector a biliquid engine runs on."""
+
+    @classmethod
+    def build(cls, **overrides: Any) -> thrust_chamber_models.Injector:
+        elements = overrides.pop("elements", None) or {
+            "oxidizer": InjectorElementFactory.build(area=1.4e-5 / 0.48),
+            "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
+        }
+        kwargs: dict[str, Any] = dict(elements=elements)
+        kwargs.update(overrides)
+        return thrust_chamber_models.Injector(**kwargs)
 
 
 class SolidMotorThrustChamberFactory:
@@ -103,9 +115,7 @@ class BiliquidEngineThrustChamberFactory:
         cls, **overrides: Any
     ) -> thrust_chamber_models.BiliquidEngineThrustChamber:
         nozzle = overrides.pop("nozzle", None) or NozzleFactory.build()
-        injector = (
-            overrides.pop("injector", None) or BipropellantInjectorFactory.build()
-        )
+        injector = overrides.pop("injector", None) or InjectorFactory.build()
         combustion_chamber = (
             overrides.pop("combustion_chamber", None)
             or CombustionChamberFactory.build()

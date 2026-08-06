@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 import math
+from collections.abc import Mapping
 from typing import Callable
 
 import machwave.common.fluid_state as fluid_state_models
@@ -23,37 +24,24 @@ import machwave.simulation.states as simulation_states
 def get_injector_mass_flows(
     chamber_pressure: float,
     *,
-    injector: injector_models.BipropellantInjector,
-    fuel_inlet: fluid_state_models.FluidState,
-    oxidizer_inlet: fluid_state_models.FluidState,
-    fuel_mass: float,
-    oxidizer_mass: float,
+    injector: injector_models.Injector,
+    inlet_states: Mapping[str, fluid_state_models.FluidState],
+    line_masses: Mapping[str, float],
     is_feeding: bool,
     d_t: float,
-) -> tuple[float, float]:
-    """Fuel and oxidizer injector flows at the given chamber pressure [kg/s]."""
+) -> dict[str, float]:
+    """
+    Injector flow on every line at the given chamber pressure [kg/s].
+
+    No line delivers more than the mass it has left over the timestep.
+    """
     if not is_feeding:
-        return 0.0, 0.0
-    fuel_flow = (
-        injector.get_mass_flow_fuel(
-            inlet=fuel_inlet,
-            chamber_pressure=chamber_pressure,
-        )
-        if fuel_inlet.pressure > chamber_pressure
-        else 0.0
+        return {name: 0.0 for name in inlet_states}
+
+    flows = injector.get_mass_flows(
+        inlet_states=inlet_states, chamber_pressure=chamber_pressure
     )
-    oxidizer_flow = (
-        injector.get_mass_flow_ox(
-            inlet=oxidizer_inlet,
-            chamber_pressure=chamber_pressure,
-        )
-        if oxidizer_inlet.pressure > chamber_pressure
-        else 0.0
-    )
-    return (
-        min(fuel_flow, fuel_mass / d_t),
-        min(oxidizer_flow, oxidizer_mass / d_t),
-    )
+    return {name: min(flow, line_masses[name] / d_t) for name, flow in flows.items()}
 
 
 def get_line_with_role(
@@ -78,10 +66,10 @@ def get_line_with_role(
 def get_total_injector_mass_flow(
     chamber_pressure: float,
     *,
-    injector_flows: Callable[[float], tuple[float, float]],
+    injector_flows: Callable[[float], Mapping[str, float]],
 ) -> float:
-    """Total injector mass flow (fuel + oxidizer) at the given pressure [kg/s]."""
-    return sum(injector_flows(chamber_pressure))
+    """Total injector mass flow over every line at the given pressure [kg/s]."""
+    return sum(injector_flows(chamber_pressure).values())
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -228,14 +216,17 @@ class BiliquidEngineState(simulation_states.MotorState):
         injector_flows = functools.partial(
             get_injector_mass_flows,
             injector=self.motor.thrust_chamber.injector,
-            fuel_inlet=fuel_inlet,
-            oxidizer_inlet=oxidizer_inlet,
-            fuel_mass=fuel_mass,
-            oxidizer_mass=oxidizer_mass,
+            inlet_states=inlet_states,
+            line_masses={
+                self.fuel_line.name: fuel_mass,
+                self.oxidizer_line.name: oxidizer_mass,
+            },
             is_feeding=is_feeding,
             d_t=d_t,
         )
-        m_dot_fuel, m_dot_ox = injector_flows(chamber_pressure)
+        mass_flows = injector_flows(chamber_pressure)
+        m_dot_fuel = mass_flows[self.fuel_line.name]
+        m_dot_ox = mass_flows[self.oxidizer_line.name]
         self.fuel_mass_flow_rate.append(m_dot_fuel)
         self.oxidizer_mass_flow_rate.append(m_dot_ox)
         fuel_consumed = m_dot_fuel * d_t
