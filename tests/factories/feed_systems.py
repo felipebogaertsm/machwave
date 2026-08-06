@@ -33,6 +33,17 @@ class PropellantLineFactory:
         return feed_systems_models.PropellantLine(**kwargs)
 
 
+class SingleLinePressureFedFeedSystemFactory:
+    @classmethod
+    def build(
+        cls, **overrides: Any
+    ) -> feed_systems_models.SingleLinePressureFedFeedSystem:
+        line = overrides.pop("line", None) or PropellantLineFactory.build()
+        kwargs: dict[str, Any] = dict(line=line)
+        kwargs.update(overrides)
+        return feed_systems_models.SingleLinePressureFedFeedSystem(**kwargs)
+
+
 class StackedTankPressureFedFeedSystemFactory:
     @classmethod
     def build(
