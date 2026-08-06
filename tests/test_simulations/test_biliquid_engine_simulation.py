@@ -69,16 +69,26 @@ def test_motor_is_re_runnable() -> None:
     second = run_simulation(motor, params)
 
     assert first.time.size == second.time.size
-    np.testing.assert_array_equal(first.oxidizer_mass, second.oxidizer_mass)
-    np.testing.assert_array_equal(first.fuel_mass, second.fuel_mass)
+    np.testing.assert_array_equal(
+        first.fluid_mass_per_line["oxidizer"], second.fluid_mass_per_line["oxidizer"]
+    )
+    np.testing.assert_array_equal(
+        first.fluid_mass_per_line["fuel"], second.fluid_mass_per_line["fuel"]
+    )
     np.testing.assert_array_equal(first.thrust, second.thrust)
 
 
 def test_propellant_masses_are_monotone_non_increasing(
     simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
-    for series_name in ("fuel_mass", "oxidizer_mass", "propellant_mass"):
-        series = getattr(simulation_result, series_name)
+    series_by_name = {
+        **{
+            f"{name} mass": series
+            for name, series in simulation_result.fluid_mass_per_line.items()
+        },
+        "propellant_mass": simulation_result.propellant_mass,
+    }
+    for series_name, series in series_by_name.items():
         diffs = np.diff(series)
         assert (diffs <= 1e-9).all(), (
             f"{series_name} increased between steps; max delta={diffs.max():.3e}"
@@ -190,7 +200,7 @@ def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
 
 def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
     state = _build_state_for_burnout_test()
-    state.fuel_mass[-1] = 1e-9
+    state.fluid_mass_per_line["fuel"][-1] = 1e-9
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
@@ -200,7 +210,7 @@ def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
 
 def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     state = _build_state_for_burnout_test()
-    state.oxidizer_mass[-1] = 1e-9
+    state.fluid_mass_per_line["oxidizer"][-1] = 1e-9
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
@@ -211,37 +221,37 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 def test_flows_stop_after_fuel_exhausts() -> None:
     """The oxidizer is not burned on its own once the fuel is gone."""
     state = _build_state_for_burnout_test()
-    state.fuel_mass[-1] = 1e-9
+    state.fluid_mass_per_line["fuel"][-1] = 1e-9
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
     assert state.end_burn is True
-    oxidizer_mass_at_burnout = state.oxidizer_mass[-1]
+    oxidizer_mass_at_burnout = state.fluid_mass_per_line["oxidizer"][-1]
     assert oxidizer_mass_at_burnout > 0.0
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
-    assert state.fuel_mass_flow_rate[-1] == 0.0
-    assert state.oxidizer_mass_flow_rate[-1] == 0.0
+    assert state.mass_flow_rate_per_line["fuel"][-1] == 0.0
+    assert state.mass_flow_rate_per_line["oxidizer"][-1] == 0.0
     assert np.isnan(state.oxidizer_to_fuel_ratio[-1])
-    assert state.oxidizer_mass[-1] == oxidizer_mass_at_burnout
+    assert state.fluid_mass_per_line["oxidizer"][-1] == oxidizer_mass_at_burnout
 
 
 def test_flows_stop_after_oxidizer_exhausts() -> None:
     """The fuel is not burned on its own once the oxidizer is gone."""
     state = _build_state_for_burnout_test()
-    state.oxidizer_mass[-1] = 1e-9
+    state.fluid_mass_per_line["oxidizer"][-1] = 1e-9
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
     assert state.end_burn is True
-    fuel_mass_at_burnout = state.fuel_mass[-1]
+    fuel_mass_at_burnout = state.fluid_mass_per_line["fuel"][-1]
     assert fuel_mass_at_burnout > 0.0
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
-    assert state.fuel_mass_flow_rate[-1] == 0.0
-    assert state.oxidizer_mass_flow_rate[-1] == 0.0
+    assert state.mass_flow_rate_per_line["fuel"][-1] == 0.0
+    assert state.mass_flow_rate_per_line["oxidizer"][-1] == 0.0
     assert np.isnan(state.oxidizer_to_fuel_ratio[-1])
-    assert state.fuel_mass[-1] == fuel_mass_at_burnout
+    assert state.fluid_mass_per_line["fuel"][-1] == fuel_mass_at_burnout
 
 
 def test_surviving_propellant_stops_draining_after_burnout(
@@ -252,15 +262,15 @@ def test_surviving_propellant_stops_draining_after_burnout(
     after_burnout = simulation_result.time >= simulation_result.burn_time
     assert after_burnout.sum() > 1, "run ended at burnout, tail-off not exercised"
 
-    for series_name in ("fuel_mass", "oxidizer_mass"):
-        series = getattr(simulation_result, series_name)[after_burnout]
+    for series_name, full_series in simulation_result.fluid_mass_per_line.items():
+        series = full_series[after_burnout]
         assert (series == series[0]).all(), f"{series_name} kept draining after burnout"
 
 
 def test_tail_off_terminates_thrust_against_zero_ambient_pressure() -> None:
     """Against zero ambient pressure the nozzle stays choked, so tail-off ends it."""
     state = _build_state_for_burnout_test()
-    state.fuel_mass[-1] = 1e-9
+    state.fluid_mass_per_line["fuel"][-1] = 1e-9
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
@@ -312,7 +322,7 @@ def test_live_mixture_ratio_drives_cea() -> None:
         warnings.simplefilter("ignore", UserWarning)
         while not state.end_thrust:
             state.run_timestep(params.d_t, params.external_pressure)
-            if state.fuel_mass_flow_rate[-1] <= 0.0:
+            if state.mass_flow_rate_per_line["fuel"][-1] <= 0.0:
                 continue
             live_ratio = state.oxidizer_to_fuel_ratio[-1]
             if abs(live_ratio - design_ratio) > 1e-6:

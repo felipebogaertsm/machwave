@@ -108,12 +108,10 @@ def main():
     internal_ballistics_plots.thrust_pressure_plot(
         result.time, result.thrust, result.chamber_pressure
     ).show()
-    internal_ballistics_plots.plot_bipropellant_tank_profiles(
+    internal_ballistics_plots.plot_tank_profiles(
         result.time,
-        result.oxidizer_tank_pressure,
-        result.fuel_tank_pressure,
-        result.oxidizer_mass,
-        result.fuel_mass,
+        result.tank_pressure_per_line,
+        result.fluid_mass_per_line,
     ).show()
 
 
