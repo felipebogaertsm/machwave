@@ -46,7 +46,7 @@ def main():
         OXIDIZER_NAME, volume=3.80e-3, temperature=300, initial_fluid_mass=2.78
     )
 
-    feed_system = feed_systems.StackedTankPressureFedFeedSystem(
+    feed_system = feed_systems.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
         oxidizer_tank=oxidizer_tank,
         fuel_tank=fuel_tank,
         piston_loss=1e5,

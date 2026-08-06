@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.tank as tank_models
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
@@ -28,8 +29,15 @@ OXIDIZER_TANK = dict(
 
 def build(isothermal):
     motor, params = motor_builders.build_1kn_biliquid_engine()
-    motor.feed_system.oxidizer_tank = tank_models.Tank(
-        **OXIDIZER_TANK, isothermal=isothermal
+    feed_system = motor.feed_system
+    motor.feed_system = (
+        feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
+            oxidizer_tank=tank_models.Tank(**OXIDIZER_TANK, isothermal=isothermal),
+            fuel_tank=feed_system.lines["fuel"].tank,
+            piston_loss=feed_system.piston_loss,
+            oxidizer_line_loss=feed_system.line_losses["oxidizer"],
+            fuel_line_loss=feed_system.line_losses["fuel"],
+        )
     )
     return motor, params
 
@@ -101,7 +109,7 @@ def test_the_state_carries_the_energy_only_for_an_energy_balance():
 
     assert isothermal_state.oxidizer_internal_energy is None
     assert energy_balance_state.oxidizer_internal_energy == pytest.approx(
-        energy_balance_motor.feed_system.oxidizer_tank.initial_internal_energy
+        energy_balance_motor.feed_system.lines["oxidizer"].tank.initial_internal_energy
     )
 
 
@@ -112,7 +120,7 @@ def test_draining_takes_the_outflow_enthalpy_out():
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
     )
-    tank = motor.feed_system.oxidizer_tank
+    tank = motor.feed_system.lines["oxidizer"].tank
     internal_energy_before = state.oxidizer_internal_energy
     assert internal_energy_before is not None
     oxidizer_mass_before = state.oxidizer_mass[-1]
