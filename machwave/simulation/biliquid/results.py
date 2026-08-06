@@ -17,37 +17,39 @@ class BiliquidSimulationResult(
 ):
     """Simulation result for a biliquid engine run."""
 
-    oxidizer_mass: simulation_results.SimulationResultArray
-    fuel_mass: simulation_results.SimulationResultArray
-    fuel_tank_pressure: simulation_results.SimulationResultArray
-    oxidizer_tank_pressure: simulation_results.SimulationResultArray
+    fluid_mass_per_line: dict[str, simulation_results.SimulationResultArray]
+    tank_pressure_per_line: dict[str, simulation_results.SimulationResultArray]
     # Flat for an isothermal tank, decaying for one running an energy balance.
-    fuel_tank_temperature: simulation_results.SimulationResultArray
-    oxidizer_tank_temperature: simulation_results.SimulationResultArray
-    final_oxidizer_mass: float
-    final_fuel_mass: float
+    tank_temperature_per_line: dict[str, simulation_results.SimulationResultArray]
+    final_fluid_mass_per_line: dict[str, float]
 
     @classmethod
     def _collect_extra_fields(
         cls, state: "biliquid_states.BiliquidEngineState"
     ) -> dict[str, Any]:
-        oxidizer_mass = np.asarray(state.oxidizer_mass)
-        fuel_mass = np.asarray(state.fuel_mass)
+        fluid_mass_per_line = {
+            name: np.asarray(series)
+            for name, series in state.fluid_mass_per_line.items()
+        }
         return {
-            "oxidizer_mass": oxidizer_mass,
-            "fuel_mass": fuel_mass,
-            "fuel_tank_pressure": np.asarray(state.fuel_tank_pressure),
-            "oxidizer_tank_pressure": np.asarray(state.oxidizer_tank_pressure),
-            "fuel_tank_temperature": np.asarray(state.fuel_tank_temperature),
-            "oxidizer_tank_temperature": np.asarray(state.oxidizer_tank_temperature),
-            "final_oxidizer_mass": float(oxidizer_mass[-1]),
-            "final_fuel_mass": float(fuel_mass[-1]),
+            "fluid_mass_per_line": fluid_mass_per_line,
+            "tank_pressure_per_line": {
+                name: np.asarray(series)
+                for name, series in state.tank_pressure_per_line.items()
+            },
+            "tank_temperature_per_line": {
+                name: np.asarray(series)
+                for name, series in state.tank_temperature_per_line.items()
+            },
+            "final_fluid_mass_per_line": {
+                name: float(series[-1]) for name, series in fluid_mass_per_line.items()
+            },
         }
 
     def _extra_summary(self) -> dict[str, float]:
         return {
-            "final_oxidizer_mass": self.final_oxidizer_mass,
-            "final_fuel_mass": self.final_fuel_mass,
+            f"final_{name}_mass": mass
+            for name, mass in self.final_fluid_mass_per_line.items()
         }
 
     def _report_body(self, file: IO) -> None:
@@ -72,5 +74,8 @@ class BiliquidSimulationResult(
         self._report_nozzle_losses(file)
 
         print("\nPROPELLANT REMAINING (kg)", file=file)
-        print(f"  Oxidizer: {self.final_oxidizer_mass:.4f}", file=file)
-        print(f"  Fuel:     {self.final_fuel_mass:.4f}", file=file)
+        label_width = max(len(name) for name in self.final_fluid_mass_per_line)
+        for name, mass in self.final_fluid_mass_per_line.items():
+            print(
+                f"  {name.capitalize() + ':':<{label_width + 1}} {mass:.4f}", file=file
+            )
