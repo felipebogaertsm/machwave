@@ -1,6 +1,6 @@
 # models.feed_systems
 
-Feed-system models for biliquid rocket engines. The package describes how
+Feed-system models for liquid-fed rocket engines. The package describes how
 propellant is delivered from the tanks to the combustion chamber, and is
 organised around three concerns:
 
@@ -14,21 +14,23 @@ organised around three concerns:
 
 ## The `FeedSystem` contract
 
-Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] and supplies the pressure it delivers to each side of the injector:
+A feed system delivers one [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] per propellant, keyed by line name, and every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] to supply the pressure that reaches the injector on every line:
 
-- `get_oxidizer_tank_pressure(*, oxidizer_mass) -> float`
-- `get_fuel_tank_pressure(*, oxidizer_mass, fuel_mass) -> float`
+- `get_inlet_pressures(line_states) -> dict[str, float]`
 
-From those, the base class assembles the state each side of the injector is fed with:
+From those, the base class assembles the state every line is fed with:
 
-- `get_oxidizer_inlet_state(*, oxidizer_mass) -> FluidState`
-- `get_fuel_inlet_state(*, oxidizer_mass, fuel_mass) -> FluidState`
+- `get_inlet_states(line_states) -> dict[str, FluidState]`
 
-The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides the inlet-state method to say so.
+Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name. Solving all the lines in one call is what the physics asks for: a cycle couples its lines, as the stacked-tank piston ties the fuel pressure to the oxidizer ullage pressure.
 
-The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-side `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). A [`FluidState`][machwave.common.fluid_state.FluidState] is the whole of what passes between them, so neither package imports the other — both depend only on the shared value object.
+Keying by name is what makes the propellant count free. A biliquid engine feeds an oxidizer line and a fuel line; a triliquid adds a third with the `ADDITIVE` role for a diluent or a coolant; an oxidizer-only hybrid feed and a monoliquid are the one-line case of the same contract.
 
-[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads both inlet states once per integration step, then calls [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] with them at each chamber pressure the solver tries.
+The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides `get_inlet_states` to say so.
+
+The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-line `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). A [`FluidState`][machwave.common.fluid_state.FluidState] is the whole of what passes between them, so neither package imports the other — both depend only on the shared value object.
+
+[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every inlet state once per integration step, then calls [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] with them at each chamber pressure the solver tries.
 
 ## Public surface
 

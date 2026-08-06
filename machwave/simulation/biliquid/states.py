@@ -9,8 +9,11 @@ import machwave.common.fluid_state as fluid_state_models
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
 import machwave.core.solvers.rk4 as rk4
+import machwave.models.feed_systems.base as feed_system_base
+import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank_models
 import machwave.models.motors as motors
+import machwave.models.propellants.components as propellant_components
 import machwave.models.propellants.properties as propellant_properties_models
 import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
@@ -51,6 +54,25 @@ def get_injector_mass_flows(
         min(fuel_flow, fuel_mass / d_t),
         min(oxidizer_flow, oxidizer_mass / d_t),
     )
+
+
+def get_line_with_role(
+    feed_system: feed_system_base.FeedSystem,
+    role: propellant_components.ComponentRole,
+) -> line_models.PropellantLine:
+    """
+    The one line of the feed system carrying the given role.
+
+    Raises:
+        ValueError: If the feed system does not feed exactly one such line.
+    """
+    lines = feed_system.get_lines_with_role(role)
+    if len(lines) != 1:
+        raise ValueError(
+            f"a biliquid engine feeds exactly one {role} line, got "
+            f"{[line.name for line in lines]}"
+        )
+    return lines[0]
 
 
 def get_total_injector_mass_flow(
@@ -103,8 +125,14 @@ class BiliquidEngineState(simulation_states.MotorState):
             external_pressure=external_pressure,
         )
 
-        oxidizer_tank = motor.feed_system.oxidizer_tank
-        fuel_tank = motor.feed_system.fuel_tank
+        self.oxidizer_line = get_line_with_role(
+            motor.feed_system, propellant_components.ComponentRole.OXIDIZER
+        )
+        self.fuel_line = get_line_with_role(
+            motor.feed_system, propellant_components.ComponentRole.FUEL
+        )
+        oxidizer_tank = self.oxidizer_line.tank
+        fuel_tank = self.fuel_line.tank
 
         self.oxidizer_mass: simulation_states.SimulationStateArray = [
             oxidizer_tank.initial_fluid_mass
@@ -167,37 +195,27 @@ class BiliquidEngineState(simulation_states.MotorState):
         propellant_mass = fuel_mass + oxidizer_mass
         self.propellant_mass.append(propellant_mass)
 
-        fuel_inlet = feed_system.get_fuel_inlet_state(
-            oxidizer_mass=oxidizer_mass,
-            fuel_mass=fuel_mass,
-            fuel_internal_energy=fuel_internal_energy,
-            oxidizer_internal_energy=oxidizer_internal_energy,
+        inlet_states = feed_system.get_inlet_states(
+            {
+                self.fuel_line.name: line_models.LineState(
+                    fluid_mass=fuel_mass, internal_energy=fuel_internal_energy
+                ),
+                self.oxidizer_line.name: line_models.LineState(
+                    fluid_mass=oxidizer_mass, internal_energy=oxidizer_internal_energy
+                ),
+            }
         )
-        oxidizer_inlet = feed_system.get_oxidizer_inlet_state(
-            oxidizer_mass=oxidizer_mass,
-            oxidizer_internal_energy=oxidizer_internal_energy,
-        )
+        fuel_inlet = inlet_states[self.fuel_line.name]
+        oxidizer_inlet = inlet_states[self.oxidizer_line.name]
 
-        fuel_tank_pressure = feed_system.get_fuel_tank_pressure(
-            oxidizer_mass=oxidizer_mass,
-            fuel_mass=fuel_mass,
-            fuel_internal_energy=fuel_internal_energy,
-            oxidizer_internal_energy=oxidizer_internal_energy,
-        )
+        fuel_tank_pressure = fuel_inlet.pressure
         self.fuel_tank_pressure.append(fuel_tank_pressure)
-        oxidizer_tank_pressure = feed_system.get_oxidizer_tank_pressure(
-            oxidizer_mass=oxidizer_mass,
-            oxidizer_internal_energy=oxidizer_internal_energy,
-        )
+        oxidizer_tank_pressure = oxidizer_inlet.pressure
         self.oxidizer_tank_pressure.append(oxidizer_tank_pressure)
 
-        fuel_tank_temperature = feed_system.fuel_tank.get_temperature(
-            fuel_mass, fuel_internal_energy
-        )
+        fuel_tank_temperature = fuel_inlet.temperature
         self.fuel_tank_temperature.append(fuel_tank_temperature)
-        oxidizer_tank_temperature = feed_system.oxidizer_tank.get_temperature(
-            oxidizer_mass, oxidizer_internal_energy
-        )
+        oxidizer_tank_temperature = oxidizer_inlet.temperature
         self.oxidizer_tank_temperature.append(oxidizer_tank_temperature)
 
         is_feeding = (
@@ -316,13 +334,13 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.oxidizer_mass.append(oxidizer_mass - oxidizer_consumed)
 
         self.fuel_internal_energy = self._drain_internal_energy(
-            tank=feed_system.fuel_tank,
+            tank=self.fuel_line.tank,
             internal_energy=fuel_internal_energy,
             fluid_mass=fuel_mass,
             mass_drained=fuel_consumed,
         )
         self.oxidizer_internal_energy = self._drain_internal_energy(
-            tank=feed_system.oxidizer_tank,
+            tank=self.oxidizer_line.tank,
             internal_energy=oxidizer_internal_energy,
             fluid_mass=oxidizer_mass,
             mass_drained=oxidizer_consumed,
