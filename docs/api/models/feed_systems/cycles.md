@@ -22,7 +22,7 @@ Additional cycles are under active development as separate work items: electric-
                    /regenerative-jacket specs)
 ```
 
-The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to say what reaches the injector face. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_inlet_states` once per integration step and hands the results to the [`BipropellantInjector`][machwave.models.thrust_chamber.injector.BipropellantInjector] at each chamber pressure the solver tries.
+The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to say what reaches the injector face. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_inlet_states` once per integration step and hands the results to the [`Injector`][machwave.models.thrust_chamber.injector.Injector] at each chamber pressure the solver tries.
 
 ---
 

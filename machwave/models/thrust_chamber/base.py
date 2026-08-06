@@ -81,10 +81,10 @@ class BiliquidEngineThrustChamber(ThrustChamber):
 
     Attributes:
         nozzle: Nozzle instance.
-        injector: Bipropellant injector instance.
+        injector: Injector instance, with one element per propellant line.
         combustion_chamber: Combustion chamber instance.
         dry_mass_properties: Mass, center of gravity, and inertia of the thrust
             chamber. Optional, not used by the internal ballistics simulation.
     """
 
-    injector: injector_models.BipropellantInjector
+    injector: injector_models.Injector

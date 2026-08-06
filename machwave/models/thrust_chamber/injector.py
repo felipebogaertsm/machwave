@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import dataclasses
 import enum
+from collections.abc import Mapping
 
 import machwave.common.fluid_state as fluid_state_models
 import machwave.core.incompressible_flow as incompressible_flow
@@ -22,153 +24,121 @@ class MassFlowModel(enum.StrEnum):
     HEM = "hem"
 
 
-class BipropellantInjector:
-    """Represents an injector for a biliquid rocket engine."""
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class InjectorElement:
+    """
+    The orifices one propellant line flows through at the injector face.
 
-    def __init__(
-        self,
-        discharge_coefficient_fuel: float,
-        discharge_coefficient_oxidizer: float,
-        area_fuel: float,
-        area_ox: float,
-        mass_flow_model_fuel: MassFlowModel = MassFlowModel.SPI,
-        mass_flow_model_oxidizer: MassFlowModel = MassFlowModel.SPI,
-    ):
-        """
-        Initialize an Injector instance.
+    An element is a pure function of its own inlet: everything upstream of the
+    face is the feed system's to account for.
 
-        Args:
-            discharge_coefficient_fuel:
-                Discharge coefficient for the fuel side (dimensionless).
-            discharge_coefficient_oxidizer:
-                Discharge coefficient for the oxidizer side (dimensionless).
-            area_fuel:
-                Effective flow area of the fuel injector [m^2].
-            area_ox:
-                Effective flow area of the oxidizer injector [m^2].
-            mass_flow_model_fuel:
-                Mass flow model for the fuel side.
-            mass_flow_model_oxidizer:
-                Mass flow model for the oxidizer side.
-        """
-        self.discharge_coefficient_fuel = discharge_coefficient_fuel
-        self.discharge_coefficient_oxidizer = discharge_coefficient_oxidizer
-        self.area_fuel = area_fuel
-        self.area_ox = area_ox
-        self.mass_flow_model_fuel = MassFlowModel(mass_flow_model_fuel)
-        self.mass_flow_model_oxidizer = MassFlowModel(mass_flow_model_oxidizer)
+    Attributes:
+        discharge_coefficient: Discharge coefficient (dimensionless).
+        area: Effective flow area [m^2].
+        mass_flow_model: Model the orifice flow is computed with.
+    """
 
-        self._validate()
+    discharge_coefficient: float
+    area: float
+    mass_flow_model: MassFlowModel = MassFlowModel.SPI
 
-    def _validate(self) -> None:
-        """
-        Validate the injector inputs.
-
-        Raises:
-            ValueError: If any field is outside its valid physical range.
-        """
-        if self.area_fuel <= 0.0:
+    def __post_init__(self) -> None:
+        if self.area <= 0.0:
+            raise ValueError(f"area must be strictly positive, got {self.area}")
+        if not 0.0 < self.discharge_coefficient <= 1.0:
             raise ValueError(
-                f"area_fuel must be strictly positive, got {self.area_fuel}"
-            )
-        if self.area_ox <= 0.0:
-            raise ValueError(f"area_ox must be strictly positive, got {self.area_ox}")
-        if not 0.0 < self.discharge_coefficient_fuel <= 1.0:
-            raise ValueError(
-                "discharge_coefficient_fuel must be in (0, 1], got "
-                f"{self.discharge_coefficient_fuel}"
-            )
-        if not 0.0 < self.discharge_coefficient_oxidizer <= 1.0:
-            raise ValueError(
-                "discharge_coefficient_oxidizer must be in (0, 1], got "
-                f"{self.discharge_coefficient_oxidizer}"
+                "discharge_coefficient must be in (0, 1], got "
+                f"{self.discharge_coefficient}"
             )
 
-    def get_mass_flow_fuel(
+        object.__setattr__(self, "mass_flow_model", MassFlowModel(self.mass_flow_model))
+
+    def get_mass_flow(
         self,
         *,
         inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
     ) -> float:
         """
-        Compute the fuel-side mass flow rate through this injector.
-
-        Args:
-            inlet: Fuel state at the injector inlet.
-            chamber_pressure: Chamber pressure [Pa].
-
-        Returns:
-            Fuel mass flow rate [kg/s].
-        """
-        return self._get_mass_flow(
-            inlet=inlet,
-            chamber_pressure=chamber_pressure,
-            discharge_coefficient=self.discharge_coefficient_fuel,
-            injector_area=self.area_fuel,
-            mass_flow_model=self.mass_flow_model_fuel,
-        )
-
-    def get_mass_flow_ox(
-        self,
-        *,
-        inlet: fluid_state_models.FluidState,
-        chamber_pressure: float,
-    ) -> float:
-        """
-        Compute the oxidizer-side mass flow rate through this injector.
-
-        Args:
-            inlet: Oxidizer state at the injector inlet.
-            chamber_pressure: Chamber pressure [Pa].
-
-        Returns:
-            Oxidizer mass flow rate [kg/s].
-        """
-        return self._get_mass_flow(
-            inlet=inlet,
-            chamber_pressure=chamber_pressure,
-            discharge_coefficient=self.discharge_coefficient_oxidizer,
-            injector_area=self.area_ox,
-            mass_flow_model=self.mass_flow_model_oxidizer,
-        )
-
-    @staticmethod
-    def _get_mass_flow(
-        *,
-        inlet: fluid_state_models.FluidState,
-        chamber_pressure: float,
-        discharge_coefficient: float,
-        injector_area: float,
-        mass_flow_model: MassFlowModel,
-    ) -> float:
-        """
-        Dispatch a mass flow calculation through the requested model.
+        Compute the mass flow rate through this element.
 
         Args:
             inlet: Propellant state at the injector inlet.
             chamber_pressure: Chamber pressure [Pa].
-            discharge_coefficient: Discharge coefficient (dimensionless).
-            injector_area: Effective flow area [m^2].
-            mass_flow_model: Mass flow model for this side.
 
         Returns:
-            Mass flow rate [kg/s].
+            Mass flow rate [kg/s]. Zero once the chamber has caught up with the
+            inlet, which is where the line stops feeding.
+
+        Raises:
+            ValueError: If the mass flow model is unsupported.
         """
-        if mass_flow_model == MassFlowModel.HEM:
+        if inlet.pressure <= chamber_pressure:
+            return 0.0
+
+        if self.mass_flow_model == MassFlowModel.HEM:
             mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
                 fluid_name=inlet.fluid_name,
                 temperature_upstream=inlet.temperature,
                 pressure_downstream=chamber_pressure,
                 pressure_upstream=inlet.pressure,
             )
-            return discharge_coefficient * injector_area * mass_flux
-        elif mass_flow_model == MassFlowModel.SPI:
+            return self.discharge_coefficient * self.area * mass_flux
+        elif self.mass_flow_model == MassFlowModel.SPI:
             return incompressible_flow.get_mass_flow_orifice(
-                discharge_coefficient=discharge_coefficient,
-                area=injector_area,
+                discharge_coefficient=self.discharge_coefficient,
+                area=self.area,
                 density=inlet.density,
                 pressure_upstream=inlet.pressure,
                 pressure_downstream=chamber_pressure,
             )
 
-        raise ValueError(f"Unsupported mass flow model: {mass_flow_model}")
+        raise ValueError(f"Unsupported mass flow model: {self.mass_flow_model}")
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Injector:
+    """
+    An injector, with one element per propellant line.
+
+    Attributes:
+        elements: Injector element of every line, keyed by the feed system's
+            line names.
+    """
+
+    elements: dict[str, InjectorElement]
+
+    def __post_init__(self) -> None:
+        if not self.elements:
+            raise ValueError("elements must hold at least one injector element")
+
+    def get_mass_flows(
+        self,
+        *,
+        inlet_states: Mapping[str, fluid_state_models.FluidState],
+        chamber_pressure: float,
+    ) -> dict[str, float]:
+        """
+        Compute the mass flow rate through every element.
+
+        Args:
+            inlet_states: Propellant state at the inlet of every line, keyed by
+                line name.
+            chamber_pressure: Chamber pressure [Pa].
+
+        Returns:
+            Mass flow rate of every line [kg/s], keyed by line name.
+
+        Raises:
+            ValueError: If any element of the injector has no inlet state.
+        """
+        missing = [name for name in self.elements if name not in inlet_states]
+        if missing:
+            raise ValueError(f"no inlet state was given for {missing}")
+
+        return {
+            name: element.get_mass_flow(
+                inlet=inlet_states[name], chamber_pressure=chamber_pressure
+            )
+            for name, element in self.elements.items()
+        }

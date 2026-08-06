@@ -3,13 +3,17 @@ import pytest
 import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
 import machwave.services.coolprop as coolprop_service
-from machwave.models.thrust_chamber import MassFlowModel
-from tests.factories import BipropellantInjectorFactory, FluidStateFactory
+from machwave.models.thrust_chamber import Injector, MassFlowModel
+from tests.factories import (
+    FluidStateFactory,
+    InjectorElementFactory,
+    InjectorFactory,
+)
 
 
 @pytest.fixture
 def injector():
-    return BipropellantInjectorFactory.build()
+    return InjectorFactory.build()
 
 
 @pytest.fixture
@@ -25,180 +29,193 @@ def saturated_nitrous_oxide_inlet():
     )
 
 
-class TestBipropellantInjectorInstantiation:
-    def test_stores_discharge_coefficients(self, injector):
-        assert injector.discharge_coefficient_fuel == pytest.approx(0.48)
-        assert injector.discharge_coefficient_oxidizer == pytest.approx(0.48)
+class TestInjectorElementInstantiation:
+    def test_stores_the_discharge_coefficient_and_the_area(self):
+        element = InjectorElementFactory.build(discharge_coefficient=0.65, area=2e-5)
 
-    def test_stores_areas(self, injector):
-        assert injector.area_fuel == pytest.approx(1.70833333333e-5, rel=1e-9)
-        assert injector.area_ox == pytest.approx(2.91666666667e-5, rel=1e-9)
+        assert element.discharge_coefficient == pytest.approx(0.65)
+        assert element.area == pytest.approx(2e-5)
 
-    def test_areas_are_positive(self, injector):
-        assert injector.area_fuel > 0
-        assert injector.area_ox > 0
+    def test_default_mass_flow_model_is_spi(self):
+        assert InjectorElementFactory.build().mass_flow_model is MassFlowModel.SPI
 
-    def test_asymmetric_discharge_coefficients(self):
-        """Fuel and oxidizer sides may have different Cd values."""
-        inj = BipropellantInjectorFactory.build(
-            discharge_coefficient_fuel=0.40,
-            discharge_coefficient_oxidizer=0.65,
-            area_fuel=5e-6,
-            area_ox=1e-5,
-        )
-        assert inj.discharge_coefficient_fuel != inj.discharge_coefficient_oxidizer
+    def test_coerces_the_mass_flow_model_from_its_value(self):
+        element = InjectorElementFactory.build(mass_flow_model="hem")
 
-    def test_different_areas(self):
-        """Fuel and oxidizer orifice areas are independently configurable."""
-        inj = BipropellantInjectorFactory.build(area_fuel=5e-6, area_ox=2e-5)
-        assert inj.area_fuel != inj.area_ox
+        assert element.mass_flow_model is MassFlowModel.HEM
 
-    def test_default_mass_flow_model_is_spi(self, injector):
-        assert injector.mass_flow_model_fuel is MassFlowModel.SPI
-        assert injector.mass_flow_model_oxidizer is MassFlowModel.SPI
-
-    def test_per_side_mass_flow_model_overrides(self):
-        """Mass flow models are configurable independently per side."""
-        inj = BipropellantInjectorFactory.build(
-            mass_flow_model_fuel=MassFlowModel.SPI,
-            mass_flow_model_oxidizer=MassFlowModel.HEM,
-        )
-        assert inj.mass_flow_model_fuel is MassFlowModel.SPI
-        assert inj.mass_flow_model_oxidizer is MassFlowModel.HEM
-
-    def test_invalid_mass_flow_model_raises_value_error(self):
+    def test_rejects_an_unknown_mass_flow_model(self):
         with pytest.raises(ValueError, match="not a valid MassFlowModel"):
-            BipropellantInjectorFactory.build(mass_flow_model_fuel="foo")
+            InjectorElementFactory.build(mass_flow_model="foo")
+
+    @pytest.mark.parametrize("area", [0.0, -1e-6])
+    def test_rejects_a_non_positive_area(self, area):
+        with pytest.raises(ValueError, match="area"):
+            InjectorElementFactory.build(area=area)
+
+    @pytest.mark.parametrize("discharge_coefficient", [0.0, -0.1, 1.2])
+    def test_rejects_a_discharge_coefficient_out_of_range(self, discharge_coefficient):
+        with pytest.raises(ValueError, match="discharge_coefficient"):
+            InjectorElementFactory.build(discharge_coefficient=discharge_coefficient)
 
 
-class TestBipropellantInjectorValidation:
-    @pytest.mark.parametrize("area_fuel", [0.0, -1e-6])
-    def test_non_positive_fuel_area(self, area_fuel):
-        with pytest.raises(ValueError, match="area_fuel"):
-            BipropellantInjectorFactory.build(area_fuel=area_fuel)
-
-    @pytest.mark.parametrize("area_ox", [0.0, -1e-6])
-    def test_non_positive_oxidizer_area(self, area_ox):
-        with pytest.raises(ValueError, match="area_ox"):
-            BipropellantInjectorFactory.build(area_ox=area_ox)
-
-    @pytest.mark.parametrize("discharge_coefficient_fuel", [0.0, -0.1, 1.2])
-    def test_fuel_discharge_coefficient_out_of_range(self, discharge_coefficient_fuel):
-        with pytest.raises(ValueError, match="discharge_coefficient_fuel"):
-            BipropellantInjectorFactory.build(
-                discharge_coefficient_fuel=discharge_coefficient_fuel
-            )
-
-    @pytest.mark.parametrize("discharge_coefficient_oxidizer", [0.0, -0.1, 1.2])
-    def test_oxidizer_discharge_coefficient_out_of_range(
-        self, discharge_coefficient_oxidizer
-    ):
-        with pytest.raises(ValueError, match="discharge_coefficient_oxidizer"):
-            BipropellantInjectorFactory.build(
-                discharge_coefficient_oxidizer=discharge_coefficient_oxidizer
-            )
-
-
-class TestBipropellantInjectorMassFlow:
-    def test_hem_predicts_lower_oxidizer_flow_than_spi_for_saturated_n2o(
+class TestInjectorElementMassFlow:
+    def test_hem_predicts_lower_flow_than_spi_for_saturated_nitrous_oxide(
         self, saturated_nitrous_oxide_inlet
     ):
         """For saturated N2O, HEM under-predicts SPI."""
         kwargs = dict(inlet=saturated_nitrous_oxide_inlet, chamber_pressure=20e5)
-        injector_spi = BipropellantInjectorFactory.build(
-            mass_flow_model_oxidizer=MassFlowModel.SPI,
-        )
-        injector_hem = BipropellantInjectorFactory.build(
-            mass_flow_model_oxidizer=MassFlowModel.HEM,
-        )
+        element_spi = InjectorElementFactory.build(mass_flow_model=MassFlowModel.SPI)
+        element_hem = InjectorElementFactory.build(mass_flow_model=MassFlowModel.HEM)
 
-        flow_spi = injector_spi.get_mass_flow_ox(**kwargs)
-        flow_hem = injector_hem.get_mass_flow_ox(**kwargs)
-
-        assert flow_hem < flow_spi
+        assert element_hem.get_mass_flow(**kwargs) < element_spi.get_mass_flow(**kwargs)
 
     def test_spi_dispatch_returns_positive_flow(self, saturated_nitrous_oxide_inlet):
-        injector = BipropellantInjectorFactory.build()
-        flow = injector.get_mass_flow_ox(
-            inlet=saturated_nitrous_oxide_inlet,
-            chamber_pressure=20e5,
+        element = InjectorElementFactory.build()
+
+        flow = element.get_mass_flow(
+            inlet=saturated_nitrous_oxide_inlet, chamber_pressure=20e5
         )
+
         assert flow > 0.0
 
     def test_spi_dispatch_matches_core_orifice_helper(self):
         """SPI dispatch equals `Cd * A * sqrt(2 * rho * dP)` from the core helper."""
         inlet = FluidStateFactory.build()
-        injector = BipropellantInjectorFactory.build(
-            mass_flow_model_oxidizer=MassFlowModel.SPI,
-        )
+        element = InjectorElementFactory.build(mass_flow_model=MassFlowModel.SPI)
         chamber_pressure = 20e5
 
-        actual = injector.get_mass_flow_ox(
-            inlet=inlet,
-            chamber_pressure=chamber_pressure,
-        )
-        expected = incompressible_flow.get_mass_flow_orifice(
-            discharge_coefficient=injector.discharge_coefficient_oxidizer,
-            area=injector.area_ox,
-            density=inlet.density,
-            pressure_upstream=inlet.pressure,
-            pressure_downstream=chamber_pressure,
-        )
-        assert actual == pytest.approx(expected)
+        actual = element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure)
 
-    def test_hem_dispatch_matches_two_phase_helper_times_cd_and_area(
+        assert actual == pytest.approx(
+            incompressible_flow.get_mass_flow_orifice(
+                discharge_coefficient=element.discharge_coefficient,
+                area=element.area,
+                density=inlet.density,
+                pressure_upstream=inlet.pressure,
+                pressure_downstream=chamber_pressure,
+            )
+        )
+
+    def test_hem_dispatch_matches_two_phase_helper_times_discharge_and_area(
         self, saturated_nitrous_oxide_inlet
     ):
         """HEM dispatch equals `Cd * A * G_HEM` from the core helper."""
         inlet = saturated_nitrous_oxide_inlet
-        injector = BipropellantInjectorFactory.build(
-            mass_flow_model_oxidizer=MassFlowModel.HEM,
-        )
+        element = InjectorElementFactory.build(mass_flow_model=MassFlowModel.HEM)
         chamber_pressure = 20e5
 
-        actual = injector.get_mass_flow_ox(
-            inlet=inlet,
-            chamber_pressure=chamber_pressure,
-        )
+        actual = element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure)
+
         mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
             fluid_name=inlet.fluid_name,
             temperature_upstream=inlet.temperature,
             pressure_downstream=chamber_pressure,
             pressure_upstream=inlet.pressure,
         )
-        expected = (
-            injector.discharge_coefficient_oxidizer * injector.area_ox * mass_flux
+        assert actual == pytest.approx(
+            element.discharge_coefficient * element.area * mass_flux
         )
-        assert actual == pytest.approx(expected)
 
-    def test_fuel_side_dispatch_uses_fuel_attributes(self):
-        """Fuel dispatch uses fuel-side Cd, area, and model — not the ox-side ones."""
-        inlet = FluidStateFactory.build(
-            fluid_name="Ethanol",
-            pressure=30e5,
-            temperature=298.0,
-            density=785.0,
+    @pytest.mark.parametrize("chamber_pressure", [30e5, 40e5])
+    def test_a_chamber_at_or_above_the_inlet_stops_the_flow(self, chamber_pressure):
+        inlet = FluidStateFactory.build(pressure=30e5)
+        element = InjectorElementFactory.build()
+
+        assert (
+            element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure) == 0.0
         )
-        injector = BipropellantInjectorFactory.build(
-            discharge_coefficient_fuel=0.40,
-            discharge_coefficient_oxidizer=0.80,
-            area_fuel=5.0e-6,
-            area_ox=2.0e-5,
-            mass_flow_model_fuel=MassFlowModel.SPI,
-            mass_flow_model_oxidizer=MassFlowModel.HEM,
+
+
+class TestInjectorMassFlows:
+    def test_every_element_gets_a_flow_in_one_call(self, injector):
+        inlet_states = {
+            "oxidizer": FluidStateFactory.build(pressure=40e5),
+            "fuel": FluidStateFactory.build(pressure=35e5),
+        }
+
+        flows = injector.get_mass_flows(
+            inlet_states=inlet_states, chamber_pressure=20e5
+        )
+
+        assert set(flows) == {"oxidizer", "fuel"}
+        assert all(flow > 0.0 for flow in flows.values())
+
+    def test_each_element_flows_on_its_own_inlet(self):
+        """One line's element and inlet decide its flow, not another line's."""
+        injector = InjectorFactory.build(
+            elements={
+                "oxidizer": InjectorElementFactory.build(
+                    discharge_coefficient=0.80,
+                    area=2.0e-5,
+                    mass_flow_model=MassFlowModel.HEM,
+                ),
+                "fuel": InjectorElementFactory.build(
+                    discharge_coefficient=0.40, area=5.0e-6
+                ),
+            }
+        )
+        fuel_inlet = FluidStateFactory.build(
+            fluid_name="Ethanol", pressure=30e5, temperature=298.0, density=785.0
         )
         chamber_pressure = 20e5
 
-        flow = injector.get_mass_flow_fuel(
-            inlet=inlet,
+        flows = injector.get_mass_flows(
+            inlet_states={
+                "oxidizer": FluidStateFactory.build(),
+                "fuel": fuel_inlet,
+            },
             chamber_pressure=chamber_pressure,
         )
 
-        expected = incompressible_flow.get_mass_flow_orifice(
-            discharge_coefficient=0.40,
-            area=5.0e-6,
-            density=inlet.density,
-            pressure_upstream=inlet.pressure,
-            pressure_downstream=chamber_pressure,
+        assert flows["fuel"] == pytest.approx(
+            incompressible_flow.get_mass_flow_orifice(
+                discharge_coefficient=0.40,
+                area=5.0e-6,
+                density=fuel_inlet.density,
+                pressure_upstream=fuel_inlet.pressure,
+                pressure_downstream=chamber_pressure,
+            )
         )
-        assert flow == pytest.approx(expected)
+
+    def test_a_third_line_is_one_more_element(self):
+        injector = InjectorFactory.build(
+            elements={
+                "oxidizer": InjectorElementFactory.build(),
+                "fuel": InjectorElementFactory.build(),
+                "diluent": InjectorElementFactory.build(area=2e-6),
+            }
+        )
+
+        flows = injector.get_mass_flows(
+            inlet_states={
+                name: FluidStateFactory.build(pressure=40e5)
+                for name in ("oxidizer", "fuel", "diluent")
+            },
+            chamber_pressure=20e5,
+        )
+
+        assert flows["diluent"] < flows["fuel"]
+
+    def test_a_single_element_injector_is_valid(self):
+        injector = InjectorFactory.build(
+            elements={"oxidizer": InjectorElementFactory.build()}
+        )
+
+        flows = injector.get_mass_flows(
+            inlet_states={"oxidizer": FluidStateFactory.build()},
+            chamber_pressure=20e5,
+        )
+
+        assert list(flows) == ["oxidizer"]
+
+    def test_rejects_a_missing_inlet_state(self, injector):
+        with pytest.raises(ValueError, match="fuel"):
+            injector.get_mass_flows(
+                inlet_states={"oxidizer": FluidStateFactory.build()},
+                chamber_pressure=20e5,
+            )
+
+    def test_rejects_an_injector_without_elements(self):
+        with pytest.raises(ValueError, match="at least one"):
+            Injector(elements={})
