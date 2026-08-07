@@ -5,12 +5,12 @@ As the propellant burns, combustion products are released (mostly in gaseous for
 The burn direction is always perpendicular to the uninhibited surface (Piobert's Law), so the shape of that surface determines how much area is burning at any moment.
 Determining the shape of the burning surface as a function of how far it has receded is called regression analysis.
 
-![Animated grain regression](../assets/theory/grain_regression/regression_animation.svg)
+![Animated grain regression](../assets/explanations/grain_regression/regression_animation.svg)
 
 For a tubular or BATES geometry, the burn area can be easily determined analytically as a function of the web distance traveled.
 However, for more complex geometries, the burn area may need to be determined through numerical methods.
 
-![Complex port geometries regressing](../assets/theory/grain_regression/geometry_animations.svg)
+![Complex port geometries regressing](../assets/explanations/grain_regression/geometry_animations.svg)
 
 Machwave uses the fast marching method (FMM) to compute the burn area for complex grain geometries.
 The FMM is a numerical algorithm for solving the Eikonal equation, which describes the evolution of a wavefront as it propagates through a medium.
@@ -41,8 +41,8 @@ x by column:  -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67 
 y by row:     -1.00 -0.83 -0.67 -0.50 -0.33 -0.17  0.00  0.17  0.33  0.50  0.67  0.83  1.00
 ```
 
-![map_x gradient](../assets/theory/grain_regression/coord_x.svg)
-![map_y gradient](../assets/theory/grain_regression/coord_y.svg)
+![map_x gradient](../assets/explanations/grain_regression/coord_x.svg)
+![map_y gradient](../assets/explanations/grain_regression/coord_y.svg)
 
 **Mask the outer diameter: [`get_outer_diameter_mask()`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_outer_diameter_mask].**
 A `1` marks a cell outside the outer diameter ($x^2 + y^2 > 1$); the `0` cells are propellant.
@@ -63,7 +63,7 @@ A `1` marks a cell outside the outer diameter ($x^2 + y^2 > 1$); the `0` cells a
  1  1  1  1  1  1  0  1  1  1  1  1  1
 ```
 
-![casing mask](../assets/theory/grain_regression/mask.svg)
+![casing mask](../assets/explanations/grain_regression/mask.svg)
 
 **Carve the core: [`generate_initial_face_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.generate_initial_face_map].**
 Each grain geometry draws its own shape here.
@@ -85,7 +85,7 @@ This example uses a circular core. Empty cells are `0`, solid propellant is `1`.
  1  1  1  1  1  1  1  1  1  1  1  1  1
 ```
 
-![initial port](../assets/theory/grain_regression/initial_face.svg)
+![initial port](../assets/explanations/grain_regression/initial_face.svg)
 
 **Apply the inhibitors: [`get_masked_face()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_masked_face].**
 Lays the initial face over the outer-diameter mask, then `_apply_surface_inhibition` decides which of the grain's four surfaces are allowed to burn (an inhibited surface cannot burn).
@@ -113,7 +113,7 @@ By default only the outer surface is inhibited.
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
 ```
 
-![masked face](../assets/theory/grain_regression/masked_face.svg)
+![masked face](../assets/explanations/grain_regression/masked_face.svg)
 
 **Compute the regression map: [`get_regression_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_regression_map].**
 Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. The map's largest value is the web thickness ([`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
@@ -134,7 +134,7 @@ Now the fast marching method runs. `skfmm.distance` fills every propellant cell 
   ·   ·   ·   ·   ·   · 0.5   ·   ·   ·   ·   ·   ·
 ```
 
-![regression field gradient](../assets/theory/grain_regression/regression.svg)
+![regression field gradient](../assets/explanations/grain_regression/regression.svg)
 
 *Yellow cells represent empty space. The color darkens with depth into the web.*
 
@@ -157,7 +157,7 @@ The face map at a web distance is obtained by thresholding the regression map at
  ·  ·  ·  ·  ·  ·  1  ·  ·  ·  ·  ·  ·
 ```
 
-![regressed face map](../assets/theory/grain_regression/face_map.svg)
+![regressed face map](../assets/explanations/grain_regression/face_map.svg)
 
 The mass-property reads, volume in 3D plus the center of gravity and moment of inertia in both 2D and 3D, need only the solid (`1`) cells of this map. They take those as a plain boolean mask from `_get_solid_mask`, cheaper to build and store than the masked integer map. The 2D reads pull the solid-cell indices from that mask, while the 3D reads reduce it straight to mass-property moments, and the mask, its indices, and its moments are each cached per web distance. Several of these reads share one web distance on a single timestep, so the regression map is thresholded once and every consumer reuses the result. The web distance only grows over a burn, so a single-entry cache is enough.
 
@@ -170,7 +170,7 @@ Then, `get_length` sums the curve to calculate the burning perimeter. Cells outs
 ... (6.0, 2.4) (7.0, 2.4) (8.0, 2.9) (9.0, 3.8) (9.6, 5.0) (9.6, 6.0) ... (closed)
 ```
 
-![burning front contour](../assets/theory/grain_regression/contours.svg)
+![burning front contour](../assets/explanations/grain_regression/contours.svg)
 
 **Burn area across the web: [`get_burn_area(w)`][machwave.models.grain.fmm._2d.FMMGrainSegment2D.get_burn_area].**
 The contour gives the burning perimeter at a single web distance.
