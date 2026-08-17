@@ -1,19 +1,29 @@
 # 4. Feed Systems
 
-A **feed system** is everything that stands between a propellant tank and the injector face.
-Machwave models it as a set of **propellant lines**, one per propellant, each identified by name.
-The propellant count is not part of the abstraction: one line feeds a hybrid motor or a monoliquid engine, two feed a biliquid engine, three feed a triliquid.
+The feed system in a chemical rocket engine is responsible for delivering propellants from their storage tanks to the injector.
+Machwave models it as a set of propellant lines, one per propellant.
+As a consequence, the feed system is agnostic to the amount of propellants, making the architecture flexible for hybrid, monoliquid, biliquid, or other engine types.
 
-## 4.1 The propellant line
+## 4.1 `PropellantLine`
 
-A [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] carries three things: the **line name** that keys it everywhere else, the **role** it plays in combustion, and the [`Tank`][machwave.models.feed_systems.tank.Tank] it draws from.
+A [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] carries three things:
 
-The role reuses [`ComponentRole`][machwave.models.propellants.components.ComponentRole], the same enum a propellant formulation uses for its chemical components: `OXIDIZER`, `FUEL`, or `ADDITIVE`.
-An additive line is a triliquid diluent or a coolant — something that flows, and is accounted for, without being either half of the mixture ratio.
+1. **name**: identifies the line across the whole simulation, and serves as a key.
+2. **role** the propellant plays in the mixture (uses [`ComponentRole`][machwave.models.propellants.components.ComponentRole]).
+3. **tank**: the [`Tank`][machwave.models.feed_systems.tank.Tank] it drains from.
 
-The name is what ties the model together.
-The feed system keys its lines by it, the injector keys its elements by it, and every series the simulation records is keyed by it.
-Nothing in the loop asks "which side is this?"; it asks "which line?".
+The lines belong to a [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem].
+The feed system iterates over its lines to get the [`FluidState`][machwave.common.fluid_state.FluidState] at every injector inlet.
+
+A feed system holds its lines in a mapping keyed by name, and works on all of them at once: it is handed the state of every line and answers for every line.
+Nothing in it is written per side, so a cycle is defined by how it pressurizes its lines, not by how many it has.
+
+The names are what join the models together.
+The injector holds one element per line name, and the simulation carries one series per line name for mass, mass flow rate, tank pressure and tank temperature.
+A line added to the feed system therefore appears at the injector face and in the results without any of the three agreeing on an order.
+
+The roles are what the physics reads.
+Flows are summed by role rather than divided one line by another, which is what keeps the mixture ratio meaningful at any propellant count, and lets an additive line flow without entering it.
 
 ## 4.2 The injector face is the seam
 
