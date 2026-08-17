@@ -12,10 +12,8 @@ class TankFluidState:
     Attributes:
         temperature: Fluid temperature [K].
         pressure: Tank pressure [Pa].
-        saturated_liquid_density: Saturated liquid density at the temperature
-            [kg/m^3].
-        saturated_vapor_density: Saturated vapor density at the temperature
-            [kg/m^3].
+        saturated_liquid_density: Saturated liquid density at the temperature [kg/m^3].
+        saturated_vapor_density: Saturated vapor density at the temperature [kg/m^3].
     """
 
     temperature: float
