@@ -4,6 +4,7 @@ from typing import Any
 
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.tank as tank_models
+import machwave.models.propellants as propellants_models
 
 
 class TankFactory:
@@ -17,6 +18,19 @@ class TankFactory:
         )
         kwargs.update(overrides)
         return tank_models.Tank(**kwargs)
+
+
+class PropellantLineFactory:
+    @classmethod
+    def build(cls, **overrides: Any) -> feed_systems_models.PropellantLine:
+        tank = overrides.pop("tank", None) or TankFactory.build()
+        kwargs: dict[str, Any] = dict(
+            name="oxidizer",
+            role=propellants_models.ComponentRole.OXIDIZER,
+            tank=tank,
+        )
+        kwargs.update(overrides)
+        return feed_systems_models.PropellantLine(**kwargs)
 
 
 class StackedTankPressureFedFeedSystemFactory:
