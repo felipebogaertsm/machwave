@@ -50,13 +50,13 @@ def results():
 
 
 def test_the_tank_pressure_decays_over_the_burn(results):
-    pressure = results[False].oxidizer_tank_pressure
+    pressure = results[False].tank_pressure_per_line["oxidizer"]
 
     assert pressure[-1] < 0.5 * pressure[0]
 
 
 def test_the_tank_cools_over_the_burn(results):
-    temperature = results[False].oxidizer_tank_temperature
+    temperature = results[False].tank_temperature_per_line["oxidizer"]
 
     assert temperature[0] == pytest.approx(OXIDIZER_TANK["temperature"])
     assert temperature[-1] < temperature[0]
@@ -69,16 +69,19 @@ def test_the_decay_is_monotonic_while_the_tank_holds_liquid(results):
     # the vapor fill it started at holds liquid at any temperature it reaches.
     # Past that the outflow enthalpy steps by the latent heat as the last of
     # the liquid goes, and the decay picks up a jitter on the way out.
-    two_phase = result.oxidizer_mass > tank.saturated_vapor_density * tank.volume
-    temperature = result.oxidizer_tank_temperature[two_phase]
+    two_phase = (
+        result.fluid_mass_per_line["oxidizer"]
+        > tank.saturated_vapor_density * tank.volume
+    )
+    temperature = result.tank_temperature_per_line["oxidizer"][two_phase]
 
     assert two_phase.sum() > 1
     assert np.all(np.diff(temperature) <= 0.0)
-    assert np.all(np.diff(result.oxidizer_tank_pressure[two_phase]) <= 0.0)
+    assert np.all(np.diff(result.tank_pressure_per_line["oxidizer"][two_phase]) <= 0.0)
 
 
 def test_an_isothermal_tank_holds_its_temperature(results):
-    temperature = results[True].oxidizer_tank_temperature
+    temperature = results[True].tank_temperature_per_line["oxidizer"]
 
     assert np.all(temperature == OXIDIZER_TANK["temperature"])
 
@@ -107,8 +110,8 @@ def test_the_state_carries_the_energy_only_for_an_energy_balance():
         external_pressure=params.external_pressure,
     )
 
-    assert isothermal_state.oxidizer_internal_energy is None
-    assert energy_balance_state.oxidizer_internal_energy == pytest.approx(
+    assert isothermal_state.internal_energy_per_line["oxidizer"] is None
+    assert energy_balance_state.internal_energy_per_line["oxidizer"] == pytest.approx(
         energy_balance_motor.feed_system.lines["oxidizer"].tank.initial_internal_energy
     )
 
@@ -121,15 +124,15 @@ def test_draining_takes_the_outflow_enthalpy_out():
         external_pressure=params.external_pressure,
     )
     tank = motor.feed_system.lines["oxidizer"].tank
-    internal_energy_before = state.oxidizer_internal_energy
+    internal_energy_before = state.internal_energy_per_line["oxidizer"]
     assert internal_energy_before is not None
-    oxidizer_mass_before = state.oxidizer_mass[-1]
+    oxidizer_mass_before = state.fluid_mass_per_line["oxidizer"][-1]
 
     state.run_timestep(params.d_t, params.external_pressure)
 
-    mass_drained = oxidizer_mass_before - state.oxidizer_mass[-1]
+    mass_drained = oxidizer_mass_before - state.fluid_mass_per_line["oxidizer"][-1]
     assert mass_drained > 0.0
-    assert state.oxidizer_internal_energy == pytest.approx(
+    assert state.internal_energy_per_line["oxidizer"] == pytest.approx(
         internal_energy_before
         - mass_drained
         * tank.get_outflow_specific_enthalpy(
