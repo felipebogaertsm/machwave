@@ -62,11 +62,15 @@ def main():
         expansion_ratio=4,
     )
 
-    injector = thrust_chamber_models.BipropellantInjector(
-        discharge_coefficient_fuel=0.48,
-        discharge_coefficient_oxidizer=0.48,
-        area_fuel=8.2e-6 / 0.48,
-        area_ox=1.4e-5 / 0.48,
+    injector = thrust_chamber_models.Injector(
+        elements={
+            "oxidizer": thrust_chamber_models.InjectorElement(
+                discharge_coefficient=0.48, area=1.4e-5 / 0.48
+            ),
+            "fuel": thrust_chamber_models.InjectorElement(
+                discharge_coefficient=0.48, area=8.2e-6 / 0.48
+            ),
+        }
     )
 
     chamber = thrust_chamber_models.CombustionChamber(

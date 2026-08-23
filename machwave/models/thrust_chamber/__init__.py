@@ -7,7 +7,8 @@ from machwave.models.thrust_chamber.combustion_chamber import (
     CombustionChamber,
 )
 from machwave.models.thrust_chamber.injector import (
-    BipropellantInjector,
+    Injector,
+    InjectorElement,
     MassFlowModel,
 )
 from machwave.models.thrust_chamber.nozzle import Nozzle
@@ -16,7 +17,8 @@ __all__ = [
     "BiliquidEngineThrustChamber",
     "SolidMotorThrustChamber",
     "ThrustChamber",
-    "BipropellantInjector",
+    "Injector",
+    "InjectorElement",
     "MassFlowModel",
     "Nozzle",
     "CombustionChamber",
