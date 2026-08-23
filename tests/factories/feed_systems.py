@@ -49,4 +49,8 @@ class StackedTankPressureFedFeedSystemFactory:
             fuel_tank=fuel_tank,
         )
         kwargs.update(overrides)
-        return feed_systems_models.StackedTankPressureFedFeedSystem(**kwargs)
+        return (
+            feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
+                **kwargs
+            )
+        )

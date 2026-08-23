@@ -1,126 +1,106 @@
 from abc import ABC, abstractmethod
+from collections.abc import Mapping, Sequence
 
 import machwave.common.fluid_state as fluid_state_models
-import machwave.models.feed_systems.tank as tank
+import machwave.models.feed_systems.lines as line_models
+import machwave.models.propellants.components as propellant_components
 
 
 class FeedSystem(ABC):
-    """Abstract base class for a bipropellant feed system in a biliquid rocket engine."""
+    """
+    Abstract base class for the feed system of a rocket engine.
 
-    def __init__(self, fuel_tank: tank.Tank, oxidizer_tank: tank.Tank):
+    The system delivers one `PropellantLine` per propellant, keyed by line
+    name, and solves every line together: a cycle couples its lines
+    physically, as the stacked-tank piston ties the fuel pressure to the
+    oxidizer ullage pressure.
+    """
+
+    def __init__(self, lines: Sequence[line_models.PropellantLine]):
         """
-        Initialize the FeedSystem with associated tank objects.
+        Initialize the feed system with the lines it delivers.
 
         Args:
-            fuel_tank: Instance representing the fuel tank.
-            oxidizer_tank: Instance representing the oxidizer tank.
+            lines: Propellant lines the system feeds, one per propellant.
+
+        Raises:
+            ValueError: If no line was given, or if two lines share a name.
         """
-        self.fuel_tank = fuel_tank
-        self.oxidizer_tank = oxidizer_tank
+        self.lines: dict[str, line_models.PropellantLine] = {
+            line.name: line for line in lines
+        }
+
+        if not lines:
+            raise ValueError("lines must hold at least one propellant line")
+        if len(self.lines) != len(lines):
+            raise ValueError(
+                f"line names must be unique, got {[line.name for line in lines]}"
+            )
 
     def get_initial_propellant_mass(self) -> float:
         """Compute and return the initial propellant mass in the system [kg]."""
-        return self.fuel_tank.initial_fluid_mass + self.oxidizer_tank.initial_fluid_mass
+        return sum(line.tank.initial_fluid_mass for line in self.lines.values())
 
-    def get_oxidizer_inlet_state(
-        self,
-        *,
-        oxidizer_mass: float,
-        oxidizer_internal_energy: float | None = None,
-    ) -> fluid_state_models.FluidState:
-        """
-        Return the oxidizer state delivered to the injector inlet.
+    def get_lines_with_role(
+        self, role: propellant_components.ComponentRole
+    ) -> tuple[line_models.PropellantLine, ...]:
+        """Return every line carrying the given role, in the order they were given."""
+        return tuple(line for line in self.lines.values() if line.role == role)
 
-        Args:
-            oxidizer_mass: Current oxidizer mass in the tank [kg].
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J]. Required for a tank running an energy balance, unused
-                otherwise.
+    def get_inlet_states(
+        self, line_states: Mapping[str, line_models.LineState]
+    ) -> dict[str, fluid_state_models.FluidState]:
         """
-        return fluid_state_models.FluidState(
-            fluid_name=self.oxidizer_tank.fluid_name,
-            pressure=self.get_oxidizer_tank_pressure(
-                oxidizer_mass=oxidizer_mass,
-                oxidizer_internal_energy=oxidizer_internal_energy,
-            ),
-            temperature=self.oxidizer_tank.get_temperature(
-                oxidizer_mass, oxidizer_internal_energy
-            ),
-            density=self.oxidizer_tank.get_density(
-                oxidizer_mass, oxidizer_internal_energy
-            ),
-        )
+        Return the state delivered to the injector inlet on every line.
 
-    def get_fuel_inlet_state(
-        self,
-        *,
-        oxidizer_mass: float,
-        fuel_mass: float,
-        fuel_internal_energy: float | None = None,
-        oxidizer_internal_energy: float | None = None,
-    ) -> fluid_state_models.FluidState:
-        """
-        Return the fuel state delivered to the injector inlet.
+        Each state is the tank fluid at the tank temperature and density, at
+        the pressure that survives the path to the injector. A cycle that heats
+        or works on a propellant on the way — a regenerative jacket, a pump —
+        overrides this to say so.
 
         Args:
-            oxidizer_mass: Current oxidizer mass in the tank [kg]. Needed
-                because some feed systems pressurize the fuel from the oxidizer
-                side.
-            fuel_mass: Current fuel mass in the tank [kg].
-            fuel_internal_energy: Current internal energy of the fuel [J].
-                Required for a tank running an energy balance, unused
-                otherwise.
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J]. Required for a tank running an energy balance, unused
-                otherwise.
+            line_states: Fluid mass and internal energy of every line, keyed by
+                line name.
+
+        Returns:
+            Injector inlet state of every line, keyed by line name.
+
+        Raises:
+            ValueError: If any line of the system has no state.
         """
-        return fluid_state_models.FluidState(
-            fluid_name=self.fuel_tank.fluid_name,
-            pressure=self.get_fuel_tank_pressure(
-                oxidizer_mass=oxidizer_mass,
-                fuel_mass=fuel_mass,
-                fuel_internal_energy=fuel_internal_energy,
-                oxidizer_internal_energy=oxidizer_internal_energy,
-            ),
-            temperature=self.fuel_tank.get_temperature(fuel_mass, fuel_internal_energy),
-            density=self.fuel_tank.get_density(fuel_mass, fuel_internal_energy),
-        )
+        missing = [name for name in self.lines if name not in line_states]
+        if missing:
+            raise ValueError(f"no line state was given for {missing}")
+
+        inlet_pressures = self.get_inlet_pressures(line_states)
+
+        inlet_states = {}
+        for name, line in self.lines.items():
+            line_state = line_states[name]
+            inlet_states[name] = fluid_state_models.FluidState(
+                fluid_name=line.tank.fluid_name,
+                pressure=inlet_pressures[name],
+                temperature=line.tank.get_temperature(
+                    line_state.fluid_mass, line_state.internal_energy
+                ),
+                density=line.tank.get_density(
+                    line_state.fluid_mass, line_state.internal_energy
+                ),
+            )
+        return inlet_states
 
     @abstractmethod
-    def get_oxidizer_tank_pressure(
-        self, *, oxidizer_mass: float, oxidizer_internal_energy: float | None = None
-    ) -> float:
+    def get_inlet_pressures(
+        self, line_states: Mapping[str, line_models.LineState]
+    ) -> dict[str, float]:
         """
-        Compute and return the oxidizer pressure at the injector inlet [Pa].
+        Compute the pressure delivered to the injector inlet on every line [Pa].
 
         Args:
-            oxidizer_mass: Current oxidizer mass in the tank [kg].
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J]. Required for a tank running an energy balance, unused
-                otherwise.
-        """
-        pass
+            line_states: Fluid mass and internal energy of every line, keyed by
+                line name.
 
-    @abstractmethod
-    def get_fuel_tank_pressure(
-        self,
-        *,
-        oxidizer_mass: float,
-        fuel_mass: float,
-        fuel_internal_energy: float | None = None,
-        oxidizer_internal_energy: float | None = None,
-    ) -> float:
-        """
-        Compute and return the fuel pressure at the injector inlet [Pa].
-
-        Args:
-            oxidizer_mass: Current oxidizer mass in the tank [kg].
-            fuel_mass: Current fuel mass in the tank [kg].
-            fuel_internal_energy: Current internal energy of the fuel [J].
-                Required for a tank running an energy balance, unused
-                otherwise.
-            oxidizer_internal_energy: Current internal energy of the oxidizer
-                [J]. Required for a tank running an energy balance, unused
-                otherwise.
+        Returns:
+            Injector inlet pressure of every line [Pa], keyed by line name.
         """
         pass
