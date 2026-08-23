@@ -7,6 +7,7 @@ layer.
 from tests.factories.common import FluidStateFactory
 from tests.factories.feed_systems import (
     PropellantLineFactory,
+    SingleLinePressureFedFeedSystemFactory,
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
 )
@@ -59,6 +60,7 @@ __all__ = [
     "OxidizerComponentFactory",
     "PropellantLineFactory",
     "RodAndTubeGrainSegmentFactory",
+    "SingleLinePressureFedFeedSystemFactory",
     "SolidMotorFactory",
     "SolidMotorThrustChamberFactory",
     "SolidPropellantPropertiesFactory",

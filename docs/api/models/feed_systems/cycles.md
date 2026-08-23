@@ -5,6 +5,7 @@ Concrete feed-system cycle implementations. A *cycle* is the topology that deter
 ## Available cycles
 
 - [`StackedTankPressureFedFeedSystem`](#stackedtankpressurefedfeedsystem) — Pressure-fed engine with the oxidizer tank stacked directly above a piston-separated fuel tank. Tank pressure provides both propellants' driving head.
+- [`SingleLinePressureFedFeedSystem`](#singlelinepressurefedfeedsystem) — Pressure-fed engine feeding one line, which the tank pressurizes itself. The one-line case of the contract: an oxidizer-only hybrid feed or a monoliquid.
 
 Additional cycles are under active development as separate work items: electric-pump, gas-generator, expander, and staged-combustion. When they land, they will reuse the dataclasses in [`feed_systems.components`](components.md) to describe their pumps, turbines, gas generators, and regenerative jackets.
 
@@ -78,6 +79,26 @@ feed_system = StackedTankPressureFedFeedSystem(
 - **HEM** (homogeneous-equilibrium two-phase) — `get_homogeneous_equilibrium_mass_flux` in [`machwave.core.two_phase_flow`](../../core.md), required for self-pressurized propellants such as nitrous oxide where the upstream saturated liquid flashes across the orifice and the flow can choke on the two-phase sound speed. The injector multiplies the returned mass flux by $C_d \cdot A$.
 
 Feedline pressure drop is stated for the design flow through `line_losses` rather than computed from the flow and the line geometry.
+
+---
+
+## `SingleLinePressureFedFeedSystem`
+
+One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, then blows down on the real-gas equation of state. What reaches the injector is that pressure less `line_loss`. An empty tank delivers nothing, which stops the flow at the injector element.
+
+**Construction**
+
+```python
+from machwave.models.feed_systems import SingleLinePressureFedFeedSystem
+from machwave.models.feed_systems.tank import Tank
+
+feed_system = SingleLinePressureFedFeedSystem.from_oxidizer_tank(
+    oxidizer_tank=Tank("N2O", volume=0.010, temperature=298.0, initial_fluid_mass=5.0),
+    line_loss=2e5,  # Pa
+)
+```
+
+A monoliquid names its own line and role instead, through the `PropellantLine` constructor.
 
 ---
 
