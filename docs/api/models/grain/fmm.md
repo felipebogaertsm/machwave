@@ -1,6 +1,6 @@
 # models.grain.fmm
 
-Fast Marching Method (FMM) base classes for grain geometries whose cross-section cannot be described analytically. The burning surface at any web distance is read off a single distance map of the initial port (solved with scikit-fmm), instead of re-meshing the geometry at every regression step.
+Fast Marching Method (FMM) base classes for grain geometries whose cross-section cannot be described analytically. The burning surface at any web distance is read off a single distance map of the initial port, solved with scikit-fmm.
 
 - `FMMGrainSegment` — Shared regression logic: builds the distance map and derives web thickness, the regressed face map, and port and burn area from it.
 - `FMMGrainSegment2D` — Constant cross-section geometries (Star, D-grain, wagon-wheel, multi-port, rod-and-tube). Burn area is the core perimeter (a single contour of the distance map) times the grain length, plus any exposed end faces.

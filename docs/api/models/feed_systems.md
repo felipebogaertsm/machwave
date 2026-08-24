@@ -22,13 +22,9 @@ From those, the base class assembles the state every line is fed with:
 
 - `get_inlet_states(line_states) -> dict[str, FluidState]`
 
-Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name. Solving all the lines in one call is what the physics asks for: a cycle couples its lines, as the stacked-tank piston ties the fuel pressure to the oxidizer ullage pressure.
-
-Keying by name is what makes the propellant count free. A biliquid engine feeds an oxidizer line and a fuel line; a triliquid adds a third with the `ADDITIVE` role for a diluent or a coolant; an oxidizer-only hybrid feed and a monoliquid are the one-line case of the same contract.
+Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name.
 
 The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides `get_inlet_states` to say so.
-
-The feed system is responsible for everything upstream of the injector face (tank state, piston and feedline losses, pump discharge, jacket pickup); the injector owns the orifice physics (discharge coefficient, area, and the per-line `MassFlowModel` that selects between single-phase incompressible and homogeneous-equilibrium two-phase flow). A [`FluidState`][machwave.common.fluid_state.FluidState] is the whole of what passes between them, so neither package imports the other — both depend only on the shared value object.
 
 [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every inlet state once per integration step, then calls [`Injector`][machwave.models.thrust_chamber.injector.Injector] with them at each chamber pressure the solver tries.
 
