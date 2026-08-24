@@ -46,9 +46,9 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Explanations:
-      - 1. Thrust and Performance: explanations/thrust.md
-      - 2. Mass Balance: explanations/mass_balance.md
-      - 3. Grain Regression: explanations/grain_regression.md
+      - Thrust and Performance: explanations/thrust.md
+      - Mass Balance: explanations/mass_balance.md
+      - Grain Regression: explanations/grain_regression.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md

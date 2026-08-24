@@ -1,11 +1,11 @@
-# 1. Thrust and Performance
+# Thrust and Performance
 
 Machwave calculates the **thrust** of a rocket motor/engine using the **thrust coefficient formulation**, which is derived from the idealized flow through a rocket nozzle.
 The ideal thrust coefficient has two terms, a momentum term which dominates and a pressure term.
 Each term is calculated and multiplied by the **nozzle efficiency** to obtain the real thrust coefficient.
 The nozzle efficiency can be applied independently to each term, and accounts for the deviations from the idealized assumptions, such as boundary layer losses, chemical kinetic losses, and more.
 
-## 1.1 Thrust Coefficient
+## Thrust Coefficient
 
 $$
 F = C_f\, P_0\, A_t
@@ -22,7 +22,7 @@ where:
 
 Implemented in [`get_thrust_from_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_thrust_from_thrust_coefficient].
 
-## 1.2 Ideal Thrust Coefficient
+## Ideal Thrust Coefficient
 
 The **ideal thrust coefficient** is given by:
 
@@ -42,7 +42,7 @@ where:
 The momentum term and the pressure term are returned separately by [`get_ideal_thrust_coefficient_terms`][machwave.core.compressible_flow.nozzle.get_ideal_thrust_coefficient_terms].
 This way, nozzle losses can act on either term separately.
 
-## 1.3 Flow Separation
+## Flow Separation
 
 The ideal thrust coefficient above assumes the nozzle flows full, with the exhaust attached to the wall all the way to the geometric exit.
 As the chamber pressure decays during tail-off the nozzle becomes increasingly overexpanded ($P_e \ll P_\text{ext}$), and below a threshold the boundary layer can no longer sustain the adverse pressure gradient.
@@ -65,7 +65,7 @@ where:
 
 Implemented in [`get_separated_exit_conditions`][machwave.core.compressible_flow.nozzle.get_separated_exit_conditions].
 
-## 1.4 Nozzle Efficiency
+## Nozzle Efficiency
 
 Real nozzles deviate from the ideal assumptions baked into the ideal thrust coefficient.
 Machwave lumps these deviations into a single **nozzle efficiency** $\eta_\text{nozzle}$ applied multiplicatively to the ideal coefficient:
@@ -84,7 +84,7 @@ Which and how many losses are included depends on the motor/engine category.
 Each loss is composed by the `Motor`'s nozzle loss model and may derate the momentum term, the pressure term, or both of the thrust coefficient.
 The equation above is the case where every loss derates both terms.
 
-## 1.5 Total Impulse and Specific Impulse
+## Total Impulse and Specific Impulse
 
 After the thrust is calculated, the total impulse is obtained by integrating it over the thrust time:
 
