@@ -4,10 +4,7 @@ Generic interpolation utilities for tabulated curves used across machwave.
 
 ## `BoundedCubicSpline`
 
-Many parts of machwave consume property curves as small tables — pump head versus volumetric flow, burn rate versus pressure, nozzle area versus axial station. `BoundedCubicSpline` wraps such a table in a cubic spline that:
-
-1. **Interpolates between knots with a cubic spline.** Smooth derivatives matter when the curve is composed with downstream solvers (RK4 step, root-finder on injector–chamber balance, etc.).
-2. **Refuses to extrapolate.** [`scipy.interpolate.CubicSpline`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html) is constructed with `extrapolate=False`, and the class additionally raises `ValueError` for any input outside `[x_points[0], x_points[-1]]`. A simulation that drifts off the calibrated domain fails loudly rather than producing fabricated values.
+Wraps a table of knots in a cubic spline built on [`scipy.interpolate.CubicSpline`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html) with `extrapolate=False`, raising `ValueError` for any input outside `[x_points[0], x_points[-1]]`.
 
 The constructor rejects malformed tables eagerly: the two sequences must be one-dimensional, the same length, contain at least two knots, and `x_points` must be strictly increasing. The inclusive domain bounds are exposed via the `domain` property.
 

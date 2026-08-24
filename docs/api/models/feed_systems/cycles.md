@@ -7,22 +7,6 @@ Concrete feed-system cycle implementations. A *cycle* is the topology that deter
 - [`StackedTankPressureFedFeedSystem`](#stackedtankpressurefedfeedsystem) — Pressure-fed engine with the oxidizer tank stacked directly above a piston-separated fuel tank. Tank pressure provides both propellants' driving head.
 - [`SingleLinePressureFedFeedSystem`](#singlelinepressurefedfeedsystem) — Pressure-fed engine feeding one line, which the tank pressurizes itself. The one-line case of the contract: an oxidizer-only hybrid feed or a monoliquid.
 
-Additional cycles are under active development as separate work items: electric-pump, gas-generator, expander, and staged-combustion. When they land, they will reuse the dataclasses in [`feed_systems.components`](components.md) to describe their pumps, turbines, gas generators, and regenerative jackets.
-
-## How cycles compose with the rest of the engine
-
-```
-┌──────────────┐  ┌──────────────────────┐  ┌──────────┐  ┌──────────┐
-│ tank.Tank    │──│ feed_systems.cycles  │──│ injector │──│ chamber  │
-│ (two-phase)  │  │  (this sub-package)  │  │          │  │          │
-└──────────────┘  └──────────────────────┘  └──────────┘  └──────────┘
-                       ▲           ▲
-                       │           │
-                  feed_systems.components
-                  (pump/turbine/gas-generator
-                   /regenerative-jacket specs)
-```
-
 The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] instances it was constructed with, and combines that state with any [component specs](components.md) it owns to say what reaches the injector face. The simulation step lives in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep], which calls `get_inlet_states` once per integration step and hands the results to the [`Injector`][machwave.models.thrust_chamber.injector.Injector] at each chamber pressure the solver tries.
 
 ---
@@ -66,19 +50,9 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Mass-flow model.** The feed system supplies the inlet state of every line and the injector does the orifice dispatch. Inlet pressure is the pressurizing tank pressure for its own line and that pressure less `piston_loss` for every line below the piston, each less its own feedline loss; downstream pressure is `chamber_pressure`. The injector picks SPI or HEM per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]:
+**Mass-flow model.** The feed system supplies the inlet state of every line and the injector does the orifice dispatch. Inlet pressure is the pressurizing tank pressure for its own line and that pressure less `piston_loss` for every line below the piston, each less its own feedline loss; downstream pressure is `chamber_pressure`. Inlet density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density]. The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].
 
-- **SPI** (single-phase incompressible) — `get_mass_flow_orifice` in [`machwave.core.incompressible_flow`](../../core.md):
-
-    \[
-    \dot{m} = C_d \cdot A \cdot \sqrt{2 \rho \left(P_\text{up} - P_\text{down}\right)}
-    \]
-
-    with $\rho$ the inlet density, which this cycle takes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density] — the saturated-liquid density while liquid remains.
-
-- **HEM** (homogeneous-equilibrium two-phase) — `get_homogeneous_equilibrium_mass_flux` in [`machwave.core.two_phase_flow`](../../core.md), required for self-pressurized propellants such as nitrous oxide where the upstream saturated liquid flashes across the orifice and the flow can choke on the two-phase sound speed. The injector multiplies the returned mass flux by $C_d \cdot A$.
-
-Feedline pressure drop is stated for the design flow through `line_losses` rather than computed from the flow and the line geometry.
+`line_losses` is a fixed pressure drop per line, not a function of flow.
 
 ---
 
