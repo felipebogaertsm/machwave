@@ -94,10 +94,10 @@ and the parameters `web_distance`, `length`, `outer_diameter`, `density_ratio`,
 - **`get_regression_map` / `regression_map`** — the adversarial review favoured
   `get_arrival_time_field` on FMM-canon grounds (correct: under unit burn speed
   `T(x)` *is* the regression distance). **Decision: keep `regression_map`.**
-  It is the term used throughout this module's `README.md` and the `docs/theory`
-  pages; renaming the code alone would split the vocabulary between code and
-  docs. Instead, enrich the docstring: *"the FMM arrival-time field `T(x)`; under
-  unit burn speed it equals the regression distance."*
+  It is the term used throughout this module's `README.md` and the
+  `docs/explanations` pages; renaming the code alone would split the vocabulary
+  between code and docs. Instead, enrich the docstring: *"the FMM arrival-time
+  field `T(x)`; under unit burn speed it equals the regression distance."*
 - Short, clear locals in tight scopes: `inside`, `eroded`, `element_mass`,
   `total_mass`, `total_volume`, `volume_per_element`, `voxels`, `voxel_map`,
   `mesh`, `_resample_nearest`, `get_core_perimeter` (`core` is the project-wide
@@ -269,7 +269,7 @@ must update it in the same PR: this module's [`README.md`](README.md) (which
 walks through `generate_initial_face_map`, `get_outer_diameter_mask`,
 `get_regression_map`, `get_face_map`, `get_contours`,
 `get_face_area_interpolator`, `get_burn_area_interpolator`, …), the
-`docs/theory/grain_regression.md` walkthrough
+`docs/explanations/grain_regression.md` walkthrough
 and call-flow diagrams, the `docs/api/models/grain/` reference pages, and the
 generated `site/`. After a docs-affecting rename, rebuild the site so the
 generated HTML matches.
