@@ -834,7 +834,7 @@ requires-dist = [
     { name = "scikit-fmm", specifier = "==2025.6.23" },
     { name = "scikit-image", specifier = ">=0.25.2,<0.27.0" },
     { name = "scipy", specifier = ">=1.15.2,<2.0.0" },
-    { name = "trimesh", specifier = ">=4.6.4,<5.0.0" },
+    { name = "trimesh", specifier = ">=4.6.4,<6.0.0" },
 ]
 provides-extras = ["rocketpy"]
 

@@ -45,10 +45,10 @@ plugins:
 nav:
   - Home: index.md
   - Quick Start: quickstart.md
-  - Rocket Theory:
-      - 1. Thrust and Performance: theory/thrust.md
-      - 2. Mass Balance: theory/mass_balance.md
-      - 3. Grain Regression: theory/grain_regression.md
+  - Explanations:
+      - 1. Thrust and Performance: explanations/thrust.md
+      - 2. Mass Balance: explanations/mass_balance.md
+      - 3. Grain Regression: explanations/grain_regression.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
