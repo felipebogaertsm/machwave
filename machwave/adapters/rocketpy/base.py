@@ -4,11 +4,13 @@ import typing
 import numpy as np
 import numpy.typing as npt
 
+import machwave.common.extras as extras
+
 try:
     import rocketpy
     import rocketpy.motors as rocketpy_motors
 except ImportError as e:  # pragma: no cover - exercised only without rocketpy
-    raise ImportError("RocketPy adapters require the `rocketpy` package") from e
+    raise extras.MissingOptionalDependencyError("rocketpy", extras.ROCKETPY) from e
 
 if typing.TYPE_CHECKING:
     import machwave.simulation as ib_simulation
