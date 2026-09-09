@@ -6,12 +6,11 @@ from abc import ABC
 from collections.abc import Callable
 
 import numpy as np
-import skfmm
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 from scipy.ndimage import binary_erosion
-from skimage import measure
 
+import machwave.common.extras as extras
 import machwave.core.filters as filters
 import machwave.core.geometric as geometric
 import machwave.core.mechanics as mechanics
@@ -41,6 +40,7 @@ def _compute_iso_surface_area(
     grid_spacing: tuple[float, float, float],
 ) -> float:
     """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
+    measure = extras.require("skimage.measure", extras.FMM)
     try:
         vertices, faces, _, _ = measure.marching_cubes(
             distance_field, level=level, spacing=grid_spacing
@@ -298,13 +298,15 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         # and y axes, because the 3D grid is anisotropic
         axial_grid_spacing = self.get_axial_grid_spacing()
         radial_grid_spacing = self.get_radial_grid_spacing()
+        skfmm = extras.require("skfmm", extras.FMM)
         distance = skfmm.distance(
             self._pad_exposed_ends(masked_face),
-            dx=[axial_grid_spacing, radial_grid_spacing, radial_grid_spacing],  # type: ignore[arg-type]
+            dx=[axial_grid_spacing, radial_grid_spacing, radial_grid_spacing],
         )
         # The padded field keeps the end faces closed for the burn area mesh.
-        self.padded_regression_map = distance * (2.0 / self.outer_diameter)
-        return self._strip_exposed_ends(self.padded_regression_map)
+        padded_regression_map = distance * (2.0 / self.outer_diameter)
+        self.padded_regression_map = padded_regression_map
+        return self._strip_exposed_ends(padded_regression_map)
 
     def get_padded_regression_map(self) -> np.ndarray:
         """Return the regression map including the void slice past each exposed end."""
