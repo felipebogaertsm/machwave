@@ -1,8 +1,13 @@
 import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 import machwave.common.arrays as common_arrays
+import machwave.common.extras as extras
+
+try:
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+except ImportError as e:  # pragma: no cover - exercised only without plotly
+    raise extras.MissingOptionalDependencyError("plotly", extras.PLOTS) from e
 
 
 def _create_plot_2d_frame(
