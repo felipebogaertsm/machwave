@@ -16,17 +16,20 @@ requires-python = ">=3.11,<=3.14"
 dependencies = [
     "numpy>=2.0.0,<3.0.0",
     "fluids>=1.1.0,<2.0.0",
-    "plotly>=6.0.0,<8.0.0",
     "scipy>=1.15.2,<2.0.0",
-    "scikit-image>=0.25.2,<0.27.0",
-    "scikit-fmm==2025.6.23",
-    "trimesh>=4.6.4,<6.0.0",
-    "rocketcea>=1.2.1,<2.0.0",
-    "coolprop>=6.7.0,<9.0.0",
 ]
 
 [project.optional-dependencies]
-rocketpy = ["rocketpy>=1.0.0,<2.0.0"]
+cea = ["rocketcea>=1.2.1,<2.0.0"]
+liquid = ["coolprop>=6.7.0,<9.0.0"]
+fmm = [
+    "scikit-fmm==2025.6.23",
+    "scikit-image>=0.25.2,<0.27.0",
+    "trimesh>=4.6.4,<6.0.0",
+]
+plots = ["plotly>=6.0.0,<8.0.0"]
+rocketpy = ["rocketpy>=1.11.0,<2.0.0"]
+all = ["machwave[cea,liquid,fmm,plots,rocketpy]"]
 
 [dependency-groups]
 dev = [
@@ -38,7 +41,6 @@ dev = [
     "pytest-benchmark>=5.0.0,<6.0.0",
     "pytest-cov>=6.2.1,<8.0.0",
     "polyfactory>=3.1.0,<4.0.0",
-    "rocketpy>=1.11.0,<2.0.0",
     "pre-commit>=4.0.0,<5.0.0",
     "pytest-xdist>=3.6.0,<4.0.0",
 ]
