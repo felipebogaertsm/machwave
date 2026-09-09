@@ -16,10 +16,8 @@ requires-python = ">=3.11,<=3.14"
 dependencies = [
     "numpy>=2.0.0,<3.0.0",
     "fluids>=1.1.0,<2.0.0",
-    "matplotlib>=3.10.0,<4.0.0",
     "plotly>=6.0.0,<8.0.0",
     "scipy>=1.15.2,<2.0.0",
-    "pandas>=2.2.3,<4.0.0",
     "scikit-image>=0.25.2,<0.27.0",
     "scikit-fmm==2025.6.23",
     "trimesh>=4.6.4,<6.0.0",
