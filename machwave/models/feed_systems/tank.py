@@ -1,8 +1,6 @@
 import dataclasses
 import functools
 
-import machwave.services.coolprop as coolprop_service
-
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class TankFluidState:
@@ -82,7 +80,10 @@ class Tank:
             ValueError: If the fluid is unknown to CoolProp, if any argument is
                 outside its valid physical range, or if the initial fill is
                 denser than the saturated liquid.
+            MissingOptionalDependencyError: If the `liquid` extra is not installed.
         """
+        import machwave.services.coolprop as coolprop_service
+
         self.fluid_name = fluid_name
         self.volume = volume
         self.temperature = temperature
