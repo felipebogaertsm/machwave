@@ -18,23 +18,16 @@ Machwave's main capabilities are:
 
 ## Installation
 
-Machwave requires **Python 3.11 – 3.14**.
-
 ```bash
 pip install machwave
 ```
 
-The core install depends only on NumPy, SciPy and fluids, and runs a complete solid
-rocket motor simulation with BATES grains, any of the eight bundled solid propellant
-formulations and the full Solid Performance Program 1975 nozzle loss set. Those
-formulations carry pre-computed thermochemical properties, so no thermochemistry
-solver is needed to burn them.
-
-Everything heavier is an optional extra:
+The core install can run a complete solid rocket motor simulation with BATES grains, with any of the preset solid propellant formulations.
+Additional capabilities such as LRE simulation, FMM grain regression, or RocketPy trajectory simulation can be unlocked by installing the extra bundled packages:
 
 | Extra | Unlocks |
 | --- | --- |
-| `cea` | Thermochemistry computed from propellant composition, needed for biliquid engines and for custom solid mixtures |
+| `cea` | Thermochemistry computed from propellant composition, i.e. biliquid engines, custom solid formulations |
 | `liquid` | Propellant tanks and the injector's homogeneous-equilibrium mass flux |
 | `fmm` | Every grain geometry other than BATES, including grains defined by an STL mesh |
 | `plots` | The built-in figures and the Monte Carlo plots |
