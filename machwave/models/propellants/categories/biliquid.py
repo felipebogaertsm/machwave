@@ -1,5 +1,3 @@
-import machwave.services.cea as cea_service
-
 from .. import components as propellant_components
 from . import base as propellant_base
 
@@ -77,7 +75,14 @@ class BiliquidPropellant(propellant_base.Propellant):
 
         Returns:
             RocketCEAService instance.
+
+        Raises:
+            ValueError: If creating the CEA object for the oxidizer and fuel
+                fails.
+            MissingOptionalDependencyError: If the `cea` extra is not installed.
         """
+        import machwave.services.cea as cea_service
+
         fuel = self._get_fuel()
         oxidizer = self._get_oxidizer()
 

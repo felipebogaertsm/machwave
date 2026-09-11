@@ -1,5 +1,3 @@
-import machwave.services.cea as cea_service
-
 from .. import components as propellant_components
 from .. import properties as propellant_properties
 from . import base as propellant_base
@@ -125,7 +123,14 @@ class SolidPropellant(propellant_base.Propellant):
 
         Returns:
             RocketCEAService instance.
+
+        Raises:
+            ValueError: If registering the propellant with CEA or creating the
+                CEA object fails.
+            MissingOptionalDependencyError: If the `cea` extra is not installed.
         """
+        import machwave.services.cea as cea_service
+
         components_data = [
             comp.to_cea_dict(weight_percent=mf * 100.0)
             for comp, mf in zip(self.components, self.mass_fractions)
