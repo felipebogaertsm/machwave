@@ -7,14 +7,14 @@ Machwave is an open source Python library for chemical rocket propulsion simulat
 Machwave's main capabilities are:
 
 - **Propellant modeling** with pre-defined formulations, and NASA CEA integration
-  for composition-derived thermochemistry (`cea` extra)
-- **Grain regression analysis** with FMM for 2D and 3D geometries (`fmm` extra)
-- **Rocket motor and engine simulation** for the following categories:
+  for composition-derived thermochemistry
+- **Grain regression analysis** with the fast marching method for 2D and 3D geometries
+- **Motor/engine simulation** for the following categories:
     - Solid Rocket Motors
-    - *Bi-propellant Liquid Rocket Engines (in development 🔧)* (`cea` and `liquid` extras)
+    - *Bipropellant Liquid Rocket Engines (in development 🔧)*
     - *Hybrid Rocket Engines (coming soon 🗓️)*
 - **Monte Carlo simulation** for all of the motors/engines above
-- **Integration with RocketPy** for trajectory simulation and analysis (`rocketpy` extra)
+- **Integration with RocketPy** for trajectory simulation and analysis
 
 ## Installation
 
