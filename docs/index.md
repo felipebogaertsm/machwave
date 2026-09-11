@@ -40,14 +40,10 @@ Install one or several by name, for example:
 pip install machwave[fmm,plots]
 ```
 
-## Quick Start
+## Getting Started
 
 The [Quick Start page](quickstart.md) covers a Solid Rocket Motor simulation.
-Propellant selection, grain geometry, nozzle design, simulation execution and result plotting.
-
-For more complete examples, including coupled trajectory with RocketPy and Monte
-Carlo simulation, check out the
-[examples directory](https://github.com/felipebogaertsm/machwave/tree/main/examples).
+For more complete examples, including coupled trajectory simulation with RocketPy and Monte Carlo, check out the [examples directory](https://github.com/felipebogaertsm/machwave/tree/main/examples).
 
 ## License
 
