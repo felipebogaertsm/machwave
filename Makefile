@@ -1,13 +1,21 @@
-.PHONY: install install-dev install-docs install-hooks test benchmark publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install install-all install-dev install-dev-core install-docs install-hooks test test-core benchmark publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
 
+install-all:
+	@uv sync --all-extras
+
 install-dev:
+	@uv sync --all-extras --group dev
+
+# The core environment: no extras, so the tooling is there but the optional
+# dependencies are not. Drives the test-core target.
+install-dev-core:
 	@uv sync --group dev
 
 install-docs:
-	@uv sync --group docs --group dev
+	@uv sync --all-extras --group docs --group dev
 
 install-hooks:
 	@uv run pre-commit install
@@ -25,6 +33,15 @@ verify-version:
 	echo "Version verified: $$PKG_VERSION"
 test:
 	@uv run pytest -n auto
+# Selects by path rather than by marker: testpaths collects the whole suite
+# before deselecting, and most of it cannot be imported without the extras.
+test-core:
+	@uv run pytest -n auto \
+		tests/test_optional_dependencies.py \
+		tests/test_common \
+		tests/test_core \
+		tests/test_services/test_eng.py \
+		--ignore=tests/test_core/test_two_phase_flow.py
 benchmark:
 	@uv run pytest tests/benchmarks --benchmark-only --benchmark-columns=min,median,mean,stddev,rounds
 publish:
