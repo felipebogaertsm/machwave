@@ -1,6 +1,6 @@
 # models.feed_systems.components
 
-Static, immutable descriptions of the physical components a feed-system cycle is built from. The classes in this sub-package do not contain integration state and never mutate during a simulation. Cycle implementations in [`machwave.models.feed_systems.cycles`](cycles.md) read these specifications and combine them with the live tank state and chamber conditions to compute mass flow, head rise, and shaft power.
+Static, immutable descriptions of the physical components a feed-system cycle is built from. The classes in this sub-package do not contain integration state and never mutate during a simulation. Cycle implementations in [`machwave.models.feed_systems.cycles`](cycles.md) combine these specifications with the live tank state and chamber conditions to compute mass flow, head rise, and shaft power. The cycles that do so — electric-pump, gas-generator, expander and staged-combustion — are not implemented yet: the two pressure-fed cycles available today read none of these specifications.
 
 - `PumpSpec` — A propellant pump at its design point: isentropic efficiency, pressure rise, volumetric flow, and shaft speed.
 - `TurbineSpec` — A turbine at its design point: isentropic efficiency, pressure ratio, inlet temperature, and mass flow.

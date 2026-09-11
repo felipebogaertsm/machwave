@@ -10,6 +10,6 @@ Fast Marching Method (FMM) base classes for grain geometries whose cross-section
 - `FMMGrainSegment3D` — Axially varying cross-section geometries (Conical, Finocyl). The port is a stack of axial slices through a 3D distance map; burn area is the marching-cubes area of the regressing iso-surface, and port area is read from a chosen slice.
 - `FMMSTLGrainSegment` — Arbitrary grain geometry imported from an STL mesh file.
 
-Used internally by the concrete geometry classes in [geometries](geometries.md).
+Used internally by the concrete geometry classes in [geometries](geometries.md). The regression scheme these classes share is derived in [Grain Regression](../../../explanations/grain_regression.md).
 
 ::: machwave.models.grain.fmm
