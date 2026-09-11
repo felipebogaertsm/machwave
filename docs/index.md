@@ -3,7 +3,7 @@
   <img src="assets/logo/machwave-lockup-white.svg#only-dark" alt="Machwave" width="400">
 </p>
 
-Machwave is an open source Python library for **internal ballistic simulation** of chemical rocket propulsion systems.
+Machwave is an open source Python library for **internal ballistics simulation** of chemical rocket propulsion systems.
 Machwave's main capabilities are:
 
 - **Propellant modeling** with pre-defined formulations, and NASA CEA integration
