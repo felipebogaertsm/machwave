@@ -4,7 +4,7 @@
 </p>
 
 Machwave is an open source Python library for chemical rocket propulsion simulation.
-Here is what it is capable of:
+Machwave's main capabilities are:
 
 - **Propellant modeling** with pre-defined formulations, and NASA CEA integration
   for composition-derived thermochemistry (`cea` extra)
