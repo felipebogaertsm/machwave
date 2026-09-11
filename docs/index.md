@@ -22,14 +22,14 @@ Machwave's main capabilities are:
 pip install machwave
 ```
 
-The core install can run a complete solid rocket motor simulation with BATES grains, with any of the preset solid propellant formulations.
+The core install can run a complete SRM simulation with BATES grains, with any of the preset solid propellant formulations.
 Additional capabilities such as LRE simulation, FMM grain regression, or RocketPy trajectory simulation can be unlocked by installing the extra bundled packages:
 
 | Extra | Unlocks |
 | --- | --- |
 | `cea` | Thermochemistry computed from propellant composition, i.e. biliquid engines, custom solid formulations |
-| `liquid` | Propellant tanks and the injector's homogeneous-equilibrium mass flux |
-| `fmm` | Every grain geometry other than BATES, including grains defined by an STL mesh |
+| `liquid` | Fluid state models for propellant tanks and injectors |
+| `fmm` | Fast marching method for complex grain regression analysis |
 | `plots` | The built-in figures and the Monte Carlo plots |
 | `rocketpy` | The RocketPy adapter for trajectory simulation |
 | `all` | All of the above |
@@ -39,11 +39,6 @@ Install one or several by name, for example:
 ```bash
 pip install machwave[fmm,plots]
 ```
-
-Using a feature without its extra raises an `ImportError` naming the install command
-that provides it. On macOS the `cea` extra needs a Fortran compiler; see the
-[README](https://github.com/felipebogaertsm/machwave#macos-prerequisite-for-the-cea-extra-gfortran)
-for the one-time setup.
 
 ## Quick Start
 
