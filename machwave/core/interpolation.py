@@ -5,7 +5,13 @@ from scipy.interpolate import CubicSpline
 
 
 class BoundedCubicSpline:
-    """Cubic spline interpolant that does not extrapolate outside its domain."""
+    """
+    Cubic spline interpolant that does not extrapolate outside its domain.
+
+    The cubic fit keeps derivatives smooth for the solvers that consume these
+    curves. Inputs outside the knot range raise instead of returning fabricated
+    values.
+    """
 
     def __init__(
         self,
