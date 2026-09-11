@@ -1,11 +1,13 @@
 from abc import ABC
 
 import numpy as np
-import trimesh
 
+import machwave.common.extras as extras
 import machwave.models.grain as grain
 import machwave.models.grain.base as grain_base
 import machwave.models.grain.fmm as grain_fmm
+
+_STL_FEATURE = "STL grain segments"
 
 
 def _resample_nearest(
@@ -40,7 +42,13 @@ class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
             length: Segment length [m].
             inhibited_surfaces: Surfaces inhibited from burning.
             grid_resolution: Grid points per axis of the cross-section.
+
+        Raises:
+            GrainGeometryError: If the segment geometry is invalid.
+            MissingOptionalDependencyError: If the `fmm` extra is not installed.
         """
+        extras.require("trimesh", extras.FMM, _STL_FEATURE)
+
         self.file_path = file_path
         self.outer_diameter = outer_diameter
         self.length = length
@@ -75,7 +83,11 @@ class FMMSTLGrainSegment(grain_fmm.FMMGrainSegment3D, ABC):
         The trimesh voxel grid does not line up with the FMM grid, so it is
         resampled onto the canonical `(normalized_length, grid_resolution, grid_resolution)`
         shape the rest of the 3D machinery expects.
+
+        Raises:
+            MissingOptionalDependencyError: If the `fmm` extra is not installed.
         """
+        trimesh = extras.require("trimesh", extras.FMM, _STL_FEATURE)
         mesh = trimesh.load_mesh(self.file_path)
         assert isinstance(mesh, trimesh.Trimesh), "Expected a single Trimesh"
         assert mesh.is_watertight, "Mesh must be watertight"

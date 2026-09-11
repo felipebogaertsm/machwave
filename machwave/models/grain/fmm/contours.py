@@ -1,5 +1,6 @@
 import numpy as np
-from skimage import measure
+
+import machwave.common.extras as extras
 
 
 def get_iso_contours(
@@ -18,7 +19,12 @@ def get_iso_contours(
     Returns:
         A list of float64 arrays, where each array represents a contour.
         Each contour array is typically shaped (N, 2) with (row, col) coordinates.
+
+    Raises:
+        MissingOptionalDependencyError: If the `fmm` extra is not installed.
     """
+    measure = extras.require("skimage.measure", extras.FMM)
+
     if np.ma.isMaskedArray(regression_field):
         # Outside-casing cells read as 0, tracing a spurious contour along the
         # wall; lift them above every iso level so only real fronts are traced.
