@@ -1,8 +1,14 @@
 from collections.abc import Sequence
 
 import numpy as np
-import plotly.graph_objects as go
 from scipy import stats as scipy_stats
+
+import machwave.common.extras as extras
+
+try:
+    import plotly.graph_objects as go
+except ImportError as e:  # pragma: no cover - exercised only without plotly
+    raise extras.MissingOptionalDependencyError("plotly", extras.PLOTS) from e
 
 
 def plot_histogram(

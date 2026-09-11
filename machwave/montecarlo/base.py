@@ -8,7 +8,6 @@ import scipy.stats as scipy_stats
 
 import machwave.common.objects as common_objects
 import machwave.montecarlo.random as random
-import machwave.services.plots.montecarlo as plot_service
 import machwave.simulation as machwave_simulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
@@ -52,7 +51,8 @@ class MonteCarloSimulation:
     Monte Carlo driver that runs scenarios and stores their results.
 
     Stores parameters and simulation type, executes the configured number of
-    scenarios, and delegates plotting to `plot_service.py`.
+    scenarios, and delegates plotting to `machwave.services.plots.montecarlo`,
+    which needs the `plots` extra.
     """
 
     def __init__(
@@ -201,7 +201,14 @@ class MonteCarloSimulation:
         x_axes_title: str = "x",
         **plotly_kwargs,
     ) -> None:
-        """Plot a histogram of a scalar property across all results."""
+        """
+        Plot a histogram of a scalar property across all results.
+
+        Raises:
+            MissingOptionalDependencyError: If the `plots` extra is not installed.
+        """
+        import machwave.services.plots.montecarlo as plot_service
+
         plot_service.plot_histogram(
             self.results, property_name, x_axes_title, **plotly_kwargs
         )
@@ -214,7 +221,14 @@ class MonteCarloSimulation:
         kde_points: int = 200,
         **plotly_kwargs,
     ) -> None:
-        """Plot a histogram of a scalar property with a KDE overlay."""
+        """
+        Plot a histogram of a scalar property with a KDE overlay.
+
+        Raises:
+            MissingOptionalDependencyError: If the `plots` extra is not installed.
+        """
+        import machwave.services.plots.montecarlo as plot_service
+
         plot_service.plot_histogram_with_kde(
             self.results,
             property_name,
@@ -230,7 +244,14 @@ class MonteCarloSimulation:
         x_axes_title: str = "x",
         **plotly_kwargs,
     ) -> None:
-        """Plot the empirical CDF of a scalar property across all results."""
+        """
+        Plot the empirical CDF of a scalar property across all results.
+
+        Raises:
+            MissingOptionalDependencyError: If the `plots` extra is not installed.
+        """
+        import machwave.services.plots.montecarlo as plot_service
+
         plot_service.plot_cdf(
             self.results, property_name, x_axes_title, **plotly_kwargs
         )
@@ -243,7 +264,14 @@ class MonteCarloSimulation:
         title: str | None = None,
         **plotly_kwargs,
     ) -> None:
-        """Plot min and max envelopes of a time series across all results."""
+        """
+        Plot min and max envelopes of a time series across all results.
+
+        Raises:
+            MissingOptionalDependencyError: If the `plots` extra is not installed.
+        """
+        import machwave.services.plots.montecarlo as plot_service
+
         plot_service.plot_time_series_extremes(
             self.results,
             time_property,
