@@ -1,6 +1,9 @@
+import typing
+
 import numpy as np
 
-import machwave.services.coolprop as coolprop_service
+if typing.TYPE_CHECKING:
+    import machwave.services.coolprop as coolprop_service
 
 
 def get_homogeneous_equilibrium_mass_flux(
@@ -31,7 +34,10 @@ def get_homogeneous_equilibrium_mass_flux(
 
     Raises:
         ValueError: If the number of sweep points is less than 2.
+        MissingOptionalDependencyError: If the `liquid` extra is not installed.
     """
+    import machwave.services.coolprop as coolprop_service
+
     if sweep_points < 2:
         raise ValueError("sweep_points must be at least 2")
 
@@ -61,7 +67,7 @@ def get_homogeneous_equilibrium_mass_flux(
 
 
 def _get_stagnation_enthalpy_and_entropy(
-    coolprop: coolprop_service.CoolPropService,
+    coolprop: "coolprop_service.CoolPropService",
     temperature: float,
     pressure: float,
 ) -> tuple[float, float]:
@@ -90,7 +96,7 @@ def _get_stagnation_enthalpy_and_entropy(
 
 
 def _get_isentropic_mass_flux(
-    coolprop: coolprop_service.CoolPropService,
+    coolprop: "coolprop_service.CoolPropService",
     pressure: float,
     enthalpy_upstream: float,
     entropy_upstream: float,

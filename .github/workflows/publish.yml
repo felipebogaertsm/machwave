@@ -64,30 +64,79 @@ jobs:
           name: dist
           path: dist
 
-      - name: Install gfortran (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install gcc
-          brew_prefix=$(brew --prefix)
-          gfortran_versioned=$(ls "$brew_prefix"/bin/gfortran-* 2>/dev/null | sort -V | tail -n 1)
-          if [ -z "$gfortran_versioned" ]; then
-            echo "::error::No gfortran-* binary found in $brew_prefix/bin after brew install gcc"
-            exit 1
-          fi
-          ln -sf "$gfortran_versioned" "$brew_prefix/bin/gfortran"
-          gfortran --version
-
+      # No Fortran compiler: a core wheel install no longer builds rocketcea.
       - name: Install built wheel
         run: python -m pip install dist/*.whl
 
       - name: Smoke test
         run: |
           python -c "import machwave; print('machwave', machwave.__version__)"
-          python -c "import machwave.simulation, machwave.models, machwave.core, machwave.services, machwave.adapters"
+          python - <<'PY'
+          import sys
+
+          import machwave
+          import machwave.adapters
+          import machwave.core
+          import machwave.models
+          import machwave.models.grain.geometries
+          import machwave.models.propellants.formulations
+          import machwave.services
+          import machwave.simulation
+
+          optional = {
+              "rocketcea",
+              "CoolProp",
+              "skfmm",
+              "skimage",
+              "trimesh",
+              "plotly",
+              "rocketpy",
+          }
+          loaded = sorted(optional & set(sys.modules))
+          assert not loaded, f"core wheel import loaded optional packages: {loaded}"
+          print("core import surface clean")
+          PY
+
+  smoke-test-extras:
+    name: Smoke test built wheel with all extras
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Download built distributions
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      - name: Install built wheel with all extras
+        run: python -m pip install "$(ls dist/*.whl)[all]"
+
+      - name: Smoke test
+        run: |
+          python -c "import machwave.services.cea, machwave.services.coolprop"
+          python -c "import machwave.services.plots.internal_ballistics"
+          python -c "import machwave.adapters.rocketpy"
+          python - <<'PY'
+          import machwave.models.grain.geometries as geometries
+
+          geometries.StarGrainSegment(
+              length=0.1,
+              outer_diameter=0.065,
+              number_of_points=5,
+              point_length=0.01,
+              point_width=0.005,
+          )
+          print("fmm geometry constructed")
+          PY
 
   publish:
     name: Publish to PyPI
-    needs: smoke-test
+    needs: [smoke-test, smoke-test-extras]
     runs-on: ubuntu-latest
     environment: publish
     steps:

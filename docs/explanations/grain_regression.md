@@ -116,7 +116,7 @@ By default only the outer surface is inhibited.
 ![masked face](../assets/explanations/grain_regression/masked_face.svg)
 
 **Compute the regression map: [`get_regression_map()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_regression_map].**
-Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. The map's largest value is the web thickness ([`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
+Now the fast marching method runs. `skfmm.distance` fills every propellant cell with its distance from the burning surface, as a fraction of the grain radius. `skfmm` and the `skimage` used further down both arrive with the `fmm` extra (`pip install machwave[fmm]`). The map's largest value is the web thickness ([`get_web_thickness()`][machwave.models.grain.fmm.base.FMMGrainSegment.get_web_thickness]).
 
 ```
   ·   ·   ·   ·   ·   · 0.5   ·   ·   ·   ·   ·   ·

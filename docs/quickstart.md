@@ -111,6 +111,9 @@ result.report()
 ib_plots.thrust_pressure_plot(result.time, result.thrust, result.chamber_pressure).show()
 ```
 
+!!! note "The plot needs the `plots` extra"
+    Everything up to here runs on the core install. Only the plot needs `pip install machwave[plots]`; `result.report()` on its own does not.
+
 ```text
 INTERNAL BALLISTICS SIMULATION RESULTS
 

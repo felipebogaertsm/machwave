@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
-import skfmm
 from scipy.ndimage import binary_erosion
 from numpy.typing import NDArray
 
+import machwave.common.extras as extras
 import machwave.models.grain as grain
 import machwave.models.grain.base as grain_base
 
@@ -33,7 +33,14 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
             inhibited_surfaces: Surfaces inhibited from burning.
             grid_resolution: Resolution of the face map, x and y axes.
             density_ratio: Ratio of real to ideal propellant density.
+
+        Raises:
+            GrainGeometryError: If the segment geometry is invalid.
+            MissingOptionalDependencyError: If the `fmm` extra is not installed.
         """
+        extras.require("skfmm", extras.FMM)
+        extras.require("skimage.measure", extras.FMM)
+
         self.grid_resolution = grid_resolution
 
         # Cache variables:
@@ -195,6 +202,7 @@ class FMMGrainSegment(grain.GrainSegment, ABC):
 
     def _compute_regression_distance(self, masked_face: np.ndarray) -> np.ndarray:
         """Return the regression distance from the burning surface in normalized web units."""
+        skfmm = extras.require("skfmm", extras.FMM)
         distance = skfmm.distance(masked_face, dx=self.get_radial_grid_spacing())
         return distance * (2.0 / self.outer_diameter)
 

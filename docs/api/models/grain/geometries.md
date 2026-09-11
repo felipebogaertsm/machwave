@@ -2,6 +2,9 @@
 
 Concrete grain segment geometries, both analytical and FMM-based.
 
+!!! note "FMM-based geometries require the `fmm` extra"
+    `pip install machwave[fmm]`. Every geometry below except `BatesSegment` is FMM-based; constructing one without the extra raises an `ImportError` naming that command.
+
 **2D (constant cross-section):**
 
 - `BatesSegment` — Cylindrical grain with an axial core, the most common amateur geometry (analytical).
@@ -13,7 +16,7 @@ Concrete grain segment geometries, both analytical and FMM-based.
 
 **3D (varying cross-section):**
 
-- `ConicalGrainSegment` — Linearly tapered core from upper to lower diameter.
+- `ConicalGrainSegment` — Linearly tapered core from upper to lower diameter (FMM-based).
 - `FinocylGrainSegment` — Central circular bore with radial fins over a partial axial section (FMM-based).
 
 All segments implement the `GrainSegment` interface and can be mixed within a single `Grain`.

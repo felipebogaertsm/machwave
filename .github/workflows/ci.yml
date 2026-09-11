@@ -88,6 +88,26 @@ jobs:
       - run: make install-dev
       - run: make test
 
+  test-core:
+    name: Core install
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      # No Fortran compiler: rocketcea now arrives with the cea extra, which a
+      # core install does not pull.
+      - run: make install-dev-core
+      - run: make test-core
+
   docs:
     runs-on: ubuntu-latest
     steps:

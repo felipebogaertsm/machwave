@@ -1,11 +1,13 @@
 import abc
 import enum
 import functools
-
-import machwave.services.cea as cea_service
+import typing
 
 from .. import components as propellant_components
 from .. import properties as propellant_properties
+
+if typing.TYPE_CHECKING:
+    import machwave.services.cea as cea_service
 
 # Elements that keep their CEA combustion products gaseous at chamber conditions
 # (above 1000K and 10 bar)
@@ -62,7 +64,7 @@ class Propellant(abc.ABC):
         self._evaluation_cache: dict = {}
 
     @functools.cached_property
-    def thermochemical_service(self) -> cea_service.RocketCEAService:
+    def thermochemical_service(self) -> "cea_service.RocketCEAService":
         """Get thermochemical service, cached."""
         return self._get_thermochemical_service()
 
@@ -91,7 +93,7 @@ class Propellant(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _get_thermochemical_service(self) -> cea_service.RocketCEAService:
+    def _get_thermochemical_service(self) -> "cea_service.RocketCEAService":
         """
         Create thermochemical service for this propellant.
 
@@ -177,6 +179,7 @@ class Propellant(abc.ABC):
 
         Raises:
             ValueError: If evaluation fails.
+            MissingOptionalDependencyError: If the `cea` extra is not installed.
         """
         quantized_chamber_pressure = (
             round(chamber_pressure / self.CHAMBER_PRESSURE_QUANTIZATION_PA)

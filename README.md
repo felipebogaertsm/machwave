@@ -19,13 +19,40 @@ Install Machwave using pip:
 pip install machwave
 ```
 
-#### macOS prerequisite: gfortran
+The core install depends only on NumPy, SciPy and fluids. It runs a complete solid
+rocket motor simulation with BATES grains, any of the eight bundled solid propellant
+formulations and the full Solid Performance Program 1975 nozzle loss set. Those
+formulations carry pre-computed thermochemical properties, so no thermochemistry
+solver is needed to burn them.
 
-Machwave depends on [rocketcea](https://pypi.org/project/RocketCEA/), which does
-not publish macOS wheels on PyPI. On macOS, pip therefore builds rocketcea from
-source and needs a Fortran compiler. Homebrew's `gcc` formula installs only
-versioned binaries (e.g. `gfortran-15`), so an unversioned `gfortran` symlink
-must be added to `PATH` before `pip install machwave`:
+Everything heavier is an optional extra:
+
+| Extra | Unlocks |
+| --- | --- |
+| `cea` | Thermochemistry computed from propellant composition, needed for biliquid engines and for custom solid mixtures |
+| `liquid` | Propellant tanks and the injector's homogeneous-equilibrium mass flux |
+| `fmm` | Every grain geometry other than BATES, including grains defined by an STL mesh |
+| `plots` | The built-in figures and the Monte Carlo plots |
+| `rocketpy` | The RocketPy adapter for trajectory simulation |
+| `all` | All of the above |
+
+Install one or several by name, for example:
+
+```bash
+pip install machwave[fmm,plots]
+```
+
+Using a feature without its extra raises an `ImportError` naming the install command
+that provides it.
+
+#### macOS prerequisite for the `cea` extra: gfortran
+
+Only needed if you install the `cea` extra, directly or through `all`.
+[rocketcea](https://pypi.org/project/RocketCEA/) does not publish macOS wheels on
+PyPI. On macOS, pip therefore builds rocketcea from source and needs a Fortran
+compiler. Homebrew's `gcc` formula installs only versioned binaries (e.g.
+`gfortran-15`), so an unversioned `gfortran` symlink must be added to `PATH`
+beforehand:
 
 ```bash
 brew install gcc
@@ -67,8 +94,12 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/felipebogaertsm/machwave.git
 cd machwave
-make install
+make install-dev
 ```
+
+`make install-dev` installs every extra alongside the development tooling, which is
+what the test suite and the type checker need. `make install-dev-core` installs the
+tooling without the extras, the environment `make test-core` runs against.
 
 #### Publishing a New Release
 

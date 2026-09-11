@@ -3,14 +3,18 @@
 import re
 from uuid import uuid4
 
-from rocketcea.cea_obj import (
-    CEA_Obj,
-    add_new_fuel,
-    add_new_oxidizer,
-    add_new_propellant,
-)
-
+import machwave.common.extras as extras
 import machwave.core.conversions as conversions
+
+try:
+    from rocketcea.cea_obj import (
+        CEA_Obj,
+        add_new_fuel,
+        add_new_oxidizer,
+        add_new_propellant,
+    )
+except ImportError as e:  # pragma: no cover - exercised only without rocketcea
+    raise extras.MissingOptionalDependencyError("rocketcea", extras.CEA) from e
 
 
 def normalize_custom_propellant_name(name: str) -> str:
