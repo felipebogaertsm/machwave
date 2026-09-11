@@ -1,6 +1,11 @@
 """Fluid property service wrapper around CoolProp."""
 
-import CoolProp.CoolProp as CP
+import machwave.common.extras as extras
+
+try:
+    import CoolProp.CoolProp as CP
+except ImportError as e:  # pragma: no cover - exercised only without coolprop
+    raise extras.MissingOptionalDependencyError("CoolProp", extras.LIQUID) from e
 
 
 class CoolPropService:
