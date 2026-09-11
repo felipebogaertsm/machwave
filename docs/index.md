@@ -22,14 +22,14 @@ Machwave's main capabilities are:
 pip install machwave
 ```
 
-The core install can run a complete SRM simulation with BATES grains, with any of the preset solid propellant formulations.
-Additional capabilities such as LRE simulation, FMM grain regression, or RocketPy trajectory simulation can be unlocked by installing the extra bundled packages:
+The core install can run a complete solid rocket motor simulation with BATES grains, using any of the preset solid propellant formulations.
+Additional capabilities, such as fast marching method grain regression, liquid feed system modeling or RocketPy trajectory simulation, can be unlocked by installing the optional extras:
 
 | Extra | Unlocks |
 | --- | --- |
-| `cea` | Thermochemistry computed from propellant composition, i.e. biliquid engines, custom solid formulations |
+| `cea` | Thermochemistry computed from propellant composition: every biliquid propellant, and solid formulations defined without pre-computed properties |
 | `liquid` | Fluid state models for propellant tanks and injectors |
-| `fmm` | Fast marching method for complex grain regression analysis |
+| `fmm` | Fast marching method grain regression, for every grain geometry other than BATES, including grains defined by an STL mesh |
 | `plots` | The built-in figures and the Monte Carlo plots |
 | `rocketpy` | The RocketPy adapter for trajectory simulation |
 | `all` | All of the above |
