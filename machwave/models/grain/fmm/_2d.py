@@ -72,7 +72,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             excluded_mask = excluded_mask | inner_surface_inhibited_cells
         return face_map, excluded_mask
 
-    def _get_contour_field(self) -> np.ma.MaskedArray:
+    def _get_contour_field(self) -> NDArray[np.float64]:
         """
         Return the regression map prepared for contour tracing.
 
