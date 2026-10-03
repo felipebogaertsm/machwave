@@ -23,6 +23,9 @@ ROCKETPY_MOTOR_COORDINATE_SYSTEM = "nozzle_to_combustion_chamber"
 RESHAPE_THRUST_CURVE = False
 INTERPOLATION_METHOD = "linear"
 
+# Machwave tensor index for each RocketPy axis (machwave x and RocketPy e_3 are axial).
+ROCKETPY_TO_MACHWAVE_AXIS = (1, 2, 0)
+
 
 class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
     """
@@ -171,18 +174,20 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
     def _get_propellant_inertia_component(self, i: int, j: int) -> rocketpy.Function:
         """
-        Return a single component of the propellant inertia tensor over time.
+        Return a single RocketPy component of the propellant inertia tensor over time.
 
         Args:
-            i: First index (0, 1, or 2).
-            j: Second index (0, 1, or 2).
+            i: First RocketPy index (0, 1, or 2), where 2 is the motor body axis.
+            j: Second RocketPy index (0, 1, or 2), where 2 is the motor body axis.
 
         Returns:
             `rocketpy.Function` with (time, I_ij) data [kg-m^2].
         """
         time = self.simulation_result.time
         inertia_tensors = self._get_inertia_tensor_over_time()
-        I_values = inertia_tensors[:, i, j]
+        I_values = inertia_tensors[
+            :, ROCKETPY_TO_MACHWAVE_AXIS[i], ROCKETPY_TO_MACHWAVE_AXIS[j]
+        ]
         data = np.column_stack((time, I_values))
         return rocketpy.Function(data)
 
