@@ -4,8 +4,8 @@ In this tutorial we will simulate a 3-segment BATES grain solid rocket motor.
 
 ## 1. Choose a propellant
 
-Machwave ships with several pre-defined solid formulations. We will use KNDX,
-65% potassium nitrate and 35% dextrose:
+Machwave ships with several pre-defined solid formulations.
+We will use KNDX, 65% potassium nitrate and 35% dextrose:
 
 ```python
 from machwave import formulations
@@ -34,8 +34,7 @@ for _ in range(3):
 
 ## 3. Build the thrust chamber
 
-Next comes the thrust chamber, composed of a **nozzle** and a **combustion
-chamber**:
+Next comes the thrust chamber, composed of a **nozzle** and a **combustion chamber**:
 
 ```python
 from machwave import thrust_chamber as thrust_chamber_models
@@ -82,7 +81,7 @@ motor = motors.SolidMotor(
 
 Every simulation needs a set of input parameters defined in `InternalBallisticsSimulationParams`.
 The timestep `d_t` needs to be small enough for the simulation to converge: usually 1 ms is a safe choice.
-The igniter pressure is the initial chamber pressure, and the external pressure is the ambient pressure.
+The igniter pressure is the initial chamber pressure.
 
 ```python
 from machwave import simulation
@@ -112,7 +111,6 @@ ib_plots.thrust_pressure_plot(result.time, result.thrust, result.chamber_pressur
 ```
 
 !!! note "The plot needs the `plots` extra"
-    Everything up to here runs on the core install. Only the plot needs `pip install machwave[plots]`; `result.report()` on its own does not.
 
 ```text
 INTERNAL BALLISTICS SIMULATION RESULTS
@@ -148,7 +146,7 @@ NOZZLE
 
 ## Congratulations!
 
-We have just simulated a solid rocket motor with Machwave. The
-[examples directory](https://github.com/felipebogaertsm/machwave/tree/main/examples)
-picks up from here, running these same steps with finocyl and star grains, a
-RocketPy trajectory, and a Monte Carlo analysis.
+We have just simulated a solid rocket motor with Machwave.
+The [examples directory](https://github.com/felipebogaertsm/machwave/tree/main/examples)
+contains more complex use cases, including coupled trajectory with RocketPy and
+Monte Carlo simulation.
