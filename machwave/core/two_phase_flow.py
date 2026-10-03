@@ -74,8 +74,9 @@ def _get_stagnation_enthalpy_and_entropy(
     """
     Get enthalpy and entropy at a given pressure and temperature.
 
-    Falls back to the saturated-liquid state at the requested temperature
-    when the pressure-temperature pair lies on the saturation curve.
+    Uses the saturated-liquid state at the requested temperature when the pressure
+    is at or below the saturation pressure, or when CoolProp cannot resolve the
+    pressure-temperature pair near the saturation curve.
 
     Args:
         coolprop: Fluid-property service bound to the working fluid.
@@ -85,14 +86,24 @@ def _get_stagnation_enthalpy_and_entropy(
     Returns:
         Tuple of enthalpy [J/kg] and entropy [J/(kg K)].
     """
-    try:
-        enthalpy = coolprop.get_enthalpy_at_temperature_pressure(temperature, pressure)
-        entropy = coolprop.get_entropy_at_temperature_pressure(temperature, pressure)
-        return enthalpy, entropy
-    except ValueError:
-        enthalpy = coolprop.get_saturated_liquid_enthalpy(temperature)
-        entropy = coolprop.get_saturated_liquid_entropy(temperature)
-        return enthalpy, entropy
+    is_saturated = temperature < coolprop.get_critical_temperature() and (
+        pressure <= coolprop.get_saturation_pressure(temperature)
+    )
+    if not is_saturated:
+        try:
+            enthalpy = coolprop.get_enthalpy_at_temperature_pressure(
+                temperature, pressure
+            )
+            entropy = coolprop.get_entropy_at_temperature_pressure(
+                temperature, pressure
+            )
+            return enthalpy, entropy
+        except ValueError:
+            pass
+
+    enthalpy = coolprop.get_saturated_liquid_enthalpy(temperature)
+    entropy = coolprop.get_saturated_liquid_entropy(temperature)
+    return enthalpy, entropy
 
 
 def _get_isentropic_mass_flux(
