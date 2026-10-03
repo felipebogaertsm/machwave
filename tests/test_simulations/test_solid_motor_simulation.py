@@ -14,6 +14,7 @@ from typing import Callable
 
 import numpy as np
 import pytest
+import scipy.constants
 
 import machwave.core.compressible_flow.isentropic as isentropic
 import machwave.models.motors as motors_models
@@ -288,6 +289,18 @@ def test_undefined_burn_time_still_builds_a_result_and_a_report() -> None:
 
     assert "Burnout time: not reached" in output
     assert f"thrust time: {result.thrust_time:.3f} s" in output
+
+
+def test_specific_impulse_divides_by_the_expended_propellant_mass() -> None:
+    """Grain left unburnt when thrust ends is not counted."""
+    result = _run_until_unchoked_with_propellant_remaining().build_result()
+
+    assert result.propellant_mass[-1] > 0.0, "run burnt the whole grain"
+
+    expended_mass = result.initial_propellant_mass - result.propellant_mass[-1]
+    assert result.specific_impulse == pytest.approx(
+        result.total_impulse / expended_mass / scipy.constants.g
+    )
 
 
 def test_moment_of_inertia_is_guarded_past_burnout() -> None:

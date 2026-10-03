@@ -13,6 +13,7 @@ import warnings
 
 import numpy as np
 import pytest
+import scipy.constants
 
 import machwave.models.motors as motors_models
 import machwave.simulation.biliquid as biliquid_simulation
@@ -265,6 +266,19 @@ def test_surviving_propellant_stops_draining_after_burnout(
     for series_name, full_series in simulation_result.fluid_mass_per_line.items():
         series = full_series[after_burnout]
         assert (series == series[0]).all(), f"{series_name} kept draining after burnout"
+
+
+def test_specific_impulse_divides_by_the_expended_propellant_mass(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    """Propellant stranded in a tank at the end of the run is not counted."""
+    stranded_mass = sum(simulation_result.final_fluid_mass_per_line.values())
+    assert stranded_mass > 0.0, "run left no propellant behind"
+
+    expended_mass = simulation_result.initial_propellant_mass - stranded_mass
+    assert simulation_result.specific_impulse == pytest.approx(
+        simulation_result.total_impulse / expended_mass / scipy.constants.g
+    )
 
 
 def test_tail_off_terminates_thrust_against_zero_ambient_pressure() -> None:
