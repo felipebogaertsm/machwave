@@ -349,16 +349,14 @@ class Tank:
             )
         return self._pressure_by_mass[fluid_mass]
 
-    def get_outflow_specific_enthalpy(
+    def get_liquid_mass(
         self, fluid_mass: float, internal_energy: float | None = None
     ) -> float:
         """
-        Return the specific enthalpy of the fluid leaving the tank [J/kg].
+        Return the mass of liquid in the tank [kg].
 
-        What the energy balance takes out per unit mass drained. The feed
-        system draws liquid from the bottom while any remains, and vapor at the
-        bulk state once none does, so this steps up by the latent heat as the
-        last of the liquid goes.
+        The liquid and vapor at saturation share the tank volume, which splits
+        the fluid mass between them.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -367,17 +365,69 @@ class Tank:
                 otherwise.
 
         Returns:
+            Liquid mass [kg], zero once the tank holds vapor alone.
+        """
+        if fluid_mass <= 0 or not self.is_delivering_liquid(
+            fluid_mass, internal_energy
+        ):
+            return 0.0
+
+        if self.isothermal:
+            liquid_density = self.saturated_liquid_density
+            vapor_density = self.saturated_vapor_density
+        else:
+            fluid_state = self._get_fluid_state(fluid_mass, internal_energy)
+            liquid_density = fluid_state.saturated_liquid_density
+            vapor_density = fluid_state.saturated_vapor_density
+
+        return (fluid_mass - vapor_density * self.volume) / (
+            1.0 - vapor_density / liquid_density
+        )
+
+    def get_outflow_specific_enthalpy(
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        mass_drained: float,
+    ) -> float:
+        """
+        Return the specific enthalpy of the fluid leaving the tank [J/kg].
+
+        What the energy balance takes out per unit mass drained. The feed
+        system draws liquid from the bottom while any remains, then saturated
+        vapor for whatever of the draw the liquid cannot cover, and vapor at
+        the bulk state once the tank holds no liquid. This steps up by the
+        latent heat as the last of the liquid goes.
+
+        Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
+            internal_energy: Current internal energy of that fluid [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            mass_drained: Mass leaving the tank over the step [kg].
+
+        Returns:
             Specific enthalpy of the leaving fluid [J/kg].
         """
         if fluid_mass <= 0:
             return 0.0
 
         temperature = self.get_temperature(fluid_mass, internal_energy)
-        if self.is_delivering_liquid(fluid_mass, internal_energy):
-            return self._coolprop.get_saturated_liquid_enthalpy(temperature)
+        if not self.is_delivering_liquid(fluid_mass, internal_energy):
+            return self._coolprop.get_enthalpy_at_temperature_density(
+                temperature, fluid_mass / self.volume
+            )
 
-        return self._coolprop.get_enthalpy_at_temperature_density(
-            temperature, fluid_mass / self.volume
+        liquid_enthalpy = self._coolprop.get_saturated_liquid_enthalpy(temperature)
+        liquid_mass = self.get_liquid_mass(fluid_mass, internal_energy)
+        if mass_drained <= liquid_mass:
+            return liquid_enthalpy
+
+        vapor_enthalpy = self._coolprop.get_saturated_vapor_enthalpy(temperature)
+        liquid_fraction = liquid_mass / mass_drained
+        return liquid_fraction * liquid_enthalpy + (1.0 - liquid_fraction) * (
+            vapor_enthalpy
         )
 
     def get_density(

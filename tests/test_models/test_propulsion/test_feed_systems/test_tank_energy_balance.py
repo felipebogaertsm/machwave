@@ -34,7 +34,9 @@ def drain(tank, mass_drained, fluid_mass=FLUID_MASS, internal_energy=None):
     """Take one lump of fluid out, with the enthalpy it carries."""
     if internal_energy is None:
         internal_energy = tank.initial_internal_energy
-    outflow_enthalpy = tank.get_outflow_specific_enthalpy(fluid_mass, internal_energy)
+    outflow_enthalpy = tank.get_outflow_specific_enthalpy(
+        fluid_mass, internal_energy, mass_drained=mass_drained
+    )
     return (
         fluid_mass - mass_drained,
         internal_energy - mass_drained * outflow_enthalpy,
@@ -154,19 +156,85 @@ class TestOutflowEnthalpy:
 
         temperature = tank.get_temperature(FLUID_MASS, internal_energy)
         assert tank.get_outflow_specific_enthalpy(
-            FLUID_MASS, internal_energy
+            FLUID_MASS, internal_energy, mass_drained=1.0
         ) == pytest.approx(CP.PropsSI("H", "T", temperature, "Q", 0, FLUID))
+
+    def test_a_draw_past_the_liquid_takes_saturated_vapor_for_the_rest(self):
+        tank = build(isothermal=True)
+        liquid_mass = 1e-3
+        fluid_mass = tank.saturated_vapor_density * VOLUME + liquid_mass * (
+            1.0 - tank.saturated_vapor_density / tank.saturated_liquid_density
+        )
+
+        outflow_enthalpy = tank.get_outflow_specific_enthalpy(
+            fluid_mass, mass_drained=4 * liquid_mass
+        )
+
+        assert outflow_enthalpy == pytest.approx(
+            0.25 * CP.PropsSI("H", "T", TEMPERATURE, "Q", 0, FLUID)
+            + 0.75 * CP.PropsSI("H", "T", TEMPERATURE, "Q", 1, FLUID)
+        )
+
+    def test_a_tank_back_in_the_dome_with_a_trace_of_liquid_keeps_cooling(self):
+        # Vapor draining at constant volume cools back into the two-phase dome
+        # with almost no liquid. Taking the draw at the liquid enthalpy would
+        # leave the fluid behind hotter per unit mass than before.
+        tank = build(isothermal=False)
+        temperature = 260.0
+        vapor_density = CP.PropsSI("D", "T", temperature, "Q", 1, FLUID)
+        fluid_mass = 1.0001 * vapor_density * VOLUME
+        internal_energy = fluid_mass * CP.PropsSI(
+            "U", "T", temperature, "D", fluid_mass / VOLUME, FLUID
+        )
+
+        drained_mass, drained_energy = drain(
+            tank, 0.5 * fluid_mass, fluid_mass, internal_energy
+        )
+
+        assert drained_energy / drained_mass < internal_energy / fluid_mass
 
     def test_vapor_leaves_at_the_bulk_state(self):
         tank = build(isothermal=True)
         # Below the saturated vapor fill, so no liquid is left to draw on.
         vapor_mass = 0.5 * tank.saturated_vapor_density * VOLUME
 
-        assert tank.get_outflow_specific_enthalpy(vapor_mass) == pytest.approx(
+        assert tank.get_outflow_specific_enthalpy(
+            vapor_mass, mass_drained=0.1 * vapor_mass
+        ) == pytest.approx(
             CP.PropsSI("H", "T", TEMPERATURE, "D", vapor_mass / VOLUME, FLUID)
         )
 
     def test_an_empty_tank_carries_nothing_out(self):
         tank = build(isothermal=False)
 
-        assert tank.get_outflow_specific_enthalpy(0.0, 0.0) == 0.0
+        assert tank.get_outflow_specific_enthalpy(0.0, 0.0, mass_drained=0.0) == 0.0
+
+
+class TestLiquidMass:
+    def test_the_loaded_tank_splits_by_the_saturated_densities(self):
+        tank = build(isothermal=True)
+        vapor_mass = (VOLUME - FLUID_MASS / tank.saturated_liquid_density) / (
+            1 / tank.saturated_vapor_density - 1 / tank.saturated_liquid_density
+        )
+
+        assert tank.get_liquid_mass(FLUID_MASS) == pytest.approx(
+            FLUID_MASS - vapor_mass
+        )
+
+    def test_the_energy_balance_agrees_at_the_loaded_state(self):
+        energy_balance = build(isothermal=False)
+        isothermal = build(isothermal=True)
+
+        assert energy_balance.get_liquid_mass(
+            FLUID_MASS, energy_balance.initial_internal_energy
+        ) == pytest.approx(isothermal.get_liquid_mass(FLUID_MASS), rel=1e-6)
+
+    def test_a_vapor_only_tank_holds_none(self):
+        tank = build(isothermal=True)
+
+        assert tank.get_liquid_mass(0.5 * tank.saturated_vapor_density * VOLUME) == 0.0
+
+    def test_an_empty_tank_holds_none(self):
+        tank = build(isothermal=False)
+
+        assert tank.get_liquid_mass(0.0, 0.0) == 0.0
