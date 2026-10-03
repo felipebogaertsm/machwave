@@ -46,6 +46,23 @@ class MonteCarloParameter(float):
         )
 
 
+def _get_children(obj: typing.Any) -> dict[typing.Any, typing.Any]:
+    """Map keys to children: list indices, dictionary keys, or attribute names."""
+    if isinstance(obj, list):
+        return dict(enumerate(obj))
+    if isinstance(obj, dict):
+        return dict(obj)
+    return common_objects.get_object_dict(obj)
+
+
+def _set_child(obj: typing.Any, key: typing.Any, value: typing.Any) -> None:
+    """Assign a child by index or key for containers, by attribute otherwise."""
+    if isinstance(obj, (list, dict)):
+        obj[key] = value
+    else:
+        setattr(obj, key, value)
+
+
 class MonteCarloSimulation:
     """
     Monte Carlo driver that runs scenarios and stores their results.
@@ -98,15 +115,18 @@ class MonteCarloSimulation:
         """
         Replace nested `MonteCarloParameter` instances with randomized values.
 
-        Recursively walks the object's attributes; replacements are performed
-        in place and intermediate objects are tracked using UUIDs.
+        Recursively walks object attributes, list items, and dictionary values;
+        replacements are performed in place and intermediate objects are tracked
+        using UUIDs. Each object is visited once, so shared references and
+        cycles are not walked repeatedly.
 
         Args:
             parameter: Object whose attributes will be processed.
         """
         parameter_uuid = uuid.uuid4()
         self._object_store[parameter_uuid] = parameter
-        search_tree = {parameter_uuid: common_objects.get_object_dict(parameter)}
+        search_tree = {parameter_uuid: _get_children(parameter)}
+        visited = {id(parameter)}
 
         i = 0
         while search_tree and i < SEARCH_TREE_DEPTH_LIMIT:
@@ -115,24 +135,13 @@ class MonteCarloSimulation:
             for param_uuid, sub_params in search_tree.items():
                 param = self._object_store[param_uuid]
                 for name, attr in sub_params.items():
-                    object_uuid = uuid.uuid4()
-
                     if isinstance(attr, MonteCarloParameter):
-                        setattr(param, name, attr.get_random_value())
-                    elif isinstance(attr, list):
-                        for item in attr:
-                            if isinstance(item, dict):
-                                continue
-                            self._object_store[object_uuid] = item
-                            new_search_tree[object_uuid] = (
-                                common_objects.get_object_dict(item)
-                            )
-                    else:
+                        _set_child(param, name, attr.get_random_value())
+                    elif id(attr) not in visited:
+                        visited.add(id(attr))
                         object_uuid = uuid.uuid4()
                         self._object_store[object_uuid] = attr
-                        new_search_tree[object_uuid] = common_objects.get_object_dict(
-                            attr
-                        )
+                        new_search_tree[object_uuid] = _get_children(attr)
 
             search_tree = new_search_tree
 
