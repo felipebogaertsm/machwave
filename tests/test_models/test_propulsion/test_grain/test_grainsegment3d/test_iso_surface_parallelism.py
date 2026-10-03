@@ -88,6 +88,7 @@ def test_threshold_depends_on_the_start_method(
 
 def test_worker_rejects_levels_before_it_holds_a_field(monkeypatch):
     monkeypatch.setattr(fmm_3d, "_worker_distance_field", None)
+    monkeypatch.setattr(fmm_3d, "_worker_inhibited_mask", None)
     monkeypatch.setattr(fmm_3d, "_worker_grid_spacing", None)
 
     with pytest.raises(RuntimeError):
@@ -102,6 +103,7 @@ def test_worker_meshes_the_field_it_was_loaded_with(monkeypatch):
     )
     max_level = float(values.max())
     distance_field = np.ma.filled(regression_map, max_level + 1.0)
+    inhibited_mask = np.zeros(distance_field.shape, dtype=bool)
     grid_spacing = (
         segment.get_axial_grid_spacing(),
         segment.get_radial_grid_spacing(),
@@ -111,9 +113,12 @@ def test_worker_meshes_the_field_it_was_loaded_with(monkeypatch):
 
     # Restored by monkeypatch once the test leaves the worker globals set.
     monkeypatch.setattr(fmm_3d, "_worker_distance_field", None)
+    monkeypatch.setattr(fmm_3d, "_worker_inhibited_mask", None)
     monkeypatch.setattr(fmm_3d, "_worker_grid_spacing", None)
-    fmm_3d._load_iso_surface_worker(distance_field, grid_spacing)
+    fmm_3d._load_iso_surface_worker(distance_field, inhibited_mask, grid_spacing)
 
     assert fmm_3d._compute_iso_surface_area_in_worker(level) == (
-        fmm_3d._compute_iso_surface_area(distance_field, level, grid_spacing)
+        fmm_3d._compute_iso_surface_area(
+            distance_field, inhibited_mask, level, grid_spacing
+        )
     )
