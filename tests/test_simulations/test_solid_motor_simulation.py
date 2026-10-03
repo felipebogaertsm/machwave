@@ -126,15 +126,40 @@ def test_exit_pressure_is_finite_and_positive(
     assert np.all(simulation_result.exit_pressure > 0.0)
 
 
+def _set_discharge_coefficient(
+    motor: motors_models.SolidMotor, discharge_coefficient: float
+) -> None:
+    motor.thrust_chamber.nozzle = dataclasses.replace(
+        motor.thrust_chamber.nozzle, discharge_coefficient=discharge_coefficient
+    )
+
+
 def test_thrust_equals_thrust_coefficient_times_chamber_pressure_times_throat_area():
+    """Thrust is evaluated on the effective throat area."""
     motor, params = motor_builders.build_nero_motor()
+    _set_discharge_coefficient(motor, 0.9)
     result = run_simulation(motor, params)
-    throat_area = motor.thrust_chamber.nozzle.get_throat_area()
+    effective_throat_area = 0.9 * motor.thrust_chamber.nozzle.get_throat_area()
     np.testing.assert_allclose(
         result.thrust,
-        result.thrust_coefficient * result.chamber_pressure * throat_area,
+        result.thrust_coefficient * result.chamber_pressure * effective_throat_area,
         rtol=1e-9,
     )
+
+
+def test_throat_discharge_loss_does_not_inflate_total_impulse() -> None:
+    """A lossier throat raises chamber pressure but not delivered impulse.
+
+    The grain sets the mass flow, so impulse only moves through the thrust
+    coefficient's mild dependence on chamber pressure.
+    """
+
+    def total_impulse(discharge_coefficient: float) -> float:
+        motor, params = motor_builders.build_nero_motor()
+        _set_discharge_coefficient(motor, discharge_coefficient)
+        return run_simulation(motor, params).total_impulse
+
+    assert total_impulse(0.9) == pytest.approx(total_impulse(1.0), rel=0.02)
 
 
 def test_loss_fraction_series_match_model_components() -> None:

@@ -144,7 +144,9 @@ class MotorState(ABC):
         thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term
         self.thrust_coefficient.append(thrust_coefficient)
         thrust = nozzle_core.get_thrust_from_thrust_coefficient(
-            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
+            thrust_coefficient,
+            chamber_pressure,
+            nozzle.discharge_coefficient * nozzle.get_throat_area(),
         )
         self.thrust.append(thrust)
         self.peak_thrust = max(self.peak_thrust, thrust)

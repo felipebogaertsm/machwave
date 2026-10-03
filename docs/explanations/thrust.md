@@ -8,7 +8,7 @@ The nozzle efficiency can be applied independently to each term, and accounts fo
 ## Thrust Coefficient
 
 $$
-F = C_f\, P_0\, A_t
+F = C_f\, P_0\, C_d\, A_t
 $$
 
 (Sutton & Biblarz, Eq. 3-31)
@@ -18,6 +18,7 @@ where:
 - $F$ is the thrust [N]
 - $C_f$ is the thrust coefficient (dimensionless)
 - $P_0$ is the chamber stagnation pressure [Pa]
+- $C_d$ is the throat discharge coefficient (dimensionless)
 - $A_t$ is the nozzle throat area [m$^2$]
 
 Implemented in [`get_thrust_from_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_thrust_from_thrust_coefficient].
