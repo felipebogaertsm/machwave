@@ -75,8 +75,7 @@ def _get_stagnation_enthalpy_and_entropy(
     Get enthalpy and entropy at a given pressure and temperature.
 
     Uses the saturated-liquid state at the requested temperature when the pressure
-    is at or below the saturation pressure, or when CoolProp cannot resolve the
-    pressure-temperature pair near the saturation curve.
+    is at or below saturation or the pressure-temperature lookup fails.
 
     Args:
         coolprop: Fluid-property service bound to the working fluid.

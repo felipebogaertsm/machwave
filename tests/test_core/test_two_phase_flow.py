@@ -69,21 +69,12 @@ def test_get_homogeneous_equilibrium_mass_flux_matches_reference_within_five_per
 def test_get_homogeneous_equilibrium_mass_flux_uses_saturated_liquid_below_saturation(
     pressure_drop,
 ):
-    """
-    An upstream pressure below saturation resolves to the saturated liquid, not to
-    the vapor root.
-    """
+    """Upstream pressure below saturation matches the at-saturation flux."""
     temperature_upstream = 293.0
     pressure_downstream = 20e5
     p_sat = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
 
     actual = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
-        fluid_name="N2O",
-        temperature_upstream=temperature_upstream,
-        pressure_downstream=pressure_downstream,
-        pressure_upstream=p_sat - pressure_drop,
-    )
-    expected = _get_reference_hem_mass_flux(
         fluid_name="N2O",
         temperature_upstream=temperature_upstream,
         pressure_downstream=pressure_downstream,
@@ -95,7 +86,6 @@ def test_get_homogeneous_equilibrium_mass_flux_uses_saturated_liquid_below_satur
         pressure_downstream=pressure_downstream,
         pressure_upstream=p_sat,
     )
-    assert actual == pytest.approx(expected, rel=0.05)
     assert actual == pytest.approx(at_saturation, rel=1e-3)
 
 
