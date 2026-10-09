@@ -355,9 +355,6 @@ class Tank:
         """
         Return the mass of liquid in the tank [kg].
 
-        The liquid and vapor at saturation share the tank volume, which splits
-        the fluid mass between them.
-
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
             internal_energy: Current internal energy of that fluid [J].
@@ -395,10 +392,10 @@ class Tank:
         Return the specific enthalpy of the fluid leaving the tank [J/kg].
 
         What the energy balance takes out per unit mass drained. The feed
-        system draws liquid from the bottom while any remains, then saturated
-        vapor for whatever of the draw the liquid cannot cover, and vapor at
-        the bulk state once the tank holds no liquid. This steps up by the
-        latent heat as the last of the liquid goes.
+        system draws liquid from the bottom while any remains, and vapor at the
+        bulk state once none does, so this steps up by the latent heat as the
+        last of the liquid goes. A draw larger than the liquid left takes
+        saturated vapor for the rest.
 
         Args:
             fluid_mass: Current total mass of fluid in the tank [kg].
@@ -426,9 +423,7 @@ class Tank:
 
         vapor_enthalpy = self._coolprop.get_saturated_vapor_enthalpy(temperature)
         liquid_fraction = liquid_mass / mass_drained
-        return liquid_fraction * liquid_enthalpy + (1.0 - liquid_fraction) * (
-            vapor_enthalpy
-        )
+        return vapor_enthalpy + liquid_fraction * (liquid_enthalpy - vapor_enthalpy)
 
     def get_density(
         self, fluid_mass: float, internal_energy: float | None = None
