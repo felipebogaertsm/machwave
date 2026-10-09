@@ -23,7 +23,6 @@ def _generate(parameter: object) -> object:
 
 
 def test_generate_scenario_randomizes_every_list_item() -> None:
-    """Every object in a list attribute gets its parameters sampled."""
     scenario = _generate(_Container())
 
     for leaf in scenario.items:
@@ -32,7 +31,6 @@ def test_generate_scenario_randomizes_every_list_item() -> None:
 
 
 def test_generate_scenario_randomizes_dictionary_values() -> None:
-    """Objects and parameters stored as dictionary values get sampled."""
     scenario = _generate(_Container())
 
     for leaf in scenario.keyed.values():
@@ -40,8 +38,7 @@ def test_generate_scenario_randomizes_dictionary_values() -> None:
     assert not isinstance(scenario.raw_dict["c"], montecarlo.MonteCarloParameter)
 
 
-def test_generate_scenario_visits_shared_objects_once() -> None:
-    """Cyclic references through dictionaries are walked once per object."""
+def test_generate_scenario_walks_dictionary_cycles_once() -> None:
     container = _Container()
     container.links = {"left": container, "right": container}
     mc = montecarlo.MonteCarloSimulation(
