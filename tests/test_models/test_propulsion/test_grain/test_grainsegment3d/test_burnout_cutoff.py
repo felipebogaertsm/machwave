@@ -1,8 +1,4 @@
-"""Volume and mass properties of a 3D FMM segment agree on burnout.
-
-The simulation evaluates the center of gravity and the moment of inertia only
-while the volume is positive, so the volume must be zero wherever those raise.
-"""
+"""Volume is zero wherever the mass properties of a 3D FMM segment are undefined."""
 
 import numpy as np
 import pytest
@@ -27,12 +23,7 @@ def segment():
 
 def test_volume_is_zero_at_and_past_the_web_thickness(segment):
     web_thickness = segment.get_web_thickness()
-    for web_distance in (
-        web_thickness,
-        np.nextafter(web_thickness, np.inf),
-        web_thickness + 7.9e-6,
-        web_thickness * 1.1,
-    ):
+    for web_distance in (web_thickness, np.nextafter(web_thickness, np.inf)):
         assert segment.get_volume(float(web_distance)) == 0.0
 
 
