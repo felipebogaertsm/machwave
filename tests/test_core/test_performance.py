@@ -20,9 +20,9 @@ def test_get_total_impulse_linear_ramp():
 
 def test_get_specific_impulse():
     total_impulse = 2500
-    expended_propellant_mass = 100
+    initial_propellant_mass = 100
     specific_impulse = core_performance.get_specific_impulse(
-        total_impulse, expended_propellant_mass
+        total_impulse, initial_propellant_mass
     )
     assert specific_impulse == pytest.approx(2.542, rel=1e-2)
 

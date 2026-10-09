@@ -1,7 +1,5 @@
 """Performance metrics and calculations."""
 
-import math
-
 import numpy as np
 import numpy.typing as npt
 import scipy.constants
@@ -55,5 +53,5 @@ def get_specific_impulse(
         Specific impulse [s], or NaN if no propellant was expended.
     """
     if expended_propellant_mass <= 0.0:
-        return math.nan
+        return np.nan
     return total_impulse / expended_propellant_mass / scipy.constants.g

@@ -111,7 +111,7 @@ $$
 where:
 
 - $I_{sp}$ is the specific impulse [s]
-- $m_{prop}$ is the propellant mass expended over the run, the initial mass minus whatever is left when thrust ends [kg]
+- $m_{prop}$ is the propellant mass expended over the run [kg]
 - $g_0 = 9.80665\ \text{m/s}^2$ is the standard gravitational acceleration
 
 Implemented in
