@@ -23,7 +23,6 @@ ROCKETPY_MOTOR_COORDINATE_SYSTEM = "nozzle_to_combustion_chamber"
 RESHAPE_THRUST_CURVE = False
 INTERPOLATION_METHOD = "linear"
 
-# RocketPy e_3 is the motor axis; in machwave it is x.
 ROCKETPY_TO_MACHWAVE_AXIS = (1, 2, 0)
 
 
