@@ -13,13 +13,11 @@ def _simulation_with_values(values: np.ndarray) -> montecarlo_base.MonteCarloSim
 
 
 def test_mode_of_continuous_samples_tracks_the_density_peak() -> None:
-    """Mode of distinct normal samples sits near the center, not at the minimum."""
     rng = np.random.default_rng(0)
     values = rng.normal(1000.0, 50.0, 200)
 
     stats = _simulation_with_values(values).get_property_stats("total_impulse")
 
-    assert stats["mode"] > values.min()
     assert stats["mode"] == pytest.approx(1000.0, abs=25.0)
 
 
