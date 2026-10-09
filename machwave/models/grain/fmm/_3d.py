@@ -41,13 +41,9 @@ def _extrapolate_past_wall(
     grid_spacing: tuple[float, float, float],
 ) -> NDArray[np.float64]:
     """
-    Fill the excluded cells by extrapolating the regression map past the wall.
+    Fill excluded cells by continuing the slope from their nearest propellant cell.
 
-    Each excluded cell continues the slope from its nearest propellant cell
-    along the line between them, so a front keeps its heading through the wall:
-    one approaching the wall runs on past it, one meeting it at a right angle
-    stays at a right angle. Without a propellant cell behind to set the slope,
-    the nearest value is held.
+    Fronts then run on through the wall instead of crossing a level at it.
     """
     excluded_cells = np.nonzero(excluded_mask)
     nearest_cell_map = np.asarray(
@@ -90,9 +86,7 @@ def _compute_iso_surface_area(
     """
     Marching-cubes area [m^2] of one regression iso-level, 0 if empty.
 
-    The surface ends at the inhibited walls: faces centered outside the casing
-    circle inscribed in the cross-section, or on an inhibited cell inside it,
-    are dropped.
+    Faces outside the casing circle or on an inhibited cell are dropped.
     """
     measure = extras.require("skimage.measure", extras.FMM)
     try:
@@ -166,9 +160,8 @@ def _compute_iso_surface_areas_in_parallel(
     Mesh every iso-level across a process pool.
 
     The levels are independent, so they split cleanly across processes. The
-    distance field and inhibited mask go to each worker once at start-up instead
-    of riding along with every level, which holds the transfer cost to one copy
-    per worker.
+    distance field goes to each worker once at start-up instead of riding along
+    with every level, which holds the transfer cost to one copy per worker.
 
     Returns:
         Areas [m^2] aligned with `iso_levels`, or None when no pool could be
@@ -455,8 +448,6 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 radial_grid_spacing,
             )
 
-            # The front runs on past the wall instead of meeting it in a level
-            # crossing; the area then drops the faces beyond the wall.
             excluded_mask = np.ma.getmaskarray(regression_map)
             distance_field = _extrapolate_past_wall(
                 np.asarray(np.ma.getdata(regression_map), dtype=np.float64),
@@ -465,9 +456,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             )
             inhibited_mask = excluded_mask & ~self.get_outer_diameter_mask()[0]
 
-            # The iso-surfaces at level 0 and at the deepest level lie on the
-            # voxelized initial face and on the wall, both degenerate, so sample
-            # between them and hold the end areas out to web 0 and to burnout.
+            # Levels 0 and max lie on the initial face and the wall (degenerate),
+            # so sample between them and hold the end areas.
             iso_levels = np.linspace(0.0, max_iso_level, ISO_LEVEL_COUNT + 2)[1:-1]
             iso_surface_areas = _compute_iso_surface_areas(
                 distance_field, inhibited_mask, iso_levels, grid_spacing
