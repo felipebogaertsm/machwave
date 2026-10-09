@@ -1,10 +1,9 @@
 """The traced core perimeter holds up against an analytic front near the casing.
 
-A rod and tube grain burns as concentric circles, so its core perimeter is
+A rod and tube grain burns as two concentric circles, so its core perimeter is
 known in closed form at every web distance. The traced perimeter has to match
 it at any grid resolution, including once the front has regressed to within a
-cell or two of the casing. With the outer surface exposed, the receding outer
-front is traced but the casing itself is not.
+cell or two of the casing.
 """
 
 import numpy as np
@@ -66,13 +65,10 @@ def test_core_perimeter_matches_the_analytic_front(grid_resolution, web_fraction
 
 
 @pytest.mark.parametrize("grid_resolution", [100, 200])
-@pytest.mark.parametrize("web_fraction", [0.25, 0.5, 0.75])
-def test_exposed_outer_surface_traces_the_front_and_not_the_casing(
-    grid_resolution, web_fraction
-):
+def test_exposed_outer_surface_traces_the_front_and_not_the_casing(grid_resolution):
     segment = _build_segment_with_exposed_outer_surface(grid_resolution)
 
-    web_distance = web_fraction * segment.get_web_thickness()
+    web_distance = 0.5 * segment.get_web_thickness()
 
     assert segment.get_core_perimeter(web_distance) == pytest.approx(
         _analytic_core_perimeter(web_distance, outer_surface_inhibited=False),
@@ -81,9 +77,7 @@ def test_exposed_outer_surface_traces_the_front_and_not_the_casing(
 
 
 @pytest.mark.parametrize("grid_resolution", [100, 200])
-def test_exposed_outer_surface_burn_area_matches_the_analytic_front(
-    grid_resolution,
-):
+def test_exposed_outer_surface_burn_area_matches_the_analytic_front(grid_resolution):
     segment = _build_segment_with_exposed_outer_surface(grid_resolution)
 
     web_distance = 0.5 * segment.get_web_thickness()

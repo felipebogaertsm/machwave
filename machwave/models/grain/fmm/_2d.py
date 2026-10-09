@@ -73,13 +73,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return face_map, excluded_mask
 
     def _get_contour_field(self) -> NDArray[np.float64]:
-        """
-        Return the regression map prepared for contour tracing.
-
-        With the outer surface uninhibited, cells outside the casing border the burning
-        surface, so they are unmasked and set to 0. Otherwise they stay masked, and
-        the tracer lifts them above every iso level.
-        """
+        """Return the regression map to trace, with an exposed casing set to 0."""
         regression_map = self.get_regression_map()
         if self.inhibited_surfaces.outer_surface:
             return regression_map
