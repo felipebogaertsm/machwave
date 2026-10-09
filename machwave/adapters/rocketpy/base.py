@@ -23,7 +23,7 @@ ROCKETPY_MOTOR_COORDINATE_SYSTEM = "nozzle_to_combustion_chamber"
 RESHAPE_THRUST_CURVE = False
 INTERPOLATION_METHOD = "linear"
 
-# Machwave tensor index for each RocketPy axis (machwave x and RocketPy e_3 are axial).
+# RocketPy e_3 is the motor axis; in machwave it is x.
 ROCKETPY_TO_MACHWAVE_AXIS = (1, 2, 0)
 
 
@@ -174,11 +174,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
     def _get_propellant_inertia_component(self, i: int, j: int) -> rocketpy.Function:
         """
-        Return a single RocketPy component of the propellant inertia tensor over time.
+        Return a single component of the propellant inertia tensor over time.
 
         Args:
-            i: First RocketPy index (0, 1, or 2), where 2 is the motor body axis.
-            j: Second RocketPy index (0, 1, or 2), where 2 is the motor body axis.
+            i: First RocketPy index (0, 1, or 2).
+            j: Second RocketPy index (0, 1, or 2).
 
         Returns:
             `rocketpy.Function` with (time, I_ij) data [kg-m^2].

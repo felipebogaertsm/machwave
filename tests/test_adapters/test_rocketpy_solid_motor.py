@@ -9,7 +9,6 @@ import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.models.grain as grain_models
 
 from tests.factories import (
-    BatesSegmentFactory,
     ConicalGrainSegmentFactory,
     DGrainSegmentFactory,
     MultiPortGrainSegmentFactory,
@@ -125,34 +124,8 @@ def test_grain_center_of_mass_is_measured_from_the_nozzle_exit(offset) -> None:
     )
 
 
-def _build_adapter_with_inertia(
-    motor, tensors
-) -> rocketpy_adapters.RocketPySolidMotorAdapter:
-    """Return an adapter whose stub result carries the given inertia tensors."""
-    adapter = _build_adapter_without_init(motor)
-    adapter.simulation_result.propellant_moi = np.asarray(tensors)
-    return adapter
-
-
-def test_propellant_inertia_maps_the_axial_moment_to_e3() -> None:
-    grain = grain_models.Grain()
-    for _ in range(4):
-        grain.add_segment(BatesSegmentFactory.build())
-    motor = SolidMotorFactory.build(grain=grain)
-    tensor = grain.get_moment_of_inertia(ideal_density=1800.0, web_distance=0.0)
-    adapter = _build_adapter_with_inertia(motor, [tensor, tensor])
-
-    I_11 = adapter.propellant_I_11(0.0)
-    I_22 = adapter.propellant_I_22(0.0)
-    I_33 = adapter.propellant_I_33(0.0)
-
-    assert I_33 == pytest.approx(tensor[0, 0])
-    assert I_11 == pytest.approx(I_22)
-    assert I_33 < I_11
-
-
-def test_propellant_inertia_off_diagonal_terms_follow_the_axis_permutation() -> None:
-    # machwave axes (x axial, y, z) map onto RocketPy axes (e_3, e_1, e_2)
+def test_propellant_inertia_maps_machwave_axes_onto_rocketpy_axes() -> None:
+    # machwave (x axial, y, z) -> RocketPy (e_3, e_1, e_2)
     tensor = np.array(
         [
             [1.0, 4.0, 5.0],
@@ -160,7 +133,8 @@ def test_propellant_inertia_off_diagonal_terms_follow_the_axis_permutation() -> 
             [5.0, 6.0, 3.0],
         ]
     )
-    adapter = _build_adapter_with_inertia(SolidMotorFactory.build(), [tensor, tensor])
+    adapter = _build_adapter_without_init(SolidMotorFactory.build())
+    adapter.simulation_result.propellant_moi = np.array([tensor, tensor])
 
     assert adapter.propellant_I_11(0.0) == pytest.approx(2.0)
     assert adapter.propellant_I_22(0.0) == pytest.approx(3.0)
