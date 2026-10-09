@@ -122,3 +122,23 @@ def test_grain_center_of_mass_is_measured_from_the_nozzle_exit(offset) -> None:
     assert attrs["grains_center_of_mass_position"] == pytest.approx(
         motor.grain.get_center_of_gravity(web_distance=0.0)[0] + offset
     )
+
+
+def test_propellant_inertia_maps_machwave_axes_onto_rocketpy_axes() -> None:
+    # machwave (x axial, y, z) -> RocketPy (e_3, e_1, e_2)
+    tensor = np.array(
+        [
+            [1.0, 4.0, 5.0],
+            [4.0, 2.0, 6.0],
+            [5.0, 6.0, 3.0],
+        ]
+    )
+    adapter = _build_adapter_without_init(SolidMotorFactory.build())
+    adapter.simulation_result.propellant_moi = np.array([tensor, tensor])
+
+    assert adapter.propellant_I_11(0.0) == pytest.approx(2.0)
+    assert adapter.propellant_I_22(0.0) == pytest.approx(3.0)
+    assert adapter.propellant_I_33(0.0) == pytest.approx(1.0)
+    assert adapter.propellant_I_12(0.0) == pytest.approx(6.0)
+    assert adapter.propellant_I_13(0.0) == pytest.approx(4.0)
+    assert adapter.propellant_I_23(0.0) == pytest.approx(5.0)
