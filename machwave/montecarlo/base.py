@@ -56,7 +56,6 @@ def _get_children(obj: typing.Any) -> dict[typing.Any, typing.Any]:
 
 
 def _set_child(obj: typing.Any, key: typing.Any, value: typing.Any) -> None:
-    """Assign a child by index or key for containers, by attribute otherwise."""
     if isinstance(obj, (list, dict)):
         obj[key] = value
     else:
@@ -115,10 +114,9 @@ class MonteCarloSimulation:
         """
         Replace nested `MonteCarloParameter` instances with randomized values.
 
-        Recursively walks object attributes, list items, and dictionary values;
-        replacements are performed in place and intermediate objects are tracked
-        using UUIDs. Each object is visited once, so shared references and
-        cycles are not walked repeatedly.
+        Recursively walks attributes, list items, and dictionary values, visiting
+        each object once; replacements are performed in place and intermediate
+        objects are tracked using UUIDs.
 
         Args:
             parameter: Object whose attributes will be processed.

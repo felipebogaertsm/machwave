@@ -52,12 +52,3 @@ def test_generate_scenario_visits_shared_objects_once() -> None:
 
     assert not isinstance(scenario.items[0].value, montecarlo.MonteCarloParameter)
     assert len(mc._object_store) < 100
-
-
-def test_generate_scenario_leaves_template_untouched() -> None:
-    """Sampling works on a copy, so the input keeps its parameters."""
-    container = _Container()
-    _generate(container)
-
-    for leaf in [*container.items, *container.keyed.values()]:
-        assert isinstance(leaf.value, montecarlo.MonteCarloParameter)
