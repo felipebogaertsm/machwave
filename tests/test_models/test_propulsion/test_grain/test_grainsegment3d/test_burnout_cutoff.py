@@ -1,5 +1,3 @@
-"""Volume is zero wherever the mass properties of a 3D FMM segment are undefined."""
-
 import numpy as np
 import pytest
 
