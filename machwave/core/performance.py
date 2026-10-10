@@ -39,15 +39,19 @@ def get_total_impulse(
     return float(np.trapezoid(thrust, time))
 
 
-def get_specific_impulse(total_impulse: float, initial_propellant_mass: float) -> float:
+def get_specific_impulse(
+    total_impulse: float, expelled_propellant_mass: float
+) -> float:
     """
     Get specific impulse.
 
     Args:
         total_impulse: Total impulse [N-s].
-        initial_propellant_mass: Initial propellant mass [kg].
+        expelled_propellant_mass: Propellant mass expelled over the run [kg].
 
     Returns:
-        Specific impulse [s].
+        Specific impulse [s], or NaN if no propellant was expelled.
     """
-    return total_impulse / initial_propellant_mass / scipy.constants.g
+    if expelled_propellant_mass <= 0.0:
+        return np.nan
+    return total_impulse / expelled_propellant_mass / scipy.constants.g

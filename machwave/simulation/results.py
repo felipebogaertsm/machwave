@@ -54,10 +54,11 @@ class SimulationResult(ABC, Generic[StateT]):
         time = np.asarray(state.time)
         thrust = np.asarray(state.thrust)
         total_impulse = performance.get_total_impulse(thrust, time)
+        propellant_mass = np.asarray(state.propellant_mass)
         initial_propellant_mass = state.motor.initial_propellant_mass
         return {
             "time": time,
-            "propellant_mass": np.asarray(state.propellant_mass),
+            "propellant_mass": propellant_mass,
             "chamber_pressure": np.asarray(state.chamber_pressure),
             "exit_pressure": np.asarray(state.exit_pressure),
             "thrust_coefficient": np.asarray(state.thrust_coefficient),
@@ -83,7 +84,9 @@ class SimulationResult(ABC, Generic[StateT]):
             "total_impulse": total_impulse,
             "specific_impulse": performance.get_specific_impulse(
                 total_impulse=total_impulse,
-                initial_propellant_mass=initial_propellant_mass,
+                expelled_propellant_mass=(
+                    initial_propellant_mass - float(propellant_mass[-1])
+                ),
             ),
         }
 
