@@ -141,5 +141,9 @@ def get_thrust_from_thrust_coefficient(
 
     Returns:
         Thrust [N].
+
+    References:
+        Sutton, G. P., & Biblarz, O. (2001). Rocket Propulsion Elements (7th ed.),
+        Eq. 3-31.
     """
     return thrust_coefficient * chamber_pressure * nozzle_throat_area

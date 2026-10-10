@@ -137,6 +137,9 @@ def test_thrust_equals_thrust_coefficient_times_chamber_pressure_times_throat_ar
         discharge_coefficient * motor.thrust_chamber.nozzle.get_throat_area()
     )
     np.testing.assert_allclose(
+        result.effective_nozzle_throat_area, effective_throat_area, rtol=1e-12
+    )
+    np.testing.assert_allclose(
         result.thrust,
         result.thrust_coefficient * result.chamber_pressure * effective_throat_area,
         rtol=1e-9,
@@ -187,6 +190,7 @@ def test_report_includes_nozzle_losses() -> None:
     result.report(file=buffer)
     output = buffer.getvalue()
 
+    assert "Average effective throat area" in output
     assert "Average nozzle efficiency" in output
     for label in motor.nozzle_loss_model.component_labels.values():
         assert label in output
