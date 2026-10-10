@@ -66,10 +66,9 @@ def test_get_homogeneous_equilibrium_mass_flux_matches_reference_within_five_per
 
 
 @pytest.mark.parametrize("pressure_drop", [1e3, 2e5])
-def test_get_homogeneous_equilibrium_mass_flux_uses_saturated_liquid_below_saturation(
+def test_get_homogeneous_equilibrium_mass_flux_below_saturation_matches_saturation(
     pressure_drop,
 ):
-    """Upstream pressure below saturation matches the at-saturation flux."""
     temperature_upstream = 293.0
     pressure_downstream = 20e5
     p_sat = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
