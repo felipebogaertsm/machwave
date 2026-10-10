@@ -14,8 +14,7 @@ SEARCH_TREE_DEPTH_LIMIT = 20
 MODE_GRID_POINTS = 512
 
 
-def _estimate_mode(values: np.ndarray) -> float:
-    """Return the peak of a Gaussian kernel density estimate over finite values."""
+def _get_kernel_density_peak(values: np.ndarray) -> float:
     finite_values = values[np.isfinite(values)]
     if finite_values.size == 0:
         return float("nan")
@@ -192,7 +191,7 @@ class MonteCarloSimulation:
         var_val = np.var(values)
         std_val = np.std(values)
 
-        mode_val = _estimate_mode(values)
+        mode_val = _get_kernel_density_peak(values)
         skew_val = scipy_stats.skew(values, bias=False)  # unbiased Fisher skew
         kurt_val = scipy_stats.kurtosis(values, fisher=True, bias=False)
         p5, p95 = np.percentile(values, [5, 95])
