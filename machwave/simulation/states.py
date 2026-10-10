@@ -47,6 +47,8 @@ class MotorState(ABC):
         self.exit_pressure: SimulationStateArray = []
         self.ideal_thrust_coefficient: SimulationStateArray = []
         self.thrust_coefficient: SimulationStateArray = []
+        self.geometric_nozzle_throat_area: SimulationStateArray = []
+        self.effective_nozzle_throat_area: SimulationStateArray = []
         self.thrust: SimulationStateArray = []
         self.peak_thrust: float = 0.0
         self.nozzle_efficiency: SimulationStateArray = []
@@ -125,7 +127,8 @@ class MotorState(ABC):
         Derate the ideal thrust coefficient terms and record the loss outputs.
 
         Appends the realized nozzle efficiency, each component loss fraction, the
-        corrected thrust coefficient, and the thrust for the timestep.
+        corrected thrust coefficient, the geometric and effective nozzle throat areas,
+        and the thrust for the timestep.
 
         Args:
             ideal_momentum_term: Momentum term of the ideal thrust coefficient.
@@ -143,8 +146,14 @@ class MotorState(ABC):
 
         thrust_coefficient = loss_result.momentum_term + loss_result.pressure_term
         self.thrust_coefficient.append(thrust_coefficient)
+        geometric_nozzle_throat_area = nozzle.get_throat_area()
+        effective_nozzle_throat_area = nozzle_core.get_effective_nozzle_throat_area(
+            geometric_nozzle_throat_area, nozzle.discharge_coefficient
+        )
+        self.geometric_nozzle_throat_area.append(geometric_nozzle_throat_area)
+        self.effective_nozzle_throat_area.append(effective_nozzle_throat_area)
         thrust = nozzle_core.get_thrust_from_thrust_coefficient(
-            thrust_coefficient, chamber_pressure, nozzle.get_throat_area()
+            thrust_coefficient, chamber_pressure, effective_nozzle_throat_area
         )
         self.thrust.append(thrust)
         self.peak_thrust = max(self.peak_thrust, thrust)
