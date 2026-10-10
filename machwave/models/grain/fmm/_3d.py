@@ -586,6 +586,8 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
         return self.volume_interpolator
 
     def get_volume(self, web_distance: float) -> float:
+        if web_distance >= self.get_web_thickness():
+            return 0.0
         web_distance_normalized = self.normalize(web_distance)
         return max(0.0, float(self.get_volume_interpolator()(web_distance_normalized)))
 
