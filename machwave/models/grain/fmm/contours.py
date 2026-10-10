@@ -40,9 +40,6 @@ def get_length(contour: np.ndarray) -> float:
     """
     Return the total length of a closed contour, in cells.
 
-    Cells outside the casing are lifted above every iso level before tracing,
-    so a contour follows the burning front only, right up to the casing.
-
     Args:
         contour: The contour array.
 

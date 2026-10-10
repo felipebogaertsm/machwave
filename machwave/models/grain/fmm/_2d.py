@@ -72,6 +72,18 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             excluded_mask = excluded_mask | inner_surface_inhibited_cells
         return face_map, excluded_mask
 
+    def _get_contour_field(self) -> NDArray[np.float64]:
+        """Return the regression map to trace, with an exposed casing set to 0."""
+        regression_map = self.get_regression_map()
+        if self.inhibited_surfaces.outer_surface:
+            return regression_map
+
+        outer_diameter_mask = self.get_outer_diameter_mask()
+        return np.ma.MaskedArray(
+            np.where(outer_diameter_mask, 0.0, np.ma.getdata(regression_map)),
+            mask=np.ma.getmaskarray(regression_map) & ~outer_diameter_mask,
+        )
+
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """
         Return contour arrays for the given web distance.
@@ -79,7 +91,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         Each contour is typically an `(N, 2)` array of `(row, col)` points.
         """
         iso_level = self.normalize(web_distance)
-        return fmm_contours.get_iso_contours(self.get_regression_map(), iso_level)
+        return fmm_contours.get_iso_contours(self._get_contour_field(), iso_level)
 
     def get_face_area_interpolator(self) -> Callable[[float], float]:
         """Return an interpolator mapping normalized web distance to face area [m^2]."""
@@ -175,8 +187,9 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             core_perimeter_per_iso_level = np.empty_like(
                 iso_levels_normalized, dtype=np.float64
             )
+            contour_field = self._get_contour_field()
             for i, dist in enumerate(iso_levels_normalized):
-                contours = fmm_contours.get_iso_contours(regression_map, float(dist))
+                contours = fmm_contours.get_iso_contours(contour_field, float(dist))
                 core_perimeter_per_iso_level[i] = float(
                     sum(
                         self.cells_to_meters(fmm_contours.get_length(contour))
