@@ -27,6 +27,10 @@ def test_get_specific_impulse():
     assert specific_impulse == pytest.approx(2.542, rel=1e-2)
 
 
+def test_get_specific_impulse_is_nan_when_no_propellant_was_expelled():
+    assert np.isnan(core_performance.get_specific_impulse(2500.0, 0.0))
+
+
 def test_effective_flame_temperature_unity_efficiency_is_unchanged():
     """An efficiency of 1.0 returns the flame temperature untouched."""
     assert core_performance.get_effective_flame_temperature(
