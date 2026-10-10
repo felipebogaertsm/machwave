@@ -8,7 +8,7 @@ from collections.abc import Callable
 import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
-from scipy.ndimage import binary_erosion
+from scipy.ndimage import binary_erosion, distance_transform_edt
 
 import machwave.common.extras as extras
 import machwave.core.filters as filters
@@ -31,41 +31,98 @@ FORK_PARALLEL_CELL_COUNT = 2_000_000
 SPAWN_PARALLEL_CELL_COUNT = 12_000_000
 
 _worker_distance_field: NDArray[np.float64] | None = None
+_worker_inhibited_mask: NDArray[np.bool_] | None = None
 _worker_grid_spacing: tuple[float, float, float] | None = None
+
+
+def _extrapolate_past_wall(
+    regression_values: NDArray[np.float64],
+    excluded_mask: NDArray[np.bool_],
+    grid_spacing: tuple[float, float, float],
+) -> NDArray[np.float64]:
+    """Continue the regression slope past the wall so no iso level lands on it."""
+    excluded_cells = np.nonzero(excluded_mask)
+    nearest_cell_map = np.asarray(
+        distance_transform_edt(
+            excluded_mask,
+            sampling=grid_spacing,
+            return_distances=False,
+            return_indices=True,
+        )
+    )
+    nearest_cell = nearest_cell_map[:, excluded_mask]
+    offset = np.stack(excluded_cells) - nearest_cell
+    step = np.sign(offset)
+    shape = np.asarray(excluded_mask.shape)[:, np.newaxis]
+    behind_cell = nearest_cell - step
+    has_behind_cell = np.all((behind_cell >= 0) & (behind_cell < shape), axis=0)
+    behind_cell = np.clip(behind_cell, 0, shape - 1)
+    has_behind_cell &= ~excluded_mask[tuple(behind_cell)]
+
+    nearest_value = regression_values[tuple(nearest_cell)]
+    behind_value = np.where(
+        has_behind_cell, regression_values[tuple(behind_cell)], nearest_value
+    )
+    spacing = np.asarray(grid_spacing)[:, np.newaxis]
+    slope = (nearest_value - behind_value) / np.linalg.norm(step * spacing, axis=0)
+
+    extrapolated = regression_values.copy()
+    extrapolated[excluded_cells] = nearest_value + slope * np.linalg.norm(
+        offset * spacing, axis=0
+    )
+    return extrapolated
 
 
 def _compute_iso_surface_area(
     distance_field: NDArray[np.float64],
+    inhibited_mask: NDArray[np.bool_],
     level: float,
     grid_spacing: tuple[float, float, float],
 ) -> float:
     """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
     measure = extras.require("skimage.measure", extras.FMM)
     try:
-        vertices, faces, _, _ = measure.marching_cubes(
-            distance_field, level=level, spacing=grid_spacing
-        )
+        vertices, faces, _, _ = measure.marching_cubes(distance_field, level=level)
     except (ValueError, RuntimeError):
         return 0.0
-    return float(measure.mesh_surface_area(vertices, faces))
+    centroids = vertices[faces].mean(axis=1)
+    axis_index = (distance_field.shape[1] - 1) / 2
+    outside_casing = (
+        np.hypot(centroids[:, 1] - axis_index, centroids[:, 2] - axis_index)
+        > axis_index
+    )
+    centroid_cells = np.rint(centroids).astype(np.intp)
+    on_inhibited_cell = inhibited_mask[
+        centroid_cells[:, 0], centroid_cells[:, 1], centroid_cells[:, 2]
+    ]
+    burning = ~(outside_casing | on_inhibited_cell)
+    return float(
+        measure.mesh_surface_area(vertices * np.asarray(grid_spacing), faces[burning])
+    )
 
 
 def _load_iso_surface_worker(
     distance_field: NDArray[np.float64],
+    inhibited_mask: NDArray[np.bool_],
     grid_spacing: tuple[float, float, float],
 ) -> None:
     """Hold the distance field in a worker process, sent once at start-up."""
-    global _worker_distance_field, _worker_grid_spacing
+    global _worker_distance_field, _worker_inhibited_mask, _worker_grid_spacing
     _worker_distance_field = distance_field
+    _worker_inhibited_mask = inhibited_mask
     _worker_grid_spacing = grid_spacing
 
 
 def _compute_iso_surface_area_in_worker(level: float) -> float:
     """Mesh one iso-level against the field the worker was started with."""
-    if _worker_distance_field is None or _worker_grid_spacing is None:
+    if (
+        _worker_distance_field is None
+        or _worker_inhibited_mask is None
+        or _worker_grid_spacing is None
+    ):
         raise RuntimeError("Iso-surface worker was not given a distance field.")
     return _compute_iso_surface_area(
-        _worker_distance_field, level, _worker_grid_spacing
+        _worker_distance_field, _worker_inhibited_mask, level, _worker_grid_spacing
     )
 
 
@@ -87,6 +144,7 @@ def _is_parallel_meshing_worthwhile(cell_count: int) -> bool:
 
 def _compute_iso_surface_areas_in_parallel(
     distance_field: NDArray[np.float64],
+    inhibited_mask: NDArray[np.bool_],
     iso_levels: NDArray[np.float64],
     grid_spacing: tuple[float, float, float],
 ) -> NDArray[np.float64] | None:
@@ -111,7 +169,7 @@ def _compute_iso_surface_areas_in_parallel(
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=worker_count,
             initializer=_load_iso_surface_worker,
-            initargs=(distance_field, grid_spacing),
+            initargs=(distance_field, inhibited_mask, grid_spacing),
         ) as executor:
             areas = list(
                 executor.map(
@@ -126,6 +184,7 @@ def _compute_iso_surface_areas_in_parallel(
 
 def _compute_iso_surface_areas(
     distance_field: NDArray[np.float64],
+    inhibited_mask: NDArray[np.bool_],
     iso_levels: NDArray[np.float64],
     grid_spacing: tuple[float, float, float],
 ) -> NDArray[np.float64]:
@@ -138,14 +197,16 @@ def _compute_iso_surface_areas(
     """
     if _is_parallel_meshing_worthwhile(distance_field.size):
         iso_surface_areas = _compute_iso_surface_areas_in_parallel(
-            distance_field, iso_levels, grid_spacing
+            distance_field, inhibited_mask, iso_levels, grid_spacing
         )
         if iso_surface_areas is not None:
             return iso_surface_areas
 
     return np.array(
         [
-            _compute_iso_surface_area(distance_field, float(level), grid_spacing)
+            _compute_iso_surface_area(
+                distance_field, inhibited_mask, float(level), grid_spacing
+            )
             for level in iso_levels
         ],
         dtype=np.float64,
@@ -371,9 +432,6 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 )
                 return self.burn_area_interpolator
 
-            # Lift the inhibited casing above every iso level so marching cubes
-            # meshes only the burning front, not the wall.
-            distance_field = np.ma.filled(regression_map, max_iso_level + 1.0)
             axial_grid_spacing = self.get_axial_grid_spacing()
             radial_grid_spacing = self.get_radial_grid_spacing()
             grid_spacing = (
@@ -382,19 +440,25 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
                 radial_grid_spacing,
             )
 
-            # The iso-surface at level 0 lies on the voxelized initial face and is
-            # degenerate, so sample above it and hold the first area back to web 0.
-            iso_levels = np.linspace(
-                max_iso_level / ISO_LEVEL_COUNT, max_iso_level, ISO_LEVEL_COUNT
+            excluded_mask = np.ma.getmaskarray(regression_map)
+            distance_field = _extrapolate_past_wall(
+                np.asarray(np.ma.getdata(regression_map), dtype=np.float64),
+                excluded_mask,
+                grid_spacing,
             )
+            inhibited_mask = excluded_mask & ~self.get_outer_diameter_mask()[0]
+
+            # Levels 0 and max mesh the initial face and the wall; hold the end areas.
+            iso_levels = np.linspace(0.0, max_iso_level, ISO_LEVEL_COUNT + 2)[1:-1]
             iso_surface_areas = _compute_iso_surface_areas(
-                distance_field, iso_levels, grid_spacing
+                distance_field, inhibited_mask, iso_levels, grid_spacing
             )
-            web_distances_denormalized = np.concatenate(
-                ([0.0], np.asarray(self.denormalize(iso_levels), dtype=np.float64))
+            web_distances_denormalized = np.asarray(
+                self.denormalize(np.concatenate(([0.0], iso_levels, [max_iso_level]))),
+                dtype=np.float64,
             )
             iso_surface_areas = np.concatenate(
-                ([iso_surface_areas[0]], iso_surface_areas)
+                ([iso_surface_areas[0]], iso_surface_areas, [iso_surface_areas[-1]])
             )
 
             burn_area_smoothed = filters.smooth_savitzky_golay(
