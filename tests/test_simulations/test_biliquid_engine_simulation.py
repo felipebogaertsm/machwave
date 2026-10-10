@@ -268,16 +268,16 @@ def test_surviving_propellant_stops_draining_after_burnout(
         assert (series == series[0]).all(), f"{series_name} kept draining after burnout"
 
 
-def test_specific_impulse_divides_by_the_expended_propellant_mass(
+def test_specific_impulse_divides_by_the_expelled_propellant_mass(
     simulation_result: biliquid_simulation.BiliquidSimulationResult,
 ) -> None:
     """Propellant stranded in a tank at the end of the run is not counted."""
     stranded_mass = sum(simulation_result.final_fluid_mass_per_line.values())
     assert stranded_mass > 0.0, "run left no propellant behind"
 
-    expended_mass = simulation_result.initial_propellant_mass - stranded_mass
+    expelled_mass = simulation_result.initial_propellant_mass - stranded_mass
     assert simulation_result.specific_impulse == pytest.approx(
-        simulation_result.total_impulse / expended_mass / scipy.constants.g
+        simulation_result.total_impulse / expelled_mass / scipy.constants.g
     )
 
 

@@ -76,7 +76,7 @@ class SimulationResult(ABC, Generic[StateT]):
             "total_impulse": total_impulse,
             "specific_impulse": performance.get_specific_impulse(
                 total_impulse=total_impulse,
-                expended_propellant_mass=(
+                expelled_propellant_mass=(
                     initial_propellant_mass - float(propellant_mass[-1])
                 ),
             ),

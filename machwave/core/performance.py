@@ -40,18 +40,18 @@ def get_total_impulse(
 
 
 def get_specific_impulse(
-    total_impulse: float, expended_propellant_mass: float
+    total_impulse: float, expelled_propellant_mass: float
 ) -> float:
     """
     Get specific impulse.
 
     Args:
         total_impulse: Total impulse [N-s].
-        expended_propellant_mass: Propellant mass expended over the run [kg].
+        expelled_propellant_mass: Propellant mass expelled over the run [kg].
 
     Returns:
-        Specific impulse [s], or NaN if no propellant was expended.
+        Specific impulse [s], or NaN if no propellant was expelled.
     """
-    if expended_propellant_mass <= 0.0:
+    if expelled_propellant_mass <= 0.0:
         return np.nan
-    return total_impulse / expended_propellant_mass / scipy.constants.g
+    return total_impulse / expelled_propellant_mass / scipy.constants.g

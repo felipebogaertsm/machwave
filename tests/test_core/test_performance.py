@@ -27,7 +27,7 @@ def test_get_specific_impulse():
     assert specific_impulse == pytest.approx(2.542, rel=1e-2)
 
 
-def test_get_specific_impulse_is_nan_when_no_propellant_was_expended():
+def test_get_specific_impulse_is_nan_when_no_propellant_was_expelled():
     assert np.isnan(core_performance.get_specific_impulse(2500.0, 0.0))
 
 
