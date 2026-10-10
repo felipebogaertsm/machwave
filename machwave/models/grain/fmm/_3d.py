@@ -40,11 +40,7 @@ def _extrapolate_past_wall(
     excluded_mask: NDArray[np.bool_],
     grid_spacing: tuple[float, float, float],
 ) -> NDArray[np.float64]:
-    """
-    Fill excluded cells by continuing the slope from their nearest propellant cell.
-
-    Fronts then run on through the wall instead of crossing a level at it.
-    """
+    """Continue the regression slope past the wall so no iso level lands on it."""
     excluded_cells = np.nonzero(excluded_mask)
     nearest_cell_map = np.asarray(
         distance_transform_edt(
@@ -83,11 +79,7 @@ def _compute_iso_surface_area(
     level: float,
     grid_spacing: tuple[float, float, float],
 ) -> float:
-    """
-    Marching-cubes area [m^2] of one regression iso-level, 0 if empty.
-
-    Faces outside the casing circle or on an inhibited cell are dropped.
-    """
+    """Marching-cubes area [m^2] of one regression iso-level, 0 if empty."""
     measure = extras.require("skimage.measure", extras.FMM)
     try:
         vertices, faces, _, _ = measure.marching_cubes(distance_field, level=level)
@@ -456,8 +448,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             )
             inhibited_mask = excluded_mask & ~self.get_outer_diameter_mask()[0]
 
-            # Levels 0 and max lie on the initial face and the wall (degenerate),
-            # so sample between them and hold the end areas.
+            # Levels 0 and max mesh the initial face and the wall; hold the end areas.
             iso_levels = np.linspace(0.0, max_iso_level, ISO_LEVEL_COUNT + 2)[1:-1]
             iso_surface_areas = _compute_iso_surface_areas(
                 distance_field, inhibited_mask, iso_levels, grid_spacing
