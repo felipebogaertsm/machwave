@@ -26,6 +26,7 @@ class SimulationResult(ABC, Generic[StateT]):
     exit_pressure: SimulationResultArray
     thrust_coefficient: SimulationResultArray
     ideal_thrust_coefficient: SimulationResultArray
+    geometric_nozzle_throat_area: SimulationResultArray
     effective_nozzle_throat_area: SimulationResultArray
     thrust: SimulationResultArray
     nozzle_efficiency: SimulationResultArray
@@ -61,6 +62,9 @@ class SimulationResult(ABC, Generic[StateT]):
             "exit_pressure": np.asarray(state.exit_pressure),
             "thrust_coefficient": np.asarray(state.thrust_coefficient),
             "ideal_thrust_coefficient": np.asarray(state.ideal_thrust_coefficient),
+            "geometric_nozzle_throat_area": np.asarray(
+                state.geometric_nozzle_throat_area
+            ),
             "effective_nozzle_throat_area": np.asarray(
                 state.effective_nozzle_throat_area
             ),
@@ -98,8 +102,13 @@ class SimulationResult(ABC, Generic[StateT]):
         """Print the subclass-specific portion of the report."""
 
     def _report_nozzle_losses(self, file: IO) -> None:
-        """Print the effective throat area, nozzle efficiency, and loss fractions."""
+        """Print the throat areas, nozzle efficiency, and loss fractions."""
         print("\nNOZZLE", file=file)
+        print(
+            "  Average geometric throat area: "
+            f"{np.mean(self.geometric_nozzle_throat_area) * 1e4:.3f} cm^2",
+            file=file,
+        )
         print(
             "  Average effective throat area: "
             f"{np.mean(self.effective_nozzle_throat_area) * 1e4:.3f} cm^2",

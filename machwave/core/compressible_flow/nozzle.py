@@ -128,6 +128,22 @@ def get_ideal_thrust_coefficient_terms(
     return momentum_term, pressure_term
 
 
+def get_effective_nozzle_throat_area(
+    geometric_throat_area: float, discharge_coefficient: float
+) -> float:
+    """
+    Get the effective nozzle throat area.
+
+    Args:
+        geometric_throat_area: Geometric nozzle throat area [m^2].
+        discharge_coefficient: Throat discharge coefficient.
+
+    Returns:
+        Effective nozzle throat area [m^2].
+    """
+    return discharge_coefficient * geometric_throat_area
+
+
 def get_thrust_from_thrust_coefficient(
     thrust_coefficient: float, chamber_pressure: float, nozzle_throat_area: float
 ) -> float:
