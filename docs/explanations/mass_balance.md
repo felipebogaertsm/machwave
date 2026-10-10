@@ -60,13 +60,13 @@ The mass outflow $\dot{m}_{out}$ is the flow through the nozzle throat and follo
 It is written compactly in terms of a dimensionless flow function $H$:
 
 $$
-\dot{m}_{out} = \frac{C_d P_0 A_t}{\sqrt{R T}}\, H
+\dot{m}_{out} = \frac{C_d P_0 A_{t,\text{geo}}}{\sqrt{R T}}\, H
 $$
 
 where:
 
 - $C_d$ is the throat discharge coefficient (dimensionless)
-- $A_t$ is the nozzle throat area [m$^2$]
+- $A_{t,\text{geo}}$ is the geometric nozzle throat area [m$^2$]
 - $H$ is the dimensionless flow function, set by the throat regime
 
 $H$ changes depending on the flow condition.
@@ -95,7 +95,7 @@ The subsonic branch matters mainly during ignition and tail-off, when the chambe
 Substituting $\dot{m}_{out}$ leaves only $\dot{m}_{in}$ to be specified per category, giving the chamber-pressure differential equation for any motor/engine:
 
 $$
-\frac{dP_0}{dt} = \frac{R T}{V_0}\left(\dot{m}_{in} - \frac{C_d P_0 A_t}{\sqrt{R T}}\, H\right) - \frac{P_0}{V_0}\frac{dV_0}{dt}
+\frac{dP_0}{dt} = \frac{R T}{V_0}\left(\dot{m}_{in} - \frac{C_d P_0 A_{t,\text{geo}}}{\sqrt{R T}}\, H\right) - \frac{P_0}{V_0}\frac{dV_0}{dt}
 $$
 
 (Seidel 1965, Eq. 35)

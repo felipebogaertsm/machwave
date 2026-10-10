@@ -18,9 +18,24 @@ where:
 - $F$ is the thrust [N]
 - $C_f$ is the thrust coefficient (dimensionless)
 - $P_0$ is the chamber stagnation pressure [Pa]
-- $A_t$ is the nozzle throat area [m$^2$]
+- $A_t$ is the effective nozzle throat area [m$^2$]
 
 Implemented in [`get_thrust_from_thrust_coefficient`][machwave.core.compressible_flow.nozzle.get_thrust_from_thrust_coefficient].
+
+The effective nozzle throat area is modeled as the product of the geometric throat area with the discharge coefficient:
+
+$$
+A_t = C_d\, A_{t,\text{geo}}
+$$
+
+where:
+
+- $C_d$ is the throat discharge coefficient (dimensionless)
+- $A_{t,\text{geo}}$ is the geometric nozzle throat area [m$^2$]
+
+A throat discharge loss therefore reduces thrust along with mass outflow.
+
+Implemented in [`get_effective_nozzle_throat_area`][machwave.core.compressible_flow.nozzle.get_effective_nozzle_throat_area].
 
 ## Ideal Thrust Coefficient
 
