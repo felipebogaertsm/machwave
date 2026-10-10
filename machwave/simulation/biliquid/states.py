@@ -330,5 +330,5 @@ class BiliquidEngineState(simulation_states.MotorState):
             return internal_energy
 
         return internal_energy - mass_drained * tank.get_outflow_specific_enthalpy(
-            fluid_mass, internal_energy
+            fluid_mass, internal_energy, mass_drained=mass_drained
         )

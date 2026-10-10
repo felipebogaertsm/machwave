@@ -95,6 +95,18 @@ class CoolPropService:
         """
         return CP.PropsSI("H", "T", temperature, "Q", 0, self.fluid_name)
 
+    def get_saturated_vapor_enthalpy(self, temperature: float) -> float:
+        """
+        Get the saturated-vapor specific enthalpy at a given temperature.
+
+        Args:
+            temperature: Temperature [K].
+
+        Returns:
+            Saturated-vapor specific enthalpy [J/kg].
+        """
+        return CP.PropsSI("H", "T", temperature, "Q", 1, self.fluid_name)
+
     def get_saturated_liquid_entropy(self, temperature: float) -> float:
         """
         Get the saturated-liquid specific entropy at a given temperature.

@@ -25,6 +25,12 @@ OXIDIZER_TANK = dict(
     temperature=300.0,
     initial_fluid_mass=2.78,
 )
+FUEL_TANK = dict(
+    fluid_name="ETHANOL",
+    volume=2.0e-3,
+    temperature=300.0,
+    initial_fluid_mass=1.55,
+)
 
 
 def build(isothermal):
@@ -33,7 +39,7 @@ def build(isothermal):
     motor.feed_system = (
         feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
             oxidizer_tank=tank_models.Tank(**OXIDIZER_TANK, isothermal=isothermal),
-            fuel_tank=feed_system.lines["fuel"].tank,
+            fuel_tank=tank_models.Tank(**FUEL_TANK, isothermal=isothermal),
             piston_loss=feed_system.piston_loss,
             oxidizer_line_loss=feed_system.line_losses["oxidizer"],
             fuel_line_loss=feed_system.line_losses["fuel"],
@@ -78,6 +84,14 @@ def test_the_decay_is_monotonic_while_the_tank_holds_liquid(results):
     assert two_phase.sum() > 1
     assert np.all(np.diff(temperature) <= 0.0)
     assert np.all(np.diff(result.tank_pressure_per_line["oxidizer"][two_phase]) <= 0.0)
+
+
+def test_the_burn_reaches_thrust_termination(results):
+    result = results[False]
+
+    assert result.thrust_time > 0.0
+    assert result.burn_time <= result.thrust_time
+    assert np.all(np.isfinite(result.tank_temperature_per_line["fuel"]))
 
 
 def test_an_isothermal_tank_holds_its_temperature(results):
@@ -136,6 +150,6 @@ def test_draining_takes_the_outflow_enthalpy_out():
         internal_energy_before
         - mass_drained
         * tank.get_outflow_specific_enthalpy(
-            oxidizer_mass_before, internal_energy_before
+            oxidizer_mass_before, internal_energy_before, mass_drained=mass_drained
         )
     )
