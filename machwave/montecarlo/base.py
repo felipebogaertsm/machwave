@@ -11,6 +11,19 @@ import machwave.montecarlo.random as random
 import machwave.simulation as machwave_simulation
 
 SEARCH_TREE_DEPTH_LIMIT = 20
+MODE_GRID_POINTS = 512
+
+
+def _get_kernel_density_peak(values: np.ndarray) -> float:
+    finite_values = values[np.isfinite(values)]
+    if finite_values.size == 0:
+        return float("nan")
+    if np.ptp(finite_values) == 0.0:
+        return float(finite_values[0])
+
+    kde = scipy_stats.gaussian_kde(finite_values)
+    grid = np.linspace(finite_values.min(), finite_values.max(), MODE_GRID_POINTS)
+    return float(grid[np.argmax(kde(grid))])
 
 
 @dataclass(init=False, slots=True)
@@ -161,9 +174,9 @@ class MonteCarloSimulation:
         """
         Return descriptive statistics for a scalar property across results.
 
-        Metrics returned: mean, median, variance, std_dev, mode, skew (Fisher,
-        unbiased), kurtosis (excess, unbiased), p5 (5th percentile), p95 (95th
-        percentile).
+        Metrics returned: mean, median, variance, std_dev, mode (peak of a Gaussian
+        kernel density estimate), skew (Fisher, unbiased), kurtosis (excess,
+        unbiased), p5 (5th percentile), p95 (95th percentile).
 
         Args:
             property_name: Attribute name on the `SimulationResult`.
@@ -178,7 +191,7 @@ class MonteCarloSimulation:
         var_val = np.var(values)
         std_val = np.std(values)
 
-        mode_val = float(scipy_stats.mode(values, nan_policy="omit").mode)
+        mode_val = _get_kernel_density_peak(values)
         skew_val = scipy_stats.skew(values, bias=False)  # unbiased Fisher skew
         kurt_val = scipy_stats.kurtosis(values, fisher=True, bias=False)
         p5, p95 = np.percentile(values, [5, 95])
