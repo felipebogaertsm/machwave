@@ -129,6 +129,14 @@ def test_get_ideal_thrust_coefficient_terms(external_pressure, expected_pressure
     )
 
 
+def test_get_effective_nozzle_throat_area():
+    effective_throat_area = core_nozzle.get_effective_nozzle_throat_area(
+        geometric_throat_area=0.01, discharge_coefficient=0.9
+    )
+
+    assert effective_throat_area == pytest.approx(0.009)
+
+
 def test_get_thrust_from_thrust_coefficient():
     thrust_coefficient = 1.6
     chamber_pressure = 7e6
