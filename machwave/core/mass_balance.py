@@ -1,6 +1,7 @@
 from typing import Callable
 
 from .compressible_flow.isentropic import get_critical_pressure_ratio
+from .compressible_flow.nozzle import get_effective_nozzle_throat_area
 
 
 def _zero_volume_rate(chamber_pressure: float) -> float:
@@ -33,7 +34,7 @@ def compute_chamber_pressure_mass_balance(
             pressure, keeping the pressure-dependent inflow consistent with
             the outflow term.
         free_chamber_volume: Chamber free volume [m^3].
-        throat_area: Nozzle throat area [m^2].
+        throat_area: Geometric nozzle throat area [m^2].
         k: Isentropic exponent of the mix.
         R: Gas constant per molecular weight [J/(kg-K)].
         flame_temperature: Effective flame temperature [K].
@@ -66,10 +67,12 @@ def compute_chamber_pressure_mass_balance(
             * (1 - pressure_ratio ** ((k - 1) / k)) ** 0.5
         )
 
+    effective_throat_area = get_effective_nozzle_throat_area(
+        throat_area, nozzle_discharge_coefficient
+    )
     mass_flow_out = (
-        nozzle_discharge_coefficient
-        * chamber_pressure
-        * throat_area
+        chamber_pressure
+        * effective_throat_area
         * isentropic_flow_function
         / (R * flame_temperature) ** 0.5
     )
