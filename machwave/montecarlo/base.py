@@ -47,7 +47,6 @@ class MonteCarloParameter(float):
 
 
 def _get_children(obj: typing.Any) -> dict[typing.Any, typing.Any]:
-    """Map keys to children: list indices, dictionary keys, or attribute names."""
     if isinstance(obj, list):
         return dict(enumerate(obj))
     if isinstance(obj, dict):
