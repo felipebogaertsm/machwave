@@ -1,22 +1,38 @@
-# Simulation Loop
+# The Simulation Loop
+
+> A simulation is the imitation of the operation of a real-world process or system over time.
+
+(Banks et al. 2001, p. 3)
 
 Machwave's simulation loop takes a motor model plus a set of simulation parameters, iterates the motor state over time in fixed timesteps, and returns the time history of the run.
 
-Implemented in [`InternalBallisticsSimulation`][machwave.simulation.base.InternalBallisticsSimulation].
+DIAGRAM OF INPUTS AND OUTPUTS. The diagram must contain 3 blocks horizontally: input, simulation loop and output.
+Input: the motor model and simulation parameters (time step, external pressure and igniter pressure).
+Loop: some steps and stop criteria
+Output: some of the time series and aggregated parameters (chamber pressure, thrust, specific impulse)
 
 ## Inputs
 
 The **[`Motor`][machwave.models.motors.Motor] model** is the physical description of the motor/engine: propellant, grain, feed system, thrust chamber, and more.
 By design, it does not change during a run and no simulation state is stored in it.
 
-The **simulation parameters** ([`InternalBallisticsSimulationParams`][machwave.simulation.base.InternalBallisticsSimulationParams]) set the conditions of the run:
+The **simulation parameters** ([`InternalBallisticsSimulationParams`][machwave.simulation.base.InternalBallisticsSimulationParams]) set the initial conditions of the run.
+These parameters are common to every motor type, be it solid, biliquid, or other.
+They are:
 
-- **Timestep:** the fixed interval between two evaluations of the motor.
-- **Igniter pressure:** the chamber pressure at the start of the run.
-  The ignition transient is not modeled, so the run starts with the chamber already pressurized.
-  It must be high enough to choke the nozzle, otherwise the run ends on its first timestep, see [Stop Criteria](#stop-criteria).
+- **Timestep:** the fixed time interval between two state evaluations [s].
+- **Igniter pressure:** the chamber pressure at the start of the run [Pa].
 - **External pressure:** the ambient pressure, held constant for the whole run.
-  The trajectory is not modeled, so altitude changes during the burn are not accounted for; coupling to a flight is one-way, through the [RocketPy adapter](../api/adapters/rocketpy.md).
+
+## The Simulation Class
+
+The class [InternalBallisticsSimulation][path] is responsible for guiding (don't like this exact term) the iterative simulation process.
+
+### The State Class
+
+### Stop Criteria
+
+## Outputs
 
 ## Timestep Iteration
 
@@ -71,15 +87,10 @@ The timestep that meets a stop criterion is recorded but not advanced, so the hi
 
 ## Outputs
 
-When the run ends, the state is frozen into a [`SimulationResult`][machwave.simulation.results.SimulationResult]: the history of every recorded quantity, plus the performance figures computed from it.
-The history covers the chamber pressure, thrust, thrust coefficient, nozzle efficiency and propellant mass of every timestep.
-A solid motor adds the grain regression (web distance, burn area, mass flux) in [`SolidSimulationResult`][machwave.simulation.solid.results.SolidSimulationResult], a biliquid engine the state of each line (fluid mass, tank pressure and temperature) and the mixture ratio in [`BiliquidSimulationResult`][machwave.simulation.biliquid.results.BiliquidSimulationResult].
+When the run ends, the state is frozen into a [`SimulationResult`][machwave.simulation.results.SimulationResult] instance.
+It contains time series such as thrust and chamber pressure, as well as aggregated metrics such as total impulse and average thrust coefficient.
+Every motor type extends the abstract class: [solidresultshere], [liquidresultshere], and so on.
 
-The performance figures are:
+# References
 
-- **Total impulse:** the thrust integrated over the run.
-- **Specific impulse:** the total impulse per unit weight of propellant expelled.
-- **Burn time:** the time of burnout, undefined if the run ends before it.
-- **Thrust time:** the time the run ends.
-
-The first two are defined in [Thrust and Performance](thrust.md); the full list of outputs is in the [simulation reference](../api/simulation.md).
+1. Banks, J., Carson, J. S., Nelson, B. L., & Nicol, D. M. (2001). *Discrete-Event System Simulation* (3rd ed.). Prentice Hall.
