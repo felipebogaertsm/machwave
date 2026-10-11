@@ -39,6 +39,7 @@ class ConstantFractionLoss(components_base.LossComponent):
 
     @staticmethod
     def compute_loss_fraction(fraction: float) -> float:
+        """Return a constant loss fraction throughout the simulation."""
         return fraction
 
     def _parse_compute_loss_fraction_arguments(
