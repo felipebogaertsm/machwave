@@ -67,15 +67,16 @@ Homepage = "https://github.com/felipebogaertsm/machwave"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["D"]
+select = ["D"] # Docstring rules
+# Extended:
+#   D213: Multi-line docstring summary should start at the second line
+#   D407: Missing dashed underline after section heading
 extend-select = ["D213", "D407"]
-# Skipped intentionally:
-#   D100, D104: module/package docstrings not required.
-#   D102, D105, D107: trivial methods, magic methods, and __init__ are not
-#     required to be documented (getters, simple delegations, etc.). When the
-#     behavior is non-obvious, document it; otherwise let the name speak.
-#   D203, D212: incompatible with Google convention.
-ignore = ["D100", "D102", "D104", "D105", "D107", "D203", "D212"]
+# Skipped docstring rules:
+#   D100, D104: modules, packages
+#   D105, D107: magic methods, __init__s
+#   D203, D212: incompatible with Google docstring style
+ignore = ["D100", "D104", "D105", "D107", "D203", "D212"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
