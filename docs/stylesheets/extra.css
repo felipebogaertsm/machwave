@@ -82,3 +82,18 @@
 .md-typeset p:has(> img) {
   text-align: center;
 }
+
+/* Mermaid fills subgraphs with --md-default-fg-color--lightest, opaque in this palette. */
+.md-typeset .mermaid {
+  --md-default-fg-color--lightest: color-mix(in srgb, var(--md-default-fg-color) 5%, var(--md-default-bg-color));
+  --md-default-fg-color--lighter: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent);
+  --md-mermaid-label-bg-color: var(--md-default-fg-color--lightest);
+  text-align: center;
+}
+
+/* An emphasized paragraph right after an image is its caption. */
+.md-typeset p:has(> img) + p:has(> em:only-child) {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--md-default-fg-color--light);
+}
