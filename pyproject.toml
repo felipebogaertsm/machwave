@@ -15,7 +15,6 @@ keywords = ["python", "rocket", "srm", "engine", "propulsion"]
 requires-python = ">=3.11,<=3.14"
 dependencies = [
     "numpy>=2.0.0,<3.0.0",
-    "fluids>=1.1.0,<2.0.0",
     "scipy>=1.15.2,<2.0.0",
 ]
 
@@ -36,8 +35,6 @@ dev = [
     "ruff",
     "pyright",
     "pytest",
-    "pylint>=3.3.5,<5.0.0",
-    "py2puml>=0.10.0,<0.12.0",
     "pytest-benchmark>=5.0.0,<6.0.0",
     "pytest-cov>=6.2.1,<8.0.0",
     "polyfactory>=3.1.0,<4.0.0",
@@ -85,8 +82,7 @@ convention = "google"
 max-doc-length = 88
 
 [tool.ruff.lint.per-file-ignores]
-# Tests, examples, scripts, and docs are exempt from docstring requirements.
+# Tests, examples, and docs are exempt from docstring requirements.
 "tests/**" = ["D"]
 "examples/**" = ["D"]
-"scripts/**" = ["D"]
 "docs/**" = ["D"]
