@@ -48,17 +48,13 @@ for _ in range(4):
 	grain.add_segment(segment)
 
 nozzle = thrust_chamber_models.Nozzle(
-	inlet_diameter=0.080,
 	throat_diameter=0.022,
 	divergent_angle=12,
-	convergent_angle=45,
 	expansion_ratio=8,
 )
 
 combustion_chamber = thrust_chamber_models.CombustionChamber(
-	casing_inner_diameter=95.25e-3,
-	casing_outer_diameter=101.6e-3,
-	thermal_liner_thickness=3e-3,
+	inner_diameter=89.25e-3,
 	internal_length=grain.total_length + 0.01,
 )
 

@@ -1,4 +1,4 @@
-.PHONY: install install-all install-dev install-dev-core install-docs install-hooks test test-core benchmark publish build verify-version check format-check lint typecheck format generate-umls coverage docs docs-serve docs-deploy clean
+.PHONY: install install-all install-dev install-dev-core install-docs install-hooks test test-core benchmark publish build verify-version check format-check lint typecheck format coverage docs docs-serve docs-deploy clean
 
 install:
 	@uv sync
@@ -57,8 +57,6 @@ typecheck:
 format:
 	@uv run ruff format
 	@uv run ruff check . --fix
-generate-umls:
-	@zsh ./scripts/generate-umls.sh
 coverage:
 	@uv run pytest --cov=machwave --cov-branch --cov-report=term-missing --cov-report=html --cov-report=xml tests/
 docs:

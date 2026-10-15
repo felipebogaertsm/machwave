@@ -19,8 +19,8 @@ Install Machwave using pip:
 pip install machwave
 ```
 
-The core install depends only on NumPy, SciPy and fluids. It runs a complete solid
-rocket motor simulation with BATES grains, any of the eight bundled solid propellant
+The core install depends only on NumPy and SciPy. It runs a complete solid rocket
+motor simulation with BATES grains, any of the eight bundled solid propellant
 formulations and the full Solid Performance Program 1975 nozzle loss set. Those
 formulations carry pre-computed thermochemical properties, so no thermochemistry
 solver is needed to burn them.

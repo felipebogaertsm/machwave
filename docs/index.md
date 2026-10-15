@@ -24,7 +24,7 @@ Machwave requires **Python 3.11 – 3.14**.
 pip install machwave
 ```
 
-The core install depends only on NumPy, SciPy and fluids.
+The core install depends only on NumPy and SciPy.
 It can be extended with the following optional features:
 
 | Extra | Unlocks |
