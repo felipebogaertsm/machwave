@@ -166,12 +166,6 @@ class TestResultPerLine:
         for name in result.final_fluid_mass_per_line:
             assert name.capitalize() in report
 
-    def test_the_summary_carries_a_final_mass_per_line(self, result):
-        summary = result.summary()
-
-        for name in result.final_fluid_mass_per_line:
-            assert f"final_{name}_mass" in summary
-
     def test_the_masses_never_grow(self, result):
         for name, series in result.fluid_mass_per_line.items():
             assert (np.diff(series) <= 1e-9).all(), f"{name} mass increased"

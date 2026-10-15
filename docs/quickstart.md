@@ -97,7 +97,7 @@ result = simulation.run()
 
 ## 6. Read the results
 
-We print the summary and plot thrust against chamber pressure:
+We print the report and plot thrust against chamber pressure:
 
 ```python
 from machwave.services.plots import internal_ballistics as ib_plots

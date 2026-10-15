@@ -130,22 +130,3 @@ class SimulationResult(ABC, Generic[StateT]):
         if self.burn_time is None:
             return "not reached"
         return f"{self.burn_time:.{decimals}f} s"
-
-    def summary(self) -> dict[str, float | None]:
-        """Return a mapping of headline scalar metrics for this result."""
-        return {
-            "burn_time": self.burn_time,
-            "thrust_time": self.thrust_time,
-            "initial_propellant_mass": self.initial_propellant_mass,
-            "total_impulse": self.total_impulse,
-            "specific_impulse": self.specific_impulse,
-            "peak_chamber_pressure": float(np.max(self.chamber_pressure)),
-            "mean_chamber_pressure": float(np.mean(self.chamber_pressure)),
-            "peak_thrust": float(np.max(self.thrust)),
-            "mean_thrust": float(np.mean(self.thrust)),
-            **self._extra_summary(),
-        }
-
-    def _extra_summary(self) -> dict[str, float]:
-        """Return subclass-specific scalar metrics to merge into `summary()`."""
-        return {}

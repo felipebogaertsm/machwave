@@ -127,15 +127,6 @@ class SolidSimulationResult(
         """Fraction of the chamber initially occupied by propellant."""
         return float(initial_propellant_volume / internal_chamber_volume)
 
-    def _extra_summary(self) -> dict[str, float]:
-        return {
-            "peak_klemmung": float(np.max(self.klemmung)),
-            "mean_klemmung": float(np.mean(self.klemmung)),
-            "initial_to_final_klemmung_ratio": self.initial_to_final_klemmung_ratio,
-            "volumetric_efficiency": self.volumetric_efficiency,
-            "max_mass_flux": self.max_mass_flux,
-        }
-
     def _report_body(self, file: IO) -> None:
         print("\nBURN REGRESSION", file=file)
         if self.propellant_mass[0] > 1:
