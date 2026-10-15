@@ -23,21 +23,6 @@ class ThrustChamber(abc.ABC):
     combustion_chamber: combustion_chamber_models.CombustionChamber
     dry_mass_properties: mass_properties.DryMassProperties | None = None
 
-    def __post_init__(self) -> None:
-        """
-        Validate that the nozzle fits the combustion chamber.
-
-        Raises:
-            ValueError: If the nozzle inlet diameter is larger than the combustion
-                chamber casing inner diameter.
-        """
-        if self.nozzle.inlet_diameter > self.combustion_chamber.casing_inner_diameter:
-            raise ValueError(
-                f"Nozzle inlet diameter ({self.nozzle.inlet_diameter}) does not fit "
-                "within combustion chamber casing_inner_diameter "
-                f"({self.combustion_chamber.casing_inner_diameter})"
-            )
-
 
 @dataclasses.dataclass(kw_only=True)
 class SolidMotorThrustChamber(ThrustChamber):
@@ -61,12 +46,8 @@ class SolidMotorThrustChamber(ThrustChamber):
         Validate the assembly geometry.
 
         Raises:
-            ValueError: If the nozzle inlet diameter is larger than the combustion
-                chamber casing inner diameter, or if the nozzle exit to grain port
-                distance is negative.
+            ValueError: If the nozzle exit to grain port distance is negative.
         """
-        super().__post_init__()
-
         if self.nozzle_exit_to_grain_port_distance < 0.0:
             raise ValueError(
                 "nozzle_exit_to_grain_port_distance must be non-negative, got "

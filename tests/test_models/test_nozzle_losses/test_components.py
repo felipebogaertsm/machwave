@@ -263,10 +263,8 @@ def test_real_component_warns_outside_typical_range(
 def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
     base = timestep_conditions.nozzle
     wide_nozzle = thrust_chamber.Nozzle(
-        inlet_diameter=base.inlet_diameter,
         throat_diameter=base.throat_diameter,
         divergent_angle=30.0,  # ~0.067 fraction, above the 0.05 upper bound
-        convergent_angle=base.convergent_angle,
         expansion_ratio=base.expansion_ratio,
         discharge_coefficient=base.discharge_coefficient,
         separation_pressure_ratio=base.separation_pressure_ratio,
@@ -279,10 +277,8 @@ def test_divergent_loss_warns_outside_typical_range(timestep_conditions):
 def test_divergent_loss_warns_below_typical_range(timestep_conditions):
     base = timestep_conditions.nozzle
     narrow_nozzle = thrust_chamber.Nozzle(
-        inlet_diameter=base.inlet_diameter,
         throat_diameter=base.throat_diameter,
         divergent_angle=5.0,  # ~0.0019 fraction, below the 0.0075 lower bound
-        convergent_angle=base.convergent_angle,
         expansion_ratio=base.expansion_ratio,
         discharge_coefficient=base.discharge_coefficient,
         separation_pressure_ratio=base.separation_pressure_ratio,

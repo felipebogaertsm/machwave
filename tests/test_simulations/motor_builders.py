@@ -46,15 +46,12 @@ def build_apcp_motor() -> tuple[
 
     thrust_chamber = SolidMotorThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
-            inlet_diameter=0.080,
             throat_diameter=0.022,
             divergent_angle=12,
-            convergent_angle=45,
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=95.25e-3,
-            casing_outer_diameter=101.6e-3,
             thermal_liner_thickness=3e-3,
             internal_length=grain.total_length + 0.01,
         ),
@@ -90,15 +87,12 @@ def build_kappa_rnakka_motor() -> tuple[
 
     thrust_chamber = SolidMotorThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
-            inlet_diameter=40e-3,
             throat_diameter=12.8e-3,
             divergent_angle=12,
-            convergent_angle=25,
             expansion_ratio=11,
         ),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=60e-3,
-            casing_outer_diameter=64e-3,
             thermal_liner_thickness=1e-3,
             internal_length=grain.total_length + 5e-3,
         ),
@@ -133,15 +127,12 @@ def build_nero_motor() -> tuple[
 
     thrust_chamber = SolidMotorThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
-            inlet_diameter=43e-3,
             throat_diameter=9.5e-3,
             divergent_angle=12,
-            convergent_angle=40,
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=44.5e-3,
-            casing_outer_diameter=50.8e-3,
             thermal_liner_thickness=1e-3,
             internal_length=grain.total_length + 10e-3,
         ),
@@ -185,15 +176,12 @@ def build_finocyl_motor() -> tuple[
 
     thrust_chamber = SolidMotorThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
-            inlet_diameter=0.045,
             throat_diameter=0.012,
             divergent_angle=12,
-            convergent_angle=45,
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=0.052,
-            casing_outer_diameter=0.06,
             thermal_liner_thickness=0.002,
             internal_length=grain.total_length + 0.01,
         ),
@@ -245,16 +233,13 @@ def build_1kn_biliquid_engine() -> tuple[
 
     thrust_chamber = BiliquidEngineThrustChamberFactory.build(
         nozzle=NozzleFactory.build(
-            inlet_diameter=55e-3,
             throat_diameter=25.4e-3,
             divergent_angle=12,
-            convergent_angle=45,
             expansion_ratio=4,
         ),
         injector=InjectorFactory.build(),
         combustion_chamber=CombustionChamberFactory.build(
             casing_inner_diameter=70e-3,
-            casing_outer_diameter=76e-3,
             internal_length=13e-3,
             thermal_liner_thickness=2e-3,
         ),

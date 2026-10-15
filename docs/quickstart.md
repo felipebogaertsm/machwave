@@ -40,16 +40,13 @@ Next comes the thrust chamber, composed of a **nozzle** and a **combustion chamb
 from machwave import thrust_chamber as thrust_chamber_models
 
 nozzle = thrust_chamber_models.Nozzle(
-    inlet_diameter=65e-3,
     throat_diameter=14e-3,
     divergent_angle=12,
-    convergent_angle=40,
     expansion_ratio=8,
 )
 
 combustion_chamber = thrust_chamber_models.CombustionChamber(
     casing_inner_diameter=69.85e-3,
-    casing_outer_diameter=76.2e-3,
     thermal_liner_thickness=2e-3,
     internal_length=grain.total_length + 10e-3,
 )

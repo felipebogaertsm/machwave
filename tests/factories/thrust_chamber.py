@@ -37,10 +37,8 @@ class NozzleFactory:
     @classmethod
     def build(cls, **overrides: Any) -> thrust_chamber_models.Nozzle:
         kwargs: dict[str, Any] = dict(
-            inlet_diameter=50.8e-3,
             throat_diameter=25.4e-3,
             divergent_angle=15,
-            convergent_angle=45,
             expansion_ratio=4,
         )
         kwargs.update(overrides)
@@ -52,7 +50,6 @@ class CombustionChamberFactory:
     def build(cls, **overrides: Any) -> thrust_chamber_models.CombustionChamber:
         kwargs: dict[str, Any] = dict(
             casing_inner_diameter=70e-3,
-            casing_outer_diameter=80e-3,
             internal_length=0.3,
             thermal_liner_thickness=2e-3,
         )

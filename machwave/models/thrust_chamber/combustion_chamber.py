@@ -10,13 +10,11 @@ class CombustionChamber:
 
     Attributes:
         casing_inner_diameter: Internal diameter [m].
-        casing_outer_diameter: Outer diameter [m].
         internal_length: Distance from combustion chamber inlet to nozzle inlet [m].
         thermal_liner_thickness: Thermal liner thickness [m]. Defaults to 0.0.
     """
 
     casing_inner_diameter: float
-    casing_outer_diameter: float
     internal_length: float
     thermal_liner_thickness: float = 0.0
 
@@ -31,11 +29,6 @@ class CombustionChamber:
             raise ValueError(
                 "casing_inner_diameter must be strictly positive, got "
                 f"{self.casing_inner_diameter}"
-            )
-        if self.casing_outer_diameter <= self.casing_inner_diameter:
-            raise ValueError(
-                f"casing_outer_diameter ({self.casing_outer_diameter}) must be larger "
-                f"than casing_inner_diameter ({self.casing_inner_diameter})"
             )
         if self.internal_length <= 0.0:
             raise ValueError(
@@ -58,19 +51,9 @@ class CombustionChamber:
         return self.casing_inner_diameter - 2 * self.thermal_liner_thickness
 
     @property
-    def outer_diameter(self) -> float:
-        """Outer diameter of the combustion chamber [m]."""
-        return self.casing_outer_diameter
-
-    @property
     def inner_radius(self) -> float:
         """Inner radius of the combustion chamber [m]."""
         return 0.5 * self.inner_diameter
-
-    @property
-    def outer_radius(self) -> float:
-        """Outer radius of the combustion chamber [m]."""
-        return 0.5 * self.outer_diameter
 
     @property
     def internal_volume(self) -> float:
