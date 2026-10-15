@@ -6,6 +6,7 @@ import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.formulations as formulations
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.montecarlo as montecarlo
+import machwave.services.plots.montecarlo as montecarlo_plots
 import machwave.simulation as simulation
 
 MC_SAMPLES = 1000
@@ -80,19 +81,25 @@ def main():
     print(f"Total impulse (N.s) variance: {total_impulse_stats.get('variance'):.2f}")
     print(f"Total impulse (N.s) std: {total_impulse_stats.get('std_dev'):.2f}")
 
-    mc.plot_histogram("total_impulse", "Total Impulse (N·s)")
-    mc.plot_histogram_with_kde("total_impulse", "Total Impulse (N·s)")
-    mc.plot_cdf("total_impulse", "Total Impulse (N·s)")
-    mc.plot_time_series_extremes(
+    montecarlo_plots.plot_histogram(
+        mc.results, "total_impulse", "Total Impulse (N·s)"
+    ).show()
+    montecarlo_plots.plot_histogram_with_kde(
+        mc.results, "total_impulse", "Total Impulse (N·s)"
+    ).show()
+    montecarlo_plots.plot_cdf(mc.results, "total_impulse", "Total Impulse (N·s)").show()
+    montecarlo_plots.plot_time_series_extremes(
+        mc.results,
         time_property="time",
         series_property="chamber_pressure",
         title="Pressão de Câmara (MPa)",
-    )
-    mc.plot_time_series_extremes(
+    ).show()
+    montecarlo_plots.plot_time_series_extremes(
+        mc.results,
         time_property="time",
         series_property="thrust",
         title="Força de Empuxo (N)",
-    )
+    ).show()
 
 
 if __name__ == "__main__":

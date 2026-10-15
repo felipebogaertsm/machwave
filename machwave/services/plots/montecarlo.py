@@ -16,7 +16,7 @@ def plot_histogram(
     property_name: str,
     x_axes_title: str = "x",
     **plotly_kwargs,
-) -> None:
+) -> go.Figure:
     """
     Histogram of a scalar property across all Monte Carlo results.
 
@@ -25,13 +25,17 @@ def plot_histogram(
         property_name: Name of the scalar attribute to histogram.
         x_axes_title: Label for the x-axis.
         **plotly_kwargs: Additional kwargs passed to go.Histogram (e.g. nbinsx=50).
+
+    Returns:
+        Plotly figure with the histogram.
     """
     values = np.array([getattr(sim_result, property_name) for sim_result in results])
 
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=values, **plotly_kwargs))
     fig.update_xaxes(title_text=property_name or x_axes_title)
-    fig.show()
+
+    return fig
 
 
 def plot_histogram_with_kde(
@@ -41,7 +45,7 @@ def plot_histogram_with_kde(
     nbins: int = 30,
     kde_points: int = 200,
     **plotly_kwargs,
-) -> None:
+) -> go.Figure:
     """
     Histogram plus KDE curve for a scalar property across all results.
 
@@ -52,6 +56,9 @@ def plot_histogram_with_kde(
         nbins: Number of bins in the histogram.
         kde_points: Number of points to compute the KDE curve.
         **plotly_kwargs: Additional kwargs for go.Histogram.
+
+    Returns:
+        Plotly figure with the histogram and the KDE curve.
     """
     values = np.array([getattr(sim_result, property_name) for sim_result in results])
 
@@ -79,7 +86,8 @@ def plot_histogram_with_kde(
         yaxis_title="Density",
         title=f"Histogram + '{property_name}' KDE",
     )
-    fig.show()
+
+    return fig
 
 
 def plot_cdf(
@@ -88,7 +96,7 @@ def plot_cdf(
     x_axes_title: str = "x",
     percentiles: Sequence[int] = (5, 25, 50, 75, 95),
     **plotly_kwargs,
-) -> None:
+) -> go.Figure:
     """
     Empirical CDF of a scalar property across all results.
 
@@ -98,6 +106,9 @@ def plot_cdf(
         x_axes_title: Label for the x-axis.
         percentiles: Percentiles to mark on the plot.
         **plotly_kwargs: Additional kwargs passed to go.Scatter.
+
+    Returns:
+        Plotly figure with the empirical CDF and the percentile markers.
     """
     values = np.array([getattr(sim_result, property_name) for sim_result in results])
     sorted_vals = np.sort(values)
@@ -144,7 +155,7 @@ def plot_cdf(
     )
     fig.update_yaxes(tickformat=".0%", range=[0, 1])
 
-    fig.show()
+    return fig
 
 
 def plot_time_series_extremes(
@@ -154,7 +165,7 @@ def plot_time_series_extremes(
     x_axes_title: str = "time",
     title: str | None = None,
     **plotly_kwargs,
-) -> None:
+) -> go.Figure:
     """
     Plot lowest-mean, highest-mean, and median-mean scenarios over time.
 
@@ -168,6 +179,10 @@ def plot_time_series_extremes(
         x_axes_title: Label for the x-axis.
         title: Plot title. If None, a default title is generated.
         **plotly_kwargs: Extra kwargs passed to go.Scatter.
+
+    Returns:
+        Plotly figure with the lowest-mean, highest-mean and median-mean
+        scenarios over time.
     """
     all_times = []
     all_series = []
@@ -246,4 +261,4 @@ def plot_time_series_extremes(
         or f"Extremes of '{series_property}' across {len(results)} scenarios",
     )
 
-    fig.show()
+    return fig

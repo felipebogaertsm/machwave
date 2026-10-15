@@ -5,6 +5,6 @@ Uncertainty and sensitivity analysis via Monte Carlo simulation. Wrap any motor 
 Useful for characterizing thrust variability, pressure envelope, and impulse confidence intervals due to manufacturing tolerances and propellant batch variation.
 
 !!! note "Plotting requires the `plots` extra"
-    Running a Monte Carlo simulation and reading its aggregates needs no extra. Only `plot_histogram`, `plot_histogram_with_kde`, `plot_cdf` and `plot_time_series_extremes` do: `pip install machwave[plots]`.
+    Running a Monte Carlo simulation and reading its aggregates needs no extra. Plotting the results with [`machwave.services.plots.montecarlo`](services/plots.md) does: `pip install machwave[plots]`.
 
 ::: machwave.montecarlo

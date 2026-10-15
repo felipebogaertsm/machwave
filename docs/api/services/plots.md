@@ -8,7 +8,7 @@ Interactive Plotly-based visualization for simulation results.
 - **Internal ballistics** — Dual-axis thrust vs. chamber pressure plot, per-segment mass flux over time.
 - **Biliquid engine profiles** — Tank pressure and propellant mass traces for oxidizer and fuel.
 - **Ballistics** — Altitude, velocity, and acceleration subplots for trajectory analysis.
-- **Monte Carlo** — Histograms (with optional KDE overlay), CDF plots with configurable percentile markers, for any scalar result property across simulation scenarios.
+- **Monte Carlo** — Histograms (with optional KDE overlay), CDF plots with configurable percentile markers, for any scalar result property across simulation scenarios, plus the lowest-mean, highest-mean and median-mean scenarios of a time series. Pass `MonteCarloSimulation.results` as the first argument.
 
 All functions return Plotly `Figure` objects that can be displayed inline or exported.
 
