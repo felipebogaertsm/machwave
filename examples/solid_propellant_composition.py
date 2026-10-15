@@ -1,11 +1,11 @@
+import time
+
 import numpy as np
 
-import machwave.common.decorators as decorators
 import machwave.models.propellants.categories as propellant_categories
 import machwave.models.propellants.components as propellant_components
 
 
-@decorators.timing
 def main() -> None:
     potassium_nitrate = propellant_components.PropellantComponent(
         name="Potassium Nitrate",
@@ -41,4 +41,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
     main()
+    print(f"\nExecution time: {time.perf_counter() - start_time:.4f} seconds")

@@ -4,7 +4,8 @@ an InternalBallisticsCoupled simulation that includes both
 internal ballistics and atmospheric flight.
 """
 
-import machwave.common.decorators as decorators
+import time
+
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
@@ -14,7 +15,6 @@ import machwave.services.plots.internal_ballistics as internal_ballistics_plots
 import machwave.simulation as simulation
 
 
-@decorators.timing
 def main():
     propellant = formulations.solid.MIT_CHERRY_LIMEADE
 
@@ -78,4 +78,6 @@ def main():
 
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
     main()
+    print(f"\nExecution time: {time.perf_counter() - start_time:.4f} seconds")
