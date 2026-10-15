@@ -122,23 +122,6 @@ _GENERATOR_REGISTRY: dict[str, FactoryFn] = {
 }
 
 
-def register_random_generator(name: str, ctor: FactoryFn) -> None:
-    """
-    Add a new random generator to the registry at runtime.
-
-    Args:
-        name: Name of the generator (case-insensitive).
-        ctor: Constructor function for the generator.
-
-    Raises:
-        ValueError: If the name is already registered.
-    """
-    if name.lower() in _GENERATOR_REGISTRY:
-        raise ValueError(f'Generator "{name}" already registered.')
-
-    _GENERATOR_REGISTRY[name.lower()] = ctor
-
-
 def get_random_generator(
     probability_distribution: str,
     *args,

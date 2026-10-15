@@ -14,10 +14,6 @@ def service() -> coolprop_service.CoolPropService:
     return coolprop_service.CoolPropService(FLUID_NAME)
 
 
-def test_get_molar_mass(service):
-    assert service.get_molar_mass() == CP.PropsSI("M", FLUID_NAME)
-
-
 def test_get_triple_point_temperature(service):
     assert service.get_triple_point_temperature() == CP.PropsSI("Ttriple", FLUID_NAME)
 
@@ -48,13 +44,6 @@ def test_get_saturated_liquid_entropy(service):
     assert service.get_saturated_liquid_entropy(TEMPERATURE) == CP.PropsSI(
         "S", "T", TEMPERATURE, "Q", 0, FLUID_NAME
     )
-
-
-def test_get_density_at_temperature_pressure(service):
-    pressure = service.get_saturation_pressure(TEMPERATURE) + 5e5
-    assert service.get_density_at_temperature_pressure(
-        TEMPERATURE, pressure
-    ) == CP.PropsSI("D", "T", TEMPERATURE, "P", pressure, FLUID_NAME)
 
 
 def test_get_enthalpy_at_temperature_pressure(service):

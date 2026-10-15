@@ -1,6 +1,6 @@
 import pytest
+import scipy.constants
 
-import machwave.core.conversions as conversions
 import machwave.models.nozzle_losses.components.spp1975 as spp1975
 
 
@@ -24,7 +24,7 @@ def test_kinetics_loss_fraction(
     kinetics_loss = spp1975.KineticsLoss.compute_loss_fraction(
         i_sp_frozen=i_sp_frozen,
         i_sp_shifting=i_sp_shifting,
-        chamber_pressure=conversions.convert_psi_to_pa(chamber_pressure_psi),
+        chamber_pressure=chamber_pressure_psi * scipy.constants.psi,
     )
     assert kinetics_loss == pytest.approx(expected_loss_fraction, abs=1e-4)
 
@@ -54,8 +54,8 @@ def test_boundary_layer_loss_fraction(
     expected_loss_fraction,
 ):
     boundary_layer_loss = spp1975.BoundaryLayerLoss.compute_loss_fraction(
-        chamber_pressure=conversions.convert_psi_to_pa(chamber_pressure_psi),
-        throat_diameter=conversions.convert_inch_to_meter(throat_diam_in),
+        chamber_pressure=chamber_pressure_psi * scipy.constants.psi,
+        throat_diameter=throat_diam_in * scipy.constants.inch,
         expansion_ratio=expansion_ratio,
         time=time_s,
         c_1=c1,
@@ -144,10 +144,10 @@ def test_two_phase_flow_loss_fraction(
     )
 
     two_phase_loss = spp1975.TwoPhaseFlowLoss.compute_loss_fraction(
-        chamber_pressure=conversions.convert_psi_to_pa(chamber_psi),
+        chamber_pressure=chamber_psi * scipy.constants.psi,
         mass_fraction_of_condensed_phase=xi,
         expansion_ratio=eps,
-        throat_diameter=conversions.convert_inch_to_meter(d_throat_in),
+        throat_diameter=d_throat_in * scipy.constants.inch,
         free_chamber_volume=1e-3,
     )
 

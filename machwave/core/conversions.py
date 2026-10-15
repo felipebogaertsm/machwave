@@ -14,45 +14,6 @@ def convert_pa_to_psi(pressure_pa: float) -> float:
     return pressure_pa / scipy.constants.psi
 
 
-def convert_psi_to_pa(pressure_psi: float) -> float:
-    """
-    Converts pressure in psi to Pascal.
-
-    Args:
-        pressure_psi: Pressure [psi].
-
-    Returns:
-        Pressure [Pa].
-    """
-    return pressure_psi * scipy.constants.psi
-
-
-def convert_pa_to_mpa(pressure_pa: float) -> float:
-    """
-    Converts pressure in Pascal to MPa.
-
-    Args:
-        pressure_pa: Pressure [Pa].
-
-    Returns:
-        Pressure [MPa].
-    """
-    return pressure_pa * 1e-6
-
-
-def convert_mpa_to_pa(pressure_mpa: float) -> float:
-    """
-    Converts pressure in MPa to Pascal.
-
-    Args:
-        pressure_mpa: Pressure [MPa].
-
-    Returns:
-        Pressure [Pa].
-    """
-    return pressure_mpa / 1e-6
-
-
 def convert_mass_flux_metric_to_imperial(mass_flux_metric: float) -> float:
     """
     Converts mass flux in kg/s-m-m to lb/s-in-in.
@@ -64,20 +25,6 @@ def convert_mass_flux_metric_to_imperial(mass_flux_metric: float) -> float:
         Mass flux [lb/s-in-in].
     """
     return mass_flux_metric * 1.42233e-3
-
-
-def convert_burn_rate_coefficient_to_metric(a_imperial: float, n: float) -> float:
-    """
-    Converts burn rate coefficient from imperial to metric units.
-
-    Args:
-        a_imperial: Burn rate coefficient in imperial units [in/s/(lb/in^2)^n].
-        n: Burn rate exponent.
-
-    Returns:
-        Burn rate coefficient in metric units [m/s/(kg/m^2)^n].
-    """
-    return a_imperial * 25.4 / (0.0069**n)
 
 
 def convert_rankine_to_kelvin(temperature_rankine: float) -> float:
@@ -117,32 +64,6 @@ def convert_meter_to_inch(measure: float) -> float:
         Distance in inches.
     """
     return measure / 0.0254
-
-
-def convert_inch_to_meter(measure: float) -> float:
-    """
-    Converts distance in inches to meters.
-
-    Args:
-        measure: Distance [in].
-
-    Returns:
-        Distance in meters.
-    """
-    return measure * 0.0254
-
-
-def convert_meter_to_micrometer(measure: float) -> float:
-    """
-    Converts distance in meters to micrometers.
-
-    Args:
-        measure: Distance [m].
-
-    Returns:
-        Distance in micrometers.
-    """
-    return measure * 1e6
 
 
 def convert_joules_per_mol_to_cal_per_mol(enthalpy_j_per_mol: float) -> float:

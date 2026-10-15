@@ -339,11 +339,3 @@ class RocketCEAService:
             pass
 
         return qsi_chamber, qsi_exhaust
-
-    def get_tank_densities(self) -> tuple[float, float]:
-        """Get tank densities [kg/m^3]: (oxidizer, fuel)."""
-        densities_lb_per_ft3 = self.cea_obj.get_Densities()
-        return (
-            conversions.convert_lbft3_to_kgm3(densities_lb_per_ft3[0]),
-            conversions.convert_lbft3_to_kgm3(densities_lb_per_ft3[1]),
-        )

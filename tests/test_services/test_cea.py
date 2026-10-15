@@ -135,13 +135,6 @@ class TestCreateCEAServiceBiliquidPropellant:
         assert 270 < isp_f < 330, f"LOX/RP1 Isp out of range: {isp_f} s"
         assert 280 < isp_s < 340, f"LOX/RP1 shifting Isp out of range: {isp_s} s"
 
-        # Test tank densities (biliquid specific)
-        ox_dens, fuel_dens = service.get_tank_densities()
-        # Note: CEA returns densities in g/cm^3
-        # LOX density ~1.14 g/cm^3, RP1 ~0.54 g/cm^3 (at boiling point)
-        assert 0.8 < ox_dens < 1.3, f"LOX density out of range: {ox_dens} g/cm^3"
-        assert 0.5 < fuel_dens < 0.9, f"RP1 density out of range: {fuel_dens} g/cm^3"
-
     def test_lox_lh2_high_performance(self):
         """Test LOX/LH2 high-performance propellant."""
         service = cea_service.create_cea_service(

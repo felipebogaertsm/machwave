@@ -9,6 +9,4 @@ Static, immutable descriptions of the physical components a feed-system cycle is
 
 Every spec is a frozen, keyword-only dataclass with `__post_init__` validation; construction with an out-of-range value raises `ValueError`. Each field, its units and its bounds are documented on the class below.
 
-Specs that carry property *curves* (e.g. pump head versus volumetric flow, turbine efficiency versus pressure ratio) wrap their tabulated data in [`machwave.core.interpolation.BoundedCubicSpline`](../../core/interpolation.md), which raises rather than extrapolating outside the calibrated knots.
-
 ::: machwave.models.feed_systems.components
