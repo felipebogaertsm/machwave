@@ -8,15 +8,9 @@ class CombustionChamber:
     """
     Represents a cylindrical combustion chamber.
 
-    The chamber internal volume is the open bore of diameter `inner_diameter` over
-    `internal_length`. Inhibitors belong to the grain, so an inhibitor sleeve between
-    the grain and the thermal insulation is not part of the chamber: its annulus is
-    counted as free chamber volume.
-
     Attributes:
-        inner_diameter: Diameter of the open bore inside the thermal insulation
-            (liner) [m]. The insulation thickness is already subtracted; inhibitor
-            thickness is not.
+        inner_diameter: Bore diameter inside the thermal insulation (liner) [m]. Do
+            not subtract inhibitors, which belong to the grain.
         internal_length: Distance from combustion chamber inlet to nozzle inlet [m].
     """
 
