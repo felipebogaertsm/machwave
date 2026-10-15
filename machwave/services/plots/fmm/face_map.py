@@ -1,6 +1,5 @@
 import numpy as np
 
-import machwave.common.arrays as common_arrays
 import machwave.common.extras as extras
 
 try:
@@ -36,7 +35,7 @@ def _create_plot_2d_frame(
         ),
         go.Contour(  # burn area contour
             name="Burn front",
-            z=common_arrays.replace_array_values(face_map, -1, 0),
+            z=np.where(face_map == -1, 0, face_map),
             contours=dict(
                 start=-1,
                 end=1,
@@ -52,7 +51,7 @@ def _create_plot_2d_frame(
         ),
         go.Contour(  # inhibited area contour
             name="Inhibitor",
-            z=common_arrays.replace_array_values(face_map, 1, 0),
+            z=np.where(face_map == 1, 0, face_map),
             contours=dict(
                 start=-1,
                 end=1,

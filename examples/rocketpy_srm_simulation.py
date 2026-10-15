@@ -8,8 +8,9 @@ This example demonstrates how to:
 3. Run a complete 6DOF flight simulation using RocketPy
 """
 
+import time
+
 import machwave.adapters.rocketpy as rocketpy_adapters
-import machwave.common.decorators as decorators
 import machwave.common.mass_properties as mass_properties
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
@@ -20,7 +21,6 @@ import machwave.simulation as simulation
 from rocketpy import Environment, Flight, Rocket
 
 
-@decorators.timing
 def main():
     # 1. Motor setup
     propellant = formulations.solid.KNSB_NAKKA
@@ -173,4 +173,6 @@ def main():
 
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
     main()
+    print(f"\nExecution time: {time.perf_counter() - start_time:.4f} seconds")

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.stats as scipy_stats
 
-import machwave.common.objects as common_objects
 import machwave.montecarlo.random as random
 import machwave.simulation as machwave_simulation
 
@@ -64,7 +63,10 @@ def _get_children(obj: typing.Any) -> dict[typing.Any, typing.Any]:
         return dict(enumerate(obj))
     if isinstance(obj, dict):
         return dict(obj)
-    return common_objects.get_object_dict(obj)
+    try:
+        return vars(obj)
+    except TypeError:
+        return {}
 
 
 def _set_child(obj: typing.Any, key: typing.Any, value: typing.Any) -> None:
