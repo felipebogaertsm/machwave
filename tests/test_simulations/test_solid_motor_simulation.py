@@ -293,7 +293,6 @@ def test_undefined_burn_time_still_builds_a_result_and_a_report() -> None:
     result = _run_until_unchoked_with_propellant_remaining().build_result()
 
     assert result.burn_time is None
-    assert result.summary()["burn_time"] is None
 
     buffer = io.StringIO()
     result.report(file=buffer)

@@ -46,12 +46,6 @@ class BiliquidSimulationResult(
             },
         }
 
-    def _extra_summary(self) -> dict[str, float]:
-        return {
-            f"final_{name}_mass": mass
-            for name, mass in self.final_fluid_mass_per_line.items()
-        }
-
     def _report_body(self, file: IO) -> None:
         print("\nBILIQUID ENGINE OPERATION RESULTS", file=file)
 
