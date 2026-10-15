@@ -27,15 +27,12 @@ def main():
     grain.add_segment(finocyl_segment)
 
     nozzle = thrust_chamber_models.Nozzle(
-        inlet_diameter=0.085,
         throat_diameter=0.034,
         divergent_angle=12,
-        convergent_angle=45,
         expansion_ratio=8,
     )
     combustion_chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=0.0985,
-        casing_outer_diameter=0.108,
         thermal_liner_thickness=0.003,
         internal_length=grain.total_length + 0.01,
     )

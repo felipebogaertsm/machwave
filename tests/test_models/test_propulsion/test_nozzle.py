@@ -10,10 +10,8 @@ from tests.factories import NozzleFactory
 def nozzle():
     """1 inch throat, expansion ratio 4."""
     return NozzleFactory.build(
-        inlet_diameter=50.8e-3,
         throat_diameter=25.4e-3,
         divergent_angle=20,
-        convergent_angle=45,
         expansion_ratio=4,
     )
 
@@ -26,8 +24,8 @@ class TestNozzleGeometry:
         """Throat area = pi / 4 * D ** 2."""
         assert nozzle.get_throat_area() == pytest.approx(5.0670747910e-4, rel=1e-9)
 
-    def test_outlet_diameter_uses_throat_not_inlet(self, nozzle):
-        """outlet_diameter must be throat_diameter * √ε, not inlet_diameter * √ε."""
+    def test_outlet_diameter_from_throat(self, nozzle):
+        """outlet_diameter = throat_diameter * √ε."""
         assert nozzle.outlet_diameter == pytest.approx(50.8e-3, rel=1e-9)
 
     def test_outlet_diameter_larger_than_throat(self, nozzle):
@@ -45,16 +43,8 @@ class TestNozzleGeometry:
         assert n1.outlet_diameter == pytest.approx(50.8e-3, rel=1e-6)
         assert n2.outlet_diameter == pytest.approx(7.1842048969e-2, rel=1e-6)
 
-    def test_outlet_diameter_independent_of_inlet_diameter(self):
-        """Two nozzles with same throat but different inlets → same exit diameter."""
-        n1 = NozzleFactory.build(inlet_diameter=50e-3, divergent_angle=15)
-        n2 = NozzleFactory.build(inlet_diameter=70e-3, divergent_angle=15)
-        assert n1.outlet_diameter == pytest.approx(50.8e-3, rel=1e-9)
-        assert n2.outlet_diameter == pytest.approx(50.8e-3, rel=1e-9)
-
-    def test_stores_angles(self, nozzle):
+    def test_stores_divergent_angle(self, nozzle):
         assert nozzle.divergent_angle == 20
-        assert nozzle.convergent_angle == 45
 
     def test_stores_expansion_ratio(self, nozzle):
         assert nozzle.expansion_ratio == 4
@@ -82,20 +72,10 @@ class TestNozzleGeometry:
 
 
 class TestNozzleValidation:
-    @pytest.mark.parametrize("inlet_diameter", [0.0, -1e-3])
-    def test_non_positive_inlet_diameter(self, inlet_diameter):
-        with pytest.raises(ValueError, match="inlet_diameter"):
-            NozzleFactory.build(inlet_diameter=inlet_diameter)
-
     @pytest.mark.parametrize("throat_diameter", [0.0, -1e-3])
     def test_non_positive_throat_diameter(self, throat_diameter):
         with pytest.raises(ValueError, match="throat_diameter"):
             NozzleFactory.build(throat_diameter=throat_diameter)
-
-    @pytest.mark.parametrize("throat_diameter", [25e-3, 30e-3])
-    def test_throat_not_smaller_than_inlet(self, throat_diameter):
-        with pytest.raises(ValueError, match="smaller than"):
-            NozzleFactory.build(inlet_diameter=25e-3, throat_diameter=throat_diameter)
 
     @pytest.mark.parametrize("expansion_ratio", [1.0, 0.5, -1.0])
     def test_expansion_ratio_not_above_one(self, expansion_ratio):
@@ -116,8 +96,3 @@ class TestNozzleValidation:
     def test_divergent_angle_out_of_range(self, divergent_angle):
         with pytest.raises(ValueError, match="divergent_angle"):
             NozzleFactory.build(divergent_angle=divergent_angle)
-
-    @pytest.mark.parametrize("convergent_angle", [0, -5, 90, 120])
-    def test_convergent_angle_out_of_range(self, convergent_angle):
-        with pytest.raises(ValueError, match="convergent_angle"):
-            NozzleFactory.build(convergent_angle=convergent_angle)

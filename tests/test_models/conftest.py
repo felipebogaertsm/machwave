@@ -56,7 +56,6 @@ def propellant_KNSU():
 def combustion_chamber_olympus():
     return CombustionChamberFactory.build(
         casing_inner_diameter=128.2e-3,
-        casing_outer_diameter=141.3e-3,
         thermal_liner_thickness=3e-3,
         internal_length=1500e-3,
     )

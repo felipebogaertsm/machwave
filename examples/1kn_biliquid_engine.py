@@ -55,10 +55,8 @@ def main():
     )
 
     nozzle = thrust_chamber_models.Nozzle(
-        inlet_diameter=55e-3,
         throat_diameter=25.4e-3,
         divergent_angle=12,
-        convergent_angle=45,
         expansion_ratio=4,
     )
 
@@ -75,7 +73,6 @@ def main():
 
     chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=70e-3,
-        casing_outer_diameter=76e-3,
         internal_length=13e-3,
         thermal_liner_thickness=2e-3,
     )

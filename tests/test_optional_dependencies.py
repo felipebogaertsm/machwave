@@ -60,15 +60,12 @@ BATES_SIMULATION = """
         propellant=formulations.solid.KNDX,
         thrust_chamber=thrust_chamber_models.SolidMotorThrustChamber(
             nozzle=thrust_chamber_models.Nozzle(
-                inlet_diameter=43e-3,
                 throat_diameter=9.5e-3,
                 divergent_angle=12,
-                convergent_angle=40,
                 expansion_ratio=8,
             ),
             combustion_chamber=thrust_chamber_models.CombustionChamber(
                 casing_inner_diameter=44.5e-3,
-                casing_outer_diameter=50.8e-3,
                 thermal_liner_thickness=1e-3,
                 internal_length=grain.total_length + 10e-3,
             ),

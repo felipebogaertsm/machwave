@@ -8,10 +8,8 @@ import machwave.simulation.solid.states as solid_states
 @pytest.fixture
 def nozzle() -> thrust_chamber.Nozzle:
     return thrust_chamber.Nozzle(
-        inlet_diameter=0.05,
         throat_diameter=0.02,
         divergent_angle=15.0,
-        convergent_angle=30.0,
         expansion_ratio=8.0,
     )
 

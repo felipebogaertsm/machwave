@@ -9,14 +9,6 @@ class TestCombustionChamberValidation:
         with pytest.raises(ValueError, match="casing_inner_diameter"):
             CombustionChamberFactory.build(casing_inner_diameter=casing_inner_diameter)
 
-    @pytest.mark.parametrize("casing_outer_diameter", [70e-3, 60e-3])
-    def test_outer_not_larger_than_inner(self, casing_outer_diameter):
-        with pytest.raises(ValueError, match="casing_outer_diameter"):
-            CombustionChamberFactory.build(
-                casing_inner_diameter=70e-3,
-                casing_outer_diameter=casing_outer_diameter,
-            )
-
     @pytest.mark.parametrize("internal_length", [0.0, -0.1])
     def test_non_positive_internal_length(self, internal_length):
         with pytest.raises(ValueError, match="internal_length"):

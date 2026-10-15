@@ -30,15 +30,12 @@ def main():
     grain.add_segment(bates_segment)
 
     nozzle = thrust_chamber_models.Nozzle(
-        inlet_diameter=40e-3,
         throat_diameter=12.8e-3,
         divergent_angle=12,
-        convergent_angle=25,
         expansion_ratio=11,
     )
     combustion_chamber = thrust_chamber_models.CombustionChamber(
         casing_inner_diameter=60e-3,
-        casing_outer_diameter=64e-3,
         thermal_liner_thickness=1e-3,
         internal_length=grain.total_length + 5e-3,
     )
