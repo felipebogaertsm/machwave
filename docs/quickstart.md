@@ -57,7 +57,7 @@ thrust_chamber = thrust_chamber_models.SolidMotorThrustChamber(
 )
 ```
 
-`inner_diameter` is the open bore inside the thermal insulation (liner): a 69.85 mm casing with a 2 mm liner leaves a 65.85 mm bore, just wide enough for our 65 mm grain.
+`inner_diameter` is the chamber bore, measured inside the liner if there is one: a 69.85 mm casing with a 2 mm liner leaves a 65.85 mm bore, just wide enough for our 65 mm grain.
 Inhibitors belong to the grain, so an inhibitor sleeve is not subtracted from the bore: its annulus counts as free chamber volume.
 
 ## 4. Assemble the motor

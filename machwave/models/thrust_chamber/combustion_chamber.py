@@ -9,8 +9,9 @@ class CombustionChamber:
     Represents a cylindrical combustion chamber.
 
     Attributes:
-        inner_diameter: Bore diameter inside the thermal insulation (liner) [m]. Do
-            not subtract inhibitors, which belong to the grain.
+        inner_diameter: Chamber bore diameter [m], measured inside the liner if there
+            is one, or at the casing wall if there is none. Inhibitor thickness is not
+            subtracted, since inhibitors belong to the grain.
         internal_length: Distance from combustion chamber inlet to nozzle inlet [m].
     """
 

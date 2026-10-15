@@ -25,8 +25,8 @@ where:
 - $R$ is the specific gas constant of the combustion products [J/(kg-K)]
 - $T$ is the flame temperature [K]
 
-The free chamber volume is the volume of the open bore inside the thermal insulation (liner), over the chamber internal length, minus the volume of unburnt propellant.
-Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleeve between the grain and the insulation is not subtracted and the annulus it occupies counts as free chamber volume.
+The free chamber volume is the volume of the chamber bore, inside the liner if there is one or the casing if there is none, over the chamber internal length, minus the volume of unburnt propellant.
+Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleeve between the grain and the bore wall is not subtracted and the annulus it occupies counts as free chamber volume.
 
 Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
 
