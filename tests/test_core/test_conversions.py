@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import machwave.core.conversions as conversions
@@ -81,6 +82,46 @@ def test_convert_meter_to_micrometer(meters, expected_micrometres):
     assert conversions.convert_meter_to_micrometer(meters) == pytest.approx(
         expected_micrometres, rel=1e-12
     )
+
+
+def test_convert_pa_to_mpa_keeps_the_array_shape():
+    pressures = np.array([[1e6, 2.5e6], [0.0, -5e5]])
+
+    np.testing.assert_allclose(
+        conversions.convert_pa_to_mpa(pressures), [[1.0, 2.5], [0.0, -0.5]]
+    )
+
+
+@pytest.mark.parametrize(
+    "meters, expected_millimeters",
+    [
+        (0.0, 0.0),
+        (0.0254, 25.4),
+        (-1.5, -1500.0),
+    ],
+)
+def test_convert_meter_to_millimeter(meters, expected_millimeters):
+    assert conversions.convert_meter_to_millimeter(meters) == pytest.approx(
+        expected_millimeters, rel=1e-12
+    )
+
+
+@pytest.mark.parametrize(
+    "millimeters_per_second, expected_meters_per_second",
+    [
+        (0.0, 0.0),
+        (10.708, 0.010708),
+        (-2.0, -0.002),
+    ],
+)
+def test_convert_millimeter_per_second_to_meter_per_second(
+    millimeters_per_second, expected_meters_per_second
+):
+    speed = conversions.convert_millimeter_per_second_to_meter_per_second(
+        millimeters_per_second
+    )
+
+    assert speed == pytest.approx(expected_meters_per_second, rel=1e-12)
 
 
 @pytest.mark.parametrize(
