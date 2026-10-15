@@ -65,8 +65,7 @@ BATES_SIMULATION = """
                 expansion_ratio=8,
             ),
             combustion_chamber=thrust_chamber_models.CombustionChamber(
-                casing_inner_diameter=44.5e-3,
-                thermal_liner_thickness=1e-3,
+                inner_diameter=42.5e-3,
                 internal_length=grain.total_length + 10e-3,
             ),
             nozzle_exit_to_grain_port_distance=0.01,

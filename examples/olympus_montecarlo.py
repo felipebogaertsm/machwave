@@ -41,8 +41,7 @@ def main():
     )
 
     combustion_chamber = thrust_chamber_models.CombustionChamber(
-        casing_inner_diameter=0.1282,
-        thermal_liner_thickness=0.003,
+        inner_diameter=0.1222,
         internal_length=grain.total_length + 0.010,
     )
 

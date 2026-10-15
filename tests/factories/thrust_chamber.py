@@ -49,9 +49,8 @@ class CombustionChamberFactory:
     @classmethod
     def build(cls, **overrides: Any) -> thrust_chamber_models.CombustionChamber:
         kwargs: dict[str, Any] = dict(
-            casing_inner_diameter=70e-3,
+            inner_diameter=66e-3,
             internal_length=0.3,
-            thermal_liner_thickness=2e-3,
         )
         kwargs.update(overrides)
         return thrust_chamber_models.CombustionChamber(**kwargs)
