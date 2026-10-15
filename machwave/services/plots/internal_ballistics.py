@@ -3,6 +3,7 @@ from collections.abc import Mapping
 import numpy as np
 
 import machwave.common.extras as extras
+import machwave.core.conversions as conversions
 
 try:
     import plotly.graph_objects as go
@@ -41,7 +42,7 @@ def thrust_pressure_plot(
     figure.add_trace(
         go.Scatter(
             x=time,
-            y=chamber_pressure * 1e-6,
+            y=conversions.convert_pa_to_mpa(chamber_pressure),
             mode="lines",
             name="Chamber Pressure",
             line=dict(color="#008141"),
@@ -119,7 +120,7 @@ def plot_tank_profiles(
         fig.add_trace(
             go.Scatter(
                 x=time,
-                y=tank_pressure * 1e-6,
+                y=conversions.convert_pa_to_mpa(tank_pressure),
                 mode="lines",
                 name=f"{name.capitalize()} Pressure",
             ),

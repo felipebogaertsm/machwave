@@ -1,4 +1,10 @@
+import typing
+
+import numpy as np
+import numpy.typing as npt
 import scipy.constants
+
+FloatOrArray = typing.TypeVar("FloatOrArray", float, npt.NDArray[np.float64])
 
 
 def convert_pa_to_psi(pressure_pa: float) -> float:
@@ -27,15 +33,15 @@ def convert_psi_to_pa(pressure_psi: float) -> float:
     return pressure_psi * scipy.constants.psi
 
 
-def convert_pa_to_mpa(pressure_pa: float) -> float:
+def convert_pa_to_mpa(pressure_pa: FloatOrArray) -> FloatOrArray:
     """
     Converts pressure in Pascal to MPa.
 
     Args:
-        pressure_pa: Pressure [Pa].
+        pressure_pa: Pressure [Pa], scalar or array.
 
     Returns:
-        Pressure [MPa].
+        Pressure [MPa], with the same shape as the input.
     """
     return pressure_pa * 1e-6
 
@@ -143,6 +149,32 @@ def convert_meter_to_micrometer(measure: float) -> float:
         Distance in micrometers.
     """
     return measure * 1e6
+
+
+def convert_meter_to_millimeter(measure: float) -> float:
+    """
+    Converts distance in meters to millimeters.
+
+    Args:
+        measure: Distance [m].
+
+    Returns:
+        Distance [mm].
+    """
+    return measure * 1e3
+
+
+def convert_millimeter_per_second_to_meter_per_second(speed: float) -> float:
+    """
+    Converts speed in millimeters per second to meters per second.
+
+    Args:
+        speed: Speed [mm/s].
+
+    Returns:
+        Speed [m/s].
+    """
+    return speed * 1e-3
 
 
 def convert_joules_per_mol_to_cal_per_mol(enthalpy_j_per_mol: float) -> float:

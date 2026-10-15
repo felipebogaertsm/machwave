@@ -1,5 +1,7 @@
 import numpy as np
 
+import machwave.core.conversions as conversions
+
 
 def generate_eng_file_content(
     time: np.ndarray,
@@ -41,8 +43,10 @@ def generate_eng_file_content(
     thrust_out = np.interp(t_out, time, thrust, left=0, right=0)
     propellant_mass_out = np.interp(t_out, time, propellant_mass, right=0)
 
+    outer_diameter_mm = conversions.convert_meter_to_millimeter(outer_diameter)
+    chamber_length_mm = conversions.convert_meter_to_millimeter(chamber_length)
     eng_header = (
-        f"{name} {outer_diameter * 1e3:.4f} {chamber_length * 1e3:.4f} P "
+        f"{name} {outer_diameter_mm:.4f} {chamber_length_mm:.4f} P "
         f"{propellant_mass_out[0]:.4f} {propellant_mass_out[0] + motor_mass:.4f} "
         f"{manufacturer}\n"
     )

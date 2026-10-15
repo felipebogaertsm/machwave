@@ -1,3 +1,5 @@
+import machwave.core.conversions as conversions
+
 from .. import components as propellant_components
 from .. import properties as propellant_properties
 from . import base as propellant_base
@@ -190,7 +192,7 @@ class SolidPropellant(propellant_base.Propellant):
         """
         Return the instantaneous burn rate of the solid propellant.
 
-        Uses Saint Robert's law `r = a * P^n`, where `r` is burn rate [m/s],
+        Uses Saint Robert's law `r = a * P^n`, where `r` is burn rate [mm/s],
         `P` is chamber pressure [MPa], and `a`, `n` are empirical coefficients
         drawn from `burn_rate_map`.
 
@@ -211,10 +213,10 @@ class SolidPropellant(propellant_base.Propellant):
 
         for item in self.burn_rate_map:
             if item["min"] <= chamber_pressure <= item["max"]:
-                a = item["a"]
-                n = item["n"]
-                # Convert pressure from Pa to MPa, apply St. Robert's law,
-                # then convert from mm/s to m/s
-                return (a * (chamber_pressure * 1e-6) ** n) * 1e-3
+                chamber_pressure_mpa = conversions.convert_pa_to_mpa(chamber_pressure)
+                burn_rate = item["a"] * chamber_pressure_mpa ** item["n"]
+                return conversions.convert_millimeter_per_second_to_meter_per_second(
+                    burn_rate
+                )
 
         raise BurnRateOutOfBoundsError(chamber_pressure)
