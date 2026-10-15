@@ -49,7 +49,7 @@ $$
 
 where:
 
-- $k_e$ is the exhaust isentropic exponent (dimensionless)
+- $k_e$ is the exhaust isentropic exponent, distinct from the chamber value (see [Propellants](propellants.md#chamber-and-exhaust-properties)) (dimensionless)
 - $P_e$ is the exit pressure [Pa]
 - $P_\text{ext}$ is the external (ambient) pressure [Pa]
 - $\varepsilon$ is the expansion ratio (dimensionless)
