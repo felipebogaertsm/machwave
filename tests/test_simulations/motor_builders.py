@@ -51,8 +51,7 @@ def build_apcp_motor() -> tuple[
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=95.25e-3,
-            thermal_liner_thickness=3e-3,
+            inner_diameter=89.25e-3,
             internal_length=grain.total_length + 0.01,
         ),
         dry_mass=6.0,
@@ -92,8 +91,7 @@ def build_kappa_rnakka_motor() -> tuple[
             expansion_ratio=11,
         ),
         combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=60e-3,
-            thermal_liner_thickness=1e-3,
+            inner_diameter=58e-3,
             internal_length=grain.total_length + 5e-3,
         ),
         center_of_gravity_coordinate=(0.035, 0.0, 0.0),
@@ -132,8 +130,7 @@ def build_nero_motor() -> tuple[
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=44.5e-3,
-            thermal_liner_thickness=1e-3,
+            inner_diameter=42.5e-3,
             internal_length=grain.total_length + 10e-3,
         ),
         center_of_gravity_coordinate=(0.04, 0.0, 0.0),
@@ -181,8 +178,7 @@ def build_finocyl_motor() -> tuple[
             expansion_ratio=8,
         ),
         combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=0.052,
-            thermal_liner_thickness=0.002,
+            inner_diameter=0.048,
             internal_length=grain.total_length + 0.01,
         ),
     )
@@ -239,9 +235,8 @@ def build_1kn_biliquid_engine() -> tuple[
         ),
         injector=InjectorFactory.build(),
         combustion_chamber=CombustionChamberFactory.build(
-            casing_inner_diameter=70e-3,
+            inner_diameter=66e-3,
             internal_length=13e-3,
-            thermal_liner_thickness=2e-3,
         ),
     )
 

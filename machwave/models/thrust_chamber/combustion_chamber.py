@@ -8,15 +8,20 @@ class CombustionChamber:
     """
     Represents a cylindrical combustion chamber.
 
+    The chamber internal volume is the open bore of diameter `inner_diameter` over
+    `internal_length`. Inhibitors belong to the grain, so an inhibitor sleeve between
+    the grain and the thermal insulation is not part of the chamber: its annulus is
+    counted as free chamber volume.
+
     Attributes:
-        casing_inner_diameter: Internal diameter [m].
+        inner_diameter: Diameter of the open bore inside the thermal insulation
+            (liner) [m]. The insulation thickness is already subtracted; inhibitor
+            thickness is not.
         internal_length: Distance from combustion chamber inlet to nozzle inlet [m].
-        thermal_liner_thickness: Thermal liner thickness [m]. Defaults to 0.0.
     """
 
-    casing_inner_diameter: float
+    inner_diameter: float
     internal_length: float
-    thermal_liner_thickness: float = 0.0
 
     def __post_init__(self) -> None:
         """
@@ -25,38 +30,17 @@ class CombustionChamber:
         Raises:
             ValueError: If any field is outside its valid physical range.
         """
-        if self.casing_inner_diameter <= 0.0:
+        if self.inner_diameter <= 0.0:
             raise ValueError(
-                "casing_inner_diameter must be strictly positive, got "
-                f"{self.casing_inner_diameter}"
+                f"inner_diameter must be strictly positive, got {self.inner_diameter}"
             )
         if self.internal_length <= 0.0:
             raise ValueError(
                 f"internal_length must be strictly positive, got {self.internal_length}"
             )
-        if self.thermal_liner_thickness < 0.0:
-            raise ValueError(
-                "thermal_liner_thickness must be non-negative, got "
-                f"{self.thermal_liner_thickness}"
-            )
-        if self.thermal_liner_thickness >= 0.5 * self.casing_inner_diameter:
-            raise ValueError(
-                f"thermal_liner_thickness ({self.thermal_liner_thickness}) leaves no "
-                f"open bore for casing_inner_diameter ({self.casing_inner_diameter})"
-            )
-
-    @property
-    def inner_diameter(self) -> float:
-        """Inner diameter of the combustion chamber [m]."""
-        return self.casing_inner_diameter - 2 * self.thermal_liner_thickness
-
-    @property
-    def inner_radius(self) -> float:
-        """Inner radius of the combustion chamber [m]."""
-        return 0.5 * self.inner_diameter
 
     @property
     def internal_volume(self) -> float:
         """Internal volume of the combustion chamber [m^3]."""
-        r = self.inner_radius
-        return np.pi * r * r * self.internal_length
+        radius = 0.5 * self.inner_diameter
+        return np.pi * radius * radius * self.internal_length

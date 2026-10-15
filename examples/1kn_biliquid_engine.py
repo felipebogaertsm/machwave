@@ -72,9 +72,8 @@ def main():
     )
 
     chamber = thrust_chamber_models.CombustionChamber(
-        casing_inner_diameter=70e-3,
+        inner_diameter=66e-3,
         internal_length=13e-3,
-        thermal_liner_thickness=2e-3,
     )
     thrust_chamber = thrust_chamber_models.BiliquidEngineThrustChamber(
         nozzle=nozzle,

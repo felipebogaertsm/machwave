@@ -54,8 +54,7 @@ nozzle = thrust_chamber_models.Nozzle(
 )
 
 combustion_chamber = thrust_chamber_models.CombustionChamber(
-	casing_inner_diameter=95.25e-3,
-	thermal_liner_thickness=3e-3,
+	inner_diameter=89.25e-3,
 	internal_length=grain.total_length + 0.01,
 )
 

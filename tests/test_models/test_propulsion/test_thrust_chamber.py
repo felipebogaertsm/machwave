@@ -58,21 +58,3 @@ class TestDryMassProperties:
                 center_of_gravity_coordinate=(0.04, 0.0),
                 moment_of_inertia=(0.02, 0.02, 0.005),
             )
-
-
-def _test_combustion_chamber_properties(combustion_chamber_olympus):
-    """
-    Generic test function for CombustionChamber and its descendents.
-
-    Tests geometric properties of the class, such as inner radius
-    (calculated from inner diameter) and more.
-    """
-    net = combustion_chamber_olympus.inner_diameter
-    gross = combustion_chamber_olympus.casing_inner_diameter
-
-    assert net > 0
-    assert net == gross - 2 * combustion_chamber_olympus.thermal_liner_thickness
-
-    assert combustion_chamber_olympus.inner_radius == net / 2
-
-    assert gross == net + 2 * combustion_chamber_olympus.liner.thickness
