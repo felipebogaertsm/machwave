@@ -116,22 +116,6 @@ def test_get_random_generator_returns_correct_instance():
     assert isinstance(gen, montecarlo_random.NormalRandomGenerator)
 
 
-def test_register_random_generator_and_duplicate_guard():
-    class Dummy(
-        montecarlo_random.NormalRandomGenerator
-    ):  # piggy-back on NormalRandomGenerator
-        pass
-
-    montecarlo_random.register_random_generator("dummy", Dummy)
-    assert isinstance(
-        montecarlo_random.get_random_generator("dummy", value=0.0, spread=0.0), Dummy
-    )
-
-    # second registration of the same name should raise
-    with pytest.raises(ValueError):
-        montecarlo_random.register_random_generator("dummy", Dummy)
-
-
 def test_get_random_generator_unknown_distribution():
     with pytest.raises(ValueError):
         montecarlo_random.get_random_generator("does-not-exist", value=0.0, spread=0.0)

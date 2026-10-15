@@ -20,15 +20,6 @@ class CoolPropService:
         """
         self.fluid_name = fluid_name
 
-    def get_molar_mass(self) -> float:
-        """
-        Get the molar mass of the fluid.
-
-        Returns:
-            Molar mass [kg/mol].
-        """
-        return CP.PropsSI("M", self.fluid_name)
-
     def get_triple_point_temperature(self) -> float:
         """
         Get the triple point temperature of the fluid.
@@ -118,21 +109,6 @@ class CoolPropService:
             Saturated-liquid specific entropy [J/(kg K)].
         """
         return CP.PropsSI("S", "T", temperature, "Q", 0, self.fluid_name)
-
-    def get_density_at_temperature_pressure(
-        self, temperature: float, pressure: float
-    ) -> float:
-        """
-        Get the single-phase density at a given temperature and pressure.
-
-        Args:
-            temperature: Temperature [K].
-            pressure: Pressure [Pa].
-
-        Returns:
-            Density [kg/m^3].
-        """
-        return CP.PropsSI("D", "T", temperature, "P", pressure, self.fluid_name)
 
     def get_pressure_at_temperature_density(
         self, temperature: float, density: float
