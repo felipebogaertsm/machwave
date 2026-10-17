@@ -46,7 +46,7 @@ def _build_segment_with_exposed_outer_surface(grid_resolution):
     )
 
 
-@pytest.mark.parametrize("grid_resolution", [100, 200])
+@pytest.mark.parametrize("grid_resolution", [100, 101, 200, 201])
 @pytest.mark.parametrize("web_fraction", [0.5, 0.9, 0.98])
 def test_core_perimeter_matches_the_analytic_front(grid_resolution, web_fraction):
     segment = RodAndTubeGrainSegmentFactory.build(
@@ -96,7 +96,31 @@ def test_exposed_outer_surface_burn_area_matches_the_analytic_front(grid_resolut
     )
 
 
-def test_contour_length_is_the_closed_polygon_length():
-    square = np.array([[0.0, 0.0], [0.0, 2.0], [2.0, 2.0], [2.0, 0.0]])
+@pytest.mark.parametrize("grid_resolution", [200, 201])
+def test_inhibited_casing_leaves_no_perimeter_once_the_bore_reaches_it(
+    grid_resolution,
+):
+    segment = RodAndTubeGrainSegmentFactory.build(
+        length=LENGTH,
+        outer_diameter=OUTER_DIAMETER,
+        rod_outer_diameter=ROD_OUTER_DIAMETER,
+        tube_inner_diameter=TUBE_INNER_DIAMETER,
+        grid_resolution=grid_resolution,
+    )
+
+    web_distance = 1.2 * segment.get_web_thickness()
+
+    assert segment.get_core_perimeter(web_distance) == 0.0
+    assert segment.get_contours(web_distance) == []
+
+
+def test_contour_length_includes_the_closing_segment_of_a_closed_contour():
+    square = np.array([[0.0, 0.0], [0.0, 2.0], [2.0, 2.0], [2.0, 0.0], [0.0, 0.0]])
 
     assert fmm_contours.get_length(square) == pytest.approx(8.0)
+
+
+def test_contour_length_does_not_close_an_open_contour():
+    open_square = np.array([[0.0, 0.0], [0.0, 2.0], [2.0, 2.0], [2.0, 0.0]])
+
+    assert fmm_contours.get_length(open_square) == pytest.approx(6.0)
