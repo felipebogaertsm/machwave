@@ -28,6 +28,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
     ) -> None:
         self.face_area_interpolator: Callable[[float], float] | None = None
         self.burn_area_interpolator: Callable[[float], float] | None = None
+        self.contour_field: NDArray[np.float64] | None = None
         super().__init__(
             length=length,
             outer_diameter=outer_diameter,
@@ -51,10 +52,10 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return self.coordinate_grids
 
     def get_outer_diameter_mask(self) -> NDArray[np.bool_]:
-        """Return a boolean mask indicating which points lie outside the unit circle."""
+        """Return a boolean mask of the points on or outside the unit circle (the casing)."""
         if self.outer_diameter_mask is None:
             map_x, map_y = self.get_coordinate_grids()
-            self.outer_diameter_mask = (map_x**2 + map_y**2) > 1
+            self.outer_diameter_mask = (map_x**2 + map_y**2) >= 1
         return self.outer_diameter_mask
 
     def _apply_surface_inhibition(
@@ -73,25 +74,68 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return face_map, excluded_mask
 
     def _get_contour_field(self) -> NDArray[np.float64]:
-        """Return the regression map to trace, with an exposed casing set to 0."""
-        regression_map = self.get_regression_map()
-        if self.inhibited_surfaces.outer_surface:
-            return regression_map
+        """
+        Return the regression field the burning fronts are traced on.
 
-        outer_diameter_mask = self.get_outer_diameter_mask()
-        return np.ma.MaskedArray(
-            np.where(outer_diameter_mask, 0.0, np.ma.getdata(regression_map)),
-            mask=np.ma.getmaskarray(regression_map) & ~outer_diameter_mask,
+        An exposed casing reads as 0 so it is traced as a burning front. Every
+        other excluded cell (an inhibited casing or inner surface) is filled by
+        extrapolating the regression slope past it, so the front runs through
+        the wall instead of along it.
+        """
+        if self.contour_field is None:
+            regression_map = self.get_regression_map()
+            regression_values = np.asarray(
+                np.ma.getdata(regression_map), dtype=np.float64
+            )
+            excluded_mask = np.ma.getmaskarray(regression_map)
+            if not self.inhibited_surfaces.outer_surface:
+                outer_diameter_mask = self.get_outer_diameter_mask()
+                regression_values = np.where(
+                    outer_diameter_mask, 0.0, regression_values
+                )
+                excluded_mask = excluded_mask & ~outer_diameter_mask
+
+            if excluded_mask.any():
+                regression_values = fmm_contours.extrapolate_past_wall(
+                    regression_values, excluded_mask, (1.0, 1.0)
+                )
+            self.contour_field = regression_values
+        return self.contour_field
+
+    def _is_on_burning_propellant(
+        self, points: NDArray[np.float64]
+    ) -> NDArray[np.bool_]:
+        """
+        Return whether `(row, col)` points lie where the front can burn.
+
+        A point burns unless it sits past an inhibited casing or on an
+        inhibited inner surface cell. The casing test uses the exact radius,
+        not the nearest cell, so a front within half a cell of the wall is kept.
+        """
+        inhibited_surface_mask = (
+            np.ma.getmaskarray(self.get_regression_map())
+            & ~self.get_outer_diameter_mask()
         )
+        nearest_cells = np.rint(points).astype(np.intp)
+        on_burning = ~inhibited_surface_mask[nearest_cells[:, 0], nearest_cells[:, 1]]
+
+        if self.inhibited_surfaces.outer_surface:
+            center_index = (self.grid_resolution - 1) / 2
+            radius = np.hypot(*(points - center_index).T)
+            on_burning &= radius < center_index
+        return on_burning
 
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """
-        Return contour arrays for the given web distance.
+        Return the burning front at the given web distance.
 
-        Each contour is typically an `(N, 2)` array of `(row, col)` points.
+        Each contour is an `(N, 2)` array of `(row, col)` points. A front that
+        meets an inhibited wall ends there as an open contour.
         """
         iso_level = self.normalize(web_distance)
-        return fmm_contours.get_iso_contours(self._get_contour_field(), iso_level)
+        return fmm_contours.get_burning_front_contours(
+            self._get_contour_field(), iso_level, self._is_on_burning_propellant
+        )
 
     def get_face_area_interpolator(self) -> Callable[[float], float]:
         """Return an interpolator mapping normalized web distance to face area [m^2]."""
@@ -189,7 +233,9 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             )
             contour_field = self._get_contour_field()
             for i, dist in enumerate(iso_levels_normalized):
-                contours = fmm_contours.get_iso_contours(contour_field, float(dist))
+                contours = fmm_contours.get_burning_front_contours(
+                    contour_field, float(dist), self._is_on_burning_propellant
+                )
                 core_perimeter_per_iso_level[i] = float(
                     sum(
                         self.cells_to_meters(fmm_contours.get_length(contour))

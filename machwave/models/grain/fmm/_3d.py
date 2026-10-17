@@ -8,7 +8,7 @@ from collections.abc import Callable
 import numpy as np
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
-from scipy.ndimage import binary_erosion, distance_transform_edt
+from scipy.ndimage import binary_erosion
 
 import machwave.common.extras as extras
 import machwave.core.filters as filters
@@ -33,44 +33,6 @@ SPAWN_PARALLEL_CELL_COUNT = 12_000_000
 _worker_distance_field: NDArray[np.float64] | None = None
 _worker_inhibited_mask: NDArray[np.bool_] | None = None
 _worker_grid_spacing: tuple[float, float, float] | None = None
-
-
-def _extrapolate_past_wall(
-    regression_values: NDArray[np.float64],
-    excluded_mask: NDArray[np.bool_],
-    grid_spacing: tuple[float, float, float],
-) -> NDArray[np.float64]:
-    """Continue the regression slope past the wall so no iso level lands on it."""
-    excluded_cells = np.nonzero(excluded_mask)
-    nearest_cell_map = np.asarray(
-        distance_transform_edt(
-            excluded_mask,
-            sampling=grid_spacing,
-            return_distances=False,
-            return_indices=True,
-        )
-    )
-    nearest_cell = nearest_cell_map[:, excluded_mask]
-    offset = np.stack(excluded_cells) - nearest_cell
-    step = np.sign(offset)
-    shape = np.asarray(excluded_mask.shape)[:, np.newaxis]
-    behind_cell = nearest_cell - step
-    has_behind_cell = np.all((behind_cell >= 0) & (behind_cell < shape), axis=0)
-    behind_cell = np.clip(behind_cell, 0, shape - 1)
-    has_behind_cell &= ~excluded_mask[tuple(behind_cell)]
-
-    nearest_value = regression_values[tuple(nearest_cell)]
-    behind_value = np.where(
-        has_behind_cell, regression_values[tuple(behind_cell)], nearest_value
-    )
-    spacing = np.asarray(grid_spacing)[:, np.newaxis]
-    slope = (nearest_value - behind_value) / np.linalg.norm(step * spacing, axis=0)
-
-    extrapolated = regression_values.copy()
-    extrapolated[excluded_cells] = nearest_value + slope * np.linalg.norm(
-        offset * spacing, axis=0
-    )
-    return extrapolated
 
 
 def _compute_iso_surface_area(
@@ -441,7 +403,7 @@ class FMMGrainSegment3D(fmm_base.FMMGrainSegment, grain.GrainSegment3D, ABC):
             )
 
             excluded_mask = np.ma.getmaskarray(regression_map)
-            distance_field = _extrapolate_past_wall(
+            distance_field = fmm_contours.extrapolate_past_wall(
                 np.asarray(np.ma.getdata(regression_map), dtype=np.float64),
                 excluded_mask,
                 grid_spacing,
