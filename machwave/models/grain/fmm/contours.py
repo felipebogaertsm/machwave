@@ -38,7 +38,10 @@ def get_iso_contours(
 
 def get_length(contour: np.ndarray) -> float:
     """
-    Return the total length of a closed contour, in cells.
+    Return the length of a contour polyline, in cells.
+
+    A closed contour repeats its first point at the end, so open pieces are not
+    closed with a chord.
 
     Args:
         contour: The contour array.
@@ -46,7 +49,4 @@ def get_length(contour: np.ndarray) -> float:
     Returns:
         The total length of the contour segments, in cells.
     """
-    shifted_vertices = np.roll(contour.T, 1, axis=1)
-    segment_lengths = np.linalg.norm(contour.T - shifted_vertices, axis=0)
-
-    return float(np.sum(segment_lengths))
+    return float(np.sum(np.linalg.norm(np.diff(contour, axis=0), axis=1)))
