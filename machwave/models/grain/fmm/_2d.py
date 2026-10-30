@@ -51,10 +51,10 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return self.coordinate_grids
 
     def get_outer_diameter_mask(self) -> NDArray[np.bool_]:
-        """Return a boolean mask indicating which points lie outside the unit circle."""
+        """Return a boolean mask of the points on or outside the unit circle."""
         if self.outer_diameter_mask is None:
             map_x, map_y = self.get_coordinate_grids()
-            self.outer_diameter_mask = (map_x**2 + map_y**2) > 1
+            self.outer_diameter_mask = (map_x**2 + map_y**2) >= 1
         return self.outer_diameter_mask
 
     def _apply_surface_inhibition(

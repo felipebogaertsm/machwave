@@ -46,7 +46,7 @@ def _build_segment_with_exposed_outer_surface(grid_resolution):
     )
 
 
-@pytest.mark.parametrize("grid_resolution", [100, 200])
+@pytest.mark.parametrize("grid_resolution", [100, 101, 200, 201])
 @pytest.mark.parametrize("web_fraction", [0.5, 0.9, 0.98])
 def test_core_perimeter_matches_the_analytic_front(grid_resolution, web_fraction):
     segment = RodAndTubeGrainSegmentFactory.build(
