@@ -51,10 +51,10 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return self.coordinate_grids
 
     def get_outer_diameter_mask(self) -> NDArray[np.bool_]:
-        """Return a boolean mask indicating which points lie outside the unit circle."""
+        """Return a boolean mask of the points on or outside the unit circle."""
         if self.outer_diameter_mask is None:
             map_x, map_y = self.get_coordinate_grids()
-            self.outer_diameter_mask = (map_x**2 + map_y**2) > 1
+            self.outer_diameter_mask = (map_x**2 + map_y**2) >= 1
         return self.outer_diameter_mask
 
     def _apply_surface_inhibition(
@@ -73,25 +73,82 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
         return face_map, excluded_mask
 
     def _get_contour_field(self) -> NDArray[np.float64]:
-        """Return the regression map to trace, with an exposed casing set to 0."""
-        regression_map = self.get_regression_map()
-        if self.inhibited_surfaces.outer_surface:
-            return regression_map
+        """
+        Return the regression map to trace, defined on the whole grid.
 
+        An exposed casing reads as 0. Past an inhibited wall the regression slope
+        continues, so fronts cross the wall instead of tracing along it.
+        """
+        regression_map = self.get_regression_map()
         outer_diameter_mask = self.get_outer_diameter_mask()
-        return np.ma.MaskedArray(
-            np.where(outer_diameter_mask, 0.0, np.ma.getdata(regression_map)),
-            mask=np.ma.getmaskarray(regression_map) & ~outer_diameter_mask,
+        contour_field = np.asarray(np.ma.getdata(regression_map), dtype=np.float64)
+        inhibited_mask = np.ma.getmaskarray(regression_map)
+        if not self.inhibited_surfaces.outer_surface:
+            contour_field = np.where(outer_diameter_mask, 0.0, contour_field)
+            inhibited_mask = inhibited_mask & ~outer_diameter_mask
+
+        grid_spacing = self.get_radial_grid_spacing()
+        return fmm_base.extrapolate_past_wall(
+            contour_field, inhibited_mask, (grid_spacing, grid_spacing)
         )
+
+    def _split_into_burning_pieces(
+        self, contour: NDArray[np.float64]
+    ) -> list[NDArray[np.float64]]:
+        """Split a contour where it leaves the casing or crosses an inhibited cell."""
+        segment_midpoints = (contour[1:] + contour[:-1]) / 2
+        axis_index = (self.grid_resolution - 1) / 2
+        outside_casing = (
+            np.hypot(
+                segment_midpoints[:, 0] - axis_index,
+                segment_midpoints[:, 1] - axis_index,
+            )
+            > axis_index
+        )
+        midpoint_cells = np.rint(segment_midpoints).astype(np.intp)
+        inhibited_core_mask = (
+            np.ma.getmaskarray(self.get_regression_map())
+            & ~self.get_outer_diameter_mask()
+        )
+        on_inhibited_cell = inhibited_core_mask[
+            midpoint_cells[:, 0], midpoint_cells[:, 1]
+        ]
+        burning = ~(outside_casing | on_inhibited_cell)
+
+        run_edges = np.flatnonzero(np.diff(np.concatenate(([0], burning, [0]))))
+        return [
+            contour[start : end + 1]
+            for start, end in zip(run_edges[::2], run_edges[1::2])
+        ]
 
     def get_contours(self, web_distance: float) -> list[NDArray[np.float64]]:
         """
-        Return contour arrays for the given web distance.
+        Return the burning front at the given web distance.
 
-        Each contour is typically an `(N, 2)` array of `(row, col)` points.
+        Each contour is an `(N, 2)` array of `(row, col)` points. A front that
+        meets an inhibited wall is an open piece ending at the wall.
         """
-        iso_level = self.normalize(web_distance)
-        return fmm_contours.get_iso_contours(self._get_contour_field(), iso_level)
+        return self._get_burning_contours(
+            self._get_contour_field(), self.normalize(web_distance)
+        )
+
+    def _get_burning_contours(
+        self, contour_field: NDArray[np.float64], iso_level: float
+    ) -> list[NDArray[np.float64]]:
+        return [
+            piece
+            for contour in fmm_contours.get_iso_contours(contour_field, iso_level)
+            for piece in self._split_into_burning_pieces(contour)
+        ]
+
+    def _get_contours_length(self, contours: list[NDArray[np.float64]]) -> float:
+        """Return the summed length of the contours [m]."""
+        return float(
+            sum(
+                self.cells_to_meters(fmm_contours.get_length(contour))
+                for contour in contours
+            )
+        )
 
     def get_face_area_interpolator(self) -> Callable[[float], float]:
         """Return an interpolator mapping normalized web distance to face area [m^2]."""
@@ -189,12 +246,8 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
             )
             contour_field = self._get_contour_field()
             for i, dist in enumerate(iso_levels_normalized):
-                contours = fmm_contours.get_iso_contours(contour_field, float(dist))
-                core_perimeter_per_iso_level[i] = float(
-                    sum(
-                        self.cells_to_meters(fmm_contours.get_length(contour))
-                        for contour in contours
-                    )
+                core_perimeter_per_iso_level[i] = self._get_contours_length(
+                    self._get_burning_contours(contour_field, float(dist))
                 )
 
             web_distances_denormalized = np.asarray(
@@ -239,13 +292,7 @@ class FMMGrainSegment2D(fmm_base.FMMGrainSegment, grain.GrainSegment2D, ABC):
 
     def get_core_perimeter(self, web_distance: float) -> float:
         """Return the perimeter of the open core at the given web distance."""
-        contours = self.get_contours(web_distance)
-        return float(
-            sum(
-                self.cells_to_meters(fmm_contours.get_length(contour))
-                for contour in contours
-            )
-        )
+        return self._get_contours_length(self.get_contours(web_distance))
 
     def get_core_area(self, web_distance: float) -> float:
         """
