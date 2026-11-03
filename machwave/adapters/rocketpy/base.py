@@ -157,6 +157,55 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         data = np.column_stack((time, center_positions))
         return rocketpy.Function(data)
 
+    @property
+    def propellant_mass(self) -> rocketpy.Function:
+        """
+        Return the simulated propellant mass over time.
+
+        Replaces RocketPy's propellant mass, which integrates thrust over a constant
+        exhaust velocity.
+
+        Returns:
+            `rocketpy.Function` with (time, mass) data [kg].
+        """
+        data = np.column_stack(
+            (self.simulation_result.time, self.simulation_result.propellant_mass)
+        )
+        return rocketpy.Function(
+            data, interpolation=INTERPOLATION_METHOD, extrapolation="constant"
+        )
+
+    @property
+    def total_mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate over time.
+
+        Time derivative of the simulated propellant mass, negative while the
+        propellant burns, as RocketPy expects.
+
+        Returns:
+            `rocketpy.Function` with (time, mass flow rate) data [kg/s].
+        """
+        time = self.simulation_result.time
+        mass_flow_rate = np.gradient(self.simulation_result.propellant_mass, time)
+        data = np.column_stack((time, mass_flow_rate))
+        return rocketpy.Function(
+            data, interpolation=INTERPOLATION_METHOD, extrapolation="zero"
+        )
+
+    @property
+    def mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate over time.
+
+        RocketPy's `SolidMotor` and `GenericMotor` read this separately from
+        `total_mass_flow_rate`, so it returns the same data.
+
+        Returns:
+            `rocketpy.Function` with (time, mass flow rate) data [kg/s].
+        """
+        return self.total_mass_flow_rate
+
     def _get_inertia_tensor_over_time(self) -> npt.NDArray[np.float64]:
         """
         Return pre-computed inertia tensors from the simulation result.
