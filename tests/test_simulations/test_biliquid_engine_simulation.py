@@ -219,6 +219,16 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     assert state.burn_time == pytest.approx(state.time[-1])
 
 
+def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
+    state = _build_state_for_burnout_test()
+    # (m / d_t) * d_t rounds above this mass
+    state.fluid_mass_per_line["fuel"][-1] = 1.0000000000000006e-10
+
+    state.run_timestep(d_t=1e-4, external_pressure=1e5)
+
+    assert state.fluid_mass_per_line["fuel"][-1] == 0.0
+
+
 def test_flows_stop_after_fuel_exhausts() -> None:
     """The oxidizer is not burned on its own once the fuel is gone."""
     state = _build_state_for_burnout_test()
