@@ -126,6 +126,7 @@ and its simulation result. The adapter currently provides:
 - chamber radius, height, and position for `GenericMotor`, taken from the combustion
   chamber inner diameter, the grain length, and the initial grain center of mass
 - propellant initial mass
+- propellant mass over time, and the mass flow rate as its time derivative
 - propellant center of mass over time
 - propellant inertia tensor components over time
 - reference pressure from the exit-pressure trace
