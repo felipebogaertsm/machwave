@@ -130,3 +130,31 @@ def get_moment_of_inertia_tensor(
     return get_moment_of_inertia_tensor_from_central_moments(
         central_second_moments, element_mass
     )
+
+
+def get_cylinder_moments_of_inertia(
+    mass: float,
+    length: float,
+    outer_radius: float,
+    inner_radius: float = 0.0,
+) -> tuple[float, float]:
+    """
+    Calculate the principal moments of inertia of a uniform cylinder.
+
+    Evaluated at the cylinder center of gravity. A solid cylinder keeps the default
+    zero inner radius; a hollow one takes its bore radius.
+
+    Args:
+        mass: Cylinder mass [kg].
+        length: Cylinder length along its axis [m].
+        outer_radius: Outer radius [m].
+        inner_radius: Bore radius [m].
+
+    Returns:
+        The moment of inertia about the cylinder axis and about any transverse axis
+        [kg-m^2].
+    """
+    radius_sum_of_squares = inner_radius**2 + outer_radius**2
+    axial_moment = mass * radius_sum_of_squares / 2
+    transverse_moment = mass * (radius_sum_of_squares / 4 + length**2 / 12)
+    return axial_moment, transverse_moment

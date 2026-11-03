@@ -1,5 +1,7 @@
+import numpy as np
 import pytest
 
+import machwave.common.mass_properties as mass_properties
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank_models
@@ -8,6 +10,7 @@ from tests.factories import (
     PropellantLineFactory,
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
+    TankPlacementFactory,
 )
 
 
@@ -196,6 +199,75 @@ class TestLines:
             feed_systems_models.StackedTankPressureFedFeedSystem(
                 lines=[line, line], pressurizing_line="oxidizer"
             )
+
+
+class TestPropellantMassProperties:
+    @staticmethod
+    def build_placed_feed_system():
+        return StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=TankPlacementFactory.build(
+                nozzle_exit_to_aft_end_distance=0.6
+            ),
+            fuel_tank_placement=TankPlacementFactory.build(
+                nozzle_exit_to_aft_end_distance=0.3
+            ),
+        )
+
+    def test_the_constructor_places_each_tank(self):
+        oxidizer_placement = TankPlacementFactory.build(
+            nozzle_exit_to_aft_end_distance=0.6
+        )
+        fuel_placement = TankPlacementFactory.build()
+
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=oxidizer_placement,
+            fuel_tank_placement=fuel_placement,
+        )
+
+        assert feed_system.lines["oxidizer"].tank_placement is oxidizer_placement
+        assert feed_system.lines["fuel"].tank_placement is fuel_placement
+
+    def test_combines_the_propellant_of_every_tank(self):
+        feed_system = self.build_placed_feed_system()
+        states = line_states(feed_system)
+
+        combined = feed_system.get_propellant_mass_properties(states)
+
+        expected = mass_properties.AxisymmetricMassProperties.combine(
+            line.get_mass_properties(states[name])
+            for name, line in feed_system.lines.items()
+        )
+        assert combined == expected
+        assert combined.mass == pytest.approx(feed_system.get_initial_propellant_mass())
+
+    def test_an_empty_tank_adds_nothing(self):
+        feed_system = self.build_placed_feed_system()
+        states = line_states(feed_system) | {
+            "fuel": line_models.LineState(fluid_mass=0.0)
+        }
+
+        combined = feed_system.get_propellant_mass_properties(states)
+
+        oxidizer = feed_system.lines["oxidizer"].get_mass_properties(states["oxidizer"])
+        assert combined == oxidizer
+
+    def test_every_tank_empty_leaves_no_center_of_gravity(self):
+        feed_system = self.build_placed_feed_system()
+        states = {
+            name: line_models.LineState(fluid_mass=0.0) for name in feed_system.lines
+        }
+
+        combined = feed_system.get_propellant_mass_properties(states)
+
+        assert np.isnan(combined.center_of_gravity).all()
+
+    def test_rejects_a_line_without_a_tank_placement(self):
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=TankPlacementFactory.build()
+        )
+
+        with pytest.raises(ValueError, match="'fuel' has no tank_placement"):
+            feed_system.get_propellant_mass_properties(line_states(feed_system))
 
 
 class TestValidation:

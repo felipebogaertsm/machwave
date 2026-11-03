@@ -46,6 +46,7 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         *,
         oxidizer_tank: tank.Tank,
         line_loss: float = 0.0,
+        oxidizer_tank_placement: line_models.TankPlacement | None = None,
     ) -> "SingleLinePressureFedFeedSystem":
         """
         Build the oxidizer-only system a hybrid motor runs on.
@@ -53,12 +54,14 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         Args:
             oxidizer_tank: Tank the oxidizer line draws from.
             line_loss: Pressure loss along the feedline [Pa].
+            oxidizer_tank_placement: Geometry and position of the oxidizer tank.
         """
         return cls(
             line=line_models.PropellantLine(
                 name="oxidizer",
                 role=propellant_components.ComponentRole.OXIDIZER,
                 tank=oxidizer_tank,
+                tank_placement=oxidizer_tank_placement,
             ),
             line_loss=line_loss,
         )

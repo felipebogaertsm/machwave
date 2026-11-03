@@ -1,6 +1,7 @@
 import numpy as np
 
 import machwave.core.geometric as geometric
+import machwave.core.mechanics as mechanics
 import machwave.models.grain as grain
 import machwave.models.grain.base as grain_base
 
@@ -134,20 +135,12 @@ class BatesSegment(grain.GrainSegment2D):
         Returns:
             A 3x3 inertia tensor [kg-m^2].
         """
-        r_inner = (self.core_diameter + 2 * web_distance) / 2
-        r_outer = self.outer_diameter / 2
-        current_length = self.get_length(web_distance)
-
-        volume = self.get_volume(web_distance)
-        mass = volume * ideal_density * self.density_ratio
-
-        r_sum_sq = r_inner**2 + r_outer**2
-
-        # Ixx: moment about axial axis
-        Ixx = mass * r_sum_sq / 2
-
-        # Iyy, Izz: moments about radial axes
-        Iyy = mass * (r_sum_sq / 4 + current_length**2 / 12)
+        Ixx, Iyy = mechanics.get_cylinder_moments_of_inertia(
+            mass=self.get_volume(web_distance) * ideal_density * self.density_ratio,
+            length=self.get_length(web_distance),
+            outer_radius=self.outer_diameter / 2,
+            inner_radius=self.get_core_diameter(web_distance) / 2,
+        )
         Izz = Iyy
 
         return np.array(

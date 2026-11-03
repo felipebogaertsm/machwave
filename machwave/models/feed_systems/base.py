@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 
 import machwave.common.fluid_state as fluid_state_models
+import machwave.common.mass_properties as mass_properties
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.propellants.components as propellant_components
 
@@ -46,6 +47,28 @@ class FeedSystem(ABC):
     ) -> tuple[line_models.PropellantLine, ...]:
         """Return every line carrying the given role, in the order they were given."""
         return tuple(line for line in self.lines.values() if line.role == role)
+
+    def get_propellant_mass_properties(
+        self, line_states: Mapping[str, line_models.LineState]
+    ) -> mass_properties.AxisymmetricMassProperties:
+        """
+        Return the mass properties of the propellant in every tank.
+
+        Args:
+            line_states: Fluid mass and internal energy of every line, keyed by
+                line name.
+
+        Returns:
+            Mass properties in the engine frame, measured from the nozzle exit with
+            positive x pointing away from the nozzle.
+
+        Raises:
+            ValueError: If any line has no tank placement.
+        """
+        return mass_properties.AxisymmetricMassProperties.combine(
+            line.get_mass_properties(line_states[name])
+            for name, line in self.lines.items()
+        )
 
     def get_inlet_states(
         self, line_states: Mapping[str, line_models.LineState]
