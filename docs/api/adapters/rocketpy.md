@@ -19,8 +19,9 @@ The adapter sits after the internal ballistics simulation:
 
 1. Build a Machwave motor model.
 2. Run `InternalBallisticsSimulation` to obtain a `SimulationResult`.
-3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)`
-   for a grain of identical BATES segments, or `RocketPyGenericMotorAdapter` for any other grain.
+3. Wrap the motor and result with `create_rocketpy_motor(motor=motor, simulation_result=result)`,
+   which returns `RocketPySolidMotorAdapter` for a grain of identical BATES segments and
+   `RocketPyGenericMotorAdapter` for any other grain.
 4. Pass the adapted motor into a RocketPy `Rocket`.
 
 ## Example
@@ -33,7 +34,7 @@ from machwave import (
     simulation,
     thrust_chamber as thrust_chamber_models,
 )
-from machwave.adapters.rocketpy import RocketPySolidMotorAdapter
+from machwave.adapters.rocketpy import create_rocketpy_motor
 from machwave.common.mass_properties import DryMassProperties
 from rocketpy import Environment, Flight, Rocket
 
@@ -88,7 +89,7 @@ result = simulation.InternalBallisticsSimulation(
 	params=params,
 ).run()
 
-rocketpy_motor = RocketPySolidMotorAdapter(motor=motor, simulation_result=result)
+rocketpy_motor = create_rocketpy_motor(motor=motor, simulation_result=result)
 
 rocket = Rocket(
 	radius=0.0508,

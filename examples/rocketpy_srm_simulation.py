@@ -1,6 +1,6 @@
 """
-Example of a RocketPy 6DOF simulation of a `machwave` solid motor using the
-`RocketPySolidMotorAdapter`.
+Example of a RocketPy 6DOF simulation of a `machwave` solid motor using
+`create_rocketpy_motor`.
 
 This example demonstrates how to:
 1. Create and simulate a solid rocket motor using machwave
@@ -80,7 +80,7 @@ def main():
     result.report()
 
     # 3. Create RocketPy adapter
-    rocketpy_motor = rocketpy_adapters.RocketPySolidMotorAdapter(
+    rocketpy_motor = rocketpy_adapters.create_rocketpy_motor(
         motor=motor, simulation_result=result
     )
     print(f"  - Total impulse: {rocketpy_motor.total_impulse:.1f} N·s")
