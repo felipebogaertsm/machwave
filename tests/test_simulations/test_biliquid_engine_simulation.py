@@ -8,6 +8,7 @@ it can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import warnings
 
@@ -55,6 +56,24 @@ def test_thrust_time_is_finite_and_positive(
 ) -> None:
     assert np.isfinite(simulation_result.thrust_time)
     assert simulation_result.thrust_time > 0.0
+
+
+def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+
+    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=4e-4))
+
+    assert np.interp(
+        1.0, coarse_result.time, coarse_result.chamber_pressure
+    ) == pytest.approx(
+        np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
+        rel=1e-4,
+    )
+    assert coarse_result.total_impulse == pytest.approx(
+        simulation_result.total_impulse, rel=1e-3
+    )
 
 
 def test_motor_is_re_runnable() -> None:
