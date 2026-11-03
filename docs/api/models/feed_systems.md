@@ -10,7 +10,7 @@ organised around three concerns:
 | Cycle implementations | [`feed_systems.cycles`](feed_systems/cycles.md) | One module per cycle topology (pressure-fed today; electric-pump, gas-generator, expander, staged-combustion to follow). |
 | Shared component descriptions | [`feed_systems.components`](feed_systems/components.md) | Static descriptions of pumps, turbines, gas generators, regenerative jackets, plus a tabulated-curve helper that cycle implementations consume. |
 | Tank thermodynamics | [`feed_systems.tank`](feed_systems/tank.md) | Two-phase tank model backed by CoolProp (`liquid` extra). |
-| Propellant lines | `feed_systems.lines` | The [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] a feed system delivers — its name, its role, and the tank it draws from — and the [`LineState`][machwave.models.feed_systems.lines.LineState] the integrator carries for it. |
+| Propellant lines | `feed_systems.lines` | The [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] a feed system delivers — its name, its role, the tank it draws from, and optionally the [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] of that tank — and the [`LineState`][machwave.models.feed_systems.lines.LineState] the integrator carries for it. |
 
 ## The `FeedSystem` contract
 
@@ -27,6 +27,12 @@ Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of eve
 The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides `get_inlet_states` to say so.
 
 [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every inlet state once per integration step, then calls [`Injector`][machwave.models.thrust_chamber.injector.Injector] with them at each chamber pressure the solver tries.
+
+## Tank placement and propellant mass properties
+
+A [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] describes a tank as a cylinder of a given inner diameter, whose length is the tank volume over the bore area, and places its aft end at `nozzle_exit_to_aft_end_distance` from the nozzle exit. It is optional and does not affect the internal ballistics.
+
+With every tank placed, [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] returns the propellant center of gravity and inertia in the engine frame. Thrust settles the liquid at the aft end of each tank and the vapor fills the ullage ahead of it; each phase is a uniform solid cylinder spanning the bore, and the parallel axis theorem combines the phases and then the tanks. The biliquid simulation records the result every timestep as `propellant_cog` and `propellant_moi`, which are NaN when any line has no placement.
 
 ## Public surface
 

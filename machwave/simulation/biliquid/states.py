@@ -6,6 +6,9 @@ import math
 from collections.abc import Mapping
 from typing import Callable
 
+import numpy as np
+import numpy.typing as npt
+
 import machwave.common.fluid_state as fluid_state_models
 import machwave.core.mass_balance as mass_balance
 import machwave.core.performance as performance
@@ -126,6 +129,12 @@ class BiliquidEngineState(simulation_states.MotorState):
         ] = {name: [] for name in self.lines}
         self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
 
+        self.has_tank_placements = all(
+            line.tank_placement is not None for line in self.lines.values()
+        )
+        self.propellant_cog: list[npt.NDArray[np.float64]] = []
+        self.propellant_moi: list[npt.NDArray[np.float64]] = []
+
     def _evaluate_propellant_properties(
         self,
         chamber_pressure: float,
@@ -174,18 +183,30 @@ class BiliquidEngineState(simulation_states.MotorState):
             name: series[-1] for name, series in self.fluid_mass_per_line.items()
         }
 
+        line_states = {
+            name: line_models.LineState(
+                fluid_mass=fluid_masses[name],
+                internal_energy=self.internal_energy_per_line[name],
+            )
+            for name in self.lines
+        }
+
         propellant_mass = sum(fluid_masses.values())
         self.propellant_mass.append(propellant_mass)
 
-        inlet_states = feed_system.get_inlet_states(
-            {
-                name: line_models.LineState(
-                    fluid_mass=fluid_masses[name],
-                    internal_energy=self.internal_energy_per_line[name],
-                )
-                for name in self.lines
-            }
-        )
+        if self.has_tank_placements:
+            propellant_mass_properties = feed_system.get_propellant_mass_properties(
+                line_states
+            )
+            propellant_cog = propellant_mass_properties.center_of_gravity
+            propellant_moi = propellant_mass_properties.moment_of_inertia
+        else:  # tanks not placed in the engine: mass properties are unknown
+            propellant_cog = np.full(3, np.nan)
+            propellant_moi = np.full((3, 3), np.nan)
+        self.propellant_cog.append(propellant_cog)
+        self.propellant_moi.append(propellant_moi)
+
+        inlet_states = feed_system.get_inlet_states(line_states)
 
         tank_pressures = {name: inlet.pressure for name, inlet in inlet_states.items()}
         tank_temperatures = {

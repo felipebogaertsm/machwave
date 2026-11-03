@@ -207,3 +207,24 @@ class TestGetMomentOfInertiaTensorFromCentralMoments:
         )
         assert result[1, 2] == pytest.approx(-2.0)  # Ixy slot in [z, x, y]
         assert result[2, 1] == pytest.approx(-2.0)
+
+
+class TestGetCylinderMomentsOfInertia:
+    def test_solid_cylinder(self):
+        axial, transverse = core_mechanics.get_cylinder_moments_of_inertia(
+            mass=2.0, length=0.3, outer_radius=0.05
+        )
+
+        assert axial == pytest.approx(2.0 * 0.05**2 / 2)
+        assert transverse == pytest.approx(2.0 * (0.05**2 / 4 + 0.3**2 / 12))
+
+    def test_hollow_cylinder(self):
+        axial, transverse = core_mechanics.get_cylinder_moments_of_inertia(
+            mass=2.0, length=0.3, outer_radius=0.05, inner_radius=0.03
+        )
+
+        radius_sum_of_squares = 0.05**2 + 0.03**2
+        assert axial == pytest.approx(2.0 * radius_sum_of_squares / 2)
+        assert transverse == pytest.approx(
+            2.0 * (radius_sum_of_squares / 4 + 0.3**2 / 12)
+        )
