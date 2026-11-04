@@ -20,7 +20,7 @@ flowchart LR
 ## Composition
 
 A propellant is a set of components, each defined by its chemical formula, standard enthalpy of formation [J/mol], initial temperature [K] and density [kg/m$^3$].
-Each component has a role (oxidizer, fuel or additive), used only for validation and for assigning feed lines in a biliquid engine; the equilibrium calculation sees the elemental composition and enthalpy only.
+Each component has a role (oxidizer, fuel or additive), used for validation and, in a biliquid, to pick the oxidizer and the fuel for the equilibrium calculation; the calculation itself sees the elemental composition and enthalpy only.
 
 A **solid** propellant has a fixed composition, given by mass fractions $w_i$.
 A **biliquid** propellant is defined by its oxidizer, its fuel and the mixture ratio $O/F = \dot{m}_{ox} / \dot{m}_{fuel}$, which can vary during the burn (see [Mixture Ratio](#mixture-ratio)).
@@ -70,7 +70,7 @@ The specific gas constant is $R = R_u / M$.
 
 The ratio $I_{sp,\,frozen} / I_{sp,\,shifting}$ bounds the effect of finite-rate recombination in the nozzle and drives the kinetics loss.
 The condensed fractions drive the two-phase flow loss; KNSB, for example, has $\xi_e \approx 0.32$ (potassium salts).
-Propellants made only of H, C, N, O, halogens and noble gases cannot form condensed species at chamber conditions, so this query is skipped for them.
+Propellants made only of H, C, N, O, halogens and noble gases cannot form condensed species at chamber conditions, so no condensed-phase evaluation is made for them.
 
 ### Fixed Properties
 
@@ -154,11 +154,11 @@ Fixed properties bypass it.
 Components are [`PropellantComponent`][machwave.models.propellants.PropellantComponent] instances with a [`ComponentRole`][machwave.models.propellants.ComponentRole].
 Propellant classes derive from [`Propellant`][machwave.models.propellants.Propellant], one per [`MixtureType`][machwave.models.propellants.MixtureType]:
 
-- [`SolidPropellant`][machwave.models.propellants.SolidPropellant]: mass fractions, burn rate map, optional fixed properties; provides `ideal_density` (TMD) and `get_burn_rate`.
+- [`SolidPropellant`][machwave.models.propellants.SolidPropellant]: mass fractions, burn rate map, optional fixed properties; provides [`ideal_density`][machwave.models.propellants.SolidPropellant.ideal_density] (TMD) and [`get_burn_rate`][machwave.models.propellants.SolidPropellant.get_burn_rate].
 - [`BiliquidPropellant`][machwave.models.propellants.BiliquidPropellant]: one oxidizer, one fuel and `oxidizer_to_fuel_ratio`.
 
-`Propellant.evaluate` handles quantization and caching and returns a [`ThermochemicalProperties`][machwave.models.propellants.ThermochemicalProperties].
-On a cache miss it calls the RocketCEA wrapper in `machwave.services.cea` (`cea` extra).
+[`Propellant.evaluate`][machwave.models.propellants.Propellant.evaluate] handles quantization and caching and returns a [`ThermochemicalProperties`][machwave.models.propellants.ThermochemicalProperties].
+On a cache miss it calls the RocketCEA wrapper in [services](../api/services.md) (`cea` extra).
 
 The density ratio is a parameter of [`GrainSegment`][machwave.models.grain.base.GrainSegment].
 Bundled propellants are in [`formulations`][machwave.models.propellants.formulations], loaded with [`get_propellant_from_json`][machwave.models.propellants.formulations.base.get_propellant_from_json].
