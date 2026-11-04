@@ -4,7 +4,9 @@ import dataclasses
 import functools
 import math
 from collections.abc import Mapping
-from typing import Callable
+from typing import Callable, cast
+
+import scipy.optimize
 
 import machwave.common.fluid_state as fluid_state_models
 import machwave.core.mass_balance as mass_balance
@@ -20,10 +22,60 @@ import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
 
+def get_line_mass_flow(
+    chamber_pressure: float,
+    *,
+    element: injector_models.InjectorElement,
+    line: line_models.PropellantLine,
+    head_state: fluid_state_models.FluidState,
+) -> float:
+    """
+    Flow a line delivers through its injector element [kg/s].
+
+    The feedline loses pressure with its own flow, so the element sees
+    P_head - dP(mdot) and the flow solves
+
+        mdot = f_inj(P_head - dP(mdot), Pc)
+
+    The right-hand side falls as mdot rises, so the root is unique and lies
+    between zero and the flow the element passes with no line loss.
+
+    Args:
+        chamber_pressure: Chamber pressure [Pa].
+        element: Injector element the line flows through.
+        line: Propellant line, whose resistance sets the feedline loss.
+        head_state: Propellant state at the head of the feedline, with no
+            line loss taken.
+
+    Returns:
+        Mass flow rate of the line [kg/s].
+    """
+    lossless_flow = element.get_mass_flow(
+        inlet=head_state, chamber_pressure=chamber_pressure
+    )
+    if line.resistance is None or lossless_flow <= 0.0:
+        return lossless_flow
+
+    def get_flow_residual(mass_flow: float) -> float:
+        inlet = fluid_state_models.FluidState(
+            fluid_name=head_state.fluid_name,
+            pressure=head_state.pressure
+            - line.get_pressure_drop(mass_flow, head_state.density),
+            temperature=head_state.temperature,
+            density=head_state.density,
+        )
+        return mass_flow - element.get_mass_flow(
+            inlet=inlet, chamber_pressure=chamber_pressure
+        )
+
+    return cast(float, scipy.optimize.brentq(get_flow_residual, 0.0, lossless_flow))
+
+
 def get_injector_mass_flows(
     chamber_pressure: float,
     *,
     injector: injector_models.Injector,
+    lines: Mapping[str, line_models.PropellantLine],
     inlet_states: Mapping[str, fluid_state_models.FluidState],
     line_masses: Mapping[str, float],
     is_feeding: bool,
@@ -32,15 +84,41 @@ def get_injector_mass_flows(
     """
     Injector flow on every line at the given chamber pressure [kg/s].
 
-    No line delivers more than the mass it has left over the timestep.
+    Each line's flow is solved with its own feedline loss. No line delivers
+    more than the mass it has left over the timestep.
+
+    Args:
+        chamber_pressure: Chamber pressure [Pa].
+        injector: Injector, with one element per line.
+        lines: Propellant line of every element, keyed by line name.
+        inlet_states: Propellant state at the head of every feedline, keyed by
+            line name.
+        line_masses: Fluid mass left on every line [kg], keyed by line name.
+        is_feeding: Whether the feed system is still delivering.
+        d_t: Time increment [s].
+
+    Raises:
+        ValueError: If any element of the injector has no inlet state.
     """
     if not is_feeding:
         return {name: 0.0 for name in inlet_states}
 
-    flows = injector.get_mass_flows(
-        inlet_states=inlet_states, chamber_pressure=chamber_pressure
-    )
-    return {name: min(flow, line_masses[name] / d_t) for name, flow in flows.items()}
+    missing = [name for name in injector.elements if name not in inlet_states]
+    if missing:
+        raise ValueError(f"no inlet state was given for {missing}")
+
+    return {
+        name: min(
+            get_line_mass_flow(
+                chamber_pressure,
+                element=element,
+                line=lines[name],
+                head_state=inlet_states[name],
+            ),
+            line_masses[name] / d_t,
+        )
+        for name, element in injector.elements.items()
+    }
 
 
 def get_total_injector_mass_flow(
@@ -203,6 +281,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         injector_flows = functools.partial(
             get_injector_mass_flows,
             injector=self.motor.thrust_chamber.injector,
+            lines=self.lines,
             inlet_states=inlet_states,
             line_masses=fluid_masses,
             is_feeding=is_feeding,
