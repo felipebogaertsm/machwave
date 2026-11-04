@@ -54,8 +54,9 @@ class CoolPropService:
     Thin wrapper around CoolProp bound to a single fluid.
 
     Point lookups go through `PropsSI`. The (D, U) state a tank running an
-    energy balance needs every step goes through one `AbstractState` instead,
-    which flashes once and hands back everything read off that flash.
+    energy balance needs every step, and the (P, s) state of the HEM flux,
+    go through an `AbstractState` instead, which flashes once and hands back
+    everything read off that flash.
     """
 
     def __init__(self, fluid_name: str) -> None:
@@ -72,6 +73,7 @@ class CoolPropService:
         self._state: typing.Any = None
         self._saturation_state: typing.Any = None
         self._check_state: typing.Any = None
+        self._pressure_entropy_state: typing.Any = None
         self._triple_point_temperature = 0.0
         self._critical_temperature = 0.0
         # How many (D, U) states the flash got wrong and the dome solve
@@ -490,3 +492,29 @@ class CoolPropService:
             Specific enthalpy [J/kg].
         """
         return CP.PropsSI("H", "P", pressure, "S", entropy, self.fluid_name)
+
+    def get_density_and_enthalpy_at_pressure_entropy(
+        self, pressure: float, entropy: float
+    ) -> tuple[float, float]:
+        """
+        Get the density and specific enthalpy at a pressure and entropy.
+
+        One (P, s) flash gives both, where `get_density_at_pressure_entropy`
+        and `get_enthalpy_at_pressure_entropy` flash once each. The values are
+        the same to the last bit.
+
+        Args:
+            pressure: Pressure [Pa].
+            entropy: Specific entropy [J/(kg K)].
+
+        Returns:
+            Tuple of density [kg/m^3] and specific enthalpy [J/kg].
+
+        Raises:
+            ValueError: If CoolProp cannot resolve the state.
+        """
+        if self._pressure_entropy_state is None:
+            self._pressure_entropy_state = CP.AbstractState("HEOS", self.fluid_name)
+        state = self._pressure_entropy_state
+        state.update(CP.PSmass_INPUTS, pressure, entropy)
+        return state.rhomass(), state.hmass()

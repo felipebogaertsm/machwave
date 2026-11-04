@@ -179,3 +179,28 @@ class TestAStateTheFlashGetsWrong:
 
 def test_get_molar_mass(service):
     assert service.get_molar_mass() == CP.PropsSI("M", FLUID_NAME)
+
+
+@pytest.mark.parametrize(
+    "pressure_ratio",
+    [
+        1.0,  # saturated liquid
+        0.7,  # two-phase
+    ],
+)
+def test_get_density_and_enthalpy_at_pressure_entropy(service, pressure_ratio):
+    """One flash reads the same bits as the two point lookups."""
+    pressure = pressure_ratio * service.get_saturation_pressure(TEMPERATURE)
+    entropy = service.get_saturated_liquid_entropy(TEMPERATURE)
+
+    assert service.get_density_and_enthalpy_at_pressure_entropy(pressure, entropy) == (
+        CP.PropsSI("D", "P", pressure, "S", entropy, FLUID_NAME),
+        CP.PropsSI("H", "P", pressure, "S", entropy, FLUID_NAME),
+    )
+
+
+def test_get_density_and_enthalpy_at_pressure_entropy_raises_when_unresolvable(
+    service,
+):
+    with pytest.raises(ValueError):
+        service.get_density_and_enthalpy_at_pressure_entropy(-1.0, 0.0)
