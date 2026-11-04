@@ -2,6 +2,7 @@ import CoolProp.CoolProp as CP
 import numpy as np
 import pytest
 
+import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
 
 
@@ -194,3 +195,262 @@ def test_get_homogeneous_equilibrium_mass_flux_honors_pressure_upstream_override
         pressure_upstream=p_sat,
     )
     assert default == pytest.approx(overridden)
+
+
+def _get_reference_dyer_mass_flux(
+    temperature_upstream: float,
+    density_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+) -> float:
+    """
+    Dyer blend written out by hand on N2O, with the HEM term from the sweep.
+
+    G = kappa / (1 + kappa) * G_SPI + 1 / (1 + kappa) * G_HEM, with
+    kappa = sqrt((P1 - P2) / (Pv - P2)) and G_SPI = sqrt(2 rho (P1 - P2)).
+    """
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_drop = pressure_upstream - pressure_downstream
+    spi = np.sqrt(2.0 * density_upstream * pressure_drop)
+    hem = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        fluid_name="N2O",
+        temperature_upstream=temperature_upstream,
+        pressure_downstream=pressure_downstream,
+        pressure_upstream=pressure_upstream,
+        sweep_points=2000,
+    )
+    kappa = np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream))
+    return float(kappa / (1.0 + kappa) * spi + 1.0 / (1.0 + kappa) * hem)
+
+
+def _get_dyer_mass_flux(
+    temperature_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+    density_upstream: float | None = None,
+) -> float:
+    density = (
+        CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+        if density_upstream is None
+        else density_upstream
+    )
+    return two_phase_flow.get_dyer_mass_flux(
+        fluid_name="N2O",
+        temperature_upstream=temperature_upstream,
+        density_upstream=density,
+        pressure_upstream=pressure_upstream,
+        pressure_downstream=pressure_downstream,
+    )
+
+
+def test_get_dyer_mass_flux_matches_a_hand_computed_state_point():
+    """
+    The 1 kN test engine's oxidizer inlet: saturated N2O at 300 K behind a
+    0.2 MPa line loss, into a 3.2635 MPa chamber.
+
+    CoolProp at 300 K: Pv = 5.88744 MPa, rho_l = 724.70 kg/m^3.
+    P1 = 5.6874 MPa, P2 = 3.2635 MPa, so P1 - P2 = 2.4239 MPa.
+
+    G_SPI = sqrt(2 * 724.70 * 2.4239e6) = sqrt(3.5132e9) = 59272 kg/(m^2 s)
+    kappa = sqrt(2.4239 / (5.88744 - 3.2635)) = sqrt(0.92378) = 0.96113
+    G_HEM = 31422 kg/(m^2 s): the choked flux from the 2000-point sweep in
+        `_get_reference_hem_mass_flux`; the critical pressure (4.14 MPa) is
+        above P2.
+    G = (0.96113 * 59272 + 31422) / 1.96113 = 88391 / 1.96113 = 45071 kg/(m^2 s)
+    """
+    assert _get_dyer_mass_flux(
+        temperature_upstream=300.0,
+        pressure_upstream=5.6874e6,
+        pressure_downstream=3.2635e6,
+        density_upstream=724.70,
+    ) == pytest.approx(45071.0, rel=1e-4)
+
+
+@pytest.mark.parametrize(
+    "temperature_upstream,pressure_upstream,pressure_downstream",
+    [
+        # Inlet below its vapor pressure, choked and unchoked HEM.
+        (300.0, 5.6874e6, 2.0e6),
+        (300.0, 5.6874e6, 4.5e6),
+        (300.0, 5.6874e6, 5.5e6),
+        # Subcooled inlet, choked and unchoked HEM.
+        (293.0, 6.0e6, 2.0e6),
+        (293.0, 6.0e6, 4.9e6),
+        (280.0, 4.5e6, 3.0e6),
+    ],
+)
+def test_get_dyer_mass_flux_matches_the_blend_of_the_swept_hem(
+    temperature_upstream, pressure_upstream, pressure_downstream
+):
+    """
+    The critical-point search behind the HEM term lands on the same choked or
+    unchoked flux as the brute-force sweep.
+    """
+    density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+
+    actual = _get_dyer_mass_flux(
+        temperature_upstream, pressure_upstream, pressure_downstream
+    )
+
+    assert actual == pytest.approx(
+        _get_reference_dyer_mass_flux(
+            temperature_upstream, density, pressure_upstream, pressure_downstream
+        ),
+        rel=1e-3,
+    )
+
+
+@pytest.mark.parametrize("pressure_downstream_offset", [0.0, 1e5])
+def test_get_dyer_mass_flux_is_spi_when_the_chamber_is_above_the_vapor_pressure(
+    pressure_downstream_offset,
+):
+    """With P2 >= Pv the liquid cannot flash: the kappa -> infinity limit."""
+    temperature_upstream = 293.0
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_upstream = 8.0e6
+    pressure_downstream = vapor_pressure + pressure_downstream_offset
+    density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+
+    actual = _get_dyer_mass_flux(
+        temperature_upstream, pressure_upstream, pressure_downstream
+    )
+
+    assert actual == pytest.approx(
+        incompressible_flow.get_mass_flow_orifice(
+            discharge_coefficient=1.0,
+            area=1.0,
+            density=density,
+            pressure_upstream=pressure_upstream,
+            pressure_downstream=pressure_downstream,
+        ),
+        rel=1e-12,
+    )
+
+
+def test_get_dyer_mass_flux_tends_to_spi_as_kappa_grows():
+    """
+    A subcooled inlet into a chamber just below the vapor pressure has a
+    large kappa, and the flux closes on SPI as P2 rises to Pv.
+    """
+    temperature_upstream = 293.0
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_upstream = 8.0e6
+
+    gaps = []
+    for margin in (1e5, 1e4, 1e2):
+        pressure_downstream = vapor_pressure - margin
+        spi = np.sqrt(2.0 * density * (pressure_upstream - pressure_downstream))
+        actual = _get_dyer_mass_flux(
+            temperature_upstream, pressure_upstream, pressure_downstream
+        )
+        gaps.append(abs(actual - spi) / spi)
+
+    assert gaps == sorted(gaps, reverse=True)
+    assert gaps[-1] < 1e-2
+
+
+def test_get_dyer_mass_flux_tends_to_hem_as_kappa_vanishes():
+    """
+    An inlet well below its vapor pressure with a small pressure drop has
+    kappa -> 0, and the flux closes on the swept HEM flux.
+    """
+    temperature_upstream = 300.0
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_upstream = vapor_pressure - 2e6
+
+    gaps = []
+    for pressure_drop in (1e4, 1e3, 1e2):
+        pressure_downstream = pressure_upstream - pressure_drop
+        hem = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+            fluid_name="N2O",
+            temperature_upstream=temperature_upstream,
+            pressure_downstream=pressure_downstream,
+            pressure_upstream=pressure_upstream,
+        )
+        actual = _get_dyer_mass_flux(
+            temperature_upstream, pressure_upstream, pressure_downstream
+        )
+        gaps.append(abs(actual - hem) / hem)
+
+    assert gaps == sorted(gaps, reverse=True)
+    assert gaps[-1] < 1e-2
+
+
+@pytest.mark.parametrize(
+    "temperature_upstream,pressure_upstream",
+    [(300.0, 5.6874e6), (293.0, 6.0e6)],
+)
+def test_get_dyer_mass_flux_falls_as_the_chamber_pressure_rises(
+    temperature_upstream, pressure_upstream
+):
+    pressures_downstream = np.linspace(0.5e6, pressure_upstream - 1e4, 40)
+
+    fluxes = [
+        _get_dyer_mass_flux(temperature_upstream, pressure_upstream, p)
+        for p in pressures_downstream
+    ]
+
+    assert all(np.diff(fluxes) < 0.0)
+
+
+@pytest.mark.parametrize("pressure_downstream", [5.0e6, 5.5e6])
+def test_get_dyer_mass_flux_returns_zero_when_downstream_at_or_above_upstream(
+    pressure_downstream,
+):
+    assert _get_dyer_mass_flux(293.0, 5.0e6, pressure_downstream) == 0.0
+
+
+def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
+    temperature_upstream = 293.0
+    pressure_upstream = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_downstream = 20e5
+
+    spi = np.sqrt(2.0 * density * (pressure_upstream - pressure_downstream))
+    hem = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        fluid_name="N2O",
+        temperature_upstream=temperature_upstream,
+        pressure_downstream=pressure_downstream,
+    )
+    actual = _get_dyer_mass_flux(
+        temperature_upstream, pressure_upstream, pressure_downstream
+    )
+
+    # A saturated inlet has kappa = 1: the plain average of the two.
+    assert hem < actual < spi
+    assert actual == pytest.approx(0.5 * (spi + hem), rel=1e-3)
+
+
+def test_get_dyer_mass_flux_is_spi_for_an_all_vapor_inlet():
+    """A drained tank feeds vapor, which has no liquid left to flash."""
+    temperature_upstream = 300.0
+    vapor_density = 0.5 * CP.PropsSI("D", "T", temperature_upstream, "Q", 1, "N2O")
+    pressure_upstream = CP.PropsSI(
+        "P", "T", temperature_upstream, "D", vapor_density, "N2O"
+    )
+    pressure_downstream = 1e6
+
+    actual = _get_dyer_mass_flux(
+        temperature_upstream,
+        pressure_upstream,
+        pressure_downstream,
+        density_upstream=vapor_density,
+    )
+
+    assert actual == pytest.approx(
+        np.sqrt(2.0 * vapor_density * (pressure_upstream - pressure_downstream))
+    )
+
+
+def test_get_dyer_mass_flux_is_spi_above_the_critical_temperature():
+    """A supercritical inlet has no vapor pressure to flash against."""
+    temperature_upstream = 315.0
+    pressure_upstream = 9.0e6
+    density = CP.PropsSI("D", "T", temperature_upstream, "P", pressure_upstream, "N2O")
+
+    actual = _get_dyer_mass_flux(
+        temperature_upstream, pressure_upstream, 3e6, density_upstream=density
+    )
+
+    assert actual == pytest.approx(np.sqrt(2.0 * density * 6.0e6))

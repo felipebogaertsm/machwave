@@ -1,6 +1,8 @@
+import functools
 import typing
 
 import numpy as np
+import scipy.optimize as scipy_optimize
 
 if typing.TYPE_CHECKING:
     import machwave.services.coolprop as coolprop_service
@@ -64,6 +66,201 @@ def get_homogeneous_equilibrium_mass_flux(
         )
 
     return float(mass_flux.max())
+
+
+def get_dyer_mass_flux(
+    fluid_name: str,
+    temperature_upstream: float,
+    density_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+) -> float:
+    """
+    Get the mass flux through an orifice via Dyer's non-equilibrium model.
+
+    Dyer's non-homogeneous non-equilibrium (NHNE) model blends the
+    single-phase incompressible flux and the critical homogeneous-equilibrium
+    flux by the ratio of bubble growth time to liquid residence time:
+
+        G = kappa / (1 + kappa) * G_SPI + 1 / (1 + kappa) * G_HEM
+        kappa = sqrt((P1 - P2) / (Pv - P2))
+
+    with Pv the vapor pressure at the upstream temperature (Dyer et al. 2007,
+    Eqs. 35 to 37). Bubbles that grow slowly against the residence time
+    (large kappa) leave the liquid no time to flash, so the flux tends to SPI;
+    fast growth tends to HEM. The weights follow that limit, which Dyer et al.
+    state on p. 10; their Eq. 36 as printed puts 1 / (1 + kappa) on SPI instead,
+    and later work (Waxman et al. 2013, Eq. 9) uses the form here. The orifice
+    length drops out with the constants of the two time scales, so the model
+    has no L/D dependence.
+
+    References:
+        Dyer, J., Doran, E., Dunn, Z., Lohner, K., Zilliac, G., and Cantwell,
+        B., "Modeling Feed System Flow Physics for Self-Pressurizing
+        Propellants", AIAA 2007-5702, 2007.
+
+    Edge cases:
+        - P1 <= P2: no flow.
+        - Pv <= P2, an upstream temperature at or above the critical point, or
+          an all-vapor inlet (density at or below the saturated vapor density):
+          nothing can flash in the orifice, so the flux is pure SPI (the
+          kappa -> infinity limit).
+        - P1 >= Pv (subcooled inlet): kappa >= 1, the formula holds as is.
+        - P1 < Pv (inlet below its own vapor pressure, as after a line loss on
+          a saturated tank): kappa < 1, the formula holds as is. The time-scale
+          ratio only needs P1 > P2 and Pv > P2, and kappa is continuous through
+          P1 = Pv.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature_upstream: Upstream stagnation temperature [K].
+        density_upstream: Upstream density, used by the SPI term [kg/m^3].
+        pressure_upstream: Upstream stagnation pressure [Pa].
+        pressure_downstream: Downstream pressure [Pa].
+
+    Returns:
+        Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
+        the upstream pressure.
+
+    Raises:
+        MissingOptionalDependencyError: If the `liquid` extra is not installed.
+    """
+    if pressure_downstream >= pressure_upstream:
+        return 0.0
+
+    pressure_drop = pressure_upstream - pressure_downstream
+    spi_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
+
+    saturation = _get_saturation_state(fluid_name, temperature_upstream)
+    if saturation is None:
+        return spi_mass_flux
+    vapor_pressure, saturated_vapor_density = saturation
+    if (
+        vapor_pressure <= pressure_downstream
+        or density_upstream <= saturated_vapor_density
+    ):
+        return spi_mass_flux
+
+    kappa = float(np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream)))
+    hem_mass_flux = _get_critical_homogeneous_equilibrium_mass_flux(
+        fluid_name, temperature_upstream, pressure_upstream, pressure_downstream
+    )
+    return (kappa * spi_mass_flux + hem_mass_flux) / (1.0 + kappa)
+
+
+@functools.lru_cache(maxsize=256)
+def _get_saturation_state(
+    fluid_name: str, temperature: float
+) -> tuple[float, float] | None:
+    """
+    Get the vapor pressure and saturated vapor density at a temperature.
+
+    Memoized on the exact temperature: an isothermal tank holds it fixed.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature: Temperature [K].
+
+    Returns:
+        Tuple of vapor pressure [Pa] and saturated vapor density [kg/m^3], or
+        `None` at or above the critical temperature, where the fluid has no
+        vapor pressure.
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    coolprop = coolprop_service.CoolPropService(fluid_name)
+    if temperature >= coolprop.get_critical_temperature():
+        return None
+    return (
+        coolprop.get_saturation_pressure(temperature),
+        coolprop.get_saturated_vapor_density(temperature),
+    )
+
+
+def _get_critical_homogeneous_equilibrium_mass_flux(
+    fluid_name: str,
+    temperature_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+) -> float:
+    """
+    Get the HEM mass flux, choked below the critical pressure.
+
+    The same quantity as `get_homogeneous_equilibrium_mass_flux`, the maximum of
+    the isentropic flux over [P2, P1], found from the critical point instead of
+    a sweep. A simulation calls this hundreds of times per inlet state, and the
+    sweep costs 200 property calls each time.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature_upstream: Upstream stagnation temperature [K].
+        pressure_upstream: Upstream stagnation pressure [Pa].
+        pressure_downstream: Downstream pressure [Pa].
+
+    Returns:
+        Mass flux [kg/(m^2-s)].
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    saturation = _get_saturation_state(fluid_name, temperature_upstream)
+    vapor_pressure = None if saturation is None else saturation[0]
+    # Below its vapor pressure the inlet is read as saturated liquid, so the
+    # stagnation state, and the critical point with it, does not depend on P1.
+    stagnation_pressure = (
+        pressure_upstream
+        if vapor_pressure is None or pressure_upstream > vapor_pressure
+        else vapor_pressure
+    )
+    critical_pressure, critical_mass_flux, enthalpy, entropy = _get_critical_point(
+        fluid_name, temperature_upstream, stagnation_pressure
+    )
+
+    # The isentropic flux rises from zero at the stagnation pressure to its peak
+    # at the critical pressure, then falls, so its maximum over [P2, P1] is at
+    # the critical pressure clipped into that interval.
+    pressure = min(max(critical_pressure, pressure_downstream), pressure_upstream)
+    if pressure == critical_pressure:
+        return critical_mass_flux
+    return _get_isentropic_mass_flux(
+        coolprop_service.CoolPropService(fluid_name), pressure, enthalpy, entropy
+    )
+
+
+@functools.lru_cache(maxsize=256)
+def _get_critical_point(
+    fluid_name: str, temperature: float, pressure: float
+) -> tuple[float, float, float, float]:
+    """
+    Locate the HEM critical point for a stagnation state.
+
+    Memoized on the exact stagnation state: a simulation step holds the inlet
+    fixed while the solver tries many chamber pressures.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature: Stagnation temperature [K].
+        pressure: Stagnation pressure [Pa].
+
+    Returns:
+        Tuple of critical pressure [Pa], critical mass flux [kg/(m^2-s)],
+        stagnation enthalpy [J/kg] and stagnation entropy [J/(kg K)].
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    coolprop = coolprop_service.CoolPropService(fluid_name)
+    enthalpy, entropy = _get_stagnation_enthalpy_and_entropy(
+        coolprop, temperature, pressure
+    )
+    lowest_pressure = coolprop.get_saturation_pressure(
+        coolprop.get_triple_point_temperature()
+    )
+    result = scipy_optimize.minimize_scalar(
+        lambda p: -_get_isentropic_mass_flux(coolprop, p, enthalpy, entropy),
+        bounds=(lowest_pressure, pressure),
+        method="bounded",
+        options={"xatol": 1e-6 * pressure},
+    )
+    return float(result.x), float(-result.fun), enthalpy, entropy
 
 
 def _get_stagnation_enthalpy_and_entropy(
