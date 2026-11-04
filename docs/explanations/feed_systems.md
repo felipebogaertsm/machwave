@@ -13,18 +13,18 @@ A propellant line has three attributes:
 3. **Tank**: the tank the line drains from.
 
 The feed system holds its lines keyed by name and works on all of them at once: it receives the state of every line and returns a result for every line.
-A cycle is defined by how it pressurizes its lines, not by how many lines it has.
+A cycle is defined by how it pressurizes its lines, whatever their number.
 
 The names join the models together.
 The injector holds one element per line name, and the simulation records mass, mass flow rate, tank pressure and tank temperature per line name.
 A line added to the feed system appears at the injector face and in the results without any of them depending on an order.
 
 The roles are what the physics reads.
-Flows are summed by role instead of dividing one line by another, so the mixture ratio keeps its meaning at any propellant count and an additive line can flow without entering it.
+Flows are summed by role, so the mixture ratio keeps its meaning at any propellant count, and an additive line flows without entering it.
 
 ## The Injector Face
 
-The feed system owns everything upstream of the injector face: tank state, feedline pressure drop, the piston in a stacked-tank cycle, and in the future a pump discharge or a regenerative jacket outlet.
+The feed system owns everything upstream of the injector face: tank state, feedline pressure drop and the piston in a stacked-tank cycle.
 The injector owns the orifice.
 
 What passes between them is the fluid state at the face: fluid name, pressure, temperature and density.
@@ -43,7 +43,6 @@ The feed system takes the state of every line and returns the injector inlet sta
 
 The lines are solved together because they can be coupled.
 In a stacked-tank cycle the fuel is pressurized by the oxidizer ullage through a piston, so the fuel inlet pressure depends on the oxidizer state.
-Solving each line separately would mean passing every other line's state in as an argument, which grows with the square of the propellant count.
 
 The state each line contributes is its fluid mass and, for a tank running an energy balance, its internal energy.
 These are the variables the integrator carries between timesteps.
@@ -55,19 +54,21 @@ These are the variables the integrator carries between timesteps.
 In a stacked-tank cycle the tanks sit in a vertical stack.
 The tank at the top, the **pressurizing line**, sets the pressure of the whole system and drives every tank below it through a piston.
 
-For a line $i$:
+For the pressurizing line $p$ and for any other line $i$:
 
 $$
-P_{\text{inlet},i} = P_{\text{tank},p} - \delta_{i \neq p}\, \Delta P_{\text{piston}} - \Delta P_{\text{line},i}
+P_{\text{inlet},p} = P_{\text{tank},p} - \Delta P_{\text{line},p}, \qquad
+P_{\text{inlet},i} = P_{\text{tank},p} - \Delta P_{\text{piston}} - \Delta P_{\text{line},i}
 $$
 
 where:
 
 - $P_{\text{tank},p}$ is the pressure of the pressurizing line's tank [Pa]
-- $\Delta P_{\text{piston}}$ is the pressure loss across the piston [Pa], applied to every line below the top of the stack
+- $\Delta P_{\text{piston}}$ is the pressure loss across the piston [Pa], taken by every line below the top of the stack
 - $\Delta P_{\text{line},i}$ is the pressure loss along the line's feedline [Pa]
 
-The feedline loss is **given at the design flow**, not computed from the instantaneous flow and the line geometry.
+The feedline loss is a fixed input stated for the design flow.
+It is held constant as the flow changes during the burn.
 
 ### Single Line
 
@@ -108,6 +109,14 @@ where:
 - $P_0$ is the chamber pressure [Pa]
 - $G_\text{HEM}$ is the homogeneous equilibrium mass flux [kg/(m²·s)]
 
+The mass flux is found by expanding the inlet fluid isentropically to a pressure $P$ between the chamber and the inlet, with the liquid and vapor in equilibrium at every point:
+
+$$
+G(P) = \rho(P)\, \sqrt{2 \left(h_\text{inlet} - h(P)\right)}, \qquad G_\text{HEM} = \max_{P_0 \le P \le P_\text{inlet}} G(P)
+$$
+
+The orifice is choked when the maximum lies above the chamber pressure, and then the flow no longer responds to $P_0$.
+
 ## Coupling with the Chamber
 
 Each timestep, the inlet state of every line is read once.
@@ -139,7 +148,8 @@ $$
 U_{n+1} = U_n - \Delta m\, h_\text{out}
 $$
 
-The remaining liquid boils to refill the ullage and cools as it does, so the saturation pressure drops over the burn instead of staying constant until the liquid runs out.
+The remaining liquid boils to refill the ullage and cools as it does, so the saturation pressure drops over the burn.
+An isothermal tank holds it constant while liquid remains.
 
 ## Propellant Count
 
@@ -150,7 +160,7 @@ The remaining liquid boils to refill the ullage and cools as it does, so the sat
 | 3 | Triliquid engine, with a diluent or coolant line | Stacked tanks |
 
 The feed system, the injector and the recorded results work at every count.
-Evaluating the thermochemistry of a three-propellant mixture is a separate problem: the thermochemical service is built around one oxidizer card and one fuel card, so a third stream has to be blended into one of them with a weight split before CEA can evaluate it.
+The thermochemistry of a three-propellant mixture is a separate problem: the equilibrium calculation takes one oxidizer and one fuel, so a third stream has to be blended into one of them before it can be evaluated.
 
 ## Implementation
 
@@ -169,5 +179,5 @@ The coupling with the chamber happens in [`BiliquidEngineState.run_timestep`][ma
 
 # References
 
-- Sutton, G. P. & Biblarz, O., *Rocket Propulsion Elements*, 9th ed., Wiley, 2017. Sections 6.3 and 10.2.
-- Whitmore, S. A. & Chandler, S. N., "Engineering Model for Self-Pressurizing Saturated-N2O-Propellant Feed Systems", *Journal of Propulsion and Power*, Vol. 26, No. 4, 2010.
+1. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Sections 6.3 and 10.2.
+2. Whitmore, S. A., & Chandler, S. N. (2010). Engineering model for self-pressurizing saturated-N2O-propellant feed systems. *Journal of Propulsion and Power*, 26(4), 706-714.
