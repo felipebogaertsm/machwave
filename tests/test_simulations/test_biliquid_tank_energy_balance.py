@@ -43,8 +43,8 @@ def build(isothermal):
             # isothermal keeps the flash away from a near-empty ethanol tank.
             fuel_tank=tank_models.Tank(**FUEL_TANK, isothermal=True),
             piston_loss=feed_system.piston_loss,
-            oxidizer_line_loss=feed_system.line_losses["oxidizer"],
-            fuel_line_loss=feed_system.line_losses["fuel"],
+            oxidizer_line_resistance=feed_system.lines["oxidizer"].resistance,
+            fuel_line_resistance=feed_system.lines["fuel"].resistance,
         )
     )
     return motor, params

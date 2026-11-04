@@ -17,50 +17,39 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
     both run on.
     """
 
-    def __init__(
-        self,
-        line: line_models.PropellantLine,
-        line_loss: float = 0.0,
-    ):
+    def __init__(self, line: line_models.PropellantLine):
         """
         Initialize the SingleLinePressureFedFeedSystem.
 
         Args:
-            line: The propellant line the system feeds.
-            line_loss: Pressure loss along the feedline [Pa], stated for the
-                design flow rather than computed from it.
-
-        Raises:
-            ValueError: If the pressure loss is negative.
+            line: The propellant line the system feeds. Its feedline
+                resistance sets what the line loses on the way to the
+                injector.
         """
         super().__init__([line])
-
-        self.line_loss = line_loss
-
-        if line_loss < 0.0:
-            raise ValueError(f"line_loss must be non-negative, got {line_loss}")
 
     @classmethod
     def from_oxidizer_tank(
         cls,
         *,
         oxidizer_tank: tank.Tank,
-        line_loss: float = 0.0,
+        line_resistance: line_models.FeedlineResistance | None = None,
     ) -> "SingleLinePressureFedFeedSystem":
         """
         Build the oxidizer-only system a hybrid motor runs on.
 
         Args:
             oxidizer_tank: Tank the oxidizer line draws from.
-            line_loss: Pressure loss along the feedline [Pa].
+            line_resistance: Hydraulic resistance of the oxidizer feedline.
+                None for a line that loses nothing.
         """
         return cls(
             line=line_models.PropellantLine(
                 name="oxidizer",
                 role=propellant_components.ComponentRole.OXIDIZER,
                 tank=oxidizer_tank,
-            ),
-            line_loss=line_loss,
+                resistance=line_resistance,
+            )
         )
 
     @property
@@ -72,7 +61,7 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         self, line_states: Mapping[str, line_models.LineState]
     ) -> dict[str, float]:
         """
-        Return the tank pressure less the feedline loss [Pa], keyed by line name.
+        Return the tank pressure [Pa], keyed by line name.
 
         Args:
             line_states: Fluid mass and internal energy of the line, keyed by
@@ -84,5 +73,4 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
             self.line.name: self.line.tank.get_pressure(
                 line_state.fluid_mass, line_state.internal_energy
             )
-            - self.line_loss
         }

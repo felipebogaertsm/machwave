@@ -13,6 +13,11 @@ from tests.factories import (
 )
 
 
+RESISTANCE = feed_systems_models.FeedlineResistance(
+    loss_coefficient=5.0, flow_area=2.0e-5
+)
+
+
 def line_states(feed_system):
     return {name: line.initial_state for name, line in feed_system.lines.items()}
 
@@ -31,14 +36,17 @@ class TestInletState:
         assert inlet.temperature == pytest.approx(tank.get_temperature(5.0))
         assert inlet.density == pytest.approx(tank.get_density(5.0))
 
-    def test_the_feedline_comes_off_the_tank_pressure(self):
-        feed_system = SingleLinePressureFedFeedSystemFactory.build(line_loss=3e5)
+    def test_the_feedline_head_is_the_tank_pressure_whatever_the_line(self):
+        """The line loss depends on the flow, so the cycle leaves it out."""
+        feed_system = SingleLinePressureFedFeedSystemFactory.build(
+            line=PropellantLineFactory.build(resistance=RESISTANCE)
+        )
         tank = feed_system.line.tank
 
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["oxidizer"] == pytest.approx(
-            tank.get_pressure(tank.initial_fluid_mass) - 3e5
+            tank.get_pressure(tank.initial_fluid_mass)
         )
 
     def test_an_empty_tank_delivers_no_pressure(self):
@@ -104,6 +112,7 @@ class TestSingleLineContract:
         flows = biliquid_states.get_injector_mass_flows(
             20e5,
             injector=injector,
+            lines=feed_system.lines,
             inlet_states=feed_system.get_inlet_states(line_states(feed_system)),
             line_masses={"oxidizer": feed_system.line.tank.initial_fluid_mass},
             is_feeding=True,
@@ -112,6 +121,30 @@ class TestSingleLineContract:
 
         assert list(flows) == ["oxidizer"]
         assert flows["oxidizer"] > 0.0
+
+    def test_the_feedline_holds_the_flow_below_the_lossless_one(self):
+        lossless = SingleLinePressureFedFeedSystemFactory.build()
+        with_line = SingleLinePressureFedFeedSystemFactory.build(
+            line=PropellantLineFactory.build(resistance=RESISTANCE)
+        )
+        injector = InjectorFactory.build(
+            elements={"oxidizer": InjectorElementFactory.build()}
+        )
+
+        flows = [
+            biliquid_states.get_injector_mass_flows(
+                20e5,
+                injector=injector,
+                lines=feed_system.lines,
+                inlet_states=feed_system.get_inlet_states(line_states(feed_system)),
+                line_masses={"oxidizer": feed_system.line.tank.initial_fluid_mass},
+                is_feeding=True,
+                d_t=1e-4,
+            )["oxidizer"]
+            for feed_system in (with_line, lossless)
+        ]
+
+        assert 0.0 < flows[0] < flows[1]
 
 
 class TestOxidizerTankConstructor:
@@ -125,17 +158,20 @@ class TestOxidizerTankConstructor:
         assert feed_system.line.name == "oxidizer"
         assert feed_system.line.role is propellants_models.ComponentRole.OXIDIZER
 
-    def test_carries_the_feedline_loss(self):
+    def test_carries_the_feedline_resistance(self):
         feed_system = (
             feed_systems_models.SingleLinePressureFedFeedSystem.from_oxidizer_tank(
-                oxidizer_tank=TankFactory.build(), line_loss=2e5
+                oxidizer_tank=TankFactory.build(), line_resistance=RESISTANCE
             )
         )
 
-        assert feed_system.line_loss == 2e5
+        assert feed_system.line.resistance is RESISTANCE
 
+    def test_a_line_without_resistance_loses_nothing(self):
+        feed_system = (
+            feed_systems_models.SingleLinePressureFedFeedSystem.from_oxidizer_tank(
+                oxidizer_tank=TankFactory.build()
+            )
+        )
 
-class TestValidation:
-    def test_rejects_a_negative_line_loss(self):
-        with pytest.raises(ValueError, match="line_loss"):
-            SingleLinePressureFedFeedSystemFactory.build(line_loss=-1.0)
+        assert feed_system.line.get_pressure_drop(1.0, 750.0) == 0.0

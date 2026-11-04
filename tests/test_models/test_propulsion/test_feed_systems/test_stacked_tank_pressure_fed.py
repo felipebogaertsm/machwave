@@ -1,13 +1,23 @@
+import dataclasses
+
 import pytest
 
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank_models
 import machwave.models.propellants as propellants_models
+import machwave.simulation.biliquid.states as biliquid_states
 from tests.factories import (
+    InjectorElementFactory,
+    InjectorFactory,
     PropellantLineFactory,
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
+)
+
+
+RESISTANCE = feed_systems_models.FeedlineResistance(
+    loss_coefficient=5.0, flow_area=2.0e-5
 )
 
 
@@ -56,14 +66,14 @@ class TestInletStates:
         )
         feed_system = StackedTankPressureFedFeedSystemFactory.build(
             oxidizer_tank=oxidizer_tank,
-            oxidizer_line_loss=3e5,
+            oxidizer_line_resistance=RESISTANCE,
         )
 
         inlet = feed_system.get_inlet_states(line_states(feed_system))["oxidizer"]
 
         assert inlet.fluid_name == "N2O"
         assert inlet.pressure == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_mass) - 3e5
+            oxidizer_tank.get_pressure(oxidizer_mass)
         )
         assert inlet.temperature == pytest.approx(
             oxidizer_tank.get_temperature(oxidizer_mass)
@@ -87,14 +97,14 @@ class TestInletStates:
         assert inlet.density == pytest.approx(fuel_tank.get_density(fuel_mass))
 
     def test_a_third_line_is_pressurized_through_the_piston_too(self):
-        feed_system = build_triliquid(piston_loss=2e5, line_losses={"diluent": 1e5})
+        feed_system = build_triliquid(piston_loss=2e5)
         oxidizer_tank = feed_system.lines["oxidizer"].tank
 
         inlet = feed_system.get_inlet_states(line_states(feed_system))["diluent"]
 
         assert inlet.fluid_name == "Water"
         assert inlet.pressure == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - 2e5 - 1e5
+            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - 2e5
         )
 
     def test_rejects_a_missing_line_state(self):
@@ -106,21 +116,12 @@ class TestInletStates:
             feed_system.get_inlet_states(states)
 
 
-class TestFeedlineLoss:
-    def test_no_line_leaves_the_tank_pressure_alone(self):
-        feed_system = StackedTankPressureFedFeedSystemFactory.build()
-        oxidizer_tank = feed_system.lines["oxidizer"].tank
+class TestFeedlineHeadPressure:
+    """The cycle delivers the head of every feedline; the line loss is the flow's."""
 
-        pressures = feed_system.get_inlet_pressures(line_states(feed_system))
-
-        assert pressures["oxidizer"] == oxidizer_tank.get_pressure(
-            oxidizer_tank.initial_fluid_mass
-        )
-
-    def test_the_oxidizer_line_comes_off_the_oxidizer_side(self):
-        oxidizer_line_loss = 3e5
+    def test_the_oxidizer_head_is_the_stack_pressure(self):
         feed_system = StackedTankPressureFedFeedSystemFactory.build(
-            oxidizer_line_loss=oxidizer_line_loss
+            oxidizer_line_resistance=RESISTANCE
         )
         oxidizer_tank = feed_system.lines["oxidizer"].tank
 
@@ -128,38 +129,95 @@ class TestFeedlineLoss:
 
         assert pressures["oxidizer"] == pytest.approx(
             oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
-            - oxidizer_line_loss
         )
 
-    def test_the_fuel_side_takes_the_piston_and_its_own_line(self):
+    def test_the_fuel_head_is_the_stack_pressure_less_the_piston(self):
         piston_loss = 1e5
-        fuel_line_loss = 2e5
         feed_system = StackedTankPressureFedFeedSystemFactory.build(
             piston_loss=piston_loss,
-            fuel_line_loss=fuel_line_loss,
-            oxidizer_line_loss=3e5,
+            oxidizer_line_resistance=RESISTANCE,
+            fuel_line_resistance=RESISTANCE,
         )
         oxidizer_tank = feed_system.lines["oxidizer"].tank
 
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
-        # The oxidizer line is not on the fuel path.
         assert pressures["fuel"] == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
-            - piston_loss
-            - fuel_line_loss
+            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - piston_loss
         )
 
-    def test_a_line_holds_the_inlet_pressure_below_the_lossless_one(self):
-        with_line = StackedTankPressureFedFeedSystemFactory.build(fuel_line_loss=5e5)
-        without_line = StackedTankPressureFedFeedSystemFactory.build()
+    def test_the_piston_loss_holds_whatever_the_flow(self):
+        """Seal friction, not a hydraulic loss: it is there at zero flow too."""
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(piston_loss=2e5)
+        oxidizer_tank = feed_system.lines["oxidizer"].tank
+        stack_pressure = oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
 
-        pressures = [
-            feed_system.get_inlet_states(line_states(feed_system))["fuel"].pressure
-            for feed_system in (with_line, without_line)
-        ]
+        pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
-        assert 0.0 < pressures[0] < pressures[1]
+        assert pressures["oxidizer"] - pressures["fuel"] == pytest.approx(2e5)
+        assert pressures["oxidizer"] == pytest.approx(stack_pressure)
+
+
+class TestInjectorSeesTheLineLoss:
+    """What each injector element sees is its head pressure less its own line loss."""
+
+    CHAMBER_PRESSURE = 20e5
+
+    @staticmethod
+    def solve(feed_system):
+        injector = InjectorFactory.build(
+            elements={
+                "oxidizer": InjectorElementFactory.build(area=1.4e-5 / 0.48),
+                "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
+            }
+        )
+        inlet_states = feed_system.get_inlet_states(line_states(feed_system))
+        flows = biliquid_states.get_injector_mass_flows(
+            TestInjectorSeesTheLineLoss.CHAMBER_PRESSURE,
+            injector=injector,
+            lines=feed_system.lines,
+            inlet_states=inlet_states,
+            line_masses={name: 10.0 for name in feed_system.lines},
+            is_feeding=True,
+            d_t=1e-4,
+        )
+        return injector, inlet_states, flows
+
+    def test_each_element_sees_the_head_less_its_own_line_loss(self):
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(
+            piston_loss=1e5,
+            oxidizer_line_resistance=RESISTANCE,
+            fuel_line_resistance=feed_systems_models.FeedlineResistance(
+                loss_coefficient=20.0, flow_area=2.0e-5
+            ),
+        )
+        injector, inlet_states, flows = self.solve(feed_system)
+
+        for name, line in feed_system.lines.items():
+            head = inlet_states[name]
+            seen = dataclasses.replace(
+                head,
+                pressure=head.pressure
+                - line.get_pressure_drop(flows[name], head.density),
+            )
+            assert flows[name] == pytest.approx(
+                injector.elements[name].get_mass_flow(
+                    inlet=seen, chamber_pressure=self.CHAMBER_PRESSURE
+                ),
+                rel=1e-9,
+            )
+
+    def test_one_line_resistance_leaves_the_other_line_alone(self):
+        lossless = StackedTankPressureFedFeedSystemFactory.build(piston_loss=1e5)
+        with_fuel_line = StackedTankPressureFedFeedSystemFactory.build(
+            piston_loss=1e5, fuel_line_resistance=RESISTANCE
+        )
+
+        _, _, flows_lossless = self.solve(lossless)
+        _, _, flows_with_line = self.solve(with_fuel_line)
+
+        assert flows_with_line["oxidizer"] == flows_lossless["oxidizer"]
+        assert 0.0 < flows_with_line["fuel"] < flows_lossless["fuel"]
 
 
 class TestLines:
@@ -203,18 +261,9 @@ class TestValidation:
         with pytest.raises(ValueError, match="pressurizing_line"):
             build_triliquid(pressurizing_line="pressurant")
 
-    def test_rejects_a_loss_keyed_by_an_unknown_line(self):
-        with pytest.raises(ValueError, match="coolant"):
-            build_triliquid(line_losses={"coolant": 1e5})
-
     def test_rejects_a_negative_piston_loss(self):
         with pytest.raises(ValueError, match="piston_loss"):
             build_triliquid(piston_loss=-1.0)
-
-    @pytest.mark.parametrize("line_name", ["oxidizer", "fuel"])
-    def test_rejects_a_negative_line_loss(self, line_name):
-        with pytest.raises(ValueError, match=line_name):
-            build_triliquid(line_losses={line_name: -1.0})
 
 
 class TestInitialState:
