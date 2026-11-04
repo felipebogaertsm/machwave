@@ -1,8 +1,6 @@
 # Machwave
 
-Python library for rocket motor internal ballistics: solid rocket motors with fast
-marching grain regression, and pressure-fed biliquid engines with chemical equilibrium
-thermochemistry and real-fluid tanks.
+Machwave is an open source Python library for chemical rocket propulsion simulation.
 
 ## Commands
 
