@@ -73,7 +73,7 @@ def main():
         elements={
             "oxidizer": thrust_chamber_models.InjectorElement(
                 discharge_coefficient=0.48,
-                area=1.4e-5 / 0.48,
+                area=2.097e-5 / 0.48,
                 mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
             ),
             "fuel": thrust_chamber_models.InjectorElement(

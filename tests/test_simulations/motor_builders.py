@@ -255,7 +255,7 @@ def build_1kn_biliquid_engine() -> tuple[
         injector=InjectorFactory.build(
             elements={
                 "oxidizer": InjectorElementFactory.build(
-                    area=1.4e-5 / 0.48,
+                    area=2.097e-5 / 0.48,
                     mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
                 ),
                 "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
