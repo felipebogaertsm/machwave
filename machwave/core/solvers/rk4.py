@@ -1,6 +1,9 @@
 import math
 from typing import Any, Callable
 
+import numpy as np
+import numpy.typing as npt
+
 
 def rk4th_ode_solver(
     variables: dict[str, float],
@@ -126,5 +129,64 @@ def rk4th_substepped_ode_solver(
 
     for _ in range(step_count):
         value = rk4th_ode_solver({key: value}, equation, d_t / step_count, **kwargs)[0]
+
+    return value
+
+
+def rk4th_vector_ode_solver(
+    state: npt.NDArray[np.float64],
+    equation: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
+    d_t: float,
+    step_count: int = 1,
+    initial_derivative: npt.NDArray[np.float64] | None = None,
+) -> npt.NDArray[np.float64]:
+    """
+    Advance an autonomous system y' = f(y) over `d_t` in equal classical RK4 steps.
+
+    Each step of size h = d_t / step_count is
+
+        k_1 = f(y)
+        k_2 = f(y + h k_1 / 2)
+        k_3 = f(y + h k_2 / 2)
+        k_4 = f(y + h k_3)
+        y <- y + h (k_1 + 2 k_2 + 2 k_3 + k_4) / 6
+
+    which is fourth order in h for a smooth f (Hairer, Norsett and Wanner
+    1993, Section II.1). Every component of the state goes through every
+    stage, so a right-hand side that couples them, as the chamber pressure
+    and the tank masses are coupled through the injector flow, keeps that
+    order.
+
+    Args:
+        state: Current state vector.
+        equation: Callable returning dy/dt at a state, with the shape of the
+            state.
+        d_t: Time step [s].
+        step_count: Number of equal RK4 steps to take over `d_t` (>=1).
+        initial_derivative: f at `state`, when the caller has evaluated it
+            already. It is the first stage of the first step, so passing it
+            saves one evaluation of `equation`.
+
+    Returns:
+        The state after `d_t`.
+
+    Raises:
+        ValueError: If `step_count` is less than one.
+    """
+    if step_count < 1:
+        raise ValueError(f"step_count must be at least 1, got {step_count}")
+
+    step = d_t / step_count
+    value = np.asarray(state, dtype=np.float64)
+    for index in range(step_count):
+        k_1 = (
+            np.asarray(initial_derivative, dtype=np.float64)
+            if index == 0 and initial_derivative is not None
+            else equation(value)
+        )
+        k_2 = equation(value + 0.5 * step * k_1)
+        k_3 = equation(value + 0.5 * step * k_2)
+        k_4 = equation(value + step * k_3)
+        value = value + (step / 6.0) * (k_1 + 2.0 * (k_2 + k_3) + k_4)
 
     return value

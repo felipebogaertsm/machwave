@@ -161,24 +161,41 @@ def test_draining_takes_the_outflow_enthalpy_out():
 
     state.run_timestep(params.d_t, params.external_pressure)
 
-    mass_drained = oxidizer_mass_before - state.fluid_mass_per_line["oxidizer"][-1]
+    oxidizer_mass_after = state.fluid_mass_per_line["oxidizer"][-1]
+    internal_energy_after = state.internal_energy_per_line["oxidizer"]
+    mass_drained = oxidizer_mass_before - oxidizer_mass_after
     fuel_drained = fuel_mass_before - state.fluid_mass_per_line["fuel"][-1]
     assert mass_drained > 0.0
     assert fuel_drained > 0.0
     # The piston sweeps the volume of fuel pushed out, and the oxidizer does
-    # the work P dV on it at the pressure the step starts at.
+    # the work P dV on it. The step integrates dU = -h dm - P dV, so the
+    # change matches the trapezoid of h and P between the two ends of the step
+    # to second order in it, far inside this tolerance.
     swept_volume = fuel_drained / CP.PropsSI(
         "D", "T", FUEL_TANK["temperature"], "Q", 0, FUEL_TANK["fluid_name"]
     )
-    assert state.internal_energy_per_line["oxidizer"] == pytest.approx(
-        internal_energy_before
-        - mass_drained
-        * tank.get_outflow_specific_enthalpy(
-            oxidizer_mass_before, internal_energy_before, mass_drained=mass_drained
+    volume_before = OXIDIZER_TANK["volume"]
+    volume_after = volume_before + swept_volume
+
+    def enthalpy_and_pressure(fluid_mass, internal_energy, volume):
+        return (
+            tank.get_outflow_specific_enthalpy(
+                fluid_mass, internal_energy, mass_drained=0.0, volume=volume
+            ),
+            tank.get_pressure(fluid_mass, internal_energy, volume=volume),
         )
-        - tank.get_pressure(oxidizer_mass_before, internal_energy_before)
-        * swept_volume,
-        rel=1e-12,
+
+    enthalpy_before, pressure_before = enthalpy_and_pressure(
+        oxidizer_mass_before, internal_energy_before, volume_before
+    )
+    enthalpy_after, pressure_after = enthalpy_and_pressure(
+        oxidizer_mass_after, internal_energy_after, volume_after
+    )
+    energy_change = internal_energy_after - internal_energy_before
+    assert energy_change == pytest.approx(
+        -0.5 * (enthalpy_before + enthalpy_after) * mass_drained
+        - 0.5 * (pressure_before + pressure_after) * swept_volume,
+        rel=1e-6,
     )
 
 

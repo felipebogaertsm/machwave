@@ -187,14 +187,19 @@ class TestResultPerLine:
             assert (series[after_burnout] == 0.0).all(), f"{name} kept flowing"
 
     def test_the_mean_ratio_weighs_each_step_by_the_mass_it_delivered(self, result):
-        _, params = build_engine_with_a_diluent_line()
-        oxidizer_delivered = np.sum(result.mass_flow_rate_per_line["oxidizer"]) * (
-            params.d_t
+        # A step delivers the flow averaged over its Runge-Kutta stages, not
+        # the flow recorded at its start, so the recorded flows give the
+        # delivered mass only to the accuracy of a quadrature: second order
+        # in the step, and first order on the step a line runs dry.
+        oxidizer_delivered = np.trapezoid(
+            result.mass_flow_rate_per_line["oxidizer"], result.time
         )
-        fuel_delivered = np.sum(result.mass_flow_rate_per_line["fuel"]) * params.d_t
+        fuel_delivered = np.trapezoid(
+            result.mass_flow_rate_per_line["fuel"], result.time
+        )
 
         assert result.mean_oxidizer_to_fuel_ratio == pytest.approx(
-            oxidizer_delivered / fuel_delivered, rel=1e-9
+            oxidizer_delivered / fuel_delivered, rel=1e-4
         )
 
     def test_the_report_lists_every_line(self, result):
