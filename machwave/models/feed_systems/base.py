@@ -51,19 +51,21 @@ class FeedSystem(ABC):
         self, line_states: Mapping[str, line_models.LineState]
     ) -> dict[str, fluid_state_models.FluidState]:
         """
-        Return the state delivered to the injector inlet on every line.
+        Return the state at the head of every feedline.
 
         Each state is the tank fluid at the tank temperature and density, at
-        the pressure that survives the path to the injector. A cycle that heats
-        or works on a propellant on the way — a regenerative jacket, a pump —
-        overrides this to say so.
+        the pressure the cycle delivers to the feedline. It is what the
+        injector would see with nothing flowing: the feedline then takes its
+        own flow-dependent loss, which the simulation solves together with the
+        injector flow. A cycle that heats or works on a propellant on the way,
+        such as a regenerative jacket or a pump, overrides this to say so.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
                 line name.
 
         Returns:
-            Injector inlet state of every line, keyed by line name.
+            Feedline head state of every line, keyed by line name.
 
         Raises:
             ValueError: If any line of the system has no state.
@@ -94,13 +96,16 @@ class FeedSystem(ABC):
         self, line_states: Mapping[str, line_models.LineState]
     ) -> dict[str, float]:
         """
-        Compute the pressure delivered to the injector inlet on every line [Pa].
+        Compute the pressure delivered to the head of every feedline [Pa].
+
+        The feedline resistance is not taken here: it depends on the line
+        flow, which the injector sets.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
                 line name.
 
         Returns:
-            Injector inlet pressure of every line [Pa], keyed by line name.
+            Feedline head pressure of every line [Pa], keyed by line name.
         """
         pass
