@@ -193,6 +193,27 @@ class TestPistonVolume:
                 sum(start.values()), rel=1e-14
             )
 
+    def test_the_volume_rates_are_the_time_derivative_of_the_volumes(self):
+        """dV/dt = dV/dm * dm/dt, checked against a difference of the volumes."""
+        feed_system = build()
+        masses = {"oxidizer": 4.0, "fuel": 2.0}
+        flows = {"oxidizer": 0.8, "fuel": 1.2}
+        d_t = 1e-3
+
+        rates = feed_system.get_tank_volume_rates(masses, flows)
+
+        before = feed_system.get_tank_volumes(masses)
+        after = feed_system.get_tank_volumes(
+            {name: masses[name] - flows[name] * d_t for name in masses}
+        )
+        for name in masses:
+            assert rates[name] == pytest.approx(
+                (after[name] - before[name]) / d_t, rel=1e-9
+            )
+        assert rates["oxidizer"] == pytest.approx(
+            flows["fuel"] / CP.PropsSI("D", "T", TEMPERATURE, "Q", 0, FUEL)
+        )
+
     def test_the_top_tank_starts_at_its_own_volume(self):
         feed_system = build()
 

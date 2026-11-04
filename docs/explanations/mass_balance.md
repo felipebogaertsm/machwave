@@ -169,7 +169,27 @@ $$
 
 The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed system implementation. The mass balance consumes only their sum. In addition, a biliquid engine has a rigid chamber ($\dot V_0 = 0$), so the free chamber volume term of the general ODE vanishes.
 
-The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA at each step from the current $P_0$, the design expansion ratio, and the instantaneous mixture ratio.
+The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA from the chamber pressure, the design expansion ratio, and the instantaneous mixture ratio.
+
+The chamber is not integrated on its own. Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance make one state vector, advanced together by classical RK4:
+
+$$
+\frac{d}{dt}
+\begin{pmatrix} P_0 \\ m_i \\ U_j \end{pmatrix}
+=
+\begin{pmatrix}
+\dfrac{R T}{V_0}\left(\sum_i \dot{m}_i - \dot{m}_{out}\right) \\
+-\dot{m}_i \\
+-h_{out,j}\,\dot{m}_j - P_j\,\dfrac{dV_j}{dt}
+\end{pmatrix}
+$$
+
+At every Runge-Kutta stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its own feedline loss, and CEA is read at the stage $P_0$ and mixture ratio. Nothing is held at its value from the start of the step, so the step is fourth order where the right-hand side is smooth. The chamber stiffness sets how many equal RK4 steps of the whole vector a simulation step takes, as above.
+
+Two things limit the order in practice:
+
+- **Events.** A line running dry is a jump in the right-hand side. The step on which a line empties drains each line by its start-of-step flow, capped at what it holds, so the line lands on zero and no stage reads a negative mass; that one step is first order. The liquid-to-vapor switch in a tank is not located inside a step either.
+- **Thermochemistry quantization.** CEA results are cached on a chamber pressure rounded to 200 Pa and a mixture ratio rounded to $10^{-3}$, which makes $T$, $R$ and $k$ piecewise constant in the state. A stage that crosses a rounding boundary sees a jump. On a variant of the 1 kN test engine over the first 13 ms of the burn this leaves an error of about $10^{-9}$ relative that no step size removes, the same size as the truncation error at the default step, so refining the step past the default gains nothing. The fourth order shows with the properties held fixed, and with the quantization made finer down to the noise of CEA itself, a few $10^{-9}$ on the chamber pressure.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
@@ -178,4 +198,5 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
+4. Hairer, E., Nørsett, S. P., & Wanner, G. (1993). *Solving Ordinary Differential Equations I: Nonstiff Problems* (2nd ed.). Springer Series in Computational Mathematics, Vol. 8. https://doi.org/10.1007/978-3-540-78862-1
 4. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
