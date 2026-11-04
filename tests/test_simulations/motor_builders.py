@@ -14,12 +14,14 @@ import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
+import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation as machwave_simulation
 from tests.factories import (
     BatesSegmentFactory,
     BiliquidEngineFactory,
     BiliquidEngineThrustChamberFactory,
     BiliquidPropellantFactory,
+    InjectorElementFactory,
     InjectorFactory,
     CombustionChamberFactory,
     FinocylGrainSegmentFactory,
@@ -235,7 +237,15 @@ def build_1kn_biliquid_engine() -> tuple[
             divergent_angle=12,
             expansion_ratio=4,
         ),
-        injector=InjectorFactory.build(),
+        injector=InjectorFactory.build(
+            elements={
+                "oxidizer": InjectorElementFactory.build(
+                    area=1.4e-5 / 0.48,
+                    mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
+                ),
+                "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
+            }
+        ),
         combustion_chamber=CombustionChamberFactory.build(
             inner_diameter=66e-3,
             internal_length=13e-3,
