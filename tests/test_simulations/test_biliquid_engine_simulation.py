@@ -404,8 +404,8 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
 
     The nozzle efficiency applied to the thrust coefficient depends only on
     geometry and nozzle losses, so it is independent of the motor's combustion
-    efficiency. Combustion efficiency instead derates the flame temperature fed
-    to the chamber-pressure solver, so the chamber-pressure path responds to it.
+    efficiency. Combustion efficiency instead derates the characteristic velocity
+    of the chamber, so the chamber-pressure path responds to it.
     """
 
     def first_step(
@@ -426,3 +426,56 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
 
     assert derated.nozzle_efficiency[-1] == pytest.approx(full.nozzle_efficiency[-1])
     assert derated.chamber_pressure[-1] != pytest.approx(full.chamber_pressure[-1])
+
+
+@pytest.mark.parametrize(
+    "combustion_efficiency, discharge_coefficient",
+    [(1.0, 1.0), (0.9, 1.0), (0.9, 0.9)],
+)
+def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
+    combustion_efficiency: float, discharge_coefficient: float
+) -> None:
+    """At steady state, Pc * Cd * At / mdot equals eta * c*_ideal.
+
+    The delivered characteristic velocity comes from the simulated chamber
+    pressure, injector mass flow and effective throat area, and the ideal one
+    from the CEA state at the same pressure and mixture ratio. The fixed tank
+    pressures let the chamber settle, so the storage term vanishes and the
+    ratio is exact.
+    """
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+    motor.combustion_efficiency = combustion_efficiency
+    motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
+    state = biliquid_simulation.BiliquidEngineState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+    for _ in range(200):
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+
+    # The flows and throat area of the last step were computed at the pressure
+    # it started from.
+    chamber_pressure = state.chamber_pressure[-2]
+    assert state.chamber_pressure[-1] == pytest.approx(chamber_pressure, rel=1e-12)
+    mass_flow = sum(series[-1] for series in state.mass_flow_rate_per_line.values())
+    throat_area = motor.thrust_chamber.nozzle.get_throat_area()
+    delivered_c_star = (
+        chamber_pressure * discharge_coefficient * throat_area / mass_flow
+    )
+
+    properties = motor.propellant.evaluate(
+        chamber_pressure=chamber_pressure,
+        expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
+        mixture_ratio=state.oxidizer_to_fuel_ratio[-1],
+    )
+    k = properties.k_chamber
+    vandenkerckhove = np.sqrt(k) * (2.0 / (k + 1.0)) ** ((k + 1.0) / (2.0 * (k - 1.0)))
+    ideal_c_star = (
+        np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
+        / vandenkerckhove
+    )
+
+    assert delivered_c_star / ideal_c_star == pytest.approx(
+        combustion_efficiency, rel=1e-9
+    )
