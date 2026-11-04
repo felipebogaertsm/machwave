@@ -613,3 +613,54 @@ class TestMixtureRatioOverride:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestBuiltInBiliquidCards:
+    """
+    Pin the phase and enthalpy of the RocketCEA cards the biliquid examples use.
+
+    A built-in name is passed to RocketCEA as is, so its card decides the
+    reactant enthalpy and the component's own fields are ignored.
+    """
+
+    def test_n2o_card_is_ideal_gas_at_298_k(self):
+        from rocketcea.input_cards import oxCards
+
+        card = " ".join(oxCards["N2O"])
+        assert "(L)" not in card
+        assert "h,cal= 19467.0" in card
+        assert "t(k)=298.15" in card
+
+    def test_ethanol_card_is_liquid_at_298_k(self):
+        from rocketcea.input_cards import fuelCards
+
+        card = " ".join(fuelCards["Ethanol"])
+        assert "C2H5OH(L)" in card
+        assert "h,cal=-66370.0" in card
+        assert "t(k)=298.15" in card
+
+
+class TestGenerateCardStringReactantType:
+    def _component(self) -> dict:
+        return {
+            "name": "N2O(L)",
+            "formula": {"N": 2, "O": 1},
+            "weight_percent": 100.0,
+            "heat_of_formation": 17038.4,
+            "temperature": 300.0,
+            "density": 0.7247,
+        }
+
+    def test_default_keyword_is_name(self):
+        card = cea_service.generate_card_string([self._component()])
+        assert card.startswith("name N2O(L)")
+
+    def test_oxidizer_keyword(self):
+        card = cea_service.generate_card_string(
+            [self._component()], reactant_type="oxid"
+        )
+        assert card.startswith("oxid N2O(L)")
+
+    def test_unknown_keyword_raises(self):
+        with pytest.raises(ValueError, match="Unknown reactant type"):
+            cea_service.generate_card_string([self._component()], reactant_type="ox")

@@ -8,6 +8,7 @@ from machwave.models.propellants.categories.solid import SolidPropellant
 from machwave.models.propellants.components import (
     ComponentRole,
     PropellantComponent,
+    saturated_liquid_nitrous_oxide,
 )
 from machwave.models.propellants.properties import ThermochemicalProperties
 
@@ -18,5 +19,6 @@ __all__ = [
     "SolidPropellant",
     "PropellantComponent",
     "ComponentRole",
+    "saturated_liquid_nitrous_oxide",
     "ThermochemicalProperties",
 ]
