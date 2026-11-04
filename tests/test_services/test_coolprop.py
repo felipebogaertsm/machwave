@@ -175,3 +175,7 @@ class TestAStateTheFlashGetsWrong:
         service.get_state_at_density_internal_energy(500.0, internal_energy)
 
         assert service.dome_solve_count == 0
+
+
+def test_get_molar_mass(service):
+    assert service.get_molar_mass() == CP.PropsSI("M", FLUID_NAME)
