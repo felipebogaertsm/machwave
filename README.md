@@ -71,10 +71,6 @@ The full documentation is available at
 
 If you're contributing to Machwave, you'll need [uv](https://docs.astral.sh/uv/) for dependency management.
 
-The rules every change follows (code style, naming, physical model evidence, tests,
-workflow) are in [AGENTS.md](AGENTS.md) and the guides it links in `docs/ai/`. They apply
-to people and coding agents alike.
-
 #### Installing uv
 
 **macOS / Linux:**

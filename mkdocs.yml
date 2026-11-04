@@ -6,11 +6,6 @@ site_author: Felipe Bogaerts de Mattos
 repo_url: https://github.com/felipebogaertsm/machwave
 repo_name: felipebogaertsm/machwave
 
-exclude_docs: |
-  ai/
-  AGENTS.md
-  CLAUDE.md
-
 theme:
   name: material
   logo: assets/logo/machwave-icon-white.svg

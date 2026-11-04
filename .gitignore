@@ -18,16 +18,23 @@ workspace.code-workspace
 # Temporary files:
 input.json
 
-# Environment files
-.env
+### DJANGO ###
 
-# Temporary files
+# Database and env files:
+.env
+db.sqlite3
+
+# Temps
 *.log
+*.pot
+*.pyc
 __pycache__/
 
-# Agent sessions
-.claude/settings.local.json
-.claude/worktrees/
+# Staticfiles
+staticfiles/
+
+# Media files
+media/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

@@ -1,104 +1,119 @@
 # Machwave
 
-Machwave is a Python library for rocket motor internal ballistics: solid rocket motors
-with fast marching grain regression in two and three dimensions, and pressure-fed
-biliquid engines with chemical equilibrium thermochemistry and real-fluid tanks. Every
-change must hold a high standard of code, architecture, physical verification and
-references.
-
-## How to use these instructions
-
-- Read this file, then only the guides mapped below to the paths you will touch. Load
-  more guides when the scope grows; do not preload all of them.
-- The code is the source of truth. A guide that teaches an outdated pattern is a defect:
-  update it in the same change that breaks the pattern.
-- Guides describe patterns, not inventories. Adding a grain geometry or a propellant card
-  should not need a guide change; changing how geometries or cards work should.
-- Subdirectories with their own `AGENTS.md` add rules for that subtree.
-
-## Before you edit
-
-| Work in | Read first |
-| --- | --- |
-| Any Python file | [docs/ai/code-style.md](docs/ai/code-style.md) |
-| `machwave/core/**`, `machwave/models/**` | [docs/ai/physical-models.md](docs/ai/physical-models.md) |
-| `machwave/models/grain/**` | [docs/ai/grain-regression.md](docs/ai/grain-regression.md) |
-| `machwave/simulation/**` | [docs/ai/simulation.md](docs/ai/simulation.md) |
-| `tests/**` | [docs/ai/testing.md](docs/ai/testing.md) |
-| `docs/**`, `scripts/**`, `examples/**` | [docs/ai/documentation.md](docs/ai/documentation.md) |
-| Branches, commits, issues, pull requests | [docs/ai/workflow.md](docs/ai/workflow.md) |
-
-Playbooks for recurring work live in `.claude/skills/`: `machwave-review` for reviewing a
-branch and `add-physical-model` for adding or changing a physical model. Any agent can
-read them as plain Markdown.
-
-## Package layout
-
-| Package | Holds |
-| --- | --- |
-| `machwave/common` | Shared types with no physics: optional dependency handling, fluid state, mass properties |
-| `machwave/core` | Physics functions: compressible flow, mass balance, performance, solvers, unit conversions |
-| `machwave/models` | Physical components: grains, propellants, nozzle losses, feed systems, thrust chambers, motors |
-| `machwave/simulation` | Time marching states, simulations and results |
-| `machwave/montecarlo` | Dispersion studies over simulations |
-| `machwave/services` | Wrappers around external solvers (`cea.py`, `coolprop.py`) and output formats (`.eng`, plots) |
-| `machwave/adapters` | Conversion of Machwave objects into other libraries' objects |
-
-Runtime imports run one way: `common` → `core` → `models` → `simulation` →
-`montecarlo` and `adapters`. A lower layer may import a higher one only under
-`typing.TYPE_CHECKING`. The external solver wrappers in `services` are imported lazily,
-inside the function that needs them. The core of the library is internal ballistics;
-exporters and adapters depend on it, never the reverse.
+Python library for rocket motor internal ballistics: solid rocket motors with fast
+marching grain regression, and pressure-fed biliquid engines with chemical equilibrium
+thermochemistry and real-fluid tanks.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `make install-dev` | Install every extra and the development tools |
-| `make format` | Format and autofix |
-| `make check` | Format check, lint, type check |
-| `make test` | Full test suite in parallel |
-| `make test-core` | Tests that must pass with no optional dependencies installed |
-| `make coverage` | Branch coverage report |
-| `make benchmark` | Performance benchmarks |
-| `make docs-deploy` | Strict documentation build, as continuous integration runs it |
+- `make install-dev`: install every extra and the development tools.
+- `make format`, then `make check` (format, lint, type check) and `make test`.
+- `make test-core`: tests that must pass with no optional dependencies.
+- `make docs-deploy`: strict documentation build.
+- One file: `uv run --all-extras pytest tests/test_core/test_mass_balance.py`.
 
-Run a single file first: `uv run --all-extras pytest tests/test_core/test_mass_balance.py`.
+The project uses uv; ignore a stale `VIRTUAL_ENV` in the shell. Never edit
+`machwave/_version.py` (generated) or `uv.lock` by hand.
 
-## Verification
+## Layout
 
-- Do not call work done without running `make check` and `make test`. For documentation
-  changes, also run `make docs-deploy`.
-- Start with the smallest relevant check, then run the full gates.
-- The gates are green on `master`, so a failing check comes from the change.
-- If a check could not run (missing extra, Fortran compiler, network), say which one and
-  why. Never imply something was tested when it was not.
-- After about three failed attempts at the same failure, stop and report what you found.
-- For a physics change, state which verification or validation case was run and its
-  result, not only that the tests pass.
-- Before finishing, reread the guides you loaded and confirm their patterns still hold.
+Runtime imports run one way: `common` → `core` → `models` → `simulation` →
+`montecarlo` and `adapters`. Upward imports only under `typing.TYPE_CHECKING`. The
+solver wrappers in `services` (CEA, CoolProp) are imported lazily inside functions. The
+core is internal ballistics: no trajectory or export helpers on `Motor`.
 
-## Rules that apply everywhere
+## Before calling work done
 
-- Names replace comments. Do not abbreviate outside the closed exception list in
-  [docs/ai/code-style.md](docs/ai/code-style.md).
-- SI units inside the package. Every unit conversion calls a function in
-  `machwave/core/conversions.py`; add one there if it is missing.
-- Every physical model cites its primary source with edition and equation or section.
-- Never mention issue or pull request numbers in source files, docstrings or tests.
-- Keep namespace imports (`import machwave.core.conversions as conversions`); resolve a
-  name clash with an alias, not a `from` import.
-- The smallest diff that solves the issue. Fix a shared function once instead of patching
-  its callers.
+- Run `make check` and `make test`; add `make docs-deploy` for documentation.
+- Say which checks could not run and why. Never imply something was tested when it was
+  not.
+- For physics changes, state which verification case ran and its result.
+- After about three failed attempts at the same failure, stop and report.
 
-## Important caveats
+## Naming
 
-- The project uses uv. A shell may export a stale `VIRTUAL_ENV` from an old environment;
-  ignore it and use `uv run`.
-- The `cea` extra builds a Fortran extension: macOS needs `gfortran` (see `README.md`).
-- `machwave/_version.py` is generated from git tags. Never edit it; never hand-edit
-  `uv.lock` either (use `uv add` or `uv lock`).
-- Several agent sessions may share this working tree through worktrees. Stage files by
-  explicit path, never with `git add -A`.
-- Fast marching grain `grid_resolution` has a floor of 100. Do not lower it to speed up
-  tests; see [docs/ai/grain-regression.md](docs/ai/grain-regression.md).
+- Names replace comments. Spell out meaning in domain terms: `chamber_pressure`,
+  `isentropic_exponent`, `time_step`. Symbols go in the docstring, not the name.
+- Do not abbreviate, including physics shorthand (`k`, `d_t`, `Isp`, `Kn`, `m_dot`).
+  The only exceptions:
+  - Python, NumPy and pytest names: `self`, `cls`, `args`, `kwargs`, `dtype`, fixtures.
+  - The import aliases `np`, `npt` and `go`.
+  - Tooling names: `env`, `venv`, `dev`, `docs`, `src`, `ci`, `os`, `sys`.
+  - Proper names: CEA, CoolProp, NIST, JSON, CSV, URL, ID, API, `.eng`.
+  - Unit symbols as suffixes (`pressure_psi`) and in conversion function names.
+  - `rk4`, `ode`, `2d`, `3d`; `i`, `j` as short loop indices; `x`, `y`, `z` as
+    coordinates; `min_` and `max_` prefixes.
+- Functions are verbs, attributes nouns, booleans predicates (`is_choked`).
+- One word per concept across solid and biliquid code, results, plots and docs.
+- No empty words (`data`, `info`, `value`, `obj`) and no `utils` modules.
+- Flags are keyword-only or enumerations. Constants are named, never bare numbers.
+
+## Code
+
+- Comments only for a reason the code cannot state. Never comment what the code does,
+  and never mention issue or pull request numbers in source, docstrings or tests.
+- Docstrings are short, with `Args`, `Returns` and `Raises` sections and SI units, wrapped
+  at 88 characters (ruff does not check docstring line length).
+- Namespace imports (`import machwave.core.conversions as conversions`); resolve a name
+  clash with an alias, not a `from` import.
+- SI everywhere. Every unit conversion calls `machwave/core/conversions.py`; keep its
+  functions even when only tests use them.
+- Optional dependencies go through `machwave/common/extras.py`.
+- Raise specific exceptions whose message gives the quantity, its value and the allowed
+  range. Warn with `stacklevel` set. The package never prints; reports return text.
+- Smallest diff that solves the issue. Reuse before adding; no thin wrappers; fix a
+  shared function once instead of patching callers.
+
+## Physical models
+
+A new or changed model in `core` or `models` ships with:
+
+- A `References:` docstring section: primary source, edition, equation or section.
+- Assumptions, valid range and SI units in the docstring. Use outside the range warns or
+  raises, never extrapolates silently.
+- A test against an exact or independent reference solution. Discretized methods also
+  assert their observed order of accuracy over at least three refinement levels.
+- Tests of invariants: conservation, non-negative masses and pressures, monotonic
+  regression.
+- Its validation status: the measured data it matches, or "verified, not validated".
+  Calibrated parameters say which data they were fitted to, and that data never
+  validates the same model.
+
+Never port code from GPL or commercially licensed software; implement from the paper.
+
+## Simulation
+
+- `SolidMotorState` and `BiliquidEngineState` mirror each other: same `run_timestep`
+  order, array conventions and names. Change both together unless the physics differs.
+- Unread `TimestepConditions` fields are intentional; do not remove them.
+- The coupled time step is first order: only chamber pressure goes through RK4.
+- Fast marching `grid_resolution` never goes below 100. Speed up tests by shortening
+  grains, not by coarsening the grid.
+- The biliquid loop is bound by CEA evaluations; benchmark loop changes with
+  `make benchmark`.
+
+## Tests
+
+- `tests/` mirrors `machwave/`; build objects with `tests/factories/`.
+- Every tolerance has a reason (round-off, solver tolerance, measured discretization
+  error, reference precision). Never loosen one or change an expected value silently.
+- Name tests after behaviour, not the fixed bug. Every fixed bug gets a test.
+- Test public behaviour; do not patch private helpers. Use `match=` with
+  `pytest.raises` and `pytest.warns`.
+
+## Documentation
+
+Explanation pages in `docs/explanations/` are for readers who know propulsion: concept
+and equations first, an `Implementation` section linking the classes last, then
+`References` with editions. No code listings. Short, plain sentences.
+
+## Workflow
+
+- Branch per issue: `{issue_number}-short-summary`. Independent bugs get separate issues,
+  branches and pull requests.
+- Commit subjects state the behaviour change; bodies explain the mechanism and the
+  measured symptom. Stage files by explicit path.
+- Pull request bodies are short and start with `Closes #<issue>.`
+- Issues use standard propulsion terms ("biliquid", spell out a symbol on first use) and
+  one or two sentences.
+- No tool or assistant attribution in commits or pull requests.
