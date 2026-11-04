@@ -12,15 +12,16 @@ thermochemistry and real-fluid tanks.
 - `make docs-deploy`: strict documentation build.
 - One file: `uv run --all-extras pytest tests/test_core/test_mass_balance.py`.
 
-The project uses uv; ignore a stale `VIRTUAL_ENV` in the shell. Never edit
-`machwave/_version.py` (generated) or `uv.lock` by hand.
+The project uses uv; ignore a stale `VIRTUAL_ENV` in the shell. The `cea` extra needs
+`gfortran` on macOS. Never edit `machwave/_version.py` (generated) or `uv.lock` by hand.
 
 ## Layout
 
 Runtime imports run one way: `common` → `core` → `models` → `simulation` →
 `montecarlo` and `adapters`. Upward imports only under `typing.TYPE_CHECKING`. The
 solver wrappers in `services` (CEA, CoolProp) are imported lazily inside functions. The
-core is internal ballistics: no trajectory or export helpers on `Motor`.
+core is internal ballistics: no trajectory or export helpers on `Motor`. Mass properties
+stay generic (`machwave/common/mass_properties.py`), never coupled to an adapter.
 
 ## Before calling work done
 
@@ -28,6 +29,8 @@ core is internal ballistics: no trajectory or export helpers on `Motor`.
 - Say which checks could not run and why. Never imply something was tested when it was
   not.
 - For physics changes, state which verification case ran and its result.
+- Docstrings, explanation pages and this file are updated in the same change that alters
+  the pattern they describe.
 - After about three failed attempts at the same failure, stop and report.
 
 ## Naming
@@ -60,9 +63,11 @@ core is internal ballistics: no trajectory or export helpers on `Motor`.
   functions even when only tests use them.
 - Optional dependencies go through `machwave/common/extras.py`.
 - Raise specific exceptions whose message gives the quantity, its value and the allowed
-  range. Warn with `stacklevel` set. The package never prints; reports return text.
-- Smallest diff that solves the issue. Reuse before adding; no thin wrappers; fix a
-  shared function once instead of patching callers.
+  range. Warn with `stacklevel` set. New code never prints; reports return text.
+- Smallest diff that solves the issue. Follow the nearest existing pattern. Reuse before
+  adding; no thin wrappers; fix a shared function once instead of patching callers.
+- A new dependency needs a reason and goes in an optional extra unless the core needs it.
+- Renaming or removing public API goes through a deprecation warning first.
 
 ## Physical models
 
@@ -80,6 +85,7 @@ A new or changed model in `core` or `models` ships with:
   validates the same model.
 
 Never port code from GPL or commercially licensed software; implement from the paper.
+Propellant and other bundled data state their source and units.
 
 ## Simulation
 
@@ -89,6 +95,8 @@ Never port code from GPL or commercially licensed software; implement from the p
 - The coupled time step is first order: only chamber pressure goes through RK4.
 - Fast marching `grid_resolution` never goes below 100. Speed up tests by shortening
   grains, not by coarsening the grid.
+- Burn area changes are checked against a closed-form area or CAD, on both the 2D and 3D
+  paths and on odd and even grids. Inhibited faces and casing walls never burn.
 - The biliquid loop is bound by CEA evaluations; benchmark loop changes with
   `make benchmark`.
 
@@ -100,12 +108,15 @@ Never port code from GPL or commercially licensed software; implement from the p
 - Name tests after behaviour, not the fixed bug. Every fixed bug gets a test.
 - Test public behaviour; do not patch private helpers. Use `match=` with
   `pytest.raises` and `pytest.warns`.
+- Short comments are fine where the code cannot speak (why a case is invalid). Assert
+  against the source value, not a decoded literal explained by a comment.
 
 ## Documentation
 
 Explanation pages in `docs/explanations/` are for readers who know propulsion: concept
 and equations first, an `Implementation` section linking the classes last, then
-`References` with editions. No code listings. Short, plain sentences.
+`References` with editions. No code listings. Short, plain sentences: no rhetorical
+openers, no "X, not Y" contrasts, no heavy bolding.
 
 ## Workflow
 
