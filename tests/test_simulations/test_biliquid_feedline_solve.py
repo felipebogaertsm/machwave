@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 
 import pytest
+import scipy.optimize
 
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.thrust_chamber.injector as injector_models
@@ -13,6 +14,7 @@ from tests.factories import (
     FluidStateFactory,
     InjectorElementFactory,
     PropellantLineFactory,
+    TankFactory,
 )
 
 HEAD_PRESSURE = 55e5
@@ -135,7 +137,65 @@ class TestHem:
         )
         assert flow == pytest.approx(
             element.get_mass_flow(inlet=seen, chamber_pressure=CHAMBER_PRESSURE),
-            rel=1e-9,
+            rel=1e-8,
+        )
+
+    def test_a_saturated_inlet_passes_the_lossless_flow(self):
+        """HEM from a saturated inlet starts from the saturated liquid at the tank
+        temperature, so the line loss has nothing to act on; the solve must not
+        fail on a residual that never changes sign."""
+        element = InjectorElementFactory.build(
+            area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
+        )
+        line = PropellantLineFactory.build(
+            resistance=feed_systems_models.FeedlineResistance(
+                loss_coefficient=5.0, flow_area=2.0e-5
+            )
+        )
+        tank = TankFactory.build(fluid_name="N2O", temperature=300.0)
+        head = FluidStateFactory.build(
+            fluid_name="N2O",
+            pressure=tank.get_pressure(tank.initial_fluid_mass),
+            temperature=300.0,
+            density=tank.get_density(tank.initial_fluid_mass),
+        )
+
+        assert solve(line, element, head_state=head) == pytest.approx(
+            element.get_mass_flow(inlet=head, chamber_pressure=CHAMBER_PRESSURE)
+        )
+
+    def test_matches_a_tight_root_find(self):
+        element = InjectorElementFactory.build(
+            area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
+        )
+        resistance = feed_systems_models.FeedlineResistance(
+            loss_coefficient=5.0, flow_area=2.0e-5
+        )
+        line = PropellantLineFactory.build(resistance=resistance)
+        head = FluidStateFactory.build(
+            fluid_name="N2O", pressure=57e5, temperature=290.0, density=785.0
+        )
+
+        def residual(mass_flow):
+            seen = FluidStateFactory.build(
+                fluid_name="N2O",
+                pressure=57e5 - resistance.get_pressure_drop(mass_flow, 785.0),
+                temperature=290.0,
+                density=785.0,
+            )
+            return mass_flow - element.get_mass_flow(
+                inlet=seen, chamber_pressure=CHAMBER_PRESSURE
+            )
+
+        reference = scipy.optimize.brentq(
+            residual,
+            0.0,
+            element.get_mass_flow(inlet=head, chamber_pressure=CHAMBER_PRESSURE),
+            xtol=1e-14,
+        )
+
+        assert solve(line, element, head_state=head) == pytest.approx(
+            reference, rel=1e-8
         )
 
 

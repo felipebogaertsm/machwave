@@ -21,6 +21,11 @@ import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
+# Of the no-loss flow. Lands within about 1e-9 of the exact root, far below
+# what any orifice model is good for, in two element evaluations fewer than
+# brentq's default tolerance.
+FLOW_SOLVE_RELATIVE_TOLERANCE = 1e-8
+
 
 def get_line_mass_flow(
     chamber_pressure: float,
@@ -38,7 +43,9 @@ def get_line_mass_flow(
         mdot = f_inj(P_head - dP(mdot), Pc)
 
     The right-hand side falls as mdot rises, so the root is unique and lies
-    between zero and the flow the element passes with no line loss.
+    between zero and the flow the element passes with no line loss. An SPI
+    element is a second quadratic resistance in series with the line, so its
+    root has a closed form; any other element is solved by bracketing.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -53,22 +60,53 @@ def get_line_mass_flow(
     lossless_flow = element.get_mass_flow(
         inlet=head_state, chamber_pressure=chamber_pressure
     )
-    if line.resistance is None or lossless_flow <= 0.0:
+    resistance = line.resistance
+    if resistance is None or lossless_flow <= 0.0:
         return lossless_flow
 
-    def get_flow_residual(mass_flow: float) -> float:
-        inlet = fluid_state_models.FluidState(
-            fluid_name=head_state.fluid_name,
-            pressure=head_state.pressure
-            - line.get_pressure_drop(mass_flow, head_state.density),
-            temperature=head_state.temperature,
-            density=head_state.density,
-        )
-        return mass_flow - element.get_mass_flow(
-            inlet=inlet, chamber_pressure=chamber_pressure
+    if element.mass_flow_model == injector_models.MassFlowModel.SPI:
+        # mdot = Cd A sqrt(2 rho dP_orifice) and the line takes
+        # K mdot^2 / (2 rho A_line^2) of the same head-to-chamber drop.
+        return lossless_flow / math.sqrt(
+            1.0
+            + resistance.loss_coefficient
+            * (element.discharge_coefficient * element.area / resistance.flow_area) ** 2
         )
 
-    return cast(float, scipy.optimize.brentq(get_flow_residual, 0.0, lossless_flow))
+    # brentq evaluates both ends of the bracket again, and each evaluation of
+    # an element such as HEM is a CoolProp sweep, so keep what is known.
+    residuals = {0.0: -lossless_flow}
+
+    def get_flow_residual(mass_flow: float) -> float:
+        if mass_flow not in residuals:
+            inlet = fluid_state_models.FluidState(
+                fluid_name=head_state.fluid_name,
+                pressure=head_state.pressure
+                - line.get_pressure_drop(mass_flow, head_state.density),
+                temperature=head_state.temperature,
+                density=head_state.density,
+            )
+            residuals[mass_flow] = mass_flow - element.get_mass_flow(
+                inlet=inlet, chamber_pressure=chamber_pressure
+            )
+        return residuals[mass_flow]
+
+    if get_flow_residual(lossless_flow) <= 0.0:
+        # The element passes no less at the lower inlet pressure, as HEM from
+        # a saturated inlet does: its stagnation state is the saturated liquid
+        # at the tank temperature whatever the pressure, so the line loss
+        # leaves the flow alone.
+        return lossless_flow
+
+    return cast(
+        float,
+        scipy.optimize.brentq(
+            get_flow_residual,
+            0.0,
+            lossless_flow,
+            xtol=FLOW_SOLVE_RELATIVE_TOLERANCE * lossless_flow,
+        ),
+    )
 
 
 def get_injector_mass_flows(
