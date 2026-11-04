@@ -4,11 +4,11 @@ Machwave is an open source Python library for chemical rocket propulsion simulat
 
 ## Commands
 
-- `make install-dev`: install every extra and the development tools.
-- `make format`, then `make check` (format, lint, type check) and `make test`.
-- `make test-core`: tests that must pass with no optional dependencies.
-- `make docs-deploy`: strict documentation build.
-- One file: `uv run --all-extras pytest tests/test_core/test_mass_balance.py`.
+The `Makefile` is the single entry point for every command that matters: install, format,
+check, test, docs, build and release. Continuous integration only sets up the
+environment and calls `make` targets, so anything CI does can be run locally the same
+way. A new routine command becomes a `make` target, never a step written only in a
+workflow file.
 
 The project uses uv; ignore a stale `VIRTUAL_ENV` in the shell. The `cea` extra needs
 `gfortran` on macOS. Never edit `machwave/_version.py` (generated) or `uv.lock` by hand.
