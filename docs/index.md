@@ -30,7 +30,7 @@ It can be extended with the following optional features:
 | Extra | Unlocks |
 | --- | --- |
 | `cea` | Thermochemistry computed from propellant composition, needed for biliquid engines and for custom solid mixtures |
-| `liquid` | Propellant tanks and the injector's homogeneous-equilibrium mass flux |
+| `liquid` | Propellant tanks and the injector's two-phase (HEM and Dyer) mass flux |
 | `fmm` | Every grain geometry other than BATES, including grains defined by an STL mesh |
 | `plots` | The built-in figures and the Monte Carlo plots |
 | `rocketpy` | The RocketPy adapter for trajectory simulation |
