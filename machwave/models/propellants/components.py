@@ -28,8 +28,15 @@ class PropellantComponent:
         role: Component role (oxidizer, fuel, additive).
         density: Component density [kg/m^3].
         chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
-        enthalpy: Standard enthalpy of formation [J/mol].
+        enthalpy: Molar enthalpy at `initial_temperature`, on the CEA scale
+            where each element is zero at 298.15 K, so at 298.15 K it is the
+            standard enthalpy of formation [J/mol].
         initial_temperature: Initial component temperature before combustion [K].
+        custom_card: Whether a biliquid propellant builds a CEA reactant card
+            from this component's formula, enthalpy, initial temperature and
+            density. When False, `name` is looked up in RocketCEA's built-in
+            cards and those fields are ignored. Solid propellants always build
+            their card from the fields.
     """
 
     name: str
@@ -38,6 +45,7 @@ class PropellantComponent:
     chemical_formula: dict[str, int]
     enthalpy: float
     initial_temperature: float = 298.15
+    custom_card: bool = False
 
     def to_cea_dict(self, *, weight_percent: float) -> dict:
         """
@@ -63,3 +71,79 @@ class PropellantComponent:
             "temperature": self.initial_temperature,
             "density": density_gcc,
         }
+
+
+# Heat of formation of N2O gas at 298.15 K in the CEA thermo library (Gurvich,
+# 1989). Taken from the library and not from JANAF so the reactant sits on the
+# same enthalpy scale as the combustion products.
+NITROUS_OXIDE_GAS_HEAT_OF_FORMATION = 81600.0  # [J/mol]
+
+# CEA assigns the ideal gas at this temperature the heat of formation.
+_CEA_REFERENCE_TEMPERATURE = 298.15  # [K]
+
+# Low enough that CoolProp's real-gas enthalpy is the ideal-gas enthalpy to
+# well under 1 J/mol.
+_IDEAL_GAS_REFERENCE_PRESSURE = 1.0  # [Pa]
+
+
+def saturated_liquid_nitrous_oxide(temperature: float) -> PropellantComponent:
+    """
+    Build an N2O oxidizer component as saturated liquid at a tank temperature.
+
+    RocketCEA's built-in "N2O" card is the ideal gas at 298.15 K. A
+    self-pressurized tank feeds saturated liquid, whose enthalpy is lower by
+    roughly the heat of vaporization, so the built-in card overstates flame
+    temperature, c* and Isp. The injector is taken as adiabatic, so the
+    enthalpy reaching the chamber is the tank liquid enthalpy whatever the
+    liquid flashes to on the way.
+
+    Following the CEA convention (Gordon and McBride, NASA RP-1311, 1994,
+    eq. 4.2), the molar enthalpy is the gas heat of formation at 298.15 K plus
+    the real-fluid enthalpy change from that ideal-gas state to saturated
+    liquid at `temperature`, taken from CoolProp:
+
+        h = h_f(N2O gas, 298.15 K) + [h_sat_liq(T) - h_ideal_gas(298.15 K)]
+
+    The card is fixed at `temperature`. A tank running an energy balance cools
+    during the burn, and the card does not follow it.
+
+    Args:
+        temperature: Liquid temperature in the tank at loading [K].
+
+    Returns:
+        Oxidizer component with `custom_card` set.
+
+    Raises:
+        ValueError: If `temperature` is not between the triple point and the
+            critical point of N2O.
+        MissingOptionalDependencyError: If the `liquid` extra is not installed.
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    fluid = coolprop_service.CoolPropService("NitrousOxide")
+    triple_point = fluid.get_triple_point_temperature()
+    critical_point = fluid.get_critical_temperature()
+    if not (triple_point <= temperature < critical_point):
+        raise ValueError(
+            f"N2O saturated-liquid temperature must be between {triple_point:.2f} K "
+            f"and {critical_point:.2f} K, got {temperature} K"
+        )
+
+    molar_mass = fluid.get_molar_mass()
+    ideal_gas_reference_enthalpy = fluid.get_enthalpy_at_temperature_pressure(
+        _CEA_REFERENCE_TEMPERATURE, _IDEAL_GAS_REFERENCE_PRESSURE
+    )
+    liquid_enthalpy = fluid.get_saturated_liquid_enthalpy(temperature)
+    enthalpy = NITROUS_OXIDE_GAS_HEAT_OF_FORMATION + molar_mass * (
+        liquid_enthalpy - ideal_gas_reference_enthalpy
+    )
+
+    return PropellantComponent(
+        name="N2O(L)",
+        role=ComponentRole.OXIDIZER,
+        density=fluid.get_saturated_liquid_density(temperature),
+        chemical_formula={"N": 2, "O": 1},
+        enthalpy=enthalpy,
+        initial_temperature=temperature,
+        custom_card=True,
+    )
