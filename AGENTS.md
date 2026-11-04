@@ -10,16 +10,37 @@ environment and calls `make` targets, so anything CI does can be run locally the
 way. A new routine command becomes a `make` target, never a step written only in a
 workflow file.
 
-The project uses uv; ignore a stale `VIRTUAL_ENV` in the shell. The `cea` extra needs
-`gfortran` on macOS. Never edit `machwave/_version.py` (generated) or `uv.lock` by hand.
+The project uses uv. Generated files and the lock file are never edited by hand.
 
-## Layout
+## Architecture
 
-Runtime imports run one way: `common` → `core` → `models` → `simulation` →
-`montecarlo` and `adapters`. Upward imports only under `typing.TYPE_CHECKING`. The
-solver wrappers in `services` (CEA, CoolProp) are imported lazily inside functions. The
-core is internal ballistics: no trajectory or export helpers on `Motor`. Mass properties
-stay generic (`machwave/common/mass_properties.py`), never coupled to an adapter.
+- Dependencies run one way: `common` → `core` → `models` → `simulation` →
+  `montecarlo` and `adapters`. A lower layer never imports a higher one at runtime.
+- The core of the library is internal ballistics. Exporters, plots and adapters to other
+  libraries depend on the core, never the reverse, and carry no physics of their own.
+- A quantity that more than one consumer may need (mass properties, results) is owned by
+  the core or a shared type, never by one consumer.
+- External solvers sit behind thin service wrappers and are imported lazily, so the
+  package imports and the core tests pass with no optional dependency installed.
+- Implementations of one abstraction keep the same structure: every `MotorState` has the
+  same step order, array conventions and names, every grain geometry exposes the same
+  quantities. A change to one is mirrored in the others unless the physics differs.
+- Extension seams are deliberate: a per-step snapshot may carry fields that no current
+  consumer reads. Do not remove them as dead code.
+
+## Designing a change
+
+- Solve the issue with the smallest change that fits the existing design. Follow the
+  nearest existing pattern; reuse before adding; the standard library before a
+  dependency; a dependency before new code.
+- Fix a shared function once instead of patching its callers.
+- No thin wrappers, no speculative parameters, no `utils` modules.
+- A new dependency needs a reason and goes in an optional extra unless the core needs it.
+- Public API is renamed or removed only through a deprecation warning first.
+- Correct first, then clear, then fast. Optimize only with a measurement; loop cost is
+  dominated by external solver evaluations, so count them.
+- Docstrings, explanation pages and this file change in the same change that alters the
+  pattern they describe. A doc that teaches the old pattern is a defect.
 
 ## Before calling work done
 
@@ -27,8 +48,6 @@ stay generic (`machwave/common/mass_properties.py`), never coupled to an adapter
 - Say which checks could not run and why. Never imply something was tested when it was
   not.
 - For physics changes, state which verification case ran and its result.
-- Docstrings, explanation pages and this file are updated in the same change that alters
-  the pattern they describe.
 - After about three failed attempts at the same failure, stop and report.
 
 ## Naming
@@ -45,76 +64,64 @@ stay generic (`machwave/common/mass_properties.py`), never coupled to an adapter
   - `rk4`, `ode`, `2d`, `3d`; `i`, `j` as short loop indices; `x`, `y`, `z` as
     coordinates; `min_` and `max_` prefixes.
 - Functions are verbs, attributes nouns, booleans predicates (`is_choked`).
-- One word per concept across solid and biliquid code, results, plots and docs.
-- No empty words (`data`, `info`, `value`, `obj`) and no `utils` modules.
+- One word per concept across every motor type, results, plots and docs.
+- No empty words (`data`, `info`, `value`, `obj`).
 - Flags are keyword-only or enumerations. Constants are named, never bare numbers.
 
 ## Code
 
 - Comments only for a reason the code cannot state. Never comment what the code does,
   and never mention issue or pull request numbers in source, docstrings or tests.
-- Docstrings are short, with `Args`, `Returns` and `Raises` sections and SI units, wrapped
-  at 88 characters (ruff does not check docstring line length).
-- Namespace imports (`import machwave.core.conversions as conversions`); resolve a name
-  clash with an alias, not a `from` import.
-- SI everywhere. Every unit conversion calls `machwave/core/conversions.py`; keep its
-  functions even when only tests use them.
-- Optional dependencies go through `machwave/common/extras.py`.
+- Docstrings are short, with `Args`, `Returns` and `Raises` sections and SI units, and
+  follow the code line length.
+- Namespace imports; resolve a name clash with an alias, not a `from` import.
+- SI everywhere. Every unit conversion goes through a conversion function, never an
+  inline factor. Conversion functions stay even when only tests use them.
 - Raise specific exceptions whose message gives the quantity, its value and the allowed
   range. Warn with `stacklevel` set. New code never prints; reports return text.
-- Smallest diff that solves the issue. Follow the nearest existing pattern. Reuse before
-  adding; no thin wrappers; fix a shared function once instead of patching callers.
-- A new dependency needs a reason and goes in an optional extra unless the core needs it.
-- Renaming or removing public API goes through a deprecation warning first.
 
 ## Physical models
 
-A new or changed model in `core` or `models` ships with:
+A new or changed model ships with:
 
 - A `References:` docstring section: primary source, edition, equation or section.
 - Assumptions, valid range and SI units in the docstring. Use outside the range warns or
   raises, never extrapolates silently.
-- A test against an exact or independent reference solution. Discretized methods also
-  assert their observed order of accuracy over at least three refinement levels.
+- A test against an exact or independent reference solution: closed-form cases, CAD
+  geometry, published tables. Discretized methods also assert their observed order of
+  accuracy over at least three refinement levels, on every code path and grid parity.
 - Tests of invariants: conservation, non-negative masses and pressures, monotonic
-  regression.
+  regression, surfaces that must not burn.
 - Its validation status: the measured data it matches, or "verified, not validated".
   Calibrated parameters say which data they were fitted to, and that data never
   validates the same model.
+- The order of accuracy stated for a coupled scheme is the global order, not the order
+  of its inner solver.
+
+Resolution floors and default time steps come from convergence studies; never lower one
+for speed. Make a test faster by shrinking the problem, not by coarsening the
+discretization.
 
 Never port code from GPL or commercially licensed software; implement from the paper.
 Propellant and other bundled data state their source and units.
 
-## Simulation
-
-- `SolidMotorState` and `BiliquidEngineState` mirror each other: same `run_timestep`
-  order, array conventions and names. Change both together unless the physics differs.
-- Unread `TimestepConditions` fields are intentional; do not remove them.
-- The coupled time step is first order: only chamber pressure goes through RK4.
-- Fast marching `grid_resolution` never goes below 100. Speed up tests by shortening
-  grains, not by coarsening the grid.
-- Burn area changes are checked against a closed-form area or CAD, on both the 2D and 3D
-  paths and on odd and even grids. Inhibited faces and casing walls never burn.
-- The biliquid loop is bound by CEA evaluations; benchmark loop changes with
-  `make benchmark`.
-
 ## Tests
 
-- `tests/` mirrors `machwave/`; build objects with `tests/factories/`.
+- `tests/` mirrors `machwave/`; build objects with the shared test factories.
 - Every tolerance has a reason (round-off, solver tolerance, measured discretization
   error, reference precision). Never loosen one or change an expected value silently.
 - Name tests after behaviour, not the fixed bug. Every fixed bug gets a test.
-- Test public behaviour; do not patch private helpers. Use `match=` with
+- Test public behaviour; do not patch private helpers. Match the message in
   `pytest.raises` and `pytest.warns`.
 - Short comments are fine where the code cannot speak (why a case is invalid). Assert
   against the source value, not a decoded literal explained by a comment.
 
 ## Documentation
 
-Explanation pages in `docs/explanations/` are for readers who know propulsion: concept
-and equations first, an `Implementation` section linking the classes last, then
-`References` with editions. No code listings. Short, plain sentences: no rhetorical
-openers, no "X, not Y" contrasts, no heavy bolding.
+Explanation pages are for readers who know propulsion: concept and equations first, an
+`Implementation` section linking the classes last, then `References` with editions. No
+code listings. Short, plain sentences: no rhetorical openers, no "X, not Y" contrasts,
+no heavy bolding.
 
 ## Workflow
 
