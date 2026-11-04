@@ -164,9 +164,9 @@ def test_loss_fraction_series_match_model_components() -> None:
 def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
     """The solid read site sources combustion efficiency from the motor.
 
-    The effective flame temperature scales with the motor's combustion
-    efficiency, so a more efficient motor produces a higher chamber pressure
-    after one identical time step.
+    The characteristic velocity scales with the motor's combustion efficiency,
+    so a more efficient motor produces a higher chamber pressure after one
+    identical time step.
     """
 
     def first_step_chamber_pressure(combustion_efficiency: float) -> float:

@@ -9,17 +9,22 @@ def get_effective_flame_temperature(
     adiabatic_flame_temperature: float, combustion_efficiency: float
 ) -> float:
     """
-    Apply the combustion efficiency to the adiabatic flame temperature.
+    Get the flame temperature that delivers the derated characteristic velocity.
+
+    The combustion efficiency is a characteristic velocity (c*) efficiency,
+    eta_c* = c*_actual / c*_ideal. Since c* = sqrt(R T) / Gamma(k), the
+    temperature is scaled by its square, T_eff = eta_c*^2 T0. With R and k held
+    at their ideal values, the chamber then delivers c* = eta_c* c*_ideal, and the
+    chamber pressure for a given mass flow and throat scales by eta_c*.
 
     Args:
         adiabatic_flame_temperature: Adiabatic flame temperature [K].
-        combustion_efficiency: Combustion efficiency in (0, 1], the ratio of the actual
-            to the ideal (adiabatic) flame temperature.
+        combustion_efficiency: Characteristic velocity efficiency in (0, 1].
 
     Returns:
         Effective flame temperature [K].
     """
-    return combustion_efficiency * adiabatic_flame_temperature
+    return combustion_efficiency**2 * adiabatic_flame_temperature
 
 
 def get_total_impulse(
