@@ -71,8 +71,10 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=1e-4,
     )
+    # The tank masses advance by explicit Euler (#483), so the impulse, which
+    # integrates the late vapor blowdown, converges at first order in the step.
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse, rel=1e-3
+        simulation_result.total_impulse, rel=1e-2
     )
 
 
