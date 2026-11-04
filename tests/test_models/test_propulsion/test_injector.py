@@ -39,10 +39,13 @@ class TestInjectorElementInstantiation:
     def test_default_mass_flow_model_is_spi(self):
         assert InjectorElementFactory.build().mass_flow_model is MassFlowModel.SPI
 
-    def test_coerces_the_mass_flow_model_from_its_value(self):
-        element = InjectorElementFactory.build(mass_flow_model="hem")
+    @pytest.mark.parametrize(
+        "value,model", [("hem", MassFlowModel.HEM), ("dyer", MassFlowModel.DYER)]
+    )
+    def test_coerces_the_mass_flow_model_from_its_value(self, value, model):
+        element = InjectorElementFactory.build(mass_flow_model=value)
 
-        assert element.mass_flow_model is MassFlowModel.HEM
+        assert element.mass_flow_model is model
 
     def test_rejects_an_unknown_mass_flow_model(self):
         with pytest.raises(ValueError, match="not a valid MassFlowModel"):
@@ -117,10 +120,51 @@ class TestInjectorElementMassFlow:
             element.discharge_coefficient * element.area * mass_flux
         )
 
+    def test_dyer_dispatch_matches_two_phase_helper_times_discharge_and_area(
+        self, saturated_nitrous_oxide_inlet
+    ):
+        """DYER dispatch equals `Cd * A * G_DYER` from the core helper."""
+        inlet = saturated_nitrous_oxide_inlet
+        element = InjectorElementFactory.build(mass_flow_model=MassFlowModel.DYER)
+        chamber_pressure = 20e5
+
+        actual = element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure)
+
+        mass_flux = two_phase_flow.get_dyer_mass_flux(
+            fluid_name=inlet.fluid_name,
+            temperature_upstream=inlet.temperature,
+            density_upstream=inlet.density,
+            pressure_upstream=inlet.pressure,
+            pressure_downstream=chamber_pressure,
+        )
+        assert actual == pytest.approx(
+            element.discharge_coefficient * element.area * mass_flux
+        )
+
+    def test_dyer_lies_between_hem_and_spi_for_saturated_nitrous_oxide(
+        self, saturated_nitrous_oxide_inlet
+    ):
+        kwargs = dict(inlet=saturated_nitrous_oxide_inlet, chamber_pressure=20e5)
+        flows = {
+            model: InjectorElementFactory.build(mass_flow_model=model).get_mass_flow(
+                **kwargs
+            )
+            for model in MassFlowModel
+        }
+
+        assert (
+            flows[MassFlowModel.HEM]
+            < flows[MassFlowModel.DYER]
+            < flows[MassFlowModel.SPI]
+        )
+
+    @pytest.mark.parametrize("mass_flow_model", list(MassFlowModel))
     @pytest.mark.parametrize("chamber_pressure", [30e5, 40e5])
-    def test_a_chamber_at_or_above_the_inlet_stops_the_flow(self, chamber_pressure):
+    def test_a_chamber_at_or_above_the_inlet_stops_the_flow(
+        self, chamber_pressure, mass_flow_model
+    ):
         inlet = FluidStateFactory.build(pressure=30e5)
-        element = InjectorElementFactory.build()
+        element = InjectorElementFactory.build(mass_flow_model=mass_flow_model)
 
         assert (
             element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure) == 0.0
