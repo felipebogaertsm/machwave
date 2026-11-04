@@ -49,6 +49,7 @@ nav:
       - Simulation Loop: explanations/simulation_loop.md
       - Thrust and Performance: explanations/thrust.md
       - Mass Balance: explanations/mass_balance.md
+      - Propellants: explanations/propellants.md
       - Grain Regression: explanations/grain_regression.md
   - Modules:
       - adapters:

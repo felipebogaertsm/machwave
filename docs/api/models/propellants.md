@@ -5,6 +5,9 @@ Propellant definition and thermochemical evaluation. A propellant is built from 
 !!! note "Composition-derived evaluation requires the `cea` extra"
     The bundled solid formulations carry pre-computed thermochemical properties and evaluate without it. Deriving properties from composition — every biliquid propellant, and any solid built without a `properties` block — needs `pip install machwave[cea]`.
 
+How a propellant is assembled and how its properties reach the simulation loop is explained in
+[Propellants](../../explanations/propellants.md).
+
 Submodules:
 
 - [categories](propellants/categories.md) — `SolidPropellant` (with St. Robert’s burn rate law) and `BiliquidPropellant` (with O/F ratio)
