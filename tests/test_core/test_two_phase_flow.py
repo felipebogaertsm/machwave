@@ -454,3 +454,106 @@ def test_get_dyer_mass_flux_is_spi_above_the_critical_temperature():
     )
 
     assert actual == pytest.approx(np.sqrt(2.0 * density * 6.0e6))
+
+
+def _get_dense_critical_mass_flux(
+    temperature_upstream: float, pressure_upstream: float, pressure_downstream: float
+) -> float:
+    """
+    Maximum isentropic flux over [P2, P1] by brute force, straight from CoolProp.
+
+    A 401-point sweep, refined four times around its best point, so the
+    pressure that gives the maximum is resolved to about 1e-12 of P1. The
+    stagnation state is the inlet at (T, P1) when subcooled and the saturated
+    liquid at T otherwise.
+    """
+    fluid_name = "N2O"
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
+    if pressure_upstream > vapor_pressure:
+        inputs = ("T", temperature_upstream, "P", pressure_upstream)
+    else:
+        inputs = ("T", temperature_upstream, "Q", 0)
+    enthalpy_upstream = CP.PropsSI("H", *inputs, fluid_name)
+    entropy_upstream = CP.PropsSI("S", *inputs, fluid_name)
+
+    def get_flux(pressure: float) -> float:
+        try:
+            density = CP.PropsSI("D", "P", pressure, "S", entropy_upstream, fluid_name)
+            enthalpy = CP.PropsSI("H", "P", pressure, "S", entropy_upstream, fluid_name)
+        except ValueError:
+            return 0.0
+        if enthalpy >= enthalpy_upstream:
+            return 0.0
+        return density * np.sqrt(2.0 * (enthalpy_upstream - enthalpy))
+
+    lower, upper = pressure_downstream, pressure_upstream
+    for _ in range(4):
+        pressures = np.linspace(lower, upper, 401)
+        fluxes = [get_flux(pressure) for pressure in pressures]
+        best = int(np.argmax(fluxes))
+        lower = pressures[max(best - 1, 0)]
+        upper = pressures[min(best + 1, len(pressures) - 1)]
+    return float(fluxes[best])
+
+
+@pytest.mark.parametrize(
+    "temperature_upstream,pressure_ratio_upstream,pressure_ratio_downstream",
+    [
+        # Saturated at 250 K, choked and unchoked.
+        (250.0, 1.0, 0.3),
+        (250.0, 1.0, 0.9),
+        # Saturated at room temperature, and an inlet below its vapor pressure.
+        (293.0, 1.0, 0.3),
+        (300.0, 0.97, 0.5),
+        # Subcooled, choked and unchoked, and barely subcooled.
+        (280.0, 1.3, 0.3),
+        (280.0, 1.3, 0.9),
+        (293.0, 1.02, 0.4),
+        # Near the critical point (309.52 K), saturated and subcooled.
+        (308.0, 1.0, 0.4),
+        (308.0, 1.2, 0.4),
+        (309.0, 1.05, 0.5),
+    ],
+)
+def test_critical_homogeneous_equilibrium_mass_flux_matches_a_dense_sweep(
+    temperature_upstream, pressure_ratio_upstream, pressure_ratio_downstream
+):
+    """
+    The memoized critical-point search lands on the brute-force maximum of the
+    isentropic flux to 1e-6, choked or not.
+
+    Pressures are given as ratios: P1 to the vapor pressure, P2 to P1.
+    """
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_upstream = pressure_ratio_upstream * vapor_pressure
+    pressure_downstream = pressure_ratio_downstream * pressure_upstream
+
+    actual = two_phase_flow._get_critical_homogeneous_equilibrium_mass_flux(
+        "N2O", temperature_upstream, pressure_upstream, pressure_downstream
+    )
+
+    assert actual == pytest.approx(
+        _get_dense_critical_mass_flux(
+            temperature_upstream, pressure_upstream, pressure_downstream
+        ),
+        rel=1e-6,
+    )
+
+
+def test_critical_homogeneous_equilibrium_mass_flux_does_not_depend_on_call_history():
+    """
+    The memos and the shared CoolProp state hand back the same bits whatever
+    was asked before.
+    """
+    arguments = ("N2O", 290.0, 5.0e6, 4.2e6)
+    two_phase_flow._get_critical_point.cache_clear()
+    two_phase_flow._get_unchoked_mass_flux.cache_clear()
+    cold = two_phase_flow._get_critical_homogeneous_equilibrium_mass_flux(*arguments)
+
+    for temperature in (250.0, 300.0, 308.0):
+        two_phase_flow._get_critical_homogeneous_equilibrium_mass_flux(
+            "N2O", temperature, 8.0e6, 2.0e6
+        )
+    warm = two_phase_flow._get_critical_homogeneous_equilibrium_mass_flux(*arguments)
+
+    assert warm == cold
