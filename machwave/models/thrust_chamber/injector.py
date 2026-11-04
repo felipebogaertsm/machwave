@@ -15,13 +15,20 @@ class MassFlowModel(enum.StrEnum):
 
     SPI: Single-phase incompressible orifice equation. Valid for subcooled liquid
         propellants.
-    HEM: Homogeneous-equilibrium two-phase model. Required for self-pressurized
-        propellants such as nitrous oxide, where flow can choke at the injector due to
-        flash boiling.
+    HEM: Homogeneous-equilibrium two-phase model, choked below the critical
+        pressure. Assumes the liquid flashes to equilibrium inside the orifice,
+        which underpredicts the flow of a short orifice.
+    DYER: Dyer's non-homogeneous non-equilibrium model, a blend of SPI and the
+        choked HEM weighted by the ratio of bubble growth time to liquid
+        residence time. The model for self-pressurized propellants such as
+        nitrous oxide near saturation, where SPI overpredicts and HEM
+        underpredicts (Dyer et al., AIAA 2007-5702; see
+        `machwave.core.two_phase_flow.get_dyer_mass_flux`).
     """
 
     SPI = "spi"
     HEM = "hem"
+    DYER = "dyer"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -82,6 +89,15 @@ class InjectorElement:
                 temperature_upstream=inlet.temperature,
                 pressure_downstream=chamber_pressure,
                 pressure_upstream=inlet.pressure,
+            )
+            return self.discharge_coefficient * self.area * mass_flux
+        elif self.mass_flow_model == MassFlowModel.DYER:
+            mass_flux = two_phase_flow.get_dyer_mass_flux(
+                fluid_name=inlet.fluid_name,
+                temperature_upstream=inlet.temperature,
+                density_upstream=inlet.density,
+                pressure_upstream=inlet.pressure,
+                pressure_downstream=chamber_pressure,
             )
             return self.discharge_coefficient * self.area * mass_flux
         elif self.mass_flow_model == MassFlowModel.SPI:
