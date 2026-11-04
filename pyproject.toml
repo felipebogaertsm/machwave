@@ -57,6 +57,9 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "machwave/_version.py"
 
+[tool.hatch.build.targets.wheel]
+exclude = ["AGENTS.md", "CLAUDE.md"]
+
 [project.urls]
 Homepage = "https://github.com/felipebogaertsm/machwave"
 
@@ -82,7 +85,8 @@ convention = "google"
 max-doc-length = 88
 
 [tool.ruff.lint.per-file-ignores]
-# Tests, examples, and docs are exempt from docstring requirements.
+# Tests, examples, docs and agent hooks are exempt from docstring requirements.
 "tests/**" = ["D"]
 "examples/**" = ["D"]
 "docs/**" = ["D"]
+".claude/**" = ["D"]
