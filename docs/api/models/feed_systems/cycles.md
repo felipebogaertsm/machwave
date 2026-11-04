@@ -13,7 +13,7 @@ The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_s
 
 ## `StackedTankPressureFedFeedSystem`
 
-A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston. The tank at the top of the stack, `pressurizing_line`, pressurises every propellant: directly for its own line, and through the piston for every line below it. Pressure loss across the piston is captured by `piston_loss`, and each feedline loses what its own [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] takes at the line flow.
+A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston. The tank at the top of the stack, `pressurizing_line`, pressurises every propellant: directly for its own line, and through the piston for every line below it. "Top" and "below" name the sides of the piston, not an orientation; the model has no gravity. Pressure loss across the piston is captured by `piston_loss`, and each feedline loses what its own [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] takes at the line flow.
 
 **Construction**
 
@@ -62,7 +62,21 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Mass-flow model.** The feed system supplies the state at the head of every feedline: the pressurizing tank pressure for its own line, and that pressure less `piston_loss` for every line below the piston. The piston loss is seal friction and holds at any flow. Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density].
+**Piston travel.** The lines below the piston are liquid-full, with no ullage: each holds its loading temperature and the saturated liquid density there, and runs no energy balance. As they drain the piston moves and the fluid at the top of the stack fills its tank volume plus every liquid volume pushed out below,
+
+$$
+V_{top}(t) = V_{top,0} + \sum_j \frac{m_{j,0} - m_j(t)}{\rho_{l,j}},
+$$
+
+which [`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns for any set of line masses. The top tank is read in that volume, and its energy balance takes out the boundary work it does on the piston as well as the enthalpy of what it drains,
+
+$$
+\frac{dU_{top}}{dt} = -h_{out} \dot{m}_{out} - P_{top} \frac{dV_{top}}{dt},
+$$
+
+see [`get_internal_energy_rate`][machwave.simulation.biliquid.states.get_internal_energy_rate]. A lower tank must hold its liquid load and must not boil at the pressure the stack loads it at; the constructor checks both.
+
+**Mass-flow model.** The feed system supplies the state at the head of every feedline: the pressurizing tank pressure for its own line, and that pressure less `piston_loss` for every line below the piston. The piston loss is seal friction and holds at any flow. Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density] for the top tank, read in the volume it has swept to.
 
 The feedline itself loses pressure with the square of its flow,
 

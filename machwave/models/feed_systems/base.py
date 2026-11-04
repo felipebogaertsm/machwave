@@ -41,6 +41,31 @@ class FeedSystem(ABC):
         """Compute and return the initial propellant mass in the system [kg]."""
         return sum(line.tank.initial_fluid_mass for line in self.lines.values())
 
+    def get_initial_line_states(self) -> dict[str, line_models.LineState]:
+        """
+        Return the state every line starts from, keyed by line name.
+
+        Each line starts as its tank was loaded. A cycle that holds a line at
+        a fixed temperature overrides this to carry no internal energy for it.
+        """
+        return {name: line.initial_state for name, line in self.lines.items()}
+
+    def get_tank_volumes(self, fluid_masses: Mapping[str, float]) -> dict[str, float]:
+        """
+        Return the volume the fluid of every line fills [m^3].
+
+        Each tank fills its own volume. A cycle whose tank boundaries move, such
+        as a piston between two tanks, overrides this: the volumes then follow
+        from the fluid masses the lines hold.
+
+        Args:
+            fluid_masses: Fluid mass of every line [kg], keyed by line name.
+
+        Returns:
+            Volume of every line's fluid [m^3], keyed by line name.
+        """
+        return {name: line.tank.volume for name, line in self.lines.items()}
+
     def get_lines_with_role(
         self, role: propellant_components.ComponentRole
     ) -> tuple[line_models.PropellantLine, ...]:
@@ -75,21 +100,41 @@ class FeedSystem(ABC):
             raise ValueError(f"no line state was given for {missing}")
 
         inlet_pressures = self.get_inlet_pressures(line_states)
+        volumes = self.get_tank_volumes(
+            {name: state.fluid_mass for name, state in line_states.items()}
+        )
 
-        inlet_states = {}
-        for name, line in self.lines.items():
-            line_state = line_states[name]
-            inlet_states[name] = fluid_state_models.FluidState(
-                fluid_name=line.tank.fluid_name,
-                pressure=inlet_pressures[name],
-                temperature=line.tank.get_temperature(
-                    line_state.fluid_mass, line_state.internal_energy
-                ),
-                density=line.tank.get_density(
-                    line_state.fluid_mass, line_state.internal_energy
-                ),
+        return {
+            name: self._get_inlet_state(
+                name, line_states[name], inlet_pressures[name], volumes[name]
             )
-        return inlet_states
+            for name in self.lines
+        }
+
+    def _get_inlet_state(
+        self,
+        name: str,
+        line_state: line_models.LineState,
+        pressure: float,
+        volume: float,
+    ) -> fluid_state_models.FluidState:
+        """
+        Return the state at the head of one feedline.
+
+        The tank fluid at its temperature and density in the volume it fills,
+        at the pressure the cycle delivers.
+        """
+        tank = self.lines[name].tank
+        return fluid_state_models.FluidState(
+            fluid_name=tank.fluid_name,
+            pressure=pressure,
+            temperature=tank.get_temperature(
+                line_state.fluid_mass, line_state.internal_energy, volume=volume
+            ),
+            density=tank.get_density(
+                line_state.fluid_mass, line_state.internal_energy, volume=volume
+            ),
+        )
 
     @abstractmethod
     def get_inlet_pressures(
