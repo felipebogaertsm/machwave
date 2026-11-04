@@ -9,6 +9,7 @@ enthalpy of whatever leaves.
 
 import CoolProp.CoolProp as CP
 import pytest
+import scipy.integrate
 
 import machwave.models.feed_systems.tank as tank_models
 
@@ -205,3 +206,87 @@ class TestOutflowEnthalpy:
         tank = build(isothermal=False)
 
         assert tank.get_outflow_specific_enthalpy(0.0, 0.0, mass_drained=0.0) == 0.0
+
+
+class TestAgainstTheIsentropicDrain:
+    """
+    A slow adiabatic drain of saturated liquid is reversible: the fluid left
+    behind and the parcel on its way out stay in equilibrium as they expand,
+    so the tank's entropy falls by the liquid entropy of what leaves,
+    $dS = s_l \\, dm$. Integrating that on the saturation curve, with no
+    internal energy and no (D, U) flash, is a reference the energy balance
+    does not share any code path with.
+    """
+
+    FINAL_FLUID_MASS = 1.6  # Above the 1.57 kg of saturated vapor at 293 K.
+    MASS_STEP = 5e-3
+
+    @staticmethod
+    def saturation(temperature):
+        return [
+            CP.PropsSI(key, "T", temperature, "Q", quality, FLUID)
+            for key, quality in (("D", 0), ("D", 1), ("S", 0), ("S", 1))
+        ]
+
+    @classmethod
+    def entropy(cls, temperature, fluid_mass):
+        liquid_density, vapor_density, liquid_entropy, vapor_entropy = cls.saturation(
+            temperature
+        )
+        latent_entropy_per_volume = (vapor_entropy - liquid_entropy) / (
+            1.0 / vapor_density - 1.0 / liquid_density
+        )
+        return (
+            fluid_mass * liquid_entropy
+            + (VOLUME - fluid_mass / liquid_density) * latent_entropy_per_volume
+        )
+
+    @classmethod
+    def isentropic_temperature(cls):
+        def temperature_slope(fluid_mass, state):
+            temperature = state[0]
+            liquid_density, vapor_density, liquid_entropy, vapor_entropy = (
+                cls.saturation(temperature)
+            )
+            entropy_slope = (
+                cls.entropy(temperature + 1e-3, fluid_mass)
+                - cls.entropy(temperature - 1e-3, fluid_mass)
+            ) / 2e-3
+            # dS/dT dT = (s_l - dS/dm at fixed T) dm, and the bracket is
+            # v_l (s_v - s_l) / (v_v - v_l).
+            return [
+                (vapor_entropy - liquid_entropy)
+                / liquid_density
+                / (1.0 / vapor_density - 1.0 / liquid_density)
+                / entropy_slope
+            ]
+
+        solution = scipy.integrate.solve_ivp(
+            temperature_slope,
+            (FLUID_MASS, cls.FINAL_FLUID_MASS),
+            [TEMPERATURE],
+            rtol=1e-10,
+            atol=1e-8,
+        )
+        return solution.y[0, -1]
+
+    def test_the_drain_follows_the_isentrope(self):
+        tank = build(isothermal=False)
+        fluid_mass, internal_energy = FLUID_MASS, tank.initial_internal_energy
+        steps = round((FLUID_MASS - self.FINAL_FLUID_MASS) / self.MASS_STEP)
+        for _ in range(steps):
+            fluid_mass, internal_energy = drain(
+                tank, self.MASS_STEP, fluid_mass, internal_energy
+            )
+
+        reference_temperature = self.isentropic_temperature()
+
+        # About 12 K and 1.3 MPa of decay; explicit steps of 5 g land within
+        # 0.01 K and 2e-4 of the pressure, shrinking linearly with the step.
+        assert reference_temperature < TEMPERATURE - 12.0
+        assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
+            reference_temperature, abs=0.05
+        )
+        assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
+            CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=5e-4
+        )

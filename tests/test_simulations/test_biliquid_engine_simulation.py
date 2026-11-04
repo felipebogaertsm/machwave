@@ -12,6 +12,7 @@ import dataclasses
 import io
 import warnings
 
+import CoolProp.CoolProp as CP
 import numpy as np
 import pytest
 import scipy.constants
@@ -220,9 +221,25 @@ def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
     )
 
 
+def _leave_a_trace(
+    state: biliquid_simulation.BiliquidEngineState, name: str, fluid_mass: float
+) -> None:
+    """
+    Cut a line down to a trace of fluid, vapor at the loading temperature.
+
+    The tank runs an energy balance, so the internal energy has to come down
+    with the mass, or the pair names no state CoolProp can resolve.
+    """
+    tank = state.motor.feed_system.lines[name].tank
+    state.fluid_mass_per_line[name][-1] = fluid_mass
+    state.internal_energy_per_line[name] = fluid_mass * CP.PropsSI(
+        "U", "T", tank.temperature, "D", fluid_mass / tank.volume, tank.fluid_name
+    )
+
+
 def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
     state = _build_state_for_burnout_test()
-    state.fluid_mass_per_line["fuel"][-1] = 1e-9
+    _leave_a_trace(state, "fuel", 1e-9)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
@@ -232,7 +249,7 @@ def test_run_timestep_sets_end_burn_when_fuel_exhausts() -> None:
 
 def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
     state = _build_state_for_burnout_test()
-    state.fluid_mass_per_line["oxidizer"][-1] = 1e-9
+    _leave_a_trace(state, "oxidizer", 1e-9)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
@@ -242,8 +259,9 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
     state = _build_state_for_burnout_test()
-    # (m / d_t) * d_t rounds above this mass
-    state.fluid_mass_per_line["fuel"][-1] = 1.0000000000000006e-10
+    # (m / d_t) * d_t rounds above this mass, which is still dense enough
+    # vapor for CoolProp's (D, U) flash on ethanol.
+    _leave_a_trace(state, "fuel", 1.5454226100014102e-09)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
@@ -253,7 +271,7 @@ def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
 def test_flows_stop_after_fuel_exhausts() -> None:
     """The oxidizer is not burned on its own once the fuel is gone."""
     state = _build_state_for_burnout_test()
-    state.fluid_mass_per_line["fuel"][-1] = 1e-9
+    _leave_a_trace(state, "fuel", 1e-9)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
     assert state.end_burn is True
@@ -271,7 +289,7 @@ def test_flows_stop_after_fuel_exhausts() -> None:
 def test_flows_stop_after_oxidizer_exhausts() -> None:
     """The fuel is not burned on its own once the oxidizer is gone."""
     state = _build_state_for_burnout_test()
-    state.fluid_mass_per_line["oxidizer"][-1] = 1e-9
+    _leave_a_trace(state, "oxidizer", 1e-9)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
     assert state.end_burn is True
@@ -315,7 +333,7 @@ def test_specific_impulse_divides_by_the_expelled_propellant_mass(
 def test_tail_off_terminates_thrust_against_zero_ambient_pressure() -> None:
     """Against zero ambient pressure the nozzle stays choked, so tail-off ends it."""
     state = _build_state_for_burnout_test()
-    state.fluid_mass_per_line["fuel"][-1] = 1e-9
+    _leave_a_trace(state, "fuel", 1e-9)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
@@ -441,11 +459,13 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
 
     The delivered characteristic velocity comes from the simulated chamber
     pressure, injector mass flow and effective throat area, and the ideal one
-    from the CEA state at the same pressure and mixture ratio. The fixed tank
-    pressures let the chamber settle, so the storage term vanishes and the
-    ratio is exact.
+    from the CEA state at the same pressure and mixture ratio. Isothermal tanks
+    hold their pressure, so the chamber settles, the storage term vanishes and
+    the ratio is exact.
     """
     motor, params = motor_builders.build_1kn_biliquid_engine()
+    for line in motor.feed_system.lines.values():
+        line.tank.isothermal = True
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
     state = biliquid_simulation.BiliquidEngineState(
