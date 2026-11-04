@@ -31,10 +31,13 @@ class TestInletState:
 
         inlet = feed_system.get_inlet_states(line_states(feed_system))["oxidizer"]
 
+        internal_energy = tank.initial_internal_energy
         assert inlet.fluid_name == "N2O"
-        assert inlet.pressure == pytest.approx(tank.get_pressure(5.0))
-        assert inlet.temperature == pytest.approx(tank.get_temperature(5.0))
-        assert inlet.density == pytest.approx(tank.get_density(5.0))
+        assert inlet.pressure == pytest.approx(tank.get_pressure(5.0, internal_energy))
+        assert inlet.temperature == pytest.approx(
+            tank.get_temperature(5.0, internal_energy)
+        )
+        assert inlet.density == pytest.approx(tank.get_density(5.0, internal_energy))
 
     def test_the_feedline_head_is_the_tank_pressure_whatever_the_line(self):
         """The line loss depends on the flow, so the cycle leaves it out."""
@@ -46,7 +49,7 @@ class TestInletState:
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["oxidizer"] == pytest.approx(
-            tank.get_pressure(tank.initial_fluid_mass)
+            tank.get_pressure(tank.initial_fluid_mass, tank.initial_internal_energy)
         )
 
     def test_an_empty_tank_delivers_no_pressure(self):
@@ -58,10 +61,14 @@ class TestInletState:
 
         assert pressures["oxidizer"] == 0.0
 
-    def test_the_tank_blows_down_as_it_drains(self):
+    def test_an_isothermal_tank_blows_down_as_it_drains(self):
+        # Arbitrary masses with no internal energy to go with them: only an
+        # isothermal tank is a function of the mass alone.
         feed_system = SingleLinePressureFedFeedSystemFactory.build(
             line=PropellantLineFactory.build(
-                tank=TankFactory.build(fluid_name="N2O", initial_fluid_mass=5.0)
+                tank=TankFactory.build(
+                    fluid_name="N2O", initial_fluid_mass=5.0, isothermal=True
+                )
             )
         )
 
