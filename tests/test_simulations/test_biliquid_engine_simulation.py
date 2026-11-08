@@ -75,10 +75,10 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         rel=1e-9,
     )
     # The lines drain by explicit first-order steps, so burnout moves with the step.
-    # Measured 2.1e-5 for this engine, and 2.6e-4 (burnout 3 ms earlier) with a
+    # Measured 1.3e-3 for this engine (burnout 16 ms earlier), and 2.1e-3 with a
     # combustion efficiency of 0.95, where the fuel tail is longer.
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse, rel=1e-2
+        simulation_result.total_impulse, rel=3e-3
     )
 
 
