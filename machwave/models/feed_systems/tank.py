@@ -49,6 +49,17 @@ class Tank:
         the real-gas equation of state.
       - Nothing crosses the tank wall: no heat in, and no work other than what
         the leaving fluid carries.
+
+    Validation status: verified, not validated. The energy balance matches a
+    slow adiabatic drain integrated along the saturation curve; it has not
+    been compared with measured tank blowdown data.
+
+    References:
+        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J. and Zilliac, G. G.,
+        "Review and Evaluation of Models for Self-Pressurizing Propellant
+        Tank Dynamics", AIAA 2013-4045, 49th AIAA/ASME/SAE/ASEE Joint
+        Propulsion Conference, 2013, Eqs. 20-23 (equilibrium model, here
+        without wall heat transfer).
     """
 
     def __init__(
@@ -75,14 +86,8 @@ class Tank:
                 density, e.g. 0.01 = 1% (>=0).
             isothermal: Whether the temperature is held where the tank was
                 loaded. False (the default) runs an energy balance, and every
-                query then needs the internal energy the integrator carries
-                beside the mass, starting from `initial_internal_energy`. True
-                is good for a quick upper bound on the feed pressure, or for a
-                tank that really is held at temperature, such as a heated one.
-                For a self-pressurizing tank it is wrong: it holds the
-                saturation pressure flat while liquid remains, where the real
-                tank cools and its pressure decays, so it over-predicts the
-                feed pressure and the thrust late in the burn.
+                query then needs the internal energy, starting from
+                `initial_internal_energy`.
 
         Raises:
             ValueError: If the fluid is unknown to CoolProp, if any argument is
