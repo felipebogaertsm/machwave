@@ -20,6 +20,17 @@ class TankFactory:
         return tank_models.Tank(**kwargs)
 
 
+class TankPlacementFactory:
+    @classmethod
+    def build(cls, **overrides: Any) -> feed_systems_models.TankPlacement:
+        kwargs: dict[str, Any] = dict(
+            inner_diameter=0.2,
+            nozzle_exit_to_aft_end_distance=0.3,
+        )
+        kwargs.update(overrides)
+        return feed_systems_models.TankPlacement(**kwargs)
+
+
 class PropellantLineFactory:
     @classmethod
     def build(cls, **overrides: Any) -> feed_systems_models.PropellantLine:

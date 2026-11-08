@@ -162,6 +162,20 @@ An isothermal tank holds it constant while liquid remains.
 The feed system, the injector and the recorded results work at every count.
 The thermochemistry of a three-propellant mixture is a separate problem: the equilibrium calculation takes one oxidizer and one fuel, so a third stream has to be blended into one of them before it can be evaluated.
 
+## Propellant Mass Properties
+
+A tank can be given a placement: its inner diameter, which sets its length from its volume, and the axial distance from the nozzle exit to its aft end.
+With every tank placed, the biliquid simulation records the propellant center of gravity and inertia, as the solid simulation does for the grain.
+Under axial acceleration the liquid settles at the aft end of each tank and the vapor fills the ullage ahead of it.
+Each phase is taken as a uniform solid cylinder spanning the bore, with
+
+$$
+I_{xx} = \frac{m r^2}{2}, \qquad I_{yy} = I_{zz} = m \left( \frac{r^2}{4} + \frac{L^2}{12} \right),
+$$
+
+and the parallel axis theorem combines the phases and then the tanks.
+Placements do not change the internal ballistics.
+
 ## Implementation
 
 A line is a [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine], with its role given by [`ComponentRole`][machwave.models.propellants.components.ComponentRole] and its tank by [`Tank`][machwave.models.feed_systems.tank.Tank].
@@ -177,7 +191,10 @@ The orifice is an [`InjectorElement`][machwave.models.thrust_chamber.injector.In
 
 The coupling with the chamber happens in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep].
 
+A tank placement is a [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] on the line, and [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] combines the tanks.
+
 # References
 
 1. Sutton, G. P., & Biblarz, O. (2017). *Rocket Propulsion Elements* (9th ed.). Wiley. Sections 6.3 and 10.2.
 2. Whitmore, S. A., & Chandler, S. N. (2010). Engineering model for self-pressurizing saturated-N2O-propellant feed systems. *Journal of Propulsion and Power*, 26(4), 706-714.
+3. Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics: Dynamics* (7th ed.). Wiley. Appendix B and Appendix D, Table D/4.

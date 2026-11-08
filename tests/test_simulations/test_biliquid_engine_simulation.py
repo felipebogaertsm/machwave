@@ -8,6 +8,7 @@ it can be reused by benchmarks under tests/benchmarks/.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import warnings
 
@@ -15,6 +16,7 @@ import numpy as np
 import pytest
 import scipy.constants
 
+import machwave.models.feed_systems as feed_systems_models
 import machwave.models.motors as motors_models
 import machwave.simulation.biliquid as biliquid_simulation
 import machwave.simulation.states as simulation_states
@@ -188,6 +190,80 @@ def test_exit_pressure_is_finite_and_positive(
 ) -> None:
     assert np.all(np.isfinite(simulation_result.exit_pressure))
     assert np.all(simulation_result.exit_pressure > 0.0)
+
+
+def test_propellant_mass_properties_are_recorded_every_timestep(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    assert simulation_result.propellant_cog.shape == (simulation_result.time.size, 3)
+    assert simulation_result.propellant_moi.shape == (
+        simulation_result.time.size,
+        3,
+        3,
+    )
+    assert np.all(np.isfinite(simulation_result.propellant_moi))
+
+
+def test_propellant_center_of_gravity_stays_within_the_tanks(
+    simulated_motor_and_result: tuple[
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
+    ],
+) -> None:
+    motor, result = simulated_motor_and_result
+    tank_ends = [
+        (
+            placement.nozzle_exit_to_aft_end_distance,
+            placement.nozzle_exit_to_aft_end_distance
+            + placement.get_length(line.tank.volume),
+        )
+        for line in motor.feed_system.lines.values()
+        if (placement := line.tank_placement) is not None
+    ]
+
+    assert np.all(result.propellant_cog[:, 0] > min(aft for aft, _ in tank_ends))
+    assert np.all(
+        result.propellant_cog[:, 0] < max(forward for _, forward in tank_ends)
+    )
+
+
+def test_initial_propellant_mass_properties_are_the_loaded_tanks(
+    simulated_motor_and_result: tuple[
+        motors_models.BiliquidEngine, biliquid_simulation.BiliquidSimulationResult
+    ],
+) -> None:
+    motor, result = simulated_motor_and_result
+    feed_system = motor.feed_system
+
+    loaded_cog, loaded_moi = feed_system.get_propellant_mass_properties(
+        {name: line.initial_state for name, line in feed_system.lines.items()}
+    )
+
+    np.testing.assert_allclose(result.propellant_cog[0], loaded_cog)
+    np.testing.assert_allclose(result.propellant_moi[0], loaded_moi)
+
+
+def test_unplaced_tanks_leave_no_center_of_gravity_and_zero_inertia() -> None:
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+    feed_system = motor.feed_system
+    motor.feed_system = feed_systems_models.StackedTankPressureFedFeedSystem(
+        lines=[
+            dataclasses.replace(line, tank_placement=None)
+            for line in feed_system.lines.values()
+        ],
+        pressurizing_line=feed_system.pressurizing_line,
+        piston_loss=feed_system.piston_loss,
+        line_losses=feed_system.line_losses,
+    )
+    state = biliquid_simulation.BiliquidEngineState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+
+    state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+
+    assert np.isnan(state.propellant_cog[-1]).all()
+    np.testing.assert_array_equal(state.propellant_moi[-1], np.zeros((3, 3)))
 
 
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:

@@ -56,6 +56,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         piston_loss: float = 0.0,
         oxidizer_line_loss: float = 0.0,
         fuel_line_loss: float = 0.0,
+        oxidizer_tank_placement: line_models.TankPlacement | None = None,
+        fuel_tank_placement: line_models.TankPlacement | None = None,
     ) -> "StackedTankPressureFedFeedSystem":
         """
         Build the two-line system a biliquid engine runs on.
@@ -70,6 +72,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             piston_loss: Pressure loss across the piston [Pa].
             oxidizer_line_loss: Pressure loss along the oxidizer feedline [Pa].
             fuel_line_loss: Pressure loss along the fuel feedline [Pa].
+            oxidizer_tank_placement: Geometry and position of the oxidizer tank.
+            fuel_tank_placement: Geometry and position of the fuel tank.
         """
         return cls(
             lines=[
@@ -77,11 +81,13 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
                     name="oxidizer",
                     role=propellant_components.ComponentRole.OXIDIZER,
                     tank=oxidizer_tank,
+                    tank_placement=oxidizer_tank_placement,
                 ),
                 line_models.PropellantLine(
                     name="fuel",
                     role=propellant_components.ComponentRole.FUEL,
                     tank=fuel_tank,
+                    tank_placement=fuel_tank_placement,
                 ),
             ],
             pressurizing_line="oxidizer",
