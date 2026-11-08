@@ -2,8 +2,11 @@
 
 import dataclasses
 
-import machwave.common.mass_properties as mass_properties
+import numpy as np
+import numpy.typing as npt
+
 import machwave.core.geometric as geometric
+import machwave.core.mechanics as mechanics
 import machwave.models.feed_systems.tank as tank_models
 import machwave.models.propellants.components as propellant_components
 
@@ -105,20 +108,33 @@ class PropellantLine:
 
     def get_mass_properties(
         self, line_state: LineState
-    ) -> mass_properties.AxisymmetricMassProperties:
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """
-        Return the mass properties of the propellant in the tank.
+        Return the center of gravity and inertia of the propellant in the tank.
 
-        Thrust settles the liquid at the aft end of the tank and the vapor fills the
-        ullage ahead of it. Each phase is a uniform solid cylinder spanning the tank
-        bore.
+        Assumes the engine accelerates along its axis, so the liquid is settled at
+        the aft end of the tank and the vapor fills the ullage ahead of it. Each
+        phase is a uniform solid cylinder spanning the tank bore, with the phase
+        split and liquid density from the tank model. Sloshing, tank walls, domes
+        and any internal hardware are ignored. A fill denser than the saturated
+        liquid, within the tank overfill tolerance, is all liquid.
+
+        Validation status: verified against the closed-form cylinder and
+        parallel axis results, not validated.
+
+        References:
+            Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics:
+            Dynamics* (7th ed.). Wiley. Appendix B (parallel-axis theorem) and
+            Appendix D, Table D/4 (circular cylinder).
 
         Args:
             line_state: Fluid mass and internal energy of the line.
 
         Returns:
-            Mass properties in the engine frame, measured from the nozzle exit with
-            positive x pointing away from the nozzle.
+            The center of gravity [m] in the engine frame, measured from the nozzle
+            exit with positive x pointing away from the nozzle, and the 3x3 inertia
+            tensor about it [kg-m^2]. An empty tank gives a NaN center of gravity
+            and zero inertia.
 
         Raises:
             ValueError: If the line has no tank placement.
@@ -131,8 +147,6 @@ class PropellantLine:
         internal_energy = line_state.internal_energy
         tank_length = tank_placement.get_length(self.tank.volume)
 
-        # A fill denser than the saturated liquid, within the overfill tolerance,
-        # leaves no room for vapor
         liquid_mass = min(
             self.tank.get_liquid_mass(fluid_mass, internal_energy), fluid_mass
         )
@@ -145,17 +159,20 @@ class PropellantLine:
 
         tank_radius = tank_placement.inner_diameter / 2
         aft_end = tank_placement.nozzle_exit_to_aft_end_distance
+        vapor_mass = fluid_mass - liquid_mass
         vapor_length = tank_length - liquid_length
-        liquid = mass_properties.AxisymmetricMassProperties.from_cylinder(
-            mass=liquid_mass,
-            length=liquid_length,
-            outer_radius=tank_radius,
-            axial_position=aft_end + liquid_length / 2,
+        return mechanics.get_combined_mass_properties(
+            masses=(liquid_mass, vapor_mass),
+            centers_of_gravity=(
+                np.array([aft_end + liquid_length / 2, 0.0, 0.0]),
+                np.array([aft_end + liquid_length + vapor_length / 2, 0.0, 0.0]),
+            ),
+            moments_of_inertia=(
+                mechanics.get_solid_cylinder_moment_of_inertia(
+                    liquid_mass, liquid_length, tank_radius
+                ),
+                mechanics.get_solid_cylinder_moment_of_inertia(
+                    vapor_mass, vapor_length, tank_radius
+                ),
+            ),
         )
-        vapor = mass_properties.AxisymmetricMassProperties.from_cylinder(
-            mass=fluid_mass - liquid_mass,
-            length=vapor_length,
-            outer_radius=tank_radius,
-            axial_position=aft_end + liquid_length + vapor_length / 2,
-        )
-        return mass_properties.AxisymmetricMassProperties.combine((liquid, vapor))

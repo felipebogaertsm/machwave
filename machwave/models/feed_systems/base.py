@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 
+import numpy as np
+import numpy.typing as npt
+
 import machwave.common.fluid_state as fluid_state_models
-import machwave.common.mass_properties as mass_properties
+import machwave.core.mechanics as mechanics
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.propellants.components as propellant_components
 
@@ -50,24 +53,31 @@ class FeedSystem(ABC):
 
     def get_propellant_mass_properties(
         self, line_states: Mapping[str, line_models.LineState]
-    ) -> mass_properties.AxisymmetricMassProperties:
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """
-        Return the mass properties of the propellant in every tank.
+        Return the center of gravity and inertia of the propellant in every tank.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
                 line name.
 
         Returns:
-            Mass properties in the engine frame, measured from the nozzle exit with
-            positive x pointing away from the nozzle.
+            The center of gravity [m] in the engine frame, measured from the nozzle
+            exit with positive x pointing away from the nozzle, and the 3x3 inertia
+            tensor about it [kg-m^2]. With every tank empty, the center of gravity
+            is NaN and the inertia zero.
 
         Raises:
             ValueError: If any line has no tank placement.
         """
-        return mass_properties.AxisymmetricMassProperties.combine(
-            line.get_mass_properties(line_states[name])
-            for name, line in self.lines.items()
+        names = list(self.lines)
+        line_mass_properties = [
+            self.lines[name].get_mass_properties(line_states[name]) for name in names
+        ]
+        return mechanics.get_combined_mass_properties(
+            masses=[line_states[name].fluid_mass for name in names],
+            centers_of_gravity=[cog for cog, _ in line_mass_properties],
+            moments_of_inertia=[moi for _, moi in line_mass_properties],
         )
 
     def get_inlet_states(

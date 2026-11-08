@@ -1,5 +1,7 @@
 """Mechanics calculations."""
 
+from collections.abc import Sequence
+
 import numpy as np
 import numpy.typing as npt
 
@@ -132,29 +134,80 @@ def get_moment_of_inertia_tensor(
     )
 
 
-def get_cylinder_moments_of_inertia(
-    mass: float,
-    length: float,
-    outer_radius: float,
-    inner_radius: float = 0.0,
-) -> tuple[float, float]:
+def get_solid_cylinder_moment_of_inertia(
+    mass: float, length: float, radius: float
+) -> npt.NDArray[np.float64]:
     """
-    Calculate the principal moments of inertia of a uniform cylinder.
+    Calculate the inertia tensor of a uniform solid cylinder lying along the x-axis.
 
-    Evaluated at the cylinder center of gravity. A solid cylinder keeps the default
-    zero inner radius; a hollow one takes its bore radius.
+    I_xx = m r^2 / 2 about the cylinder axis and I_yy = I_zz = m (r^2 / 4 + L^2 / 12)
+    about any transverse axis, both through the center of gravity.
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics: Dynamics*
+        (7th ed.). Wiley. Appendix D, Table D/4 (circular cylinder).
 
     Args:
         mass: Cylinder mass [kg].
         length: Cylinder length along its axis [m].
-        outer_radius: Outer radius [m].
-        inner_radius: Bore radius [m].
+        radius: Cylinder radius [m].
 
     Returns:
-        The moment of inertia about the cylinder axis and about any transverse axis
+        3x3 diagonal inertia tensor at the center of gravity, axial axis first
         [kg-m^2].
     """
-    radius_sum_of_squares = inner_radius**2 + outer_radius**2
-    axial_moment = mass * radius_sum_of_squares / 2
-    transverse_moment = mass * (radius_sum_of_squares / 4 + length**2 / 12)
-    return axial_moment, transverse_moment
+    axial_moment = mass * radius**2 / 2
+    transverse_moment = mass * (radius**2 / 4 + length**2 / 12)
+    return np.diag([axial_moment, transverse_moment, transverse_moment]).astype(
+        np.float64
+    )
+
+
+def get_combined_mass_properties(
+    masses: Sequence[float],
+    centers_of_gravity: Sequence[npt.NDArray[np.float64]],
+    moments_of_inertia: Sequence[npt.NDArray[np.float64]],
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    """
+    Combine rigid bodies into one with the parallel axis theorem.
+
+    Each body's inertia tensor is shifted from its own center of gravity to the
+    combined one by m (|r|^2 E - r r^T), where r joins the two. A massless body adds
+    nothing, so its center of gravity may be undefined.
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics: Dynamics*
+        (7th ed.). Wiley. Appendix B (parallel-axis theorem).
+
+    Args:
+        masses: Mass of each body [kg].
+        centers_of_gravity: Center of gravity of each body, in one shared frame [m].
+        moments_of_inertia: 3x3 inertia tensor of each body about its own center of
+            gravity, axes parallel to the shared frame [kg-m^2].
+
+    Returns:
+        The combined center of gravity [m] and the inertia tensor about it
+        [kg-m^2]. With no mass, the center of gravity is NaN and the inertia zero,
+        as the solid simulation records an empty grain.
+    """
+    total_mass = 0.0
+    weighted_position = np.zeros(3, dtype=np.float64)
+    for mass, center_of_gravity in zip(masses, centers_of_gravity, strict=True):
+        if mass > 0.0:
+            total_mass += mass
+            weighted_position += mass * np.asarray(center_of_gravity)
+
+    if total_mass <= 0.0:
+        return np.full(3, np.nan), np.zeros((3, 3), dtype=np.float64)
+
+    combined_center_of_gravity = weighted_position / total_mass
+    combined_moment_of_inertia = np.zeros((3, 3), dtype=np.float64)
+    for mass, center_of_gravity, moment_of_inertia in zip(
+        masses, centers_of_gravity, moments_of_inertia, strict=True
+    ):
+        if mass > 0.0:
+            offset = np.asarray(center_of_gravity) - combined_center_of_gravity
+            combined_moment_of_inertia += moment_of_inertia + mass * (
+                np.dot(offset, offset) * np.eye(3) - np.outer(offset, offset)
+            )
+    return combined_center_of_gravity, combined_moment_of_inertia

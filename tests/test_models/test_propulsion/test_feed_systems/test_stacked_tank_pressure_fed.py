@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import machwave.common.mass_properties as mass_properties
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank_models
@@ -231,14 +230,22 @@ class TestPropellantMassProperties:
         feed_system = self.build_placed_feed_system()
         states = line_states(feed_system)
 
-        combined = feed_system.get_propellant_mass_properties(states)
+        cog, moi = feed_system.get_propellant_mass_properties(states)
 
-        expected = mass_properties.AxisymmetricMassProperties.combine(
+        masses = [states[name].fluid_mass for name in feed_system.lines]
+        line_mass_properties = [
             line.get_mass_properties(states[name])
             for name, line in feed_system.lines.items()
+        ]
+        expected_cog = sum(
+            mass * line_cog
+            for mass, (line_cog, _) in zip(masses, line_mass_properties, strict=True)
+        ) / sum(masses)
+        np.testing.assert_allclose(cog, expected_cog)
+        # Moments about the shared axis add without a parallel axis shift.
+        assert moi[0, 0] == pytest.approx(
+            sum(line_moi[0, 0] for _, line_moi in line_mass_properties)
         )
-        assert combined == expected
-        assert combined.mass == pytest.approx(feed_system.get_initial_propellant_mass())
 
     def test_an_empty_tank_adds_nothing(self):
         feed_system = self.build_placed_feed_system()
@@ -246,20 +253,24 @@ class TestPropellantMassProperties:
             "fuel": line_models.LineState(fluid_mass=0.0)
         }
 
-        combined = feed_system.get_propellant_mass_properties(states)
+        cog, moi = feed_system.get_propellant_mass_properties(states)
 
-        oxidizer = feed_system.lines["oxidizer"].get_mass_properties(states["oxidizer"])
-        assert combined == oxidizer
+        oxidizer_cog, oxidizer_moi = feed_system.lines["oxidizer"].get_mass_properties(
+            states["oxidizer"]
+        )
+        np.testing.assert_array_equal(cog, oxidizer_cog)
+        np.testing.assert_array_equal(moi, oxidizer_moi)
 
-    def test_every_tank_empty_leaves_no_center_of_gravity(self):
+    def test_every_tank_empty_leaves_no_center_of_gravity_and_zero_inertia(self):
         feed_system = self.build_placed_feed_system()
         states = {
             name: line_models.LineState(fluid_mass=0.0) for name in feed_system.lines
         }
 
-        combined = feed_system.get_propellant_mass_properties(states)
+        cog, moi = feed_system.get_propellant_mass_properties(states)
 
-        assert np.isnan(combined.center_of_gravity).all()
+        assert np.isnan(cog).all()
+        np.testing.assert_array_equal(moi, np.zeros((3, 3)))
 
     def test_rejects_a_line_without_a_tank_placement(self):
         feed_system = StackedTankPressureFedFeedSystemFactory.build(

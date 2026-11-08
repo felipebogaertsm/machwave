@@ -234,15 +234,15 @@ def test_initial_propellant_mass_properties_are_the_loaded_tanks(
     motor, result = simulated_motor_and_result
     feed_system = motor.feed_system
 
-    loaded = feed_system.get_propellant_mass_properties(
+    loaded_cog, loaded_moi = feed_system.get_propellant_mass_properties(
         {name: line.initial_state for name, line in feed_system.lines.items()}
     )
 
-    np.testing.assert_allclose(result.propellant_cog[0], loaded.center_of_gravity)
-    np.testing.assert_allclose(result.propellant_moi[0], loaded.moment_of_inertia)
+    np.testing.assert_allclose(result.propellant_cog[0], loaded_cog)
+    np.testing.assert_allclose(result.propellant_moi[0], loaded_moi)
 
 
-def test_unplaced_tanks_leave_the_propellant_mass_properties_undefined() -> None:
+def test_unplaced_tanks_leave_no_center_of_gravity_and_zero_inertia() -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
     feed_system = motor.feed_system
     motor.feed_system = feed_systems_models.StackedTankPressureFedFeedSystem(
@@ -263,7 +263,7 @@ def test_unplaced_tanks_leave_the_propellant_mass_properties_undefined() -> None
     state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
     assert np.isnan(state.propellant_cog[-1]).all()
-    assert np.isnan(state.propellant_moi[-1]).all()
+    np.testing.assert_array_equal(state.propellant_moi[-1], np.zeros((3, 3)))
 
 
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
