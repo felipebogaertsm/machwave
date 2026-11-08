@@ -25,14 +25,18 @@ from tests.test_simulations import motor_builders
 # slowly and the error of every step falls to the CoolProp and CEA noise
 # floor, about 1e-11 relative.
 WINDOW = 0.0128  # s
+# The Dyer element costs a CoolProp sweep per evaluation, so its window is
+# shorter, still inside the chamber transient.
+DYER_WINDOW = 0.0032  # s
 # All below 1 / |lambda| of the chamber, so the stiffness never splits a step
 # and the step the integrator takes halves with d_t.
 STEPS = (8e-5, 4e-5, 2e-5)
 
 
-def build_state(*, smooth_thermochemistry: bool):
+def build_state(*, smooth_thermochemistry: bool, dyer_oxidizer: bool = False):
     """
-    The 1 kN engine with an SPI oxidizer element, from ignition.
+    The 1 kN engine from ignition, with an SPI oxidizer element unless
+    `dyer_oxidizer`.
 
     Dyer's element costs a CoolProp sweep per tank state, and SPI keeps the
     same coupling of flow to chamber and tank pressure. The top tank runs its
@@ -46,15 +50,16 @@ def build_state(*, smooth_thermochemistry: bool):
     """
     motor, params = motor_builders.build_1kn_biliquid_engine()
     elements = motor.thrust_chamber.injector.elements
-    motor.thrust_chamber.injector = thrust_chamber_models.Injector(
-        elements={
-            "oxidizer": thrust_chamber_models.InjectorElement(
-                discharge_coefficient=elements["oxidizer"].discharge_coefficient,
-                area=elements["oxidizer"].area,
-            ),
-            "fuel": elements["fuel"],
-        }
-    )
+    if not dyer_oxidizer:
+        motor.thrust_chamber.injector = thrust_chamber_models.Injector(
+            elements={
+                "oxidizer": thrust_chamber_models.InjectorElement(
+                    discharge_coefficient=elements["oxidizer"].discharge_coefficient,
+                    area=elements["oxidizer"].area,
+                ),
+                "fuel": elements["fuel"],
+            }
+        )
     if smooth_thermochemistry:
         properties = motor.propellant.evaluate(
             chamber_pressure=2.6e6,
@@ -70,12 +75,16 @@ def build_state(*, smooth_thermochemistry: bool):
     return state, params.external_pressure
 
 
-def march(d_t: float) -> np.ndarray:
+def march(
+    d_t: float, *, window: float = WINDOW, dyer_oxidizer: bool = False
+) -> np.ndarray:
     """The engine state at the end of the window, marched at `d_t`."""
-    state, external_pressure = build_state(smooth_thermochemistry=True)
+    state, external_pressure = build_state(
+        smooth_thermochemistry=True, dyer_oxidizer=dyer_oxidizer
+    )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
-        for _ in range(round(WINDOW / d_t)):
+        for _ in range(round(window / d_t)):
             state.run_timestep(d_t, external_pressure)
     return np.array(
         [
@@ -99,6 +108,17 @@ def test_the_engine_state_converges_at_fourth_order() -> None:
     assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
 
 
+def test_the_engine_state_converges_at_fourth_order_with_the_dyer_element() -> None:
+    coarse, middle, fine = (
+        march(d_t, window=DYER_WINDOW, dyer_oxidizer=True) for d_t in STEPS
+    )
+
+    observed_order = np.log2(np.abs(coarse - middle) / np.abs(middle - fine))
+
+    # Measured 4.47 to 4.54 on the four variables, the same picture as SPI.
+    assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
+
+
 def test_the_thermochemistry_is_evaluated_at_every_stage() -> None:
     state, external_pressure = build_state(smooth_thermochemistry=False)
     pressures = []
@@ -117,4 +137,3 @@ def test_the_thermochemistry_is_evaluated_at_every_stage() -> None:
     assert len(pressures) == 4
     assert len(set(pressures)) == 4
     assert pressures[0] == pytest.approx(state.chamber_pressure[0])
-

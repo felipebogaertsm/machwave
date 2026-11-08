@@ -134,7 +134,7 @@ def test_vector_solver_matches_the_scalar_solver():
     )
 
     assert vector[0] == pytest.approx(
-        rk4.rk4th_ode_solver({"value": 1.0}, exponential_decay, d_t)[0], rel=1e-15
+        rk4.rk4th_ode_solver({"quantity": 1.0}, exponential_decay, d_t)[0], rel=1e-15
     )
 
 
