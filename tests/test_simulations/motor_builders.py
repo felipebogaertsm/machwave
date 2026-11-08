@@ -15,14 +15,12 @@ import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
-import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation as machwave_simulation
 from tests.factories import (
     BatesSegmentFactory,
     BiliquidEngineFactory,
     BiliquidEngineThrustChamberFactory,
     BiliquidPropellantFactory,
-    InjectorElementFactory,
     InjectorFactory,
     CombustionChamberFactory,
     FinocylGrainSegmentFactory,
@@ -200,10 +198,18 @@ def build_finocyl_motor() -> tuple[
     return motor, params
 
 
-def build_1kn_biliquid_engine() -> tuple[
+def build_1kn_biliquid_engine(
+    *, isothermal_tanks: bool = False
+) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
-    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
+    """
+    1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like).
+
+    Args:
+        isothermal_tanks: Whether both tanks hold their loading temperature
+            instead of running an energy balance.
+    """
     tank_temperature = 300.0
     # Self-pressurized N2O reaches the injector as saturated liquid, not as the
     # 298.15 K ideal gas of RocketCEA's built-in "N2O" card.
@@ -220,12 +226,14 @@ def build_1kn_biliquid_engine() -> tuple[
             volume=3.80e-3,
             temperature=tank_temperature,
             initial_fluid_mass=2.78,
+            isothermal=isothermal_tanks,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
             temperature=tank_temperature,
             initial_fluid_mass=1.55,
+            isothermal=isothermal_tanks,
         ),
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
@@ -233,14 +241,14 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8298,
+                mass_flow=0.8406,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.4948,
+            mass_flow=0.5015,
             density=783.45,
             flow_area=9.37e-5,
         ),
@@ -252,15 +260,7 @@ def build_1kn_biliquid_engine() -> tuple[
             divergent_angle=12,
             expansion_ratio=4,
         ),
-        injector=InjectorFactory.build(
-            elements={
-                "oxidizer": InjectorElementFactory.build(
-                    area=1.4e-5 / 0.48,
-                    mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
-                ),
-                "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
-            }
-        ),
+        injector=InjectorFactory.build(),
         combustion_chamber=CombustionChamberFactory.build(
             inner_diameter=66e-3,
             internal_length=13e-3,
