@@ -13,21 +13,19 @@ import machwave.simulation as simulation_module
 
 FUEL_NAME = "Ethanol"
 OXIDIZER_NAME = "N2O"
-TANK_TEMPERATURE = 300.0  # [K]
 
 
 def main():
     # The tank feeds saturated liquid N2O. RocketCEA's built-in "N2O" card is
     # the ideal gas at 298.15 K and would overstate flame temperature and Isp.
-    oxidizer = propellants.saturated_liquid_nitrous_oxide(TANK_TEMPERATURE)
-    # RocketCEA's built-in "Ethanol" card is the liquid at 298.15 K.
+    oxidizer = propellants.saturated_liquid_nitrous_oxide(300.0)
     fuel = propellants.PropellantComponent(
         name=FUEL_NAME,
         role=propellants.ComponentRole.FUEL,
         density=789.0,
         chemical_formula={"C": 2, "H": 6, "O": 1},
         enthalpy=0.0,
-        initial_temperature=TANK_TEMPERATURE,
+        initial_temperature=300.0,
     )
 
     propellant = propellants.BiliquidPropellant(
@@ -36,17 +34,16 @@ def main():
         oxidizer_to_fuel_ratio=1.9495,
     )
 
+    # The fuel sits liquid-full below the piston, at its loading temperature.
     fuel_tank = tank.Tank(
         FUEL_NAME.upper(),
         volume=2.0e-3,
-        temperature=TANK_TEMPERATURE,
+        temperature=300,
         initial_fluid_mass=1.55,
+        isothermal=True,
     )
     oxidizer_tank = tank.Tank(
-        OXIDIZER_NAME,
-        volume=3.80e-3,
-        temperature=TANK_TEMPERATURE,
-        initial_fluid_mass=2.78,
+        OXIDIZER_NAME, volume=3.80e-3, temperature=300, initial_fluid_mass=2.78
     )
 
     feed_system = feed_systems.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
@@ -54,12 +51,14 @@ def main():
         fuel_tank=fuel_tank,
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore). The loss falls with the square of the flow.
+        # tube (10.9 mm bore). The loss falls with the square of the flow. Flows
+        # measured at t = 1 s with the Dyer oxidizer element, after one
+        # fixed-point pass.
         oxidizer_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.8298, density=724.7, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.7976, density=724.7, flow_area=9.37e-5
         ),
         fuel_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.4948, density=783.45, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.3849, density=783.45, flow_area=9.37e-5
         ),
     )
 
@@ -73,6 +72,7 @@ def main():
         elements={
             "oxidizer": thrust_chamber_models.InjectorElement(
                 discharge_coefficient=0.48,
+                # Sized for the nominal O/F of 1.95 at t = 0.1 s.
                 area=2.097e-5 / 0.48,
                 mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
             ),

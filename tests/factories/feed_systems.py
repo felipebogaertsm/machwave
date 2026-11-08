@@ -53,7 +53,7 @@ class StackedTankPressureFedFeedSystemFactory:
             fluid_name="N2O", initial_fluid_mass=5.0
         )
         fuel_tank = overrides.pop("fuel_tank", None) or TankFactory.build(
-            fluid_name="Ethanol", volume=0.008, initial_fluid_mass=3.0
+            fluid_name="Ethanol", volume=0.008, initial_fluid_mass=3.0, isothermal=True
         )
         kwargs: dict[str, Any] = dict(
             oxidizer_tank=oxidizer_tank,

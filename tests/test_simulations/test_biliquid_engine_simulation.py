@@ -64,13 +64,17 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
 ) -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
 
-    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=4e-4))
+    coarse_step = 4e-4
+    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
+    # At 1 s the chamber sits on the quasi-steady state of its balance, which
+    # does not depend on the step, but the tanks it follows drain and cool by
+    # explicit first-order steps. Measured 1.0e-5 between the two runs.
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
-        rel=1e-4,
+        rel=3e-5,
     )
     # The chamber, line masses and tank energy advance in one RK4 step, so the
     # coarse step only loses the first-order burnout step and the trapezoidal
@@ -464,9 +468,9 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
     hold their pressure, so the chamber settles, the storage term vanishes and
     the ratio is exact.
     """
-    motor, params = motor_builders.build_1kn_biliquid_engine()
-    for line in motor.feed_system.lines.values():
-        line.tank.isothermal = True
+    motor, params = motor_builders.build_1kn_biliquid_engine(
+        isothermal_oxidizer_tank=True
+    )
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
     state = biliquid_simulation.BiliquidEngineState(
@@ -492,11 +496,13 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
         expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
         mixture_ratio=state.oxidizer_to_fuel_ratio[-1],
     )
-    k = properties.k_chamber
-    vandenkerckhove = np.sqrt(k) * (2.0 / (k + 1.0)) ** ((k + 1.0) / (2.0 * (k - 1.0)))
+    specific_heat_ratio = properties.k_chamber
+    vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
+        2.0 / (specific_heat_ratio + 1.0)
+    ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
     ideal_c_star = (
         np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
-        / vandenkerckhove
+        / vandenkerckhove_function
     )
 
     assert delivered_c_star / ideal_c_star == pytest.approx(

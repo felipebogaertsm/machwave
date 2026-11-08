@@ -68,6 +68,12 @@ def rk4th_ode_solver(
 # nonlinear chamber balance settles on spurious steady states.
 MAX_STIFFNESS_STEP_PRODUCT = 1.0
 
+# Central-difference step relative to the variable, near the square root of machine
+# epsilon so truncation and round-off errors are balanced; the scale floor keeps the
+# step finite when the variable is near zero.
+RELATIVE_STIFFNESS_PERTURBATION = 1e-6
+MIN_STIFFNESS_PERTURBATION_SCALE = 1.0
+
 
 def get_stable_step_count(
     variables: dict[str, float],
@@ -96,11 +102,13 @@ def get_stable_step_count(
     if len(variables) != 1:
         raise ValueError(f"expected a single variable, got {len(variables)}")
 
-    ((key, value),) = variables.items()
-    perturbation = 1e-6 * max(abs(value), 1.0)
+    ((state_name, state),) = variables.items()
+    perturbation = RELATIVE_STIFFNESS_PERTURBATION * max(
+        abs(state), MIN_STIFFNESS_PERTURBATION_SCALE
+    )
     stiffness = (
-        equation(**{key: value + perturbation}, **kwargs)[0]
-        - equation(**{key: value - perturbation}, **kwargs)[0]
+        equation(**{state_name: state + perturbation}, **kwargs)[0]
+        - equation(**{state_name: state - perturbation}, **kwargs)[0]
     ) / (2 * perturbation)
 
     return max(1, math.ceil(-stiffness * d_t / MAX_STIFFNESS_STEP_PRODUCT))
@@ -125,12 +133,14 @@ def rk4th_substepped_ode_solver(
         New value of the variable.
     """
     step_count = get_stable_step_count(variables, equation, d_t, **kwargs)
-    ((key, value),) = variables.items()
+    ((state_name, state),) = variables.items()
 
     for _ in range(step_count):
-        value = rk4th_ode_solver({key: value}, equation, d_t / step_count, **kwargs)[0]
+        state = rk4th_ode_solver(
+            {state_name: state}, equation, d_t / step_count, **kwargs
+        )[0]
 
-    return value
+    return state
 
 
 def rk4th_vector_ode_solver(
