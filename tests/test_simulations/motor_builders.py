@@ -266,6 +266,7 @@ def build_1kn_biliquid_engine(
         injector=InjectorFactory.build(
             elements={
                 "oxidizer": InjectorElementFactory.build(
+                    # Sized for the nominal O/F of 1.95 at t = 0.1 s.
                     area=2.097e-5 / 0.48,
                     mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
                 ),
