@@ -74,13 +74,11 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=1e-9,
     )
-    # Burnout is resolved to within one coarse step, so the impulse may differ by
-    # one step of peak thrust (bound 1.4e-4, measured 2.1e-5).
+    # The lines drain by explicit first-order steps, so burnout moves with the step.
+    # Measured 2.1e-5 for this engine, and 2.6e-4 (burnout 3 ms earlier) with a
+    # combustion efficiency of 0.95, where the fuel tail is longer.
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse,
-        rel=coarse_step
-        * np.max(simulation_result.thrust)
-        / simulation_result.total_impulse,
+        simulation_result.total_impulse, rel=1e-3
     )
 
 
