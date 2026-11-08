@@ -1,14 +1,15 @@
 """
-Shared motor + simulation-params builders for end-to-end simulation tests
-and benchmarks.
+Shared motor + simulation-params builders for end-to-end simulation tests,
+adapter tests and benchmarks.
 
 These configurations mirror the example scripts under examples/ (apcp_motor,
-kappa_rnakka, nero_motor, 1kn_biliquid_engine) but are duplicated here so tests
-stay independent of the example layer.
+kappa_rnakka, nero_motor, 1kn_biliquid_engine) and the RocketPy adapter docs
+example, but are duplicated here so tests stay independent of the example layer.
 """
 
 from __future__ import annotations
 
+import machwave.models.feed_systems as feed_systems_models
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
@@ -198,6 +199,56 @@ def build_finocyl_motor() -> tuple[
     return motor, params
 
 
+def build_rocketpy_example_motor(
+    *,
+    segments: list[grain_models.GrainSegment] | None = None,
+    dry_center_of_gravity: float = 0.35,
+) -> tuple[
+    motors_models.SolidMotor, machwave_simulation.InternalBallisticsSimulationParams
+]:
+    """KNSB motor of the RocketPy adapter example, four BATES segments by default.
+
+    Args:
+        segments: Grain segments replacing the four identical BATES segments.
+        dry_center_of_gravity: Axial dry center of gravity from the nozzle exit [m].
+    """
+    if segments is None:
+        segments = [
+            BatesSegmentFactory.build(
+                outer_diameter=0.085, core_diameter=0.035, length=0.150
+            )
+        ] * 4
+    grain = grain_models.Grain(spacing=0.01)
+    for segment in segments:
+        grain.add_segment(segment)
+
+    thrust_chamber = SolidMotorThrustChamberFactory.build(
+        nozzle=NozzleFactory.build(
+            throat_diameter=0.022,
+            divergent_angle=12,
+            expansion_ratio=8,
+        ),
+        combustion_chamber=CombustionChamberFactory.build(
+            inner_diameter=89.25e-3,
+            internal_length=grain.total_length + 0.01,
+        ),
+        dry_mass=6.0,
+        center_of_gravity_coordinate=(dry_center_of_gravity, 0.0, 0.0),
+        moment_of_inertia=(0.19, 0.19, 0.008),
+    )
+    motor = SolidMotorFactory.build(
+        grain=grain,
+        propellant=solid_propellants.KNSB_NAKKA,
+        thrust_chamber=thrust_chamber,
+    )
+    params = machwave_simulation.InternalBallisticsSimulationParams(
+        d_t=0.01,
+        igniter_pressure=1e6,
+        external_pressure=1.013e5,
+    )
+    return motor, params
+
+
 def build_1kn_biliquid_engine() -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
@@ -225,6 +276,12 @@ def build_1kn_biliquid_engine() -> tuple[
         piston_loss=1e5,
         oxidizer_line_loss=2e5,
         fuel_line_loss=2e5,
+        oxidizer_tank_placement=feed_systems_models.TankPlacement(
+            inner_diameter=0.1, nozzle_exit_to_aft_end_distance=0.53
+        ),
+        fuel_tank_placement=feed_systems_models.TankPlacement(
+            inner_diameter=0.1, nozzle_exit_to_aft_end_distance=0.25
+        ),
     )
 
     thrust_chamber = BiliquidEngineThrustChamberFactory.build(

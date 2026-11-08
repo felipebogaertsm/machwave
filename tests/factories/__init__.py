@@ -10,6 +10,7 @@ from tests.factories.feed_systems import (
     SingleLinePressureFedFeedSystemFactory,
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
+    TankPlacementFactory,
 )
 from tests.factories.grain import (
     BatesSegmentFactory,
@@ -67,5 +68,6 @@ __all__ = [
     "StackedTankPressureFedFeedSystemFactory",
     "StarGrainSegmentFactory",
     "TankFactory",
+    "TankPlacementFactory",
     "WagonWheelGrainSegmentFactory",
 ]
