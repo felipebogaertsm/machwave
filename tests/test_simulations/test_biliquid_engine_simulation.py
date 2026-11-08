@@ -67,13 +67,14 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # At 1 s the chamber has settled on the steady state of its balance, which does
-    # not depend on the step, so the two runs agree to round-off.
+    # At 1 s the chamber sits on the quasi-steady state of its balance, which
+    # does not depend on the step, but the tanks it follows drain and cool by
+    # explicit first-order steps. Measured 1.0e-5 between the two runs.
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
-        rel=1e-9,
+        rel=3e-5,
     )
     # The lines drain by explicit first-order steps, so burnout moves with the step.
     # Measured 1.3e-3 for this engine (burnout 16 ms earlier), and 2.1e-3 with a
