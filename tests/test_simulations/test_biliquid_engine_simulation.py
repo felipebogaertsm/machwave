@@ -63,16 +63,24 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
 ) -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
 
-    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=4e-4))
+    coarse_step = 4e-4
+    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
+    # At 1 s the chamber has settled on the steady state of its balance, which does
+    # not depend on the step, so the two runs agree to round-off.
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
-        rel=1e-4,
+        rel=1e-9,
     )
+    # Burnout is resolved to within one coarse step, so the impulse may differ by
+    # one step of peak thrust (bound 1.4e-4, measured 2.1e-5).
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse, rel=1e-3
+        simulation_result.total_impulse,
+        rel=coarse_step
+        * np.max(simulation_result.thrust)
+        / simulation_result.total_impulse,
     )
 
 
