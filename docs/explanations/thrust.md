@@ -80,24 +80,107 @@ where:
 
 Implemented in [`get_separated_exit_conditions`][machwave.core.compressible_flow.nozzle.get_separated_exit_conditions].
 
-## Nozzle Efficiency
+## Nozzle Efficiency and Term Targets
 
-Real nozzles deviate from the ideal assumptions baked into the ideal thrust coefficient.
-Machwave lumps these deviations into a single **nozzle efficiency** $\eta_\text{nozzle}$ applied multiplicatively to the ideal coefficient:
+Real nozzles deviate from the idealized assumptions baked into the ideal thrust coefficient.
+Rather than applying an arbitrary lump-sum penalty, Machwave decouples the thrust coefficient into its **momentum** and **pressure** terms, evaluates each loss component against its specific target, and combines the resulting corrections into the realized nozzle efficiency $\eta_\text{nozzle}$.
+
+Implemented in [`NozzleLossModel`][machwave.models.nozzle_losses.base.NozzleLossModel] and [`ThrustCoefficientTermTarget`][machwave.models.nozzle_losses.base.ThrustCoefficientTermTarget].
+
+### Decoupled Thrust Coefficient Terms
+
+The ideal thrust coefficient is partitioned as:
 
 $$
-C_{f} = \eta_\text{nozzle}\, C_{f,\text{ideal}}
+C_{f,\text{ideal}} = C_{f,\text{mom,ideal}} + C_{f,\text{pres,ideal}}
 $$
+
+where $C_{f,\text{mom,ideal}}$ is the momentum term and $C_{f,\text{pres,ideal}} = \varepsilon\,\frac{P_e - P_\text{ext}}{P_0}$ is the pressure term.
+
+Each loss component targets one or both terms via [`ThrustCoefficientTermTarget`][machwave.models.nozzle_losses.base.ThrustCoefficientTermTarget]:
+
+- `MOMENTUM`: derates the momentum term only.
+- `PRESSURE`: derates the pressure term only.
+- `BOTH`: derates both momentum and pressure terms simultaneously.
+
+### Accumulating Loss Factors
+
+During each timestep, each active component computes its non-dimensional loss fraction $\eta_i \in [0, 1]$.
+Machwave sums these fractions into distinct correction factors for the momentum and pressure terms:
+
+$$
+f_\text{mom} = 1 - \sum_{i \in \mathcal{L}_\text{mom}} \eta_i
+$$
+
+$$
+f_\text{pres} = 1 - \sum_{i \in \mathcal{L}_\text{pres}} \eta_i
+$$
+
+where $\mathcal{L}_\text{mom}$ and $\mathcal{L}_\text{pres}$ are the sets of loss components that affect the momentum and pressure terms, respectively.
+If either $f_\text{mom} < 0$ or $f_\text{pres} < 0$, an error is raised because losses cannot derate a term below zero.
+
+The corrected thrust coefficient terms are:
+
+$$
+C_{f,\text{mom}} = f_\text{mom} \, C_{f,\text{mom,ideal}}
+$$
+
+$$
+C_{f,\text{pres}} = f_\text{pres} \, C_{f,\text{pres,ideal}}
+$$
+
+and the total delivered thrust coefficient is their sum:
+
+$$
+C_f = C_{f,\text{mom}} + C_{f,\text{pres}}
+$$
+
+### Combined Nozzle Efficiency
+
+The effective nozzle efficiency $\eta_\text{nozzle}$ represents the ratio between delivered and ideal thrust coefficients:
+
+$$
+\eta_\text{nozzle} = \frac{C_f}{C_{f,\text{ideal}}} = \frac{C_{f,\text{mom}} + C_{f,\text{pres}}}{C_{f,\text{mom,ideal}} + C_{f,\text{pres,ideal}}}
+$$
+
+When all components target `BOTH` (such as flat-efficiency models or kinetics without divergence loss), $f_\text{mom} = f_\text{pres} = 1 - \sum_i \eta_i$, which recovers the familiar scalar efficiency:
 
 $$
 \eta_\text{nozzle} = 1 - \sum_i \eta_i
 $$
 
-where each $\eta_i$ is a loss fraction accounting for one or more of the idealized assumptions.
-Which and how many losses are included depends on the motor/engine category.
+However, when components target specific terms (e.g. geometric divergence acting exclusively on exit momentum), $\eta_\text{nozzle}$ becomes a weighted average of $f_\text{mom}$ and $f_\text{pres}$ weighted by their respective ideal terms.
 
-Each loss is composed by the `Motor`'s nozzle loss model and may derate the momentum term, the pressure term, or both of the thrust coefficient.
-The equation above is the case where every loss derates both terms.
+**Overexpansion guard:** Under extreme overexpansion during tail-off ($P_e \ll P_\text{ext}$), a large negative pressure term can nearly cancel out the momentum term, driving $C_{f,\text{ideal}} \to 0$ and causing the efficiency fraction to diverge.
+When $C_{f,\text{ideal}} \le 10^{-9}$, Machwave defines nozzle efficiency purely by the momentum factor:
+
+$$
+\eta_\text{nozzle} = f_\text{mom} \quad \text{for } C_{f,\text{ideal}} \le 10^{-9}
+$$
+
+### How Loss Components Act on the Terms
+
+Machwave provides several standard loss components across solid and liquid motors:
+
+1. **Divergence Loss ([`DivergentLoss`][machwave.models.nozzle_losses.components.divergent.DivergentLoss])**:
+   - **Target:** `MOMENTUM`.
+   - **Mechanism:** In a conical convergent-divergent nozzle with half-angle $\alpha$, exhaust gases exit with non-axial velocity components. The momentum efficiency factor is $\lambda = \frac{1 + \cos\alpha}{2}$, giving a loss fraction $\eta_\text{div} = \frac{1 - \cos\alpha}{2}$. Because this non-axial flow affects only the exit momentum vector and does not alter the integrated exit static pressure, it derates momentum and spares the pressure term.
+
+2. **Boundary Layer Loss ([`BoundaryLayerLoss`][machwave.models.nozzle_losses.components.spp1975.BoundaryLayerLoss])**:
+   - **Target:** `BOTH`.
+   - **Mechanism:** Viscous wall shear reduces core gas velocity and exit momentum, while boundary layer displacement thickness reduces the effective expansion area and modifies the wall static pressure distribution. Derived from the empirical SPP-75 solid nozzle correlation with time and pressure dependence.
+
+3. **Chemical Kinetics Loss ([`KineticsLoss`][machwave.models.nozzle_losses.components.spp1975.KineticsLoss])**:
+   - **Target:** `BOTH`.
+   - **Mechanism:** Rapid expansion through supersonic nozzles limits residence time, preventing chemical recombination of dissociated gas species (shifting vs. frozen equilibrium). This reduces sensible heat conversion into kinetic energy and lowers expansion pressure throughout the nozzle.
+
+4. **Two-Phase Flow Loss ([`TwoPhaseFlowLoss`][machwave.models.nozzle_losses.components.spp1975.TwoPhaseFlowLoss])**:
+   - **Target:** `BOTH`.
+   - **Mechanism:** Solid or liquid condensed particles (such as alumina $\text{Al}_2\text{O}_3$ in metallized solid propellants) exhibit velocity lag (drag) and thermal lag behind the gas phase. This momentum drag and non-equilibrium heat transfer degrade both exit momentum and expansion pressure.
+
+5. **Constant Fraction Loss ([`ConstantFractionLoss`][machwave.models.nozzle_losses.components.constant.ConstantFractionLoss])**:
+   - **Target:** `BOTH`.
+   - **Mechanism:** Represents fixed parasitic margins or lumped losses (such as submerged nozzle losses or entrance losses) applied uniformly across the entire thrust coefficient.
 
 ## Total Impulse and Specific Impulse
 
