@@ -5,6 +5,8 @@ fluid fills its own volume plus the liquid volume pushed out below. It boils
 to fill the extra space and does boundary work on the piston as it goes.
 """
 
+import math
+
 import CoolProp.CoolProp as CP
 import pytest
 import scipy.integrate
@@ -82,6 +84,7 @@ class TestIsentropicDrainOfAGrowingTank:
     """
 
     FINAL_OXIDIZER_MASS = 3.0
+    OXIDIZER_STEPS = (2e-2, 1e-2, 5e-3)  # Each half the last.
 
     @staticmethod
     def entropy(temperature, fluid_mass, volume):
@@ -161,22 +164,29 @@ class TestIsentropicDrainOfAGrowingTank:
             pressure / reference_pressure - 1.0,
         )
 
-    def test_the_drain_follows_the_isentrope_and_converges_with_the_step(self):
-        reference_temperature, coarse_temperature, coarse_pressure = self.errors(0.02)
-        _, fine_temperature, fine_pressure = self.errors(0.005)
+    def test_the_drain_follows_the_isentrope(self):
+        reference_temperature, temperature_error, pressure_error = self.errors(
+            self.OXIDIZER_STEPS[-1]
+        )
 
         # 3 kg of fuel sweeps 3.8 L onto the 10 L tank: 14.8 K of cooling,
         # against 6.8 K for a fixed tank draining the same 2 kg of oxidizer.
         # Steps of 5 g land within 0.01 K and 2e-4 of the pressure.
         assert reference_temperature < TEMPERATURE - 14.0
-        assert abs(fine_temperature) < 0.01
-        assert abs(fine_pressure) < 2e-4
-        # First order in the step: a quarter of the step, a quarter of the
-        # error.
-        assert abs(fine_temperature) == pytest.approx(
-            abs(coarse_temperature) / 4.0, rel=0.2
-        )
-        assert abs(fine_pressure) == pytest.approx(abs(coarse_pressure) / 4.0, rel=0.2)
+        assert abs(temperature_error) < 0.01
+        assert abs(pressure_error) < 2e-4
+
+    def test_the_explicit_drain_is_first_order(self):
+        temperature_errors = [self.errors(step)[1] for step in self.OXIDIZER_STEPS]
+
+        observed_orders = [
+            math.log2(coarse / fine)
+            for coarse, fine in zip(temperature_errors, temperature_errors[1:])
+        ]
+
+        # Measured 1.0018 and 1.0009; the reference is solved to rtol 1e-10,
+        # far below the 7 mK error left at the finest step.
+        assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)
 
 
 class TestPistonVolume:
