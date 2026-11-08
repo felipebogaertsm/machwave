@@ -207,6 +207,15 @@ class _CoupledStateLayout:
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
+class _StartOfStepEvaluation:
+    """What the step has already evaluated at its starting state."""
+
+    inlet_states: Mapping[str, fluid_state_models.FluidState]
+    mass_flows: Mapping[str, float]
+    propellant_properties: propellant_properties_models.ThermochemicalProperties
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class BiliquidTimestepConditions(simulation_states.TimestepConditions):
     """Timestep conditions for a biliquid engine."""
 
@@ -485,9 +494,15 @@ class BiliquidEngineState(simulation_states.MotorState):
                 equation,
                 d_t,
                 step_count=step_count,
+                # The first stage is the start of the step, which the
+                # recorded flows and thermochemistry already evaluated.
                 initial_derivative=equation(
                     state,
-                    known=(inlet_states, mass_flows, propellant_properties),
+                    start_of_step=_StartOfStepEvaluation(
+                        inlet_states=inlet_states,
+                        mass_flows=mass_flows,
+                        propellant_properties=propellant_properties,
+                    ),
                 ),
             )
         except _StageLeftTheStateSpaceError:
@@ -545,12 +560,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         is_feeding: bool,
         external_pressure: float,
         d_t: float,
-        known: tuple[
-            Mapping[str, fluid_state_models.FluidState],
-            Mapping[str, float],
-            propellant_properties_models.ThermochemicalProperties,
-        ]
-        | None = None,
+        start_of_step: _StartOfStepEvaluation | None = None,
     ) -> npt.NDArray[np.float64]:
         """
         Time derivative of the whole engine state at one Runge-Kutta stage.
@@ -577,8 +587,9 @@ class BiliquidEngineState(simulation_states.MotorState):
             external_pressure: Ambient pressure [Pa].
             d_t: Time increment [s], over which no line delivers more than it
                 holds.
-            known: Feedline head states, line flows and propellant properties
-                already evaluated at this state, at the start of the step.
+            start_of_step: Feedline head states, line flows and propellant
+                properties already evaluated at this state, when it is the
+                start of the step.
 
         Returns:
             dy/dt, packed like the state.
@@ -598,16 +609,18 @@ class BiliquidEngineState(simulation_states.MotorState):
             # Nothing leaves the tanks, so only the chamber moves.
             mass_flows = {name: 0.0 for name in self.lines}
             propellant_properties = (
-                known[2]
-                if known is not None
+                start_of_step.propellant_properties
+                if start_of_step is not None
                 else self._evaluate_propellant_properties(chamber_pressure, None)
             )
         else:
             if any(fluid_mass <= 0.0 for fluid_mass in fluid_masses.values()):
                 raise _StageLeftTheStateSpaceError
             feed_system = self.motor.feed_system
-            if known is not None:
-                inlet_states, mass_flows, propellant_properties = known
+            if start_of_step is not None:
+                inlet_states = start_of_step.inlet_states
+                mass_flows = start_of_step.mass_flows
+                propellant_properties = start_of_step.propellant_properties
             else:
                 inlet_states = feed_system.get_inlet_states(
                     {

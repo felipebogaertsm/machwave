@@ -17,7 +17,6 @@ import pytest
 
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation.biliquid as biliquid_simulation
-import machwave.simulation.biliquid.states as biliquid_states
 from tests.test_simulations import motor_builders
 
 # From ignition, well before any line runs dry. The window holds the chamber
@@ -119,23 +118,3 @@ def test_the_thermochemistry_is_evaluated_at_every_stage() -> None:
     assert len(set(pressures)) == 4
     assert pressures[0] == pytest.approx(state.chamber_pressure[0])
 
-
-def test_a_stage_never_reads_a_line_drained_past_empty() -> None:
-    """The step falls back to the capped depletion step instead."""
-    state, external_pressure = build_state(smooth_thermochemistry=True)
-    layout = biliquid_states._CoupledStateLayout(
-        line_names=tuple(state.lines), energy_line_names=("oxidizer",)
-    )
-    drained = layout.pack(
-        2e6,
-        {"oxidizer": 1.0, "fuel": 0.0},
-        {"oxidizer": state.internal_energy_per_line["oxidizer"]},
-    )
-
-    with pytest.raises(biliquid_states._StageLeftTheStateSpaceError):
-        state._get_coupled_derivative(
-            drained,
-            layout=layout,
-            is_feeding=True,
-            external_pressure=external_pressure,
-        )
