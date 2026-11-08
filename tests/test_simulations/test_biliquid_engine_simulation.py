@@ -63,18 +63,22 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
 ) -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
 
-    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=4e-4))
+    coarse_step = 4e-4
+    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
+    # At 1 s the chamber has settled on the steady state of its balance, which does
+    # not depend on the step, so the two runs agree to round-off.
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
-        rel=1e-4,
+        rel=1e-9,
     )
-    # The tank masses advance by explicit Euler (#483), so the impulse, which
-    # integrates the late vapor blowdown, converges at first order in the step.
+    # The lines drain by explicit first-order steps, so burnout moves with the step.
+    # Measured 1.3e-3 for this engine (burnout 16 ms earlier), and 2.1e-3 with a
+    # combustion efficiency of 0.95, where the fuel tail is longer.
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse, rel=1e-2
+        simulation_result.total_impulse, rel=3e-3
     )
 
 
@@ -471,11 +475,13 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
         expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
         mixture_ratio=state.oxidizer_to_fuel_ratio[-1],
     )
-    k = properties.k_chamber
-    vandenkerckhove = np.sqrt(k) * (2.0 / (k + 1.0)) ** ((k + 1.0) / (2.0 * (k - 1.0)))
+    specific_heat_ratio = properties.k_chamber
+    vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
+        2.0 / (specific_heat_ratio + 1.0)
+    ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
     ideal_c_star = (
         np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
-        / vandenkerckhove
+        / vandenkerckhove_function
     )
 
     assert delivered_c_star / ideal_c_star == pytest.approx(

@@ -1,14 +1,14 @@
 import CoolProp.CoolProp as CP
 import pytest
 
+import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants_models
 import machwave.models.propellants.components as propellant_components
 
-# RocketCEA's "N2O_nbp" card: liquid N2O at its normal boiling point,
-# h = 14583.0 cal/mol at 184.4 K. It is an independent route to the liquid
-# enthalpy on the CEA scale.
-_ROCKETCEA_N2O_NBP_ENTHALPY = 14583.0 * 4.184  # [J/mol]
-_ROCKETCEA_N2O_NBP_TEMPERATURE = 184.4  # [K]
+# RocketCEA's "N2O_nbp" card: liquid N2O at its normal boiling point, an
+# independent route to the liquid enthalpy on the CEA scale.
+_ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY = 14583.0  # [cal/mol]
+_ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE = 184.4  # [K]
 
 
 def _ethanol() -> propellant_components.PropellantComponent:
@@ -34,10 +34,16 @@ def _n2o_ethanol(
 class TestSaturatedLiquidNitrousOxide:
     def test_matches_rocketcea_normal_boiling_point_card(self):
         component = propellants_models.saturated_liquid_nitrous_oxide(
-            _ROCKETCEA_N2O_NBP_TEMPERATURE
+            _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE
         )
+        # The card's tabulated enthalpy and CoolProp's equation of state differ
+        # by 102 J/mol here; 200 J/mol stays far below the 10 kJ/mol gap
+        # between the liquid and the built-in gas card this component replaces.
         assert component.enthalpy == pytest.approx(
-            _ROCKETCEA_N2O_NBP_ENTHALPY, abs=200.0
+            conversions.convert_cal_per_mol_to_joules_per_mol(
+                _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY
+            ),
+            abs=200.0,
         )
 
     def test_density_and_state_follow_temperature(self):
@@ -89,11 +95,11 @@ class TestBiliquidCustomCard:
         propellant = _n2o_ethanol(
             propellants_models.saturated_liquid_nitrous_oxide(300.0)
         )
-        lean = propellant.evaluate(3.26e6, 4.0, mixture_ratio=1.95)
-        rich_in_oxidizer = propellant.evaluate(3.26e6, 4.0, mixture_ratio=4.0)
+        at_low_mixture_ratio = propellant.evaluate(3.26e6, 4.0, mixture_ratio=1.95)
+        at_high_mixture_ratio = propellant.evaluate(3.26e6, 4.0, mixture_ratio=4.0)
         assert (
-            rich_in_oxidizer.adiabatic_flame_temperature
-            > lean.adiabatic_flame_temperature + 300.0
+            at_high_mixture_ratio.adiabatic_flame_temperature
+            > at_low_mixture_ratio.adiabatic_flame_temperature + 300.0
         )
 
     def test_built_in_name_ignores_component_fields(self):
