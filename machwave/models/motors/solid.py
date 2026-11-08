@@ -30,8 +30,8 @@ class SolidMotor(
             thrust_chamber: Thrust chamber model.
             combustion_efficiency: Characteristic velocity (c*) efficiency in
                 (0, 1], the ratio of the delivered to the ideal c*. Chamber
-                pressure for a given mass flow and throat scales by this value;
-                the flame temperature fed to the chamber scales by its square.
+                pressure for a given mass flow and throat scales by this value.
+                The flame temperature fed to the chamber scales by its square.
             nozzle_loss_model: Nozzle loss model.
         """
         super().__init__(

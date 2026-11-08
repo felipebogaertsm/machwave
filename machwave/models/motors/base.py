@@ -27,8 +27,8 @@ class Motor(Generic[P, T], ABC):
             thrust_chamber: Thrust chamber of the motor.
             combustion_efficiency: Characteristic velocity (c*) efficiency in
                 (0, 1], the ratio of the delivered to the ideal c*. Chamber
-                pressure for a given mass flow and throat scales by this value;
-                the flame temperature fed to the chamber scales by its square.
+                pressure for a given mass flow and throat scales by this value.
+                The flame temperature fed to the chamber scales by its square.
             nozzle_loss_model: Nozzle thrust coefficient loss model. Motor
                 subclasses supply an engine-appropriate default.
 
