@@ -1,4 +1,4 @@
-"""Tests for the simulated propellant mass passed to RocketPy."""
+"""Tests for the RocketPy base adapter."""
 
 import numpy as np
 import pytest
@@ -6,57 +6,22 @@ import rocketpy
 
 import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.adapters.rocketpy.base as rocketpy_base
-import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
-import machwave.models.propellants.formulations.solid as solid_propellants
-import machwave.simulation as machwave_simulation
 import machwave.simulation.solid.results as solid_results
+from tests.test_simulations import motor_builders
+from tests.test_simulations.conftest import run_simulation
 
-from tests.factories import (
-    BatesSegmentFactory,
-    CombustionChamberFactory,
-    NozzleFactory,
-    SolidMotorFactory,
-    SolidMotorThrustChamberFactory,
-)
-
-DRY_MASS = 6.0
+# Catches only a gross error in the mass passed to RocketPy: the docs example
+# reaches about 2.4 km above ground level.
+MIN_APOGEE_ABOVE_GROUND = 1000.0
 
 
 @pytest.fixture(scope="module")
 def simulated_motor() -> tuple[
     motors_models.SolidMotor, solid_results.SolidSimulationResult
 ]:
-    grain = grain_models.Grain(spacing=0.01)
-    for _ in range(4):
-        grain.add_segment(
-            BatesSegmentFactory.build(
-                outer_diameter=0.085, core_diameter=0.035, length=0.150
-            )
-        )
-    thrust_chamber = SolidMotorThrustChamberFactory.build(
-        nozzle=NozzleFactory.build(
-            throat_diameter=0.022, divergent_angle=12, expansion_ratio=8
-        ),
-        combustion_chamber=CombustionChamberFactory.build(
-            inner_diameter=89.25e-3, internal_length=grain.total_length + 0.01
-        ),
-        dry_mass=DRY_MASS,
-        center_of_gravity_coordinate=(0.35, 0.0, 0.0),
-        moment_of_inertia=(0.19, 0.19, 0.008),
-    )
-    motor = SolidMotorFactory.build(
-        grain=grain,
-        propellant=solid_propellants.KNSB_NAKKA,
-        thrust_chamber=thrust_chamber,
-    )
-    params = machwave_simulation.InternalBallisticsSimulationParams(
-        d_t=0.01, igniter_pressure=1e6, external_pressure=1.013e5
-    )
-    result = machwave_simulation.InternalBallisticsSimulation(
-        motor=motor, params=params
-    ).run()
-    return motor, result
+    motor, params = motor_builders.build_rocketpy_example_motor()
+    return motor, run_simulation(motor, params)
 
 
 @pytest.fixture(
@@ -111,9 +76,10 @@ def test_mass_flow_rate_matches_the_total_mass_flow_rate(adapter) -> None:
 
 def test_total_mass_at_burnout_equals_dry_mass(adapter) -> None:
     burn_out_time = adapter.burn_out_time
+    dry_mass = adapter.motor.thrust_chamber.dry_mass_properties.dry_mass
 
-    assert adapter.total_mass(burn_out_time) == pytest.approx(DRY_MASS)
-    assert adapter.total_mass(burn_out_time + 1.0) == pytest.approx(DRY_MASS)
+    assert adapter.total_mass(burn_out_time) == pytest.approx(dry_mass)
+    assert adapter.total_mass(burn_out_time + 1.0) == pytest.approx(dry_mass)
     assert adapter.total_mass_flow_rate(burn_out_time + 1.0) == pytest.approx(0.0)
 
 
@@ -143,4 +109,4 @@ def test_flight_reaches_apogee(adapter, equations_of_motion) -> None:
     )
 
     assert flight.apogee_time > adapter.burn_out_time
-    assert flight.apogee - environment.elevation > 1000.0
+    assert flight.apogee - environment.elevation > MIN_APOGEE_ABOVE_GROUND
