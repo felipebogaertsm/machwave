@@ -161,6 +161,7 @@ and its simulation result. The adapter currently provides:
 ## Current Scope And Limitations
 
 - `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments; it raises `ValueError` otherwise.
+- The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
 - `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry. Both adapters pass the same propellant mass, center of mass, and inertia from the Machwave simulation result, so they yield the same mass properties for a BATES grain.
 - `RocketPyGenericMotorAdapter` also accepts a biliquid engine. Every propellant line must define `tank_placement`; the adapter raises `ValueError` otherwise. The liquid is taken as settled at the aft end of each tank, toward the nozzle, with the vapor ahead of it.
 - RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
