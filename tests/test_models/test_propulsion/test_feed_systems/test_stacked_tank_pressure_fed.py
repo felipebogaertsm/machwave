@@ -35,12 +35,16 @@ def build_triliquid(**overrides):
         PropellantLineFactory.build(
             name="fuel",
             role="fuel",
-            tank=TankFactory.build(fluid_name="Ethanol", initial_fluid_mass=3.0),
+            tank=TankFactory.build(
+                fluid_name="Ethanol", initial_fluid_mass=3.0, isothermal=True
+            ),
         ),
         PropellantLineFactory.build(
             name="diluent",
             role="additive",
-            tank=TankFactory.build(fluid_name="Water", initial_fluid_mass=1.0),
+            tank=TankFactory.build(
+                fluid_name="Water", initial_fluid_mass=1.0, isothermal=True
+            ),
         ),
     ]
     kwargs = dict(lines=lines, pressurizing_line="oxidizer")
@@ -223,13 +227,19 @@ class TestInjectorSeesTheLineLoss:
             seen = dataclasses.replace(
                 head,
                 pressure=head.pressure
-                - line.get_pressure_drop(flows[name], head.density),
+                - line.resistance.get_pressure_drop(flows[name], head.density),
             )
+            element = injector.elements[name]
+            lossless_flow = element.get_mass_flow(
+                inlet=head, chamber_pressure=self.CHAMBER_PRESSURE
+            )
+            # A flow within the solve tolerance of the root misses the element
+            # flow by that tolerance times (1 + |d f_inj / d mdot|), under 2 here.
             assert flows[name] == pytest.approx(
-                injector.elements[name].get_mass_flow(
+                element.get_mass_flow(
                     inlet=seen, chamber_pressure=self.CHAMBER_PRESSURE
                 ),
-                rel=1e-9,
+                abs=2.0 * biliquid_states.LINE_FLOW_RELATIVE_TOLERANCE * lossless_flow,
             )
 
     def test_one_line_resistance_leaves_the_other_line_alone(self):
@@ -289,6 +299,52 @@ class TestValidation:
     def test_rejects_a_negative_piston_loss(self):
         with pytest.raises(ValueError, match="piston_loss"):
             build_triliquid(piston_loss=-1.0)
+
+    def test_rejects_a_tank_below_the_piston_running_an_energy_balance(self):
+        with pytest.raises(ValueError, match="'fuel' is below the piston"):
+            StackedTankPressureFedFeedSystemFactory.build(
+                fuel_tank=TankFactory.build(fluid_name="Ethanol", isothermal=False)
+            )
+
+
+class TestDeprecatedLineLosses:
+    def test_fixed_line_losses_still_come_off_the_head_pressure(self):
+        with pytest.warns(DeprecationWarning, match="fixed line losses"):
+            feed_system = build_triliquid(piston_loss=2e5, line_losses={"diluent": 1e5})
+        oxidizer_tank = feed_system.lines["oxidizer"].tank
+
+        pressures = feed_system.get_inlet_pressures(line_states(feed_system))
+
+        assert pressures["diluent"] == pytest.approx(
+            oxidizer_tank.get_pressure(
+                oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+            )
+            - 2e5
+            - 1e5
+        )
+
+    def test_the_two_line_constructor_still_carries_them(self):
+        with pytest.warns(DeprecationWarning, match="fixed line losses"):
+            feed_system = StackedTankPressureFedFeedSystemFactory.build(
+                oxidizer_line_loss=3e5, fuel_line_loss=2e5
+            )
+
+        assert feed_system.line_losses == {"oxidizer": 3e5, "fuel": 2e5}
+
+    def test_rejects_a_loss_keyed_by_an_unknown_line(self):
+        with (
+            pytest.warns(DeprecationWarning, match="fixed line losses"),
+            pytest.raises(ValueError, match="coolant"),
+        ):
+            build_triliquid(line_losses={"coolant": 1e5})
+
+    @pytest.mark.parametrize("line_name", ["oxidizer", "fuel"])
+    def test_rejects_a_negative_line_loss(self, line_name):
+        with (
+            pytest.warns(DeprecationWarning, match="fixed line losses"),
+            pytest.raises(ValueError, match=f"line_losses\\['{line_name}'\\]"),
+        ):
+            build_triliquid(line_losses={line_name: -1.0})
 
 
 class TestInitialState:

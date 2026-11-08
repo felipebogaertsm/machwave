@@ -200,10 +200,19 @@ def build_finocyl_motor() -> tuple[
     return motor, params
 
 
-def build_1kn_biliquid_engine() -> tuple[
+def build_1kn_biliquid_engine(
+    *, isothermal_oxidizer_tank: bool = False
+) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
-    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
+    """
+    1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like).
+
+    Args:
+        isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
+            temperature instead of running an energy balance. The fuel tank
+            below the piston always does.
+    """
     tank_temperature = 300.0
     # Self-pressurized N2O reaches the injector as saturated liquid, not as the
     # 298.15 K ideal gas of RocketCEA's built-in "N2O" card.
@@ -220,27 +229,30 @@ def build_1kn_biliquid_engine() -> tuple[
             volume=3.80e-3,
             temperature=tank_temperature,
             initial_fluid_mass=2.78,
+            isothermal=isothermal_oxidizer_tank,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
             temperature=tank_temperature,
             initial_fluid_mass=1.55,
+            isothermal=True,
         ),
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore).
+        # tube (10.9 mm bore). Flows measured at t = 1 s on this engine with
+        # the Dyer oxidizer element, after one fixed-point pass.
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8298,
+                mass_flow=0.7976,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.4948,
+            mass_flow=0.3849,
             density=783.45,
             flow_area=9.37e-5,
         ),
@@ -255,6 +267,7 @@ def build_1kn_biliquid_engine() -> tuple[
         injector=InjectorFactory.build(
             elements={
                 "oxidizer": InjectorElementFactory.build(
+                    # Sized for the nominal O/F of 1.95 at t = 0.1 s.
                     area=2.097e-5 / 0.48,
                     mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
                 ),

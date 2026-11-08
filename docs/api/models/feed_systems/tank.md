@@ -15,8 +15,6 @@ The mass and internal energy fix the state through a CoolProp (D, U) flash, so t
 
 Passing `isothermal=True` holds the temperature where the tank was loaded instead, so a self-pressurizing tank holds its saturation pressure flat for as long as any liquid remains. That is a quick upper bound on the feed pressure, or a fair model of a tank held at temperature, but for a self-pressurizing propellant such as N2O it over-predicts the feed pressure and the thrust late in the burn.
 
-A tank running the energy balance resolves its mass and internal energy through one CoolProp (D, U) flash per state (one `AbstractState` per tank, through `CoolPropService.get_state_at_density_internal_energy`). The flash is checked against the saturation curve and solved on the dome directly when CoolProp lands on a wrong state.
-
 Tanks are identified by CoolProp fluid name (e.g., `"N2O"`, `"Oxygen"`, `"Hydrogen"`).
 
 **Reference.** J. E. Zimmerman, B. S. Waxman, B. J. Cantwell and G. G. Zilliac, "Review and Evaluation of Models for Self-Pressurizing Propellant Tank Dynamics", AIAA 2013-4045, 49th AIAA/ASME/SAE/ASEE Joint Propulsion Conference, 2013. [doi:10.2514/6.2013-4045](https://doi.org/10.2514/6.2013-4045)

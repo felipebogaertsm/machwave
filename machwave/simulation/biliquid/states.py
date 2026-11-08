@@ -21,18 +21,17 @@ import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
-# Of the no-loss flow. Lands within about 1e-9 of the exact root, far below
-# what any orifice model is good for, in two element evaluations fewer than
-# brentq's default tolerance.
-FLOW_SOLVE_RELATIVE_TOLERANCE = 1e-8
+# Relative to the lossless flow, far below the accuracy of any orifice model.
+LINE_FLOW_RELATIVE_TOLERANCE = 1e-8
 
 
 def get_line_mass_flow(
     chamber_pressure: float,
     *,
     element: injector_models.InjectorElement,
-    line: line_models.PropellantLine,
+    resistance: line_models.FeedlineResistance,
     head_state: fluid_state_models.FluidState,
+    lossless_flow: float,
 ) -> float:
     """
     Flow a line delivers through its injector element [kg/s].
@@ -42,60 +41,40 @@ def get_line_mass_flow(
 
         mdot = f_inj(P_head - dP(mdot), Pc)
 
-    The right-hand side falls as mdot rises, so the root is unique and lies
-    between zero and the flow the element passes with no line loss. An SPI
-    element is a second quadratic resistance in series with the line, so its
-    root has a closed form; any other element is solved by bracketing.
+    The right-hand side does not rise as mdot rises, so the root lies between
+    zero and the flow the element passes with no line loss, and is bracketed
+    there. When the residual at the lossless flow is not positive, the element
+    passes no less at the lower inlet pressure (HEM from a saturated inlet,
+    whose stagnation state is the saturated liquid at the tank temperature
+    whatever the pressure), and the lossless flow is returned.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
         element: Injector element the line flows through.
-        line: Propellant line, whose resistance sets the feedline loss.
+        resistance: Hydraulic resistance of the feedline.
         head_state: Propellant state at the head of the feedline, with no
             line loss taken.
+        lossless_flow: Flow the element passes from the head state [kg/s].
 
     Returns:
         Mass flow rate of the line [kg/s].
     """
-    lossless_flow = element.get_mass_flow(
-        inlet=head_state, chamber_pressure=chamber_pressure
-    )
-    resistance = line.resistance
-    if resistance is None or lossless_flow <= 0.0:
+    if lossless_flow <= 0.0:
         return lossless_flow
 
-    if element.mass_flow_model == injector_models.MassFlowModel.SPI:
-        # mdot = Cd A sqrt(2 rho dP_orifice) and the line takes
-        # K mdot^2 / (2 rho A_line^2) of the same head-to-chamber drop.
-        return lossless_flow / math.sqrt(
-            1.0
-            + resistance.loss_coefficient
-            * (element.discharge_coefficient * element.area / resistance.flow_area) ** 2
+    def get_flow_residual(mass_flow: float) -> float:
+        inlet = fluid_state_models.FluidState(
+            fluid_name=head_state.fluid_name,
+            pressure=head_state.pressure
+            - resistance.get_pressure_drop(mass_flow, head_state.density),
+            temperature=head_state.temperature,
+            density=head_state.density,
+        )
+        return mass_flow - element.get_mass_flow(
+            inlet=inlet, chamber_pressure=chamber_pressure
         )
 
-    # brentq evaluates both ends of the bracket again, and each evaluation of
-    # an element such as HEM is a CoolProp sweep, so keep what is known.
-    residuals = {0.0: -lossless_flow}
-
-    def get_flow_residual(mass_flow: float) -> float:
-        if mass_flow not in residuals:
-            inlet = fluid_state_models.FluidState(
-                fluid_name=head_state.fluid_name,
-                pressure=head_state.pressure
-                - line.get_pressure_drop(mass_flow, head_state.density),
-                temperature=head_state.temperature,
-                density=head_state.density,
-            )
-            residuals[mass_flow] = mass_flow - element.get_mass_flow(
-                inlet=inlet, chamber_pressure=chamber_pressure
-            )
-        return residuals[mass_flow]
-
     if get_flow_residual(lossless_flow) <= 0.0:
-        # The element passes no less at the lower inlet pressure, as HEM from
-        # a saturated inlet does: its stagnation state is the saturated liquid
-        # at the tank temperature whatever the pressure, so the line loss
-        # leaves the flow alone.
         return lossless_flow
 
     return cast(
@@ -104,7 +83,7 @@ def get_line_mass_flow(
             get_flow_residual,
             0.0,
             lossless_flow,
-            xtol=FLOW_SOLVE_RELATIVE_TOLERANCE * lossless_flow,
+            xtol=LINE_FLOW_RELATIVE_TOLERANCE * lossless_flow,
         ),
     )
 
@@ -122,8 +101,8 @@ def get_injector_mass_flows(
     """
     Injector flow on every line at the given chamber pressure [kg/s].
 
-    Each line's flow is solved with its own feedline loss. No line delivers
-    more than the mass it has left over the timestep.
+    Each line with a feedline resistance has its flow solved with its own
+    loss. No line delivers more than the mass it has left over the timestep.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -141,54 +120,24 @@ def get_injector_mass_flows(
     if not is_feeding:
         return {name: 0.0 for name in inlet_states}
 
-    missing = [name for name in injector.elements if name not in inlet_states]
-    if missing:
-        raise ValueError(f"no inlet state was given for {missing}")
-
-    return {
-        name: min(
-            get_line_mass_flow(
+    lossless_flows = injector.get_mass_flows(
+        inlet_states=inlet_states, chamber_pressure=chamber_pressure
+    )
+    flows = {
+        name: (
+            flow
+            if (resistance := lines[name].resistance) is None
+            else get_line_mass_flow(
                 chamber_pressure,
-                element=element,
-                line=lines[name],
+                element=injector.elements[name],
+                resistance=resistance,
                 head_state=inlet_states[name],
-            ),
-            line_masses[name] / d_t,
+                lossless_flow=flow,
+            )
         )
-        for name, element in injector.elements.items()
+        for name, flow in lossless_flows.items()
     }
-
-
-def get_internal_energy_rate(
-    *,
-    outflow_specific_enthalpy: float,
-    mass_flow_rate: float,
-    pressure: float,
-    volume_rate: float,
-) -> float:
-    """
-    Rate of change of the internal energy of an adiabatic tank [W].
-
-    The open-system energy balance of a tank that loses fluid through one port
-    and whose boundary moves, as a piston does:
-
-        dU/dt = -h_out * mdot_out - P * dV/dt
-
-    The first term is the enthalpy the leaving fluid carries, which includes
-    the flow work that pushes it out. The second is the boundary work the
-    fluid does on a moving wall. A tank of fixed volume has dV/dt = 0.
-
-    Args:
-        outflow_specific_enthalpy: Specific enthalpy of the leaving fluid
-            [J/kg].
-        mass_flow_rate: Mass flow leaving the tank [kg/s] (>=0).
-        pressure: Tank pressure [Pa].
-        volume_rate: Rate at which the volume the fluid fills grows [m^3/s].
-
-    Returns:
-        dU/dt [W].
-    """
-    return -outflow_specific_enthalpy * mass_flow_rate - pressure * volume_rate
+    return {name: min(flow, line_masses[name] / d_t) for name, flow in flows.items()}
 
 
 def get_total_injector_mass_flow(
@@ -252,7 +201,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             )
         )
 
-        initial_states = feed_system.get_initial_line_states()
+        initial_states = {name: line.initial_state for name, line in self.lines.items()}
         self.fluid_mass_per_line: dict[str, simulation_states.SimulationStateArray] = {
             name: [state.fluid_mass] for name, state in initial_states.items()
         }
@@ -462,7 +411,6 @@ class BiliquidEngineState(simulation_states.MotorState):
                 mass_drained=mass_consumed[name],
                 volume=volumes[name],
                 swept_volume=new_volumes[name] - volumes[name],
-                d_t=d_t,
             )
 
     @staticmethod
@@ -474,16 +422,20 @@ class BiliquidEngineState(simulation_states.MotorState):
         mass_drained: float,
         volume: float,
         swept_volume: float,
-        d_t: float,
     ) -> float | None:
         """
         Step the internal energy of a tank over one timestep [J].
 
-        The tank is adiabatic. It loses the enthalpy of what it drains, and
-        where its boundary moves it does the work P dV on it, both taken at the
-        start of the step like the mass update. The fluid behind boils to
-        refill the space and cools doing it, which is what walks the saturation
-        pressure down over the burn.
+        The open-system energy balance of an adiabatic tank with one port and
+        a boundary that may move, as a piston does:
+
+            dU = -h_out * dm_out - P * dV
+
+        The first term is the enthalpy the drained fluid carries, flow work
+        included; the second is the boundary work, zero for a fixed tank. Both
+        are taken at the start of the step like the mass update. The fluid
+        behind boils to refill the space and cools doing it, which is what
+        walks the saturation pressure down over the burn.
 
         Args:
             tank: Tank of the line.
@@ -492,11 +444,10 @@ class BiliquidEngineState(simulation_states.MotorState):
             mass_drained: Mass drained over the step [kg].
             volume: Volume the fluid fills at the start of the step [m^3].
             swept_volume: How much that volume grows over the step [m^3].
-            d_t: Time increment [s].
 
         Returns:
-            The internal energy left in the tank [J], or None for a line that
-            runs no energy balance.
+            The internal energy left in the tank [J], or None for an
+            isothermal tank, which runs no energy balance.
         """
         if internal_energy is None or (mass_drained <= 0.0 and swept_volume == 0.0):
             return internal_energy
@@ -508,14 +459,11 @@ class BiliquidEngineState(simulation_states.MotorState):
             if mass_drained > 0.0
             else 0.0
         )
-        pressure = (
-            tank.get_pressure(fluid_mass, internal_energy, volume=volume)
+        boundary_work = (
+            tank.get_pressure(fluid_mass, internal_energy, volume=volume) * swept_volume
             if swept_volume != 0.0
             else 0.0
         )
-        return internal_energy + d_t * get_internal_energy_rate(
-            outflow_specific_enthalpy=outflow_specific_enthalpy,
-            mass_flow_rate=mass_drained / d_t,
-            pressure=pressure,
-            volume_rate=swept_volume / d_t,
+        return (
+            internal_energy - mass_drained * outflow_specific_enthalpy - boundary_work
         )
