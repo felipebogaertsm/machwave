@@ -14,21 +14,12 @@ class TankFluidState:
             [kg/m^3].
         saturated_vapor_density: Saturated vapor density at the temperature
             [kg/m^3].
-        saturated_liquid_enthalpy: Saturated liquid specific enthalpy at the
-            temperature [J/kg].
-        saturated_vapor_enthalpy: Saturated vapor specific enthalpy at the
-            temperature [J/kg].
-        bulk_enthalpy: Specific enthalpy of the fluid at the bulk density
-            [J/kg].
     """
 
     temperature: float
     pressure: float
     saturated_liquid_density: float
     saturated_vapor_density: float
-    saturated_liquid_enthalpy: float
-    saturated_vapor_enthalpy: float
-    bulk_enthalpy: float
 
 
 class Tank:
@@ -215,9 +206,9 @@ class Tank:
         """
         Resolve the fluid at a mass and internal energy, memoized on the pair.
 
-        The bulk density and the specific internal energy fix the state in one
-        CoolProp flash, and the temperature that comes out of it fixes the
-        saturation properties the fill state is read against.
+        The bulk density and the specific internal energy fix the state, and
+        the temperature that comes out of it fixes the saturation densities the
+        fill state is read against.
 
         Raises:
             ValueError: If no internal energy was given, or if the fluid has
@@ -238,8 +229,20 @@ class Tank:
         density = fluid_mass / self.volume
         specific_internal_energy = internal_energy / fluid_mass
         try:
-            state = self._coolprop.get_state_at_density_internal_energy(
+            temperature = self._coolprop.get_temperature_at_density_internal_energy(
                 density, specific_internal_energy
+            )
+            fluid_state = TankFluidState(
+                temperature=temperature,
+                pressure=self._coolprop.get_pressure_at_density_internal_energy(
+                    density, specific_internal_energy
+                ),
+                saturated_liquid_density=(
+                    self._coolprop.get_saturated_liquid_density(temperature)
+                ),
+                saturated_vapor_density=(
+                    self._coolprop.get_saturated_vapor_density(temperature)
+                ),
             )
         except ValueError as error:
             raise ValueError(
@@ -249,15 +252,6 @@ class Tank:
                 "what the two-phase model covers."
             ) from error
 
-        fluid_state = TankFluidState(
-            temperature=state.temperature,
-            pressure=state.pressure,
-            saturated_liquid_density=state.saturated_liquid_density,
-            saturated_vapor_density=state.saturated_vapor_density,
-            saturated_liquid_enthalpy=state.saturated_liquid_enthalpy,
-            saturated_vapor_enthalpy=state.saturated_vapor_enthalpy,
-            bulk_enthalpy=state.enthalpy,
-        )
         self._fluid_state_by_state[memo_key] = fluid_state
         return fluid_state
 
@@ -416,31 +410,18 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        if self.isothermal:
-            fluid_state = None
-            temperature = self.temperature
-        else:
-            fluid_state = self._get_fluid_state(fluid_mass, internal_energy)
-            temperature = fluid_state.temperature
-
+        temperature = self.get_temperature(fluid_mass, internal_energy)
         if not self.is_delivering_liquid(fluid_mass, internal_energy):
-            if fluid_state is not None:
-                return fluid_state.bulk_enthalpy
             return self._coolprop.get_enthalpy_at_temperature_density(
                 temperature, fluid_mass / self.volume
             )
 
-        if fluid_state is not None:
-            liquid_enthalpy = fluid_state.saturated_liquid_enthalpy
-            vapor_enthalpy = fluid_state.saturated_vapor_enthalpy
-        else:
-            liquid_enthalpy = self._coolprop.get_saturated_liquid_enthalpy(temperature)
-            vapor_enthalpy = self._coolprop.get_saturated_vapor_enthalpy(temperature)
-
+        liquid_enthalpy = self._coolprop.get_saturated_liquid_enthalpy(temperature)
         liquid_mass = self.get_liquid_mass(fluid_mass, internal_energy)
         if mass_drained <= liquid_mass:
             return liquid_enthalpy
 
+        vapor_enthalpy = self._coolprop.get_saturated_vapor_enthalpy(temperature)
         liquid_fraction = liquid_mass / mass_drained
         return vapor_enthalpy + liquid_fraction * (liquid_enthalpy - vapor_enthalpy)
 

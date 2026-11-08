@@ -148,6 +148,32 @@ class TestEnergyBalanceTank:
         with pytest.raises(ValueError, match="outside the range CoolProp"):
             tank.get_pressure(FLUID_MASS, -1e12)
 
+    def test_a_mid_burn_state_the_flash_gets_wrong_stays_on_the_dome(self):
+        # CoolProp 6.8.0's (D, U) flash puts this N2O state at 270.37 K and
+        # 1.45 MPa, single-phase. The saturated mix at the reference
+        # temperature and quality gives back its density and internal energy.
+        density = 454.50072100174214
+        specific_internal_energy = 228590.2487156092
+        reference_temperature = 291.03099264302705
+        reference_quality = 0.17165274259158367
+        assert CP.PropsSI(
+            "D", "T", reference_temperature, "Q", reference_quality, FLUID
+        ) == pytest.approx(density, rel=1e-12)
+        tank = build(isothermal=False)
+        fluid_mass = density * VOLUME
+        internal_energy = specific_internal_energy * fluid_mass
+
+        # The dome solve stops at a 1e-10 K bracket; 1e-6 K leaves room for
+        # the round-off in the reference state, and moves the saturation
+        # pressure by about 1e-8 relative.
+        assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
+            reference_temperature, abs=1e-6
+        )
+        assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
+            CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=1e-7
+        )
+        assert tank.is_delivering_liquid(fluid_mass, internal_energy)
+
 
 class TestOutflowEnthalpy:
     def test_liquid_leaves_at_the_saturated_liquid_enthalpy(self):
