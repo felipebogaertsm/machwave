@@ -9,37 +9,25 @@ if typing.TYPE_CHECKING:
     import machwave.simulation.solid.results as solid_results
 
 
-def get_solid_motor_incompatibilities(grain: "grain_models.Grain") -> list[str]:
+def is_supported_by_solid_motor(grain: "grain_models.Grain") -> bool:
     """
-    Return the reasons RocketPy's SolidMotor cannot model a grain.
+    Return whether RocketPy's SolidMotor can model the grain.
 
     Args:
         grain: The machwave grain.
 
     Returns:
-        One description per incompatibility, empty if SolidMotor can model the grain.
+        True for a grain of identical BATES segments.
+
+    Raises:
+        ValueError: If the grain has no segments.
     """
     if not grain.segments:
-        return ["Grain must have at least one segment"]
-
-    incompatibilities: list[str] = []
-
-    mismatches = grain.get_segment_mismatches()
-    if mismatches:
-        incompatibilities.append(
-            "RocketPy SolidMotor requires all grain segments to be "
-            "identical, but the following mismatches were found: "
-            + "; ".join(mismatches)
-        )
-
-    first_segment = grain.segments[0]
-    if not isinstance(first_segment, grain_geometries.BatesSegment):
-        incompatibilities.append(
-            "RocketPy SolidMotor only supports BATES grain geometry, got "
-            f"{type(first_segment).__name__}"
-        )
-
-    return incompatibilities
+        raise ValueError("Grain must have at least one segment")
+    return (
+        isinstance(grain.segments[0], grain_geometries.BatesSegment)
+        and not grain.get_segment_mismatches()
+    )
 
 
 def get_initial_grain_center_of_mass_position(
@@ -73,11 +61,26 @@ class RocketPySolidMotorAdapter(
         motor = typing.cast("motors_models.SolidMotor", self.motor)
         grain = motor.grain
 
-        incompatibilities = get_solid_motor_incompatibilities(grain)
-        if incompatibilities:
-            raise ValueError("; ".join(incompatibilities))
+        if not grain.segments:
+            raise ValueError("Grain must have at least one segment")
 
-        first_segment = typing.cast(grain_geometries.BatesSegment, grain.segments[0])
+        # RocketPy's SolidMotor assumes all segments are identical
+        mismatches = grain.get_segment_mismatches()
+        if mismatches:
+            raise ValueError(
+                "RocketPy SolidMotor requires all grain segments to be "
+                "identical, but the following mismatches were found: "
+                + "; ".join(mismatches)
+            )
+
+        first_segment = grain.segments[0]
+
+        # RocketPy's SolidMotor only supports a BATES geometry
+        if not isinstance(first_segment, grain_geometries.BatesSegment):
+            raise ValueError(
+                "RocketPy SolidMotor only supports BATES grain geometry, got "
+                f"{type(first_segment).__name__}"
+            )
 
         grain_number = grain.segment_count
         grain_separation = grain.spacing

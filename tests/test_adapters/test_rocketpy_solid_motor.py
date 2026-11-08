@@ -65,30 +65,34 @@ def test_non_bates_geometry_raises_value_error(segment_factory) -> None:
         adapter._get_rocketpy_attributes()
 
 
-def test_identical_bates_segments_have_no_solid_motor_incompatibilities() -> None:
+@pytest.mark.parametrize(
+    ("segments", "is_supported"),
+    [
+        ([BatesSegmentFactory.build()] * 3, True),
+        ([StarGrainSegmentFactory.build()] * 3, False),
+        (
+            [
+                BatesSegmentFactory.build(core_diameter=0.035),
+                BatesSegmentFactory.build(core_diameter=0.045),
+            ],
+            False,
+        ),
+    ],
+    ids=["identical_bates", "star", "mismatched_bates"],
+)
+def test_solid_motor_supports_only_identical_bates_segments(
+    segments, is_supported
+) -> None:
     grain = grain_models.Grain()
-    for _ in range(3):
-        grain.add_segment(BatesSegmentFactory.build())
+    for segment in segments:
+        grain.add_segment(segment)
 
-    assert rocketpy_solid_motor.get_solid_motor_incompatibilities(grain) == []
-
-
-def test_empty_grain_is_incompatible_with_solid_motor() -> None:
-    assert rocketpy_solid_motor.get_solid_motor_incompatibilities(
-        grain_models.Grain()
-    ) == ["Grain must have at least one segment"]
+    assert rocketpy_solid_motor.is_supported_by_solid_motor(grain) is is_supported
 
 
-def test_mismatched_non_bates_segments_report_every_incompatibility() -> None:
-    grain = grain_models.Grain()
-    grain.add_segment(StarGrainSegmentFactory.build(length=0.1))
-    grain.add_segment(StarGrainSegmentFactory.build(length=0.2))
-
-    incompatibilities = rocketpy_solid_motor.get_solid_motor_incompatibilities(grain)
-
-    assert len(incompatibilities) == 2
-    assert "requires all grain segments to be identical" in incompatibilities[0]
-    assert "only supports BATES grain geometry" in incompatibilities[1]
+def test_an_empty_grain_has_no_solid_motor_support_to_decide() -> None:
+    with pytest.raises(ValueError, match="Grain must have at least one segment"):
+        rocketpy_solid_motor.is_supported_by_solid_motor(grain_models.Grain())
 
 
 def test_bates_geometry_produces_expected_keys() -> None:

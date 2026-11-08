@@ -21,7 +21,7 @@ The adapter sits after the internal ballistics simulation:
 2. Run `InternalBallisticsSimulation` to obtain a `SimulationResult`.
 3. Wrap the motor and result with `create_rocketpy_motor(motor=motor, simulation_result=result)`,
    which returns `RocketPySolidMotorAdapter` for a grain of identical BATES segments and
-   `RocketPyGenericMotorAdapter` for any other grain.
+   `RocketPyGenericMotorAdapter` for any other grain or a biliquid engine.
 4. Pass the adapted motor into a RocketPy `Rocket`.
 
 ## Example
@@ -139,7 +139,7 @@ feed_system = StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
 ```
 
 The engine is then simulated and adapted like a solid motor, with
-`RocketPyGenericMotorAdapter(motor=engine, simulation_result=result)`. See
+`create_rocketpy_motor(motor=engine, simulation_result=result)`. See
 `examples/1kn_biliquid_engine.py` for the engine definition.
 
 ## Data Passed To RocketPy
