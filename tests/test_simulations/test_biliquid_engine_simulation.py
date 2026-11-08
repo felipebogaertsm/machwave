@@ -477,11 +477,13 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
         expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
         mixture_ratio=state.oxidizer_to_fuel_ratio[-1],
     )
-    k = properties.k_chamber
-    vandenkerckhove = np.sqrt(k) * (2.0 / (k + 1.0)) ** ((k + 1.0) / (2.0 * (k - 1.0)))
+    specific_heat_ratio = properties.k_chamber
+    vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
+        2.0 / (specific_heat_ratio + 1.0)
+    ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
     ideal_c_star = (
         np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
-        / vandenkerckhove
+        / vandenkerckhove_function
     )
 
     assert delivered_c_star / ideal_c_star == pytest.approx(
