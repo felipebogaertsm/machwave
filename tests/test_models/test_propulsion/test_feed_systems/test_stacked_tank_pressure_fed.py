@@ -198,13 +198,19 @@ class TestInjectorSeesTheLineLoss:
             seen = dataclasses.replace(
                 head,
                 pressure=head.pressure
-                - line.get_pressure_drop(flows[name], head.density),
+                - line.resistance.get_pressure_drop(flows[name], head.density),
             )
+            element = injector.elements[name]
+            lossless_flow = element.get_mass_flow(
+                inlet=head, chamber_pressure=self.CHAMBER_PRESSURE
+            )
+            # A flow within the solve tolerance of the root misses the element
+            # flow by that tolerance times (1 + |d f_inj / d mdot|), under 2 here.
             assert flows[name] == pytest.approx(
-                injector.elements[name].get_mass_flow(
+                element.get_mass_flow(
                     inlet=seen, chamber_pressure=self.CHAMBER_PRESSURE
                 ),
-                rel=1e-9,
+                abs=2.0 * biliquid_states.LINE_FLOW_RELATIVE_TOLERANCE * lossless_flow,
             )
 
     def test_one_line_resistance_leaves_the_other_line_alone(self):

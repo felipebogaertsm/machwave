@@ -174,4 +174,4 @@ class TestOxidizerTankConstructor:
             )
         )
 
-        assert feed_system.line.get_pressure_drop(1.0, 750.0) == 0.0
+        assert feed_system.line.resistance is None

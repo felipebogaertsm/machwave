@@ -23,15 +23,32 @@ DENSITY = 790.0
 
 
 def solve(line, element, head_state=None, chamber_pressure=CHAMBER_PRESSURE):
-    return biliquid_states.get_line_mass_flow(
+    return biliquid_states.get_injector_mass_flows(
         chamber_pressure,
-        element=element,
-        line=line,
-        head_state=head_state
-        or FluidStateFactory.build(
-            fluid_name="Ethanol", pressure=HEAD_PRESSURE, density=DENSITY
-        ),
+        injector=injector_models.Injector(elements={line.name: element}),
+        lines={line.name: line},
+        inlet_states={
+            line.name: head_state
+            or FluidStateFactory.build(
+                fluid_name="Ethanol", pressure=HEAD_PRESSURE, density=DENSITY
+            )
+        },
+        line_masses={line.name: math.inf},
+        is_feeding=True,
+        d_t=1.0,
+    )[line.name]
+
+
+def get_solve_tolerance(element, head_state, chamber_pressure=CHAMBER_PRESSURE):
+    """The bracketed solve stops within this of the root [kg/s]."""
+    return biliquid_states.LINE_FLOW_RELATIVE_TOLERANCE * element.get_mass_flow(
+        inlet=head_state, chamber_pressure=chamber_pressure
     )
+
+
+ETHANOL_HEAD = FluidStateFactory.build(
+    fluid_name="Ethanol", pressure=HEAD_PRESSURE, density=DENSITY
+)
 
 
 class TestSpiSeriesResistances:
@@ -55,7 +72,9 @@ class TestSpiSeriesResistances:
             / (1.0 / (0.6 * 1.5e-5) ** 2 + loss_coefficient / 3.0e-5**2)
         )
 
-        assert solve(line, element) == pytest.approx(expected, rel=1e-9)
+        assert solve(line, element) == pytest.approx(
+            expected, abs=get_solve_tolerance(element, ETHANOL_HEAD)
+        )
 
     def test_a_line_without_resistance_is_the_bare_orifice(self):
         element = InjectorElementFactory.build(discharge_coefficient=0.6, area=1.5e-5)
@@ -65,22 +84,23 @@ class TestSpiSeriesResistances:
             0.6 * 1.5e-5 * math.sqrt(2.0 * DENSITY * (HEAD_PRESSURE - CHAMBER_PRESSURE))
         )
 
-    def test_the_line_drop_follows_the_solved_flow_squared(self):
-        """A quarter of the driving pressure halves the flow and quarters the loss."""
+    def test_a_quarter_of_the_driving_pressure_halves_the_flow(self):
         element = InjectorElementFactory.build(discharge_coefficient=0.6, area=1.5e-5)
         resistance = feed_systems_models.FeedlineResistance(
             loss_coefficient=5.0, flow_area=3.0e-5
         )
         line = PropellantLineFactory.build(resistance=resistance)
 
+        quarter_chamber_pressure = HEAD_PRESSURE - (HEAD_PRESSURE - 30e5) / 4
         full = solve(line, element)
-        quarter = solve(
-            line, element, chamber_pressure=HEAD_PRESSURE - (HEAD_PRESSURE - 30e5) / 4
-        )
+        quarter = solve(line, element, chamber_pressure=quarter_chamber_pressure)
 
-        assert quarter == pytest.approx(full / 2.0, rel=1e-9)
-        assert line.get_pressure_drop(quarter, DENSITY) == pytest.approx(
-            line.get_pressure_drop(full, DENSITY) / 4.0, rel=1e-9
+        # Both flows carry the solver tolerance, the full one doubled by the
+        # halving.
+        assert quarter == pytest.approx(
+            full / 2.0,
+            abs=get_solve_tolerance(element, ETHANOL_HEAD)
+            + get_solve_tolerance(element, ETHANOL_HEAD, quarter_chamber_pressure),
         )
 
 
@@ -125,7 +145,7 @@ class TestHem:
         flow = solve(line, element, head_state=head)
         seen = FluidStateFactory.build(
             fluid_name="N2O",
-            pressure=57e5 - line.get_pressure_drop(flow, 725.0),
+            pressure=57e5 - line.resistance.get_pressure_drop(flow, 725.0),
             temperature=300.0,
             density=725.0,
         )

@@ -38,6 +38,16 @@ class FeedlineResistance:
     K lumps the friction of the run (f * L / D) and the minor losses of every
     fitting and valve on it, all referred to the same flow area A.
 
+    Assumes fully turbulent single-phase liquid flow, so K is constant with
+    the Reynolds number, and steady flow: the inertance of the line is
+    neglected. Verified against the closed form, not validated against
+    measured feedline losses.
+
+    References:
+        Idelchik, I. E., "Handbook of Hydraulic Resistance", 3rd ed., Begell
+        House, 1996, Ch. 1 (resistance coefficient and its addition along a
+        line).
+
     Attributes:
         loss_coefficient: Total loss coefficient K, referred to the flow area
             (dimensionless).
@@ -152,18 +162,6 @@ class PropellantLine:
             raise ValueError("name must be a non-empty string")
 
         object.__setattr__(self, "role", propellant_components.ComponentRole(self.role))
-
-    def get_pressure_drop(self, mass_flow: float, density: float) -> float:
-        """
-        Pressure the feedline loses at the given flow [Pa].
-
-        Args:
-            mass_flow: Mass flow through the line [kg/s].
-            density: Density of the fluid in the line [kg/m^3].
-        """
-        if self.resistance is None:
-            return 0.0
-        return self.resistance.get_pressure_drop(mass_flow, density)
 
     @property
     def initial_state(self) -> LineState:
