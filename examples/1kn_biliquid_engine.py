@@ -58,9 +58,7 @@ def main():
     injector = thrust_chamber_models.Injector(
         elements={
             "oxidizer": thrust_chamber_models.InjectorElement(
-                discharge_coefficient=0.48,
-                area=1.4e-5 / 0.48,
-                mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
+                discharge_coefficient=0.48, area=1.4e-5 / 0.48
             ),
             "fuel": thrust_chamber_models.InjectorElement(
                 discharge_coefficient=0.48, area=8.2e-6 / 0.48
