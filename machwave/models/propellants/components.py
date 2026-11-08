@@ -18,6 +18,10 @@ class ComponentRole(enum.StrEnum):
     ADDITIVE = "additive"
 
 
+# CEA assigns the ideal gas at this temperature the heat of formation.
+_CEA_REFERENCE_TEMPERATURE = 298.15  # [K]
+
+
 @dataclasses.dataclass(kw_only=True)
 class PropellantComponent:
     """
@@ -44,7 +48,7 @@ class PropellantComponent:
     density: float
     chemical_formula: dict[str, int]
     enthalpy: float
-    initial_temperature: float = 298.15
+    initial_temperature: float = _CEA_REFERENCE_TEMPERATURE
     custom_card: bool = False
 
     def to_cea_dict(self, *, weight_percent: float) -> dict:
@@ -78,9 +82,6 @@ class PropellantComponent:
 # same enthalpy scale as the combustion products.
 NITROUS_OXIDE_GAS_HEAT_OF_FORMATION = 81600.0  # [J/mol]
 
-# CEA assigns the ideal gas at this temperature the heat of formation.
-_CEA_REFERENCE_TEMPERATURE = 298.15  # [K]
-
 # Low enough that CoolProp's real-gas enthalpy is the ideal-gas enthalpy to
 # well under 1 J/mol.
 _IDEAL_GAS_REFERENCE_PRESSURE = 1.0  # [Pa]
@@ -107,6 +108,9 @@ def saturated_liquid_nitrous_oxide(temperature: float) -> PropellantComponent:
     The card is fixed at `temperature`. A tank running an energy balance cools
     during the burn, and the card does not follow it.
 
+    Validation status: verified, not validated. At 184.4 K the enthalpy is
+    within about 100 J/mol of RocketCEA's independent "N2O_nbp" liquid card.
+
     Args:
         temperature: Liquid temperature in the tank at loading [K].
 
@@ -121,12 +125,13 @@ def saturated_liquid_nitrous_oxide(temperature: float) -> PropellantComponent:
     import machwave.services.coolprop as coolprop_service
 
     fluid = coolprop_service.CoolPropService("NitrousOxide")
-    triple_point = fluid.get_triple_point_temperature()
-    critical_point = fluid.get_critical_temperature()
-    if not (triple_point <= temperature < critical_point):
+    triple_point_temperature = fluid.get_triple_point_temperature()
+    critical_temperature = fluid.get_critical_temperature()
+    if not (triple_point_temperature <= temperature < critical_temperature):
         raise ValueError(
-            f"N2O saturated-liquid temperature must be between {triple_point:.2f} K "
-            f"and {critical_point:.2f} K, got {temperature} K"
+            "N2O saturated-liquid temperature must be between "
+            f"{triple_point_temperature:.2f} K and {critical_temperature:.2f} K, "
+            f"got {temperature} K"
         )
 
     molar_mass = fluid.get_molar_mass()
