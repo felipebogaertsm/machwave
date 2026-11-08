@@ -1,9 +1,16 @@
+import warnings
 from collections.abc import Mapping
 
 import machwave.models.feed_systems.base as feed_system_base
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank
 import machwave.models.propellants.components as propellant_components
+
+
+LINE_LOSS_DEPRECATION_MESSAGE = (
+    "line_loss is deprecated and will be removed; give the line a "
+    "FeedlineResistance, whose loss grows with the square of the flow"
+)
 
 
 class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
@@ -17,7 +24,11 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
     both run on.
     """
 
-    def __init__(self, line: line_models.PropellantLine):
+    def __init__(
+        self,
+        line: line_models.PropellantLine,
+        line_loss: float | None = None,
+    ):
         """
         Initialize the SingleLinePressureFedFeedSystem.
 
@@ -25,8 +36,21 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
             line: The propellant line the system feeds. Its feedline
                 resistance sets what the line loses on the way to the
                 injector.
+            line_loss: Deprecated. A fixed pressure loss along the feedline
+                [Pa], taken whatever the flow. Give the line a
+                `FeedlineResistance` instead.
+
+        Raises:
+            ValueError: If the pressure loss is negative.
         """
         super().__init__([line])
+
+        self.line_loss = 0.0
+        if line_loss is not None:
+            warnings.warn(
+                LINE_LOSS_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2
+            )
+            self._set_line_loss(line_loss)
 
     @classmethod
     def from_oxidizer_tank(
@@ -34,6 +58,7 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         *,
         oxidizer_tank: tank.Tank,
         line_resistance: line_models.FeedlineResistance | None = None,
+        line_loss: float | None = None,
     ) -> "SingleLinePressureFedFeedSystem":
         """
         Build the oxidizer-only system a hybrid motor runs on.
@@ -42,8 +67,13 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
             oxidizer_tank: Tank the oxidizer line draws from.
             line_resistance: Hydraulic resistance of the oxidizer feedline.
                 None for a line that loses nothing.
+            line_loss: Deprecated. A fixed pressure loss along the feedline
+                [Pa]. Use `line_resistance` instead.
+
+        Raises:
+            ValueError: If the pressure loss is negative.
         """
-        return cls(
+        feed_system = cls(
             line=line_models.PropellantLine(
                 name="oxidizer",
                 role=propellant_components.ComponentRole.OXIDIZER,
@@ -51,6 +81,17 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
                 resistance=line_resistance,
             )
         )
+        if line_loss is not None:
+            warnings.warn(
+                LINE_LOSS_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2
+            )
+            feed_system._set_line_loss(line_loss)
+        return feed_system
+
+    def _set_line_loss(self, line_loss: float) -> None:
+        if line_loss < 0.0:
+            raise ValueError(f"line_loss must be non-negative, got {line_loss}")
+        self.line_loss = line_loss
 
     @property
     def line(self) -> line_models.PropellantLine:
@@ -63,6 +104,9 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the tank pressure [Pa], keyed by line name.
 
+        The feedline resistance is taken later, at the line flow. A deprecated
+        fixed `line_loss` is still taken here.
+
         Args:
             line_states: Fluid mass and internal energy of the line, keyed by
                 line name.
@@ -73,4 +117,5 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
             self.line.name: self.line.tank.get_pressure(
                 line_state.fluid_mass, line_state.internal_energy
             )
+            - self.line_loss
         }

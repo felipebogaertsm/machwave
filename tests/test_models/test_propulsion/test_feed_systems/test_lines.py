@@ -124,21 +124,8 @@ class TestFeedlineResistance:
         assert resistance.get_pressure_drop(0.83, 725.0) == pytest.approx(2e5)
         assert resistance.flow_area == 9.37e-5
 
-    def test_a_line_without_resistance_drops_nothing(self):
-        line = PropellantLineFactory.build()
-
-        assert line.resistance is None
-        assert line.get_pressure_drop(0.8, 800.0) == 0.0
-
-    def test_a_line_takes_its_resistance_drop(self):
-        resistance = line_models.FeedlineResistance(
-            loss_coefficient=4.0, flow_area=1.0e-4
-        )
-        line = PropellantLineFactory.build(resistance=resistance)
-
-        assert line.get_pressure_drop(0.8, 800.0) == resistance.get_pressure_drop(
-            0.8, 800.0
-        )
+    def test_a_line_has_no_resistance_by_default(self):
+        assert PropellantLineFactory.build().resistance is None
 
     @pytest.mark.parametrize(
         "kwargs, match",

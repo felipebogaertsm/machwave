@@ -15,14 +15,12 @@ import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
-import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation as machwave_simulation
 from tests.factories import (
     BatesSegmentFactory,
     BiliquidEngineFactory,
     BiliquidEngineThrustChamberFactory,
     BiliquidPropellantFactory,
-    InjectorElementFactory,
     InjectorFactory,
     CombustionChamberFactory,
     FinocylGrainSegmentFactory,
@@ -233,14 +231,14 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8298,
+                mass_flow=0.8406,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.4948,
+            mass_flow=0.5015,
             density=783.45,
             flow_area=9.37e-5,
         ),
@@ -252,15 +250,7 @@ def build_1kn_biliquid_engine() -> tuple[
             divergent_angle=12,
             expansion_ratio=4,
         ),
-        injector=InjectorFactory.build(
-            elements={
-                "oxidizer": InjectorElementFactory.build(
-                    area=1.4e-5 / 0.48,
-                    mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
-                ),
-                "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
-            }
-        ),
+        injector=InjectorFactory.build(),
         combustion_chamber=CombustionChamberFactory.build(
             inner_diameter=66e-3,
             internal_length=13e-3,

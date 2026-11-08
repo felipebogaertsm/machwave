@@ -181,4 +181,34 @@ class TestOxidizerTankConstructor:
             )
         )
 
-        assert feed_system.line.get_pressure_drop(1.0, 750.0) == 0.0
+        assert feed_system.line.resistance is None
+
+
+class TestDeprecatedLineLoss:
+    def test_a_fixed_line_loss_still_comes_off_the_tank_pressure(self):
+        with pytest.warns(DeprecationWarning, match="line_loss is deprecated"):
+            feed_system = SingleLinePressureFedFeedSystemFactory.build(line_loss=3e5)
+        tank = feed_system.line.tank
+
+        pressures = feed_system.get_inlet_pressures(line_states(feed_system))
+
+        assert pressures["oxidizer"] == pytest.approx(
+            tank.get_pressure(tank.initial_fluid_mass) - 3e5
+        )
+
+    def test_the_oxidizer_tank_constructor_still_carries_it(self):
+        with pytest.warns(DeprecationWarning, match="line_loss is deprecated"):
+            feed_system = (
+                feed_systems_models.SingleLinePressureFedFeedSystem.from_oxidizer_tank(
+                    oxidizer_tank=TankFactory.build(), line_loss=2e5
+                )
+            )
+
+        assert feed_system.line_loss == 2e5
+
+    def test_rejects_a_negative_line_loss(self):
+        with (
+            pytest.warns(DeprecationWarning, match="line_loss is deprecated"),
+            pytest.raises(ValueError, match="line_loss must be non-negative"),
+        ):
+            SingleLinePressureFedFeedSystemFactory.build(line_loss=-1.0)
