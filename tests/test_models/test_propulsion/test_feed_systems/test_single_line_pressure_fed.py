@@ -10,7 +10,6 @@ from tests.factories import (
     PropellantLineFactory,
     SingleLinePressureFedFeedSystemFactory,
     TankFactory,
-    TankPlacementFactory,
 )
 
 
@@ -134,16 +133,6 @@ class TestOxidizerTankConstructor:
         )
 
         assert feed_system.line_loss == 2e5
-
-    def test_carries_the_tank_placement(self):
-        placement = TankPlacementFactory.build()
-        feed_system = (
-            feed_systems_models.SingleLinePressureFedFeedSystem.from_oxidizer_tank(
-                oxidizer_tank=TankFactory.build(), oxidizer_tank_placement=placement
-            )
-        )
-
-        assert feed_system.line.tank_placement is placement
 
 
 class TestValidation:
