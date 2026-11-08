@@ -193,7 +193,8 @@ class TestDeprecatedLineLoss:
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["oxidizer"] == pytest.approx(
-            tank.get_pressure(tank.initial_fluid_mass) - 3e5
+            tank.get_pressure(tank.initial_fluid_mass, tank.initial_internal_energy)
+            - 3e5
         )
 
     def test_the_oxidizer_tank_constructor_still_carries_it(self):
