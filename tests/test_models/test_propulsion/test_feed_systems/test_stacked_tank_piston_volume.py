@@ -12,7 +12,6 @@ import scipy.integrate
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.feed_systems.tank as tank_models
 import machwave.simulation.biliquid.states as biliquid_states
-from tests.factories import PropellantLineFactory, TankFactory
 
 OXIDIZER = "N2O"
 FUEL = "Ethanol"
@@ -31,6 +30,7 @@ def build(**fuel_tank_overrides):
         volume=FUEL_VOLUME,
         temperature=TEMPERATURE,
         initial_fluid_mass=FUEL_MASS,
+        isothermal=True,
     )
     fuel_tank_arguments.update(fuel_tank_overrides)
     return feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
@@ -67,7 +67,6 @@ def drain(feed_system, oxidizer_step, steps, fuel_per_oxidizer=FUEL_PER_OXIDIZER
             mass_drained=drained["oxidizer"],
             volume=volume,
             swept_volume=new_volume - volume,
-            d_t=1.0,
         )
         masses = new_masses
     return masses, internal_energy
@@ -250,7 +249,6 @@ class TestPistonVolume:
             fluid_mass=OXIDIZER_MASS,
             mass_drained=0.1,
             volume=volume,
-            d_t=1e-3,
         )
 
         with_work = biliquid_states.BiliquidEngineState._drain_internal_energy(
@@ -272,7 +270,7 @@ class TestLowerLines:
     def test_a_line_below_the_piston_feeds_liquid_at_its_loading_temperature(self):
         feed_system = build()
         fuel_tank = feed_system.lines["fuel"].tank
-        states = feed_system.get_initial_line_states()
+        states = {name: line.initial_state for name, line in feed_system.lines.items()}
 
         inlet = feed_system.get_inlet_states(states)["fuel"]
 
@@ -282,41 +280,3 @@ class TestLowerLines:
             CP.PropsSI("D", "T", TEMPERATURE, "Q", 0, FUEL)
         )
         assert inlet.density == fuel_tank.saturated_liquid_density
-
-    def test_the_top_line_still_starts_from_its_loaded_energy(self):
-        feed_system = build()
-
-        state = feed_system.get_initial_line_states()["oxidizer"]
-
-        assert state.internal_energy == pytest.approx(
-            feed_system.lines["oxidizer"].tank.initial_internal_energy
-        )
-
-    def test_rejects_a_lower_load_that_does_not_fit_its_tank(self):
-        liquid_density = CP.PropsSI("D", "T", TEMPERATURE, "Q", 0, FUEL)
-
-        with pytest.raises(ValueError, match="more than its tank volume"):
-            build(
-                initial_fluid_mass=1.02 * liquid_density * FUEL_VOLUME,
-                overfill_tolerance=0.05,
-            )
-
-    def test_rejects_a_lower_line_that_would_boil_at_the_stack_pressure(self):
-        with pytest.raises(ValueError, match="boils"):
-            feed_systems_models.StackedTankPressureFedFeedSystem(
-                lines=[
-                    PropellantLineFactory.build(
-                        name="oxidizer",
-                        role="oxidizer",
-                        tank=TankFactory.build(fluid_name="N2O", temperature=280.0),
-                    ),
-                    PropellantLineFactory.build(
-                        name="fuel",
-                        role="fuel",
-                        tank=TankFactory.build(
-                            fluid_name="N2O", temperature=300.0, initial_fluid_mass=6.0
-                        ),
-                    ),
-                ],
-                pressurizing_line="oxidizer",
-            )

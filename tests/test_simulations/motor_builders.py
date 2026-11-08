@@ -199,7 +199,7 @@ def build_finocyl_motor() -> tuple[
 
 
 def build_1kn_biliquid_engine(
-    *, isothermal_tanks: bool = False
+    *, isothermal_oxidizer_tank: bool = False
 ) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
@@ -207,8 +207,9 @@ def build_1kn_biliquid_engine(
     1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like).
 
     Args:
-        isothermal_tanks: Whether both tanks hold their loading temperature
-            instead of running an energy balance.
+        isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
+            temperature instead of running an energy balance. The fuel tank
+            below the piston always does.
     """
     tank_temperature = 300.0
     # Self-pressurized N2O reaches the injector as saturated liquid, not as the
@@ -226,14 +227,14 @@ def build_1kn_biliquid_engine(
             volume=3.80e-3,
             temperature=tank_temperature,
             initial_fluid_mass=2.78,
-            isothermal=isothermal_tanks,
+            isothermal=isothermal_oxidizer_tank,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
             temperature=tank_temperature,
             initial_fluid_mass=1.55,
-            isothermal=isothermal_tanks,
+            isothermal=True,
         ),
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in

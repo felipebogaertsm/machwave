@@ -31,6 +31,7 @@ FUEL_TANK = dict(
     volume=2.0e-3,
     temperature=300.0,
     initial_fluid_mass=1.55,
+    isothermal=True,
 )
 
 
@@ -40,7 +41,7 @@ def build(isothermal):
     motor.feed_system = (
         feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
             oxidizer_tank=tank_models.Tank(**OXIDIZER_TANK, isothermal=isothermal),
-            fuel_tank=tank_models.Tank(**FUEL_TANK, isothermal=isothermal),
+            fuel_tank=tank_models.Tank(**FUEL_TANK),
             piston_loss=feed_system.piston_loss,
             oxidizer_line_resistance=feed_system.lines["oxidizer"].resistance,
             fuel_line_resistance=feed_system.lines["fuel"].resistance,

@@ -35,12 +35,16 @@ def build_triliquid(**overrides):
         PropellantLineFactory.build(
             name="fuel",
             role="fuel",
-            tank=TankFactory.build(fluid_name="Ethanol", initial_fluid_mass=3.0),
+            tank=TankFactory.build(
+                fluid_name="Ethanol", initial_fluid_mass=3.0, isothermal=True
+            ),
         ),
         PropellantLineFactory.build(
             name="diluent",
             role="additive",
-            tank=TankFactory.build(fluid_name="Water", initial_fluid_mass=1.0),
+            tank=TankFactory.build(
+                fluid_name="Water", initial_fluid_mass=1.0, isothermal=True
+            ),
         ),
     ]
     kwargs = dict(lines=lines, pressurizing_line="oxidizer")
@@ -295,6 +299,12 @@ class TestValidation:
     def test_rejects_a_negative_piston_loss(self):
         with pytest.raises(ValueError, match="piston_loss"):
             build_triliquid(piston_loss=-1.0)
+
+    def test_rejects_a_tank_below_the_piston_running_an_energy_balance(self):
+        with pytest.raises(ValueError, match="'fuel' is below the piston"):
+            StackedTankPressureFedFeedSystemFactory.build(
+                fuel_tank=TankFactory.build(fluid_name="Ethanol", isothermal=False)
+            )
 
 
 class TestDeprecatedLineLosses:

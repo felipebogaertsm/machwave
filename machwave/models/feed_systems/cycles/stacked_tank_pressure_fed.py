@@ -1,7 +1,6 @@
 import warnings
 from collections.abc import Mapping, Sequence
 
-import machwave.common.fluid_state as fluid_state_models
 import machwave.models.feed_systems.base as feed_system_base
 import machwave.models.feed_systems.lines as line_models
 import machwave.models.feed_systems.tank as tank
@@ -19,10 +18,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     Pressure-fed feed system whose propellant tanks are stacked vertically.
 
     The tank at the top of the stack pressurizes every tank below it through a
-    piston, so one tank sets the pressure the whole system runs on. "Top" and
-    "below" name the two sides of the piston, not an orientation: the model
-    has no gravity, so a layout with the oxidizer below the piston and the
-    fuel above it is the same system.
+    piston, so one tank sets the pressure the whole system runs on.
 
     The piston moves down as the lines below it drain, so the fluid at the top
     of the stack fills its tank volume plus every liquid volume pushed out
@@ -33,14 +29,23 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     and does the boundary work P dV_top on the piston as it goes, which the
     energy balance of the top tank takes out.
 
-    The lines below the piston are liquid-full, with no ullage. Each holds its
-    loading temperature and the saturated liquid density there, whatever its
-    tank's `isothermal` flag: an incompressible liquid pushed out by a piston
-    takes in P dV from it and carries out h = u + P / rho, so its internal
-    energy per unit mass does not change. Ethanol at 300 K is 0.7 % denser at
-    6 MPa than saturated, so the liquid volume, and with it the volume swept,
-    is good to that. A lower tank's own volume only bounds its load: the
-    piston rests on the liquid, so V_top,0 is the top tank's `volume`.
+    The lines below the piston are liquid-full, with no ullage, and their
+    tanks are isothermal: each holds its loading temperature and the
+    saturated liquid density there. An incompressible liquid pushed out by a
+    piston takes in P dV from it and carries out h = u + P / rho, so its
+    internal energy per unit mass does not change. Compression of that liquid
+    above its saturation pressure is neglected. A lower tank's own volume
+    only bounds its load: the piston rests on the liquid, so V_top,0 is the
+    top tank's `volume`.
+
+    Validation status: verified, not validated. The top tank matches a slow
+    adiabatic drain of a growing volume integrated along the saturation
+    curve; the model has not been compared with measured stacked-tank data.
+
+    References:
+        Cengel, Y. A. and Boles, M. A., "Thermodynamics: An Engineering
+        Approach", 8th ed., McGraw-Hill, 2015, Ch. 5 (energy analysis of
+        unsteady-flow processes, boundary work of a moving wall).
     """
 
     def __init__(
@@ -67,9 +72,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Raises:
             ValueError: If the pressurizing line is not one of the lines, if a
                 loss is keyed by an unknown line, if any pressure loss is
-                negative, if a line below the piston is loaded with more liquid
-                than its tank holds, or if a line below the piston would boil
-                at the pressure the stack loads it at.
+                negative, or if a tank below the piston is not isothermal.
         """
         super().__init__(lines)
 
@@ -83,6 +86,14 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             self.line_losses |= dict(line_losses)
 
         self._validate_pressure_losses()
+
+        for name in self.lower_line_names:
+            if not self.lines[name].tank.isothermal:
+                raise ValueError(
+                    f"line {name!r} is below the piston, which holds it "
+                    "liquid-full at its loading temperature; its tank must be "
+                    "built with isothermal=True"
+                )
 
     @classmethod
     def from_oxidizer_and_fuel(
@@ -169,52 +180,10 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
                     f"line_losses[{name!r}] must be non-negative, got {loss}"
                 )
 
-        top_state = self.lines[self.pressurizing_line].initial_state
-        initial_head_pressure = (
-            self.lines[self.pressurizing_line].tank.get_pressure(
-                top_state.fluid_mass, top_state.internal_energy
-            )
-            - self.piston_loss
-        )
-        for name in self.lower_line_names:
-            lower_tank = self.lines[name].tank
-            liquid_volume = (
-                lower_tank.initial_fluid_mass / lower_tank.saturated_liquid_density
-            )
-            if liquid_volume > lower_tank.volume:
-                raise ValueError(
-                    f"line {name!r} is loaded with {liquid_volume:.4e} m^3 of "
-                    f"liquid, more than its tank volume {lower_tank.volume:.4e} "
-                    "m^3"
-                )
-            if lower_tank.saturation_pressure >= initial_head_pressure:
-                raise ValueError(
-                    f"line {name!r} below the piston boils at "
-                    f"{lower_tank.saturation_pressure:.4e} Pa, above the "
-                    f"{initial_head_pressure:.4e} Pa the stack loads it at, so "
-                    "it cannot be held liquid-full"
-                )
-
     @property
     def lower_line_names(self) -> tuple[str, ...]:
         """Names of the lines below the piston, in the order they were given."""
         return tuple(name for name in self.lines if name != self.pressurizing_line)
-
-    def get_initial_line_states(self) -> dict[str, line_models.LineState]:
-        """
-        Return the state every line starts from, keyed by line name.
-
-        The top tank starts as it was loaded. The lines below the piston carry
-        no internal energy: they hold their loading temperature.
-        """
-        return {
-            name: (
-                line.initial_state
-                if name == self.pressurizing_line
-                else line_models.LineState(fluid_mass=line.tank.initial_fluid_mass)
-            )
-            for name, line in self.lines.items()
-        }
 
     def get_tank_volumes(self, fluid_masses: Mapping[str, float]) -> dict[str, float]:
         """
@@ -245,34 +214,6 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
             self.lines[self.pressurizing_line].tank.volume + swept_volume
         )
         return volumes
-
-    def _get_inlet_state(
-        self,
-        name: str,
-        line_state: line_models.LineState,
-        pressure: float,
-        volume: float,
-    ) -> fluid_state_models.FluidState:
-        """
-        Return the state at the head of one feedline.
-
-        A line below the piston feeds its liquid at the loading temperature.
-        The top of the stack feeds its tank fluid in the volume it has swept.
-        """
-        if name == self.pressurizing_line:
-            return super()._get_inlet_state(name, line_state, pressure, volume)
-
-        lower_tank = self.lines[name].tank
-        return fluid_state_models.FluidState(
-            fluid_name=lower_tank.fluid_name,
-            pressure=pressure,
-            temperature=lower_tank.temperature,
-            density=(
-                lower_tank.saturated_liquid_density
-                if line_state.fluid_mass > 0.0
-                else 0.0
-            ),
-        )
 
     def get_inlet_pressures(
         self, line_states: Mapping[str, line_models.LineState]
