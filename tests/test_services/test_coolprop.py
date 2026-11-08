@@ -1,8 +1,5 @@
 """Tests for CoolPropService."""
 
-import copy
-import pickle
-
 import CoolProp.CoolProp as CP
 import pytest
 
@@ -79,68 +76,43 @@ def test_get_enthalpy_at_pressure_entropy(service):
     )
 
 
-class TestStateAtDensityInternalEnergy:
-    """One AbstractState flash against the PropsSI calls it replaces."""
+@pytest.mark.parametrize(
+    "temperature, density",
+    [
+        (290.0, 500.0),  # Inside the dome.
+        (300.0, 731.58),  # Compressed liquid, a 1% overfill.
+        (290.0, 50.0),  # Superheated vapor below the vapor fill.
+    ],
+)
+def test_a_flash_coolprop_gets_right_is_kept(service, temperature, density):
+    internal_energy = CP.PropsSI("U", "T", temperature, "D", density, FLUID_NAME)
 
-    @staticmethod
-    def props_reference(density, internal_energy):
-        temperature = CP.PropsSI("T", "D", density, "U", internal_energy, FLUID_NAME)
-        return dict(
-            temperature=temperature,
-            pressure=CP.PropsSI("P", "D", density, "U", internal_energy, FLUID_NAME),
-            saturated_liquid_density=CP.PropsSI(
-                "D", "T", temperature, "Q", 0, FLUID_NAME
-            ),
-            saturated_vapor_density=CP.PropsSI(
-                "D", "T", temperature, "Q", 1, FLUID_NAME
-            ),
-            saturated_liquid_enthalpy=CP.PropsSI(
-                "H", "T", temperature, "Q", 0, FLUID_NAME
-            ),
-            saturated_vapor_enthalpy=CP.PropsSI(
-                "H", "T", temperature, "Q", 1, FLUID_NAME
-            ),
-            enthalpy=CP.PropsSI("H", "T", temperature, "D", density, FLUID_NAME),
-        )
+    assert service.get_temperature_at_density_internal_energy(
+        density, internal_energy
+    ) == CP.PropsSI("T", "D", density, "U", internal_energy, FLUID_NAME)
+    assert service.get_pressure_at_density_internal_energy(
+        density, internal_energy
+    ) == CP.PropsSI("P", "D", density, "U", internal_energy, FLUID_NAME)
 
-    @pytest.mark.parametrize(
-        "temperature, density, is_two_phase",
-        [
-            (290.0, 500.0, True),  # Inside the dome.
-            (300.0, 731.58, False),  # Compressed liquid, a 1% overfill.
-            (290.0, 50.0, False),  # Superheated vapor below the vapor fill.
-        ],
-    )
-    def test_matches_props_si(self, service, temperature, density, is_two_phase):
-        internal_energy = CP.PropsSI("U", "T", temperature, "D", density, FLUID_NAME)
 
-        state = service.get_state_at_density_internal_energy(density, internal_energy)
+def test_a_supercritical_state_raises(service):
+    density = 454.0
+    internal_energy = CP.PropsSI("U", "T", 320.0, "D", density, FLUID_NAME)
 
-        assert state.is_two_phase is is_two_phase
-        for name, value in self.props_reference(density, internal_energy).items():
-            assert getattr(state, name) == pytest.approx(value, rel=1e-12), name
+    with pytest.raises(ValueError, match="is supercritical at 320"):
+        service.get_pressure_at_density_internal_energy(density, internal_energy)
 
-    def test_a_state_off_the_chart_raises(self, service):
-        with pytest.raises(ValueError):
-            service.get_state_at_density_internal_energy(500.0, -1e12)
 
-    def test_the_service_survives_a_copy_and_a_pickle(self, service):
-        internal_energy = CP.PropsSI("U", "T", 290.0, "D", 500.0, FLUID_NAME)
-        expected = service.get_state_at_density_internal_energy(500.0, internal_energy)
-
-        for clone in (copy.deepcopy(service), pickle.loads(pickle.dumps(service))):
-            assert (
-                clone.get_state_at_density_internal_energy(500.0, internal_energy)
-                == expected
-            )
+def test_a_state_off_the_chart_raises(service):
+    with pytest.raises(ValueError, match="nor on the saturation dome"):
+        service.get_temperature_at_density_internal_energy(500.0, -1e12)
 
 
 class TestAStateTheFlashGetsWrong:
     """
     CoolProp 6.8.0's (D, U) flash puts this N2O state at 270.37 K and 1.45 MPa,
-    flagged single-phase. It is two-phase at 291.031 K and 4.814 MPa: the
-    saturated mix at that temperature and quality gives back the density and
-    internal energy to round-off, which the flashed state does not.
+    flagged single-phase. It is two-phase at 291.031 K: the saturated mix at
+    that temperature and quality gives back the density and internal energy.
     """
 
     DENSITY = 454.50072100174214
@@ -156,25 +128,21 @@ class TestAStateTheFlashGetsWrong:
             "U", "T", self.TEMPERATURE, "Q", self.QUALITY, FLUID_NAME
         ) == pytest.approx(self.INTERNAL_ENERGY, rel=1e-12)
 
-    def test_the_service_resolves_it_on_the_dome(self, service):
-        state = service.get_state_at_density_internal_energy(
+    def test_the_temperature_is_on_the_dome(self, service):
+        # The dome solve stops at a 1e-10 K bracket; 1e-6 K leaves room for
+        # the round-off in the reference state.
+        assert service.get_temperature_at_density_internal_energy(
             self.DENSITY, self.INTERNAL_ENERGY
+        ) == pytest.approx(self.TEMPERATURE, abs=1e-6)
+
+    def test_the_pressure_is_the_saturation_pressure(self, service):
+        # A 1e-6 K temperature error moves the saturation pressure by about
+        # 1e-8 relative.
+        assert service.get_pressure_at_density_internal_energy(
+            self.DENSITY, self.INTERNAL_ENERGY
+        ) == pytest.approx(
+            CP.PropsSI("P", "T", self.TEMPERATURE, "Q", 0, FLUID_NAME), rel=1e-7
         )
-
-        assert state.is_two_phase
-        assert state.temperature == pytest.approx(self.TEMPERATURE, abs=1e-6)
-        assert state.pressure == pytest.approx(
-            CP.PropsSI("P", "T", self.TEMPERATURE, "Q", 0, FLUID_NAME), rel=1e-9
-        )
-        assert state.pressure == pytest.approx(4.814e6, rel=1e-3)
-        assert service.dome_solve_count == 1
-
-    def test_a_state_the_flash_gets_right_skips_the_dome_solve(self, service):
-        internal_energy = CP.PropsSI("U", "T", 290.0, "D", 500.0, FLUID_NAME)
-
-        service.get_state_at_density_internal_energy(500.0, internal_energy)
-
-        assert service.dome_solve_count == 0
 
 
 def test_get_molar_mass(service):
