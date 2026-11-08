@@ -1,3 +1,4 @@
+import functools
 import typing
 
 import numpy as np
@@ -16,9 +17,14 @@ def get_homogeneous_equilibrium_mass_flux(
     """
     Get the mass flux through an orifice via the homogeneous-equilibrium model.
 
-    Sweeps the pressure from downstream to upstream to find the maximum mass flux.
-    Returns the choked mass flux when the orifice is critical, otherwise the value at
-    the downstream pressure.
+    Takes the maximum isentropic mass flux over a grid of pressures from downstream
+    to upstream: the choked mass flux when the orifice is critical, otherwise the
+    value at the downstream pressure. Along the isentrope the flux rises from zero
+    at the upstream pressure to a single maximum, so the grid maximum is found by
+    bisecting on the sign of the flux difference between neighbouring points, with
+    about 2 log2(sweep_points) CoolProp flashes instead of one per point. Where two
+    neighbours are equal (both zero where CoolProp cannot evaluate the state) the
+    bisection cannot pick a side and every point is evaluated.
 
     Args:
         fluid_name: CoolProp fluid name.
@@ -57,13 +63,26 @@ def get_homogeneous_equilibrium_mass_flux(
     )
 
     pressures = np.linspace(pressure_downstream, upstream_pressure, sweep_points)
-    mass_flux = np.zeros_like(pressures)
-    for index, pressure in enumerate(pressures):
-        mass_flux[index] = _get_isentropic_mass_flux(
-            coolprop, pressure, upstream_enthalpy, upstream_entropy
+
+    @functools.cache
+    def get_mass_flux(index: int) -> float:
+        return _get_isentropic_mass_flux(
+            coolprop, pressures[index], upstream_enthalpy, upstream_entropy
         )
 
-    return float(mass_flux.max())
+    lower_index, upper_index = 0, sweep_points - 1
+    while lower_index < upper_index:
+        middle_index = (lower_index + upper_index) // 2
+        mass_flux = get_mass_flux(middle_index)
+        next_mass_flux = get_mass_flux(middle_index + 1)
+        if mass_flux < next_mass_flux:
+            lower_index = middle_index + 1
+        elif mass_flux > next_mass_flux:
+            upper_index = middle_index
+        else:
+            return max(get_mass_flux(index) for index in range(sweep_points))
+
+    return get_mass_flux(lower_index)
 
 
 def get_dyer_mass_flux(
@@ -219,8 +238,9 @@ def _get_isentropic_mass_flux(
         the upstream value or if CoolProp cannot evaluate the state.
     """
     try:
-        density = coolprop.get_density_at_pressure_entropy(pressure, entropy_upstream)
-        enthalpy = coolprop.get_enthalpy_at_pressure_entropy(pressure, entropy_upstream)
+        density, enthalpy = coolprop.get_density_and_enthalpy_at_pressure_entropy(
+            pressure, entropy_upstream
+        )
     except ValueError:
         return 0.0
     delta_enthalpy = enthalpy_upstream - enthalpy

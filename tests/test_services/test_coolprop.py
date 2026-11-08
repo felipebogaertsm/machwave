@@ -170,5 +170,5 @@ def test_get_density_and_enthalpy_at_pressure_entropy(service, pressure_ratio):
 def test_get_density_and_enthalpy_at_pressure_entropy_raises_when_unresolvable(
     service,
 ):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="unable to solve"):
         service.get_density_and_enthalpy_at_pressure_entropy(-1.0, 0.0)
