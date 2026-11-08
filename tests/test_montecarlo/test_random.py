@@ -119,3 +119,19 @@ def test_get_random_generator_returns_correct_instance():
 def test_get_random_generator_unknown_distribution():
     with pytest.raises(ValueError):
         montecarlo_random.get_random_generator("does-not-exist", value=0.0, spread=0.0)
+
+def test_generator_accepts_seeded_rng() -> None:
+    rng1 = np.random.default_rng(12345)
+    rng2 = np.random.default_rng(12345)
+
+    norm = montecarlo_random.NormalRandomGenerator(value=10.0, spread=3.0)
+    samples1 = [norm.get_value(rng=rng1) for _ in range(50)]
+    samples2 = [norm.get_value(rng=rng2) for _ in range(50)]
+    assert samples1 == samples2
+
+    rng3 = np.random.default_rng(999)
+    rng4 = np.random.default_rng(999)
+    unif = montecarlo_random.UniformRandomGenerator(value=5.0, spread=2.0)
+    samples3 = [unif.get_value(rng=rng3) for _ in range(50)]
+    samples4 = [unif.get_value(rng=rng4) for _ in range(50)]
+    assert samples3 == samples4

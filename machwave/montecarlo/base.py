@@ -46,9 +46,9 @@ class MonteCarloParameter(float):
             self._distribution, float(self), self._spread
         )
 
-    def get_random_value(self) -> float:
+    def get_random_value(self, rng: np.random.Generator | None = None) -> float:
         """Sample a single random value from this parameter's distribution."""
-        return self.random_generator.get_value()
+        return self.random_generator.get_value(rng=rng)
 
     def __repr__(self) -> str:
         """Return a debugging representation of the parameter."""
@@ -90,6 +90,7 @@ class MonteCarloSimulation:
         parameters: list[typing.Any],
         number_of_scenarios: int,
         simulation: type[machwave_simulation.InternalBallisticsSimulation],
+        rng: np.random.Generator | None = None,
     ) -> None:
         """
         Initialize a Monte Carlo driver.
@@ -98,10 +99,12 @@ class MonteCarloSimulation:
             parameters: Input parameters for a simulation class.
             number_of_scenarios: Number of scenarios to simulate.
             simulation: Simulation class reference.
+            rng: Optional NumPy random generator instance.
         """
         self.parameters = parameters
         self.number_of_scenarios = number_of_scenarios
         self.simulation = simulation
+        self.rng = rng
 
         self.scenarios: list = []
         self.results: list = []
@@ -115,7 +118,7 @@ class MonteCarloSimulation:
 
         for parameter in parameters_copy:
             if isinstance(parameter, MonteCarloParameter):
-                parameter = parameter.get_random_value()
+                parameter = parameter.get_random_value(rng=self.rng)
             else:
                 self._process_nested_parameters(parameter)
 
@@ -148,7 +151,7 @@ class MonteCarloSimulation:
                 param = self._object_store[param_uuid]
                 for name, attr in sub_params.items():
                     if isinstance(attr, MonteCarloParameter):
-                        _set_child(param, name, attr.get_random_value())
+                        _set_child(param, name, attr.get_random_value(rng=self.rng))
                     elif id(attr) not in visited:
                         visited.add(id(attr))
                         object_uuid = uuid.uuid4()

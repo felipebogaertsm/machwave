@@ -32,9 +32,12 @@ class RandomGenerator(ABC):
             raise ValueError("Spread must be a non-negative value.")
 
     @abstractmethod
-    def get_value(self) -> float:
+    def get_value(self, rng: np.random.Generator | None = None) -> float:
         """
         Gets a random value based on a probability distribution.
+
+        Args:
+            rng: Optional NumPy random generator instance.
 
         Returns:
             Random value.
@@ -70,7 +73,7 @@ class NormalRandomGenerator(RandomGenerator):
         sigma = self.spread / 3
         object.__setattr__(self, "_sigma", sigma)
 
-    def get_value(self) -> float:
+    def get_value(self, rng: np.random.Generator | None = None) -> float:
         """
         Return a sample from the normal distribution.
 
@@ -78,9 +81,13 @@ class NormalRandomGenerator(RandomGenerator):
         is defined as 3 times the standard deviation, so ~99.7% of generated
         values lie within `value +/- spread`.
         """
-        return np.random.normal(
-            loc=self.value,
-            scale=self._sigma,
+        if rng is not None:
+            return float(rng.normal(loc=self.value, scale=self._sigma))
+        return float(
+            np.random.normal(
+                loc=self.value,
+                scale=self._sigma,
+            )
         )
 
 
@@ -92,7 +99,7 @@ class UniformRandomGenerator(RandomGenerator):
     - Uses `spread` as the total width of the distribution.
     """
 
-    def get_value(self) -> float:
+    def get_value(self, rng: np.random.Generator | None = None) -> float:
         """
         Gets a random value based on a uniform probability distribution.
 
@@ -107,9 +114,13 @@ class UniformRandomGenerator(RandomGenerator):
             lower_bound = self.value - self.spread / 2
             upper_bound = self.value + self.spread / 2
 
-        return np.random.uniform(
-            low=lower_bound,
-            high=upper_bound,
+        if rng is not None:
+            return float(rng.uniform(low=lower_bound, high=upper_bound))
+        return float(
+            np.random.uniform(
+                low=lower_bound,
+                high=upper_bound,
+            )
         )
 
 
