@@ -22,9 +22,11 @@ def get_homogeneous_equilibrium_mass_flux(
     value at the downstream pressure. Along the isentrope the flux rises from zero
     at the upstream pressure to a single maximum, so the grid maximum is found by
     bisecting on the sign of the flux difference between neighbouring points, with
-    about 2 log2(sweep_points) CoolProp flashes instead of one per point. Where two
-    neighbours are equal (both zero where CoolProp cannot evaluate the state) the
-    bisection cannot pick a side and every point is evaluated.
+    about 2 log2(sweep_points) CoolProp flashes instead of one per point. The flux
+    is zero at a point where CoolProp cannot resolve the state (single points near
+    the critical temperature, all points below the triple point), which breaks that
+    shape, so a zero or a tie between neighbours falls back to evaluating every
+    point.
 
     Args:
         fluid_name: CoolProp fluid name.
@@ -75,12 +77,12 @@ def get_homogeneous_equilibrium_mass_flux(
         middle_index = (lower_index + upper_index) // 2
         mass_flux = get_mass_flux(middle_index)
         next_mass_flux = get_mass_flux(middle_index + 1)
+        if mass_flux == next_mass_flux or min(mass_flux, next_mass_flux) == 0.0:
+            return max(get_mass_flux(index) for index in range(sweep_points))
         if mass_flux < next_mass_flux:
             lower_index = middle_index + 1
-        elif mass_flux > next_mass_flux:
-            upper_index = middle_index
         else:
-            return max(get_mass_flux(index) for index in range(sweep_points))
+            upper_index = middle_index
 
     return get_mass_flux(lower_index)
 
