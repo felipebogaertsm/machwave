@@ -48,10 +48,10 @@ def main():
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
         # tube (10.9 mm bore). The loss falls with the square of the flow.
         oxidizer_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.8298, density=724.7, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.8406, density=724.7, flow_area=9.37e-5
         ),
         fuel_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.4948, density=783.45, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.5015, density=783.45, flow_area=9.37e-5
         ),
     )
 

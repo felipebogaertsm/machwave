@@ -231,14 +231,14 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8298,
+                mass_flow=0.8406,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.4948,
+            mass_flow=0.5015,
             density=783.45,
             flow_area=9.37e-5,
         ),
