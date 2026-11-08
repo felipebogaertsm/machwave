@@ -7,6 +7,8 @@ carries the tank's internal energy alongside its mass and takes out the
 enthalpy of whatever leaves.
 """
 
+import math
+
 import CoolProp.CoolProp as CP
 import pytest
 import scipy.integrate
@@ -149,6 +151,32 @@ class TestEnergyBalanceTank:
         with pytest.raises(ValueError, match="outside the range CoolProp"):
             tank.get_pressure(FLUID_MASS, -1e12)
 
+    def test_a_mid_burn_state_the_flash_gets_wrong_stays_on_the_dome(self):
+        # CoolProp 6.8.0's (D, U) flash puts this N2O state at 270.37 K and
+        # 1.45 MPa, single-phase. The saturated mix at the reference
+        # temperature and quality gives back its density and internal energy.
+        density = 454.50072100174214
+        specific_internal_energy = 228590.2487156092
+        reference_temperature = 291.03099264302705
+        reference_quality = 0.17165274259158367
+        assert CP.PropsSI(
+            "D", "T", reference_temperature, "Q", reference_quality, FLUID
+        ) == pytest.approx(density, rel=1e-12)
+        tank = build(isothermal=False)
+        fluid_mass = density * VOLUME
+        internal_energy = specific_internal_energy * fluid_mass
+
+        # The dome solve stops at a 1e-10 K bracket; 1e-6 K leaves room for
+        # the round-off in the reference state, and moves the saturation
+        # pressure by about 1e-8 relative.
+        assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
+            reference_temperature, abs=1e-6
+        )
+        assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
+            CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=1e-7
+        )
+        assert tank.is_delivering_liquid(fluid_mass, internal_energy)
+
 
 class TestOutflowEnthalpy:
     def test_liquid_leaves_at_the_saturated_liquid_enthalpy(self):
@@ -219,7 +247,7 @@ class TestAgainstTheIsentropicDrain:
     """
 
     FINAL_FLUID_MASS = 1.6  # Above the 1.57 kg of saturated vapor at 293 K.
-    MASS_STEP = 5e-3
+    MASS_STEPS = (2e-2, 1e-2, 5e-3)  # Each half the last.
 
     @staticmethod
     def saturation(temperature):
@@ -270,19 +298,26 @@ class TestAgainstTheIsentropicDrain:
         )
         return solution.y[0, -1]
 
-    def test_the_drain_follows_the_isentrope(self):
+    @classmethod
+    def drain_to_the_final_mass(cls, mass_step):
         tank = build(isothermal=False)
         fluid_mass, internal_energy = FLUID_MASS, tank.initial_internal_energy
-        steps = round((FLUID_MASS - self.FINAL_FLUID_MASS) / self.MASS_STEP)
+        steps = round((FLUID_MASS - cls.FINAL_FLUID_MASS) / mass_step)
         for _ in range(steps):
             fluid_mass, internal_energy = drain(
-                tank, self.MASS_STEP, fluid_mass, internal_energy
+                tank, mass_step, fluid_mass, internal_energy
             )
+        return tank, fluid_mass, internal_energy
+
+    def test_the_drain_follows_the_isentrope(self):
+        tank, fluid_mass, internal_energy = self.drain_to_the_final_mass(
+            self.MASS_STEPS[-1]
+        )
 
         reference_temperature = self.isentropic_temperature()
 
         # About 12 K and 1.3 MPa of decay; explicit steps of 5 g land within
-        # 0.01 K and 2e-4 of the pressure, shrinking linearly with the step.
+        # 0.01 K and 2e-4 of the pressure.
         assert reference_temperature < TEMPERATURE - 12.0
         assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
             reference_temperature, abs=0.05
@@ -290,3 +325,21 @@ class TestAgainstTheIsentropicDrain:
         assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
             CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=5e-4
         )
+
+    def test_the_explicit_drain_is_first_order(self):
+        reference_temperature = self.isentropic_temperature()
+        errors = []
+        for mass_step in self.MASS_STEPS:
+            tank, fluid_mass, internal_energy = self.drain_to_the_final_mass(mass_step)
+            errors.append(
+                tank.get_temperature(fluid_mass, internal_energy)
+                - reference_temperature
+            )
+
+        observed_orders = [
+            math.log2(coarse / fine) for coarse, fine in zip(errors, errors[1:])
+        ]
+
+        # Measured 1.0016 and 1.0008; the reference is solved to rtol 1e-10,
+        # far below the 7 mK error left at the finest step.
+        assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)

@@ -200,10 +200,19 @@ def build_finocyl_motor() -> tuple[
     return motor, params
 
 
-def build_1kn_biliquid_engine() -> tuple[
+def build_1kn_biliquid_engine(
+    *, isothermal_oxidizer_tank: bool = False
+) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
-    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
+    """
+    1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like).
+
+    Args:
+        isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
+            temperature instead of running an energy balance. The fuel tank
+            below the piston always does.
+    """
     tank_temperature = 300.0
     # Self-pressurized N2O reaches the injector as saturated liquid, not as the
     # 298.15 K ideal gas of RocketCEA's built-in "N2O" card.
@@ -220,12 +229,14 @@ def build_1kn_biliquid_engine() -> tuple[
             volume=3.80e-3,
             temperature=tank_temperature,
             initial_fluid_mass=2.78,
+            isothermal=isothermal_oxidizer_tank,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
             temperature=tank_temperature,
             initial_fluid_mass=1.55,
+            isothermal=True,
         ),
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
@@ -233,14 +244,14 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8298,
+                mass_flow=0.8406,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.4948,
+            mass_flow=0.5015,
             density=783.45,
             flow_area=9.37e-5,
         ),

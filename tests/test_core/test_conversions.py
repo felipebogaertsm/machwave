@@ -184,6 +184,21 @@ def test_convert_joules_per_mol_to_cal_per_mol(j_per_mol, expected_cal_per_mol):
 
 
 @pytest.mark.parametrize(
+    "cal_per_mol, expected_j_per_mol",
+    [
+        (0.0, 0.0),
+        (1.0, 4.184),
+        (-2000.0, -8368.0),
+    ],
+)
+def test_convert_cal_per_mol_to_joules_per_mol(cal_per_mol, expected_j_per_mol):
+    # The thermochemical calorie is 4.184 J exactly, so only round-off remains.
+    assert conversions.convert_cal_per_mol_to_joules_per_mol(
+        cal_per_mol
+    ) == pytest.approx(expected_j_per_mol, rel=1e-12)
+
+
+@pytest.mark.parametrize(
     "kgm3, expected_gcc",
     [
         (0.0, 0.0),
