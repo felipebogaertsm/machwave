@@ -467,9 +467,7 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
     hold their pressure, so the chamber settles, the storage term vanishes and
     the ratio is exact.
     """
-    motor, params = motor_builders.build_1kn_biliquid_engine()
-    for line in motor.feed_system.lines.values():
-        line.tank.isothermal = True
+    motor, params = motor_builders.build_1kn_biliquid_engine(isothermal_tanks=True)
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
     state = biliquid_simulation.BiliquidEngineState(
