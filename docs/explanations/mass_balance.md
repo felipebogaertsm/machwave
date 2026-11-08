@@ -41,7 +41,7 @@ $$
 
 (Huzel & Huang 1967, Eq. 1-32 and the theoretical form below it, p. 12), with $A_t = C_d A_{t,\text{geo}}$ the effective throat area and $H_\text{choked}$ the choked flow function defined below.
 A c* reduced from test data with the geometric throat area also carries the throat discharge loss; Machwave models that loss separately through $C_d$, so a measured efficiency should not be applied on top of a $C_d$ below one without accounting for it.
-Since $c^* \propto \sqrt{T}$ at fixed $R$ and $k$, the efficiency enters the chamber as the square of the temperature ratio:
+Since $c^* \propto \sqrt{T}$ at fixed $R$ and $k$, the temperature ratio is the square of the efficiency:
 
 $$
 T = \eta_{c^*}^2 T_0
