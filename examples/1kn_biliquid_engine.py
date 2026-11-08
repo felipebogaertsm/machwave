@@ -51,12 +51,14 @@ def main():
         fuel_tank=fuel_tank,
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore). The loss falls with the square of the flow.
+        # tube (10.9 mm bore). The loss falls with the square of the flow. Flows
+        # measured at t = 1 s with the Dyer oxidizer element, after one
+        # fixed-point pass.
         oxidizer_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.8406, density=724.7, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.7976, density=724.7, flow_area=9.37e-5
         ),
         fuel_line_resistance=feed_systems.FeedlineResistance.from_design_point(
-            pressure_drop=2e5, mass_flow=0.5015, density=783.45, flow_area=9.37e-5
+            pressure_drop=2e5, mass_flow=0.3849, density=783.45, flow_area=9.37e-5
         ),
     )
 

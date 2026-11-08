@@ -240,18 +240,19 @@ def build_1kn_biliquid_engine(
         ),
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore).
+        # tube (10.9 mm bore). Flows measured at t = 1 s on this engine with
+        # the Dyer oxidizer element, after one fixed-point pass.
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.8406,
+                mass_flow=0.7976,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.5015,
+            mass_flow=0.3849,
             density=783.45,
             flow_area=9.37e-5,
         ),
