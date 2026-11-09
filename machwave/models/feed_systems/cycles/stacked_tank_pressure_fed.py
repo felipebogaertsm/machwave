@@ -151,7 +151,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Return the pressure at the head of every feedline [Pa].
 
         Every line below the piston takes the piston pressure loss. The feedline
-        resistance is not taken here, only a deprecated fixed line loss.
+        resistance is not taken here. A deprecated fixed line loss is.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
