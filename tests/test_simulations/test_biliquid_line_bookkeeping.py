@@ -40,12 +40,14 @@ def build_engine_with_a_diluent_line():
             temperature=300.0,
             initial_fluid_mass=0.5,
         ),
+        resistance=feed_systems_models.FeedlineResistance.from_design_point(
+            pressure_drop=2e5, mass_flow=0.13, density=997.0, flow_area=9.37e-5
+        ),
     )
     motor.feed_system = feed_systems_models.StackedTankPressureFedFeedSystem(
         lines=[*feed_system.lines.values(), diluent_line],
         pressurizing_line="oxidizer",
         piston_loss=feed_system.piston_loss,
-        line_losses={**feed_system.line_losses, DILUENT_LINE_NAME: 2e5},
     )
     motor.thrust_chamber.injector = thrust_chamber_models.Injector(
         elements={
