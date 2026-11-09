@@ -211,7 +211,8 @@ class BiliquidEngineState(simulation_states.MotorState):
         mass_flows = injector_flows(chamber_pressure)
         for name, mass_flow in mass_flows.items():
             self.mass_flow_rate_per_line[name].append(mass_flow)
-        # A flow capped at line_mass / d_t can round to more than the line holds
+        # A flow capped at the line mass over the time step can round to slightly
+        # more than the line holds.
         mass_consumed = {
             name: min(flow * d_t, fluid_masses[name])
             for name, flow in mass_flows.items()
