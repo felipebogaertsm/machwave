@@ -151,7 +151,7 @@ def test_get_molar_mass(service):
     ],
 )
 def test_get_density_and_enthalpy_at_pressure_entropy(service, pressure_ratio):
-    """One flash reads the same bits as the two point lookups."""
+    """One flash returns exactly the values of the two point lookups."""
     pressure = pressure_ratio * service.get_saturation_pressure(TEMPERATURE)
     entropy = service.get_saturated_liquid_entropy(TEMPERATURE)
 

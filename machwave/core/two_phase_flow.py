@@ -18,9 +18,9 @@ def get_homogeneous_equilibrium_mass_flux(
     Get the mass flux through an orifice via the homogeneous-equilibrium model.
 
     Takes the maximum isentropic mass flux over a grid of pressures from downstream
-    to upstream: the choked mass flux when the orifice is critical, otherwise the
-    value at the downstream pressure. The maximum is found by bisection, falling back
-    to evaluating every grid point where CoolProp cannot resolve a state.
+    to upstream. This is the choked mass flux when the orifice is critical, otherwise
+    the value at the downstream pressure. The maximum is found by bisection. Where
+    CoolProp cannot resolve a state, every grid point is evaluated instead.
 
     Args:
         fluid_name: CoolProp fluid name.
