@@ -16,14 +16,10 @@ class MassFlowModel(enum.StrEnum):
     SPI: Single-phase incompressible orifice equation. Valid for subcooled liquid
         propellants.
     HEM: Homogeneous-equilibrium two-phase model, choked below the critical
-        pressure. Assumes the liquid flashes to equilibrium inside the orifice,
-        which underpredicts the flow of a short orifice.
-    DYER: Dyer's non-homogeneous non-equilibrium model, a blend of SPI and the
-        choked HEM weighted by the ratio of bubble growth time to liquid
-        residence time. The model for self-pressurized propellants such as
-        nitrous oxide near saturation, where SPI overpredicts and HEM
-        underpredicts (Dyer et al., AIAA 2007-5702; see
-        `machwave.core.two_phase_flow.get_dyer_mass_flux`).
+        pressure. Underpredicts the flow of a short orifice.
+    DYER: Dyer's non-homogeneous non-equilibrium blend of SPI and HEM, for
+        self-pressurized propellants such as nitrous oxide near saturation. See
+        `machwave.core.two_phase_flow.get_dyer_mass_flux`.
     """
 
     SPI = "spi"

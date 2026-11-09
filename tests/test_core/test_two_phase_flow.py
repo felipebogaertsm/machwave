@@ -223,7 +223,7 @@ def test_get_dyer_mass_flux_matches_a_hand_computed_state_point():
     pressure_downstream = 3.2635e6
     liquid_density = 724.70  # CoolProp at 300 K
     vapor_pressure = 5.88744e6  # CoolProp at 300 K
-    # choked flux of the isentropic sweep, the same to 1e-8 with 200 to 20000 points
+    # choked flux of the isentropic sweep
     equilibrium_flux = 31422.0
 
     pressure_drop = pressure_upstream - pressure_downstream
@@ -358,7 +358,7 @@ def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
         temperature_upstream, pressure_upstream, pressure_downstream
     )
 
-    # a saturated inlet weights the two equally, so only round-off remains
+    # a saturated inlet weights the two equally
     assert equilibrium_flux < actual < incompressible_flux
     assert actual == pytest.approx(
         0.5 * (incompressible_flux + equilibrium_flux), rel=1e-12
