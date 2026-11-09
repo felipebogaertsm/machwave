@@ -90,7 +90,7 @@ def test_solid_motor_supports_only_identical_bates_segments(
     assert rocketpy_solid_motor.is_supported_by_solid_motor(grain) is is_supported
 
 
-def test_an_empty_grain_has_no_solid_motor_support_to_decide() -> None:
+def test_empty_grain_raises_value_error() -> None:
     with pytest.raises(ValueError, match="Grain must have at least one segment"):
         rocketpy_solid_motor.is_supported_by_solid_motor(grain_models.Grain())
 

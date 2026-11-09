@@ -16,8 +16,7 @@ from tests.test_simulations.conftest import run_simulation
 
 @pytest.fixture(scope="module")
 def simulation_result() -> solid_results.SolidSimulationResult:
-    # The adapter class depends on the motor alone, so every case reuses this one
-    # result instead of simulating each motor.
+    # the adapter class depends only on the motor, so one result serves every case
     motor, params = motor_builders.build_rocketpy_example_motor()
     return run_simulation(motor, params)
 
