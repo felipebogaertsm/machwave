@@ -405,7 +405,7 @@ def _get_sweep_maximum(
     pressure_downstream: float,
     sweep_points: int,
 ) -> float:
-    """Largest isentropic N2O flux over the sweep grid, every point from PropsSI."""
+    """Largest isentropic N2O flux over the sweep grid, with each point from PropsSI."""
     fluid_name = "N2O"
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
     if pressure_upstream > vapor_pressure:
@@ -449,7 +449,7 @@ def _get_sweep_maximum(
 def test_get_homogeneous_equilibrium_mass_flux_is_the_maximum_over_its_sweep(
     temperature_upstream, upstream_to_vapor_pressure_ratio, pressure_downstream
 ):
-    """The flux is the largest isentropic flux over its sweep, to the last bit."""
+    """The flux equals the largest isentropic flux over its sweep exactly."""
     sweep_points = 200
     pressure_upstream = upstream_to_vapor_pressure_ratio * CP.PropsSI(
         "P", "T", temperature_upstream, "Q", 0, "N2O"
