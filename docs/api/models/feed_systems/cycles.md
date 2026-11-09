@@ -65,37 +65,23 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Piston travel.** The lines below the piston are liquid-full, with no ullage: each holds its loading temperature and the saturated liquid density there, so their tanks must be built with `isothermal=True`. As they drain the piston moves and the fluid at the top of the stack fills its tank volume plus every liquid volume pushed out below,
+**Piston travel.** The lines below the piston stay liquid-full at their loading temperature, so their tanks must be built with `isothermal=True`. As they drain, the fluid at the top of the stack fills its own tank volume plus the liquid volume pushed out below,
 
 $$
 V_{top}(t) = V_{top,0} + \sum_j \frac{m_{j,0} - m_j(t)}{\rho_{l,j}},
 $$
 
-which [`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns for any set of line masses. The top tank state is evaluated at that volume, and its energy balance takes out the boundary work it does on the piston as well as the enthalpy of what it drains,
+which [`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns for any set of line masses. The top tank state is evaluated at that volume, and its energy balance also takes out the boundary work done on the piston.
 
-$$
-\frac{dU_{top}}{dt} = -h_{out} \dot{m}_{out} - P_{top} \frac{dV_{top}}{dt},
-$$
+**Mass-flow model.** The feed system supplies the state at the head of every feedline: the pressurizing tank pressure for its own line, and that pressure less `piston_loss` for every line below the piston, whatever the flow. Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density], for the top tank at the volume it has swept to. Each line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes a loss that grows with the square of the line flow, and [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] solves the injector element flow together with that loss at every chamber pressure the integrator tries. The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]. A line with no resistance loses nothing.
 
-the open-system energy balance of a control volume with a moving boundary (Cengel and Boles, 8th ed., Ch. 5).
-
-**Mass-flow model.** The feed system supplies the state at the head of every feedline: the pressurizing tank pressure for its own line, and that pressure less `piston_loss` for every line below the piston. The piston loss is seal friction and holds at any flow. Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density] for the top tank, evaluated at the volume it has swept to.
-
-The feedline itself loses pressure with the square of its flow,
-
-$$
-\Delta P_{line} = K \frac{\dot{m}^2}{2 \rho A^2},
-$$
-
-so the injector element sees $P_{head} - \Delta P_{line}(\dot{m})$ and its flow is the root of $\dot{m} = f_{inj}(P_{head} - \Delta P_{line}(\dot{m}), P_c)$. [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] brackets it on $[0, f_{inj}(P_{head}, P_c)]$ and solves it per line at every chamber pressure the integrator tries. The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]. A line with no resistance loses nothing.
-
-`line_losses` and `from_oxidizer_and_fuel`'s `oxidizer_line_loss` and `fuel_line_loss` still take a fixed pressure drop off the feedline head, whatever the flow, but are deprecated in favor of a `FeedlineResistance` on each line.
+`line_losses`, `oxidizer_line_loss` and `fuel_line_loss` are deprecated: they take a fixed pressure drop off the feedline head whatever the flow. Give each line a `FeedlineResistance` instead.
 
 ---
 
 ## `SingleLinePressureFedFeedSystem`
 
-One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, falling as the tank cools, then blows down on the real-gas equation of state. The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss on the way to the injector, as for the stacked tank. An empty tank delivers nothing, which stops the flow at the injector element.
+One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, falling as the tank cools, then blows down on the real-gas equation of state. The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as for the stacked tank. An empty tank delivers nothing, which stops the flow at the injector element.
 
 **Construction**
 
@@ -112,7 +98,7 @@ feed_system = SingleLinePressureFedFeedSystem.from_oxidizer_tank(
 )
 ```
 
-The fixed `line_loss` is deprecated in favor of `line_resistance`; while it lasts, `get_inlet_pressures` still takes it off the tank pressure.
+The fixed `line_loss` is deprecated in favor of `line_resistance`.
 
 A monoliquid names its own line and role instead, through the `PropellantLine` constructor.
 

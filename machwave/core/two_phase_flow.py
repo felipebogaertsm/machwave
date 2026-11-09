@@ -91,31 +91,12 @@ def get_dyer_mass_flux(
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
 
-    Dyer's non-homogeneous non-equilibrium model blends the single-phase
-    incompressible flux and the homogeneous-equilibrium flux by the non-equilibrium
-    parameter kappa, the square root of the ratio of bubble growth time to liquid
-    residence time:
-
-        G = kappa / (1 + kappa) * G_SPI + 1 / (1 + kappa) * G_HEM
-        kappa = sqrt((P1 - P2) / (Pv - P2))
-
-    with Pv the vapor pressure at the upstream temperature. Slow bubble growth
-    (large kappa) leaves the liquid no time to flash, so the flux tends to the
-    incompressible flux; fast growth tends to the equilibrium flux. Dyer et al. state
-    this limit on p. 10, but their Eq. 36 as printed swaps the two weights; the form
-    here follows the limit, as Waxman et al. (Eq. 9) do. The orifice length drops
-    out, so the model does not depend on the length-to-diameter ratio. G_HEM is the
-    choked or unchoked flux of `get_homogeneous_equilibrium_mass_flux` over [P2, P1].
-
-    Valid for a liquid inlet below the critical temperature with Pv > P2. The inlet
-    may be subcooled (P1 >= Pv) or below its own vapor pressure after a line loss
-    (P1 < Pv); kappa is continuous through P1 = Pv. Where nothing can flash in the
-    orifice (Pv <= P2, an inlet at or above the critical temperature, or an
-    all-vapor inlet at or below the saturated vapor density) the flux is the
-    incompressible flux, the large-kappa limit.
-
-    Validation status: verified, not validated. Checked against the closed form and
-    its incompressible and equilibrium limits.
+    Blends the single-phase incompressible flux and the flux of
+    `get_homogeneous_equilibrium_mass_flux` by the non-equilibrium parameter. The
+    weights follow Waxman et al.; Eq. 36 of Dyer et al. as printed swaps them. Where
+    nothing can flash in the orifice (vapor pressure at or below the downstream
+    pressure, an inlet at or above the critical temperature, or an all-vapor inlet),
+    the incompressible flux is returned.
 
     Args:
         fluid_name: CoolProp fluid name.

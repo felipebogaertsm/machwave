@@ -38,16 +38,10 @@ def get_line_mass_flow(
     """
     Flow a line delivers through its injector element [kg/s].
 
-    The feedline loses pressure with its own flow, so the element sees the head
-    pressure less the line loss and the flow solves
-
-        mdot = f_inj(P_head - dP(mdot), Pc)
-
-    The element flow does not rise with the line flow, so the root lies between
-    zero and the lossless flow. If the element passes no less at the lower inlet
-    pressure, as the homogeneous equilibrium model does from a saturated inlet,
-    whose stagnation state does not depend on the pressure, the lossless flow is
-    returned.
+    The element sees the head pressure less the feedline loss at the same flow, and
+    the flow is solved between zero and the lossless flow. If the element passes no
+    less at the lower inlet pressure, as the homogeneous equilibrium model does from
+    a saturated inlet, the lossless flow is returned.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -58,7 +52,8 @@ def get_line_mass_flow(
         lossless_flow: Flow the element passes from the head state [kg/s].
 
     Returns:
-        Mass flow rate of the line [kg/s].
+        Mass flow rate of the line [kg/s]. The lossless flow itself when it is not
+        positive.
     """
     if lossless_flow <= 0.0:
         return lossless_flow
@@ -102,8 +97,8 @@ def get_injector_mass_flows(
     """
     Injector flow on every line at the given chamber pressure [kg/s].
 
-    Each line with a feedline resistance has its flow solved with its own
-    loss. No line delivers more than the mass it has left over the timestep.
+    A line with a feedline resistance has its flow solved with its own loss. No line
+    delivers more than the mass it has left over the timestep.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -745,16 +740,8 @@ class BiliquidEngineState(simulation_states.MotorState):
         """
         Step the internal energy of a tank over one timestep [J].
 
-        The open-system energy balance of an adiabatic tank with one port and
-        a boundary that may move, as a piston does:
-
-            dU = -h_out * dm_out - P * dV
-
-        The first term is the enthalpy the drained fluid carries, flow work
-        included; the second is the boundary work, zero for a fixed tank. Both
-        are taken at the start of the step like the mass update. The fluid
-        behind boils to refill the space and cools doing it, which is what
-        walks the saturation pressure down over the burn.
+        Takes out the enthalpy of the drained fluid and the boundary work of a
+        moving tank wall, both evaluated at the start of the step.
 
         Args:
             tank: Tank of the line.

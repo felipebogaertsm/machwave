@@ -24,7 +24,7 @@ From those, the base class assembles the state every line is fed with:
 
 Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name.
 
-The default state is the tank fluid at the tank temperature and density, at the pressure the cycle delivers to the feedline. The feedline loss is not in it: it depends on the line flow, which the injector sets, so the simulation solves the two together per line. A cycle that heats or pressurizes a propellant on the way, such as a regenerative jacket or a pump, overrides `get_inlet_states` to say so.
+The default state is the tank fluid at the tank temperature and density, at the pressure the cycle delivers to the feedline, before the feedline loss. A cycle that heats or pressurizes a propellant on the way, such as a regenerative jacket or a pump, overrides `get_inlet_states` to say so.
 
 [`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every feedline head state once per integration step, then, at each chamber pressure the solver tries, solves every line's flow through its [`Injector`][machwave.models.thrust_chamber.injector.Injector] element with the line's own flow-dependent loss.
 
