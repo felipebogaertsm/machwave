@@ -4,6 +4,7 @@ import pytest
 
 import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
+import machwave.services.coolprop as coolprop_service
 
 
 def _get_reference_hem_mass_flux(
@@ -195,6 +196,65 @@ def test_get_homogeneous_equilibrium_mass_flux_honors_pressure_upstream_override
         pressure_upstream=p_sat,
     )
     assert default == pytest.approx(overridden)
+
+
+def test_get_homogeneous_equilibrium_mass_flux_reuses_the_saturated_inlet_sweep(
+    monkeypatch,
+):
+    """A saturated inlet at another pressure costs no isentropic flash."""
+    temperature_upstream, pressure_downstream = 293.0, 20e5
+    saturation_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    reference = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        "N2O",
+        temperature_upstream,
+        pressure_downstream,
+        pressure_upstream=0.95 * saturation_pressure,
+    )
+    flashes = []
+    flash = (
+        coolprop_service.CoolPropService.get_density_and_enthalpy_at_pressure_entropy
+    )
+
+    def counting_flash(self, *args):
+        flashes.append(args)
+        return flash(self, *args)
+
+    monkeypatch.setattr(
+        coolprop_service.CoolPropService,
+        "get_density_and_enthalpy_at_pressure_entropy",
+        counting_flash,
+    )
+
+    actual = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        "N2O",
+        temperature_upstream,
+        pressure_downstream,
+        pressure_upstream=0.9 * saturation_pressure,
+    )
+
+    assert actual == reference
+    assert flashes == []
+
+
+def test_get_homogeneous_equilibrium_mass_flux_below_the_choking_pressure_is_the_flux_at_the_inlet():
+    temperature_upstream = 293.0
+    saturation_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    pressure_upstream = 0.3 * saturation_pressure
+    enthalpy_upstream = CP.PropsSI("H", "T", temperature_upstream, "Q", 0, "N2O")
+    entropy_upstream = CP.PropsSI("S", "T", temperature_upstream, "Q", 0, "N2O")
+    density = CP.PropsSI("D", "P", pressure_upstream, "S", entropy_upstream, "N2O")
+    enthalpy = CP.PropsSI("H", "P", pressure_upstream, "S", entropy_upstream, "N2O")
+
+    actual = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        "N2O",
+        temperature_upstream,
+        0.2 * saturation_pressure,
+        pressure_upstream=pressure_upstream,
+    )
+
+    assert actual == pytest.approx(
+        density * np.sqrt(2.0 * (enthalpy_upstream - enthalpy))
+    )
 
 
 def _get_dyer_mass_flux(
@@ -463,6 +523,10 @@ def test_get_homogeneous_equilibrium_mass_flux_is_the_maximum_over_its_sweep(
         sweep_points=sweep_points,
     )
 
+    saturation_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     assert actual == _get_sweep_maximum(
-        temperature_upstream, pressure_upstream, pressure_downstream, sweep_points
+        temperature_upstream,
+        max(pressure_upstream, saturation_pressure),
+        pressure_downstream,
+        sweep_points,
     )

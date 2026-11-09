@@ -1,5 +1,6 @@
 """Fluid property service wrapper around CoolProp."""
 
+import functools
 import typing
 
 import scipy.optimize
@@ -16,6 +17,19 @@ INTERNAL_ENERGY_TOLERANCE = 1.0  # [J/kg]
 # the saturation curve is undefined at the critical point itself
 CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8
 DOME_TEMPERATURE_TOLERANCE = 1e-10  # [K]
+
+
+@functools.cache
+def _get_fluid_constant(key: str, fluid_name: str) -> float:
+    return CP.PropsSI(key, fluid_name)
+
+
+# the injector and tank ask for the same saturation state many times per timestep
+@functools.lru_cache(maxsize=1024)
+def _get_saturation_property(
+    key: str, temperature: float, quality: int, fluid_name: str
+) -> float:
+    return CP.PropsSI(key, "T", temperature, "Q", quality, fluid_name)
 
 
 class CoolPropService:
@@ -38,7 +52,7 @@ class CoolPropService:
         Returns:
             Triple point temperature [K].
         """
-        return CP.PropsSI("Ttriple", self.fluid_name)
+        return _get_fluid_constant("Ttriple", self.fluid_name)
 
     def get_molar_mass(self) -> float:
         """
@@ -47,7 +61,7 @@ class CoolPropService:
         Returns:
             Molar mass [kg/mol].
         """
-        return CP.PropsSI("M", self.fluid_name)
+        return _get_fluid_constant("M", self.fluid_name)
 
     def get_critical_temperature(self) -> float:
         """
@@ -56,7 +70,7 @@ class CoolPropService:
         Returns:
             Critical temperature [K].
         """
-        return CP.PropsSI("Tcrit", self.fluid_name)
+        return _get_fluid_constant("Tcrit", self.fluid_name)
 
     def get_saturation_pressure(self, temperature: float) -> float:
         """
@@ -68,7 +82,7 @@ class CoolPropService:
         Returns:
             Saturation pressure [Pa].
         """
-        return CP.PropsSI("P", "T", temperature, "Q", 0, self.fluid_name)
+        return _get_saturation_property("P", temperature, 0, self.fluid_name)
 
     def get_saturated_liquid_density(self, temperature: float) -> float:
         """
@@ -80,7 +94,7 @@ class CoolPropService:
         Returns:
             Saturated-liquid density [kg/m^3].
         """
-        return CP.PropsSI("D", "T", temperature, "Q", 0, self.fluid_name)
+        return _get_saturation_property("D", temperature, 0, self.fluid_name)
 
     def get_saturated_vapor_density(self, temperature: float) -> float:
         """
@@ -92,7 +106,7 @@ class CoolPropService:
         Returns:
             Saturated-vapor density [kg/m^3].
         """
-        return CP.PropsSI("D", "T", temperature, "Q", 1, self.fluid_name)
+        return _get_saturation_property("D", temperature, 1, self.fluid_name)
 
     def get_saturated_liquid_enthalpy(self, temperature: float) -> float:
         """
@@ -104,7 +118,7 @@ class CoolPropService:
         Returns:
             Saturated-liquid specific enthalpy [J/kg].
         """
-        return CP.PropsSI("H", "T", temperature, "Q", 0, self.fluid_name)
+        return _get_saturation_property("H", temperature, 0, self.fluid_name)
 
     def get_saturated_vapor_enthalpy(self, temperature: float) -> float:
         """
@@ -116,7 +130,7 @@ class CoolPropService:
         Returns:
             Saturated-vapor specific enthalpy [J/kg].
         """
-        return CP.PropsSI("H", "T", temperature, "Q", 1, self.fluid_name)
+        return _get_saturation_property("H", temperature, 1, self.fluid_name)
 
     def get_saturated_liquid_entropy(self, temperature: float) -> float:
         """
@@ -128,7 +142,7 @@ class CoolPropService:
         Returns:
             Saturated-liquid specific entropy [J/(kg K)].
         """
-        return CP.PropsSI("S", "T", temperature, "Q", 0, self.fluid_name)
+        return _get_saturation_property("S", temperature, 0, self.fluid_name)
 
     def get_pressure_at_temperature_density(
         self, temperature: float, density: float
