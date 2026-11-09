@@ -109,20 +109,26 @@ The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid
 
 ## Integrating the Chamber Pressure
 
-The equation is integrated with the classical fourth-order Runge–Kutta method, with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
+The equation is integrated with the classical fourth-order Runge–Kutta method.
+Both $\dot{m}_{in}$ and $\dot{m}_{out}$ are evaluated at the pressure of each stage.
 
-A pressure deviation relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, of the order of minus the inverse chamber residence time.
-$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor, which can be shorter than the simulation step.
-A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$, so each simulation step is split into $N$ equal substeps:
+A pressure deviation decays at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$.
+This rate is of the order of minus the inverse chamber residence time.
+$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
+This can be shorter than the simulation step.
+A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$.
+Each simulation step is therefore split into $N$ equal substeps:
 
 $$
 N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
 $$
 
 with $\lambda$ estimated by central difference at the start of the step.
-Only the chamber pressure is substepped; grain geometry, propellant properties and feed system state advance once per simulation step.
+Only the chamber pressure is substepped.
+Grain geometry, propellant properties and feed system state advance once per simulation step.
 
-Implemented in [`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver]; the substep count of each step is recorded in [`SimulationResult`][machwave.simulation.results.SimulationResult].
+[`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver] implements this.
+[`SimulationResult`][machwave.simulation.results.SimulationResult] records the substep count of each step.
 
 ## Solid Rocket Motor
 
