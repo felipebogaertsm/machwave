@@ -30,9 +30,12 @@ The default inlet state is the tank fluid at the tank temperature and density, a
 
 ## Tank placement and propellant mass properties
 
-A [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] gives a tank its inner diameter and the distance from the nozzle exit to its aft end. It is optional and does not affect the internal ballistics.
+A [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] gives a tank its inner diameter and the distance from the nozzle exit to its aft end.
+It is optional and does not affect the internal ballistics.
 
-With every tank placed, [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] returns the propellant center of gravity and inertia in the engine frame, and the biliquid simulation records them every timestep as `propellant_cog` and `propellant_moi`. The center of gravity is NaN and the inertia zero once every tank is empty or when any line has no placement.
+With every tank placed, [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] returns the propellant center of gravity and inertia in the engine frame.
+The biliquid simulation records them every timestep as `propellant_cog` and `propellant_moi`.
+The center of gravity is NaN and the inertia zero once every tank is empty or when any line has no placement.
 
 ## Public surface
 

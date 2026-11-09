@@ -164,7 +164,8 @@ The thermochemistry of a three-propellant mixture is a separate problem: the equ
 
 ## Propellant Mass Properties
 
-A tank can be given a placement: its inner diameter, which sets its length from its volume, and the axial distance from the nozzle exit to its aft end.
+A tank can have a placement.
+The placement gives the tank inner diameter, which sets its length from its volume, and the axial distance from the nozzle exit to its aft end.
 With every tank placed, the biliquid simulation records the propellant center of gravity and inertia, as the solid simulation does for the grain.
 Under axial acceleration the liquid settles at the aft end of each tank and the vapor fills the ullage ahead of it.
 Each phase is taken as a uniform solid cylinder spanning the bore, with
@@ -191,7 +192,8 @@ The orifice is an [`InjectorElement`][machwave.models.thrust_chamber.injector.In
 
 The coupling with the chamber happens in [`BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep].
 
-A tank placement is a [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] on the line, and [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] combines the tanks.
+A tank placement is a [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] on the line.
+[`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] combines the tanks.
 
 # References
 
