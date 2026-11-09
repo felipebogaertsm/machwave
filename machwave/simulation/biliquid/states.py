@@ -36,16 +36,10 @@ def get_line_mass_flow(
     """
     Flow a line delivers through its injector element [kg/s].
 
-    The feedline loses pressure with its own flow, so the element sees the head
-    pressure less the line loss and the flow solves
-
-        mdot = f_inj(P_head - dP(mdot), Pc)
-
-    The element flow does not rise with the line flow, so the root lies between
-    zero and the lossless flow. If the element passes no less at the lower inlet
-    pressure, as the homogeneous equilibrium model does from a saturated inlet,
-    whose stagnation state does not depend on the pressure, the lossless flow is
-    returned.
+    The element sees the head pressure less the feedline loss at the same flow, and
+    the flow is solved between zero and the lossless flow. If the element passes no
+    less at the lower inlet pressure, as the homogeneous equilibrium model does from
+    a saturated inlet, the lossless flow is returned.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
@@ -56,7 +50,8 @@ def get_line_mass_flow(
         lossless_flow: Flow the element passes from the head state [kg/s].
 
     Returns:
-        Mass flow rate of the line [kg/s].
+        Mass flow rate of the line [kg/s]. The lossless flow itself when it is not
+        positive.
     """
     if lossless_flow <= 0.0:
         return lossless_flow
@@ -100,8 +95,8 @@ def get_injector_mass_flows(
     """
     Injector flow on every line at the given chamber pressure [kg/s].
 
-    Each line with a feedline resistance has its flow solved with its own
-    loss. No line delivers more than the mass it has left over the timestep.
+    A line with a feedline resistance has its flow solved with its own loss. No line
+    delivers more than the mass it has left over the timestep.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].

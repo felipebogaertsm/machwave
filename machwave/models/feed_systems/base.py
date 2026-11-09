@@ -53,12 +53,10 @@ class FeedSystem(ABC):
         """
         Return the state at the head of every feedline.
 
-        Each state is the tank fluid at the tank temperature and density, at
-        the pressure the cycle delivers to the feedline. It is what the
-        injector would see with nothing flowing: the feedline then takes its
-        own flow-dependent loss, which the simulation solves together with the
-        injector flow. A cycle that heats or works on a propellant on the way,
-        such as a regenerative jacket or a pump, overrides this to say so.
+        Each state is the tank fluid at the tank temperature and density, at the
+        pressure the cycle delivers to the feedline. The feedline loss is not taken
+        here. A cycle that heats or works on a propellant on the way, such as a
+        regenerative jacket or a pump, overrides this.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
@@ -98,8 +96,7 @@ class FeedSystem(ABC):
         """
         Compute the pressure delivered to the head of every feedline [Pa].
 
-        The feedline resistance is not taken here: it depends on the line
-        flow, which the injector sets.
+        The feedline resistance is not taken here.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
