@@ -134,8 +134,9 @@ N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
 $$
 
 with $\lambda$ estimated by central difference at the start of the step.
-Only the chamber pressure is substepped.
-Grain geometry, propellant properties and feed system state advance once per simulation step.
+In a solid motor only the chamber pressure is substepped.
+Grain geometry and propellant properties advance once per simulation step.
+A biliquid engine substeps its whole state, as described below.
 
 [`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver] implements this.
 [`SimulationResult`][machwave.simulation.results.SimulationResult] records the substep count of each step.
@@ -190,7 +191,38 @@ $$
 
 The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed system implementation. The mass balance consumes only their sum. In addition, a biliquid engine has a rigid chamber ($\dot V_0 = 0$), so the free chamber volume term of the general ODE vanishes.
 
-The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA at each step from the current $P_0$, the design expansion ratio, and the instantaneous mixture ratio.
+The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA from the chamber pressure, the design expansion ratio, and the instantaneous mixture ratio.
+
+The chamber is not integrated on its own.
+Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance form one state vector.
+The classical fourth-order Runge-Kutta method [4] advances this vector:
+
+$$
+\frac{d}{dt}
+\begin{pmatrix} P_0 \\ m_i \\ U_j \end{pmatrix}
+=
+\begin{pmatrix}
+\dfrac{R T}{V_0}\left(\sum_i \dot{m}_i - \dot{m}_{out}\right) \\
+-\dot{m}_i \\
+-h_{out,j}\,\dot{m}_j - P_j\,\dfrac{dV_j}{dt}
+\end{pmatrix}
+$$
+
+At every stage, the tank state is computed from the stage $(m, U)$.
+Each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its feedline loss.
+CEA is evaluated at the stage $P_0$ and mixture ratio.
+The step is therefore fourth order where the right-hand side is smooth.
+The chamber decay rate sets the number of substeps of the whole vector, as above.
+
+Two things limit the order in practice:
+
+- **Line depletion.** The step on which a line runs dry is first order.
+  On that step each line drains by its start-of-step flow, capped at what it holds.
+  The liquid-to-vapor switch in a tank is not located inside a step.
+- **Thermochemistry quantization.** CEA results are cached on chamber pressure rounded to 200 Pa and mixture ratio rounded to $10^{-3}$.
+  As a result, $T$, $R$ and $k$ are piecewise constant in the state.
+  This leaves a relative error of about $10^{-9}$, the size of the truncation error at the default step.
+  Refining the step past the default therefore gains nothing.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
@@ -199,3 +231,4 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
+4. Hairer, E., Nørsett, S. P., & Wanner, G. (1993). *Solving Ordinary Differential Equations I: Nonstiff Problems* (2nd ed.). Springer Series in Computational Mathematics, Vol. 8. https://doi.org/10.1007/978-3-540-78862-1

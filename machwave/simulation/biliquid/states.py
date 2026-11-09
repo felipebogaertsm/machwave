@@ -6,6 +6,8 @@ import math
 from collections.abc import Mapping
 from typing import Callable, cast
 
+import numpy as np
+import numpy.typing as npt
 import scipy.optimize
 
 import machwave.common.fluid_state as fluid_state_models
@@ -141,6 +143,68 @@ def get_total_injector_mass_flow(
 ) -> float:
     """Total injector mass flow over every line at the given pressure [kg/s]."""
     return sum(injector_flows(chamber_pressure).values())
+
+
+class _LineRanDryAtStageError(Exception):
+    """A Runge-Kutta stage drained a line past empty."""
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _CoupledStateLayout:
+    """
+    Position of every variable in the integrated state vector.
+
+    The chamber pressure comes first, then the fluid mass of every line, then the
+    internal energy of every tank that runs an energy balance, in line order.
+    """
+
+    line_names: tuple[str, ...]
+    energy_line_names: tuple[str, ...]
+
+    def mass_index(self, name: str) -> int:
+        return 1 + self.line_names.index(name)
+
+    def energy_index(self, name: str) -> int:
+        """Index of the internal energy of a line's tank."""
+        return 1 + len(self.line_names) + self.energy_line_names.index(name)
+
+    def pack(
+        self,
+        chamber_pressure: float,
+        fluid_masses: Mapping[str, float],
+        internal_energies: Mapping[str, float | None],
+    ) -> npt.NDArray[np.float64]:
+        return np.array(
+            [
+                chamber_pressure,
+                *(fluid_masses[name] for name in self.line_names),
+                *(
+                    cast(float, internal_energies[name])
+                    for name in self.energy_line_names
+                ),
+            ],
+            dtype=np.float64,
+        )
+
+    def unpack_masses(self, state: npt.NDArray[np.float64]) -> dict[str, float]:
+        """Fluid mass of every line [kg], keyed by line name."""
+        return {name: float(state[self.mass_index(name)]) for name in self.line_names}
+
+    def unpack_energies(self, state: npt.NDArray[np.float64]) -> dict[str, float]:
+        """Internal energy of every tank that runs an energy balance [J]."""
+        return {
+            name: float(state[self.energy_index(name)])
+            for name in self.energy_line_names
+        }
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _StartOfStepEvaluation:
+    """Values the step has already evaluated at its starting state."""
+
+    inlet_states: Mapping[str, fluid_state_models.FluidState]
+    mass_flows: Mapping[str, float]
+    propellant_properties: propellant_properties_models.ThermochemicalProperties
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -368,30 +432,285 @@ class BiliquidEngineState(simulation_states.MotorState):
         ):
             return
 
-        new_time = time + d_t
-        self.time.append(new_time)
-        effective_flame_temperature = performance.get_effective_flame_temperature(
-            adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
-            combustion_efficiency=self.motor.combustion_efficiency,
-        )
-        new_chamber_pressure, substep_count = rk4.rk4th_ode_solver(
-            variables={"chamber_pressure": chamber_pressure},
-            equation=mass_balance.compute_chamber_pressure_mass_balance,
-            d_t=d_t,
-            external_pressure=external_pressure,
-            mass_flow_in=functools.partial(
-                get_total_injector_mass_flow, injector_flows=injector_flows
+        self.time.append(time + d_t)
+        substep_count = rk4.get_substep_count(
+            {"chamber_pressure": chamber_pressure},
+            mass_balance.compute_chamber_pressure_mass_balance,
+            d_t,
+            **self._get_chamber_balance_arguments(
+                propellant_properties,
+                external_pressure=external_pressure,
+                mass_flow_in=functools.partial(
+                    get_total_injector_mass_flow, injector_flows=injector_flows
+                ),
             ),
+        )
+        self.substep_count.append(substep_count)
+
+        depletes_this_step = any(
+            mass_consumed[name] >= fluid_masses[name] for name in self.lines
+        )
+        if is_feeding and depletes_this_step:
+            self._run_depletion_step(
+                d_t=d_t,
+                substep_count=substep_count,
+                external_pressure=external_pressure,
+                chamber_pressure=chamber_pressure,
+                fluid_masses=fluid_masses,
+                mass_consumed=mass_consumed,
+                injector_flows=injector_flows,
+                propellant_properties=propellant_properties,
+            )
+            return
+
+        layout = _CoupledStateLayout(
+            line_names=tuple(self.lines),
+            energy_line_names=tuple(
+                name
+                for name, internal_energy in self.internal_energy_per_line.items()
+                if internal_energy is not None
+            ),
+        )
+        state = layout.pack(
+            chamber_pressure, fluid_masses, self.internal_energy_per_line
+        )
+        equation = functools.partial(
+            self._get_coupled_derivative,
+            layout=layout,
+            is_feeding=is_feeding,
+            external_pressure=external_pressure,
+            d_t=d_t,
+        )
+        try:
+            new_state = rk4.rk4th_vector_ode_solver(
+                state,
+                equation,
+                d_t,
+                step_count=substep_count,
+                # reuse the start-of-step flows and thermochemistry as the first stage
+                initial_derivative=equation(
+                    state,
+                    start_of_step=_StartOfStepEvaluation(
+                        inlet_states=inlet_states,
+                        mass_flows=mass_flows,
+                        propellant_properties=propellant_properties,
+                    ),
+                ),
+            )
+        except _LineRanDryAtStageError:
+            new_state = None
+        if new_state is None or any(
+            mass <= 0.0 for mass in layout.unpack_masses(new_state).values()
+        ):
+            # a line ran dry inside a stage
+            self._run_depletion_step(
+                d_t=d_t,
+                substep_count=substep_count,
+                external_pressure=external_pressure,
+                chamber_pressure=chamber_pressure,
+                fluid_masses=fluid_masses,
+                mass_consumed=mass_consumed,
+                injector_flows=injector_flows,
+                propellant_properties=propellant_properties,
+            )
+            return
+
+        self.chamber_pressure.append(float(new_state[0]))
+        for name, fluid_mass in layout.unpack_masses(new_state).items():
+            self.fluid_mass_per_line[name].append(fluid_mass)
+        self.internal_energy_per_line.update(layout.unpack_energies(new_state))
+
+    def _get_chamber_balance_arguments(
+        self,
+        propellant_properties: propellant_properties_models.ThermochemicalProperties,
+        *,
+        external_pressure: float,
+        mass_flow_in: Callable[[float], float],
+    ) -> dict:
+        """Keyword arguments of the chamber mass balance at one set of properties."""
+        nozzle = self.motor.thrust_chamber.nozzle
+        return dict(
+            external_pressure=external_pressure,
+            mass_flow_in=mass_flow_in,
             free_chamber_volume=self.motor.thrust_chamber.combustion_chamber.internal_volume,
             throat_area=nozzle.get_throat_area(),
             k=propellant_properties.k_chamber,
             R=propellant_properties.R_chamber,
-            flame_temperature=effective_flame_temperature,
+            flame_temperature=performance.get_effective_flame_temperature(
+                adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
+                combustion_efficiency=self.motor.combustion_efficiency,
+            ),
             nozzle_discharge_coefficient=nozzle.discharge_coefficient,
         )
-        self.chamber_pressure.append(new_chamber_pressure)
-        self.substep_count.append(substep_count)
 
+    def _get_coupled_derivative(
+        self,
+        state: npt.NDArray[np.float64],
+        *,
+        layout: _CoupledStateLayout,
+        is_feeding: bool,
+        external_pressure: float,
+        d_t: float,
+        start_of_step: _StartOfStepEvaluation | None = None,
+    ) -> npt.NDArray[np.float64]:
+        """
+        Time derivative of the whole engine state at one Runge-Kutta stage.
+
+        Feedline head states, line flows and thermochemistry are evaluated at the stage
+        state.
+
+        Args:
+            state: Packed state vector.
+            layout: Where every variable sits in the vector.
+            is_feeding: Whether the feed system delivers over this step, decided at
+                the start of the step.
+            external_pressure: Ambient pressure [Pa].
+            d_t: Time increment [s], over which no line delivers more than it
+                holds.
+            start_of_step: Feedline head states, line flows and propellant
+                properties already evaluated at `state`, if it is the start of the
+                step.
+
+        Returns:
+            dy/dt, packed like the state.
+
+        Raises:
+            _LineRanDryAtStageError: If a line has no mass left at the stage.
+        """
+        chamber_pressure = float(state[0])
+        fluid_masses = layout.unpack_masses(state)
+        internal_energies = {
+            **self.internal_energy_per_line,
+            **layout.unpack_energies(state),
+        }
+        derivative = np.zeros_like(state)
+        if not is_feeding:
+            mass_flows = {name: 0.0 for name in self.lines}
+            propellant_properties = (
+                start_of_step.propellant_properties
+                if start_of_step is not None
+                else self._evaluate_propellant_properties(chamber_pressure, None)
+            )
+        else:
+            if any(fluid_mass <= 0.0 for fluid_mass in fluid_masses.values()):
+                raise _LineRanDryAtStageError
+            feed_system = self.motor.feed_system
+            if start_of_step is not None:
+                inlet_states = start_of_step.inlet_states
+                mass_flows = start_of_step.mass_flows
+                propellant_properties = start_of_step.propellant_properties
+            else:
+                inlet_states = feed_system.get_inlet_states(
+                    {
+                        name: line_models.LineState(
+                            fluid_mass=fluid_masses[name],
+                            internal_energy=internal_energies[name],
+                        )
+                        for name in self.lines
+                    }
+                )
+                mass_flows = get_injector_mass_flows(
+                    chamber_pressure,
+                    injector=self.motor.thrust_chamber.injector,
+                    lines=self.lines,
+                    inlet_states=inlet_states,
+                    line_masses=fluid_masses,
+                    is_feeding=True,
+                    d_t=d_t,
+                )
+                propellant_properties = self._evaluate_propellant_properties(
+                    chamber_pressure, self._get_mixture_ratio(mass_flows)
+                )
+
+            volume_rates = feed_system.get_tank_volume_rates(fluid_masses, mass_flows)
+            volumes = feed_system.get_tank_volumes(fluid_masses)
+            for name in layout.energy_line_names:
+                tank = self.lines[name].tank
+                # an infinitesimal draw is liquid while any liquid is left
+                outflow_specific_enthalpy = tank.get_outflow_specific_enthalpy(
+                    fluid_masses[name],
+                    internal_energies[name],
+                    mass_drained=0.0,
+                    volume=volumes[name],
+                )
+                boundary_power = (
+                    tank.get_pressure(
+                        fluid_masses[name],
+                        internal_energies[name],
+                        volume=volumes[name],
+                    )
+                    * volume_rates[name]
+                    if volume_rates[name] != 0.0
+                    else 0.0
+                )
+                derivative[layout.energy_index(name)] = (
+                    -outflow_specific_enthalpy * mass_flows[name] - boundary_power
+                )
+
+        for name, mass_flow in mass_flows.items():
+            derivative[layout.mass_index(name)] = -mass_flow
+        derivative[0] = mass_balance.compute_chamber_pressure_mass_balance(
+            chamber_pressure,
+            **self._get_chamber_balance_arguments(
+                propellant_properties,
+                external_pressure=external_pressure,
+                mass_flow_in=lambda _: sum(mass_flows.values()),
+            ),
+        )[0]
+        return derivative
+
+    def _run_depletion_step(
+        self,
+        *,
+        d_t: float,
+        substep_count: int,
+        external_pressure: float,
+        chamber_pressure: float,
+        fluid_masses: Mapping[str, float],
+        mass_consumed: Mapping[str, float],
+        injector_flows: Callable[[float], Mapping[str, float]],
+        propellant_properties: propellant_properties_models.ThermochemicalProperties,
+    ) -> None:
+        """
+        Take the step on which a line runs dry, at first order.
+
+        Each line drains by its start-of-step flow, capped at what it holds, so it
+        ends at zero. The chamber pressure is integrated with the start-of-step head
+        states and thermochemistry.
+
+        Args:
+            d_t: Time increment [s].
+            substep_count: Number of Runge-Kutta substeps the chamber pressure needs.
+            external_pressure: Ambient pressure [Pa].
+            chamber_pressure: Chamber pressure at the start of the step [Pa].
+            fluid_masses: Fluid mass of every line at the start of the step
+                [kg].
+            mass_consumed: Mass every line delivers over the step [kg].
+            injector_flows: Line flows at a chamber pressure, from the head
+                states at the start of the step.
+            propellant_properties: Thermochemistry at the start of the step.
+        """
+        arguments = self._get_chamber_balance_arguments(
+            propellant_properties,
+            external_pressure=external_pressure,
+            mass_flow_in=functools.partial(
+                get_total_injector_mass_flow, injector_flows=injector_flows
+            ),
+        )
+        self.chamber_pressure.append(
+            rk4.rk4th_vector_ode_solver(
+                np.array([chamber_pressure]),
+                lambda value: np.array(
+                    mass_balance.compute_chamber_pressure_mass_balance(
+                        float(value[0]), **arguments
+                    )
+                ),
+                d_t,
+                step_count=substep_count,
+            )[0]
+        )
+
+        feed_system = self.motor.feed_system
         new_fluid_masses = {
             name: fluid_masses[name] - mass_consumed[name] for name in self.lines
         }

@@ -1,6 +1,9 @@
 import math
 from typing import Any, Callable
 
+import numpy as np
+import numpy.typing as npt
+
 
 def rk4th_step(
     variables: dict[str, float],
@@ -128,3 +131,54 @@ def rk4th_ode_solver(
         )[0]
 
     return state, substep_count
+
+
+def rk4th_vector_ode_solver(
+    state: npt.NDArray[np.float64],
+    equation: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
+    d_t: float,
+    step_count: int = 1,
+    initial_derivative: npt.NDArray[np.float64] | None = None,
+) -> npt.NDArray[np.float64]:
+    """
+    Advance an autonomous system y' = f(y) in equal fourth-order Runge-Kutta steps.
+
+    Every component goes through every stage. A coupled right-hand side therefore
+    keeps fourth order.
+
+    Args:
+        state: Current state vector.
+        equation: Callable returning dy/dt at a state, with the shape of the
+            state.
+        d_t: Time step [s].
+        step_count: Number of equal Runge-Kutta steps to take over `d_t` (>=1).
+        initial_derivative: Derivative at `state`, if already evaluated. Saves one
+            call to `equation`.
+
+    Returns:
+        The state after `d_t`.
+
+    Raises:
+        ValueError: If `step_count` is less than one.
+
+    References:
+        Hairer, E., Norsett, S. P., & Wanner, G. (1993). Solving Ordinary Differential
+        Equations I: Nonstiff Problems, 2nd ed., Section II.1.
+    """
+    if step_count < 1:
+        raise ValueError(f"step_count must be at least 1, got {step_count}")
+
+    step = d_t / step_count
+    value = np.asarray(state, dtype=np.float64)
+    for index in range(step_count):
+        k_1 = (
+            np.asarray(initial_derivative, dtype=np.float64)
+            if index == 0 and initial_derivative is not None
+            else equation(value)
+        )
+        k_2 = equation(value + 0.5 * step * k_1)
+        k_3 = equation(value + 0.5 * step * k_2)
+        k_4 = equation(value + step * k_3)
+        value = value + (step / 6.0) * (k_1 + 2.0 * (k_2 + k_3) + k_4)
+
+    return value

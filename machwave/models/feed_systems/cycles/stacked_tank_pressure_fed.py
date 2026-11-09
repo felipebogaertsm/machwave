@@ -194,6 +194,36 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         )
         return volumes
 
+    def get_tank_volume_rates(
+        self,
+        fluid_masses: Mapping[str, float],
+        mass_flows: Mapping[str, float],
+    ) -> dict[str, float]:
+        """
+        Return the rate of change of the fluid volume of every line [m^3/s].
+
+        The time derivative of `get_tank_volumes`. Each line below the piston shrinks
+        by its liquid volume flow, and the top tank grows by their sum.
+
+        Args:
+            fluid_masses: Fluid mass of every line [kg], keyed by line name.
+            mass_flows: Mass flow leaving every line [kg/s], keyed by line name.
+
+        Returns:
+            dV/dt of every line's fluid [m^3/s], keyed by line name.
+        """
+        rates: dict[str, float] = {}
+        swept_volume_rate = 0.0
+        for name in self.lower_line_names:
+            liquid_volume_flow = (
+                mass_flows[name] / self.lines[name].tank.saturated_liquid_density
+            )
+            rates[name] = -liquid_volume_flow
+            swept_volume_rate += liquid_volume_flow
+
+        rates[self.pressurizing_line] = swept_volume_rate
+        return rates
+
     def get_inlet_pressures(
         self, line_states: Mapping[str, line_models.LineState]
     ) -> dict[str, float]:
