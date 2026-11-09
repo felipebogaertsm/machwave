@@ -34,7 +34,7 @@ def main():
         oxidizer_to_fuel_ratio=1.9495,
     )
 
-    # The fuel sits liquid-full below the piston, at its loading temperature.
+    # liquid-full below the piston, so it holds its loading temperature
     fuel_tank = tank.Tank(
         FUEL_NAME.upper(),
         volume=2.0e-3,

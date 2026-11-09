@@ -119,11 +119,9 @@ class Tank:
         self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
-        # Vapor pressure at the tank temperature, memoized per fluid mass and
-        # volume.
+        # vapor pressure at the tank temperature, memoized per fluid mass and volume
         self._pressure_by_mass: dict[tuple[float, float], float] = {}
-        # Energy balance state, memoized per fluid mass, internal energy and
-        # volume.
+        # energy balance state, memoized per fluid mass, internal energy and volume
         self._fluid_state_by_state: dict[
             tuple[float, float, float], TankFluidState
         ] = {}
