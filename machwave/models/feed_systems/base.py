@@ -68,9 +68,9 @@ class FeedSystem(ABC):
         """
         Return the state at the head of every feedline.
 
-        Each state is the tank fluid in the volume `get_tank_volumes` gives, at
-        the pressure the cycle delivers to the feedline, with no feedline loss
-        taken. A cycle that heats or works on a propellant on the way, such as a
+        Each state is the tank fluid in the volume `get_tank_volumes` gives, at the
+        pressure the cycle delivers to the feedline. The feedline loss is not taken.
+        A cycle that heats or works on a propellant on the way, such as a
         regenerative jacket or a pump, overrides this.
 
         Args:

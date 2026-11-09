@@ -304,7 +304,7 @@ class TestAgainstTheIsentropicDrain:
 
         reference_temperature = self.isentropic_temperature()
 
-        # about 12 K of decay; measured within 0.01 K and 2e-4 of the pressure
+        # about 12 K of decay. Measured within 0.01 K and 2e-4 of the pressure
         assert reference_temperature < TEMPERATURE - 12.0
         assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
             reference_temperature, abs=0.05
