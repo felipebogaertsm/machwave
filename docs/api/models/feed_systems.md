@@ -30,9 +30,9 @@ The default inlet state is the tank fluid at the tank temperature and density, a
 
 ## Tank placement and propellant mass properties
 
-A [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] describes a tank as a cylinder of a given inner diameter, whose length is the tank volume over the bore area, and places its aft end at `nozzle_exit_to_aft_end_distance` from the nozzle exit. It is optional and does not affect the internal ballistics.
+A [`TankPlacement`][machwave.models.feed_systems.lines.TankPlacement] gives a tank its inner diameter and the distance from the nozzle exit to its aft end. It is optional and does not affect the internal ballistics.
 
-With every tank placed, [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] returns the propellant center of gravity and inertia in the engine frame. Thrust settles the liquid at the aft end of each tank and the vapor fills the ullage ahead of it; each phase is a uniform solid cylinder spanning the bore, and the parallel axis theorem combines the phases and then the tanks. The biliquid simulation records the result every timestep as `propellant_cog` and `propellant_moi`, with the solid simulation's conventions: a NaN center of gravity and zero inertia once every tank is empty, or when any line has no placement.
+With every tank placed, [`FeedSystem.get_propellant_mass_properties`][machwave.models.feed_systems.base.FeedSystem.get_propellant_mass_properties] returns the propellant center of gravity and inertia in the engine frame, and the biliquid simulation records them every timestep as `propellant_cog` and `propellant_moi`. The center of gravity is NaN and the inertia zero once every tank is empty or when any line has no placement.
 
 ## Public surface
 
