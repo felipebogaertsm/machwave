@@ -198,7 +198,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             propellant_cog, propellant_moi = feed_system.get_propellant_mass_properties(
                 line_states
             )
-        else:  # center of gravity unknown without tank placements
+        else:
             propellant_cog = np.full(3, np.nan)
             propellant_moi = np.zeros((3, 3))
         self.propellant_cog.append(propellant_cog)

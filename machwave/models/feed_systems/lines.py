@@ -39,9 +39,7 @@ class TankPlacement:
         inner_diameter: Tank inner diameter [m]. The tank length follows from the
             tank volume.
         nozzle_exit_to_aft_end_distance: Axial distance from the nozzle exit plane to
-            the aft end of the tank, the end nearest the nozzle [m]. Shifts the
-            propellant mass properties into the engine frame, whose origin is the
-            nozzle exit.
+            the aft end of the tank, the end nearest the nozzle [m].
     """
 
     inner_diameter: float
@@ -112,20 +110,8 @@ class PropellantLine:
         """
         Return the center of gravity and inertia of the propellant in the tank.
 
-        Assumes the engine accelerates along its axis, so the liquid is settled at
-        the aft end of the tank and the vapor fills the ullage ahead of it. Each
-        phase is a uniform solid cylinder spanning the tank bore, with the phase
-        split and liquid density from the tank model. Sloshing, tank walls, domes
-        and any internal hardware are ignored. A fill denser than the saturated
-        liquid, within the tank overfill tolerance, is all liquid.
-
-        Validation status: verified against the closed-form cylinder and
-        parallel axis results, not validated.
-
-        References:
-            Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics:
-            Dynamics* (7th ed.). Wiley. Appendix B (parallel-axis theorem) and
-            Appendix D, Table D/4 (circular cylinder).
+        The liquid sits at the aft end of the tank with the vapor ahead of it, each a
+        uniform cylinder spanning the bore. Tank walls are not included.
 
         Args:
             line_state: Fluid mass and internal energy of the line.
@@ -138,6 +124,10 @@ class PropellantLine:
 
         Raises:
             ValueError: If the line has no tank placement.
+
+        References:
+            Meriam, J. L., & Kraige, L. G. (2012). Engineering Mechanics: Dynamics,
+            7th ed., Appendix B and Appendix D, Table D/4.
         """
         tank_placement = self.tank_placement
         if tank_placement is None:
