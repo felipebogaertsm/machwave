@@ -201,7 +201,7 @@ def build_finocyl_motor() -> tuple[
 
 
 def build_1kn_biliquid_engine(
-    *, isothermal_oxidizer_tank: bool = False
+    *, isothermal_oxidizer_tank: bool = False, dyer_oxidizer: bool = False
 ) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
@@ -212,7 +212,22 @@ def build_1kn_biliquid_engine(
         isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
             temperature instead of running an energy balance. The fuel tank
             below the piston always does.
+        dyer_oxidizer: Whether the oxidizer element uses the Dyer model, as in the
+            example. Each Dyer flow costs a CoolProp sweep, so the default is the
+            incompressible element.
     """
+    if dyer_oxidizer:
+        oxidizer_element = InjectorElementFactory.build(
+            # sized for an oxidizer-to-fuel ratio of 1.95 at 0.1 s
+            area=2.097e-5 / 0.48,
+            mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
+        )
+        # flows at 1 s
+        oxidizer_line_flow, fuel_line_flow = 0.7976, 0.3849
+    else:
+        oxidizer_element = InjectorElementFactory.build(area=1.4e-5 / 0.48)
+        oxidizer_line_flow, fuel_line_flow = 0.8406, 0.5015
+
     tank_temperature = 300.0
     # the built-in "N2O" card is the 298.15 K gas, not the tank liquid
     oxidizer = propellants.saturated_liquid_nitrous_oxide(tank_temperature)
@@ -239,18 +254,17 @@ def build_1kn_biliquid_engine(
         ),
         piston_loss=1e5,
         # 2e5 Pa per line at the steady engine flow, through 1/2 in tube (10.9 mm bore)
-        # flows taken at 1 s with the Dyer oxidizer element
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
-                mass_flow=0.7976,
+                mass_flow=oxidizer_line_flow,
                 density=724.7,
                 flow_area=9.37e-5,
             )
         ),
         fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5,
-            mass_flow=0.3849,
+            mass_flow=fuel_line_flow,
             density=783.45,
             flow_area=9.37e-5,
         ),
@@ -264,11 +278,7 @@ def build_1kn_biliquid_engine(
         ),
         injector=InjectorFactory.build(
             elements={
-                "oxidizer": InjectorElementFactory.build(
-                    # sized for an oxidizer-to-fuel ratio of 1.95 at 0.1 s
-                    area=2.097e-5 / 0.48,
-                    mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
-                ),
+                "oxidizer": oxidizer_element,
                 "fuel": InjectorElementFactory.build(area=8.2e-6 / 0.48),
             }
         ),
