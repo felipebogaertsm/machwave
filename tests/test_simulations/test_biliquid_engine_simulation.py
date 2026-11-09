@@ -67,9 +67,8 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # At 1 s the chamber sits on the quasi-steady state of its balance, which
-    # does not depend on the step, but the tanks it follows drain and cool by
-    # explicit first-order steps. Measured 1.0e-5 between the two runs.
+    # the chamber is quasi-steady at 1 s, but the tanks drain and cool by explicit
+    # first-order steps; measured 1.0e-5 between the two runs
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
@@ -229,12 +228,7 @@ def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
 def _leave_a_trace(
     state: biliquid_simulation.BiliquidEngineState, name: str, fluid_mass: float
 ) -> None:
-    """
-    Cut a line down to a trace of fluid, vapor at the loading temperature.
-
-    The tank runs an energy balance, so the internal energy has to come down
-    with the mass, or the pair names no state CoolProp can resolve.
-    """
+    """Cut a line to a trace of vapor, with the internal energy to match."""
     tank = state.motor.feed_system.lines[name].tank
     state.fluid_mass_per_line[name][-1] = fluid_mass
     state.internal_energy_per_line[name] = fluid_mass * CP.PropsSI(
@@ -264,8 +258,7 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
     state = _build_state_for_burnout_test()
-    # (m / d_t) * d_t rounds above this mass, which is still dense enough
-    # vapor for CoolProp's (D, U) flash on ethanol.
+    # rounds up when turned into a flow and back, yet dense enough for CoolProp
     _leave_a_trace(state, "fuel", 1.5454226100014102e-09)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)

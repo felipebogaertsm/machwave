@@ -11,7 +11,7 @@ $$
 \frac{dm}{dt} = -\dot{m}_{out}, \qquad \frac{dU}{dt} = -\dot{m}_{out} \, h_{out}
 $$
 
-The mass and internal energy fix the state through a CoolProp (D, U) flash, so the liquid boils to refill the ullage, the tank cools, and the saturation pressure decays over the burn. This is the equilibrium model of Zimmerman et al. (2013, Eqs. 20-23) without the wall heat transfer term. Every query on such a tank takes that internal energy alongside the mass, and says so when it is missing.
+The mass and internal energy fix the state through a CoolProp density and internal energy flash, so the liquid boils to refill the ullage, the tank cools, and the saturation pressure decays over the burn. This is the equilibrium model of Zimmerman et al. (2013, Eqs. 20-23) without the wall heat transfer term. Every query on such a tank takes that internal energy alongside the mass, and says so when it is missing.
 
 Passing `isothermal=True` holds the temperature where the tank was loaded instead, so a self-pressurizing tank holds its saturation pressure flat for as long as any liquid remains. That is a quick upper bound on the feed pressure, or a fair model of a tank held at temperature, but for a self-pressurizing propellant such as N2O it over-predicts the feed pressure and the thrust late in the burn.
 

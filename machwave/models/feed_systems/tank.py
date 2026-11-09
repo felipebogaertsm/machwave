@@ -108,9 +108,7 @@ class Tank:
 
         self._validate()
 
-        # Saturation properties at the loaded temperature: constant for an
-        # isothermal tank, and the starting point of one running an energy
-        # balance.
+        # saturation properties at the loaded temperature, constant only if isothermal
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
             temperature

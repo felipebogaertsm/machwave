@@ -238,16 +238,12 @@ class TestOutflowEnthalpy:
 
 class TestAgainstTheIsentropicDrain:
     """
-    A slow adiabatic drain of saturated liquid is reversible: the fluid left
-    behind and the parcel on its way out stay in equilibrium as they expand,
-    so the tank's entropy falls by the liquid entropy of what leaves,
-    $dS = s_l \\, dm$. Integrating that on the saturation curve, with no
-    internal energy and no (D, U) flash, is a reference the energy balance
-    does not share any code path with.
+    A slow adiabatic drain is isentropic, so integrating it on the saturation curve
+    gives a reference that shares no code with the energy balance.
     """
 
-    FINAL_FLUID_MASS = 1.6  # Above the 1.57 kg of saturated vapor at 293 K.
-    MASS_STEPS = (2e-2, 1e-2, 5e-3)  # Each half the last.
+    FINAL_FLUID_MASS = 1.6  # above the 1.57 kg of saturated vapor at 293 K
+    MASS_STEPS = (2e-2, 1e-2, 5e-3)  # each half the last
 
     @staticmethod
     def saturation(temperature):
@@ -280,8 +276,7 @@ class TestAgainstTheIsentropicDrain:
                 cls.entropy(temperature + 1e-3, fluid_mass)
                 - cls.entropy(temperature - 1e-3, fluid_mass)
             ) / 2e-3
-            # dS/dT dT = (s_l - dS/dm at fixed T) dm, and the bracket is
-            # v_l (s_v - s_l) / (v_v - v_l).
+            # the outflow carries the liquid entropy, leaving only the boil-off term
             return [
                 (vapor_entropy - liquid_entropy)
                 / liquid_density
@@ -316,8 +311,7 @@ class TestAgainstTheIsentropicDrain:
 
         reference_temperature = self.isentropic_temperature()
 
-        # About 12 K and 1.3 MPa of decay; explicit steps of 5 g land within
-        # 0.01 K and 2e-4 of the pressure.
+        # about 12 K of decay; 5 g steps land within 0.01 K and 2e-4 of the pressure
         assert reference_temperature < TEMPERATURE - 12.0
         assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
             reference_temperature, abs=0.05
@@ -340,6 +334,6 @@ class TestAgainstTheIsentropicDrain:
             math.log2(coarse / fine) for coarse, fine in zip(errors, errors[1:])
         ]
 
-        # Measured 1.0016 and 1.0008; the reference is solved to rtol 1e-10,
-        # far below the 7 mK error left at the finest step.
+        # measured 1.0016 and 1.0008; the reference error is far below the 7 mK
+        # left at the finest step
         assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)

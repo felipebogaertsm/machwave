@@ -62,8 +62,7 @@ class TestInletState:
         assert pressures["oxidizer"] == 0.0
 
     def test_an_isothermal_tank_blows_down_as_it_drains(self):
-        # Arbitrary masses with no internal energy to go with them: only an
-        # isothermal tank is a function of the mass alone.
+        # only an isothermal tank is a function of the mass alone
         feed_system = SingleLinePressureFedFeedSystemFactory.build(
             line=PropellantLineFactory.build(
                 tank=TankFactory.build(
