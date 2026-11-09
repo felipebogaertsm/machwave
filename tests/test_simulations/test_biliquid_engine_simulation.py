@@ -18,6 +18,7 @@ import pytest
 import scipy.constants
 
 import machwave.models.motors as motors_models
+import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation.biliquid as biliquid_simulation
 import machwave.simulation.states as simulation_states
 from tests.test_simulations import motor_builders
@@ -212,6 +213,37 @@ def test_exit_pressure_is_finite_and_positive(
 ) -> None:
     assert np.all(np.isfinite(simulation_result.exit_pressure))
     assert np.all(simulation_result.exit_pressure > 0.0)
+
+
+def test_the_dyer_oxidizer_element_flows_less_than_an_incompressible_one() -> None:
+    first_oxidizer_flows = {}
+    for mass_flow_model in (
+        thrust_chamber_models.MassFlowModel.SPI,
+        thrust_chamber_models.MassFlowModel.DYER,
+    ):
+        motor, params = motor_builders.build_1kn_biliquid_engine(dyer_oxidizer=True)
+        elements = motor.thrust_chamber.injector.elements
+        motor.thrust_chamber.injector = thrust_chamber_models.Injector(
+            elements={
+                **elements,
+                "oxidizer": dataclasses.replace(
+                    elements["oxidizer"], mass_flow_model=mass_flow_model
+                ),
+            }
+        )
+        state = biliquid_simulation.BiliquidEngineState(
+            motor=motor,
+            igniter_pressure=params.igniter_pressure,
+            external_pressure=params.external_pressure,
+        )
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+        first_oxidizer_flows[mass_flow_model] = state.mass_flow_rate_per_line[
+            "oxidizer"
+        ][-1]
+
+    dyer_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.DYER]
+    incompressible_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.SPI]
+    assert 0.0 < dyer_flow < incompressible_flow
 
 
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
