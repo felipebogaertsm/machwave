@@ -30,28 +30,15 @@ class FeedlineResistance:
     """
     Hydraulic resistance of the plumbing between a tank and the injector.
 
-    The line loses pressure with the square of its flow, as a turbulent
-    liquid line does:
-
-        dP = K * mdot^2 / (2 * rho * A^2)
-
-    K lumps the friction of the run (f * L / D) and the minor losses of every
-    fitting and valve on it, all referred to the same flow area A.
-
-    Assumes fully turbulent single-phase liquid flow, so K is constant with
-    the Reynolds number, and steady flow: the inertance of the line is
-    neglected. Verified against the closed form, not validated against
-    measured feedline losses.
-
-    References:
-        Idelchik, I. E., "Handbook of Hydraulic Resistance", 3rd ed., Begell
-        House, 1996, Ch. 1 (resistance coefficient and its addition along a
-        line).
+    The pressure drop grows with the square of the flow. The loss coefficient lumps
+    the friction and fitting losses, referred to one flow area.
 
     Attributes:
-        loss_coefficient: Total loss coefficient K, referred to the flow area
-            (dimensionless).
+        loss_coefficient: Total loss coefficient, referred to the flow area.
         flow_area: Flow area the loss coefficient is referred to [m^2].
+
+    References:
+        Idelchik, I. E. (1996). Handbook of Hydraulic Resistance, 3rd ed., Ch. 1.
     """
 
     loss_coefficient: float

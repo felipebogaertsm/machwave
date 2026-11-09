@@ -33,12 +33,9 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         Initialize the SingleLinePressureFedFeedSystem.
 
         Args:
-            line: The propellant line the system feeds. Its feedline
-                resistance sets what the line loses on the way to the
-                injector.
-            line_loss: Deprecated. A fixed pressure loss along the feedline
-                [Pa], taken whatever the flow. Give the line a
-                `FeedlineResistance` instead.
+            line: The propellant line the system feeds.
+            line_loss: Deprecated. Fixed pressure loss along the feedline [Pa]. Give
+                the line a `FeedlineResistance` instead.
 
         Raises:
             ValueError: If the pressure loss is negative.
@@ -65,10 +62,10 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
 
         Args:
             oxidizer_tank: Tank the oxidizer line draws from.
-            line_resistance: Hydraulic resistance of the oxidizer feedline.
-                None for a line that loses nothing.
-            line_loss: Deprecated. A fixed pressure loss along the feedline
-                [Pa]. Use `line_resistance` instead.
+            line_resistance: Hydraulic resistance of the oxidizer feedline. None for
+                a line that loses nothing.
+            line_loss: Deprecated. Fixed pressure loss along the feedline [Pa]. Use
+                `line_resistance` instead.
 
         Raises:
             ValueError: If the pressure loss is negative.
@@ -104,8 +101,8 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the tank pressure [Pa], keyed by line name.
 
-        The feedline resistance is taken later, at the line flow. A deprecated
-        fixed `line_loss` is still taken here.
+        The feedline resistance is not taken here, only a deprecated fixed
+        `line_loss`.
 
         Args:
             line_states: Fluid mass and internal energy of the line, keyed by
