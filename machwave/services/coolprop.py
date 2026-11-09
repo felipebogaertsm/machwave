@@ -11,15 +11,11 @@ try:
 except ImportError as e:  # pragma: no cover - exercised only without coolprop
     raise extras.MissingOptionalDependencyError("CoolProp", extras.LIQUID) from e
 
-# How far a (D, U) flash may miss the internal energy it was asked for before
-# it is rejected [J/kg]. CoolProp lands within 1e-8 J/kg when it converges; the
-# wrong flashes this catches miss by tens of kJ/kg.
-INTERNAL_ENERGY_TOLERANCE = 1.0
-# Relative margin below the critical temperature where the dome solve bracket
-# ends, since the saturation curve is undefined at the critical point itself.
+# converged flashes land within 1e-8 J/kg, wrong ones miss by tens of kJ/kg
+INTERNAL_ENERGY_TOLERANCE = 1.0  # [J/kg]
+# the saturation curve is undefined at the critical point itself
 CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8
-# Absolute temperature tolerance of the dome solve [K].
-DOME_TEMPERATURE_TOLERANCE = 1e-10
+DOME_TEMPERATURE_TOLERANCE = 1e-10  # [K]
 
 
 class CoolPropService:
@@ -169,8 +165,7 @@ class CoolPropService:
         """
         Get the temperature at a given density and specific internal energy.
 
-        See `_get_temperature_pressure_at_density_internal_energy` for how the
-        CoolProp flash is checked against the saturation curve.
+        The CoolProp flash is checked against the saturation curve.
 
         Args:
             density: Density [kg/m^3].
@@ -193,8 +188,7 @@ class CoolPropService:
         """
         Get the pressure at a given density and specific internal energy.
 
-        See `_get_temperature_pressure_at_density_internal_energy` for how the
-        CoolProp flash is checked against the saturation curve.
+        The CoolProp flash is checked against the saturation curve.
 
         Args:
             density: Density [kg/m^3].
@@ -215,16 +209,12 @@ class CoolPropService:
         self, density: float, internal_energy: float
     ) -> tuple[float, float]:
         """
-        Resolve the temperature and pressure at a density and internal energy.
+        Get the temperature and pressure at a density and internal energy.
 
-        CoolProp 6.8 can return a single-phase state for a point inside the
-        saturation dome without saying so (N2O at 454.5 kg/m^3 and 228.6 kJ/kg
-        flashes to 270.4 K and 1.45 MPa; the equilibrium state is 291.0 K and
-        4.81 MPa). The flash is kept only if it is consistent: inside the
-        saturation densities at its temperature, the two-phase mix there must
-        hold the internal energy; outside them, a (D, T) lookup at its
-        temperature must give the internal energy back. Otherwise, or if the
-        flash fails, the state is solved on the dome.
+        CoolProp 6.8 can silently return a single-phase state for a point inside the
+        saturation dome (N2O at 454.5 kg/m^3 and 228.6 kJ/kg flashes to 270.4 K
+        instead of 291.0 K). The flash is kept only if its temperature gives the
+        internal energy back, and otherwise the state is solved on the dome.
 
         Args:
             density: Density [kg/m^3].
@@ -279,11 +269,7 @@ class CoolPropService:
         self, temperature: float, density: float, internal_energy: float
     ) -> tuple[float, float]:
         """
-        How far a two-phase mix at the density misses the internal energy.
-
-        The quality follows from 1/rho = v_l + x (v_v - v_l), and the mix holds
-        u = u_l + x (u_v - u_l), both on the saturation curve at the
-        temperature.
+        Get how far a two-phase mix at the density misses the internal energy.
 
         Args:
             temperature: Saturation temperature [K].
@@ -307,12 +293,10 @@ class CoolPropService:
         self, density: float, internal_energy: float
     ) -> tuple[float, float]:
         """
-        Solve the two-phase relation for the temperature, bracketed.
+        Solve for the two-phase temperature at a density and internal energy.
 
-        Along an isochore the mix's internal energy rises with temperature, so
-        the root is bracketed between the triple point and just under the
-        critical point. The state is two-phase only if the quality there lies
-        in [0, 1].
+        At constant density the mix energy rises with temperature, so the root is
+        bracketed between the triple point and just under the critical point.
 
         Args:
             density: Bulk density [kg/m^3].

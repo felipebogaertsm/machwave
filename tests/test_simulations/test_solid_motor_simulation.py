@@ -185,16 +185,10 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
 
 
 @pytest.mark.parametrize("combustion_efficiency", [1.0, 0.9])
-def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
+def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficiency(
     combustion_efficiency: float,
 ) -> None:
-    """Mid-burn, Pc * Cd * At over the nozzle mass flow equals eta * c*_ideal.
-
-    The nozzle mass flow is the grain mass flow minus the rate of change of the
-    gas stored in the free chamber volume, taken by central difference over the
-    recorded steps. The ideal characteristic velocity comes from the propellant
-    properties at the same chamber pressure.
-    """
+    """Mid-burn, the characteristic velocity ratio equals the efficiency."""
     motor, params = motor_builders.build_nero_motor()
     motor.combustion_efficiency = combustion_efficiency
     state = solid_simulation.SolidMotorState(
@@ -243,8 +237,7 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
         / vandenkerckhove_function
     )
 
-    # Measured 2.6e-5 (eta 1) and 4.2e-5 (eta 0.9) at the motor's 0.01 s step,
-    # halving with the step: the time discretization of the stored gas term.
+    # measured 2.6e-5 and 4.2e-5, from the time discretization of the stored gas term
     assert delivered_c_star / ideal_c_star == pytest.approx(
         combustion_efficiency, rel=1e-4
     )
