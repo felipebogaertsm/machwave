@@ -106,8 +106,8 @@ $$
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
 It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
 Both source terms are evaluated at the chamber pressure of each Runge–Kutta stage: $\dot{m}_{out}$ is linear in $P_0$, and $\dot{m}_{in}$ carries the pressure dependence of the burn rate (solid motor) or of the injector pressure drop (biliquid engine), so the integrator advances the true coupled $(\dot{m}_{in} - \dot{m}_{out})$ slope instead of freezing the inflow at the start of the step.
-The equation is stiff when the chamber residence time is short, as in a liquid engine with a small characteristic length $L^*$: a perturbation in $P_0$ relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, and an explicit step with $|\lambda| \Delta t$ near RK4's stability limit of about 2.8 overshoots or settles on a spurious steady state.
-Each simulation step is therefore split into equal RK4 steps with $|\lambda| \Delta t \le 1$.
+The equation is stiff when the chamber residence time is short, as in a liquid engine with a small characteristic length $L^*$: a perturbation in $P_0$ relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, and an explicit step with $|\lambda| \Delta t$ near the fourth-order Runge–Kutta stability limit of about 2.8 overshoots or settles on a spurious steady state.
+Each simulation step is therefore split into equal Runge–Kutta steps with $|\lambda| \Delta t \le 1$.
 The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
 
 ## Solid Rocket Motor
