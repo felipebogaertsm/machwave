@@ -5,7 +5,7 @@ import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants_models
 import machwave.models.propellants.components as propellant_components
 
-# RocketCEA's "N2O_nbp" card, an independent source for the liquid enthalpy
+# RocketCEA's "N2O_nbp" liquid card
 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY = 14583.0  # [cal/mol]
 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE = 184.4  # [K]
 
@@ -35,8 +35,7 @@ class TestSaturatedLiquidNitrousOxide:
         component = propellants_models.saturated_liquid_nitrous_oxide(
             _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE
         )
-        # the card and CoolProp differ by 102 J/mol, far below the 10 kJ/mol
-        # gap between the liquid and the built-in gas card
+        # measured 102 J/mol apart; the liquid and gas cards differ by 10 kJ/mol
         assert component.enthalpy == pytest.approx(
             conversions.convert_cal_per_mol_to_joules_per_mol(
                 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY

@@ -233,13 +233,10 @@ class TestOutflowEnthalpy:
 
 
 class TestAgainstTheIsentropicDrain:
-    """
-    A slow adiabatic drain is isentropic, so integrating it on the saturation curve
-    gives a reference that shares no code with the energy balance.
-    """
+    """A slow adiabatic drain is isentropic, giving an independent reference."""
 
     FINAL_FLUID_MASS = 1.6  # above the 1.57 kg of saturated vapor at 293 K
-    MASS_STEPS = (2e-2, 1e-2, 5e-3)  # each half the last
+    MASS_STEPS = (2e-2, 1e-2, 5e-3)
 
     @staticmethod
     def saturation(temperature):
@@ -272,7 +269,7 @@ class TestAgainstTheIsentropicDrain:
                 cls.entropy(temperature + 1e-3, fluid_mass)
                 - cls.entropy(temperature - 1e-3, fluid_mass)
             ) / 2e-3
-            # the outflow carries the liquid entropy, leaving only the boil-off term
+            # the outflow leaves at the liquid entropy
             return [
                 (vapor_entropy - liquid_entropy)
                 / liquid_density
@@ -307,7 +304,7 @@ class TestAgainstTheIsentropicDrain:
 
         reference_temperature = self.isentropic_temperature()
 
-        # about 12 K of decay; 5 g steps land within 0.01 K and 2e-4 of the pressure
+        # about 12 K of decay; measured within 0.01 K and 2e-4 of the pressure
         assert reference_temperature < TEMPERATURE - 12.0
         assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
             reference_temperature, abs=0.05
@@ -330,6 +327,5 @@ class TestAgainstTheIsentropicDrain:
             math.log2(coarse / fine) for coarse, fine in zip(errors, errors[1:])
         ]
 
-        # measured 1.0016 and 1.0008; the reference error is far below the 7 mK
-        # left at the finest step
+        # measured 1.0016 and 1.0008
         assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)

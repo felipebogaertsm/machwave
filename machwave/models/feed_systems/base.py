@@ -118,8 +118,7 @@ class FeedSystem(ABC):
         """
         Compute the pressure delivered to the head of every feedline [Pa].
 
-        The feedline resistance is not taken here: it depends on the line
-        flow, which the injector sets.
+        The feedline resistance is not taken here.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by

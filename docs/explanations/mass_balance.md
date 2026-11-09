@@ -30,30 +30,23 @@ Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleev
 
 Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
 
-The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$.
-The combustion efficiency accounts for incomplete combustion, heat losses and other losses in the chamber that make the delivered characteristic velocity lower than the ideal one.
-
-In Machwave, $\eta_{c^*}$ is the **characteristic velocity efficiency**, the ratio of the delivered to the ideal characteristic velocity.
-This is how the number is usually quoted in test reports and textbooks:
+The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$, the ratio of the delivered to the ideal characteristic velocity:
 
 $$
 \eta_{c^*} = \frac{c^*_\text{actual}}{c^*_\text{ideal}}, \qquad c^* = \frac{P_0 A_t}{\dot{m}} = \frac{\sqrt{R T}}{H_\text{choked}}
 $$
 
-(Huzel & Huang 1967, Eq. 1-41, p. 16, and Eq. 1-32 with the theoretical form below it, p. 12)
+(Huzel & Huang 1967, Eqs. 1-32 and 1-41)
 
 $A_t = C_d A_{t,\text{geo}}$ is the effective throat area and $H_\text{choked}$ is the choked flow function defined below.
-A $c^*$ reduced from test data with the geometric throat area also carries the throat discharge loss.
-Machwave models that loss separately through $C_d$, so a measured efficiency should not be applied on top of a $C_d$ below one without accounting for it.
-Since $c^* \propto \sqrt{T}$ at fixed $R$ and $k$, the temperature ratio is the square of the efficiency:
+Since $c^* \propto \sqrt{T}$, the flame temperature is:
 
 $$
 T = \eta_{c^*}^2 T_0
 $$
 
-For a choked chamber at a given mass flow and throat area, the chamber pressure and the delivered $c^*$ both scale by $\eta_{c^*}$.
-Huzel & Huang (1967, p. 16) give 0.87 to 1.03 for this factor.
-Machwave accepts values in (0, 1], and typical values depend mainly on the propellant combination and motor/engine size.
+Machwave accepts $\eta_{c^*}$ in (0, 1].
+A $c^*$ measured with the geometric throat area already includes the discharge loss, which Machwave models separately through $C_d$.
 A unitary $\eta_{c^*}$ tends to overestimate the chamber pressure.
 
 Substituting $M_{stored}$ into the mass balance and rearranging gives the general form of the chamber pressure differential equation:
@@ -123,32 +116,11 @@ The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid
 
 ## Integrating the Chamber Pressure
 
-The equation is integrated with the classical fourth-order Runge–Kutta method.
-Each step evaluates the right-hand side at four intermediate pressures (stages), with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
+The equation is integrated with the classical fourth-order Runge–Kutta method, with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
 
-Near equilibrium, a pressure deviation decays as $e^{\lambda t}$, with $\lambda = \partial \dot{P}_0 / \partial P_0$.
-With a choked nozzle and an inflow independent of $P_0$:
-
-$$
-\lambda = -\frac{1}{\tau}, \qquad \tau = \frac{L^*}{C_d H \sqrt{R T}}, \qquad L^* = \frac{V_0}{A_{t,\text{geo}}}
-$$
-
-where $\tau$ is the chamber residence time and $L^*$ the characteristic length.
-A pressure-dependent inflow changes $\lambda$: for a solid motor with burn rate exponent $n$, $\lambda = -(1 - n)/\tau$ at equilibrium.
-The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine with $L^*$ near 9 cm, and 1 to 2 ms for a solid motor whose chamber is mostly filled with propellant; both can be shorter than the simulation step.
-
-One Runge–Kutta step of length $\Delta t$ multiplies the deviation by
-
-$$
-G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
-$$
-
-instead of the exact $e^{z}$.
-At $z = -1$ the two agree closely (0.375 against 0.368).
-Below $z \approx -1.3$ the last stage lands on the far side of equilibrium, where the nonlinear terms can drive the integration to a false steady state.
-Below $z = -2.785$, $|G| > 1$ and the deviation grows every step.
-
-Each simulation step is therefore split into $N$ equal substeps, so that $|\lambda| \Delta t / N \le 1$:
+A pressure deviation relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, of the order of minus the inverse chamber residence time.
+$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor, which can be shorter than the simulation step.
+A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$, so each simulation step is split into $N$ equal substeps:
 
 $$
 N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)

@@ -32,15 +32,13 @@ class PropellantComponent:
         role: Component role (oxidizer, fuel, additive).
         density: Component density [kg/m^3].
         chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
-        enthalpy: Molar enthalpy at `initial_temperature`, on the CEA scale
-            where each element is zero at 298.15 K, so at 298.15 K it is the
-            standard enthalpy of formation [J/mol].
+        enthalpy: Molar enthalpy at `initial_temperature` on the CEA scale; at
+            298.15 K it is the standard enthalpy of formation [J/mol].
         initial_temperature: Initial component temperature before combustion [K].
         custom_card: Whether a biliquid propellant builds a CEA reactant card
-            from this component's formula, enthalpy, initial temperature and
-            density. When False, `name` is looked up in RocketCEA's built-in
-            cards and those fields are ignored. Solid propellants always build
-            their card from the fields.
+            from this component's fields. When False, `name` is looked up in
+            RocketCEA's built-in cards and the fields are ignored. Solid
+            propellants always build their card from the fields.
     """
 
     name: str
@@ -77,35 +75,20 @@ class PropellantComponent:
         }
 
 
-# from the CEA thermo library (Gurvich, 1989) rather than JANAF, so the reactant
-# sits on the same enthalpy scale as the combustion products
+# CEA thermo library value, on the same scale as the combustion products
 NITROUS_OXIDE_GAS_HEAT_OF_FORMATION = 81600.0  # [J/mol]
 
-# low enough that the real-gas enthalpy matches the ideal gas to well under 1 J/mol
+# low enough for the real-gas enthalpy to match the ideal gas
 _IDEAL_GAS_REFERENCE_PRESSURE = 1.0  # [Pa]
 
 
 def saturated_liquid_nitrous_oxide(temperature: float) -> PropellantComponent:
     """
-    Build an N2O oxidizer component as saturated liquid at a tank temperature.
+    Build a nitrous oxide oxidizer component as saturated liquid at a tank temperature.
 
-    RocketCEA's built-in "N2O" card is the ideal gas at 298.15 K. A self-pressurized
-    tank feeds saturated liquid, whose enthalpy is lower by roughly the heat of
-    vaporization, so the built-in card overstates flame temperature, characteristic
-    velocity and specific impulse. The injector is taken as adiabatic, so the chamber
-    receives the tank liquid enthalpy whatever the liquid flashes to on the way.
-
-    On the CEA enthalpy scale, the molar enthalpy is the gas heat of formation at
-    298.15 K plus the CoolProp enthalpy change from that ideal-gas state to saturated
-    liquid at `temperature`:
-
-        h = h_f(N2O gas, 298.15 K) + [h_sat_liq(T) - h_ideal_gas(298.15 K)]
-
-    The card is fixed at `temperature` and does not follow a tank that cools during
+    Use instead of RocketCEA's built-in "N2O" card, which is the ideal gas at 298.15 K.
+    The enthalpy is fixed at `temperature` and does not follow a tank that cools during
     the burn.
-
-    Validation status: verified, not validated. At 184.4 K the enthalpy is within
-    about 100 J/mol of RocketCEA's independent "N2O_nbp" liquid card.
 
     Args:
         temperature: Liquid temperature in the tank at loading [K].
@@ -115,7 +98,7 @@ def saturated_liquid_nitrous_oxide(temperature: float) -> PropellantComponent:
 
     Raises:
         ValueError: If `temperature` is not between the triple point and the
-            critical point of N2O.
+            critical point of nitrous oxide.
         MissingOptionalDependencyError: If the `liquid` extra is not installed.
 
     References:
