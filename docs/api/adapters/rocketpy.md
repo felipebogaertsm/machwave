@@ -150,9 +150,8 @@ and its simulation result. The adapter currently provides:
 - burn-time interval
 - dry mass, dry-mass center of gravity, and dry-mass moments of inertia
 - nozzle radius, and the throat radius for `SolidMotor`
-- chamber radius, height, and position for `GenericMotor`, taken from the combustion
-  chamber inner diameter, the grain length, and the initial grain center of mass, or for
-  a biliquid engine from the cylinder enclosing every tank
+- chamber radius, height, and position for `GenericMotor`, from the grain or, for a
+  biliquid engine, from the cylinder enclosing every tank
 - propellant initial mass
 - propellant center of mass over time
 - propellant inertia tensor components over time
@@ -162,8 +161,8 @@ and its simulation result. The adapter currently provides:
 
 - `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments; it raises `ValueError` otherwise.
 - The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
-- `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry. Both adapters pass the same propellant mass, center of mass, and inertia from the Machwave simulation result, so they yield the same mass properties for a BATES grain.
-- `RocketPyGenericMotorAdapter` also accepts a biliquid engine. Every propellant line must define `tank_placement`; the adapter raises `ValueError` otherwise. The liquid is taken as settled at the aft end of each tank, toward the nozzle, with the vapor ahead of it.
+- `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry.
+- `RocketPyGenericMotorAdapter` also accepts a biliquid engine. Every propellant line must define `tank_placement`; the adapter raises `ValueError` otherwise.
 - RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
 - The thrust chamber must define `dry_mass_properties`; the adapter raises `ValueError` otherwise.
 - The coordinate system orientation is `nozzle_to_combustion_chamber`, and `nozzle_position` is zero, so RocketPy measures from the nozzle exit. Machwave's motor frame shares that origin, so the propellant and dry mass positions pass through unchanged.
