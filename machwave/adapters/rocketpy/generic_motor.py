@@ -15,8 +15,8 @@ class RocketPyGenericMotorAdapter(
     Adapter to use a simulation result and solid motor as a RocketPy GenericMotor.
 
     Accepts any grain geometry. The propellant center of mass and inertia come from
-    the simulation result, so the chamber dimensions passed to RocketPy only feed its
-    descriptive outputs.
+    the simulation result. RocketPy uses the chamber dimensions only in its descriptive
+    outputs.
     """
 
     _rocketpy_motor_class = "GenericMotor"
