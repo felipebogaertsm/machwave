@@ -19,8 +19,7 @@ The adapter sits after the internal ballistics simulation:
 
 1. Build a Machwave motor model.
 2. Run `InternalBallisticsSimulation` to obtain a `SimulationResult`.
-3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)`
-   for a grain of identical BATES segments, or `RocketPyGenericMotorAdapter` for any other grain.
+3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)` for a grain of identical BATES segments, or with `RocketPyGenericMotorAdapter` for any other grain.
 4. Pass the adapted motor into a RocketPy `Rocket`.
 
 ## Example
@@ -123,8 +122,7 @@ and its simulation result. The adapter currently provides:
 - burn-time interval
 - dry mass, dry-mass center of gravity, and dry-mass moments of inertia
 - nozzle radius, and the throat radius for `SolidMotor`
-- chamber radius, height, and position for `GenericMotor`, taken from the combustion
-  chamber inner diameter, the grain length, and the initial grain center of mass
+- chamber radius, height, and position for `GenericMotor`, taken from the combustion chamber inner diameter, the grain length, and the initial grain center of mass
 - propellant initial mass
 - propellant center of mass over time
 - propellant inertia tensor components over time
@@ -132,10 +130,14 @@ and its simulation result. The adapter currently provides:
 
 ## Current Scope And Limitations
 
-- `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments; it raises `ValueError` otherwise.
+- `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments.
+  It raises `ValueError` for any other grain.
 - The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
-- `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry. Both adapters pass the same propellant mass, center of mass, and inertia from the Machwave simulation result, so they yield the same mass properties for a BATES grain.
-- RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
+- `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry.
+  Both adapters pass the same propellant mass, center of mass, and inertia from the Machwave simulation result.
+  For a BATES grain they give the same mass properties.
+- RocketPy must be installed.
+  Without it, importing or initializing an adapter raises `ImportError`.
 - The thrust chamber must define `dry_mass_properties`; the adapter raises `ValueError` otherwise.
 - The coordinate system orientation is `nozzle_to_combustion_chamber`, and `nozzle_position` is zero, so RocketPy measures from the nozzle exit. Machwave's motor frame shares that origin, so the propellant and dry mass positions pass through unchanged.
 
