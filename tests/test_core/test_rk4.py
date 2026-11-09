@@ -12,6 +12,13 @@ def exponential_decay(quantity):
     return (-DECAY_RATE * quantity,)
 
 
+def test_step_returns_one_value_per_variable():
+    def rotation(x, y):
+        return (-y, x)
+
+    assert len(rk4.rk4th_step({"x": 1.0, "y": 0.0}, rotation, 0.1)) == 2
+
+
 @pytest.mark.parametrize(
     "d_t, expected_substep_count",
     [(0.5e-4, 1), (4.5e-4, 5), (1.025e-2, 103)],
