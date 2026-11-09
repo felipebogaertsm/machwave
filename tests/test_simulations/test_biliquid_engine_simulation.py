@@ -73,8 +73,7 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=1e-9,
     )
-    # the lines drain by first-order steps, so burnout shifts with the step; measured
-    # 1.3e-3 here and 2.1e-3 with a combustion efficiency of 0.95 (longer fuel tail)
+    # line draining is first order, so burnout shifts with the step; measured 2.1e-3
     assert coarse_result.total_impulse == pytest.approx(
         simulation_result.total_impulse, rel=3e-3
     )
