@@ -127,7 +127,9 @@ N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
 $$
 
 with $\lambda$ estimated by central difference at the start of the step.
-In a solid motor only the chamber pressure is substepped; grain geometry and propellant properties advance once per simulation step. A biliquid engine substeps its whole state, as described below.
+In a solid motor only the chamber pressure is substepped.
+Grain geometry and propellant properties advance once per simulation step.
+A biliquid engine substeps its whole state, as described below.
 
 Implemented in [`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver]; the substep count of each step is recorded in [`SimulationResult`][machwave.simulation.results.SimulationResult].
 
@@ -183,7 +185,9 @@ The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed sy
 
 The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA from the chamber pressure, the design expansion ratio, and the instantaneous mixture ratio.
 
-The chamber is not integrated on its own. Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance make one state vector, advanced together by the classical fourth-order Runge-Kutta method [4]:
+The chamber is not integrated on its own.
+Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance form one state vector.
+The classical fourth-order Runge-Kutta method [4] advances this vector:
 
 $$
 \frac{d}{dt}
@@ -196,12 +200,21 @@ $$
 \end{pmatrix}
 $$
 
-At every stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its feedline loss, and CEA is read at the stage $P_0$ and mixture ratio, so the step is fourth order where the right-hand side is smooth. The chamber decay rate sets the number of substeps of the whole vector, as above.
+At every stage, the tank state is computed from the stage $(m, U)$.
+Each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its feedline loss.
+CEA is evaluated at the stage $P_0$ and mixture ratio.
+The step is therefore fourth order where the right-hand side is smooth.
+The chamber decay rate sets the number of substeps of the whole vector, as above.
 
 Two things limit the order in practice:
 
-- **Line depletion.** The step on which a line runs dry drains each line by its start-of-step flow, capped at what it holds, and is first order. The liquid-to-vapor switch in a tank is not located inside a step.
-- **Thermochemistry quantization.** CEA results are cached on chamber pressure rounded to 200 Pa and mixture ratio rounded to $10^{-3}$, so $T$, $R$ and $k$ are piecewise constant in the state. This leaves an error of about $10^{-9}$ relative, the size of the truncation error at the default step, so refining the step past the default gains nothing.
+- **Line depletion.** The step on which a line runs dry is first order.
+  On that step each line drains by its start-of-step flow, capped at what it holds.
+  The liquid-to-vapor switch in a tank is not located inside a step.
+- **Thermochemistry quantization.** CEA results are cached on chamber pressure rounded to 200 Pa and mixture ratio rounded to $10^{-3}$.
+  As a result, $T$, $R$ and $k$ are piecewise constant in the state.
+  This leaves a relative error of about $10^{-9}$, the size of the truncation error at the default step.
+  Refining the step past the default therefore gains nothing.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 

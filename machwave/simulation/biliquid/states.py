@@ -200,7 +200,7 @@ class _CoupledStateLayout:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class _StartOfStepEvaluation:
-    """What the step has already evaluated at its starting state."""
+    """Values the step has already evaluated at its starting state."""
 
     inlet_states: Mapping[str, fluid_state_models.FluidState]
     mass_flows: Mapping[str, float]
@@ -675,7 +675,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         Take the step on which a line runs dry, at first order.
 
         Each line drains by its start-of-step flow, capped at what it holds, so it
-        lands on zero. The chamber pressure is integrated with the start-of-step head
+        ends at zero. The chamber pressure is integrated with the start-of-step head
         states and thermochemistry.
 
         Args:

@@ -59,8 +59,13 @@ Each timestep, the state evaluates the motor at the current chamber pressure, re
 
 How it advances depends on the motor type:
 
-- **Biliquid engine:** the chamber pressure, the fluid mass of every line and the internal energy of every tank that runs an energy balance advance together in one fourth-order Runge-Kutta step, with line flows, tank states and thermochemistry evaluated at every stage. The step on which a line runs dry is first order; see [Mass Balance](mass_balance.md#biliquid-rocket-engine).
-- **Solid motor:** the chamber pressure goes through a fourth-order Runge-Kutta step, while the burnt web advances by explicit Euler at the burn rate of the start of the step, which makes the run first order in the step.
+- **Biliquid engine:** the chamber pressure, the fluid mass of every line and the internal energy of every tank that runs an energy balance advance together in one fourth-order Runge-Kutta step.
+  Line flows, tank states and thermochemistry are evaluated at every stage.
+  The step on which a line runs dry is first order.
+  See [Mass Balance](mass_balance.md#biliquid-rocket-engine).
+- **Solid motor:** the chamber pressure goes through a fourth-order Runge-Kutta step.
+  The burnt web advances by explicit Euler at the burn rate of the start of the step.
+  This makes the run first order in the step.
 
 It also decides when the run is over: once the stop criteria is met it sets `end_thrust` to `True`, and the simulation stops advancing.
 

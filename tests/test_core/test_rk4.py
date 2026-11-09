@@ -68,7 +68,7 @@ def test_solver_stays_stable_past_the_single_step_limit():
     assert 0.0 < solved < 1.0
 
 
-# eigenvalues -1 +/- 2i and -3: a decaying rotation driving a third component
+# eigenvalues -1 +/- 2i and -3, a decaying rotation driving a third component
 LINEAR_SYSTEM = np.array(
     [
         [-1.0, 2.0, 0.0],

@@ -202,8 +202,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the rate of change of the fluid volume of every line [m^3/s].
 
-        The time derivative of `get_tank_volumes`: each line below the piston shrinks
-        by its liquid volume flow and the top tank grows by their sum.
+        The time derivative of `get_tank_volumes`. Each line below the piston shrinks
+        by its liquid volume flow, and the top tank grows by their sum.
 
         Args:
             fluid_masses: Fluid mass of every line [kg], keyed by line name.

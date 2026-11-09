@@ -10,7 +10,7 @@ import pytest
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 
-# ignition transient; once the chamber settles the truncation error falls below the
+# ignition transient. Once the chamber settles, the truncation error falls below the
 # property noise (about 1e-11 relative)
 WINDOW = 0.0128  # s
 DYER_WINDOW = 0.0032  # s, shorter since the Dyer element runs a CoolProp sweep
@@ -65,7 +65,7 @@ def test_the_engine_state_converges_at_fourth_order() -> None:
 
     observed_order = np.log2(np.abs(coarse - middle) / np.abs(middle - fine))
 
-    # measured 4.6 to 4.7; not yet asymptotic, so the band is wider above 4
+    # measured 4.6 to 4.7. Not yet asymptotic, so the band is wider above 4
     assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
 
 

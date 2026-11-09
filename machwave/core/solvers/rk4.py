@@ -143,8 +143,8 @@ def rk4th_vector_ode_solver(
     """
     Advance an autonomous system y' = f(y) in equal fourth-order Runge-Kutta steps.
 
-    Every component goes through every stage, so a coupled right-hand side keeps
-    fourth order.
+    Every component goes through every stage. A coupled right-hand side therefore
+    keeps fourth order.
 
     Args:
         state: Current state vector.
