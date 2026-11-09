@@ -237,7 +237,7 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
         / vandenkerckhove_function
     )
 
-    # measured 2.6e-5 and 4.2e-5, from the time discretization of the stored gas term
+    # loose because the stored gas term is a finite difference in time
     assert delivered_c_star / ideal_c_star == pytest.approx(
         combustion_efficiency, rel=1e-4
     )
