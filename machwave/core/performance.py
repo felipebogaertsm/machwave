@@ -9,13 +9,15 @@ def get_effective_flame_temperature(
     adiabatic_flame_temperature: float, combustion_efficiency: float
 ) -> float:
     """
-    Get the flame temperature that delivers the derated characteristic velocity.
+    Get the flame temperature corrected by the combustion efficiency.
 
-    The combustion efficiency is a characteristic velocity (c*) efficiency,
-    eta_c* = c*_actual / c*_ideal. Since c* = sqrt(R T) / Gamma(k), the
-    temperature is scaled by its square, T_eff = eta_c*^2 T0. With R and k held
-    at their ideal values, the chamber then delivers c* = eta_c* c*_ideal, and the
-    chamber pressure for a given mass flow and throat scales by eta_c*.
+    The combustion efficiency is applied to the characteristic velocity (c*).
+    Since the square root of temperature is proportional to c*, the effective
+    flame temperature is proportional to the square of the combustion efficiency.
+
+    References:
+        Huzel, D. K., & Huang, D. H. (1967). Design of Liquid Propellant Rocket
+        Engines (2nd ed.). NASA SP-125. Eq. 1-41, p. 16.
 
     Args:
         adiabatic_flame_temperature: Adiabatic flame temperature [K].
