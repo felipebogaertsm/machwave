@@ -1,5 +1,7 @@
 """Mechanics calculations."""
 
+from collections.abc import Sequence
+
 import numpy as np
 import numpy.typing as npt
 
@@ -130,3 +132,76 @@ def get_moment_of_inertia_tensor(
     return get_moment_of_inertia_tensor_from_central_moments(
         central_second_moments, element_mass
     )
+
+
+def get_solid_cylinder_moment_of_inertia(
+    mass: float, length: float, radius: float
+) -> npt.NDArray[np.float64]:
+    """
+    Calculate the inertia tensor of a uniform solid cylinder lying along the x-axis.
+
+    Args:
+        mass: Cylinder mass [kg].
+        length: Cylinder length along its axis [m].
+        radius: Cylinder radius [m].
+
+    Returns:
+        3x3 diagonal inertia tensor at the center of gravity, axial axis first
+        [kg-m^2].
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). Engineering Mechanics: Dynamics,
+        7th ed., Appendix D, Table D/4.
+    """
+    axial_moment = mass * radius**2 / 2
+    transverse_moment = mass * (radius**2 / 4 + length**2 / 12)
+    return np.diag([axial_moment, transverse_moment, transverse_moment]).astype(
+        np.float64
+    )
+
+
+def get_combined_mass_properties(
+    masses: Sequence[float],
+    centers_of_gravity: Sequence[npt.NDArray[np.float64]],
+    moments_of_inertia: Sequence[npt.NDArray[np.float64]],
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    """
+    Combine rigid bodies into one with the parallel axis theorem.
+
+    A massless body is skipped, so its center of gravity may be undefined.
+
+    Args:
+        masses: Mass of each body [kg].
+        centers_of_gravity: Center of gravity of each body, in one shared frame [m].
+        moments_of_inertia: 3x3 inertia tensor of each body about its own center of
+            gravity, axes parallel to the shared frame [kg-m^2].
+
+    Returns:
+        The combined center of gravity [m] and the inertia tensor about it
+        [kg-m^2]. With no mass, the center of gravity is NaN and the inertia zero.
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). Engineering Mechanics: Dynamics,
+        7th ed., Appendix B.
+    """
+    total_mass = 0.0
+    weighted_position = np.zeros(3, dtype=np.float64)
+    for mass, center_of_gravity in zip(masses, centers_of_gravity, strict=True):
+        if mass > 0.0:
+            total_mass += mass
+            weighted_position += mass * np.asarray(center_of_gravity)
+
+    if total_mass <= 0.0:
+        return np.full(3, np.nan), np.zeros((3, 3), dtype=np.float64)
+
+    combined_center_of_gravity = weighted_position / total_mass
+    combined_moment_of_inertia = np.zeros((3, 3), dtype=np.float64)
+    for mass, center_of_gravity, moment_of_inertia in zip(
+        masses, centers_of_gravity, moments_of_inertia, strict=True
+    ):
+        if mass > 0.0:
+            offset = np.asarray(center_of_gravity) - combined_center_of_gravity
+            combined_moment_of_inertia += moment_of_inertia + mass * (
+                np.dot(offset, offset) * np.eye(3) - np.outer(offset, offset)
+            )
+    return combined_center_of_gravity, combined_moment_of_inertia
