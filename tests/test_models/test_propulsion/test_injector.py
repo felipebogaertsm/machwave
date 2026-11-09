@@ -123,7 +123,6 @@ class TestInjectorElementMassFlow:
     def test_dyer_dispatch_matches_two_phase_helper_times_discharge_and_area(
         self, saturated_nitrous_oxide_inlet
     ):
-        """DYER dispatch equals `Cd * A * G_DYER` from the core helper."""
         inlet = saturated_nitrous_oxide_inlet
         element = InjectorElementFactory.build(mass_flow_model=MassFlowModel.DYER)
         chamber_pressure = 20e5

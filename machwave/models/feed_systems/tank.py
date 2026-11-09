@@ -32,12 +32,9 @@ class Tank:
     re-runnable.
 
     By default the tank runs an energy balance and is a function of the fluid
-    mass and of the internal energy the integrator carries alongside it.
-    Draining takes enthalpy out with the fluid, the fluid left behind cools as
-    it boils to refill the ullage, and the saturation pressure follows the
-    temperature down over the burn. This is the homogeneous equilibrium tank
-    model: liquid and vapor share one temperature and stay on the saturation
-    curve.
+    mass and of the internal energy the integrator carries alongside it, so the
+    saturation pressure falls as the tank cools over the burn. Liquid and vapor
+    share one temperature.
 
     An isothermal tank is a pure function of the fluid mass. Its temperature is
     held where it was loaded, so a self-pressurizing tank holds its saturation
@@ -51,16 +48,10 @@ class Tank:
         the cycle passes the volume the fluid fills and the simulation takes
         out the boundary work.
 
-    Validation status: verified, not validated. The energy balance matches a
-    slow adiabatic drain integrated along the saturation curve; it has not
-    been compared with measured tank blowdown data.
-
     References:
-        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J. and Zilliac, G. G.,
-        "Review and Evaluation of Models for Self-Pressurizing Propellant
-        Tank Dynamics", AIAA 2013-4045, 49th AIAA/ASME/SAE/ASEE Joint
-        Propulsion Conference, 2013, Eqs. 20-23 (equilibrium model, here
-        without wall heat transfer).
+        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J., & Zilliac, G. G. (2013).
+        Review and Evaluation of Models for Self-Pressurizing Propellant Tank
+        Dynamics. AIAA 2013-4045, Eqs. 20-23, without wall heat transfer.
     """
 
     def __init__(
