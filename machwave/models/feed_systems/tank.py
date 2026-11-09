@@ -31,10 +31,9 @@ class Tank:
     caller, which lets the integrator own that state and keeps the model
     re-runnable.
 
-    By default the tank runs an energy balance and is a function of the fluid
-    mass and of the internal energy the integrator carries alongside it, so the
-    saturation pressure falls as the tank cools over the burn. Liquid and vapor
-    share one temperature.
+    By default the tank runs an energy balance. Its state is the fluid mass and the
+    internal energy the integrator carries beside it. The saturation pressure falls
+    as the tank cools over the burn. Liquid and vapor share one temperature.
 
     An isothermal tank is a pure function of the fluid mass. Its temperature is
     held where it was loaded, so a self-pressurizing tank holds its saturation
@@ -77,8 +76,8 @@ class Tank:
             overfill_tolerance: Allowed fraction over the saturated liquid
                 density, e.g. 0.01 = 1% (>=0).
             isothermal: Whether the temperature is held where the tank was
-                loaded. False (the default) runs an energy balance, and every
-                query then needs the internal energy, starting from
+                loaded. False (the default) runs an energy balance. Every query
+                then needs the internal energy, which starts at
                 `initial_internal_energy`.
 
         Raises:

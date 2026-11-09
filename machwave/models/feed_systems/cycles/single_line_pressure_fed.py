@@ -101,8 +101,7 @@ class SingleLinePressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the tank pressure [Pa], keyed by line name.
 
-        The feedline resistance is not taken here, only a deprecated fixed
-        `line_loss`.
+        The feedline resistance is not taken here. A deprecated fixed `line_loss` is.
 
         Args:
             line_states: Fluid mass and internal energy of the line, keyed by

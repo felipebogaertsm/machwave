@@ -35,7 +35,7 @@ class TestSaturatedLiquidNitrousOxide:
         component = propellants_models.saturated_liquid_nitrous_oxide(
             _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE
         )
-        # measured 102 J/mol apart; the liquid and gas cards differ by 10 kJ/mol
+        # measured 102 J/mol apart. The liquid and gas cards differ by 10 kJ/mol
         assert component.enthalpy == pytest.approx(
             conversions.convert_cal_per_mol_to_joules_per_mol(
                 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY
