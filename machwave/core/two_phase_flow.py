@@ -66,6 +66,80 @@ def get_homogeneous_equilibrium_mass_flux(
     return float(mass_flux.max())
 
 
+def get_dyer_mass_flux(
+    fluid_name: str,
+    temperature_upstream: float,
+    density_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+) -> float:
+    """
+    Get the mass flux through an orifice via Dyer's non-equilibrium model.
+
+    Blends the single-phase incompressible flux and the flux of
+    `get_homogeneous_equilibrium_mass_flux` by the non-equilibrium parameter. The
+    weights follow Waxman et al. The printed Eq. 36 of Dyer et al. swaps them.
+    Returns the incompressible flux when nothing can flash in the orifice. That is
+    the case when the vapor pressure is at or below the downstream pressure, the inlet
+    is at or above the critical temperature, or the inlet is all vapor.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature_upstream: Upstream stagnation temperature [K].
+        density_upstream: Upstream density, used by the incompressible term
+            [kg/m^3].
+        pressure_upstream: Upstream stagnation pressure [Pa].
+        pressure_downstream: Downstream pressure [Pa].
+
+    Returns:
+        Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
+        the upstream pressure.
+
+    Raises:
+        MissingOptionalDependencyError: If the `liquid` extra is not installed.
+
+    References:
+        Dyer, J., Doran, E., Dunn, Z., Lohner, K., Zilliac, G., and Cantwell,
+        B., "Modeling Feed System Flow Physics for Self-Pressurizing
+        Propellants", AIAA 2007-5702, 2007, Eqs. 35 to 37.
+        Waxman, B. S., Zimmerman, J. E., Cantwell, B. J., and Zilliac, G. G.,
+        "Mass Flow Rate and Isolation Characteristics of Injectors for Use with
+        Self-Pressurizing Oxidizers in Hybrid Rockets", AIAA 2013-3636, 2013,
+        Eq. 9.
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    if pressure_downstream >= pressure_upstream:
+        return 0.0
+
+    pressure_drop = pressure_upstream - pressure_downstream
+    incompressible_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
+
+    coolprop = coolprop_service.CoolPropService(fluid_name)
+    if temperature_upstream >= coolprop.get_critical_temperature():
+        return incompressible_mass_flux
+    vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
+    if (
+        vapor_pressure <= pressure_downstream
+        or density_upstream
+        <= coolprop.get_saturated_vapor_density(temperature_upstream)
+    ):
+        return incompressible_mass_flux
+
+    non_equilibrium_parameter = float(
+        np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream))
+    )
+    equilibrium_mass_flux = get_homogeneous_equilibrium_mass_flux(
+        fluid_name=fluid_name,
+        temperature_upstream=temperature_upstream,
+        pressure_downstream=pressure_downstream,
+        pressure_upstream=pressure_upstream,
+    )
+    return (
+        non_equilibrium_parameter * incompressible_mass_flux + equilibrium_mass_flux
+    ) / (1.0 + non_equilibrium_parameter)
+
+
 def _get_stagnation_enthalpy_and_entropy(
     coolprop: "coolprop_service.CoolPropService",
     temperature: float,
