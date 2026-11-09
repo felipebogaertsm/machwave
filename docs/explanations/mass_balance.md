@@ -30,7 +30,8 @@ Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleev
 
 Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
 
-The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$, the ratio of the delivered to the ideal characteristic velocity:
+The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$.
+The combustion efficiency is the ratio of the delivered to the ideal characteristic velocity:
 
 $$
 \eta_{c^*} = \frac{c^*_\text{actual}}{c^*_\text{ideal}}, \qquad c^* = \frac{P_0 A_t}{\dot{m}} = \frac{\sqrt{R T}}{H_\text{choked}}
@@ -38,7 +39,8 @@ $$
 
 (Huzel & Huang 1967, Eqs. 1-32 and 1-41)
 
-$A_t = C_d A_{t,\text{geo}}$ is the effective throat area and $H_\text{choked}$ is the choked flow function defined below.
+$A_t = C_d A_{t,\text{geo}}$ is the effective throat area.
+$H_\text{choked}$ is the choked flow function defined below.
 Since $c^* \propto \sqrt{T}$, the flame temperature is:
 
 $$
@@ -46,8 +48,9 @@ T = \eta_{c^*}^2 T_0
 $$
 
 Machwave accepts $\eta_{c^*}$ in (0, 1].
-A $c^*$ measured with the geometric throat area already includes the discharge loss, which Machwave models separately through $C_d$.
-A unitary $\eta_{c^*}$ tends to overestimate the chamber pressure.
+A $c^*$ measured with the geometric throat area already includes the discharge loss.
+Machwave models that loss separately through $C_d$.
+A unitary $\eta_{c^*}$ overestimates the chamber pressure.
 
 Substituting $M_{stored}$ into the mass balance and rearranging gives the general form of the chamber pressure differential equation:
 
