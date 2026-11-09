@@ -212,8 +212,7 @@ def build_1kn_biliquid_engine(
             below the piston always does.
     """
     tank_temperature = 300.0
-    # Self-pressurized N2O reaches the injector as saturated liquid, not as the
-    # 298.15 K ideal gas of RocketCEA's built-in "N2O" card.
+    # the built-in "N2O" card is the 298.15 K gas, not the tank liquid
     oxidizer = propellants.saturated_liquid_nitrous_oxide(tank_temperature)
     fuel = FuelComponentFactory.build(initial_temperature=tank_temperature)
     propellant = BiliquidPropellantFactory.build(
@@ -237,8 +236,7 @@ def build_1kn_biliquid_engine(
             isothermal=True,
         ),
         piston_loss=1e5,
-        # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore).
+        # 2e5 Pa per line at the steady engine flow, through 1/2 in tube (10.9 mm bore)
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,
