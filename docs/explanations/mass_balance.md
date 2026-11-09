@@ -116,32 +116,11 @@ The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid
 
 ## Integrating the Chamber Pressure
 
-The equation is integrated with the classical fourth-order Runge–Kutta method.
-Each step evaluates the right-hand side at four intermediate pressures (stages), with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
+The equation is integrated with the classical fourth-order Runge–Kutta method, with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
 
-Near equilibrium, a pressure deviation decays as $e^{\lambda t}$, with $\lambda = \partial \dot{P}_0 / \partial P_0$.
-With a choked nozzle and an inflow independent of $P_0$:
-
-$$
-\lambda = -\frac{1}{\tau}, \qquad \tau = \frac{L^*}{C_d H \sqrt{R T}}, \qquad L^* = \frac{V_0}{A_{t,\text{geo}}}
-$$
-
-where $\tau$ is the chamber residence time and $L^*$ the characteristic length.
-A pressure-dependent inflow changes $\lambda$: for a solid motor with burn rate exponent $n$, $\lambda = -(1 - n)/\tau$ at equilibrium.
-The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine with $L^*$ near 9 cm, and 1 to 2 ms for a solid motor whose chamber is mostly filled with propellant; both can be shorter than the simulation step.
-
-One Runge–Kutta step of length $\Delta t$ multiplies the deviation by
-
-$$
-G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
-$$
-
-instead of the exact $e^{z}$.
-At $z = -1$ the two agree closely (0.375 against 0.368).
-Below $z \approx -1.3$ the last stage lands on the far side of equilibrium, where the nonlinear terms can drive the integration to a false steady state.
-Below $z = -2.785$, $|G| > 1$ and the deviation grows every step.
-
-Each simulation step is therefore split into $N$ equal substeps, so that $|\lambda| \Delta t / N \le 1$:
+A pressure deviation relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, of the order of minus the inverse chamber residence time.
+$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor, which can be shorter than the simulation step.
+A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$, so each simulation step is split into $N$ equal substeps:
 
 $$
 N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
