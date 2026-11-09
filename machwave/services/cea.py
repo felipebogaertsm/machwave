@@ -48,11 +48,9 @@ def generate_card_string(components: list[dict], *, reactant_type: str = "name")
 
     Args:
         components: Components in the format of `PropellantComponent.to_cea_dict`.
-        reactant_type: CEA reactant keyword. "name" is for a solid or
-            monopropellant. A biliquid needs "oxid" for the oxidizer card and
-            "fuel" for the fuel card: CEA only applies the mixture ratio
-            between an oxidant and a fuel, so two "name" cards run at a fixed
-            composition whatever mixture ratio is asked for.
+        reactant_type: CEA reactant keyword: "name" for a solid or monopropellant,
+            "oxid" or "fuel" for the cards of a biliquid, so that CEA applies the
+            mixture ratio between them.
 
     Returns:
         CEA card string.
