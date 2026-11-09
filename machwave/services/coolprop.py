@@ -11,7 +11,7 @@ try:
 except ImportError as e:  # pragma: no cover - exercised only without coolprop
     raise extras.MissingOptionalDependencyError("CoolProp", extras.LIQUID) from e
 
-# converged flashes land within 1e-8 J/kg, wrong ones miss by tens of kJ/kg
+# a converged flash is off by under 1e-8 J/kg, a wrong one by tens of kJ/kg
 INTERNAL_ENERGY_TOLERANCE = 1.0  # [J/kg]
 # the saturation curve is undefined at the critical point itself
 CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8
@@ -203,8 +203,8 @@ class CoolPropService:
         Get the temperature and pressure at a density and internal energy.
 
         CoolProp 6.8 can silently return a single-phase state for a point inside the
-        saturation dome. The flash is kept only if its temperature gives the internal
-        energy back; otherwise the state is solved on the dome.
+        saturation dome. The flash is kept only if its temperature gives back the
+        internal energy. Otherwise the state is solved on the dome.
 
         Args:
             density: Density [kg/m^3].
@@ -259,7 +259,7 @@ class CoolPropService:
         self, temperature: float, density: float, internal_energy: float
     ) -> tuple[float, float]:
         """
-        Get how far a two-phase mix at the density misses the internal energy.
+        Get the internal energy residual of a two-phase mix at the density.
 
         Args:
             temperature: Saturation temperature [K].
@@ -285,8 +285,8 @@ class CoolPropService:
         """
         Solve for the two-phase temperature at a density and internal energy.
 
-        At constant density the mix energy rises with temperature, so the root is
-        bracketed between the triple point and just under the critical point.
+        At constant density the mix internal energy rises with temperature. The root
+        is bracketed between the triple point and just under the critical point.
 
         Args:
             density: Bulk density [kg/m^3].
