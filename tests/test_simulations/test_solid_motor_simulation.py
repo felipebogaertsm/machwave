@@ -326,7 +326,7 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
     assert np.all(np.isnan(state.propellant_cog[-1]))
 
 
-def test_chamber_pressure_stays_positive_on_a_stiff_chamber() -> None:
+def test_chamber_pressure_stays_positive_with_a_short_residence_time() -> None:
     motor, params = motor_builders.build_finocyl_motor()
 
     result = run_simulation(motor, params)
