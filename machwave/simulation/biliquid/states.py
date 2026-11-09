@@ -282,7 +282,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             adiabatic_flame_temperature=propellant_properties.adiabatic_flame_temperature,
             combustion_efficiency=self.motor.combustion_efficiency,
         )
-        new_chamber_pressure, substep_count = rk4.rk4th_substepped_ode_solver(
+        new_chamber_pressure, substep_count = rk4.rk4th_ode_solver(
             variables={"chamber_pressure": chamber_pressure},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,
