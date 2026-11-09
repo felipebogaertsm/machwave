@@ -419,9 +419,8 @@ class CoolPropService:
         """
         Get the density and specific enthalpy at a pressure and specific entropy.
 
-        One (P, s) flash of a CoolProp `AbstractState` gives both, where
-        `get_density_at_pressure_entropy` and `get_enthalpy_at_pressure_entropy`
-        flash once each. The values are the same to the last bit.
+        Uses a single flash, so it is cheaper than calling
+        `get_density_at_pressure_entropy` and `get_enthalpy_at_pressure_entropy`.
 
         Args:
             pressure: Pressure [Pa].
