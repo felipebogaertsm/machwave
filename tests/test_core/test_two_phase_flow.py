@@ -441,7 +441,7 @@ def _get_sweep_maximum(
         # subcooled, choked and unchoked
         (280.0, 1.3, 1.0e6),
         (280.0, 1.3, 4.0e6),
-        # subcooled near the critical point, where CoolProp fails at one sweep point
+        # subcooled near the critical point, where CoolProp fails at one point
         (308.0, 1.5, 4.0e6),
         (308.0, 2.0, 5.0e5),
     ],
