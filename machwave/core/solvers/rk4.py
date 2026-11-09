@@ -2,7 +2,7 @@ import math
 from typing import Any, Callable
 
 
-def rk4th_ode_solver(
+def rk4th_step(
     variables: dict[str, float],
     equation: Callable,
     d_t: float,
@@ -109,7 +109,7 @@ def get_substep_count(
     return max(1, math.ceil(decay_rate * d_t / MAX_DECAY_RATE_STEP_PRODUCT))
 
 
-def rk4th_substepped_ode_solver(
+def rk4th_ode_solver(
     variables: dict[str, float],
     equation: Callable,
     d_t: float,
@@ -131,7 +131,7 @@ def rk4th_substepped_ode_solver(
     ((state_name, state),) = variables.items()
 
     for _ in range(substep_count):
-        state = rk4th_ode_solver(
+        state = rk4th_step(
             {state_name: state}, equation, d_t / substep_count, **kwargs
         )[0]
 

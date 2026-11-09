@@ -36,40 +36,38 @@ def test_substep_count_rejects_more_than_one_variable():
         rk4.get_substep_count({"a": 1.0, "b": 1.0}, lambda a, b: (a, b), 1e-3)
 
 
-def test_substepped_solver_matches_a_single_step_when_the_step_is_stable():
+def test_solver_takes_a_single_step_when_it_is_stable():
     d_t = 1.0e-4
 
-    substepped, substep_count = rk4.rk4th_substepped_ode_solver(
+    solved, substep_count = rk4.rk4th_ode_solver(
         {"quantity": 1.0}, exponential_decay, d_t
     )
 
     assert substep_count == 1
-    assert (
-        substepped == rk4.rk4th_ode_solver({"quantity": 1.0}, exponential_decay, d_t)[0]
-    )
+    assert solved == rk4.rk4th_step({"quantity": 1.0}, exponential_decay, d_t)[0]
 
 
-def test_substepped_solver_stays_stable_past_the_rk4_limit():
+def test_solver_stays_stable_past_the_single_step_limit():
     d_t = 10 / DECAY_RATE
 
-    single_step = rk4.rk4th_ode_solver({"quantity": 1.0}, exponential_decay, d_t)[0]
-    substepped, substep_count = rk4.rk4th_substepped_ode_solver(
+    single_step = rk4.rk4th_step({"quantity": 1.0}, exponential_decay, d_t)[0]
+    solved, substep_count = rk4.rk4th_ode_solver(
         {"quantity": 1.0}, exponential_decay, d_t
     )
 
     assert abs(single_step) > 1.0
     assert substep_count == 10
-    assert 0.0 < substepped < 1.0
+    assert 0.0 < solved < 1.0
 
 
-def test_substepped_solver_is_fourth_order_on_exponential_decay():
+def test_solver_is_fourth_order_on_exponential_decay():
     horizon = 10 / DECAY_RATE
     expected = math.exp(-DECAY_RATE * horizon)
     errors = []
     for step_count in (40, 80, 160, 320):
         quantity = 1.0
         for _ in range(step_count):
-            quantity, _ = rk4.rk4th_substepped_ode_solver(
+            quantity, _ = rk4.rk4th_ode_solver(
                 {"quantity": quantity}, exponential_decay, horizon / step_count
             )
         errors.append(abs(quantity - expected))
