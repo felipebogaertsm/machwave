@@ -18,10 +18,9 @@ class BiliquidSimulationResult(
     """Simulation result for a biliquid engine run."""
 
     fluid_mass_per_line: dict[str, simulation_results.SimulationResultArray]
-    # Injector flow of each line [kg/s], zero once the feed has stopped.
+    # injector flow of each line [kg/s], zero once the feed has stopped
     mass_flow_rate_per_line: dict[str, simulation_results.SimulationResultArray]
-    # Total oxidizer flow over total fuel flow. NaN where either side has
-    # stopped flowing, since the ratio has no meaning there.
+    # NaN where either side has stopped flowing
     oxidizer_to_fuel_ratio: simulation_results.SimulationResultArray
     tank_pressure_per_line: dict[str, simulation_results.SimulationResultArray]
     # Flat for an isothermal tank, decaying for one running an energy balance.
