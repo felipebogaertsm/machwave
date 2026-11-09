@@ -66,17 +66,15 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # At 1 s the chamber has settled on the steady state of its balance, which does
-    # not depend on the step, so the two runs agree to round-off.
+    # the steady state at 1 s does not depend on the step
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=1e-9,
     )
-    # The lines drain by explicit first-order steps, so burnout moves with the step.
-    # Measured 1.3e-3 for this engine (burnout 16 ms earlier), and 2.1e-3 with a
-    # combustion efficiency of 0.95, where the fuel tail is longer.
+    # the lines drain by first-order steps, so burnout shifts with the step; measured
+    # 1.3e-3 here and 2.1e-3 with a combustion efficiency of 0.95 (longer fuel tail)
     assert coarse_result.total_impulse == pytest.approx(
         simulation_result.total_impulse, rel=3e-3
     )
@@ -246,7 +244,7 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
     state = _build_state_for_burnout_test()
-    # (m / d_t) * d_t rounds above this mass
+    # rounds up when divided and multiplied by the time step
     state.fluid_mass_per_line["fuel"][-1] = 1.0000000000000006e-10
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
@@ -438,17 +436,10 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
     "combustion_efficiency, discharge_coefficient",
     [(1.0, 1.0), (0.9, 1.0), (0.9, 0.9)],
 )
-def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
+def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficiency(
     combustion_efficiency: float, discharge_coefficient: float
 ) -> None:
-    """At steady state, Pc * Cd * At / mdot equals eta * c*_ideal.
-
-    The delivered characteristic velocity comes from the simulated chamber
-    pressure, injector mass flow and effective throat area, and the ideal one
-    from the CEA state at the same pressure and mixture ratio. The fixed tank
-    pressures let the chamber settle, so the storage term vanishes and the
-    ratio is exact.
-    """
+    """At steady state, the characteristic velocity ratio equals the efficiency."""
     motor, params = motor_builders.build_1kn_biliquid_engine()
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
@@ -460,8 +451,7 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
     for _ in range(200):
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
-    # The flows and throat area of the last step were computed at the pressure
-    # it started from.
+    # the last step computed its flows at the pressure it started from
     chamber_pressure = state.chamber_pressure[-2]
     assert state.chamber_pressure[-1] == pytest.approx(chamber_pressure, rel=1e-12)
     mass_flow = sum(series[-1] for series in state.mass_flow_rate_per_line.values())
