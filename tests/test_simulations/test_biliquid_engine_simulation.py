@@ -438,17 +438,10 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
     "combustion_efficiency, discharge_coefficient",
     [(1.0, 1.0), (0.9, 1.0), (0.9, 0.9)],
 )
-def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
+def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficiency(
     combustion_efficiency: float, discharge_coefficient: float
 ) -> None:
-    """At steady state, Pc * Cd * At / mdot equals eta * c*_ideal.
-
-    The delivered characteristic velocity comes from the simulated chamber
-    pressure, injector mass flow and effective throat area, and the ideal one
-    from the CEA state at the same pressure and mixture ratio. The fixed tank
-    pressures let the chamber settle, so the storage term vanishes and the
-    ratio is exact.
-    """
+    """At steady state, the characteristic velocity ratio equals the efficiency."""
     motor, params = motor_builders.build_1kn_biliquid_engine()
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
@@ -460,8 +453,7 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
     for _ in range(200):
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
-    # The flows and throat area of the last step were computed at the pressure
-    # it started from.
+    # the last step computed its flows at the pressure it started from
     chamber_pressure = state.chamber_pressure[-2]
     assert state.chamber_pressure[-1] == pytest.approx(chamber_pressure, rel=1e-12)
     mass_flow = sum(series[-1] for series in state.mass_flow_rate_per_line.values())
