@@ -221,13 +221,10 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         mass_flows: Mapping[str, float],
     ) -> dict[str, float]:
         """
-        Return how fast the volume the fluid of every line fills grows [m^3/s].
+        Return the rate of change of the fluid volume of every line [m^3/s].
 
-        The time derivative of `get_tank_volumes`: a line below the piston
-        shrinks by its liquid volume flow, and the top of the stack grows by
-        the sum of them,
-
-            dV_top/dt = sum_j mdot_j / rho_j
+        The time derivative of `get_tank_volumes`: each line below the piston shrinks
+        by its liquid volume flow and the top tank grows by their sum.
 
         Args:
             fluid_masses: Fluid mass of every line [kg], keyed by line name.

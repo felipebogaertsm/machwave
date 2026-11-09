@@ -143,26 +143,29 @@ def rk4th_vector_ode_solver(
     initial_derivative: npt.NDArray[np.float64] | None = None,
 ) -> npt.NDArray[np.float64]:
     """
-    Advance an autonomous system y' = f(y) over `d_t` in equal classical RK4 steps.
+    Advance an autonomous system y' = f(y) in equal fourth-order Runge-Kutta steps.
 
-    Every component goes through every stage, so a right-hand side that couples them
-    keeps fourth order (Hairer, Norsett and Wanner 1993, Section II.1).
+    Every component goes through every stage, so a coupled right-hand side keeps
+    fourth order.
 
     Args:
         state: Current state vector.
         equation: Callable returning dy/dt at a state, with the shape of the
             state.
         d_t: Time step [s].
-        step_count: Number of equal RK4 steps to take over `d_t` (>=1).
-        initial_derivative: f at `state`, when the caller has evaluated it
-            already. It is the first stage of the first step, so passing it
-            saves one evaluation of `equation`.
+        step_count: Number of equal Runge-Kutta steps to take over `d_t` (>=1).
+        initial_derivative: Derivative at `state`, if already evaluated. Saves one
+            call to `equation`.
 
     Returns:
         The state after `d_t`.
 
     Raises:
         ValueError: If `step_count` is less than one.
+
+    References:
+        Hairer, E., Norsett, S. P., & Wanner, G. (1993). Solving Ordinary Differential
+        Equations I: Nonstiff Problems, 2nd ed., Section II.1.
     """
     if step_count < 1:
         raise ValueError(f"step_count must be at least 1, got {step_count}")

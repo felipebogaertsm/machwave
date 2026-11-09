@@ -6,6 +6,6 @@ Numerical ODE solvers used by the simulation engine.
 
 `rk4th_step` takes one classical fourth-order Runge-Kutta step of size `d_t` for a system of variables, and is what `rk4th_ode_solver` calls for each substep. Only the entries in the state-variable dictionary are advanced through the four stages; any other keyword arguments are held constant for the whole step. A source term that depends on an integrated variable must be supplied through the equation callable rather than as a precomputed constant.
 
-`rk4th_vector_ode_solver` advances an autonomous system $y' = f(y)$ held in one array over `d_t` in `step_count` equal Runge-Kutta steps. Every component goes through every stage, so a right-hand side that couples the components keeps fourth order. The biliquid engine integrates its whole state with it.
+`rk4th_vector_ode_solver` advances an autonomous system $y' = f(y)$, held in one array, over `d_t` in `step_count` equal Runge-Kutta steps. The biliquid engine integrates its whole state with it.
 
 ::: machwave.core.solvers

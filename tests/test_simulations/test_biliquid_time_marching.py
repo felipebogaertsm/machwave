@@ -10,8 +10,8 @@ import pytest
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 
-# chamber transient from ignition: once the chamber settles, the truncation error
-# drops below the CoolProp and CEA noise (about 1e-11 relative)
+# ignition transient; once the chamber settles the truncation error falls below the
+# property noise (about 1e-11 relative)
 WINDOW = 0.0128  # s
 DYER_WINDOW = 0.0032  # s, shorter since the Dyer element runs a CoolProp sweep
 # small enough that the chamber never needs a substep
@@ -23,8 +23,7 @@ def build_state(*, smooth_thermochemistry: bool, dyer_oxidizer: bool = False):
     motor, params = motor_builders.build_1kn_biliquid_engine(
         dyer_oxidizer=dyer_oxidizer
     )
-    # the CEA cache quantization makes the right-hand side piecewise constant and
-    # hides the order of the scheme
+    # the CEA cache quantization would hide the order of the scheme
     if smooth_thermochemistry:
         properties = motor.propellant.evaluate(
             chamber_pressure=2.6e6,
@@ -66,8 +65,7 @@ def test_the_engine_state_converges_at_fourth_order() -> None:
 
     observed_order = np.log2(np.abs(coarse - middle) / np.abs(middle - fine))
 
-    # measured 4.6 to 4.7; the error is not yet purely fourth order at these steps,
-    # so the band is wider above 4 than below
+    # measured 4.6 to 4.7; not yet asymptotic, so the band is wider above 4
     assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
 
 

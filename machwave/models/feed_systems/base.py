@@ -63,11 +63,10 @@ class FeedSystem(ABC):
         mass_flows: Mapping[str, float],
     ) -> dict[str, float]:
         """
-        Return how fast the volume the fluid of every line fills grows [m^3/s].
+        Return the rate of change of the fluid volume of every line [m^3/s].
 
-        Each tank fills its own fixed volume, so every rate is zero. A cycle
-        whose tank boundaries move, such as a piston between two tanks,
-        overrides this with the rate its volumes follow the line flows at.
+        Zero for every line, since each tank has a fixed volume. Cycles with moving
+        tank boundaries override this.
 
         Args:
             fluid_masses: Fluid mass of every line [kg], keyed by line name.

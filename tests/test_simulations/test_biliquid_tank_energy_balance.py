@@ -163,8 +163,7 @@ def test_draining_takes_the_outflow_enthalpy_out():
     fuel_drained = fuel_mass_before - state.fluid_mass_per_line["fuel"][-1]
     assert mass_drained > 0.0
     assert fuel_drained > 0.0
-    # the piston sweeps the fuel volume pushed out and the oxidizer works on it;
-    # averaging enthalpy and pressure over both ends of the step is second order
+    # trapezoidal estimate of the outflow enthalpy and piston work, second order
     swept_volume = fuel_drained / CP.PropsSI(
         "D", "T", FUEL_TANK["temperature"], "Q", 0, FUEL_TANK["fluid_name"]
     )

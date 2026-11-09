@@ -211,7 +211,7 @@ The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed sy
 
 The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA from the chamber pressure, the design expansion ratio, and the instantaneous mixture ratio.
 
-The chamber is not integrated on its own. Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance make one state vector, advanced together by classical RK4:
+The chamber is not integrated on its own. Its pressure, the fluid mass $m_i$ of every line and the internal energy $U_j$ of every tank that runs an energy balance make one state vector, advanced together by the classical fourth-order Runge-Kutta method [4]:
 
 $$
 \frac{d}{dt}
@@ -224,12 +224,12 @@ $$
 \end{pmatrix}
 $$
 
-At every Runge-Kutta stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its own feedline loss, and CEA is read at the stage $P_0$ and mixture ratio. Nothing is held at its value from the start of the step, so the step is fourth order where the right-hand side is smooth. The chamber decay rate sets how many equal substeps of the whole vector a simulation step takes, as above.
+At every stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its feedline loss, and CEA is read at the stage $P_0$ and mixture ratio, so the step is fourth order where the right-hand side is smooth. The chamber decay rate sets the number of substeps of the whole vector, as above.
 
 Two things limit the order in practice:
 
-- **Events.** A line running dry is a jump in the right-hand side. The step on which a line empties drains each line by its start-of-step flow, capped at what it holds, so the line lands on zero and no stage reads a negative mass; that one step is first order. The liquid-to-vapor switch in a tank is not located inside a step either.
-- **Thermochemistry quantization.** CEA results are cached on a chamber pressure rounded to 200 Pa and a mixture ratio rounded to $10^{-3}$, which makes $T$, $R$ and $k$ piecewise constant in the state. A stage that crosses a rounding boundary sees a jump, which leaves an error of about $10^{-9}$ relative that no step size removes. That is already the size of the truncation error at the default step, so refining the step past the default gains nothing. The fourth order shows once the properties are held fixed.
+- **Line depletion.** The step on which a line runs dry drains each line by its start-of-step flow, capped at what it holds, and is first order. The liquid-to-vapor switch in a tank is not located inside a step.
+- **Thermochemistry quantization.** CEA results are cached on chamber pressure rounded to 200 Pa and mixture ratio rounded to $10^{-3}$, so $T$, $R$ and $k$ are piecewise constant in the state. This leaves an error of about $10^{-9}$ relative, the size of the truncation error at the default step, so refining the step past the default gains nothing.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 

@@ -507,7 +507,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         if new_state is None or any(
             mass <= 0.0 for mass in layout.unpack_masses(new_state).values()
         ):
-            # a line ran dry inside a stage, so fall back to the depletion step
+            # a line ran dry inside a stage
             self._run_depletion_step(
                 d_t=d_t,
                 substep_count=substep_count,
@@ -561,33 +561,26 @@ class BiliquidEngineState(simulation_states.MotorState):
         """
         Time derivative of the whole engine state at one Runge-Kutta stage.
 
-            dP_c/dt = R T / V_c (sum_i mdot_i - mdot_nozzle)
-            dm_i/dt = -mdot_i
-            dU_j/dt = -h_out,j mdot_j - P_j dV_j/dt
-
-        The feedline head states, line flows and thermochemistry are all evaluated at
-        the stage state. Nothing is held at its start-of-step value, which keeps the
-        step fourth order.
+        Feedline head states, line flows and thermochemistry are evaluated at the stage
+        state.
 
         Args:
             state: Packed state vector.
             layout: Where every variable sits in the vector.
-            is_feeding: Whether the feed system delivers over this step. It is
-                decided at the start of the step, so a line that stops feeding
-                stops at a step boundary.
+            is_feeding: Whether the feed system delivers over this step, decided at
+                the start of the step.
             external_pressure: Ambient pressure [Pa].
             d_t: Time increment [s], over which no line delivers more than it
                 holds.
             start_of_step: Feedline head states, line flows and propellant
-                properties already evaluated at this state, when it is the
-                start of the step.
+                properties already evaluated at `state`, if it is the start of the
+                step.
 
         Returns:
             dy/dt, packed like the state.
 
         Raises:
-            _LineRanDryAtStageError: If a stage has a line with no mass left,
-                where neither the tank model nor the flow is defined.
+            _LineRanDryAtStageError: If a line has no mass left at the stage.
         """
         chamber_pressure = float(state[0])
         fluid_masses = layout.unpack_masses(state)
@@ -597,7 +590,6 @@ class BiliquidEngineState(simulation_states.MotorState):
         }
         derivative = np.zeros_like(state)
         if not is_feeding:
-            # nothing leaves the tanks, only the chamber moves
             mass_flows = {name: 0.0 for name in self.lines}
             propellant_properties = (
                 start_of_step.propellant_properties
@@ -687,10 +679,9 @@ class BiliquidEngineState(simulation_states.MotorState):
         """
         Take the step on which a line runs dry, at first order.
 
-        A Runge-Kutta stage past burnout would read a tank with negative mass, so each
-        line drains by its start-of-step flow, capped at what it holds, and lands on
-        zero. The internal energy uses the same flows, and the chamber pressure goes
-        through RK4 with the start-of-step head states and thermochemistry.
+        Each line drains by its start-of-step flow, capped at what it holds, so it
+        lands on zero. The chamber pressure is integrated with the start-of-step head
+        states and thermochemistry.
 
         Args:
             d_t: Time increment [s].
