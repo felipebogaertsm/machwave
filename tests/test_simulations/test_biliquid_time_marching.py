@@ -1,12 +1,4 @@
-"""Order of accuracy of the biliquid time marching.
-
-The whole engine state (chamber pressure, line masses, top tank internal
-energy) goes through one Runge-Kutta step, so on a smooth stretch of the burn
-the error falls with the fourth power of the step. The observed order comes
-from three runs at halving steps, as in Roache (1998):
-
-    p = log2(|y_4h - y_2h| / |y_2h - y_h|)
-"""
+"""Observed order of accuracy of the biliquid time marching (Roache 1998)."""
 
 from __future__ import annotations
 
@@ -19,37 +11,20 @@ import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 
-# From ignition, well before any line runs dry. The window holds the chamber
-# transient from the igniter pressure, which is where the truncation error is
-# large enough to measure: once the chamber has settled the state drifts
-# slowly and the error of every step falls to the CoolProp and CEA noise
-# floor, about 1e-11 relative.
+# chamber transient from ignition: once the chamber settles, the truncation error
+# drops below the CoolProp and CEA noise (about 1e-11 relative)
 WINDOW = 0.0128  # s
-# The Dyer element costs a CoolProp sweep per evaluation, so its window is
-# shorter, still inside the chamber transient.
-DYER_WINDOW = 0.0032  # s
-# All below 1 / |lambda| of the chamber, so the stiffness never splits a step
-# and the step the integrator takes halves with d_t.
+DYER_WINDOW = 0.0032  # s, shorter since the Dyer element runs a CoolProp sweep
+# small enough that the chamber stiffness never splits a step
 STEPS = (8e-5, 4e-5, 2e-5)
 
 
 def build_state(*, smooth_thermochemistry: bool, dyer_oxidizer: bool = False):
-    """
-    The 1 kN engine from ignition, with an SPI oxidizer element unless
-    `dyer_oxidizer`.
-
-    Dyer's element costs a CoolProp sweep per tank state, and SPI keeps the
-    same coupling of flow to chamber and tank pressure. The top tank runs its
-    energy balance and the piston works on it, so every part of the state
-    vector moves.
-
-    With `smooth_thermochemistry`, CEA is evaluated once and held: the
-    propellant cache quantizes the chamber pressure and mixture ratio, which
-    makes the right-hand side piecewise constant and hides the order of the
-    scheme under its own steps.
-    """
+    """The 1 kN engine at ignition, with the piston working on the top tank."""
     motor, params = motor_builders.build_1kn_biliquid_engine()
     elements = motor.thrust_chamber.injector.elements
+    # the single-phase incompressible element couples the flow to chamber and tank
+    # pressure like Dyer's, without a CoolProp sweep per tank state
     if not dyer_oxidizer:
         motor.thrust_chamber.injector = thrust_chamber_models.Injector(
             elements={
@@ -60,6 +35,8 @@ def build_state(*, smooth_thermochemistry: bool, dyer_oxidizer: bool = False):
                 "fuel": elements["fuel"],
             }
         )
+    # the CEA cache quantization makes the right-hand side piecewise constant and
+    # hides the order of the scheme
     if smooth_thermochemistry:
         properties = motor.propellant.evaluate(
             chamber_pressure=2.6e6,
@@ -101,10 +78,8 @@ def test_the_engine_state_converges_at_fourth_order() -> None:
 
     observed_order = np.log2(np.abs(coarse - middle) / np.abs(middle - fine))
 
-    # Chamber pressure, oxidizer mass, fuel mass, top tank internal energy.
-    # The Euler update this replaced gives 1.1 to 1.2 here. The coupled step
-    # gives 4.6 to 4.7, and 4.6 to 4.8 one halving finer: the error is not yet
-    # a pure h^4 at these steps, so the band is wider above 4 than below.
+    # measured 4.6 to 4.7; the error is not yet purely fourth order at these steps,
+    # so the band is wider above 4 than below
     assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
 
 
@@ -115,7 +90,7 @@ def test_the_engine_state_converges_at_fourth_order_with_the_dyer_element() -> N
 
     observed_order = np.log2(np.abs(coarse - middle) / np.abs(middle - fine))
 
-    # Measured 4.47 to 4.54 on the four variables, the same picture as SPI.
+    # measured 4.47 to 4.54
     assert np.all((observed_order > 3.5) & (observed_order < 5.0)), observed_order
 
 
@@ -133,7 +108,7 @@ def test_the_thermochemistry_is_evaluated_at_every_stage() -> None:
         warnings.simplefilter("ignore", UserWarning)
         state.run_timestep(STEPS[0], external_pressure)
 
-    # The start of the step and its three later stages.
+    # start of the step plus its three later stages
     assert len(pressures) == 4
     assert len(set(pressures)) == 4
     assert pressures[0] == pytest.approx(state.chamber_pressure[0])

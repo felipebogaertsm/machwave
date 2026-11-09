@@ -61,8 +61,7 @@ def test_substepped_solver_stays_stable_past_the_rk4_limit():
     assert 0.0 < substepped < 1.0
 
 
-# y' = A y with eigenvalues -1 +/- 2i and -3: rotation, decay and a coupled
-# component, with the closed form y(t) = expm(A t) y(0).
+# eigenvalues -1 +/- 2i and -3: a decaying rotation driving a third component
 LINEAR_SYSTEM = np.array(
     [
         [-1.0, 2.0, 0.0],
@@ -123,7 +122,7 @@ def test_vector_solver_uses_a_given_initial_derivative_as_its_first_stage():
         initial_derivative=linear_system(LINEAR_SYSTEM_START),
     )
 
-    assert len(calls) == 7
+    assert len(calls) == 2 * 4 - 1
 
 
 def test_vector_solver_matches_the_scalar_solver():

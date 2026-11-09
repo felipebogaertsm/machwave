@@ -189,7 +189,7 @@ At every Runge-Kutta stage the tank state follows from the stage $(m, U)$, each 
 Two things limit the order in practice:
 
 - **Events.** A line running dry is a jump in the right-hand side. The step on which a line empties drains each line by its start-of-step flow, capped at what it holds, so the line lands on zero and no stage reads a negative mass; that one step is first order. The liquid-to-vapor switch in a tank is not located inside a step either.
-- **Thermochemistry quantization.** CEA results are cached on a chamber pressure rounded to 200 Pa and a mixture ratio rounded to $10^{-3}$, which makes $T$, $R$ and $k$ piecewise constant in the state. A stage that crosses a rounding boundary sees a jump. On a variant of the 1 kN test engine over the first 13 ms of the burn this leaves an error of about $10^{-9}$ relative that no step size removes, the same size as the truncation error at the default step, so refining the step past the default gains nothing. The fourth order shows with the properties held fixed, and with the quantization made finer down to the noise of CEA itself, a few $10^{-9}$ on the chamber pressure.
+- **Thermochemistry quantization.** CEA results are cached on a chamber pressure rounded to 200 Pa and a mixture ratio rounded to $10^{-3}$, which makes $T$, $R$ and $k$ piecewise constant in the state. A stage that crosses a rounding boundary sees a jump, which leaves an error of about $10^{-9}$ relative that no step size removes. That is already the size of the truncation error at the default step, so refining the step past the default gains nothing. The fourth order shows once the properties are held fixed.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 

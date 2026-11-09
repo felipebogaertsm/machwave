@@ -76,9 +76,7 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=3e-5,
     )
-    # The chamber, line masses and tank energy advance in one RK4 step, so the
-    # coarse step only loses the first-order burnout step and the trapezoidal
-    # impulse sum.
+    # only the first-order burnout step and the trapezoidal impulse sum see the step
     assert coarse_result.total_impulse == pytest.approx(
         simulation_result.total_impulse, rel=1e-3
     )

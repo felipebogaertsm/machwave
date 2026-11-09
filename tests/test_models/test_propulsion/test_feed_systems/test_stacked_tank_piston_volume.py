@@ -203,7 +203,6 @@ class TestPistonVolume:
             )
 
     def test_the_volume_rates_are_the_time_derivative_of_the_volumes(self):
-        """dV/dt = dV/dm * dm/dt, checked against a difference of the volumes."""
         feed_system = build()
         masses = {"oxidizer": 4.0, "fuel": 2.0}
         flows = {"oxidizer": 0.8, "fuel": 1.2}

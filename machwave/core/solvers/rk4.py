@@ -153,19 +153,8 @@ def rk4th_vector_ode_solver(
     """
     Advance an autonomous system y' = f(y) over `d_t` in equal classical RK4 steps.
 
-    Each step of size h = d_t / step_count is
-
-        k_1 = f(y)
-        k_2 = f(y + h k_1 / 2)
-        k_3 = f(y + h k_2 / 2)
-        k_4 = f(y + h k_3)
-        y <- y + h (k_1 + 2 k_2 + 2 k_3 + k_4) / 6
-
-    which is fourth order in h for a smooth f (Hairer, Norsett and Wanner
-    1993, Section II.1). Every component of the state goes through every
-    stage, so a right-hand side that couples them, as the chamber pressure
-    and the tank masses are coupled through the injector flow, keeps that
-    order.
+    Every component goes through every stage, so a right-hand side that couples them
+    keeps fourth order (Hairer, Norsett and Wanner 1993, Section II.1).
 
     Args:
         state: Current state vector.
