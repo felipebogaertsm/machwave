@@ -26,6 +26,10 @@ class BiliquidSimulationResult(
     # Flat for an isothermal tank, decaying for one running an energy balance.
     tank_temperature_per_line: dict[str, simulation_results.SimulationResultArray]
     final_fluid_mass_per_line: dict[str, float]
+    # time each line spent outside the envelope of Dyer's injector model [s]: the
+    # injector inlet below its vapor pressure, and the tank near the critical point
+    two_phase_inlet_time_per_line: dict[str, float]
+    near_critical_tank_time_per_line: dict[str, float]
 
     @classmethod
     def _collect_extra_fields(
@@ -53,6 +57,10 @@ class BiliquidSimulationResult(
             "final_fluid_mass_per_line": {
                 name: float(series[-1]) for name, series in fluid_mass_per_line.items()
             },
+            "two_phase_inlet_time_per_line": dict(state.two_phase_inlet_time_per_line),
+            "near_critical_tank_time_per_line": dict(
+                state.near_critical_tank_time_per_line
+            ),
         }
 
     def _report_body(self, file: IO) -> None:

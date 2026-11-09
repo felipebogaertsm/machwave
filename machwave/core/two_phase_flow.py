@@ -1,4 +1,5 @@
 import functools
+import math
 import typing
 
 import numpy as np
@@ -94,6 +95,7 @@ def get_dyer_mass_flux(
     density_upstream: float,
     pressure_upstream: float,
     pressure_downstream: float,
+    non_equilibrium_factor: float = 1.0,
 ) -> float:
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
@@ -111,15 +113,19 @@ def get_dyer_mass_flux(
     incompressible flux; fast growth tends to the equilibrium flux. Dyer et al. state
     this limit on p. 10, but their Eq. 36 as printed swaps the two weights; the form
     here follows the limit, as Waxman et al. (Eq. 9) do. The orifice length drops
-    out, so the model does not depend on the length-to-diameter ratio. G_HEM is the
-    choked or unchoked flux of `get_homogeneous_equilibrium_mass_flux` over [P2, P1].
+    out, so the model does not depend on the length-to-diameter ratio; a long
+    orifice, closer to equilibrium, is calibrated with `non_equilibrium_factor`,
+    which scales kappa. G_HEM is the choked or unchoked flux of
+    `get_homogeneous_equilibrium_mass_flux` over [P2, P1].
 
     Valid for a liquid inlet below the critical temperature with Pv > P2. The inlet
     may be subcooled (P1 >= Pv) or below its own vapor pressure after a line loss
-    (P1 < Pv); kappa is continuous through P1 = Pv. Where nothing can flash in the
+    (P1 < Pv); kappa is continuous through P1 = Pv, though the vapor already formed
+    upstream of the face goes unaccounted for. Where nothing can flash in the
     orifice (Pv <= P2, an inlet at or above the critical temperature, or an
     all-vapor inlet at or below the saturated vapor density) the flux is the
-    incompressible flux, the large-kappa limit.
+    incompressible flux, the large-kappa limit. An infinite factor takes that limit
+    without any fluid property.
 
     Validation status: verified, not validated. Checked against the closed form and
     its incompressible and equilibrium limits.
@@ -131,6 +137,7 @@ def get_dyer_mass_flux(
             [kg/m^3].
         pressure_upstream: Upstream stagnation pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
+        non_equilibrium_factor: Multiplier on kappa (dimensionless).
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
@@ -155,6 +162,8 @@ def get_dyer_mass_flux(
 
     pressure_drop = pressure_upstream - pressure_downstream
     incompressible_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
+    if math.isinf(non_equilibrium_factor):
+        return incompressible_mass_flux
 
     coolprop = coolprop_service.CoolPropService(fluid_name)
     if temperature_upstream >= coolprop.get_critical_temperature():
@@ -167,7 +176,7 @@ def get_dyer_mass_flux(
     ):
         return incompressible_mass_flux
 
-    non_equilibrium_parameter = float(
+    non_equilibrium_parameter = non_equilibrium_factor * float(
         np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream))
     )
     equilibrium_mass_flux = get_homogeneous_equilibrium_mass_flux(

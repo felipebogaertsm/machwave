@@ -1,34 +1,10 @@
 from __future__ import annotations
 
 import dataclasses
-import enum
 from collections.abc import Mapping
 
 import machwave.common.fluid_state as fluid_state_models
-import machwave.core.incompressible_flow as incompressible_flow
 import machwave.core.two_phase_flow as two_phase_flow
-
-
-class MassFlowModel(enum.StrEnum):
-    """
-    Models for computing mass flow through an injector orifice.
-
-    SPI: Single-phase incompressible orifice equation. Valid for subcooled liquid
-        propellants.
-    HEM: Homogeneous-equilibrium two-phase model, choked below the critical
-        pressure. Assumes the liquid flashes to equilibrium inside the orifice,
-        which underpredicts the flow of a short orifice.
-    DYER: Dyer's non-homogeneous non-equilibrium model, a blend of SPI and the
-        choked HEM weighted by the ratio of bubble growth time to liquid
-        residence time. The model for self-pressurized propellants such as
-        nitrous oxide near saturation, where SPI overpredicts and HEM
-        underpredicts (Dyer et al., AIAA 2007-5702; see
-        `machwave.core.two_phase_flow.get_dyer_mass_flux`).
-    """
-
-    SPI = "spi"
-    HEM = "hem"
-    DYER = "dyer"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -37,17 +13,25 @@ class InjectorElement:
     The orifices one propellant line flows through at the injector face.
 
     An element is a pure function of its own inlet: everything upstream of the
-    face is the feed system's to account for.
+    face is the feed system's to account for. It flows by Dyer's non-homogeneous
+    non-equilibrium model, `machwave.core.two_phase_flow.get_dyer_mass_flux`:
+    the incompressible orifice flow where nothing flashes, blended with the
+    homogeneous equilibrium flow where the liquid is near saturation, as
+    self-pressurized nitrous oxide is.
 
     Attributes:
         discharge_coefficient: Discharge coefficient (dimensionless).
         area: Effective flow area [m^2].
-        mass_flow_model: Model the orifice flow is computed with.
+        non_equilibrium_factor: Multiplier on Dyer's non-equilibrium parameter
+            kappa (dimensionless). A calibration knob next to the discharge
+            coefficient: below 1.0 weights the equilibrium flow, as a long orifice
+            does; above 1.0 the incompressible flow; infinite is the incompressible
+            flow alone.
     """
 
     discharge_coefficient: float
     area: float
-    mass_flow_model: MassFlowModel = MassFlowModel.SPI
+    non_equilibrium_factor: float = 1.0
 
     def __post_init__(self) -> None:
         if self.area <= 0.0:
@@ -57,8 +41,11 @@ class InjectorElement:
                 "discharge_coefficient must be in (0, 1], got "
                 f"{self.discharge_coefficient}"
             )
-
-        object.__setattr__(self, "mass_flow_model", MassFlowModel(self.mass_flow_model))
+        if not self.non_equilibrium_factor > 0.0:
+            raise ValueError(
+                "non_equilibrium_factor must be strictly positive, got "
+                f"{self.non_equilibrium_factor}"
+            )
 
     def get_mass_flow(
         self,
@@ -76,40 +63,19 @@ class InjectorElement:
         Returns:
             Mass flow rate [kg/s]. Zero once the chamber has caught up with the
             inlet, which is where the line stops feeding.
-
-        Raises:
-            ValueError: If the mass flow model is unsupported.
         """
         if inlet.pressure <= chamber_pressure:
             return 0.0
 
-        if self.mass_flow_model == MassFlowModel.HEM:
-            mass_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
-                fluid_name=inlet.fluid_name,
-                temperature_upstream=inlet.temperature,
-                pressure_downstream=chamber_pressure,
-                pressure_upstream=inlet.pressure,
-            )
-            return self.discharge_coefficient * self.area * mass_flux
-        elif self.mass_flow_model == MassFlowModel.DYER:
-            mass_flux = two_phase_flow.get_dyer_mass_flux(
-                fluid_name=inlet.fluid_name,
-                temperature_upstream=inlet.temperature,
-                density_upstream=inlet.density,
-                pressure_upstream=inlet.pressure,
-                pressure_downstream=chamber_pressure,
-            )
-            return self.discharge_coefficient * self.area * mass_flux
-        elif self.mass_flow_model == MassFlowModel.SPI:
-            return incompressible_flow.get_mass_flow_orifice(
-                discharge_coefficient=self.discharge_coefficient,
-                area=self.area,
-                density=inlet.density,
-                pressure_upstream=inlet.pressure,
-                pressure_downstream=chamber_pressure,
-            )
-
-        raise ValueError(f"Unsupported mass flow model: {self.mass_flow_model}")
+        mass_flux = two_phase_flow.get_dyer_mass_flux(
+            fluid_name=inlet.fluid_name,
+            temperature_upstream=inlet.temperature,
+            density_upstream=inlet.density,
+            pressure_upstream=inlet.pressure,
+            pressure_downstream=chamber_pressure,
+            non_equilibrium_factor=self.non_equilibrium_factor,
+        )
+        return self.discharge_coefficient * self.area * mass_flux
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import io
+import math
 import warnings
 
 import CoolProp.CoolProp as CP
@@ -17,9 +18,11 @@ import numpy as np
 import pytest
 import scipy.constants
 
+import machwave.common.fluid_state as fluid_state_models
 import machwave.models.motors as motors_models
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation.biliquid as biliquid_simulation
+import machwave.simulation.biliquid.states as biliquid_states
 import machwave.simulation.states as simulation_states
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import (
@@ -216,19 +219,17 @@ def test_exit_pressure_is_finite_and_positive(
     assert np.all(simulation_result.exit_pressure > 0.0)
 
 
-def test_the_dyer_oxidizer_element_flows_less_than_an_incompressible_one() -> None:
+def test_the_oxidizer_element_flows_less_than_its_incompressible_limit() -> None:
     first_oxidizer_flows = {}
-    for mass_flow_model in (
-        thrust_chamber_models.MassFlowModel.SPI,
-        thrust_chamber_models.MassFlowModel.DYER,
-    ):
+    for non_equilibrium_factor in (1.0, math.inf):
         motor, params = motor_builders.build_1kn_biliquid_engine(dyer_oxidizer=True)
         elements = motor.thrust_chamber.injector.elements
         motor.thrust_chamber.injector = thrust_chamber_models.Injector(
             elements={
                 **elements,
                 "oxidizer": dataclasses.replace(
-                    elements["oxidizer"], mass_flow_model=mass_flow_model
+                    elements["oxidizer"],
+                    non_equilibrium_factor=non_equilibrium_factor,
                 ),
             }
         )
@@ -237,14 +238,115 @@ def test_the_dyer_oxidizer_element_flows_less_than_an_incompressible_one() -> No
             igniter_pressure=params.igniter_pressure,
             external_pressure=params.external_pressure,
         )
-        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
-        first_oxidizer_flows[mass_flow_model] = state.mass_flow_rate_per_line[
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            state.run_timestep(
+                d_t=params.d_t, external_pressure=params.external_pressure
+            )
+        first_oxidizer_flows[non_equilibrium_factor] = state.mass_flow_rate_per_line[
             "oxidizer"
         ][-1]
 
-    dyer_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.DYER]
-    incompressible_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.SPI]
-    assert 0.0 < dyer_flow < incompressible_flow
+    assert 0.0 < first_oxidizer_flows[1.0] < first_oxidizer_flows[math.inf]
+
+
+def test_warns_once_when_a_line_feeds_the_injector_below_its_vapor_pressure() -> None:
+    """The 1 kN engine's line loss takes its N2O below saturation from the start."""
+    motor, params = motor_builders.build_1kn_biliquid_engine()
+    state = biliquid_simulation.BiliquidEngineState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+    steps = 3
+
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        for _ in range(steps):
+            state.run_timestep(
+                d_t=params.d_t, external_pressure=params.external_pressure
+            )
+    raised = [
+        warning
+        for warning in record
+        if "'oxidizer' feeds the injector below its vapor pressure"
+        in str(warning.message)
+    ]
+
+    assert len(raised) == 1
+    assert "from 0.0000 s" in str(raised[0].message)
+    assert state.two_phase_inlet_time_per_line["oxidizer"] == pytest.approx(
+        steps * params.d_t
+    )
+    assert state.two_phase_inlet_time_per_line["fuel"] == 0.0
+    assert state.near_critical_tank_time_per_line == {"oxidizer": 0.0, "fuel": 0.0}
+
+
+def test_the_result_carries_the_time_outside_the_injector_model_envelope(
+    simulation_result: biliquid_simulation.BiliquidSimulationResult,
+) -> None:
+    assert (
+        0.0
+        < simulation_result.two_phase_inlet_time_per_line["oxidizer"]
+        <= simulation_result.burn_time
+    )
+    assert simulation_result.two_phase_inlet_time_per_line["fuel"] == 0.0
+    assert simulation_result.near_critical_tank_time_per_line == {
+        "oxidizer": 0.0,
+        "fuel": 0.0,
+    }
+
+
+@pytest.mark.parametrize("temperature,expected", [(300.0, False), (307.0, True)])
+def test_is_near_critical_against_the_nitrous_oxide_critical_point(
+    temperature, expected
+) -> None:
+    assert biliquid_states.is_near_critical("N2O", temperature) is expected
+
+
+class TestIsTwoPhaseLiquidInlet:
+    temperature = 293.0
+    vapor_pressure = CP.PropsSI("P", "T", temperature, "Q", 0, "N2O")
+    liquid_density = CP.PropsSI("D", "T", temperature, "Q", 0, "N2O")
+    vapor_density = CP.PropsSI("D", "T", temperature, "Q", 1, "N2O")
+
+    def build_inlet(self, pressure, density=None, temperature=None):
+        return fluid_state_models.FluidState(
+            fluid_name="N2O",
+            pressure=pressure,
+            temperature=self.temperature if temperature is None else temperature,
+            density=self.liquid_density if density is None else density,
+        )
+
+    def test_liquid_below_its_vapor_pressure(self):
+        assert biliquid_states.is_two_phase_liquid_inlet(
+            self.build_inlet(0.9 * self.vapor_pressure)
+        )
+
+    def test_liquid_at_or_above_its_vapor_pressure(self):
+        assert not biliquid_states.is_two_phase_liquid_inlet(
+            self.build_inlet(self.vapor_pressure)
+        )
+        assert not biliquid_states.is_two_phase_liquid_inlet(
+            self.build_inlet(1.1 * self.vapor_pressure)
+        )
+
+    def test_vapor_alone_is_what_an_empty_tank_feeds(self):
+        assert not biliquid_states.is_two_phase_liquid_inlet(
+            self.build_inlet(0.9 * self.vapor_pressure, density=self.vapor_density)
+        )
+
+    def test_a_supercritical_inlet_has_no_vapor_pressure(self):
+        assert not biliquid_states.is_two_phase_liquid_inlet(
+            self.build_inlet(50e5, density=400.0, temperature=320.0)
+        )
+
+    def test_a_subcooled_fuel(self):
+        inlet = fluid_state_models.FluidState(
+            fluid_name="Ethanol", pressure=20e5, temperature=298.0, density=785.0
+        )
+
+        assert not biliquid_states.is_two_phase_liquid_inlet(inlet)
 
 
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:

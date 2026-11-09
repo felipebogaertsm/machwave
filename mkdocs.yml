@@ -50,6 +50,7 @@ nav:
       - Thrust and Performance: explanations/thrust.md
       - Mass Balance: explanations/mass_balance.md
       - Grain Regression: explanations/grain_regression.md
+      - Injector Flow: explanations/injector_flow.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md

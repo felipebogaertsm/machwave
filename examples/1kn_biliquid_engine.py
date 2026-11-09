@@ -71,7 +71,6 @@ def main():
                 discharge_coefficient=0.48,
                 # sized for an oxidizer-to-fuel ratio of 1.95 at 0.1 s
                 area=2.097e-5 / 0.48,
-                mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
             ),
             "fuel": thrust_chamber_models.InjectorElement(
                 discharge_coefficient=0.48, area=8.2e-6 / 0.48

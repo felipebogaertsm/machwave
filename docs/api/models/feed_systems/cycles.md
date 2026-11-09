@@ -87,7 +87,7 @@ $$
 \Delta P_{line} = K \frac{\dot{m}^2}{2 \rho A^2},
 $$
 
-so the injector element sees $P_{head} - \Delta P_{line}(\dot{m})$ and its flow is the root of $\dot{m} = f_{inj}(P_{head} - \Delta P_{line}(\dot{m}), P_c)$. [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] brackets it on $[0, f_{inj}(P_{head}, P_c)]$ and solves it per line at every chamber pressure the integrator tries. The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel]. A line with no resistance loses nothing.
+so the injector element sees $P_{head} - \Delta P_{line}(\dot{m})$ and its flow is the root of $\dot{m} = f_{inj}(P_{head} - \Delta P_{line}(\dot{m}), P_c)$. [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] brackets it on $[0, f_{inj}(P_{head}, P_c)]$ and solves it per line at every chamber pressure the integrator tries. A line with no resistance loses nothing.
 
 `line_losses` and `from_oxidizer_and_fuel`'s `oxidizer_line_loss` and `fuel_line_loss` still take a fixed pressure drop off the feedline head, whatever the flow, but are deprecated in favor of a `FeedlineResistance` on each line.
 
