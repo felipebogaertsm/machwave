@@ -64,6 +64,8 @@ def get_line_mass_flow(
         return lossless_flow
 
     def get_flow_residual(mass_flow: float) -> float:
+        if mass_flow == 0.0:
+            return -lossless_flow
         inlet = fluid_state_models.FluidState(
             fluid_name=head_state.fluid_name,
             pressure=head_state.pressure
