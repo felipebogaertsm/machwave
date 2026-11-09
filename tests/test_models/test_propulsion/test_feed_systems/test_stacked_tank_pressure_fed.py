@@ -135,7 +135,7 @@ class TestInletStates:
 
 
 class TestFeedlineHeadPressure:
-    """The cycle delivers the head of every feedline; the line loss is the flow's."""
+    """The cycle sets the feedline head pressure; the line loss comes with the flow."""
 
     def test_the_oxidizer_head_is_the_stack_pressure(self):
         feed_system = StackedTankPressureFedFeedSystemFactory.build(
@@ -184,8 +184,6 @@ class TestFeedlineHeadPressure:
 
 
 class TestInjectorSeesTheLineLoss:
-    """What each injector element sees is its head pressure less its own line loss."""
-
     CHAMBER_PRESSURE = 20e5
 
     @staticmethod
@@ -229,8 +227,7 @@ class TestInjectorSeesTheLineLoss:
             lossless_flow = element.get_mass_flow(
                 inlet=head, chamber_pressure=self.CHAMBER_PRESSURE
             )
-            # A flow within the solve tolerance of the root misses the element
-            # flow by that tolerance times (1 + |d f_inj / d mdot|), under 2 here.
+            # the element flow can miss by up to twice the solve tolerance
             assert flows[name] == pytest.approx(
                 element.get_mass_flow(
                     inlet=seen, chamber_pressure=self.CHAMBER_PRESSURE

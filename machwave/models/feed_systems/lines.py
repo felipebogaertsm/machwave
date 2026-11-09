@@ -79,8 +79,8 @@ class FeedlineResistance:
         """
         Build the resistance that drops a stated pressure at a design flow.
 
-        Away from that flow the drop scales as (mdot / mdot_design)^2 *
-        rho_design / rho.
+        Away from that flow the drop scales with the square of the flow and
+        inversely with the density.
 
         Args:
             pressure_drop: Line pressure drop at the design point [Pa].
