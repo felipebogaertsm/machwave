@@ -212,9 +212,8 @@ def build_1kn_biliquid_engine(
         isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
             temperature instead of running an energy balance. The fuel tank
             below the piston always does.
-        dyer_oxidizer: Whether the oxidizer element uses the Dyer model, as in the
-            example. Each Dyer flow costs a CoolProp sweep, so the default is the
-            incompressible element.
+        dyer_oxidizer: Whether the oxidizer element uses the Dyer model, as the
+            example does. Off by default because the Dyer model is much slower.
     """
     if dyer_oxidizer:
         oxidizer_element = InjectorElementFactory.build(

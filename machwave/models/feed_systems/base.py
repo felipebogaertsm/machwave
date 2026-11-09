@@ -46,8 +46,7 @@ class FeedSystem(ABC):
         Return the volume the fluid of every line fills [m^3].
 
         Each tank fills its own volume. A cycle whose tank boundaries move, such
-        as a piston between two tanks, overrides this: the volumes then follow
-        from the fluid masses the lines hold.
+        as a piston between two tanks, overrides this.
 
         Args:
             fluid_masses: Fluid mass of every line [kg], keyed by line name.
@@ -69,13 +68,10 @@ class FeedSystem(ABC):
         """
         Return the state at the head of every feedline.
 
-        Each state is the tank fluid at the tank temperature and density, in
-        the volume `get_tank_volumes` says it fills, at the pressure the cycle
-        delivers to the feedline. It is what the injector would see with nothing
-        flowing: the feedline then takes its own flow-dependent loss, which the
-        simulation solves together with the injector flow. A cycle that heats or
-        works on a propellant on the way, such as a regenerative jacket or a
-        pump, overrides this to say so.
+        Each state is the tank fluid in the volume `get_tank_volumes` gives, at
+        the pressure the cycle delivers to the feedline, with no feedline loss
+        taken. A cycle that heats or works on a propellant on the way, such as a
+        regenerative jacket or a pump, overrides this.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
@@ -122,8 +118,7 @@ class FeedSystem(ABC):
         """
         Compute the pressure delivered to the head of every feedline [Pa].
 
-        The feedline resistance is not taken here: it depends on the line
-        flow, which the injector sets.
+        The feedline resistance is not taken here.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by

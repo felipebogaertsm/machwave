@@ -32,12 +32,9 @@ class Tank:
     re-runnable.
 
     By default the tank runs an energy balance and is a function of the fluid
-    mass and of the internal energy the integrator carries alongside it.
-    Draining takes enthalpy out with the fluid, the fluid left behind cools as
-    it boils to refill the ullage, and the saturation pressure follows the
-    temperature down over the burn. This is the homogeneous equilibrium tank
-    model: liquid and vapor share one temperature and stay on the saturation
-    curve.
+    mass and of the internal energy the integrator carries alongside it, so the
+    saturation pressure falls as the tank cools over the burn. Liquid and vapor
+    share one temperature.
 
     An isothermal tank is a pure function of the fluid mass. Its temperature is
     held where it was loaded, so a self-pressurizing tank holds its saturation
@@ -47,20 +44,14 @@ class Tank:
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
       - If insufficient mass for liquid, treat it as single-phase vapor via
         the real-gas equation of state.
-      - No heat crosses the tank wall. Where the boundary moves, as a piston
-        does, the cycle passes the volume the fluid fills to every query and
-        the integrator takes the boundary work out of the internal energy.
-
-    Validation status: verified, not validated. The energy balance matches a
-    slow adiabatic drain integrated along the saturation curve; it has not
-    been compared with measured tank blowdown data.
+      - No heat crosses the tank wall. For a moving boundary, such as a piston,
+        the cycle passes the volume the fluid fills and the simulation takes
+        out the boundary work.
 
     References:
-        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J. and Zilliac, G. G.,
-        "Review and Evaluation of Models for Self-Pressurizing Propellant
-        Tank Dynamics", AIAA 2013-4045, 49th AIAA/ASME/SAE/ASEE Joint
-        Propulsion Conference, 2013, Eqs. 20-23 (equilibrium model, here
-        without wall heat transfer).
+        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J., & Zilliac, G. G. (2013).
+        Review and Evaluation of Models for Self-Pressurizing Propellant Tank
+        Dynamics. AIAA 2013-4045, Eqs. 20-23, without wall heat transfer.
     """
 
     def __init__(
@@ -117,9 +108,9 @@ class Tank:
         self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
-        # vapor pressure at the tank temperature, memoized per fluid mass and volume
+        # keyed by (fluid mass, volume)
         self._pressure_by_mass: dict[tuple[float, float], float] = {}
-        # energy balance state, memoized per fluid mass, internal energy and volume
+        # keyed by (fluid mass, internal energy, volume)
         self._fluid_state_by_state: dict[
             tuple[float, float, float], TankFluidState
         ] = {}
@@ -301,9 +292,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Fluid temperature [K].
@@ -333,9 +322,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             True if liquid remains in the tank.
@@ -377,9 +364,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Tank pressure [Pa].
@@ -418,9 +403,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Liquid mass [kg], zero once the tank holds vapor alone.
@@ -466,9 +449,7 @@ class Tank:
                 Required for a tank running an energy balance, unused
                 otherwise.
             mass_drained: Mass leaving the tank over the step [kg].
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Specific enthalpy of the leaving fluid [J/kg].
@@ -512,9 +493,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
-            volume: Volume the fluid fills [m^3]. None for the tank's own
-                volume; a cycle whose tank boundary moves, such as a piston,
-                passes the volume it has swept to.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Fluid density [kg/m^3].
