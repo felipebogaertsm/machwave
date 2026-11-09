@@ -104,9 +104,31 @@ $$
 (Seidel 1965, Eq. 35)
 
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
-It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
-Both source terms are evaluated at the chamber pressure of each Runge–Kutta stage: $\dot{m}_{out}$ is linear in $P_0$, and $\dot{m}_{in}$ carries the pressure dependence of the burn rate (solid motor) or of the injector pressure drop (biliquid engine), so the integrator advances the true coupled $(\dot{m}_{in} - \dot{m}_{out})$ slope instead of freezing the inflow at the start of the step.
-The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
+It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance].
+The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid Rocket Motor](#solid-rocket-motor) and [Biliquid Rocket Engine](#biliquid-rocket-engine).
+
+## Integrating the Chamber Pressure
+
+The equation is integrated with the classical fourth-order Runge–Kutta method.
+Both $\dot{m}_{in}$ and $\dot{m}_{out}$ are evaluated at the pressure of each stage.
+
+A pressure deviation decays at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$.
+This rate is of the order of minus the inverse chamber residence time.
+$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
+This can be shorter than the simulation step.
+A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$.
+Each simulation step is therefore split into $N$ equal substeps:
+
+$$
+N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
+$$
+
+with $\lambda$ estimated by central difference at the start of the step.
+Only the chamber pressure is substepped.
+Grain geometry, propellant properties and feed system state advance once per simulation step.
+
+[`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver] implements this.
+[`SimulationResult`][machwave.simulation.results.SimulationResult] records the substep count of each step.
 
 ## Solid Rocket Motor
 

@@ -2,8 +2,14 @@
 
 Numerical ODE solvers used by the simulation engine.
 
-Provides a classical 4th-order Runge-Kutta integrator (`rk4th_ode_solver`) that advances the internal ballistics state at each time step. Accepts a generic equation callable and a dictionary of state variables, returning updated values after one step of size `d_t`.
+`rk4th_ode_solver` advances a single variable over `d_t` in equal fourth-order Runge-Kutta substeps.
+It takes as many substeps as keep each one within one decay time.
+It returns the new value and the substep count.
+The chamber pressure is integrated this way, as described in [Integrating the Chamber Pressure](../../explanations/mass_balance.md#integrating-the-chamber-pressure).
 
-Only the entries in the state-variable dictionary are advanced through the four stages; any other keyword arguments are held constant for the whole step. A source term that depends on an integrated variable must be supplied through the equation callable rather than as a precomputed constant.
+`rk4th_step` takes one classical fourth-order Runge-Kutta step for a system of variables.
+Only the entries in the state-variable dictionary are advanced through the four stages.
+Other keyword arguments are held constant for the whole step.
+A source term that depends on an integrated variable must therefore come through the equation callable.
 
 ::: machwave.core.solvers

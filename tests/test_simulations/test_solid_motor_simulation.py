@@ -320,12 +320,20 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
     # query at this web would raise GrainGeometryError.
     state.web = [motor.grain.segments[0].get_web_thickness() * 1.5]
 
-    # Small step so the one-shot chamber-pressure update stays well-behaved; the
-    # mass-property guard runs regardless of the step size.
-    state.run_timestep(d_t=1e-5, external_pressure=params.external_pressure)
+    state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
     np.testing.assert_array_equal(state.propellant_moi[-1], np.zeros((3, 3)))
     assert np.all(np.isnan(state.propellant_cog[-1]))
+
+
+def test_short_residence_time_is_substepped_and_keeps_the_pressure_positive() -> None:
+    motor, params = motor_builders.build_finocyl_motor()
+
+    result = run_simulation(motor, params)
+
+    assert np.all(result.chamber_pressure > 0.0)
+    assert len(result.substep_count) == len(result.time) - 1
+    assert result.substep_count.max() > 1
 
 
 def test_propellant_center_of_gravity_is_measured_from_the_nozzle_exit() -> None:
