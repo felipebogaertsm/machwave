@@ -611,5 +611,31 @@ class TestMixtureRatioOverride:
         assert explicit == pytest.approx(cached)
 
 
+class TestGenerateCardStringReactantType:
+    def _component(self) -> dict:
+        return {
+            "name": "N2O(L)",
+            "formula": {"N": 2, "O": 1},
+            "weight_percent": 100.0,
+            "heat_of_formation": 17038.4,
+            "temperature": 300.0,
+            "density": 0.7247,
+        }
+
+    def test_default_keyword_is_name(self):
+        card = cea_service.generate_card_string([self._component()])
+        assert card.startswith("name N2O(L)")
+
+    def test_oxidizer_keyword(self):
+        card = cea_service.generate_card_string(
+            [self._component()], reactant_type="oxid"
+        )
+        assert card.startswith("oxid N2O(L)")
+
+    def test_unknown_keyword_raises(self):
+        with pytest.raises(ValueError, match="Unknown reactant type"):
+            cea_service.generate_card_string([self._component()], reactant_type="ox")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

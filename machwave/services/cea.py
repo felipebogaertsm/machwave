@@ -39,17 +39,42 @@ def normalize_custom_propellant_name(name: str) -> str:
     return normalized
 
 
-def generate_card_string(components: list[dict]) -> str:
-    """Generate CEA card string from component list."""
+_REACTANT_TYPES = ("name", "oxid", "fuel")
+
+
+def generate_card_string(components: list[dict], *, reactant_type: str = "name") -> str:
+    """
+    Generate CEA card string from component list.
+
+    Args:
+        components: Components in the format of `PropellantComponent.to_cea_dict`.
+        reactant_type: CEA reactant keyword. Use "name" for a solid or
+            monopropellant. Use "oxid" or "fuel" for the cards of a biliquid, so
+            that CEA applies the mixture ratio between them.
+
+    Returns:
+        CEA card string.
+
+    Raises:
+        ValueError: If no components are given or `reactant_type` is unknown.
+    """
     if not components:
         raise ValueError("No components provided")
+    if reactant_type not in _REACTANT_TYPES:
+        raise ValueError(
+            f"Unknown reactant type '{reactant_type}'. Must be one of: "
+            f"{list(_REACTANT_TYPES)}"
+        )
 
     card_lines = []
     for comp in components:
         formula_str = " ".join(
             f"{elem} {count}" for elem, count in comp["formula"].items()
         )
-        line = f"name {comp['name']}  {formula_str}  wt%={comp['weight_percent']:.1f}"
+        line = (
+            f"{reactant_type} {comp['name']}  {formula_str}  "
+            f"wt%={comp['weight_percent']:.1f}"
+        )
         card_lines.append(line)
 
         thermo_line = (

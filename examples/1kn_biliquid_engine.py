@@ -16,14 +16,8 @@ OXIDIZER_NAME = "N2O"
 
 
 def main():
-    oxidizer = propellants.PropellantComponent(
-        name=OXIDIZER_NAME,
-        role=propellants.ComponentRole.OXIDIZER,
-        density=745.0,
-        chemical_formula={"N": 2, "O": 1},
-        enthalpy=0.0,
-        initial_temperature=300.0,
-    )
+    # the built-in "N2O" card is the 298.15 K gas and overstates flame temperature
+    oxidizer = propellants.saturated_liquid_nitrous_oxide(300.0)
     fuel = propellants.PropellantComponent(
         name=FUEL_NAME,
         role=propellants.ComponentRole.FUEL,
