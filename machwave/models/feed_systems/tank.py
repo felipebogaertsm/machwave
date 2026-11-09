@@ -43,8 +43,9 @@ class Tank:
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
       - If insufficient mass for liquid, treat it as single-phase vapor via
         the real-gas equation of state.
-      - Nothing crosses the tank wall: no heat in, and no work other than what
-        the leaving fluid carries.
+      - No heat crosses the tank wall. For a moving boundary, such as a piston,
+        the cycle passes the volume the fluid fills and the simulation takes
+        out the boundary work.
 
     References:
         Zimmerman, J. E., Waxman, B. S., Cantwell, B. J., & Zilliac, G. G. (2013).
@@ -106,10 +107,12 @@ class Tank:
         self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
-        # Vapor pressure at the tank temperature, memoized per fluid mass.
-        self._pressure_by_mass: dict[float, float] = {}
-        # Energy balance state, memoized per fluid mass and internal energy.
-        self._fluid_state_by_state: dict[tuple[float, float], TankFluidState] = {}
+        # keyed by (fluid mass, volume)
+        self._pressure_by_mass: dict[tuple[float, float], float] = {}
+        # keyed by (fluid mass, internal energy, volume)
+        self._fluid_state_by_state: dict[
+            tuple[float, float, float], TankFluidState
+        ] = {}
 
         self._check_not_overfilled()
 
@@ -202,11 +205,24 @@ class Tank:
             * self.initial_fluid_mass
         )
 
+    def _get_volume(self, volume: float | None) -> float:
+        """
+        Return the volume the fluid fills [m^3], the tank's own by default.
+
+        Raises:
+            ValueError: If the volume given is not strictly positive.
+        """
+        if volume is None:
+            return self.volume
+        if volume <= 0.0:
+            raise ValueError(f"volume must be strictly positive, got {volume}")
+        return volume
+
     def _get_fluid_state(
-        self, fluid_mass: float, internal_energy: float | None
+        self, fluid_mass: float, internal_energy: float | None, volume: float
     ) -> TankFluidState:
         """
-        Resolve the fluid at a mass and internal energy, memoized on the pair.
+        Resolve the fluid at a mass, internal energy and volume, memoized.
 
         The bulk density and the specific internal energy fix the state, and
         the temperature that comes out of it fixes the saturation densities the
@@ -223,12 +239,12 @@ class Tank:
                 "initial_internal_energy."
             )
 
-        memo_key = (fluid_mass, internal_energy)
+        memo_key = (fluid_mass, internal_energy, volume)
         fluid_state = self._fluid_state_by_state.get(memo_key)
         if fluid_state is not None:
             return fluid_state
 
-        density = fluid_mass / self.volume
+        density = fluid_mass / volume
         specific_internal_energy = internal_energy / fluid_mass
         try:
             temperature = self._coolprop.get_temperature_at_density_internal_energy(
@@ -258,7 +274,11 @@ class Tank:
         return fluid_state
 
     def get_temperature(
-        self, fluid_mass: float, internal_energy: float | None = None
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
     ) -> float:
         """
         Return the fluid temperature [K].
@@ -271,6 +291,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Fluid temperature [K].
@@ -278,10 +299,16 @@ class Tank:
         if self.isothermal or fluid_mass <= 0:
             return self.temperature
 
-        return self._get_fluid_state(fluid_mass, internal_energy).temperature
+        return self._get_fluid_state(
+            fluid_mass, internal_energy, self._get_volume(volume)
+        ).temperature
 
     def is_delivering_liquid(
-        self, fluid_mass: float, internal_energy: float | None = None
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
     ) -> bool:
         """
         Whether the tank still holds liquid to feed, rather than vapor alone.
@@ -294,21 +321,27 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             True if liquid remains in the tank.
         """
+        volume = self._get_volume(volume)
         if self.isothermal:
             saturated_vapor_density = self.saturated_vapor_density
         else:
             saturated_vapor_density = self._get_fluid_state(
-                fluid_mass, internal_energy
+                fluid_mass, internal_energy, volume
             ).saturated_vapor_density
 
-        return fluid_mass > saturated_vapor_density * self.volume
+        return fluid_mass > saturated_vapor_density * volume
 
     def get_pressure(
-        self, fluid_mass: float, internal_energy: float | None = None
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
     ) -> float:
         """
         Return the tank pressure [Pa] for a given fluid state.
@@ -330,6 +363,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Tank pressure [Pa].
@@ -337,22 +371,28 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
+        volume = self._get_volume(volume)
         if not self.isothermal:
-            return self._get_fluid_state(fluid_mass, internal_energy).pressure
+            return self._get_fluid_state(fluid_mass, internal_energy, volume).pressure
 
-        if self.is_delivering_liquid(fluid_mass):
+        if self.is_delivering_liquid(fluid_mass, volume=volume):
             return self.saturation_pressure
 
-        if fluid_mass not in self._pressure_by_mass:
-            self._pressure_by_mass[fluid_mass] = (
+        memo_key = (fluid_mass, volume)
+        if memo_key not in self._pressure_by_mass:
+            self._pressure_by_mass[memo_key] = (
                 self._coolprop.get_pressure_at_temperature_density(
-                    self.temperature, fluid_mass / self.volume
+                    self.temperature, fluid_mass / volume
                 )
             )
-        return self._pressure_by_mass[fluid_mass]
+        return self._pressure_by_mass[memo_key]
 
     def get_liquid_mass(
-        self, fluid_mass: float, internal_energy: float | None = None
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
     ) -> float:
         """
         Return the mass of liquid in the tank [kg].
@@ -362,12 +402,14 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Liquid mass [kg], zero once the tank holds vapor alone.
         """
+        volume = self._get_volume(volume)
         if fluid_mass <= 0 or not self.is_delivering_liquid(
-            fluid_mass, internal_energy
+            fluid_mass, internal_energy, volume=volume
         ):
             return 0.0
 
@@ -375,11 +417,11 @@ class Tank:
             liquid_density = self.saturated_liquid_density
             vapor_density = self.saturated_vapor_density
         else:
-            fluid_state = self._get_fluid_state(fluid_mass, internal_energy)
+            fluid_state = self._get_fluid_state(fluid_mass, internal_energy, volume)
             liquid_density = fluid_state.saturated_liquid_density
             vapor_density = fluid_state.saturated_vapor_density
 
-        return (fluid_mass - vapor_density * self.volume) / (
+        return (fluid_mass - vapor_density * volume) / (
             1.0 - vapor_density / liquid_density
         )
 
@@ -389,6 +431,7 @@ class Tank:
         internal_energy: float | None = None,
         *,
         mass_drained: float,
+        volume: float | None = None,
     ) -> float:
         """
         Return the specific enthalpy of the fluid leaving the tank [J/kg].
@@ -405,6 +448,7 @@ class Tank:
                 Required for a tank running an energy balance, unused
                 otherwise.
             mass_drained: Mass leaving the tank over the step [kg].
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Specific enthalpy of the leaving fluid [J/kg].
@@ -412,14 +456,15 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        temperature = self.get_temperature(fluid_mass, internal_energy)
-        if not self.is_delivering_liquid(fluid_mass, internal_energy):
+        volume = self._get_volume(volume)
+        temperature = self.get_temperature(fluid_mass, internal_energy, volume=volume)
+        if not self.is_delivering_liquid(fluid_mass, internal_energy, volume=volume):
             return self._coolprop.get_enthalpy_at_temperature_density(
-                temperature, fluid_mass / self.volume
+                temperature, fluid_mass / volume
             )
 
         liquid_enthalpy = self._coolprop.get_saturated_liquid_enthalpy(temperature)
-        liquid_mass = self.get_liquid_mass(fluid_mass, internal_energy)
+        liquid_mass = self.get_liquid_mass(fluid_mass, internal_energy, volume=volume)
         if mass_drained <= liquid_mass:
             return liquid_enthalpy
 
@@ -428,7 +473,11 @@ class Tank:
         return vapor_enthalpy + liquid_fraction * (liquid_enthalpy - vapor_enthalpy)
 
     def get_density(
-        self, fluid_mass: float, internal_energy: float | None = None
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
     ) -> float:
         """
         Return fluid density [kg/m^3] for a given fluid state.
@@ -443,6 +492,7 @@ class Tank:
             internal_energy: Current internal energy of that fluid [J].
                 Required for a tank running an energy balance, unused
                 otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
 
         Returns:
             Fluid density [kg/m^3].
@@ -450,11 +500,12 @@ class Tank:
         if fluid_mass <= 0:
             return 0.0
 
-        if not self.is_delivering_liquid(fluid_mass, internal_energy):
-            return fluid_mass / self.volume
+        volume = self._get_volume(volume)
+        if not self.is_delivering_liquid(fluid_mass, internal_energy, volume=volume):
+            return fluid_mass / volume
 
         if self.isothermal:
             return self.saturated_liquid_density
         return self._get_fluid_state(
-            fluid_mass, internal_energy
+            fluid_mass, internal_energy, volume
         ).saturated_liquid_density

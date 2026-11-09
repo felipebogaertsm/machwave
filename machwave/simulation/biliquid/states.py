@@ -392,15 +392,20 @@ class BiliquidEngineState(simulation_states.MotorState):
         self.chamber_pressure.append(new_chamber_pressure)
         self.substep_count.append(substep_count)
 
+        new_fluid_masses = {
+            name: fluid_masses[name] - mass_consumed[name] for name in self.lines
+        }
+        volumes = feed_system.get_tank_volumes(fluid_masses)
+        new_volumes = feed_system.get_tank_volumes(new_fluid_masses)
         for name, line in self.lines.items():
-            self.fluid_mass_per_line[name].append(
-                fluid_masses[name] - mass_consumed[name]
-            )
+            self.fluid_mass_per_line[name].append(new_fluid_masses[name])
             self.internal_energy_per_line[name] = self._drain_internal_energy(
                 tank=line.tank,
                 internal_energy=self.internal_energy_per_line[name],
                 fluid_mass=fluid_masses[name],
                 mass_drained=mass_consumed[name],
+                volume=volumes[name],
+                swept_volume=new_volumes[name] - volumes[name],
             )
 
     @staticmethod
@@ -410,22 +415,42 @@ class BiliquidEngineState(simulation_states.MotorState):
         internal_energy: float | None,
         fluid_mass: float,
         mass_drained: float,
+        volume: float,
+        swept_volume: float,
     ) -> float | None:
         """
-        Take the enthalpy the drained fluid carries out of the tank [J].
+        Step the internal energy of a tank over one timestep [J].
 
-        The tank is adiabatic and does no work on anything but the fluid it
-        pushes out, so its internal energy falls by the enthalpy of what left.
-        The fluid behind boils to refill the ullage and cools doing it, which
-        is what walks the saturation pressure down over the burn.
+        Takes out the enthalpy of the drained fluid and the boundary work of a
+        moving tank wall, both evaluated at the start of the step.
+
+        Args:
+            tank: Tank of the line.
+            internal_energy: Internal energy at the start of the step [J].
+            fluid_mass: Fluid mass at the start of the step [kg].
+            mass_drained: Mass drained over the step [kg].
+            volume: Volume the fluid fills at the start of the step [m^3].
+            swept_volume: How much that volume grows over the step [m^3].
 
         Returns:
             The internal energy left in the tank [J], or None for an
             isothermal tank, which runs no energy balance.
         """
-        if internal_energy is None or mass_drained <= 0.0:
+        if internal_energy is None or (mass_drained <= 0.0 and swept_volume == 0.0):
             return internal_energy
 
-        return internal_energy - mass_drained * tank.get_outflow_specific_enthalpy(
-            fluid_mass, internal_energy, mass_drained=mass_drained
+        outflow_specific_enthalpy = (
+            tank.get_outflow_specific_enthalpy(
+                fluid_mass, internal_energy, mass_drained=mass_drained, volume=volume
+            )
+            if mass_drained > 0.0
+            else 0.0
+        )
+        boundary_work = (
+            tank.get_pressure(fluid_mass, internal_energy, volume=volume) * swept_volume
+            if swept_volume != 0.0
+            else 0.0
+        )
+        return (
+            internal_energy - mass_drained * outflow_specific_enthalpy - boundary_work
         )

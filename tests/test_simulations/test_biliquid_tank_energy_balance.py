@@ -7,6 +7,7 @@ it, instead of holding flat until the liquid runs out.
 
 from __future__ import annotations
 
+import CoolProp.CoolProp as CP
 import numpy as np
 import pytest
 
@@ -30,6 +31,7 @@ FUEL_TANK = dict(
     volume=2.0e-3,
     temperature=300.0,
     initial_fluid_mass=1.55,
+    isothermal=True,
 )
 
 
@@ -39,13 +41,21 @@ def build(isothermal):
     motor.feed_system = (
         feed_systems_models.StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
             oxidizer_tank=tank_models.Tank(**OXIDIZER_TANK, isothermal=isothermal),
-            fuel_tank=tank_models.Tank(**FUEL_TANK, isothermal=isothermal),
+            fuel_tank=tank_models.Tank(**FUEL_TANK),
             piston_loss=feed_system.piston_loss,
             oxidizer_line_resistance=feed_system.lines["oxidizer"].resistance,
             fuel_line_resistance=feed_system.lines["fuel"].resistance,
         )
     )
     return motor, params
+
+
+def end_oxidizer_volume(result):
+    """Volume the oxidizer fills once the piston has swept the fuel out [m^3]."""
+    motor, _ = build(isothermal=False)
+    return motor.feed_system.get_tank_volumes(
+        {name: float(series[-1]) for name, series in result.fluid_mass_per_line.items()}
+    )["oxidizer"]
 
 
 @pytest.fixture(scope="module")
@@ -75,9 +85,11 @@ def test_the_decay_is_monotonic_while_the_tank_holds_liquid(results):
     # the vapor fill it started at holds liquid at any temperature it reaches.
     # Past that the outflow enthalpy steps by the latent heat as the last of
     # the liquid goes, and the decay picks up a jitter on the way out.
+    # the piston grows the oxidizer volume, so take the vapor fill at its end volume
+    oxidizer_volume = end_oxidizer_volume(result)
     two_phase = (
         result.fluid_mass_per_line["oxidizer"]
-        > tank.saturated_vapor_density * tank.volume
+        > tank.saturated_vapor_density * oxidizer_volume
     )
     temperature = result.tank_temperature_per_line["oxidizer"][two_phase]
 
@@ -141,15 +153,39 @@ def test_draining_takes_the_outflow_enthalpy_out():
     internal_energy_before = state.internal_energy_per_line["oxidizer"]
     assert internal_energy_before is not None
     oxidizer_mass_before = state.fluid_mass_per_line["oxidizer"][-1]
+    fuel_mass_before = state.fluid_mass_per_line["fuel"][-1]
 
     state.run_timestep(params.d_t, params.external_pressure)
 
     mass_drained = oxidizer_mass_before - state.fluid_mass_per_line["oxidizer"][-1]
+    fuel_drained = fuel_mass_before - state.fluid_mass_per_line["fuel"][-1]
     assert mass_drained > 0.0
+    assert fuel_drained > 0.0
+    # boundary work on the piston, at the pressure the step starts at
+    swept_volume = fuel_drained / CP.PropsSI(
+        "D", "T", FUEL_TANK["temperature"], "Q", 0, FUEL_TANK["fluid_name"]
+    )
     assert state.internal_energy_per_line["oxidizer"] == pytest.approx(
         internal_energy_before
         - mass_drained
         * tank.get_outflow_specific_enthalpy(
             oxidizer_mass_before, internal_energy_before, mass_drained=mass_drained
         )
+        - tank.get_pressure(oxidizer_mass_before, internal_energy_before)
+        * swept_volume,
+        rel=1e-12,
     )
+
+
+def test_the_line_below_the_piston_runs_no_energy_balance():
+    motor, params = build(isothermal=False)
+    state = biliquid_simulation.BiliquidEngineState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+
+    state.run_timestep(params.d_t, params.external_pressure)
+
+    assert state.internal_energy_per_line["fuel"] is None
+    assert state.tank_temperature_per_line["fuel"][-1] == FUEL_TANK["temperature"]

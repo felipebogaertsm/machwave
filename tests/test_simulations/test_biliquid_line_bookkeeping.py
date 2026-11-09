@@ -39,6 +39,7 @@ def build_engine_with_a_diluent_line():
             volume=1.0e-3,
             temperature=300.0,
             initial_fluid_mass=0.5,
+            isothermal=True,
         ),
         resistance=feed_systems_models.FeedlineResistance.from_design_point(
             pressure_drop=2e5, mass_flow=0.13, density=997.0, flow_area=9.37e-5

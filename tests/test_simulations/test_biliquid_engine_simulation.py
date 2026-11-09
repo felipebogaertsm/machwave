@@ -451,8 +451,10 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
     combustion_efficiency: float, discharge_coefficient: float
 ) -> None:
     """At steady state, the characteristic velocity ratio equals the efficiency."""
-    # isothermal tanks hold their pressure, so the chamber settles
-    motor, params = motor_builders.build_1kn_biliquid_engine(isothermal_tanks=True)
+    # an isothermal oxidizer tank holds its pressure, so the chamber settles
+    motor, params = motor_builders.build_1kn_biliquid_engine(
+        isothermal_oxidizer_tank=True
+    )
     motor.combustion_efficiency = combustion_efficiency
     motor.thrust_chamber.nozzle.discharge_coefficient = discharge_coefficient
     state = biliquid_simulation.BiliquidEngineState(
