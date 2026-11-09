@@ -7,7 +7,6 @@ import warnings
 import numpy as np
 import pytest
 
-import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation.biliquid as biliquid_simulation
 from tests.test_simulations import motor_builders
 
@@ -21,20 +20,9 @@ STEPS = (8e-5, 4e-5, 2e-5)
 
 def build_state(*, smooth_thermochemistry: bool, dyer_oxidizer: bool = False):
     """The 1 kN engine at ignition, with the piston working on the top tank."""
-    motor, params = motor_builders.build_1kn_biliquid_engine()
-    elements = motor.thrust_chamber.injector.elements
-    # the single-phase incompressible element couples the flow to chamber and tank
-    # pressure like Dyer's, without a CoolProp sweep per tank state
-    if not dyer_oxidizer:
-        motor.thrust_chamber.injector = thrust_chamber_models.Injector(
-            elements={
-                "oxidizer": thrust_chamber_models.InjectorElement(
-                    discharge_coefficient=elements["oxidizer"].discharge_coefficient,
-                    area=elements["oxidizer"].area,
-                ),
-                "fuel": elements["fuel"],
-            }
-        )
+    motor, params = motor_builders.build_1kn_biliquid_engine(
+        dyer_oxidizer=dyer_oxidizer
+    )
     # the CEA cache quantization makes the right-hand side piecewise constant and
     # hides the order of the scheme
     if smooth_thermochemistry:
