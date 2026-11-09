@@ -31,8 +31,8 @@ class BiliquidEngine(
                 injector).
             feed_system: Propellant feed system (tanks, lines, pumps or
                 pressurization).
-            combustion_efficiency: Ratio of the actual flame temperature to the ideal
-                adiabatic flame temperature (0, 1].
+            combustion_efficiency: The ratio of the real to the ideal characteristic
+                velocity (0, 1].
             nozzle_loss_model: Nozzle loss model.
         """
         super().__init__(

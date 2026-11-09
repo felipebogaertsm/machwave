@@ -117,27 +117,29 @@ BURN REGRESSION
  Initial propellant volume: 881.452 cm^3
  Initial burn area: 383.636 cm^2
  Peak burn area: 432.896 cm^2
- Mean Kn: 264.80
+ Mean Kn: 264.71
  Max Kn: 281.21
  Initial to final Kn ratio: 1.098
  Volumetric efficiency: 78.430%
  Burn profile: regressive
- Max initial mass flux: 1855.148 kg/s-m-m or 2.639 lb/s-in-in
+ Max initial mass flux: 1758.430 kg/s-m-m or 2.501 lb/s-in-in
 
 CHAMBER PRESSURE
- Maximum, average chamber pressure: 6.090, 5.144 MPa
+ Maximum, average chamber pressure: 5.810, 4.778 MPa
 
 THRUST AND IMPULSE
- Maximum, average thrust: 1357.313, 1134.445 N
- Total, specific impulses: 2099.769 N-s, 130.039 s
- Burnout time: 1.789 s, thrust time: 1.850 s
+ Maximum, average thrust: 1290.482, 1049.092 N
+ Total, specific impulses: 2037.248 N-s, 126.167 s
+ Burnout time: 1.880 s, thrust time: 1.941 s
 
 NOZZLE
-  Average nozzle efficiency: 86.517%
+  Average geometric throat area: 1.539 cm^2
+  Average effective throat area: 1.539 cm^2
+  Average nozzle efficiency: 86.745%
   Average divergent nozzle loss fraction: 1.093%
-  Average kinetics loss fraction: 0.107%
-  Average boundary layer loss fraction: 3.326%
-  Average two-phase flow loss fraction: 3.974%
+  Average kinetics loss fraction: 0.114%
+  Average boundary layer loss fraction: 3.136%
+  Average two-phase flow loss fraction: 3.921%
   Average other losses fraction: 5.000%
 ```
 

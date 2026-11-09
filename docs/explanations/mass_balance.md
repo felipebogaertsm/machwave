@@ -30,17 +30,27 @@ Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleev
 
 Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
 
-The actual **flame temperature** $T$ is obtained by multiplying the **adiabatic flame temperature** $T_{0}$ by a **combustion efficiency** $\eta_{comb}$.
-The combustion efficiency accounts for the fact that the actual flame temperature is often lower than the ideal adiabatic value due to incomplete combustion, heat losses or other inefficiencies in the combustion process.
-
-In Machwave, $\eta_{comb}$ is defined as a *temperature* ratio, $\eta_{comb} = T / T_0$.
-It should not be confused with the characteristic velocity efficiency $\eta_{c^*} = c^*_\text{actual} / c^*_\text{ideal}$ common in the literature, which relates to temperature as $\eta_{comb} = \eta_{c^*}^2$ (since $c^* \propto \sqrt{T}$).
-Typical values for $\eta_{comb}$ range from 0.9 to 0.99, depending mainly on the propellant combination and motor/engine size.
-A unitary $\eta_{comb}$ tends to overestimate the chamber pressure.
+The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$.
+The combustion efficiency is the ratio of the delivered to the ideal characteristic velocity:
 
 $$
-T = \eta_{comb} T_0
+\eta_{c^*} = \frac{c^*_\text{actual}}{c^*_\text{ideal}}, \qquad c^* = \frac{P_0 A_t}{\dot{m}} = \frac{\sqrt{R T}}{H_\text{choked}}
 $$
+
+(Huzel & Huang 1967, Eqs. 1-32 and 1-41)
+
+$A_t = C_d A_{t,\text{geo}}$ is the effective throat area.
+$H_\text{choked}$ is the choked flow function defined below.
+Since $c^* \propto \sqrt{T}$, the flame temperature is:
+
+$$
+T = \eta_{c^*}^2 T_0
+$$
+
+Machwave accepts $\eta_{c^*}$ in (0, 1].
+A $c^*$ measured with the geometric throat area already includes the discharge loss.
+Machwave models that loss separately through $C_d$.
+A unitary $\eta_{c^*}$ overestimates the chamber pressure.
 
 Substituting $M_{stored}$ into the mass balance and rearranging gives the general form of the chamber pressure differential equation:
 
@@ -188,4 +198,4 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
-3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
+3. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929

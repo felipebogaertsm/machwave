@@ -16,6 +16,7 @@ import numpy as np
 import pytest
 
 import machwave.core.compressible_flow.isentropic as isentropic
+import machwave.core.performance as performance
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.nozzle_losses.components.constant as constant
@@ -164,9 +165,9 @@ def test_loss_fraction_series_match_model_components() -> None:
 def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
     """The solid read site sources combustion efficiency from the motor.
 
-    The effective flame temperature scales with the motor's combustion
-    efficiency, so a more efficient motor produces a higher chamber pressure
-    after one identical time step.
+    The characteristic velocity scales with the motor's combustion efficiency,
+    so a more efficient motor produces a higher chamber pressure after one
+    identical time step.
     """
 
     def first_step_chamber_pressure(combustion_efficiency: float) -> float:
@@ -181,6 +182,65 @@ def test_effective_flame_temperature_uses_motor_combustion_efficiency() -> None:
         return state.chamber_pressure[-1]
 
     assert first_step_chamber_pressure(1.0) > first_step_chamber_pressure(0.5)
+
+
+@pytest.mark.parametrize("combustion_efficiency", [1.0, 0.9])
+def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficiency(
+    combustion_efficiency: float,
+) -> None:
+    """Mid-burn, the characteristic velocity ratio equals the efficiency."""
+    motor, params = motor_builders.build_nero_motor()
+    motor.combustion_efficiency = combustion_efficiency
+    state = solid_simulation.SolidMotorState(
+        motor=motor,
+        igniter_pressure=params.igniter_pressure,
+        external_pressure=params.external_pressure,
+    )
+    mid_burn_index = 50
+    for _ in range(mid_burn_index + 2):
+        state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
+
+    chamber_pressure = state.chamber_pressure[mid_burn_index]
+    properties = motor.propellant.evaluate(
+        chamber_pressure=chamber_pressure,
+        expansion_ratio=motor.thrust_chamber.nozzle.expansion_ratio,
+    )
+    effective_flame_temperature = performance.get_effective_flame_temperature(
+        adiabatic_flame_temperature=properties.adiabatic_flame_temperature,
+        combustion_efficiency=combustion_efficiency,
+    )
+    stored_gas_mass = [
+        state.chamber_pressure[i]
+        * state.free_chamber_volume[i]
+        / (properties.R_chamber * effective_flame_temperature)
+        for i in (mid_burn_index - 1, mid_burn_index + 1)
+    ]
+    stored_gas_mass_rate = (stored_gas_mass[1] - stored_gas_mass[0]) / (2 * params.d_t)
+    nozzle_mass_flow = (
+        float(np.sum(state.grain_segment_mass_flow[mid_burn_index]))
+        - stored_gas_mass_rate
+    )
+    nozzle = motor.thrust_chamber.nozzle
+    delivered_c_star = (
+        chamber_pressure
+        * nozzle.discharge_coefficient
+        * nozzle.get_throat_area()
+        / nozzle_mass_flow
+    )
+
+    specific_heat_ratio = properties.k_chamber
+    vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
+        2.0 / (specific_heat_ratio + 1.0)
+    ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
+    ideal_c_star = (
+        np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
+        / vandenkerckhove_function
+    )
+
+    # loose because the stored gas term is a finite difference in time
+    assert delivered_c_star / ideal_c_star == pytest.approx(
+        combustion_efficiency, rel=1e-4
+    )
 
 
 def test_report_includes_nozzle_losses() -> None:
