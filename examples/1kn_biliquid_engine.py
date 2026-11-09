@@ -51,9 +51,8 @@ def main():
         fuel_tank=fuel_tank,
         piston_loss=1e5,
         # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore). The loss falls with the square of the flow. Flows
-        # measured at t = 1 s with the Dyer oxidizer element, after one
-        # fixed-point pass.
+        # tube (10.9 mm bore)
+        # flows taken at 1 s with the Dyer oxidizer element
         oxidizer_line_resistance=feed_systems.FeedlineResistance.from_design_point(
             pressure_drop=2e5, mass_flow=0.7976, density=724.7, flow_area=9.37e-5
         ),
@@ -72,7 +71,7 @@ def main():
         elements={
             "oxidizer": thrust_chamber_models.InjectorElement(
                 discharge_coefficient=0.48,
-                # Sized for the nominal O/F of 1.95 at t = 0.1 s.
+                # sized for an oxidizer-to-fuel ratio of 1.95 at 0.1 s
                 area=2.097e-5 / 0.48,
                 mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
             ),
