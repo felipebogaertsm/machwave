@@ -172,7 +172,7 @@ class TestIsentropicDrainOfAGrowingTank:
             self.OXIDIZER_MASSES_PER_STEP[-1]
         )
 
-        # piston travel cools it 14.8 K, against 6.8 K for a fixed tank
+        # piston travel cools it by 14.8 K, versus 6.8 K for a fixed tank
         assert reference_temperature < TEMPERATURE - 14.0
         assert abs(temperature_error) < 0.01
         assert abs(pressure_error) < 2e-4

@@ -20,10 +20,10 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     The tank at the top of the stack pressurizes every tank below it through a
     piston, so one tank sets the pressure the whole system runs on.
 
-    As the lines below the piston drain, the fluid at the top of the stack fills
-    its tank volume plus the liquid volume pushed out below, and the top tank does
-    boundary work on the piston. Tanks below the piston must be isothermal: they
-    stay liquid-full at their loading temperature.
+    As the lines below the piston drain, the fluid at the top of the stack fills its
+    tank volume plus the liquid volume pushed out below. The top tank does boundary
+    work on the piston. Tanks below the piston must be isothermal, because they stay
+    liquid-full at their loading temperature.
 
     References:
         Cengel, Y. A., & Boles, M. A. (2015). Thermodynamics: An Engineering
@@ -200,9 +200,9 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the pressure at the head of every feedline [Pa].
 
-        The top line starts at its tank pressure, at the volume the piston has
-        swept to; every line below the piston takes the piston pressure loss. The
-        feedline resistance is not taken here, only a deprecated fixed line loss.
+        The top line gets its tank pressure at the volume the piston has swept to.
+        Every line below the piston takes the piston pressure loss. The feedline
+        resistance is not taken here, only a deprecated fixed line loss.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
