@@ -65,19 +65,13 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
-**Piston travel.** The lines below the piston are liquid-full, with no ullage: each holds its loading temperature and the saturated liquid density there, so their tanks must be built with `isothermal=True`. As they drain the piston moves and the fluid at the top of the stack fills its tank volume plus every liquid volume pushed out below,
+**Piston travel.** The lines below the piston stay liquid-full at their loading temperature, so their tanks must be built with `isothermal=True`. As they drain, the fluid at the top of the stack fills its own tank volume plus the liquid volume pushed out below,
 
 $$
 V_{top}(t) = V_{top,0} + \sum_j \frac{m_{j,0} - m_j(t)}{\rho_{l,j}},
 $$
 
-which [`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns for any set of line masses. The top tank state is evaluated at that volume, and its energy balance takes out the boundary work it does on the piston as well as the enthalpy of what it drains,
-
-$$
-\frac{dU_{top}}{dt} = -h_{out} \dot{m}_{out} - P_{top} \frac{dV_{top}}{dt},
-$$
-
-the open-system energy balance of a control volume with a moving boundary (Cengel and Boles, 8th ed., Ch. 5).
+which [`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns for any set of line masses. The top tank state is evaluated at that volume, and its energy balance also takes out the boundary work done on the piston.
 
 **Mass-flow model.** The feed system supplies the state at the head of every feedline: the pressurizing tank pressure for its own line, and that pressure less `piston_loss` for every line below the piston. The piston loss is seal friction and holds at any flow. Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density] for the top tank, evaluated at the volume it has swept to.
 

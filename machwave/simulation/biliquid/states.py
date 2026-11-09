@@ -426,16 +426,8 @@ class BiliquidEngineState(simulation_states.MotorState):
         """
         Step the internal energy of a tank over one timestep [J].
 
-        The open-system energy balance of an adiabatic tank with one port and
-        a boundary that may move, as a piston does:
-
-            dU = -h_out * dm_out - P * dV
-
-        The first term is the enthalpy the drained fluid carries, flow work
-        included; the second is the boundary work, zero for a fixed tank. Both
-        are taken at the start of the step like the mass update. The fluid
-        behind boils to refill the space and cools doing it, which is what
-        walks the saturation pressure down over the burn.
+        Takes out the enthalpy of the drained fluid and the boundary work of a
+        moving tank wall, both evaluated at the start of the step.
 
         Args:
             tank: Tank of the line.
