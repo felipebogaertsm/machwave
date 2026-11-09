@@ -70,7 +70,11 @@ feed_system = StackedTankPressureFedFeedSystem(
 
 ## `SingleLinePressureFedFeedSystem`
 
-One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, falling as the tank cools, then blows down on the real-gas equation of state. The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as for the stacked tank. An empty tank delivers nothing, which stops the flow at the injector element.
+One propellant line, pressurized by its own tank.
+A self-pressurized propellant feeds at its vapor pressure while liquid remains, and that pressure falls as the tank cools.
+Once the liquid is gone, the tank blows down on the real-gas equation of state.
+The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as for the stacked tank.
+An empty tank delivers nothing, which stops the flow at the injector element.
 
 **Construction**
 
