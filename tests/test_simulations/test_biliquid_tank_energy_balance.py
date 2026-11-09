@@ -50,7 +50,7 @@ def build(isothermal):
     return motor, params
 
 
-def motor_feed_system_end_volume(result):
+def end_oxidizer_volume(result):
     """Volume the oxidizer fills once the piston has swept the fuel out [m^3]."""
     motor, _ = build(isothermal=False)
     return motor.feed_system.get_tank_volumes(
@@ -85,12 +85,11 @@ def test_the_decay_is_monotonic_while_the_tank_holds_liquid(results):
     # the vapor fill it started at holds liquid at any temperature it reaches.
     # Past that the outflow enthalpy steps by the latent heat as the last of
     # the liquid goes, and the decay picks up a jitter on the way out.
-    # The piston grows the volume the oxidizer fills, so the vapor fill is
-    # taken in the volume it has swept to at the end of the burn.
-    swept_volume = motor_feed_system_end_volume(result)
+    # the piston grows the oxidizer volume, so take the vapor fill at its end volume
+    oxidizer_volume = end_oxidizer_volume(result)
     two_phase = (
         result.fluid_mass_per_line["oxidizer"]
-        > tank.saturated_vapor_density * swept_volume
+        > tank.saturated_vapor_density * oxidizer_volume
     )
     temperature = result.tank_temperature_per_line["oxidizer"][two_phase]
 
@@ -162,8 +161,7 @@ def test_draining_takes_the_outflow_enthalpy_out():
     fuel_drained = fuel_mass_before - state.fluid_mass_per_line["fuel"][-1]
     assert mass_drained > 0.0
     assert fuel_drained > 0.0
-    # The piston sweeps the volume of fuel pushed out, and the oxidizer does
-    # the work P dV on it at the pressure the step starts at.
+    # boundary work on the piston, at the pressure the step starts at
     swept_volume = fuel_drained / CP.PropsSI(
         "D", "T", FUEL_TANK["temperature"], "Q", 0, FUEL_TANK["fluid_name"]
     )

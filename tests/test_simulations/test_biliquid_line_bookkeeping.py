@@ -160,7 +160,7 @@ class TestResultPerLine:
     def test_recorded_arrays_stay_aligned(self, result):
         assert_recorded_arrays_aligned(result)
 
-    def test_the_mixture_ratio_has_one_value_per_timestep(self, result):
+    def test_the_flows_and_the_mixture_ratio_have_one_value_per_timestep(self, result):
         assert result.oxidizer_to_fuel_ratio.shape == result.time.shape
         for series in result.mass_flow_rate_per_line.values():
             assert series.shape == result.time.shape

@@ -221,8 +221,8 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the pressure at the head of every feedline [Pa].
 
-        The line at the top of the stack starts at its tank pressure, read in
-        the volume the piston has swept to; every line below the piston starts
+        The line at the top of the stack starts at its tank pressure, evaluated
+        at the volume the piston has swept to; every line below the piston starts
         the piston pressure loss lower. The feedline resistance is taken later,
         at the line flow; a deprecated fixed line loss is still taken here.
 

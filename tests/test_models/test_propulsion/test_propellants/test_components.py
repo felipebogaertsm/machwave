@@ -5,8 +5,7 @@ import machwave.core.conversions as conversions
 import machwave.models.propellants as propellants_models
 import machwave.models.propellants.components as propellant_components
 
-# RocketCEA's "N2O_nbp" card: liquid N2O at its normal boiling point, an
-# independent route to the liquid enthalpy on the CEA scale.
+# RocketCEA's "N2O_nbp" card, an independent source for the liquid enthalpy
 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY = 14583.0  # [cal/mol]
 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE = 184.4  # [K]
 
@@ -36,9 +35,8 @@ class TestSaturatedLiquidNitrousOxide:
         component = propellants_models.saturated_liquid_nitrous_oxide(
             _ROCKETCEA_N2O_NORMAL_BOILING_POINT_TEMPERATURE
         )
-        # The card's tabulated enthalpy and CoolProp's equation of state differ
-        # by 102 J/mol here; 200 J/mol stays far below the 10 kJ/mol gap
-        # between the liquid and the built-in gas card this component replaces.
+        # the card and CoolProp differ by 102 J/mol, far below the 10 kJ/mol
+        # gap between the liquid and the built-in gas card
         assert component.enthalpy == pytest.approx(
             conversions.convert_cal_per_mol_to_joules_per_mol(
                 _ROCKETCEA_N2O_NORMAL_BOILING_POINT_ENTHALPY
@@ -81,7 +79,7 @@ class TestBiliquidCustomCard:
         gas_properties = _n2o_ethanol(gas).evaluate(3.26e6, 4.0)
         liquid_properties = _n2o_ethanol(liquid).evaluate(3.26e6, 4.0)
 
-        # About 10 kJ/mol less reactant enthalpy is worth about 77 K here.
+        # about 10 kJ/mol less reactant enthalpy, measured 77 K cooler
         temperature_drop = (
             gas_properties.adiabatic_flame_temperature
             - liquid_properties.adiabatic_flame_temperature
@@ -90,8 +88,7 @@ class TestBiliquidCustomCard:
         assert liquid_properties.i_sp_frozen < gas_properties.i_sp_frozen
 
     def test_custom_card_follows_mixture_ratio(self):
-        # Catches cards written with the "name" keyword, which CEA burns at a
-        # fixed composition whatever mixture ratio is asked for.
+        # "name" cards burn at a fixed composition whatever the mixture ratio
         propellant = _n2o_ethanol(
             propellants_models.saturated_liquid_nitrous_oxide(300.0)
         )

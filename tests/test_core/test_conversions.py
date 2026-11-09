@@ -192,7 +192,7 @@ def test_convert_joules_per_mol_to_cal_per_mol(j_per_mol, expected_cal_per_mol):
     ],
 )
 def test_convert_cal_per_mol_to_joules_per_mol(cal_per_mol, expected_j_per_mol):
-    # The thermochemical calorie is 4.184 J exactly, so only round-off remains.
+    # the thermochemical calorie is exactly 4.184 J, so only round-off remains
     assert conversions.convert_cal_per_mol_to_joules_per_mol(
         cal_per_mol
     ) == pytest.approx(expected_j_per_mol, rel=1e-12)

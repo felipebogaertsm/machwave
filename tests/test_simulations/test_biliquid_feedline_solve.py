@@ -40,7 +40,6 @@ def solve(line, element, head_state=None, chamber_pressure=CHAMBER_PRESSURE):
 
 
 def get_solve_tolerance(element, head_state, chamber_pressure=CHAMBER_PRESSURE):
-    """The bracketed solve stops within this of the root [kg/s]."""
     return biliquid_states.LINE_FLOW_RELATIVE_TOLERANCE * element.get_mass_flow(
         inlet=head_state, chamber_pressure=chamber_pressure
     )
@@ -51,11 +50,8 @@ ETHANOL_HEAD = FluidStateFactory.build(
 )
 
 
-class TestSpiSeriesResistances:
-    """For SPI the orifice and the line are two quadratic resistances in series.
-
-    dP_total = mdot^2 / (2 rho) * (1 / (Cd A)^2 + K / A_line^2)
-    """
+class TestIncompressibleSeriesResistances:
+    """The orifice and the line act as two quadratic resistances in series."""
 
     @pytest.mark.parametrize("loss_coefficient", [0.5, 5.0, 50.0])
     def test_matches_the_closed_form(self, loss_coefficient):
@@ -91,12 +87,13 @@ class TestSpiSeriesResistances:
         )
         line = PropellantLineFactory.build(resistance=resistance)
 
-        quarter_chamber_pressure = HEAD_PRESSURE - (HEAD_PRESSURE - 30e5) / 4
+        quarter_chamber_pressure = (
+            HEAD_PRESSURE - (HEAD_PRESSURE - CHAMBER_PRESSURE) / 4
+        )
         full = solve(line, element)
         quarter = solve(line, element, chamber_pressure=quarter_chamber_pressure)
 
-        # Both flows carry the solver tolerance, the full one doubled by the
-        # halving.
+        # each flow carries its own solve tolerance
         assert quarter == pytest.approx(
             full / 2.0,
             abs=get_solve_tolerance(element, ETHANOL_HEAD)
@@ -115,9 +112,8 @@ class TestNoFlow:
 
         assert solve(line, element, chamber_pressure=HEAD_PRESSURE) == 0.0
 
-    def test_a_small_drop_is_not_eaten_by_a_fixed_loss(self):
-        """A head only 0.1 bar over the chamber still flows, where a fixed 2 bar
-        loss would have stopped it."""
+    def test_flows_on_a_drop_below_the_design_line_loss(self):
+        """A fixed 2 bar loss would have stopped this 0.1 bar drop from flowing."""
         element = InjectorElementFactory.build()
         line = PropellantLineFactory.build(
             resistance=feed_systems_models.FeedlineResistance.from_design_point(
@@ -128,7 +124,7 @@ class TestNoFlow:
         assert solve(line, element, chamber_pressure=HEAD_PRESSURE - 1e4) > 0.0
 
 
-class TestHem:
+class TestHomogeneousEquilibrium:
     def test_the_element_sees_the_head_less_the_line_drop(self):
         element = InjectorElementFactory.build(
             area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
@@ -161,9 +157,7 @@ class TestHem:
         )
 
     def test_a_saturated_inlet_passes_the_lossless_flow(self):
-        """HEM from a saturated inlet starts from the saturated liquid at the tank
-        temperature, so the line loss has nothing to act on; the solve must not
-        fail on a residual that never changes sign."""
+        """Here the line loss has no effect, so the residual never changes sign."""
         element = InjectorElementFactory.build(
             area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
         )

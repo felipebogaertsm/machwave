@@ -71,11 +71,11 @@ class FeedSystem(ABC):
 
         Each state is the tank fluid at the tank temperature and density, in
         the volume `get_tank_volumes` says it fills, at the pressure the cycle
-        delivers to the feedline. It is what the
-        injector would see with nothing flowing: the feedline then takes its
-        own flow-dependent loss, which the simulation solves together with the
-        injector flow. A cycle that heats or works on a propellant on the way,
-        such as a regenerative jacket or a pump, overrides this to say so.
+        delivers to the feedline. It is what the injector would see with nothing
+        flowing: the feedline then takes its own flow-dependent loss, which the
+        simulation solves together with the injector flow. A cycle that heats or
+        works on a propellant on the way, such as a regenerative jacket or a
+        pump, overrides this to say so.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
