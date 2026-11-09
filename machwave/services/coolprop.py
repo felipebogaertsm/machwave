@@ -212,9 +212,8 @@ class CoolPropService:
         Get the temperature and pressure at a density and internal energy.
 
         CoolProp 6.8 can silently return a single-phase state for a point inside the
-        saturation dome (N2O at 454.5 kg/m^3 and 228.6 kJ/kg flashes to 270.4 K
-        instead of 291.0 K). The flash is kept only if its temperature gives the
-        internal energy back, and otherwise the state is solved on the dome.
+        saturation dome. The flash is kept only if its temperature gives the internal
+        energy back; otherwise the state is solved on the dome.
 
         Args:
             density: Density [kg/m^3].
