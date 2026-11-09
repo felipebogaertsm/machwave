@@ -14,7 +14,8 @@ organised around three concerns:
 
 ## The `FeedSystem` contract
 
-A feed system delivers one [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] per propellant, keyed by line name, and every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] to supply the pressure at the head of every feedline:
+A feed system delivers one [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] per propellant, keyed by line name.
+Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] to supply the pressure at the head of every feedline:
 
 - `get_inlet_pressures(line_states) -> dict[str, float]`
 
@@ -24,9 +25,12 @@ From those, the base class assembles the state every line is fed with:
 
 Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name.
 
-The default state is the tank fluid at the tank temperature and density, at the pressure the cycle delivers to the feedline, before the feedline loss. A cycle that heats or pressurizes a propellant on the way, such as a regenerative jacket or a pump, overrides `get_inlet_states` to say so.
+The default state is the tank fluid at the tank temperature and density, at the pressure the cycle delivers to the feedline, before the feedline loss.
+A cycle that heats or pressurizes a propellant on the way, such as a regenerative jacket or a pump, overrides `get_inlet_states` to say so.
 
-[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every feedline head state once per integration step, then, at each chamber pressure the solver tries, solves every line's flow through its [`Injector`][machwave.models.thrust_chamber.injector.Injector] element with the line's own flow-dependent loss.
+[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two.
+It reads every feedline head state once per integration step.
+Then, at each chamber pressure the solver tries, it solves the flow of every line through its [`Injector`][machwave.models.thrust_chamber.injector.Injector] element with the line's own flow-dependent loss.
 
 ## Public surface
 

@@ -68,7 +68,7 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # the tanks drain and cool by first-order steps; measured 1.0e-5
+    # the tanks drain and cool by first-order steps. Measured 1.0e-5
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
