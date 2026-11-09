@@ -1,9 +1,4 @@
-"""The fluid at the top of a stacked tank fills the volume the piston sweeps.
-
-As the lines below the piston drain, the piston moves down and the top tank's
-fluid fills its own volume plus the liquid volume pushed out below. It boils
-to fill the extra space and does boundary work on the piston as it goes.
-"""
+"""The fluid at the top of a stacked tank fills the volume the piston sweeps."""
 
 import math
 
@@ -22,8 +17,7 @@ OXIDIZER_VOLUME = 0.01
 OXIDIZER_MASS = 5.0
 FUEL_VOLUME = 0.004
 FUEL_MASS = 3.0
-# The fuel line drains this much for every unit of oxidizer drained.
-FUEL_PER_OXIDIZER = 1.5
+FUEL_TO_OXIDIZER_DRAIN_RATIO = 1.5
 
 
 def build(**fuel_tank_overrides):
@@ -46,7 +40,12 @@ def build(**fuel_tank_overrides):
     )
 
 
-def drain(feed_system, oxidizer_step, steps, fuel_per_oxidizer=FUEL_PER_OXIDIZER):
+def drain(
+    feed_system,
+    oxidizer_mass_per_step,
+    step_count,
+    fuel_to_oxidizer_drain_ratio=FUEL_TO_OXIDIZER_DRAIN_RATIO,
+):
     """
     Drain both lines in equal explicit steps, as the engine state does.
 
@@ -57,8 +56,11 @@ def drain(feed_system, oxidizer_step, steps, fuel_per_oxidizer=FUEL_PER_OXIDIZER
     oxidizer_tank = feed_system.lines["oxidizer"].tank
     masses = {"oxidizer": OXIDIZER_MASS, "fuel": FUEL_MASS}
     internal_energy = oxidizer_tank.initial_internal_energy
-    drained = {"oxidizer": oxidizer_step, "fuel": fuel_per_oxidizer * oxidizer_step}
-    for _ in range(steps):
+    drained = {
+        "oxidizer": oxidizer_mass_per_step,
+        "fuel": fuel_to_oxidizer_drain_ratio * oxidizer_mass_per_step,
+    }
+    for _ in range(step_count):
         new_masses = {name: masses[name] - drained[name] for name in masses}
         volume = feed_system.get_tank_volumes(masses)["oxidizer"]
         new_volume = feed_system.get_tank_volumes(new_masses)["oxidizer"]
@@ -75,16 +77,10 @@ def drain(feed_system, oxidizer_step, steps, fuel_per_oxidizer=FUEL_PER_OXIDIZER
 
 
 class TestIsentropicDrainOfAGrowingTank:
-    """
-    A slow adiabatic drain leaves the fluid behind on an isentrope.
-
-    With dS = s_l dm for the fluid that stays and V(m) set by the piston,
-    S(T, m, V) on the saturation curve gives an ODE in T alone, integrated
-    from CoolProp saturation properties with no (D, U) flash.
-    """
+    """A slow adiabatic drain leaves the fluid behind on an isentrope."""
 
     FINAL_OXIDIZER_MASS = 3.0
-    OXIDIZER_STEPS = (2e-2, 1e-2, 5e-3)  # Each half the last.
+    OXIDIZER_MASSES_PER_STEP = (2e-2, 1e-2, 5e-3)  # each half the last
 
     @staticmethod
     def entropy(temperature, fluid_mass, volume):
@@ -104,31 +100,36 @@ class TestIsentropicDrainOfAGrowingTank:
         def volume(fluid_mass):
             return (
                 OXIDIZER_VOLUME
-                + FUEL_PER_OXIDIZER * (OXIDIZER_MASS - fluid_mass) / fuel_density
+                + FUEL_TO_OXIDIZER_DRAIN_RATIO
+                * (OXIDIZER_MASS - fluid_mass)
+                / fuel_density
             )
 
         def temperature_slope(fluid_mass, state):
             temperature = state[0]
-            # With m the independent variable, dV/dm = -1.5 / rho_fuel and
-            # S_T dT/dm = s_l - S_m - S_V dV/dm.
-            v = volume(fluid_mass)
-            d_volume = -FUEL_PER_OXIDIZER / fuel_density
+            # the fluid left behind loses only the entropy of the liquid drained
+            fluid_volume = volume(fluid_mass)
+            volume_per_mass = -FUEL_TO_OXIDIZER_DRAIN_RATIO / fuel_density
             liquid_entropy = CP.PropsSI("S", "T", temperature, "Q", 0, OXIDIZER)
-            mass_slope = (
-                cls.entropy(temperature, fluid_mass + 1e-6, v)
-                - cls.entropy(temperature, fluid_mass - 1e-6, v)
+            entropy_per_mass = (
+                cls.entropy(temperature, fluid_mass + 1e-6, fluid_volume)
+                - cls.entropy(temperature, fluid_mass - 1e-6, fluid_volume)
             ) / 2e-6
-            volume_slope = (
-                cls.entropy(temperature, fluid_mass, v + 1e-9)
-                - cls.entropy(temperature, fluid_mass, v - 1e-9)
+            entropy_per_volume = (
+                cls.entropy(temperature, fluid_mass, fluid_volume + 1e-9)
+                - cls.entropy(temperature, fluid_mass, fluid_volume - 1e-9)
             ) / 2e-9
-            temperature_slope = (
-                cls.entropy(temperature + 1e-3, fluid_mass, v)
-                - cls.entropy(temperature - 1e-3, fluid_mass, v)
+            entropy_per_temperature = (
+                cls.entropy(temperature + 1e-3, fluid_mass, fluid_volume)
+                - cls.entropy(temperature - 1e-3, fluid_mass, fluid_volume)
             ) / 2e-3
             return [
-                (liquid_entropy - mass_slope - volume_slope * d_volume)
-                / temperature_slope
+                (
+                    liquid_entropy
+                    - entropy_per_mass
+                    - entropy_per_volume * volume_per_mass
+                )
+                / entropy_per_temperature
             ]
 
         solution = scipy.integrate.solve_ivp(
@@ -140,11 +141,13 @@ class TestIsentropicDrainOfAGrowingTank:
         )
         return solution.y[0, -1], volume(cls.FINAL_OXIDIZER_MASS)
 
-    def errors(self, oxidizer_step):
+    def errors(self, oxidizer_mass_per_step):
         feed_system = build()
         oxidizer_tank = feed_system.lines["oxidizer"].tank
-        steps = round((OXIDIZER_MASS - self.FINAL_OXIDIZER_MASS) / oxidizer_step)
-        masses, internal_energy = drain(feed_system, oxidizer_step, steps)
+        step_count = round(
+            (OXIDIZER_MASS - self.FINAL_OXIDIZER_MASS) / oxidizer_mass_per_step
+        )
+        masses, internal_energy = drain(feed_system, oxidizer_mass_per_step, step_count)
         volume = feed_system.get_tank_volumes(masses)["oxidizer"]
         reference_temperature, reference_volume = self.isentropic_temperature()
         assert volume == pytest.approx(reference_volume, rel=1e-12)
@@ -166,26 +169,26 @@ class TestIsentropicDrainOfAGrowingTank:
 
     def test_the_drain_follows_the_isentrope(self):
         reference_temperature, temperature_error, pressure_error = self.errors(
-            self.OXIDIZER_STEPS[-1]
+            self.OXIDIZER_MASSES_PER_STEP[-1]
         )
 
-        # 3 kg of fuel sweeps 3.8 L onto the 10 L tank: 14.8 K of cooling,
-        # against 6.8 K for a fixed tank draining the same 2 kg of oxidizer.
-        # Steps of 5 g land within 0.01 K and 2e-4 of the pressure.
+        # piston travel cools it 14.8 K, against 6.8 K for a fixed tank
         assert reference_temperature < TEMPERATURE - 14.0
         assert abs(temperature_error) < 0.01
         assert abs(pressure_error) < 2e-4
 
     def test_the_explicit_drain_is_first_order(self):
-        temperature_errors = [self.errors(step)[1] for step in self.OXIDIZER_STEPS]
+        temperature_errors = [
+            self.errors(mass_per_step)[1]
+            for mass_per_step in self.OXIDIZER_MASSES_PER_STEP
+        ]
 
         observed_orders = [
             math.log2(coarse / fine)
             for coarse, fine in zip(temperature_errors, temperature_errors[1:])
         ]
 
-        # Measured 1.0018 and 1.0009; the reference is solved to rtol 1e-10,
-        # far below the 7 mK error left at the finest step.
+        # measured 1.0018 and 1.0009, with the reference far tighter than the 7 mK left
         assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)
 
 
@@ -235,7 +238,6 @@ class TestPistonVolume:
         )
 
     def test_without_fuel_flow_the_top_tank_drains_as_a_fixed_tank(self):
-        """No piston travel, no work: exactly the fixed-volume energy balance."""
         feed_system = build()
         fixed_tank = tank_models.Tank(
             fluid_name=OXIDIZER,
@@ -243,17 +245,22 @@ class TestPistonVolume:
             temperature=TEMPERATURE,
             initial_fluid_mass=OXIDIZER_MASS,
         )
-        step, steps = 0.05, 20
+        mass_per_step, step_count = 0.05, 20
 
-        masses, internal_energy = drain(feed_system, step, steps, fuel_per_oxidizer=0)
+        masses, internal_energy = drain(
+            feed_system, mass_per_step, step_count, fuel_to_oxidizer_drain_ratio=0
+        )
 
         fluid_mass = OXIDIZER_MASS
         fixed_internal_energy = fixed_tank.initial_internal_energy
-        for _ in range(steps):
-            fixed_internal_energy -= step * fixed_tank.get_outflow_specific_enthalpy(
-                fluid_mass, fixed_internal_energy, mass_drained=step
+        for _ in range(step_count):
+            fixed_internal_energy -= (
+                mass_per_step
+                * fixed_tank.get_outflow_specific_enthalpy(
+                    fluid_mass, fixed_internal_energy, mass_drained=mass_per_step
+                )
             )
-            fluid_mass -= step
+            fluid_mass -= mass_per_step
 
         assert masses["fuel"] == FUEL_MASS
         assert internal_energy == fixed_internal_energy

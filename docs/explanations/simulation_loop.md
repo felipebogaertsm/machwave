@@ -82,7 +82,8 @@ The run ends on the first of two conditions:
 The state is frozen into a [`SimulationResult`][machwave.simulation.results.SimulationResult] instance.
 It contains time series such as thrust and chamber pressure, as well as aggregated metrics such as total impulse and specific impulse.
 Every motor type extends the abstract class: [`SolidSimulationResult`][machwave.simulation.solid.results.SolidSimulationResult], [`BiliquidSimulationResult`][machwave.simulation.biliquid.results.BiliquidSimulationResult], and so on.
-A biliquid result also carries the injector mass flow of every line and the oxidizer-to-fuel ratio at each timestep. The ratio is NaN where either side has stopped flowing.
+A biliquid result also carries the injector mass flow of every line and the oxidizer-to-fuel ratio at each timestep.
+The ratio is NaN where either side has stopped flowing.
 
 # References
 

@@ -109,9 +109,7 @@ class Tank:
 
         self._validate()
 
-        # Saturation properties at the loaded temperature: constant for an
-        # isothermal tank, and the starting point of one running an energy
-        # balance.
+        # saturation properties at the loaded temperature, constant only if isothermal
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
             temperature
@@ -119,11 +117,9 @@ class Tank:
         self.saturated_vapor_density = self._coolprop.get_saturated_vapor_density(
             temperature
         )
-        # Vapor pressure at the tank temperature, memoized per fluid mass and
-        # volume.
+        # vapor pressure at the tank temperature, memoized per fluid mass and volume
         self._pressure_by_mass: dict[tuple[float, float], float] = {}
-        # Energy balance state, memoized per fluid mass, internal energy and
-        # volume.
+        # energy balance state, memoized per fluid mass, internal energy and volume
         self._fluid_state_by_state: dict[
             tuple[float, float, float], TankFluidState
         ] = {}

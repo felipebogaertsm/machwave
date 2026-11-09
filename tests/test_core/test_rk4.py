@@ -156,5 +156,5 @@ def test_substepped_solver_is_fourth_order_on_exponential_decay():
 
     observed_orders = np.log2(np.array(errors[:-1]) / np.array(errors[1:]))
 
-    # Measured 4.15, 4.08 and 4.04: the next error term shrinks as the step halves.
+    # measured 4.15, 4.08 and 4.04, approaching 4 as the step halves
     np.testing.assert_allclose(observed_orders, 4.0, atol=0.2)

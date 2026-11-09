@@ -21,10 +21,9 @@ def get_homogeneous_equilibrium_mass_flux(
     to upstream: the choked mass flux when the orifice is critical, otherwise the
     value at the downstream pressure. Along the isentrope the flux rises from zero
     at the upstream pressure to a single maximum, so the grid maximum is found by
-    bisecting on the sign of the flux difference between neighbouring points, with
-    about 2 log2(sweep_points) CoolProp flashes instead of one per point. The flux
-    is zero at a point where CoolProp cannot resolve the state (single points near
-    the critical temperature, all points below the triple point), which breaks that
+    bisecting on the sign of the flux difference between neighbouring points. The
+    flux is zero where CoolProp cannot resolve the state (single points near the
+    critical temperature, all points below the triple point), which breaks that
     shape, so a zero or a tie between neighbours falls back to evaluating every
     point.
 
@@ -97,47 +96,37 @@ def get_dyer_mass_flux(
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
 
-    Dyer's non-homogeneous non-equilibrium (NHNE) model blends the
-    single-phase incompressible flux and the homogeneous-equilibrium flux by
-    the non-equilibrium parameter kappa, the square root of the ratio of
-    bubble growth time to liquid residence time:
+    Dyer's non-homogeneous non-equilibrium model blends the single-phase
+    incompressible flux and the homogeneous-equilibrium flux by the non-equilibrium
+    parameter kappa, the square root of the ratio of bubble growth time to liquid
+    residence time:
 
         G = kappa / (1 + kappa) * G_SPI + 1 / (1 + kappa) * G_HEM
         kappa = sqrt((P1 - P2) / (Pv - P2))
 
-    with Pv the vapor pressure at the upstream temperature (Dyer et al. 2007,
-    Eqs. 35 to 37). Bubbles that grow slowly against the residence time
-    (large kappa) leave the liquid no time to flash, so the flux tends to SPI;
-    fast growth tends to HEM. The weights follow that limit, which Dyer et al.
-    state on p. 10; their Eq. 36 as printed puts 1 / (1 + kappa) on SPI instead,
-    and later work (Waxman et al. 2013, Eq. 9) uses the form here. The orifice
-    length drops out with the constants of the two time scales, so the model
-    has no L/D dependence. G_HEM is the choked or unchoked flux of
-    `get_homogeneous_equilibrium_mass_flux` over [P2, P1].
+    with Pv the vapor pressure at the upstream temperature. Slow bubble growth
+    (large kappa) leaves the liquid no time to flash, so the flux tends to the
+    incompressible flux; fast growth tends to the equilibrium flux. Dyer et al. state
+    this limit on p. 10, but their Eq. 36 as printed swaps the two weights; the form
+    here follows the limit, as Waxman et al. (Eq. 9) do. The orifice length drops
+    out, so the model does not depend on the length-to-diameter ratio. G_HEM is the
+    choked or unchoked flux of `get_homogeneous_equilibrium_mass_flux` over [P2, P1].
 
-    Valid for a liquid inlet below the critical temperature with Pv > P2. The
-    inlet may be subcooled (P1 >= Pv, kappa >= 1) or below its own vapor
-    pressure after a line loss (P1 < Pv, kappa < 1); kappa is continuous
-    through P1 = Pv. Where nothing can flash in the orifice (Pv <= P2, an
-    upstream temperature at or above the critical temperature, or an all-vapor
-    inlet at or below the saturated vapor density) the flux is the SPI flux,
-    the kappa -> infinity limit.
+    Valid for a liquid inlet below the critical temperature with Pv > P2. The inlet
+    may be subcooled (P1 >= Pv) or below its own vapor pressure after a line loss
+    (P1 < Pv); kappa is continuous through P1 = Pv. Where nothing can flash in the
+    orifice (Pv <= P2, an inlet at or above the critical temperature, or an
+    all-vapor inlet at or below the saturated vapor density) the flux is the
+    incompressible flux, the large-kappa limit.
 
-    Verified against the closed form and its SPI and HEM limits, not
-    validated against measured orifice flows.
-
-    References:
-        Dyer, J., Doran, E., Dunn, Z., Lohner, K., Zilliac, G., and Cantwell,
-        B., "Modeling Feed System Flow Physics for Self-Pressurizing
-        Propellants", AIAA 2007-5702, 2007.
-        Waxman, B. S., Zimmerman, J. E., Cantwell, B. J., and Zilliac, G. G.,
-        "Mass Flow Rate and Isolation Characteristics of Injectors for Use with
-        Self-Pressurizing Oxidizers in Hybrid Rockets", AIAA 2013-3636, 2013.
+    Validation status: verified, not validated. Checked against the closed form and
+    its incompressible and equilibrium limits.
 
     Args:
         fluid_name: CoolProp fluid name.
         temperature_upstream: Upstream stagnation temperature [K].
-        density_upstream: Upstream density, used by the SPI term [kg/m^3].
+        density_upstream: Upstream density, used by the incompressible term
+            [kg/m^3].
         pressure_upstream: Upstream stagnation pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
 
@@ -147,6 +136,15 @@ def get_dyer_mass_flux(
 
     Raises:
         MissingOptionalDependencyError: If the `liquid` extra is not installed.
+
+    References:
+        Dyer, J., Doran, E., Dunn, Z., Lohner, K., Zilliac, G., and Cantwell,
+        B., "Modeling Feed System Flow Physics for Self-Pressurizing
+        Propellants", AIAA 2007-5702, 2007, Eqs. 35 to 37.
+        Waxman, B. S., Zimmerman, J. E., Cantwell, B. J., and Zilliac, G. G.,
+        "Mass Flow Rate and Isolation Characteristics of Injectors for Use with
+        Self-Pressurizing Oxidizers in Hybrid Rockets", AIAA 2013-3636, 2013,
+        Eq. 9.
     """
     import machwave.services.coolprop as coolprop_service
 
@@ -154,31 +152,31 @@ def get_dyer_mass_flux(
         return 0.0
 
     pressure_drop = pressure_upstream - pressure_downstream
-    spi_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
+    incompressible_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
 
     coolprop = coolprop_service.CoolPropService(fluid_name)
     if temperature_upstream >= coolprop.get_critical_temperature():
-        return spi_mass_flux
+        return incompressible_mass_flux
     vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
     if (
         vapor_pressure <= pressure_downstream
         or density_upstream
         <= coolprop.get_saturated_vapor_density(temperature_upstream)
     ):
-        return spi_mass_flux
+        return incompressible_mass_flux
 
     non_equilibrium_parameter = float(
         np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream))
     )
-    hem_mass_flux = get_homogeneous_equilibrium_mass_flux(
+    equilibrium_mass_flux = get_homogeneous_equilibrium_mass_flux(
         fluid_name=fluid_name,
         temperature_upstream=temperature_upstream,
         pressure_downstream=pressure_downstream,
         pressure_upstream=pressure_upstream,
     )
-    return (non_equilibrium_parameter * spi_mass_flux + hem_mass_flux) / (
-        1.0 + non_equilibrium_parameter
-    )
+    return (
+        non_equilibrium_parameter * incompressible_mass_flux + equilibrium_mass_flux
+    ) / (1.0 + non_equilibrium_parameter)
 
 
 def _get_stagnation_enthalpy_and_entropy(

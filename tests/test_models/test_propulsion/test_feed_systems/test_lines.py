@@ -79,15 +79,14 @@ class TestLineState:
 
 class TestFeedlineResistance:
     def test_drops_k_times_the_dynamic_pressure(self):
-        """dP = K rho v^2 / 2, with v = mdot / (rho A)."""
         resistance = line_models.FeedlineResistance(
             loss_coefficient=4.0, flow_area=1.0e-4
         )
         mass_flow, density = 0.8, 800.0
-        velocity = mass_flow / (density * 1.0e-4)
+        velocity = mass_flow / (density * resistance.flow_area)
 
         assert resistance.get_pressure_drop(mass_flow, density) == pytest.approx(
-            4.0 * 0.5 * density * velocity**2
+            resistance.loss_coefficient * 0.5 * density * velocity**2
         )
 
     def test_drops_nothing_at_zero_flow(self):

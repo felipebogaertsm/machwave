@@ -52,7 +52,7 @@ def generate_card_string(components: list[dict], *, reactant_type: str = "name")
             monopropellant. A biliquid needs "oxid" for the oxidizer card and
             "fuel" for the fuel card: CEA only applies the mixture ratio
             between an oxidant and a fuel, so two "name" cards run at a fixed
-            composition whatever O/F is asked for.
+            composition whatever mixture ratio is asked for.
 
     Returns:
         CEA card string.

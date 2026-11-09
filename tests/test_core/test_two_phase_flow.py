@@ -218,35 +218,36 @@ def _get_dyer_mass_flux(
 
 
 def test_get_dyer_mass_flux_matches_a_hand_computed_state_point():
-    """
-    The 1 kN test engine's oxidizer inlet: saturated N2O at 300 K behind a
-    0.2 MPa line loss, into a 3.2635 MPa chamber.
+    """The 1 kN test engine's oxidizer inlet, saturated N2O at 300 K."""
+    pressure_upstream = 5.6874e6
+    pressure_downstream = 3.2635e6
+    liquid_density = 724.70  # CoolProp at 300 K
+    vapor_pressure = 5.88744e6  # CoolProp at 300 K
+    # choked flux of the isentropic sweep, the same to 1e-8 with 200 to 20000 points
+    equilibrium_flux = 31422.0
 
-    CoolProp at 300 K: Pv = 5.88744 MPa, rho_l = 724.70 kg/m^3.
-    P1 = 5.6874 MPa, P2 = 3.2635 MPa, so P1 - P2 = 2.4239 MPa.
+    pressure_drop = pressure_upstream - pressure_downstream
+    incompressible_flux = np.sqrt(2.0 * liquid_density * pressure_drop)
+    non_equilibrium_parameter = np.sqrt(
+        pressure_drop / (vapor_pressure - pressure_downstream)
+    )
+    expected = (non_equilibrium_parameter * incompressible_flux + equilibrium_flux) / (
+        1.0 + non_equilibrium_parameter
+    )
 
-    G_SPI = sqrt(2 * 724.70 * 2.4239e6) = sqrt(3.5132e9) = 59272 kg/(m^2 s)
-    kappa = sqrt(2.4239 / (5.88744 - 3.2635)) = sqrt(0.92378) = 0.96113
-    G_HEM = 31422 kg/(m^2 s): the choked flux of the isentropic sweep, the
-        same to 1e-8 with 200, 2000 and 20000 points; the critical pressure
-        (4.14 MPa) is above P2.
-    G = (0.96113 * 59272 + 31422) / 1.96113 = 88391 / 1.96113 = 45071 kg/(m^2 s)
-
-    The tolerance covers the five significant figures carried by hand.
-    """
+    # the reference values carry five significant figures
     assert _get_dyer_mass_flux(
         temperature_upstream=300.0,
-        pressure_upstream=5.6874e6,
-        pressure_downstream=3.2635e6,
-        density_upstream=724.70,
-    ) == pytest.approx(45071.0, rel=1e-4)
+        pressure_upstream=pressure_upstream,
+        pressure_downstream=pressure_downstream,
+        density_upstream=liquid_density,
+    ) == pytest.approx(expected, rel=1e-4)
 
 
 @pytest.mark.parametrize("pressure_downstream_offset", [0.0, 1e5])
 def test_get_dyer_mass_flux_is_spi_when_the_chamber_is_above_the_vapor_pressure(
     pressure_downstream_offset,
 ):
-    """With P2 >= Pv the liquid cannot flash: the kappa -> infinity limit."""
     temperature_upstream = 293.0
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     pressure_upstream = 8.0e6
@@ -270,10 +271,7 @@ def test_get_dyer_mass_flux_is_spi_when_the_chamber_is_above_the_vapor_pressure(
 
 
 def test_get_dyer_mass_flux_tends_to_spi_as_the_non_equilibrium_parameter_grows():
-    """
-    A subcooled inlet into a chamber just below the vapor pressure has a
-    large kappa, and the flux closes on SPI as P2 rises to Pv.
-    """
+    """A subcooled inlet into a chamber rising toward the vapor pressure."""
     temperature_upstream = 293.0
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
@@ -282,21 +280,20 @@ def test_get_dyer_mass_flux_tends_to_spi_as_the_non_equilibrium_parameter_grows(
     gaps = []
     for margin in (1e5, 1e4, 1e2):
         pressure_downstream = vapor_pressure - margin
-        spi = np.sqrt(2.0 * density * (pressure_upstream - pressure_downstream))
+        incompressible_flux = np.sqrt(
+            2.0 * density * (pressure_upstream - pressure_downstream)
+        )
         actual = _get_dyer_mass_flux(
             temperature_upstream, pressure_upstream, pressure_downstream
         )
-        gaps.append(abs(actual - spi) / spi)
+        gaps.append(abs(actual - incompressible_flux) / incompressible_flux)
 
     assert gaps == sorted(gaps, reverse=True)
     assert gaps[-1] < 1e-2
 
 
 def test_get_dyer_mass_flux_tends_to_hem_as_the_non_equilibrium_parameter_vanishes():
-    """
-    An inlet well below its vapor pressure with a small pressure drop has
-    kappa -> 0, and the flux closes on the swept HEM flux.
-    """
+    """An inlet well below its vapor pressure with a shrinking pressure drop."""
     temperature_upstream = 300.0
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     pressure_upstream = vapor_pressure - 2e6
@@ -304,7 +301,7 @@ def test_get_dyer_mass_flux_tends_to_hem_as_the_non_equilibrium_parameter_vanish
     gaps = []
     for pressure_drop in (1e4, 1e3, 1e2):
         pressure_downstream = pressure_upstream - pressure_drop
-        hem = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        equilibrium_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
             fluid_name="N2O",
             temperature_upstream=temperature_upstream,
             pressure_downstream=pressure_downstream,
@@ -313,7 +310,7 @@ def test_get_dyer_mass_flux_tends_to_hem_as_the_non_equilibrium_parameter_vanish
         actual = _get_dyer_mass_flux(
             temperature_upstream, pressure_upstream, pressure_downstream
         )
-        gaps.append(abs(actual - hem) / hem)
+        gaps.append(abs(actual - equilibrium_flux) / equilibrium_flux)
 
     assert gaps == sorted(gaps, reverse=True)
     assert gaps[-1] < 1e-2
@@ -349,8 +346,10 @@ def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
     density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
     pressure_downstream = 20e5
 
-    spi = np.sqrt(2.0 * density * (pressure_upstream - pressure_downstream))
-    hem = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+    incompressible_flux = np.sqrt(
+        2.0 * density * (pressure_upstream - pressure_downstream)
+    )
+    equilibrium_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
         fluid_name="N2O",
         temperature_upstream=temperature_upstream,
         pressure_downstream=pressure_downstream,
@@ -359,10 +358,11 @@ def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
         temperature_upstream, pressure_upstream, pressure_downstream
     )
 
-    # A saturated inlet has kappa = 1: the plain average of the two, built
-    # from the same HEM sweep, so only round-off separates them.
-    assert hem < actual < spi
-    assert actual == pytest.approx(0.5 * (spi + hem), rel=1e-12)
+    # a saturated inlet weights the two equally, so only round-off remains
+    assert equilibrium_flux < actual < incompressible_flux
+    assert actual == pytest.approx(
+        0.5 * (incompressible_flux + equilibrium_flux), rel=1e-12
+    )
 
 
 def test_get_dyer_mass_flux_is_spi_for_an_all_vapor_inlet():
@@ -405,11 +405,7 @@ def _get_sweep_maximum(
     pressure_downstream: float,
     sweep_points: int,
 ) -> float:
-    """
-    Largest isentropic N2O flux over the sweep grid, every point straight from
-    PropsSI. The stagnation state is the inlet at (T, P1) when subcooled and
-    the saturated liquid at T otherwise.
-    """
+    """Largest isentropic N2O flux over the sweep grid, every point from PropsSI."""
     fluid_name = "N2O"
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
     if pressure_upstream > vapor_pressure:
@@ -434,33 +430,28 @@ def _get_sweep_maximum(
 
 
 @pytest.mark.parametrize(
-    "temperature_upstream,pressure_ratio_upstream,pressure_downstream",
+    "temperature_upstream,upstream_to_vapor_pressure_ratio,pressure_downstream",
     [
-        # Saturated at 250 K, choked and unchoked.
+        # saturated at 250 K, choked and unchoked
         (250.0, 1.0, 5.0e5),
         (250.0, 1.0, 1.5e6),
-        # Saturated at room temperature, and an inlet below its vapor pressure.
+        # saturated at room temperature, and an inlet below its vapor pressure
         (293.0, 1.0, 1.5e6),
         (300.0, 0.97, 3.0e6),
-        # Subcooled, choked and unchoked.
+        # subcooled, choked and unchoked
         (280.0, 1.3, 1.0e6),
         (280.0, 1.3, 4.0e6),
-        # Subcooled near the critical point (309.52 K), where CoolProp fails at
-        # one point of the sweep between the inlet and the maximum.
+        # subcooled near the critical point, where CoolProp fails at one sweep point
         (308.0, 1.5, 4.0e6),
         (308.0, 2.0, 5.0e5),
     ],
 )
 def test_get_homogeneous_equilibrium_mass_flux_is_the_maximum_over_its_sweep(
-    temperature_upstream, pressure_ratio_upstream, pressure_downstream
+    temperature_upstream, upstream_to_vapor_pressure_ratio, pressure_downstream
 ):
-    """
-    The flux is the largest of the isentropic fluxes at every point of the
-    sweep, to the last bit, choked or not. P1 is given as a ratio to the vapor
-    pressure.
-    """
+    """The flux is the largest isentropic flux over its sweep, to the last bit."""
     sweep_points = 200
-    pressure_upstream = pressure_ratio_upstream * CP.PropsSI(
+    pressure_upstream = upstream_to_vapor_pressure_ratio * CP.PropsSI(
         "P", "T", temperature_upstream, "Q", 0, "N2O"
     )
 

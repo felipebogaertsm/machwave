@@ -67,9 +67,8 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # At 1 s the chamber sits on the quasi-steady state of its balance, which
-    # does not depend on the step, but the tanks it follows drain and cool by
-    # explicit first-order steps. Measured 1.0e-5 between the two runs.
+    # the chamber is quasi-steady at 1 s, but the tanks drain and cool by explicit
+    # first-order steps; measured 1.0e-5 between the two runs
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
@@ -227,12 +226,7 @@ def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
 def _leave_a_trace(
     state: biliquid_simulation.BiliquidEngineState, name: str, fluid_mass: float
 ) -> None:
-    """
-    Cut a line down to a trace of fluid, vapor at the loading temperature.
-
-    The tank runs an energy balance, so the internal energy has to come down
-    with the mass, or the pair names no state CoolProp can resolve.
-    """
+    """Cut a line to a trace of vapor, with the internal energy to match."""
     tank = state.motor.feed_system.lines[name].tank
     state.fluid_mass_per_line[name][-1] = fluid_mass
     state.internal_energy_per_line[name] = fluid_mass * CP.PropsSI(
@@ -262,8 +256,7 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
     state = _build_state_for_burnout_test()
-    # (m / d_t) * d_t rounds above this mass, which is still dense enough
-    # vapor for CoolProp's (D, U) flash on ethanol.
+    # rounds up when turned into a flow and back, yet dense enough for CoolProp
     _leave_a_trace(state, "fuel", 1.5454226100014102e-09)
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
@@ -455,17 +448,11 @@ def test_combustion_efficiency_derates_chamber_not_thrust_coefficient() -> None:
     "combustion_efficiency, discharge_coefficient",
     [(1.0, 1.0), (0.9, 1.0), (0.9, 0.9)],
 )
-def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
+def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficiency(
     combustion_efficiency: float, discharge_coefficient: float
 ) -> None:
-    """At steady state, Pc * Cd * At / mdot equals eta * c*_ideal.
-
-    The delivered characteristic velocity comes from the simulated chamber
-    pressure, injector mass flow and effective throat area, and the ideal one
-    from the CEA state at the same pressure and mixture ratio. Isothermal tanks
-    hold their pressure, so the chamber settles, the storage term vanishes and
-    the ratio is exact.
-    """
+    """At steady state, the characteristic velocity ratio equals the efficiency."""
+    # an isothermal oxidizer tank holds its pressure, so the chamber settles
     motor, params = motor_builders.build_1kn_biliquid_engine(
         isothermal_oxidizer_tank=True
     )
@@ -479,8 +466,7 @@ def test_combustion_efficiency_is_the_delivered_c_star_efficiency(
     for _ in range(200):
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
-    # The flows and throat area of the last step were computed at the pressure
-    # it started from.
+    # the last step computed its flows at the pressure it started from
     chamber_pressure = state.chamber_pressure[-2]
     assert state.chamber_pressure[-1] == pytest.approx(chamber_pressure, rel=1e-12)
     mass_flow = sum(series[-1] for series in state.mass_flow_rate_per_line.values())

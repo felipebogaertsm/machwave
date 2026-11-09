@@ -63,16 +63,13 @@ def rk4th_ode_solver(
     )
 
 
-# |lambda * d_t| per step. RK4 stays stable up to about 2.785, but past 1 its stages
-# overshoot a decaying variable through zero, and near the stability limit the
-# nonlinear chamber balance settles on spurious steady states.
+# RK4 is stable up to about 2.8, but past 1 its stages overshoot a decaying variable
+# through zero, and near the limit the chamber settles on a spurious steady state
 MAX_STIFFNESS_STEP_PRODUCT = 1.0
 
-# Central-difference step relative to the variable, near the square root of machine
-# epsilon so truncation and round-off errors are balanced; the scale floor keeps the
-# step finite when the variable is near zero.
+# about the square root of machine epsilon, to balance truncation and round-off error
 RELATIVE_STIFFNESS_PERTURBATION = 1e-6
-MIN_STIFFNESS_PERTURBATION_SCALE = 1.0
+MIN_STIFFNESS_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
 
 
 def get_stable_step_count(
