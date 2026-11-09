@@ -326,12 +326,14 @@ def test_moment_of_inertia_is_guarded_past_burnout() -> None:
     assert np.all(np.isnan(state.propellant_cog[-1]))
 
 
-def test_chamber_pressure_stays_positive_on_a_stiff_chamber() -> None:
+def test_short_residence_time_is_substepped_and_keeps_the_pressure_positive() -> None:
     motor, params = motor_builders.build_finocyl_motor()
 
     result = run_simulation(motor, params)
 
     assert np.all(result.chamber_pressure > 0.0)
+    assert len(result.substep_count) == len(result.time) - 1
+    assert result.substep_count.max() > 1
 
 
 def test_propellant_center_of_gravity_is_measured_from_the_nozzle_exit() -> None:
