@@ -78,10 +78,10 @@ def get_dyer_mass_flux(
 
     Blends the single-phase incompressible flux and the flux of
     `get_homogeneous_equilibrium_mass_flux` by the non-equilibrium parameter. The
-    weights follow Waxman et al.; Eq. 36 of Dyer et al. as printed swaps them. Where
-    nothing can flash in the orifice (vapor pressure at or below the downstream
-    pressure, an inlet at or above the critical temperature, or an all-vapor inlet),
-    the incompressible flux is returned.
+    weights follow Waxman et al. The printed Eq. 36 of Dyer et al. swaps them.
+    Returns the incompressible flux when nothing can flash in the orifice. That is
+    the case when the vapor pressure is at or below the downstream pressure, the inlet
+    is at or above the critical temperature, or the inlet is all vapor.
 
     Args:
         fluid_name: CoolProp fluid name.
