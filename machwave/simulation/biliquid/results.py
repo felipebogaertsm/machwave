@@ -18,6 +18,10 @@ class BiliquidSimulationResult(
     """Simulation result for a biliquid engine run."""
 
     fluid_mass_per_line: dict[str, simulation_results.SimulationResultArray]
+    # injector flow of each line [kg/s], zero once the feed has stopped
+    mass_flow_rate_per_line: dict[str, simulation_results.SimulationResultArray]
+    # NaN where either side has stopped flowing
+    oxidizer_to_fuel_ratio: simulation_results.SimulationResultArray
     tank_pressure_per_line: dict[str, simulation_results.SimulationResultArray]
     # Flat for an isothermal tank, decaying for one running an energy balance.
     tank_temperature_per_line: dict[str, simulation_results.SimulationResultArray]
@@ -33,6 +37,11 @@ class BiliquidSimulationResult(
         }
         return {
             "fluid_mass_per_line": fluid_mass_per_line,
+            "mass_flow_rate_per_line": {
+                name: np.asarray(series)
+                for name, series in state.mass_flow_rate_per_line.items()
+            },
+            "oxidizer_to_fuel_ratio": np.asarray(state.oxidizer_to_fuel_ratio),
             "tank_pressure_per_line": {
                 name: np.asarray(series)
                 for name, series in state.tank_pressure_per_line.items()
