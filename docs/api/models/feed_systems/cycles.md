@@ -13,7 +13,11 @@ The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_s
 
 ## `StackedTankPressureFedFeedSystem`
 
-A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston. The tank at the top of the stack, `pressurizing_line`, pressurises every propellant: directly for its own line, and through the piston for every line below it. Pressure loss across the piston is captured by `piston_loss`, and each feedline loses what its own [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] takes at the line flow.
+A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston.
+The tank at the top of the stack, `pressurizing_line`, pressurises every propellant.
+It pressurises its own line directly and every line below it through the piston.
+`piston_loss` is the pressure loss across the piston.
+Each feedline loses what its own [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] takes at the line flow.
 
 **Construction**
 
@@ -86,13 +90,19 @@ Each line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineRe
 The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].
 A line with no resistance loses nothing.
 
-`line_losses`, `oxidizer_line_loss` and `fuel_line_loss` are deprecated: they take a fixed pressure drop off the feedline head whatever the flow. Give each line a `FeedlineResistance` instead.
+`line_losses`, `oxidizer_line_loss` and `fuel_line_loss` are deprecated.
+They take a fixed pressure drop off the feedline head whatever the flow.
+Give each line a `FeedlineResistance` instead.
 
 ---
 
 ## `SingleLinePressureFedFeedSystem`
 
-One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, falling as the tank cools, then blows down on the real-gas equation of state. The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as for the stacked tank. An empty tank delivers nothing, which stops the flow at the injector element.
+One propellant line, pressurized by its own tank.
+A self-pressurized propellant feeds at its vapor pressure while liquid remains, and that pressure falls as the tank cools.
+Once the liquid is gone, the tank blows down on the real-gas equation of state.
+The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as for the stacked tank.
+An empty tank delivers nothing, which stops the flow at the injector element.
 
 **Construction**
 

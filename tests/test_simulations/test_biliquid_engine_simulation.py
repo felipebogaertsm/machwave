@@ -67,14 +67,14 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
     coarse_step = 4e-4
     coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
 
-    # the tanks drain and cool by first-order steps; measured 1.0e-5
+    # the tanks drain and cool by first-order steps. Measured 1.0e-5
     assert np.interp(
         1.0, coarse_result.time, coarse_result.chamber_pressure
     ) == pytest.approx(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=3e-5,
     )
-    # line draining is first order, so burnout shifts with the step; measured 2.1e-3
+    # line draining is first order, so burnout shifts with the step. Measured 2.1e-3
     assert coarse_result.total_impulse == pytest.approx(
         simulation_result.total_impulse, rel=3e-3
     )
