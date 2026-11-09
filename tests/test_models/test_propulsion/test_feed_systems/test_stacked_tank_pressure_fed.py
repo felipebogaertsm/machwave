@@ -117,7 +117,7 @@ class TestInletStates:
 
 
 class TestFeedlineHeadPressure:
-    """The cycle sets the feedline head pressure; the line loss comes with the flow."""
+    """The cycle sets the feedline head pressure. The line loss depends on the flow."""
 
     def test_the_oxidizer_head_is_the_stack_pressure(self):
         feed_system = StackedTankPressureFedFeedSystemFactory.build(
@@ -147,7 +147,7 @@ class TestFeedlineHeadPressure:
         )
 
     def test_the_piston_loss_holds_whatever_the_flow(self):
-        """Seal friction, not a hydraulic loss: it is there at zero flow too."""
+        """Seal friction is not a hydraulic loss. It is there at zero flow too."""
         feed_system = StackedTankPressureFedFeedSystemFactory.build(piston_loss=2e5)
         oxidizer_tank = feed_system.lines["oxidizer"].tank
         stack_pressure = oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
