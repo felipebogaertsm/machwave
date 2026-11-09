@@ -242,7 +242,7 @@ class TestPropellantMassProperties:
             for mass, (line_cog, _) in zip(masses, line_mass_properties, strict=True)
         ) / sum(masses)
         np.testing.assert_allclose(cog, expected_cog)
-        # Moments about the shared axis add without a parallel axis shift.
+        # axial moments add without a parallel axis shift
         assert moi[0, 0] == pytest.approx(
             sum(line_moi[0, 0] for _, line_moi in line_mass_properties)
         )

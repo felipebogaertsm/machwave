@@ -21,9 +21,8 @@ class BiliquidSimulationResult(
     tank_pressure_per_line: dict[str, simulation_results.SimulationResultArray]
     # Flat for an isothermal tank, decaying for one running an energy balance.
     tank_temperature_per_line: dict[str, simulation_results.SimulationResultArray]
-    # propellant_cog is measured from the nozzle exit, positive away from the nozzle.
-    # Like an empty tank, a line without a tank placement gives a NaN propellant_cog
-    # and a zero propellant_moi.
+    # measured from the nozzle exit, positive away from the nozzle
+    # NaN center of gravity and zero inertia when all tanks are empty or any is unplaced
     propellant_cog: simulation_results.SimulationResultArray
     propellant_moi: simulation_results.SimulationResultArray
     final_fluid_mass_per_line: dict[str, float]
