@@ -22,8 +22,7 @@ def rk4th_step(
             so it stays consistent across the stages.
 
     Returns:
-        Tuple containing the new values of the variables followed by the
-        averaged auxiliary term; length equals `len(variables) + 1`.
+        New values of the variables, in the order of `variables`.
     """
     k_1 = equation(**variables, **kwargs)
     k_2 = equation(
@@ -48,15 +47,10 @@ def rk4th_step(
         **kwargs,
     )
 
-    derivatives = (
-        variables[key]
+    return tuple(
+        value
         + (1 / 6) * (k_1[index] + 2 * (k_2[index] + k_3[index]) + k_4[index]) * d_t
-        for index, key in enumerate(variables.keys())
-    )
-
-    return (
-        *derivatives,
-        (1 / 6) * (k_1[-1] + 2 * (k_2[-1] + k_3[-1]) + k_4[-1]),
+        for index, value in enumerate(variables.values())
     )
 
 
