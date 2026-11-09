@@ -21,10 +21,9 @@ def get_homogeneous_equilibrium_mass_flux(
     to upstream: the choked mass flux when the orifice is critical, otherwise the
     value at the downstream pressure. Along the isentrope the flux rises from zero
     at the upstream pressure to a single maximum, so the grid maximum is found by
-    bisecting on the sign of the flux difference between neighbouring points, with
-    about 2 log2(sweep_points) CoolProp flashes instead of one per point. The flux
-    is zero at a point where CoolProp cannot resolve the state (single points near
-    the critical temperature, all points below the triple point), which breaks that
+    bisecting on the sign of the flux difference between neighbouring points. The
+    flux is zero where CoolProp cannot resolve the state (single points near the
+    critical temperature, all points below the triple point), which breaks that
     shape, so a zero or a tie between neighbours falls back to evaluating every
     point.
 

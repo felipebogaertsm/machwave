@@ -405,11 +405,7 @@ def _get_sweep_maximum(
     pressure_downstream: float,
     sweep_points: int,
 ) -> float:
-    """
-    Largest isentropic N2O flux over the sweep grid, every point straight from
-    PropsSI. The stagnation state is the inlet at (T, P1) when subcooled and
-    the saturated liquid at T otherwise.
-    """
+    """Largest isentropic N2O flux over the sweep grid, every point from PropsSI."""
     fluid_name = "N2O"
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
     if pressure_upstream > vapor_pressure:
@@ -434,33 +430,28 @@ def _get_sweep_maximum(
 
 
 @pytest.mark.parametrize(
-    "temperature_upstream,pressure_ratio_upstream,pressure_downstream",
+    "temperature_upstream,upstream_to_vapor_pressure_ratio,pressure_downstream",
     [
-        # Saturated at 250 K, choked and unchoked.
+        # saturated at 250 K, choked and unchoked
         (250.0, 1.0, 5.0e5),
         (250.0, 1.0, 1.5e6),
-        # Saturated at room temperature, and an inlet below its vapor pressure.
+        # saturated at room temperature, and an inlet below its vapor pressure
         (293.0, 1.0, 1.5e6),
         (300.0, 0.97, 3.0e6),
-        # Subcooled, choked and unchoked.
+        # subcooled, choked and unchoked
         (280.0, 1.3, 1.0e6),
         (280.0, 1.3, 4.0e6),
-        # Subcooled near the critical point (309.52 K), where CoolProp fails at
-        # one point of the sweep between the inlet and the maximum.
+        # subcooled near the critical point, where CoolProp fails at one sweep point
         (308.0, 1.5, 4.0e6),
         (308.0, 2.0, 5.0e5),
     ],
 )
 def test_get_homogeneous_equilibrium_mass_flux_is_the_maximum_over_its_sweep(
-    temperature_upstream, pressure_ratio_upstream, pressure_downstream
+    temperature_upstream, upstream_to_vapor_pressure_ratio, pressure_downstream
 ):
-    """
-    The flux is the largest of the isentropic fluxes at every point of the
-    sweep, to the last bit, choked or not. P1 is given as a ratio to the vapor
-    pressure.
-    """
+    """The flux is the largest isentropic flux over its sweep, to the last bit."""
     sweep_points = 200
-    pressure_upstream = pressure_ratio_upstream * CP.PropsSI(
+    pressure_upstream = upstream_to_vapor_pressure_ratio * CP.PropsSI(
         "P", "T", temperature_upstream, "Q", 0, "N2O"
     )
 
