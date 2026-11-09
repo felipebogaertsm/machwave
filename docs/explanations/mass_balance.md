@@ -182,5 +182,4 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
-3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
-4. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
+3. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
