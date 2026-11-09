@@ -32,8 +32,8 @@ class PropellantComponent:
         role: Component role (oxidizer, fuel, additive).
         density: Component density [kg/m^3].
         chemical_formula: Element symbols to atom counts (i.e., {"H": 2, "O": 1}).
-        enthalpy: Molar enthalpy at `initial_temperature` on the CEA scale; at
-            298.15 K it is the standard enthalpy of formation [J/mol].
+        enthalpy: Molar enthalpy at `initial_temperature` on the CEA scale [J/mol].
+            At 298.15 K it is the standard enthalpy of formation.
         initial_temperature: Initial component temperature before combustion [K].
         custom_card: Whether a biliquid propellant builds a CEA reactant card
             from this component's fields. When False, `name` is looked up in

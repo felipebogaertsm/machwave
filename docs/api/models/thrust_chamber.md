@@ -11,7 +11,10 @@ Thrust chamber assembly and sub-components.
   An element stops flowing once the chamber pressure reaches its inlet pressure.
   In a biliquid simulation the inlet is the feedline head state less the line's flow-dependent loss.
   [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] solves that loss together with the element flow.
-- `MassFlowModel` — Enum selecting the orifice flow model. `SPI` (single-phase incompressible) for subcooled liquid propellants; `HEM` (homogeneous-equilibrium two-phase, choked below the critical pressure); `DYER` (Dyer's non-homogeneous non-equilibrium blend of `SPI` and `HEM`) for self-pressurized propellants such as nitrous oxide near saturation.
+- `MassFlowModel` — Enum selecting the orifice flow model.
+  `SPI` (single-phase incompressible) is for subcooled liquid propellants.
+  `HEM` (homogeneous-equilibrium two-phase) chokes below the critical pressure.
+  `DYER` (Dyer's non-homogeneous non-equilibrium blend of `SPI` and `HEM`) is for self-pressurized propellants such as nitrous oxide near saturation.
 - `SolidMotorThrustChamber` — Bundles nozzle + chamber + the distance from nozzle exit to grain port.
 - `BiliquidEngineThrustChamber` — Bundles nozzle + chamber + injector.
 
