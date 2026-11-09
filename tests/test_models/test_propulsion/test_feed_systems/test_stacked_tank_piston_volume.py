@@ -188,7 +188,7 @@ class TestIsentropicDrainOfAGrowingTank:
             for coarse, fine in zip(temperature_errors, temperature_errors[1:])
         ]
 
-        # measured 1.0018 and 1.0009, with the reference far tighter than the 7 mK left
+        # measured 1.0018 and 1.0009
         assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)
 
 

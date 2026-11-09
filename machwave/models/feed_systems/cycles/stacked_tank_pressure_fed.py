@@ -20,32 +20,14 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
     The tank at the top of the stack pressurizes every tank below it through a
     piston, so one tank sets the pressure the whole system runs on.
 
-    The piston moves down as the lines below it drain, so the fluid at the top
-    of the stack fills its tank volume plus every liquid volume pushed out
-    below:
-
-        V_top = V_top,0 + sum_j (m_j,0 - m_j) / rho_j
-
-    and does the boundary work P dV_top on the piston as it goes, which the
-    energy balance of the top tank takes out.
-
-    The lines below the piston are liquid-full, with no ullage, and their
-    tanks are isothermal: each holds its loading temperature and the
-    saturated liquid density there. An incompressible liquid pushed out by a
-    piston takes in P dV from it and carries out h = u + P / rho, so its
-    internal energy per unit mass does not change. Compression of that liquid
-    above its saturation pressure is neglected. A lower tank's own volume
-    only bounds its load: the piston rests on the liquid, so V_top,0 is the
-    top tank's `volume`.
-
-    Validation status: verified, not validated. The top tank matches a slow
-    adiabatic drain of a growing volume integrated along the saturation
-    curve; the model has not been compared with measured stacked-tank data.
+    As the lines below the piston drain, the fluid at the top of the stack fills
+    its tank volume plus the liquid volume pushed out below, and the top tank does
+    boundary work on the piston. Tanks below the piston must be isothermal: they
+    stay liquid-full at their loading temperature.
 
     References:
-        Cengel, Y. A. and Boles, M. A., "Thermodynamics: An Engineering
-        Approach", 8th ed., McGraw-Hill, 2015, Ch. 5 (energy analysis of
-        unsteady-flow processes, boundary work of a moving wall).
+        Cengel, Y. A., & Boles, M. A. (2015). Thermodynamics: An Engineering
+        Approach, 8th ed., Ch. 5.
     """
 
     def __init__(
@@ -190,9 +172,7 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         Return the volume the fluid of every line fills [m^3].
 
         A line below the piston fills the volume of its liquid. The top of the
-        stack fills its tank volume plus every liquid volume the piston has
-        pushed out below it, so the volumes add up to the same total whatever
-        the lines hold.
+        stack fills its tank volume plus the liquid volume pushed out below it.
 
         Args:
             fluid_masses: Fluid mass of every line [kg], keyed by line name.
@@ -221,10 +201,10 @@ class StackedTankPressureFedFeedSystem(feed_system_base.FeedSystem):
         """
         Return the pressure at the head of every feedline [Pa].
 
-        The line at the top of the stack starts at its tank pressure, evaluated
-        at the volume the piston has swept to; every line below the piston starts
-        the piston pressure loss lower. The feedline resistance is taken later,
-        at the line flow; a deprecated fixed line loss is still taken here.
+        The top line starts at its tank pressure, at the volume the piston has
+        swept to; every line below the piston starts the piston pressure loss
+        lower. The feedline resistance is taken later, at the line flow; a
+        deprecated fixed line loss is still taken here.
 
         Args:
             line_states: Fluid mass and internal energy of every line, keyed by
