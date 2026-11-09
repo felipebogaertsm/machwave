@@ -69,14 +69,14 @@ RELATIVE_DERIVATIVE_PERTURBATION = 1e-6
 MIN_DERIVATIVE_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
 
 
-def get_stable_step_count(
+def get_substep_count(
     variables: dict[str, float],
     equation: Callable,
     d_t: float,
     **kwargs: Any,
 ) -> int:
     """
-    Return how many equal RK4 steps keep a scalar ODE stable over `d_t`.
+    Return how many equal RK4 substeps keep a scalar ODE stable over `d_t`.
 
     The decay rate is minus the derivative of the right-hand side with respect to
     the variable, taken by central difference at its current value. Each step is
@@ -89,7 +89,7 @@ def get_stable_step_count(
         **kwargs: Additional keyword arguments forwarded to `equation`.
 
     Returns:
-        Number of steps, at least one.
+        Number of substeps, at least one.
 
     Raises:
         ValueError: If `variables` does not hold exactly one variable.
@@ -114,9 +114,9 @@ def rk4th_substepped_ode_solver(
     equation: Callable,
     d_t: float,
     **kwargs: Any,
-) -> float:
+) -> tuple[float, int]:
     """
-    Advance a scalar ODE over `d_t` in as many equal RK4 steps as stability needs.
+    Advance a scalar ODE over `d_t` in as many equal RK4 substeps as stability needs.
 
     Args:
         variables: Mapping of the single variable name to its current value.
@@ -125,14 +125,14 @@ def rk4th_substepped_ode_solver(
         **kwargs: Additional keyword arguments forwarded to `equation`.
 
     Returns:
-        New value of the variable.
+        New value of the variable and the number of substeps taken.
     """
-    step_count = get_stable_step_count(variables, equation, d_t, **kwargs)
+    substep_count = get_substep_count(variables, equation, d_t, **kwargs)
     ((state_name, state),) = variables.items()
 
-    for _ in range(step_count):
+    for _ in range(substep_count):
         state = rk4th_ode_solver(
-            {state_name: state}, equation, d_t / step_count, **kwargs
+            {state_name: state}, equation, d_t / substep_count, **kwargs
         )[0]
 
-    return state
+    return state, substep_count
