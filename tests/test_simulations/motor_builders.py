@@ -202,8 +202,7 @@ def build_1kn_biliquid_engine() -> tuple[
 ]:
     """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
     tank_temperature = 300.0
-    # Self-pressurized N2O reaches the injector as saturated liquid, not as the
-    # 298.15 K ideal gas of RocketCEA's built-in "N2O" card.
+    # the built-in "N2O" card is the 298.15 K gas, not the tank liquid
     oxidizer = propellants.saturated_liquid_nitrous_oxide(tank_temperature)
     fuel = FuelComponentFactory.build(initial_temperature=tank_temperature)
     propellant = BiliquidPropellantFactory.build(

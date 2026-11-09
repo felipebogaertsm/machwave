@@ -16,8 +16,7 @@ OXIDIZER_NAME = "N2O"
 
 
 def main():
-    # The tank feeds saturated liquid N2O. RocketCEA's built-in "N2O" card is
-    # the ideal gas at 298.15 K and would overstate flame temperature and Isp.
+    # the built-in "N2O" card is the 298.15 K gas and overstates flame temperature
     oxidizer = propellants.saturated_liquid_nitrous_oxide(300.0)
     fuel = propellants.PropellantComponent(
         name=FUEL_NAME,

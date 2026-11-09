@@ -33,22 +33,27 @@ Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the a
 The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$.
 The combustion efficiency accounts for incomplete combustion, heat losses and other losses in the chamber that make the delivered characteristic velocity lower than the ideal one.
 
-In Machwave, $\eta_{c^*}$ is the **characteristic velocity efficiency**, the ratio of the delivered to the ideal characteristic velocity (Huzel & Huang 1967, Eq. 1-41, p. 16), which is how the number is usually quoted in test reports and textbooks:
+In Machwave, $\eta_{c^*}$ is the **characteristic velocity efficiency**, the ratio of the delivered to the ideal characteristic velocity.
+This is how the number is usually quoted in test reports and textbooks:
 
 $$
 \eta_{c^*} = \frac{c^*_\text{actual}}{c^*_\text{ideal}}, \qquad c^* = \frac{P_0 A_t}{\dot{m}} = \frac{\sqrt{R T}}{H_\text{choked}}
 $$
 
-(Huzel & Huang 1967, Eq. 1-32 and the theoretical form below it, p. 12), with $A_t = C_d A_{t,\text{geo}}$ the effective throat area and $H_\text{choked}$ the choked flow function defined below.
-A c* reduced from test data with the geometric throat area also carries the throat discharge loss; Machwave models that loss separately through $C_d$, so a measured efficiency should not be applied on top of a $C_d$ below one without accounting for it.
+(Huzel & Huang 1967, Eq. 1-41, p. 16, and Eq. 1-32 with the theoretical form below it, p. 12)
+
+$A_t = C_d A_{t,\text{geo}}$ is the effective throat area and $H_\text{choked}$ is the choked flow function defined below.
+A $c^*$ reduced from test data with the geometric throat area also carries the throat discharge loss.
+Machwave models that loss separately through $C_d$, so a measured efficiency should not be applied on top of a $C_d$ below one without accounting for it.
 Since $c^* \propto \sqrt{T}$ at fixed $R$ and $k$, the temperature ratio is the square of the efficiency:
 
 $$
 T = \eta_{c^*}^2 T_0
 $$
 
-so that, for a choked chamber at a given mass flow and throat area, the chamber pressure and the delivered $c^*$ both scale by $\eta_{c^*}$.
-Huzel & Huang (1967, p. 16) give 0.87 to 1.03 for this factor; Machwave accepts values in (0, 1], and typical values depend mainly on the propellant combination and motor/engine size.
+For a choked chamber at a given mass flow and throat area, the chamber pressure and the delivered $c^*$ both scale by $\eta_{c^*}$.
+Huzel & Huang (1967, p. 16) give 0.87 to 1.03 for this factor.
+Machwave accepts values in (0, 1], and typical values depend mainly on the propellant combination and motor/engine size.
 A unitary $\eta_{c^*}$ tends to overestimate the chamber pressure.
 
 Substituting $M_{stored}$ into the mass balance and rearranging gives the general form of the chamber pressure differential equation:
@@ -115,8 +120,8 @@ $$
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
 It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
 Both source terms are evaluated at the chamber pressure of each Runge–Kutta stage: $\dot{m}_{out}$ is linear in $P_0$, and $\dot{m}_{in}$ carries the pressure dependence of the burn rate (solid motor) or of the injector pressure drop (biliquid engine), so the integrator advances the true coupled $(\dot{m}_{in} - \dot{m}_{out})$ slope instead of freezing the inflow at the start of the step.
-The equation is stiff when the chamber residence time is short, as in a liquid engine with a small characteristic length $L^*$: a perturbation in $P_0$ relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, and an explicit step with $|\lambda| \Delta t$ near RK4's stability limit of about 2.8 overshoots or settles on a spurious steady state.
-Each simulation step is therefore split into equal RK4 steps with $|\lambda| \Delta t \le 1$.
+The equation is stiff when the chamber residence time is short, as in a liquid engine with a small characteristic length $L^*$: a perturbation in $P_0$ relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, and an explicit step with $|\lambda| \Delta t$ near the fourth-order Runge–Kutta stability limit of about 2.8 overshoots or settles on a spurious steady state.
+Each simulation step is therefore split into equal Runge–Kutta steps with $|\lambda| \Delta t \le 1$.
 The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
 
 ## Solid Rocket Motor
@@ -177,5 +182,4 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
-3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
-4. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
+3. Huzel, D. K., & Huang, D. H. (1967). *Design of Liquid Propellant Rocket Engines* (2nd ed.). NASA SP-125. https://ntrs.nasa.gov/citations/19710019929
