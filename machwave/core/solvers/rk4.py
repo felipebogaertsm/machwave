@@ -54,11 +54,10 @@ def rk4th_step(
     )
 
 
-# RK4 is stable up to about 2.8, but past about 1.3 its last stage overshoots the
-# equilibrium, and near the limit the chamber settles on a spurious steady state
+# past about 1.3 the last stage overshoots equilibrium, well before the limit of 2.785
 MAX_DECAY_RATE_STEP_PRODUCT = 1.0
 
-# about the square root of machine epsilon, to balance truncation and round-off error
+# near the square root of machine epsilon, balancing truncation and round-off error
 RELATIVE_DERIVATIVE_PERTURBATION = 1e-6
 MIN_DERIVATIVE_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
 
@@ -70,11 +69,10 @@ def get_substep_count(
     **kwargs: Any,
 ) -> int:
     """
-    Return how many equal RK4 substeps keep a scalar ODE stable over `d_t`.
+    Return how many equal Runge-Kutta substeps keep a scalar equation stable over `d_t`.
 
-    The decay rate is minus the derivative of the right-hand side with respect to
-    the variable, taken by central difference at its current value. Each step is
-    kept within one decay time.
+    Each substep spans at most one decay time, taken by central difference at the
+    current value. A growing solution takes a single substep.
 
     Args:
         variables: Mapping of the single variable name to its current value.
@@ -110,7 +108,7 @@ def rk4th_ode_solver(
     **kwargs: Any,
 ) -> tuple[float, int]:
     """
-    Advance a scalar ODE over `d_t` in as many equal RK4 substeps as stability needs.
+    Advance a scalar equation over `d_t` in as many Runge-Kutta substeps as it needs.
 
     Args:
         variables: Mapping of the single variable name to its current value.
