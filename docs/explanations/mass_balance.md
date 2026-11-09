@@ -30,30 +30,23 @@ Inhibitors belong to the grain rather than to the chamber, so an inhibitor sleev
 
 Since the flow in the chamber is assumed quasi-stagnant (low Mach number), the adiabatic flame temperature is taken as the ideal chamber stagnation temperature.
 
-The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$.
-The combustion efficiency accounts for incomplete combustion, heat losses and other losses in the chamber that make the delivered characteristic velocity lower than the ideal one.
-
-In Machwave, $\eta_{c^*}$ is the **characteristic velocity efficiency**, the ratio of the delivered to the ideal characteristic velocity.
-This is how the number is usually quoted in test reports and textbooks:
+The actual **flame temperature** $T$ is obtained from the **adiabatic flame temperature** $T_{0}$ and a **combustion efficiency** $\eta_{c^*}$, the ratio of the delivered to the ideal characteristic velocity:
 
 $$
 \eta_{c^*} = \frac{c^*_\text{actual}}{c^*_\text{ideal}}, \qquad c^* = \frac{P_0 A_t}{\dot{m}} = \frac{\sqrt{R T}}{H_\text{choked}}
 $$
 
-(Huzel & Huang 1967, Eq. 1-41, p. 16, and Eq. 1-32 with the theoretical form below it, p. 12)
+(Huzel & Huang 1967, Eqs. 1-32 and 1-41)
 
 $A_t = C_d A_{t,\text{geo}}$ is the effective throat area and $H_\text{choked}$ is the choked flow function defined below.
-A $c^*$ reduced from test data with the geometric throat area also carries the throat discharge loss.
-Machwave models that loss separately through $C_d$, so a measured efficiency should not be applied on top of a $C_d$ below one without accounting for it.
-Since $c^* \propto \sqrt{T}$ at fixed $R$ and $k$, the temperature ratio is the square of the efficiency:
+Since $c^* \propto \sqrt{T}$, the flame temperature is:
 
 $$
 T = \eta_{c^*}^2 T_0
 $$
 
-For a choked chamber at a given mass flow and throat area, the chamber pressure and the delivered $c^*$ both scale by $\eta_{c^*}$.
-Huzel & Huang (1967, p. 16) give 0.87 to 1.03 for this factor.
-Machwave accepts values in (0, 1], and typical values depend mainly on the propellant combination and motor/engine size.
+Machwave accepts $\eta_{c^*}$ in (0, 1].
+A $c^*$ measured with the geometric throat area already includes the discharge loss, which Machwave models separately through $C_d$.
 A unitary $\eta_{c^*}$ tends to overestimate the chamber pressure.
 
 Substituting $M_{stored}$ into the mass balance and rearranging gives the general form of the chamber pressure differential equation:
