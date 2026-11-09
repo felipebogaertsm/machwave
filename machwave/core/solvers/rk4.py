@@ -60,13 +60,13 @@ def rk4th_ode_solver(
     )
 
 
-# RK4 is stable up to about 2.8, but past 1 its stages overshoot a decaying variable
-# through zero, and near the limit the chamber settles on a spurious steady state
-MAX_STIFFNESS_STEP_PRODUCT = 1.0
+# RK4 is stable up to about 2.8, but past about 1.3 its last stage overshoots the
+# equilibrium, and near the limit the chamber settles on a spurious steady state
+MAX_DECAY_RATE_STEP_PRODUCT = 1.0
 
 # about the square root of machine epsilon, to balance truncation and round-off error
-RELATIVE_STIFFNESS_PERTURBATION = 1e-6
-MIN_STIFFNESS_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
+RELATIVE_DERIVATIVE_PERTURBATION = 1e-6
+MIN_DERIVATIVE_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
 
 
 def get_stable_step_count(
@@ -78,8 +78,9 @@ def get_stable_step_count(
     """
     Return how many equal RK4 steps keep a scalar ODE stable over `d_t`.
 
-    The stiffness is the derivative of the right-hand side with respect to the
-    variable, taken by central difference at its current value.
+    The decay rate is minus the derivative of the right-hand side with respect to
+    the variable, taken by central difference at its current value. Each step is
+    kept within one decay time.
 
     Args:
         variables: Mapping of the single variable name to its current value.
@@ -97,15 +98,15 @@ def get_stable_step_count(
         raise ValueError(f"expected a single variable, got {len(variables)}")
 
     ((state_name, state),) = variables.items()
-    perturbation = RELATIVE_STIFFNESS_PERTURBATION * max(
-        abs(state), MIN_STIFFNESS_PERTURBATION_SCALE
+    perturbation = RELATIVE_DERIVATIVE_PERTURBATION * max(
+        abs(state), MIN_DERIVATIVE_PERTURBATION_SCALE
     )
-    stiffness = (
+    decay_rate = -(
         equation(**{state_name: state + perturbation}, **kwargs)[0]
         - equation(**{state_name: state - perturbation}, **kwargs)[0]
     ) / (2 * perturbation)
 
-    return max(1, math.ceil(-stiffness * d_t / MAX_STIFFNESS_STEP_PRODUCT))
+    return max(1, math.ceil(decay_rate * d_t / MAX_DECAY_RATE_STEP_PRODUCT))
 
 
 def rk4th_substepped_ode_solver(
@@ -115,7 +116,7 @@ def rk4th_substepped_ode_solver(
     **kwargs: Any,
 ) -> float:
     """
-    Advance a scalar ODE over `d_t` in as many equal RK4 steps as its stiffness needs.
+    Advance a scalar ODE over `d_t` in as many equal RK4 steps as stability needs.
 
     Args:
         variables: Mapping of the single variable name to its current value.

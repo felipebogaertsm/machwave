@@ -16,9 +16,7 @@ def exponential_decay(quantity):
     "d_t, expected_step_count",
     [(0.5e-4, 1), (4.5e-4, 5), (1.025e-2, 103)],
 )
-def test_step_count_keeps_each_step_within_the_stiffness_bound(
-    d_t, expected_step_count
-):
+def test_step_count_keeps_each_step_within_one_decay_time(d_t, expected_step_count):
     step_count = rk4.get_stable_step_count({"quantity": 1.0}, exponential_decay, d_t)
 
     assert step_count == expected_step_count
