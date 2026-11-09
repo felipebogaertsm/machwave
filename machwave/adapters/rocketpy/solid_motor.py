@@ -4,8 +4,30 @@ import machwave.adapters.rocketpy.base as rocketpy_base
 import machwave.models.grain.geometries as grain_geometries
 
 if typing.TYPE_CHECKING:
+    import machwave.models.grain as grain_models
     import machwave.models.motors as motors_models
     import machwave.simulation.solid.results as solid_results
+
+
+def is_supported_by_solid_motor(grain: "grain_models.Grain") -> bool:
+    """
+    Return whether RocketPy's SolidMotor can model the grain.
+
+    Args:
+        grain: The machwave grain.
+
+    Returns:
+        True for a grain of identical BATES segments.
+
+    Raises:
+        ValueError: If the grain has no segments.
+    """
+    if not grain.segments:
+        raise ValueError("Grain must have at least one segment")
+    return (
+        isinstance(grain.segments[0], grain_geometries.BatesSegment)
+        and not grain.get_segment_mismatches()
+    )
 
 
 def get_initial_grain_center_of_mass_position(
