@@ -79,8 +79,8 @@ class PropellantLine:
         role: Whether the line carries an oxidizer, a fuel, or an additive such
             as a triliquid diluent or a coolant.
         tank: Tank the line draws from.
-        tank_placement: Geometry and position of the tank in the engine. Optional,
-            not used by the internal ballistics simulation.
+        tank_placement: Geometry and position of the tank in the engine. Optional.
+            The internal ballistics simulation does not use it.
     """
 
     name: str
@@ -110,8 +110,8 @@ class PropellantLine:
         """
         Return the center of gravity and inertia of the propellant in the tank.
 
-        The liquid sits at the aft end of the tank with the vapor ahead of it, each a
-        uniform cylinder spanning the bore. Tank walls are not included.
+        Each phase is a uniform cylinder spanning the bore. The liquid sits at the aft
+        end of the tank and the vapor ahead of it. Tank walls are not included.
 
         Args:
             line_state: Fluid mass and internal energy of the line.
