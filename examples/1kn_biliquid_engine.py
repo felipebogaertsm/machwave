@@ -52,6 +52,12 @@ def main():
         piston_loss=1e5,
         oxidizer_line_loss=2e5,
         fuel_line_loss=2e5,
+        oxidizer_tank_placement=feed_systems.TankPlacement(
+            inner_diameter=0.1, nozzle_exit_to_aft_end_distance=0.53
+        ),
+        fuel_tank_placement=feed_systems.TankPlacement(
+            inner_diameter=0.1, nozzle_exit_to_aft_end_distance=0.25
+        ),
     )
 
     nozzle = thrust_chamber_models.Nozzle(
