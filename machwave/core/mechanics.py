@@ -140,13 +140,6 @@ def get_solid_cylinder_moment_of_inertia(
     """
     Calculate the inertia tensor of a uniform solid cylinder lying along the x-axis.
 
-    I_xx = m r^2 / 2 about the cylinder axis and I_yy = I_zz = m (r^2 / 4 + L^2 / 12)
-    about any transverse axis, both through the center of gravity.
-
-    References:
-        Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics: Dynamics*
-        (7th ed.). Wiley. Appendix D, Table D/4 (circular cylinder).
-
     Args:
         mass: Cylinder mass [kg].
         length: Cylinder length along its axis [m].
@@ -155,6 +148,10 @@ def get_solid_cylinder_moment_of_inertia(
     Returns:
         3x3 diagonal inertia tensor at the center of gravity, axial axis first
         [kg-m^2].
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). Engineering Mechanics: Dynamics,
+        7th ed., Appendix D, Table D/4.
     """
     axial_moment = mass * radius**2 / 2
     transverse_moment = mass * (radius**2 / 4 + length**2 / 12)
@@ -171,13 +168,7 @@ def get_combined_mass_properties(
     """
     Combine rigid bodies into one with the parallel axis theorem.
 
-    Each body's inertia tensor is shifted from its own center of gravity to the
-    combined one by m (|r|^2 E - r r^T), where r joins the two. A massless body adds
-    nothing, so its center of gravity may be undefined.
-
-    References:
-        Meriam, J. L., & Kraige, L. G. (2012). *Engineering Mechanics: Dynamics*
-        (7th ed.). Wiley. Appendix B (parallel-axis theorem).
+    A massless body is skipped, so its center of gravity may be undefined.
 
     Args:
         masses: Mass of each body [kg].
@@ -187,8 +178,11 @@ def get_combined_mass_properties(
 
     Returns:
         The combined center of gravity [m] and the inertia tensor about it
-        [kg-m^2]. With no mass, the center of gravity is NaN and the inertia zero,
-        as the solid simulation records an empty grain.
+        [kg-m^2]. With no mass, the center of gravity is NaN and the inertia zero.
+
+    References:
+        Meriam, J. L., & Kraige, L. G. (2012). Engineering Mechanics: Dynamics,
+        7th ed., Appendix B.
     """
     total_mass = 0.0
     weighted_position = np.zeros(3, dtype=np.float64)
