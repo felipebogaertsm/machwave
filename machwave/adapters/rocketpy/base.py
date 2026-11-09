@@ -180,7 +180,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         """
         Return the propellant mass flow rate over time.
 
-        Time derivative of the simulated propellant mass, negative while the
+        Time derivative of the simulated propellant mass. It is negative while the
         propellant burns, as RocketPy expects.
 
         Returns:
@@ -198,8 +198,8 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         """
         Return the propellant mass flow rate over time.
 
-        RocketPy's `SolidMotor` and `GenericMotor` read this separately from
-        `total_mass_flow_rate`, so it returns the same data.
+        Returns the same data as `total_mass_flow_rate`. RocketPy's `SolidMotor` and
+        `GenericMotor` read the two separately.
 
         Returns:
             `rocketpy.Function` with (time, mass flow rate) data [kg/s].
