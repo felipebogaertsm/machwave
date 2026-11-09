@@ -104,8 +104,46 @@ $$
 (Seidel 1965, Eq. 35)
 
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
-It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated in time as described in [Integrating the Chamber Pressure](#integrating-the-chamber-pressure).
-The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
+It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance].
+The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid Rocket Motor](#solid-rocket-motor) and [Biliquid Rocket Engine](#biliquid-rocket-engine).
+
+## Integrating the Chamber Pressure
+
+The equation is integrated with the classical fourth-order Runge–Kutta method.
+Each step evaluates the right-hand side at four intermediate pressures (stages), with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
+
+Near equilibrium, a pressure deviation decays as $e^{\lambda t}$, with $\lambda = \partial \dot{P}_0 / \partial P_0$.
+With a choked nozzle and an inflow independent of $P_0$:
+
+$$
+\lambda = -\frac{1}{\tau}, \qquad \tau = \frac{L^*}{C_d H \sqrt{R T}}, \qquad L^* = \frac{V_0}{A_{t,\text{geo}}}
+$$
+
+where $\tau$ is the chamber residence time and $L^*$ the characteristic length.
+A pressure-dependent inflow changes $\lambda$: for a solid motor with burn rate exponent $n$, $\lambda = -(1 - n)/\tau$ at equilibrium.
+The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine with $L^*$ near 9 cm, and 1 to 2 ms for a solid motor whose chamber is mostly filled with propellant; both can be shorter than the simulation step.
+
+One Runge–Kutta step of length $\Delta t$ multiplies the deviation by
+
+$$
+G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
+$$
+
+instead of the exact $e^{z}$.
+At $z = -1$ the two agree closely (0.375 against 0.368).
+Below $z \approx -1.3$ the last stage lands on the far side of equilibrium, where the nonlinear terms can drive the integration to a false steady state.
+Below $z = -2.785$, $|G| > 1$ and the deviation grows every step.
+
+Each simulation step is therefore split into $N$ equal substeps, so that $|\lambda| \Delta t / N \le 1$:
+
+$$
+N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
+$$
+
+with $\lambda$ estimated by central difference at the start of the step.
+Only the chamber pressure is substepped; grain geometry, propellant properties and feed system state advance once per simulation step.
+
+Implemented in [`rk4th_substepped_ode_solver`][machwave.core.solvers.rk4th_substepped_ode_solver]; the substep count of each step is recorded in [`SimulationResult`][machwave.simulation.results.SimulationResult].
 
 ## Solid Rocket Motor
 
@@ -160,65 +198,6 @@ The stream flows $\dot{m}_{fuel}$ and $\dot{m}_{ox}$ are supplied by the feed sy
 The chamber state $\{T_0, R, k_{chamber}, k_{exhaust}\}$ is evaluated by NASA-CEA at each step from the current $P_0$, the design expansion ratio, and the instantaneous mixture ratio.
 
 Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
-
-## Integrating the Chamber Pressure
-
-The chamber pressure equation is integrated with the classical fourth-order Runge–Kutta method.
-One Runge–Kutta step evaluates the right-hand side four times, at four intermediate pressures called stages, and combines the four slopes into a single update of $P_0$.
-Both $\dot{m}_{out}$ and $\dot{m}_{in}$ are evaluated at every stage pressure, so the pressure dependence of the burn rate or of the injector pressure drop is integrated together with the nozzle outflow instead of being frozen at the start of the step.
-
-### Residence Time
-
-Near equilibrium, a small pressure deviation $\delta P$ evolves as
-
-$$
-\frac{d\,\delta P}{dt} = \lambda\,\delta P, \qquad \lambda = \frac{\partial \dot{P}_0}{\partial P_0}
-$$
-
-and decays as $e^{\lambda t}$.
-With a choked nozzle and an inflow independent of $P_0$, only the outflow term contributes, and
-
-$$
-\lambda = -\frac{1}{\tau}, \qquad \tau = \frac{L^*}{C_d H \sqrt{R T}}, \qquad L^* = \frac{V_0}{A_{t,\text{geo}}}
-$$
-
-where $\tau$ is the chamber residence time (or stay time) and $L^*$ the characteristic length.
-With the ideal characteristic velocity $c^* = \sqrt{R T} / H$ and $C_d = 1$, this is $\tau = L^* c^* / (R T)$.
-
-A pressure-dependent inflow changes $\lambda$.
-For a solid motor at equilibrium, the burn rate law gives $\lambda = -(1 - n)/\tau$.
-For a biliquid engine, the injector flow falls as $P_0$ rises, which makes $\lambda$ more negative.
-
-The decay time $1/|\lambda|$ can be shorter than the simulation step for both motor types.
-A liquid engine with $L^*$ near 9 cm has a decay time near 0.1 ms.
-A solid motor has a longer decay time but is usually run with a longer step: one whose chamber is mostly filled with propellant can stay between 1 and 2 ms through the burn, below a 5 ms step.
-
-### Step Size
-
-One Runge–Kutta step of length $\Delta t$ applied to the linear equation above multiplies $\delta P$ by
-
-$$
-G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
-$$
-
-which approximates the exact factor $e^{z}$:
-
-- For $|z| \le 1$ the two agree closely: $G(-1) = 0.375$ against $e^{-1} = 0.368$.
-- Past $|z| \approx 1.3$ the last stage overshoots, evaluating the right-hand side on the far side of equilibrium, at pressures the true solution never reaches. Through the nonlinear terms (nozzle flow function, burn rate, injector flow, combustion properties), the integration can settle on a false steady state.
-- Past $|z| = 2.785$, $|G| > 1$ and the deviation grows every step until the pressure turns negative.
-
-Each simulation step is therefore split into $n$ equal Runge–Kutta steps of length $\Delta t / n$:
-
-$$
-n = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
-$$
-
-so that each one satisfies $|\lambda| \Delta t / n \le 1$.
-$\lambda$ is estimated at the start of each simulation step by a central difference of the right-hand side at the current pressure.
-Only the chamber pressure is split this way: grain geometry, propellant properties and feed system state still advance once per simulation step.
-When $|\lambda| \Delta t \le 1$ a single step is taken, so the simulation step can be chosen for those slower quantities rather than for the chamber.
-
-Implemented in [`rk4th_substepped_ode_solver`][machwave.core.solvers.rk4th_substepped_ode_solver].
 
 # References
 
