@@ -19,8 +19,7 @@ The adapter sits after the internal ballistics simulation:
 
 1. Build a Machwave motor model.
 2. Run `InternalBallisticsSimulation` to obtain a `SimulationResult`.
-3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)`
-   for a grain of identical BATES segments, or `RocketPyGenericMotorAdapter` for any other grain.
+3. Wrap the motor and result with `RocketPySolidMotorAdapter(motor=motor, simulation_result=result)` for a grain of identical BATES segments, or `RocketPyGenericMotorAdapter` for any other grain.
 4. Pass the adapted motor into a RocketPy `Rocket`.
 
 ## Example
@@ -116,9 +115,8 @@ For a full runnable script, see `examples/rocketpy_srm_simulation.py`.
 
 ## Biliquid Engines
 
-`RocketPyGenericMotorAdapter` also accepts a `BiliquidEngine`. Every propellant line
-needs a `TankPlacement`, so the simulation can record the propellant center of mass and
-inertia:
+`RocketPyGenericMotorAdapter` also accepts a `BiliquidEngine`.
+Every propellant line needs a `TankPlacement`, so the simulation can record the propellant center of mass and inertia:
 
 ```python
 from machwave.models.feed_systems import StackedTankPressureFedFeedSystem, TankPlacement
@@ -137,9 +135,8 @@ feed_system = StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
 )
 ```
 
-The engine is then simulated and adapted like a solid motor, with
-`RocketPyGenericMotorAdapter(motor=engine, simulation_result=result)`. See
-`examples/1kn_biliquid_engine.py` for the engine definition.
+Simulate and adapt the engine like a solid motor, with `RocketPyGenericMotorAdapter(motor=engine, simulation_result=result)`.
+See `examples/1kn_biliquid_engine.py` for the engine definition.
 
 ## Data Passed To RocketPy
 
@@ -150,8 +147,7 @@ and its simulation result. The adapter currently provides:
 - burn-time interval
 - dry mass, dry-mass center of gravity, and dry-mass moments of inertia
 - nozzle radius, and the throat radius for `SolidMotor`
-- chamber radius, height, and position for `GenericMotor`, from the grain or, for a
-  biliquid engine, from the cylinder enclosing every tank
+- chamber radius, height, and position for `GenericMotor`, from the grain or, for a biliquid engine, from the cylinder enclosing every tank
 - propellant initial mass
 - propellant center of mass over time
 - propellant inertia tensor components over time
@@ -159,10 +155,13 @@ and its simulation result. The adapter currently provides:
 
 ## Current Scope And Limitations
 
-- `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments; it raises `ValueError` otherwise.
+- `RocketPySolidMotorAdapter` builds a RocketPy `SolidMotor` and only accepts grains of identical BATES segments.
+  It raises `ValueError` otherwise.
 - The solid-motor adapter assumes RocketPy's segmented-grain model and uses the first Machwave grain segment as the representative geometry.
 - `RocketPyGenericMotorAdapter` builds a RocketPy `GenericMotor` and accepts any grain geometry.
-- `RocketPyGenericMotorAdapter` also accepts a biliquid engine. Every propellant line must define `tank_placement`; the adapter raises `ValueError` otherwise.
+- `RocketPyGenericMotorAdapter` also accepts a biliquid engine.
+  Every propellant line must define `tank_placement`.
+  The adapter raises `ValueError` otherwise.
 - RocketPy must be installed, otherwise adapter import or initialization raises `ImportError`.
 - The thrust chamber must define `dry_mass_properties`; the adapter raises `ValueError` otherwise.
 - The coordinate system orientation is `nozzle_to_combustion_chamber`, and `nozzle_position` is zero, so RocketPy measures from the nozzle exit. Machwave's motor frame shares that origin, so the propellant and dry mass positions pass through unchanged.

@@ -21,8 +21,8 @@ from tests.test_simulations.conftest import run_simulation
 from tests.test_simulations import motor_builders
 
 RAIL_LENGTH = 5.2
-# absolute since the center of mass can reach the nozzle exit at burnout, and the two
-# RocketPy classes compute the propellant mass slightly differently
+# Absolute tolerance. The center of mass can reach the nozzle exit at burnout, and the
+# two RocketPy classes compute the propellant mass slightly differently.
 CENTER_OF_MASS_TOLERANCE = 1e-6
 
 

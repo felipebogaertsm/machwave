@@ -90,8 +90,8 @@ class RocketPyGenericMotorAdapter(
         """
         Return the radius, height, and position of the chamber passed to RocketPy.
 
-        A solid motor's chamber is its grain in the combustion chamber; a biliquid
-        engine's is the envelope of its tanks.
+        For a solid motor the chamber is the grain in the combustion chamber. For a
+        biliquid engine it is the cylinder enclosing every tank.
 
         Raises:
             ValueError: If a biliquid engine has a line without a tank placement.
