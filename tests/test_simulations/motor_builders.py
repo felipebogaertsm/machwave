@@ -226,8 +226,7 @@ def build_1kn_biliquid_engine() -> tuple[
             initial_fluid_mass=1.55,
         ),
         piston_loss=1e5,
-        # 2e5 Pa on each line at the flow the engine settles at, through 1/2 in
-        # tube (10.9 mm bore).
+        # 2e5 Pa per line at the steady engine flow, through 1/2 in tube (10.9 mm bore)
         oxidizer_line_resistance=(
             feed_systems_models.FeedlineResistance.from_design_point(
                 pressure_drop=2e5,

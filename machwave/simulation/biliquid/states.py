@@ -21,7 +21,7 @@ import machwave.models.thrust_chamber.injector as injector_models
 import machwave.simulation.biliquid.results as biliquid_results
 import machwave.simulation.states as simulation_states
 
-# Relative to the lossless flow, far below the accuracy of any orifice model.
+# relative to the lossless flow, far below the accuracy of any orifice model
 LINE_FLOW_RELATIVE_TOLERANCE = 1e-8
 
 
@@ -36,17 +36,16 @@ def get_line_mass_flow(
     """
     Flow a line delivers through its injector element [kg/s].
 
-    The feedline loses pressure with its own flow, so the element sees
-    P_head - dP(mdot) and the flow solves
+    The feedline loses pressure with its own flow, so the element sees the head
+    pressure less the line loss and the flow solves
 
         mdot = f_inj(P_head - dP(mdot), Pc)
 
-    The right-hand side does not rise as mdot rises, so the root lies between
-    zero and the flow the element passes with no line loss, and is bracketed
-    there. When the residual at the lossless flow is not positive, the element
-    passes no less at the lower inlet pressure (HEM from a saturated inlet,
-    whose stagnation state is the saturated liquid at the tank temperature
-    whatever the pressure), and the lossless flow is returned.
+    The element flow does not rise with the line flow, so the root lies between
+    zero and the lossless flow. If the element passes no less at the lower inlet
+    pressure, as the homogeneous equilibrium model does from a saturated inlet,
+    whose stagnation state does not depend on the pressure, the lossless flow is
+    returned.
 
     Args:
         chamber_pressure: Chamber pressure [Pa].
