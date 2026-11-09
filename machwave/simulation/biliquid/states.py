@@ -438,7 +438,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             return
 
         self.time.append(time + d_t)
-        step_count = rk4.get_stable_step_count(
+        substep_count = rk4.get_substep_count(
             {"chamber_pressure": chamber_pressure},
             mass_balance.compute_chamber_pressure_mass_balance,
             d_t,
@@ -450,6 +450,7 @@ class BiliquidEngineState(simulation_states.MotorState):
                 ),
             ),
         )
+        self.substep_count.append(substep_count)
 
         depletes_this_step = any(
             mass_consumed[name] >= fluid_masses[name] for name in self.lines
@@ -457,7 +458,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         if is_feeding and depletes_this_step:
             self._run_depletion_step(
                 d_t=d_t,
-                step_count=step_count,
+                substep_count=substep_count,
                 external_pressure=external_pressure,
                 chamber_pressure=chamber_pressure,
                 fluid_masses=fluid_masses,
@@ -490,7 +491,7 @@ class BiliquidEngineState(simulation_states.MotorState):
                 state,
                 equation,
                 d_t,
-                step_count=step_count,
+                step_count=substep_count,
                 # reuse the start-of-step flows and thermochemistry as the first stage
                 initial_derivative=equation(
                     state,
@@ -509,7 +510,7 @@ class BiliquidEngineState(simulation_states.MotorState):
             # a line ran dry inside a stage, so fall back to the depletion step
             self._run_depletion_step(
                 d_t=d_t,
-                step_count=step_count,
+                substep_count=substep_count,
                 external_pressure=external_pressure,
                 chamber_pressure=chamber_pressure,
                 fluid_masses=fluid_masses,
@@ -675,7 +676,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         self,
         *,
         d_t: float,
-        step_count: int,
+        substep_count: int,
         external_pressure: float,
         chamber_pressure: float,
         fluid_masses: Mapping[str, float],
@@ -693,7 +694,7 @@ class BiliquidEngineState(simulation_states.MotorState):
 
         Args:
             d_t: Time increment [s].
-            step_count: Number of RK4 steps the chamber stiffness needs.
+            substep_count: Number of Runge-Kutta substeps the chamber pressure needs.
             external_pressure: Ambient pressure [Pa].
             chamber_pressure: Chamber pressure at the start of the step [Pa].
             fluid_masses: Fluid mass of every line at the start of the step
@@ -719,7 +720,7 @@ class BiliquidEngineState(simulation_states.MotorState):
                     )
                 ),
                 d_t,
-                step_count=step_count,
+                step_count=substep_count,
             )[0]
         )
 

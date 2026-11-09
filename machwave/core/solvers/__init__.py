@@ -1,13 +1,5 @@
 """Numerical methods for differential equations, optimization, and similar."""
 
-from .rk4 import (
-    rk4th_ode_solver,
-    rk4th_substepped_ode_solver,
-    rk4th_vector_ode_solver,
-)
+from .rk4 import rk4th_ode_solver, rk4th_step, rk4th_vector_ode_solver
 
-__all__ = [
-    "rk4th_ode_solver",
-    "rk4th_substepped_ode_solver",
-    "rk4th_vector_ode_solver",
-]
+__all__ = ["rk4th_ode_solver", "rk4th_step", "rk4th_vector_ode_solver"]

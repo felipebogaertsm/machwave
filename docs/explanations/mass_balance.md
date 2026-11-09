@@ -118,11 +118,46 @@ $$
 (Seidel 1965, Eq. 35)
 
 This single differential equation is the foundation of all internal ballistics simulations in Machwave.
-It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance] and integrated numerically with the fourth-order Runge–Kutta solver in [`machwave.core.solvers`][machwave.core.solvers].
-Both source terms are evaluated at the chamber pressure of each Runge–Kutta stage: $\dot{m}_{out}$ is linear in $P_0$, and $\dot{m}_{in}$ carries the pressure dependence of the burn rate (solid motor) or of the injector pressure drop (biliquid engine), so the integrator advances the true coupled $(\dot{m}_{in} - \dot{m}_{out})$ slope instead of freezing the inflow at the start of the step.
-The equation is stiff when the chamber residence time is short, as in a liquid engine with a small characteristic length $L^*$: a perturbation in $P_0$ relaxes at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$, and an explicit step with $|\lambda| \Delta t$ near the fourth-order Runge–Kutta stability limit of about 2.8 overshoots or settles on a spurious steady state.
-Each simulation step is therefore split into equal Runge–Kutta steps with $|\lambda| \Delta t \le 1$.
-The next sections derive the specific forms of $\dot{m}_{in}$ for different categories of motors/engines.
+It is evaluated by [`compute_chamber_pressure_mass_balance`][machwave.core.mass_balance.compute_chamber_pressure_mass_balance].
+The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid Rocket Motor](#solid-rocket-motor) and [Biliquid Rocket Engine](#biliquid-rocket-engine).
+
+## Integrating the Chamber Pressure
+
+The equation is integrated with the classical fourth-order Runge–Kutta method.
+Each step evaluates the right-hand side at four intermediate pressures (stages), with both $\dot{m}_{in}$ and $\dot{m}_{out}$ evaluated at each stage pressure.
+
+Near equilibrium, a pressure deviation decays as $e^{\lambda t}$, with $\lambda = \partial \dot{P}_0 / \partial P_0$.
+With a choked nozzle and an inflow independent of $P_0$:
+
+$$
+\lambda = -\frac{1}{\tau}, \qquad \tau = \frac{L^*}{C_d H \sqrt{R T}}, \qquad L^* = \frac{V_0}{A_{t,\text{geo}}}
+$$
+
+where $\tau$ is the chamber residence time and $L^*$ the characteristic length.
+A pressure-dependent inflow changes $\lambda$: for a solid motor with burn rate exponent $n$, $\lambda = -(1 - n)/\tau$ at equilibrium.
+The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine with $L^*$ near 9 cm, and 1 to 2 ms for a solid motor whose chamber is mostly filled with propellant; both can be shorter than the simulation step.
+
+One Runge–Kutta step of length $\Delta t$ multiplies the deviation by
+
+$$
+G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
+$$
+
+instead of the exact $e^{z}$.
+At $z = -1$ the two agree closely (0.375 against 0.368).
+Below $z \approx -1.3$ the last stage lands on the far side of equilibrium, where the nonlinear terms can drive the integration to a false steady state.
+Below $z = -2.785$, $|G| > 1$ and the deviation grows every step.
+
+Each simulation step is therefore split into $N$ equal substeps, so that $|\lambda| \Delta t / N \le 1$:
+
+$$
+N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
+$$
+
+with $\lambda$ estimated by central difference at the start of the step.
+In a solid motor only the chamber pressure is substepped; grain geometry and propellant properties advance once per simulation step. A biliquid engine substeps its whole state, as described below.
+
+Implemented in [`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver]; the substep count of each step is recorded in [`SimulationResult`][machwave.simulation.results.SimulationResult].
 
 ## Solid Rocket Motor
 
@@ -189,7 +224,7 @@ $$
 \end{pmatrix}
 $$
 
-At every Runge-Kutta stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its own feedline loss, and CEA is read at the stage $P_0$ and mixture ratio. Nothing is held at its value from the start of the step, so the step is fourth order where the right-hand side is smooth. The chamber stiffness sets how many equal RK4 steps of the whole vector a simulation step takes, as above.
+At every Runge-Kutta stage the tank state follows from the stage $(m, U)$, each line flow $\dot{m}_i$ is solved at the stage $P_0$ with its own feedline loss, and CEA is read at the stage $P_0$ and mixture ratio. Nothing is held at its value from the start of the step, so the step is fourth order where the right-hand side is smooth. The chamber decay rate sets how many equal substeps of the whole vector a simulation step takes, as above.
 
 Two things limit the order in practice:
 

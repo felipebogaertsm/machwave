@@ -117,7 +117,7 @@ def test_inflow_callable_is_evaluated_at_each_rk4_stage_pressure():
         seen_pressures.append(chamber_pressure)
         return 0.5
 
-    rk4.rk4th_ode_solver(
+    rk4.rk4th_step(
         variables={"chamber_pressure": 5.0e6},
         equation=mass_balance.compute_chamber_pressure_mass_balance,
         d_t=0.05,
@@ -157,7 +157,7 @@ def integrate_chamber_pressure(*, staged, d_t, step_count, initial_pressure):
             mass_flow_in = saint_robert_inflow
         else:
             mass_flow_in = constant(saint_robert_inflow(chamber_pressure))
-        result = rk4.rk4th_ode_solver(
+        result = rk4.rk4th_step(
             variables={"chamber_pressure": chamber_pressure},
             equation=mass_balance.compute_chamber_pressure_mass_balance,
             d_t=d_t,

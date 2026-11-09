@@ -15,7 +15,7 @@ from tests.test_simulations import motor_builders
 # drops below the CoolProp and CEA noise (about 1e-11 relative)
 WINDOW = 0.0128  # s
 DYER_WINDOW = 0.0032  # s, shorter since the Dyer element runs a CoolProp sweep
-# small enough that the chamber stiffness never splits a step
+# small enough that the chamber never needs a substep
 STEPS = (8e-5, 4e-5, 2e-5)
 
 
