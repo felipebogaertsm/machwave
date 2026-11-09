@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 import math
+import warnings
 from collections.abc import Mapping
 from typing import Callable, cast
 
@@ -25,6 +26,8 @@ import machwave.simulation.states as simulation_states
 
 # relative to the lossless flow, far below the accuracy of any orifice model
 LINE_FLOW_RELATIVE_TOLERANCE = 1e-8
+# the saturated-liquid flash the equilibrium flow rests on is ill-conditioned above it
+NEAR_CRITICAL_TEMPERATURE_RATIO = 0.99
 
 
 def get_line_mass_flow(
@@ -150,6 +153,66 @@ def get_total_injector_mass_flow(
 ) -> float:
     """Total injector mass flow over every line at the given pressure [kg/s]."""
     return sum(injector_flows(chamber_pressure).values())
+
+
+def get_injector_inlet_pressure(
+    head_state: fluid_state_models.FluidState,
+    resistance: line_models.FeedlineResistance | None,
+    mass_flow: float,
+) -> float:
+    """Pressure at the injector face: the feedline head less the line loss [Pa]."""
+    if resistance is None:
+        return head_state.pressure
+    return head_state.pressure - resistance.get_pressure_drop(
+        mass_flow, head_state.density
+    )
+
+
+def is_two_phase_liquid_inlet(inlet: fluid_state_models.FluidState) -> bool:
+    """
+    Whether a liquid inlet sits below its vapor pressure, flashing before the face.
+
+    Dyer's model blends the flow of a liquid flashing inside the orifice, so vapor
+    already formed in the feedline goes unaccounted for. An all-vapor inlet is not
+    flagged: a tank out of liquid feeds gas by design.
+
+    Args:
+        inlet: Propellant state at the injector face.
+
+    Returns:
+        True if liquid is present below its vapor pressure.
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    coolprop = coolprop_service.CoolPropService(inlet.fluid_name)
+    if inlet.temperature >= coolprop.get_critical_temperature():
+        return False
+    return inlet.density > coolprop.get_saturated_vapor_density(
+        inlet.temperature
+    ) and inlet.pressure < coolprop.get_saturation_pressure(inlet.temperature)
+
+
+def is_near_critical(fluid_name: str, temperature: float) -> bool:
+    """
+    Whether the temperature is near the critical temperature of the fluid.
+
+    Near is at or above `NEAR_CRITICAL_TEMPERATURE_RATIO` times the critical
+    temperature.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature: Temperature [K].
+
+    Returns:
+        True if the temperature is at or above the ratio times the critical
+        temperature.
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    critical_temperature = coolprop_service.CoolPropService(
+        fluid_name
+    ).get_critical_temperature()
+    return temperature >= NEAR_CRITICAL_TEMPERATURE_RATIO * critical_temperature
 
 
 class _LineRanDryAtStageError(Exception):
@@ -288,6 +351,58 @@ class BiliquidEngineState(simulation_states.MotorState):
         ] = {name: [] for name in self.lines}
         self.oxidizer_to_fuel_ratio: simulation_states.SimulationStateArray = []
 
+        # time each line spent outside the envelope of Dyer's injector model [s]
+        self.two_phase_inlet_time_per_line: dict[str, float] = {
+            name: 0.0 for name in self.lines
+        }
+        self.near_critical_tank_time_per_line: dict[str, float] = {
+            name: 0.0 for name in self.lines
+        }
+
+    def _track_injector_model_envelope(
+        self,
+        time: float,
+        d_t: float,
+        inlet_states: Mapping[str, fluid_state_models.FluidState],
+        mass_flows: Mapping[str, float],
+    ) -> None:
+        """
+        Add the timestep to each line's time outside the envelope of Dyer's model.
+
+        Warns once per line, at the onset of each condition.
+        """
+        for name, head_state in inlet_states.items():
+            if mass_flows[name] <= 0.0:
+                continue
+            inlet = dataclasses.replace(
+                head_state,
+                pressure=get_injector_inlet_pressure(
+                    head_state, self.lines[name].resistance, mass_flows[name]
+                ),
+            )
+            if is_two_phase_liquid_inlet(inlet):
+                if self.two_phase_inlet_time_per_line[name] == 0.0:
+                    warnings.warn(
+                        f"line {name!r} feeds the injector below its vapor pressure "
+                        f"from {time:.4f} s: the {inlet.fluid_name} flashes in the "
+                        "feedline, which Dyer's model does not account for",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                self.two_phase_inlet_time_per_line[name] += d_t
+            if is_near_critical(inlet.fluid_name, inlet.temperature):
+                if self.near_critical_tank_time_per_line[name] == 0.0:
+                    warnings.warn(
+                        f"line {name!r} is within "
+                        f"{1.0 - NEAR_CRITICAL_TEMPERATURE_RATIO:.0%} of the "
+                        f"critical temperature of {inlet.fluid_name} from "
+                        f"{time:.4f} s, where the equilibrium flow of its injector "
+                        "element is ill-conditioned",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                self.near_critical_tank_time_per_line[name] += d_t
+
     def _evaluate_propellant_properties(
         self,
         chamber_pressure: float,
@@ -374,6 +489,7 @@ class BiliquidEngineState(simulation_states.MotorState):
         mass_flows = injector_flows(chamber_pressure)
         for name, mass_flow in mass_flows.items():
             self.mass_flow_rate_per_line[name].append(mass_flow)
+        self._track_injector_model_envelope(time, d_t, inlet_states, mass_flows)
 
         mass_consumed = {
             name: min(flow * d_t, fluid_masses[name])

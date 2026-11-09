@@ -9,6 +9,8 @@ stay independent of the example layer.
 
 from __future__ import annotations
 
+import math
+
 import machwave.models.feed_systems as feed_systems_models
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
@@ -212,20 +214,21 @@ def build_1kn_biliquid_engine(
         isothermal_oxidizer_tank: Whether the oxidizer tank holds its loading
             temperature instead of running an energy balance. The fuel tank
             below the piston always does.
-        dyer_oxidizer: Whether the oxidizer element uses the Dyer model, as in the
-            example. Each Dyer flow costs a CoolProp sweep, so the default is the
-            incompressible element.
+        dyer_oxidizer: Whether the oxidizer element blends in the equilibrium
+            flow, as in the example. Each blended flow costs a CoolProp sweep, so
+            the default runs the element in its incompressible limit.
     """
     if dyer_oxidizer:
         oxidizer_element = InjectorElementFactory.build(
             # sized for an oxidizer-to-fuel ratio of 1.95 at 0.1 s
             area=2.097e-5 / 0.48,
-            mass_flow_model=thrust_chamber_models.MassFlowModel.DYER,
         )
         # flows at 1 s
         oxidizer_line_flow, fuel_line_flow = 0.7976, 0.3849
     else:
-        oxidizer_element = InjectorElementFactory.build(area=1.4e-5 / 0.48)
+        oxidizer_element = InjectorElementFactory.build(
+            area=1.4e-5 / 0.48, non_equilibrium_factor=math.inf
+        )
         oxidizer_line_flow, fuel_line_flow = 0.8406, 0.5015
 
     tank_temperature = 300.0

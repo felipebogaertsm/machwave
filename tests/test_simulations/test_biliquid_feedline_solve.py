@@ -124,11 +124,9 @@ class TestNoFlow:
         assert solve(line, element, chamber_pressure=HEAD_PRESSURE - 1e4) > 0.0
 
 
-class TestHomogeneousEquilibrium:
+class TestSaturatedNitrousOxide:
     def test_the_element_sees_the_head_less_the_line_drop(self):
-        element = InjectorElementFactory.build(
-            area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
-        )
+        element = InjectorElementFactory.build(area=1.4e-5 / 0.48)
         line = PropellantLineFactory.build(
             resistance=feed_systems_models.FeedlineResistance(
                 loss_coefficient=5.0, flow_area=2.0e-5
@@ -156,36 +154,8 @@ class TestHomogeneousEquilibrium:
             rel=1e-8,
         )
 
-    def test_a_saturated_inlet_passes_the_lossless_flow(self):
-        """Here the line loss has no effect, so the residual never changes sign."""
-        element = InjectorElementFactory.build(
-            area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
-        )
-        line = PropellantLineFactory.build(
-            resistance=feed_systems_models.FeedlineResistance(
-                loss_coefficient=5.0, flow_area=2.0e-5
-            )
-        )
-        tank = TankFactory.build(fluid_name="N2O", temperature=300.0)
-        head = FluidStateFactory.build(
-            fluid_name="N2O",
-            pressure=tank.get_pressure(
-                tank.initial_fluid_mass, tank.initial_internal_energy
-            ),
-            temperature=300.0,
-            density=tank.get_density(
-                tank.initial_fluid_mass, tank.initial_internal_energy
-            ),
-        )
-
-        assert solve(line, element, head_state=head) == pytest.approx(
-            element.get_mass_flow(inlet=head, chamber_pressure=CHAMBER_PRESSURE)
-        )
-
     def test_matches_a_tight_root_find(self):
-        element = InjectorElementFactory.build(
-            area=1.4e-5 / 0.48, mass_flow_model=injector_models.MassFlowModel.HEM
-        )
+        element = InjectorElementFactory.build(area=1.4e-5 / 0.48)
         resistance = feed_systems_models.FeedlineResistance(
             loss_coefficient=5.0, flow_area=2.0e-5
         )

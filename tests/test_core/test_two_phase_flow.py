@@ -1,3 +1,5 @@
+import math
+
 import CoolProp.CoolProp as CP
 import numpy as np
 import pytest
@@ -275,6 +277,53 @@ def _get_dyer_mass_flux(
         pressure_upstream=pressure_upstream,
         pressure_downstream=pressure_downstream,
     )
+
+
+def test_get_dyer_mass_flux_scales_the_non_equilibrium_parameter_by_the_factor():
+    temperature_upstream, pressure_downstream = 293.0, 20e5
+    pressure_upstream = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
+    density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
+    incompressible_flux = np.sqrt(
+        2.0 * density * (pressure_upstream - pressure_downstream)
+    )
+    equilibrium_flux = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        "N2O", temperature_upstream, pressure_downstream, pressure_upstream
+    )
+    factor = 3.0
+
+    actual = two_phase_flow.get_dyer_mass_flux(
+        fluid_name="N2O",
+        temperature_upstream=temperature_upstream,
+        density_upstream=density,
+        pressure_upstream=pressure_upstream,
+        pressure_downstream=pressure_downstream,
+        non_equilibrium_factor=factor,
+    )
+
+    # a saturated inlet has kappa = 1 before the factor
+    assert actual == pytest.approx(
+        (factor * incompressible_flux + equilibrium_flux) / (1.0 + factor)
+    )
+
+
+def test_get_dyer_mass_flux_with_an_infinite_factor_is_the_incompressible_flux_without_coolprop(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "machwave.services.coolprop.CoolPropService.__init__",
+        lambda self, fluid_name: pytest.fail("CoolProp was consulted"),
+    )
+
+    actual = two_phase_flow.get_dyer_mass_flux(
+        fluid_name="RP-1",
+        temperature_upstream=293.0,
+        density_upstream=810.0,
+        pressure_upstream=30e5,
+        pressure_downstream=20e5,
+        non_equilibrium_factor=math.inf,
+    )
+
+    assert actual == pytest.approx(np.sqrt(2.0 * 810.0 * 10e5))
 
 
 def test_get_dyer_mass_flux_matches_a_hand_computed_state_point():
