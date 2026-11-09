@@ -79,9 +79,9 @@ def test_get_enthalpy_at_pressure_entropy(service):
 @pytest.mark.parametrize(
     "temperature, density",
     [
-        (290.0, 500.0),  # Inside the dome.
-        (300.0, 731.58),  # Compressed liquid, a 1% overfill.
-        (290.0, 50.0),  # Superheated vapor below the vapor fill.
+        (290.0, 500.0),  # inside the dome
+        (300.0, 731.58),  # compressed liquid, a 1% overfill
+        (290.0, 50.0),  # superheated vapor
     ],
 )
 def test_a_flash_coolprop_gets_right_is_kept(service, temperature, density):
@@ -109,11 +109,7 @@ def test_a_state_off_the_chart_raises(service):
 
 
 class TestAStateTheFlashGetsWrong:
-    """
-    CoolProp 6.8.0's (D, U) flash puts this N2O state at 270.37 K and 1.45 MPa,
-    flagged single-phase. It is two-phase at 291.031 K: the saturated mix at
-    that temperature and quality gives back the density and internal energy.
-    """
+    """CoolProp 6.8 flashes this two-phase N2O state to a single-phase 270.37 K."""
 
     DENSITY = 454.50072100174214
     INTERNAL_ENERGY = 228590.2487156092
@@ -129,15 +125,13 @@ class TestAStateTheFlashGetsWrong:
         ) == pytest.approx(self.INTERNAL_ENERGY, rel=1e-12)
 
     def test_the_temperature_is_on_the_dome(self, service):
-        # The dome solve stops at a 1e-10 K bracket; 1e-6 K leaves room for
-        # the round-off in the reference state.
+        # 1e-6 K leaves room for round-off in the reference state
         assert service.get_temperature_at_density_internal_energy(
             self.DENSITY, self.INTERNAL_ENERGY
         ) == pytest.approx(self.TEMPERATURE, abs=1e-6)
 
     def test_the_pressure_is_the_saturation_pressure(self, service):
-        # A 1e-6 K temperature error moves the saturation pressure by about
-        # 1e-8 relative.
+        # a 1e-6 K error moves the saturation pressure by about 1e-8 relative
         assert service.get_pressure_at_density_internal_energy(
             self.DENSITY, self.INTERNAL_ENERGY
         ) == pytest.approx(
