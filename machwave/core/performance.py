@@ -11,13 +11,8 @@ def get_effective_flame_temperature(
     """
     Get the flame temperature corrected by the combustion efficiency.
 
-    The combustion efficiency is applied to the characteristic velocity (c*).
-    Since the square root of temperature is proportional to c*, the effective
-    flame temperature is proportional to the square of the combustion efficiency.
-
-    References:
-        Huzel, D. K., & Huang, D. H. (1967). Design of Liquid Propellant Rocket
-        Engines (2nd ed.). NASA SP-125. Eq. 1-41, p. 16.
+    The combustion efficiency is a characteristic velocity efficiency, so the flame
+    temperature scales with its square.
 
     Args:
         adiabatic_flame_temperature: Adiabatic flame temperature [K].
@@ -25,6 +20,10 @@ def get_effective_flame_temperature(
 
     Returns:
         Effective flame temperature [K].
+
+    References:
+        Huzel, D. K., & Huang, D. H. (1967). Design of Liquid Propellant Rocket
+        Engines (2nd ed.). NASA SP-125. Eq. 1-41.
     """
     return combustion_efficiency**2 * adiabatic_flame_temperature
 
