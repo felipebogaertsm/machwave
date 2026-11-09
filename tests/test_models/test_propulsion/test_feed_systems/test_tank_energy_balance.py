@@ -7,8 +7,11 @@ carries the tank's internal energy alongside its mass and takes out the
 enthalpy of whatever leaves.
 """
 
+import math
+
 import CoolProp.CoolProp as CP
 import pytest
+import scipy.integrate
 
 import machwave.models.feed_systems.tank as tank_models
 
@@ -227,3 +230,102 @@ class TestOutflowEnthalpy:
         tank = build(isothermal=False)
 
         assert tank.get_outflow_specific_enthalpy(0.0, 0.0, mass_drained=0.0) == 0.0
+
+
+class TestAgainstTheIsentropicDrain:
+    """A slow adiabatic drain is isentropic, giving an independent reference."""
+
+    FINAL_FLUID_MASS = 1.6  # above the 1.57 kg of saturated vapor at 293 K
+    MASS_STEPS = (2e-2, 1e-2, 5e-3)
+
+    @staticmethod
+    def saturation(temperature):
+        return [
+            CP.PropsSI(key, "T", temperature, "Q", quality, FLUID)
+            for key, quality in (("D", 0), ("D", 1), ("S", 0), ("S", 1))
+        ]
+
+    @classmethod
+    def entropy(cls, temperature, fluid_mass):
+        liquid_density, vapor_density, liquid_entropy, vapor_entropy = cls.saturation(
+            temperature
+        )
+        latent_entropy_per_volume = (vapor_entropy - liquid_entropy) / (
+            1.0 / vapor_density - 1.0 / liquid_density
+        )
+        return (
+            fluid_mass * liquid_entropy
+            + (VOLUME - fluid_mass / liquid_density) * latent_entropy_per_volume
+        )
+
+    @classmethod
+    def isentropic_temperature(cls):
+        def temperature_slope(fluid_mass, state):
+            temperature = state[0]
+            liquid_density, vapor_density, liquid_entropy, vapor_entropy = (
+                cls.saturation(temperature)
+            )
+            entropy_slope = (
+                cls.entropy(temperature + 1e-3, fluid_mass)
+                - cls.entropy(temperature - 1e-3, fluid_mass)
+            ) / 2e-3
+            # the outflow leaves at the liquid entropy
+            return [
+                (vapor_entropy - liquid_entropy)
+                / liquid_density
+                / (1.0 / vapor_density - 1.0 / liquid_density)
+                / entropy_slope
+            ]
+
+        solution = scipy.integrate.solve_ivp(
+            temperature_slope,
+            (FLUID_MASS, cls.FINAL_FLUID_MASS),
+            [TEMPERATURE],
+            rtol=1e-10,
+            atol=1e-8,
+        )
+        return solution.y[0, -1]
+
+    @classmethod
+    def drain_to_the_final_mass(cls, mass_step):
+        tank = build(isothermal=False)
+        fluid_mass, internal_energy = FLUID_MASS, tank.initial_internal_energy
+        steps = round((FLUID_MASS - cls.FINAL_FLUID_MASS) / mass_step)
+        for _ in range(steps):
+            fluid_mass, internal_energy = drain(
+                tank, mass_step, fluid_mass, internal_energy
+            )
+        return tank, fluid_mass, internal_energy
+
+    def test_the_drain_follows_the_isentrope(self):
+        tank, fluid_mass, internal_energy = self.drain_to_the_final_mass(
+            self.MASS_STEPS[-1]
+        )
+
+        reference_temperature = self.isentropic_temperature()
+
+        # about 12 K of decay. Measured within 0.01 K and 2e-4 of the pressure
+        assert reference_temperature < TEMPERATURE - 12.0
+        assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
+            reference_temperature, abs=0.05
+        )
+        assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
+            CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=5e-4
+        )
+
+    def test_the_explicit_drain_is_first_order(self):
+        reference_temperature = self.isentropic_temperature()
+        errors = []
+        for mass_step in self.MASS_STEPS:
+            tank, fluid_mass, internal_energy = self.drain_to_the_final_mass(mass_step)
+            errors.append(
+                tank.get_temperature(fluid_mass, internal_energy)
+                - reference_temperature
+            )
+
+        observed_orders = [
+            math.log2(coarse / fine) for coarse, fine in zip(errors, errors[1:])
+        ]
+
+        # measured 1.0016 and 1.0008
+        assert observed_orders == pytest.approx([1.0, 1.0], abs=0.05)

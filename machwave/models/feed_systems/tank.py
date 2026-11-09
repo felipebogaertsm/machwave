@@ -31,15 +31,13 @@ class Tank:
     caller, which lets the integrator own that state and keeps the model
     re-runnable.
 
+    By default the tank runs an energy balance. Its state is the fluid mass and the
+    internal energy the integrator carries beside it. The saturation pressure falls
+    as the tank cools over the burn. Liquid and vapor share one temperature.
+
     An isothermal tank is a pure function of the fluid mass. Its temperature is
     held where it was loaded, so a self-pressurizing tank holds its saturation
     pressure flat for as long as any liquid remains.
-
-    A tank running an energy balance is a function of the fluid mass and of the
-    internal energy the integrator carries alongside it. Draining takes enthalpy
-    out with the fluid, the fluid left behind cools as it boils to refill the
-    ullage, and the saturation pressure follows the temperature down over the
-    burn.
 
     Assumptions:
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
@@ -47,6 +45,11 @@ class Tank:
         the real-gas equation of state.
       - Nothing crosses the tank wall: no heat in, and no work other than what
         the leaving fluid carries.
+
+    References:
+        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J., & Zilliac, G. G. (2013).
+        Review and Evaluation of Models for Self-Pressurizing Propellant Tank
+        Dynamics. AIAA 2013-4045, Eqs. 20-23, without wall heat transfer.
     """
 
     def __init__(
@@ -56,7 +59,7 @@ class Tank:
         temperature: float,
         initial_fluid_mass: float,
         overfill_tolerance: float = 0.01,
-        isothermal: bool = True,
+        isothermal: bool = False,
     ) -> None:
         """
         Initialize a two-phase tank model.
@@ -72,9 +75,9 @@ class Tank:
             overfill_tolerance: Allowed fraction over the saturated liquid
                 density, e.g. 0.01 = 1% (>=0).
             isothermal: Whether the temperature is held where the tank was
-                loaded. False runs an energy balance instead, and every query
-                then needs the internal energy the integrator carries beside
-                the mass, starting from `initial_internal_energy`.
+                loaded. False (the default) runs an energy balance. Every query
+                then needs the internal energy, which starts at
+                `initial_internal_energy`.
 
         Raises:
             ValueError: If the fluid is unknown to CoolProp, if any argument is
@@ -95,8 +98,7 @@ class Tank:
 
         self._validate()
 
-        # The tank is isothermal with a fixed fluid, so these properties are constant
-        # and cached
+        # saturation properties at the loaded temperature, constant only if isothermal
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
             temperature
