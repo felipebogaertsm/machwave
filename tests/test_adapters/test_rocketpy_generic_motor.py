@@ -21,11 +21,8 @@ from tests.test_simulations.conftest import run_simulation
 from tests.test_simulations import motor_builders
 
 RAIL_LENGTH = 5.2
-# Absolute because the center of mass reaches the nozzle exit at burnout when the
-# dry center of gravity sits there. SolidMotor takes the propellant mass from its
-# own grain regression and GenericMotor from thrust over a constant exhaust
-# velocity; the two differ by about 1e-5 of the motor mass, which moves the center
-# of mass by less than 3e-7 m at the sampled times.
+# absolute since the center of mass can reach the nozzle exit at burnout, and the two
+# RocketPy classes compute the propellant mass slightly differently
 CENTER_OF_MASS_TOLERANCE = 1e-6
 
 
@@ -78,9 +75,12 @@ def test_chamber_attributes_describe_the_grain_and_combustion_chamber() -> None:
     )
     assert attrs["chamber_height"] == pytest.approx(motor.grain.total_length)
     assert attrs["chamber_position"] == pytest.approx(
-        motor.grain.get_center_of_gravity(web_distance=0.0)[0] + 0.01
+        motor.grain.get_center_of_gravity(web_distance=0.0)[0]
+        + thrust_chamber.nozzle_exit_to_grain_port_distance
     )
-    assert attrs["propellant_initial_mass"] == pytest.approx(2.5)
+    assert attrs["propellant_initial_mass"] == pytest.approx(
+        adapter.simulation_result.initial_propellant_mass
+    )
 
 
 def test_chamber_attributes_describe_the_envelope_of_the_tanks() -> None:
