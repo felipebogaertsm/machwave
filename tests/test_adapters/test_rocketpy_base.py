@@ -11,8 +11,7 @@ import machwave.simulation.solid.results as solid_results
 from tests.test_simulations import motor_builders
 from tests.test_simulations.conftest import run_simulation
 
-# Catches only a gross error in the mass passed to RocketPy: the docs example
-# reaches about 2.4 km above ground level.
+# loose on purpose, the example motor reaches about 2.4 km above ground
 MIN_APOGEE_ABOVE_GROUND = 1000.0
 
 
