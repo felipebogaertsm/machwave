@@ -211,12 +211,11 @@ class BiliquidEngineState(simulation_states.MotorState):
         mass_flows = injector_flows(chamber_pressure)
         for name, mass_flow in mass_flows.items():
             self.mass_flow_rate_per_line[name].append(mass_flow)
-        # A flow capped at the line mass over the time step can round to slightly
-        # more than the line holds.
+
         mass_consumed = {
             name: min(flow * d_t, fluid_masses[name])
             for name, flow in mass_flows.items()
-        }
+        }  # limit mass consumed to the available fluid mass in each line
 
         mixture_ratio = self._get_mixture_ratio(mass_flows)
         oxidizer_to_fuel_ratio = math.nan if mixture_ratio is None else mixture_ratio
