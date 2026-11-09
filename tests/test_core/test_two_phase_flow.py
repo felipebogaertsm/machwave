@@ -397,3 +397,72 @@ def test_get_dyer_mass_flux_is_spi_above_the_critical_temperature():
     )
 
     assert actual == pytest.approx(np.sqrt(2.0 * density * 6.0e6))
+
+
+def _get_sweep_maximum(
+    temperature_upstream: float,
+    pressure_upstream: float,
+    pressure_downstream: float,
+    sweep_points: int,
+) -> float:
+    """Largest isentropic N2O flux over the sweep grid, with each point from PropsSI."""
+    fluid_name = "N2O"
+    vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, fluid_name)
+    if pressure_upstream > vapor_pressure:
+        inputs = ("T", temperature_upstream, "P", pressure_upstream)
+    else:
+        inputs = ("T", temperature_upstream, "Q", 0)
+    enthalpy_upstream = CP.PropsSI("H", *inputs, fluid_name)
+    entropy_upstream = CP.PropsSI("S", *inputs, fluid_name)
+
+    mass_fluxes = [0.0]
+    for pressure in np.linspace(pressure_downstream, pressure_upstream, sweep_points):
+        try:
+            density = CP.PropsSI("D", "P", pressure, "S", entropy_upstream, fluid_name)
+            enthalpy = CP.PropsSI("H", "P", pressure, "S", entropy_upstream, fluid_name)
+        except ValueError:
+            continue
+        if enthalpy < enthalpy_upstream:
+            mass_fluxes.append(
+                density * float(np.sqrt(2.0 * (enthalpy_upstream - enthalpy)))
+            )
+    return max(mass_fluxes)
+
+
+@pytest.mark.parametrize(
+    "temperature_upstream,upstream_to_vapor_pressure_ratio,pressure_downstream",
+    [
+        # saturated at 250 K, choked and unchoked
+        (250.0, 1.0, 5.0e5),
+        (250.0, 1.0, 1.5e6),
+        # saturated at room temperature, and an inlet below its vapor pressure
+        (293.0, 1.0, 1.5e6),
+        (300.0, 0.97, 3.0e6),
+        # subcooled, choked and unchoked
+        (280.0, 1.3, 1.0e6),
+        (280.0, 1.3, 4.0e6),
+        # subcooled near the critical point, where CoolProp fails at one point
+        (308.0, 1.5, 4.0e6),
+        (308.0, 2.0, 5.0e5),
+    ],
+)
+def test_get_homogeneous_equilibrium_mass_flux_is_the_maximum_over_its_sweep(
+    temperature_upstream, upstream_to_vapor_pressure_ratio, pressure_downstream
+):
+    """The flux equals the largest isentropic flux over its sweep exactly."""
+    sweep_points = 200
+    pressure_upstream = upstream_to_vapor_pressure_ratio * CP.PropsSI(
+        "P", "T", temperature_upstream, "Q", 0, "N2O"
+    )
+
+    actual = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
+        "N2O",
+        temperature_upstream,
+        pressure_downstream,
+        pressure_upstream=pressure_upstream,
+        sweep_points=sweep_points,
+    )
+
+    assert actual == _get_sweep_maximum(
+        temperature_upstream, pressure_upstream, pressure_downstream, sweep_points
+    )
