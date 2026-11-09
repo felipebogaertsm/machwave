@@ -45,10 +45,9 @@ def test_effective_flame_temperature_unity_efficiency_is_unchanged():
         (0.5, 2_800.0, 700.0),
     ],
 )
-def test_effective_flame_temperature_squares_the_c_star_efficiency(
+def test_effective_flame_temperature_squares_the_characteristic_velocity_efficiency(
     combustion_efficiency, adiabatic_flame_temperature, expected
 ):
-    """T_eff = eta_c*^2 * T0, since c* scales with sqrt(T)."""
     assert core_performance.get_effective_flame_temperature(
         adiabatic_flame_temperature=adiabatic_flame_temperature,
         combustion_efficiency=combustion_efficiency,
