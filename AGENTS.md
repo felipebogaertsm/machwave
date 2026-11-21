@@ -1,15 +1,14 @@
 # Machwave
 
 Open source Python library for chemical rocket propulsion simulation: solid motors and
-biliquid engines, built on internal ballistics. Python 3 with uv. User documentation is
-built with MkDocs from `docs/`.
+biliquid engines, built on internal ballistics.
 
 ## How to use these instructions
 
 - Start here, then load only the docs mapped below to the paths you will touch.
 - If the task grows into a new area, load that area's doc before editing there.
 - The code is the source of truth. If a doc and the code disagree, trust the code and
-  fix the doc. `docs/ai/README.md` says where a new rule goes.
+  fix the doc.
 
 ## Before you edit
 
@@ -23,23 +22,6 @@ built with MkDocs from `docs/`.
   `docs/ai/documentation.md`.
 - **This file or anything in `docs/ai/`:** read `docs/ai/README.md`.
 
-## Layout
-
-```
-machwave/common/      shared types (fluid state, mass properties) and optional dependency loading
-machwave/core/        physics primitives: compressible flow, mass balance, performance, unit conversions, solvers
-machwave/models/      engine components: grain, propellants, nozzle losses, feed systems, thrust chamber, motors
-machwave/simulation/  the time-marched loop and per-step state for solid and biliquid engines, and results
-machwave/montecarlo/  dispersion studies over a simulation
-machwave/adapters/    exporters to other libraries (RocketPy)
-machwave/services/    thin wrappers over external solvers (CEA, CoolProp), .eng export and plots
-tests/                test_<package> mirrors machwave/<package>; shared factories in tests/factories
-```
-
-Dependencies run one way: `common` → `core` → `models` → `simulation` → `montecarlo` and
-`adapters`. A lower layer never imports a higher one at runtime. Adapters, exporters and
-plots depend on the core and carry no physics of their own.
-
 ## Key commands
 
 `make` is the single entry point; CI only sets up the environment and calls `make`
@@ -50,14 +32,10 @@ workflow file.
 - Format: `make format`
 - Format check, lint and type check: `make check`
 - Tests: `make test`. One file: `uv run pytest tests/test_core/test_performance.py`
-- Tests with no optional dependency installed: `make install-dev-core`, then
-  `make test-core`
-- Coverage: `make coverage`. Benchmarks: `make benchmark`
 - Documentation build as CI runs it: `make docs-deploy`
 
 ## Verification
 
-- Do not claim work is complete without running verification.
 - Run the smallest relevant test first, then `make check` and `make test`. Add
   `make docs-deploy` when `docs/`, `mkdocs.yml` or a docstring changed.
 - For a physics change, state which verification test ran and its result.
@@ -67,14 +45,17 @@ workflow file.
 
 ## Important caveats
 
+- **Dependencies run one way:** `common` → `core` → `models` → `simulation` →
+  `montecarlo` and `adapters`. A lower layer never imports a higher one at runtime.
+  Adapters, exporters and plots carry no physics of their own.
 - **SI everywhere.** Every unit conversion goes through a function in
   `machwave/core/conversions.py`, never an inline factor. Conversion functions stay
   even when only tests use them.
-- **Optional dependencies load lazily** through `machwave.common.extras.require`, so the
-  package imports and the core tests pass with no extra installed.
-  `tests/test_optional_dependencies.py` enforces this.
-- Generated files (`machwave/_version.py`) and `uv.lock` are never edited by hand.
-- Public API is renamed or removed only through a deprecation warning first.
+- **Optional dependencies** are imported through `machwave.common.extras.require`, at
+  the point of use, so the package imports with no extra installed.
+  `tests/test_optional_dependencies.py` fails otherwise.
+- `machwave/_version.py` and `uv.lock` are generated. Never edit them by hand.
+- Public API is renamed or removed only after a deprecation warning.
 - Never port code from GPL or commercially licensed software; implement from the paper.
 - Workflow:
   - Branch per issue: `{issue_number}-short-summary`. Independent bugs get separate
