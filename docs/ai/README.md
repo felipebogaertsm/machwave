@@ -8,7 +8,6 @@ published site in `mkdocs.yml`.
 
 - `AGENTS.md` is the map: what the repository is, which doc to read for which paths, the
   layout, the commands, how to verify, and the caveats that apply everywhere.
-- `CLAUDE.md` only imports `AGENTS.md`, so every agent reads the same instructions.
 - `docs/ai/<topic>.md` is the manual for one kind of work, named after the work that
   triggers it.
 
