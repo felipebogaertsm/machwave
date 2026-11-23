@@ -245,7 +245,7 @@ def test_get_dyer_mass_flux_matches_a_hand_computed_state_point():
 
 
 @pytest.mark.parametrize("pressure_downstream_offset", [0.0, 1e5])
-def test_get_dyer_mass_flux_is_spi_when_the_chamber_is_above_the_vapor_pressure(
+def test_get_dyer_mass_flux_is_incompressible_when_the_chamber_is_above_vapor_pressure(
     pressure_downstream_offset,
 ):
     temperature_upstream = 293.0
@@ -270,7 +270,7 @@ def test_get_dyer_mass_flux_is_spi_when_the_chamber_is_above_the_vapor_pressure(
     )
 
 
-def test_get_dyer_mass_flux_tends_to_spi_as_the_non_equilibrium_parameter_grows():
+def test_get_dyer_mass_flux_tends_to_incompressible_as_the_parameter_grows():
     """A subcooled inlet into a chamber rising toward the vapor pressure."""
     temperature_upstream = 293.0
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
@@ -289,10 +289,11 @@ def test_get_dyer_mass_flux_tends_to_spi_as_the_non_equilibrium_parameter_grows(
         gaps.append(abs(actual - incompressible_flux) / incompressible_flux)
 
     assert gaps == sorted(gaps, reverse=True)
+    # the blend weight left on the other flux is below 1 % at the last point
     assert gaps[-1] < 1e-2
 
 
-def test_get_dyer_mass_flux_tends_to_hem_as_the_non_equilibrium_parameter_vanishes():
+def test_get_dyer_mass_flux_tends_to_equilibrium_as_the_parameter_vanishes():
     """An inlet well below its vapor pressure with a shrinking pressure drop."""
     temperature_upstream = 300.0
     vapor_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
@@ -313,6 +314,7 @@ def test_get_dyer_mass_flux_tends_to_hem_as_the_non_equilibrium_parameter_vanish
         gaps.append(abs(actual - equilibrium_flux) / equilibrium_flux)
 
     assert gaps == sorted(gaps, reverse=True)
+    # the blend weight left on the other flux is below 1 % at the last point
     assert gaps[-1] < 1e-2
 
 
@@ -326,8 +328,10 @@ def test_get_dyer_mass_flux_falls_as_the_chamber_pressure_rises(
     pressures_downstream = np.linspace(0.5e6, pressure_upstream - 1e4, 40)
 
     fluxes = [
-        _get_dyer_mass_flux(temperature_upstream, pressure_upstream, p)
-        for p in pressures_downstream
+        _get_dyer_mass_flux(
+            temperature_upstream, pressure_upstream, pressure_downstream
+        )
+        for pressure_downstream in pressures_downstream
     ]
 
     assert all(np.diff(fluxes) < 0.0)
@@ -340,7 +344,7 @@ def test_get_dyer_mass_flux_returns_zero_when_downstream_at_or_above_upstream(
     assert _get_dyer_mass_flux(293.0, 5.0e6, pressure_downstream) == 0.0
 
 
-def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
+def test_get_dyer_mass_flux_lies_between_incompressible_and_equilibrium_fluxes():
     temperature_upstream = 293.0
     pressure_upstream = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     density = CP.PropsSI("D", "T", temperature_upstream, "Q", 0, "N2O")
@@ -365,7 +369,7 @@ def test_get_dyer_mass_flux_lies_between_spi_and_hem_for_saturated_n2o():
     )
 
 
-def test_get_dyer_mass_flux_is_spi_for_an_all_vapor_inlet():
+def test_get_dyer_mass_flux_is_incompressible_for_an_all_vapor_inlet():
     """A drained tank feeds vapor, which has no liquid left to flash."""
     temperature_upstream = 300.0
     vapor_density = 0.5 * CP.PropsSI("D", "T", temperature_upstream, "Q", 1, "N2O")
@@ -386,7 +390,7 @@ def test_get_dyer_mass_flux_is_spi_for_an_all_vapor_inlet():
     )
 
 
-def test_get_dyer_mass_flux_is_spi_above_the_critical_temperature():
+def test_get_dyer_mass_flux_is_incompressible_above_the_critical_temperature():
     """A supercritical inlet has no vapor pressure to flash against."""
     temperature_upstream = 315.0
     pressure_upstream = 9.0e6

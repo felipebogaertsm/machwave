@@ -82,6 +82,7 @@ def get_dyer_mass_flux(
     Returns the incompressible flux when nothing can flash in the orifice. That is
     the case when the vapor pressure is at or below the downstream pressure, the inlet
     is at or above the critical temperature, or the inlet is all vapor.
+    Verified, not validated against measured flow.
 
     Args:
         fluid_name: CoolProp fluid name.
