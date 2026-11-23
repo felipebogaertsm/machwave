@@ -234,12 +234,14 @@ def test_initial_propellant_mass_properties_are_the_loaded_tanks(
     motor, result = simulated_motor_and_result
     feed_system = motor.feed_system
 
-    loaded_cog, loaded_moi = feed_system.get_propellant_mass_properties(
-        {name: line.initial_state for name, line in feed_system.lines.items()}
+    loaded_center_of_gravity, loaded_moment_of_inertia = (
+        feed_system.get_propellant_mass_properties(
+            {name: line.initial_state for name, line in feed_system.lines.items()}
+        )
     )
 
-    np.testing.assert_allclose(result.propellant_cog[0], loaded_cog)
-    np.testing.assert_allclose(result.propellant_moi[0], loaded_moi)
+    np.testing.assert_allclose(result.propellant_cog[0], loaded_center_of_gravity)
+    np.testing.assert_allclose(result.propellant_moi[0], loaded_moment_of_inertia)
 
 
 def test_unplaced_tanks_leave_no_center_of_gravity_and_zero_inertia() -> None:

@@ -168,13 +168,23 @@ A tank can have a placement.
 The placement gives the tank inner diameter, which sets its length from its volume, and the axial distance from the nozzle exit to its aft end.
 With every tank placed, the biliquid simulation records the propellant center of gravity and inertia, as the solid simulation does for the grain.
 Under axial acceleration the liquid settles at the aft end of each tank and the vapor fills the ullage ahead of it.
-Each phase is taken as a uniform solid cylinder spanning the bore, with
+Each phase is taken as a uniform solid cylinder spanning the bore:
 
 $$
-I_{xx} = \frac{m r^2}{2}, \qquad I_{yy} = I_{zz} = m \left( \frac{r^2}{4} + \frac{L^2}{12} \right),
+I_{xx} = \frac{m r^2}{2}, \qquad I_{yy} = I_{zz} = m \left( \frac{r^2}{4} + \frac{L^2}{12} \right)
 $$
 
-and the parallel axis theorem combines the phases and then the tanks.
+(Meriam & Kraige, Table D/4)
+
+where:
+
+- $I_{xx}$ is the moment of inertia about the engine axis [kg m$^2$]
+- $I_{yy}$ and $I_{zz}$ are the transverse moments of inertia [kg m$^2$]
+- $m$ is the mass of the phase [kg]
+- $r$ is the tank inner radius [m]
+- $L$ is the length the phase fills [m]
+
+The parallel axis theorem combines the phases and then the tanks (Meriam & Kraige, Appendix B).
 Placements do not change the internal ballistics.
 
 ## Implementation

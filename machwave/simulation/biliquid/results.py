@@ -46,10 +46,16 @@ class BiliquidSimulationResult(
                 for name, series in state.tank_temperature_per_line.items()
             },
             "propellant_cog": np.stack(
-                [np.asarray(cog) for cog in state.propellant_cog]
+                [
+                    np.asarray(center_of_gravity)
+                    for center_of_gravity in state.propellant_cog
+                ]
             ),
             "propellant_moi": np.stack(
-                [np.asarray(moi) for moi in state.propellant_moi]
+                [
+                    np.asarray(moment_of_inertia)
+                    for moment_of_inertia in state.propellant_moi
+                ]
             ),
             "final_fluid_mass_per_line": {
                 name: float(series[-1]) for name, series in fluid_mass_per_line.items()

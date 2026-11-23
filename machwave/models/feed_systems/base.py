@@ -76,8 +76,12 @@ class FeedSystem(ABC):
         ]
         return mechanics.get_combined_mass_properties(
             masses=[line_states[name].fluid_mass for name in names],
-            centers_of_gravity=[cog for cog, _ in line_mass_properties],
-            moments_of_inertia=[moi for _, moi in line_mass_properties],
+            centers_of_gravity=[
+                center_of_gravity for center_of_gravity, _ in line_mass_properties
+            ],
+            moments_of_inertia=[
+                moment_of_inertia for _, moment_of_inertia in line_mass_properties
+            ],
         )
 
     def get_inlet_states(

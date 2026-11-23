@@ -64,7 +64,15 @@ class TankPlacement:
             )
 
     def get_length(self, volume: float) -> float:
-        """Return the length of the tank that holds the given volume [m]."""
+        """
+        Return the length of the tank that holds the given volume.
+
+        Args:
+            volume: Tank volume [m^3].
+
+        Returns:
+            Tank length [m].
+        """
         return volume / geometric.get_circle_area(self.inner_diameter)
 
 

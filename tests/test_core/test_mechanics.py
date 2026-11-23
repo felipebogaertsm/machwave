@@ -227,15 +227,19 @@ def _on_axis(axial_position: float) -> np.ndarray:
 
 class TestGetCombinedMassProperties:
     def test_shifts_each_body_with_the_parallel_axis_theorem(self):
-        cog, moi = core_mechanics.get_combined_mass_properties(
-            masses=(1.0, 3.0),
-            centers_of_gravity=(_on_axis(0.0), _on_axis(2.0)),
-            moments_of_inertia=(np.zeros((3, 3)), np.zeros((3, 3))),
+        center_of_gravity, moment_of_inertia = (
+            core_mechanics.get_combined_mass_properties(
+                masses=(1.0, 3.0),
+                centers_of_gravity=(_on_axis(0.0), _on_axis(2.0)),
+                moments_of_inertia=(np.zeros((3, 3)), np.zeros((3, 3))),
+            )
         )
 
         transverse = 1.0 * 1.5**2 + 3.0 * 0.5**2
-        np.testing.assert_allclose(cog, [1.5, 0.0, 0.0])
-        np.testing.assert_allclose(moi, np.diag([0.0, transverse, transverse]))
+        np.testing.assert_allclose(center_of_gravity, [1.5, 0.0, 0.0])
+        np.testing.assert_allclose(
+            moment_of_inertia, np.diag([0.0, transverse, transverse])
+        )
 
     def test_adds_the_moments_about_the_shared_axis(self):
         moments = [
@@ -243,32 +247,38 @@ class TestGetCombinedMassProperties:
             for mass in (1.0, 2.0)
         ]
 
-        _, moi = core_mechanics.get_combined_mass_properties(
+        _, moment_of_inertia = core_mechanics.get_combined_mass_properties(
             masses=(1.0, 2.0),
             centers_of_gravity=(_on_axis(0.1), _on_axis(0.5)),
             moments_of_inertia=moments,
         )
 
-        assert moi[0, 0] == pytest.approx(moments[0][0, 0] + moments[1][0, 0])
+        assert moment_of_inertia[0, 0] == pytest.approx(
+            moments[0][0, 0] + moments[1][0, 0]
+        )
 
     def test_a_massless_body_adds_nothing(self):
         moment = core_mechanics.get_solid_cylinder_moment_of_inertia(2.0, 0.2, 0.05)
 
-        cog, moi = core_mechanics.get_combined_mass_properties(
-            masses=(2.0, 0.0),
-            centers_of_gravity=(_on_axis(0.7), np.full(3, np.nan)),
-            moments_of_inertia=(moment, np.zeros((3, 3))),
+        center_of_gravity, moment_of_inertia = (
+            core_mechanics.get_combined_mass_properties(
+                masses=(2.0, 0.0),
+                centers_of_gravity=(_on_axis(0.7), np.full(3, np.nan)),
+                moments_of_inertia=(moment, np.zeros((3, 3))),
+            )
         )
 
-        np.testing.assert_array_equal(cog, [0.7, 0.0, 0.0])
-        np.testing.assert_array_equal(moi, moment)
+        np.testing.assert_array_equal(center_of_gravity, [0.7, 0.0, 0.0])
+        np.testing.assert_array_equal(moment_of_inertia, moment)
 
     def test_no_mass_gives_no_center_of_gravity_and_zero_inertia(self):
-        cog, moi = core_mechanics.get_combined_mass_properties(
-            masses=(0.0, 0.0),
-            centers_of_gravity=(_on_axis(0.1), _on_axis(0.2)),
-            moments_of_inertia=(np.zeros((3, 3)), np.zeros((3, 3))),
+        center_of_gravity, moment_of_inertia = (
+            core_mechanics.get_combined_mass_properties(
+                masses=(0.0, 0.0),
+                centers_of_gravity=(_on_axis(0.1), _on_axis(0.2)),
+                moments_of_inertia=(np.zeros((3, 3)), np.zeros((3, 3))),
+            )
         )
 
-        assert np.isnan(cog).all()
-        np.testing.assert_array_equal(moi, np.zeros((3, 3)))
+        assert np.isnan(center_of_gravity).all()
+        np.testing.assert_array_equal(moment_of_inertia, np.zeros((3, 3)))

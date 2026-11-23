@@ -132,14 +132,16 @@ class TestPropellantLineMassProperties:
             "vapor_only": 0.5 * tank.saturated_vapor_density * TANK_VOLUME,
         }[fill]
 
-        cog, moi = line.get_mass_properties(
+        center_of_gravity, moment_of_inertia = line.get_mass_properties(
             line_models.LineState(fluid_mass=fluid_mass)
         )
 
         transverse = fluid_mass * (TANK_INNER_RADIUS**2 / 4 + TANK_LENGTH**2 / 12)
-        np.testing.assert_allclose(cog, [TANK_AFT_END + TANK_LENGTH / 2, 0.0, 0.0])
         np.testing.assert_allclose(
-            moi,
+            center_of_gravity, [TANK_AFT_END + TANK_LENGTH / 2, 0.0, 0.0]
+        )
+        np.testing.assert_allclose(
+            moment_of_inertia,
             np.diag([fluid_mass * TANK_INNER_RADIUS**2 / 2, transverse, transverse]),
         )
 
@@ -150,7 +152,7 @@ class TestPropellantLineMassProperties:
         liquid_mass = liquid_density * TANK_VOLUME / 2
         vapor_mass = vapor_density * TANK_VOLUME / 2
 
-        cog, moi = line.get_mass_properties(
+        center_of_gravity, moment_of_inertia = line.get_mass_properties(
             line_models.LineState(fluid_mass=liquid_mass + vapor_mass)
         )
 
@@ -167,9 +169,9 @@ class TestPropellantLineMassProperties:
             + liquid_mass * (liquid_position - expected_position) ** 2
             + vapor_mass * (vapor_position - expected_position) ** 2
         )
-        np.testing.assert_allclose(cog, [expected_position, 0.0, 0.0])
+        np.testing.assert_allclose(center_of_gravity, [expected_position, 0.0, 0.0])
         np.testing.assert_allclose(
-            moi,
+            moment_of_inertia,
             np.diag(
                 [
                     (liquid_mass + vapor_mass) * TANK_INNER_RADIUS**2 / 2,
@@ -180,26 +182,30 @@ class TestPropellantLineMassProperties:
         )
 
     def test_an_empty_tank_has_no_center_of_gravity_and_no_inertia(self):
-        cog, moi = build_placed_line().get_mass_properties(
+        center_of_gravity, moment_of_inertia = build_placed_line().get_mass_properties(
             line_models.LineState(fluid_mass=0.0)
         )
 
-        assert np.isnan(cog).all()
-        np.testing.assert_array_equal(moi, np.zeros((3, 3)))
+        assert np.isnan(center_of_gravity).all()
+        np.testing.assert_array_equal(moment_of_inertia, np.zeros((3, 3)))
 
     def test_a_tank_running_an_energy_balance_matches_at_its_loaded_state(self):
         energy_balance_line = build_placed_line(isothermal=False)
         isothermal_line = build_placed_line(isothermal=True)
 
-        energy_balance_cog, energy_balance_moi = (
+        energy_balance_center_of_gravity, energy_balance_moment_of_inertia = (
             energy_balance_line.get_mass_properties(energy_balance_line.initial_state)
         )
-        isothermal_cog, isothermal_moi = isothermal_line.get_mass_properties(
-            isothermal_line.initial_state
+        isothermal_center_of_gravity, isothermal_moment_of_inertia = (
+            isothermal_line.get_mass_properties(isothermal_line.initial_state)
         )
 
-        np.testing.assert_allclose(energy_balance_cog, isothermal_cog)
-        np.testing.assert_allclose(energy_balance_moi, isothermal_moi)
+        np.testing.assert_allclose(
+            energy_balance_center_of_gravity, isothermal_center_of_gravity
+        )
+        np.testing.assert_allclose(
+            energy_balance_moment_of_inertia, isothermal_moment_of_inertia
+        )
 
     def test_rejects_a_line_without_a_tank_placement(self):
         line = PropellantLineFactory.build()
