@@ -6,10 +6,15 @@ from machwave.models.feed_systems.cycles.single_line_pressure_fed import (
 from machwave.models.feed_systems.cycles.stacked_tank_pressure_fed import (
     StackedTankPressureFedFeedSystem,
 )
-from machwave.models.feed_systems.lines import LineState, PropellantLine
+from machwave.models.feed_systems.lines import (
+    FeedlineResistance,
+    LineState,
+    PropellantLine,
+)
 
 __all__ = [
     "FeedSystem",
+    "FeedlineResistance",
     "LineState",
     "PropellantLine",
     "SingleLinePressureFedFeedSystem",

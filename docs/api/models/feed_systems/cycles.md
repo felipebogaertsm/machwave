@@ -13,22 +13,33 @@ The cycle reads tank state through the [`PropellantLine`][machwave.models.feed_s
 
 ## `StackedTankPressureFedFeedSystem`
 
-A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston. The tank at the top of the stack — `pressurizing_line` — pressurises every propellant: directly for its own line, and through the piston for every line below it. Pressure loss across the piston is captured by `piston_loss`, and each feedline takes what `line_losses` states for it.
+A pressure-fed engine whose propellant tanks are arranged as a single vertical stack separated by a piston.
+The tank at the top of the stack, `pressurizing_line`, pressurises every propellant.
+It pressurises its own line directly and every line below it through the piston.
+`piston_loss` is the pressure loss across the piston.
+Each feedline loses what its own [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] takes at the line flow.
 
 **Construction**
 
 The two-line case a biliquid engine runs on has a convenience constructor, which names the lines `"oxidizer"` and `"fuel"`:
 
 ```python
-from machwave.models.feed_systems import StackedTankPressureFedFeedSystem
+from machwave.models.feed_systems import (
+    FeedlineResistance,
+    StackedTankPressureFedFeedSystem,
+)
 from machwave.models.feed_systems.tank import Tank
 
 feed_system = StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
     oxidizer_tank=Tank("N2O", volume=0.010, temperature=298.0, initial_fluid_mass=5.0),
     fuel_tank=Tank("Ethanol", volume=0.008, temperature=298.0, initial_fluid_mass=3.0),
-    piston_loss=0.0,          # Pa
-    oxidizer_line_loss=2e5,   # Pa
-    fuel_line_loss=2e5,       # Pa
+    piston_loss=0.0,  # Pa
+    # 2 bar at 0.83 kg/s of liquid N2O through a 10.9 mm bore
+    oxidizer_line_resistance=FeedlineResistance.from_design_point(
+        pressure_drop=2e5, mass_flow=0.83, density=725.0, flow_area=9.37e-5
+    ),
+    # or the loss coefficient of the run and its fittings, referred to the bore
+    fuel_line_resistance=FeedlineResistance(loss_coefficient=8.0, flow_area=9.37e-5),
 )
 ```
 
@@ -40,37 +51,59 @@ from machwave.models.propellants import ComponentRole
 
 feed_system = StackedTankPressureFedFeedSystem(
     lines=[
-        PropellantLine(name="oxidizer", role=ComponentRole.OXIDIZER, tank=oxidizer_tank),
-        PropellantLine(name="fuel", role=ComponentRole.FUEL, tank=fuel_tank),
+        PropellantLine(
+            name="oxidizer", role=ComponentRole.OXIDIZER, tank=oxidizer_tank,
+            resistance=oxidizer_resistance,
+        ),
+        PropellantLine(
+            name="fuel", role=ComponentRole.FUEL, tank=fuel_tank,
+            resistance=fuel_resistance,
+        ),
         PropellantLine(name="diluent", role=ComponentRole.ADDITIVE, tank=diluent_tank),
     ],
     pressurizing_line="oxidizer",
     piston_loss=1e5,
-    line_losses={"oxidizer": 2e5, "fuel": 2e5, "diluent": 1e5},
 )
 ```
 
-**Mass-flow model.** The feed system supplies the inlet state of every line and the injector does the orifice dispatch. Inlet pressure is the pressurizing tank pressure for its own line and that pressure less `piston_loss` for every line below the piston, each less its own feedline loss; downstream pressure is `chamber_pressure`. Inlet density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density]. The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].
+**Mass-flow model.** The feed system supplies the state at the head of every feedline.
+The line at the top of the stack gets the pressurizing tank pressure, and every line below the piston gets that pressure less `piston_loss`, whatever the flow.
+Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density].
+Each line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes a loss that grows with the square of the line flow.
+[`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] solves the injector element flow together with that loss at every chamber pressure the integrator tries.
+The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].
+A line with no resistance loses nothing.
 
-`line_losses` is a fixed pressure drop per line, not a function of flow.
+`line_losses`, `oxidizer_line_loss` and `fuel_line_loss` are deprecated.
+They take a fixed pressure drop off the feedline head whatever the flow.
+Give each line a `FeedlineResistance` instead.
 
 ---
 
 ## `SingleLinePressureFedFeedSystem`
 
-One propellant line, pressurized by its own tank: a self-pressurized propellant rides its vapor pressure while liquid remains, then blows down on the real-gas equation of state. What reaches the injector is that pressure less `line_loss`. An empty tank delivers nothing, which stops the flow at the injector element.
+One propellant line, pressurized by its own tank.
+For a self-pressurized propellant the tank pressure is the vapor pressure while liquid remains.
+After that, the tank blows down on the real-gas equation of state.
+The line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes its flow-dependent loss, as in the stacked tank.
+An empty tank delivers nothing, which stops the flow at the injector element.
 
 **Construction**
 
 ```python
-from machwave.models.feed_systems import SingleLinePressureFedFeedSystem
+from machwave.models.feed_systems import (
+    FeedlineResistance,
+    SingleLinePressureFedFeedSystem,
+)
 from machwave.models.feed_systems.tank import Tank
 
 feed_system = SingleLinePressureFedFeedSystem.from_oxidizer_tank(
     oxidizer_tank=Tank("N2O", volume=0.010, temperature=298.0, initial_fluid_mass=5.0),
-    line_loss=2e5,  # Pa
+    line_resistance=FeedlineResistance(loss_coefficient=8.0, flow_area=9.37e-5),
 )
 ```
+
+The fixed `line_loss` is deprecated in favor of `line_resistance`.
 
 A monoliquid names its own line and role instead, through the `PropellantLine` constructor.
 

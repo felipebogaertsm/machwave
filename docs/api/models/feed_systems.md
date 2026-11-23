@@ -10,11 +10,12 @@ organised around three concerns:
 | Cycle implementations | [`feed_systems.cycles`](feed_systems/cycles.md) | One module per cycle topology (pressure-fed today; electric-pump, gas-generator, expander, staged-combustion to follow). |
 | Shared component descriptions | [`feed_systems.components`](feed_systems/components.md) | Static descriptions of pumps, turbines, gas generators, regenerative jackets, plus a tabulated-curve helper that cycle implementations consume. |
 | Tank thermodynamics | [`feed_systems.tank`](feed_systems/tank.md) | Two-phase tank model backed by CoolProp (`liquid` extra). |
-| Propellant lines | `feed_systems.lines` | The [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] a feed system delivers — its name, its role, and the tank it draws from — and the [`LineState`][machwave.models.feed_systems.lines.LineState] the integrator carries for it. |
+| Propellant lines | `feed_systems.lines` | The [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] a feed system delivers (its name, its role, the tank it draws from and the [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] of its plumbing) and the [`LineState`][machwave.models.feed_systems.lines.LineState] the integrator carries for it. |
 
 ## The `FeedSystem` contract
 
-A feed system delivers one [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] per propellant, keyed by line name, and every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] to supply the pressure that reaches the injector on every line:
+A feed system delivers one [`PropellantLine`][machwave.models.feed_systems.lines.PropellantLine] per propellant, keyed by line name.
+Every cycle implementation extends [`FeedSystem`][machwave.models.feed_systems.base.FeedSystem] to supply the pressure at the head of every feedline:
 
 - `get_inlet_pressures(line_states) -> dict[str, float]`
 
@@ -24,9 +25,12 @@ From those, the base class assembles the state every line is fed with:
 
 Both take the [`LineState`][machwave.models.feed_systems.lines.LineState] of every line — the fluid mass and the internal energy the integrator carries beside it — keyed by line name.
 
-The default inlet state is the tank fluid at the tank temperature and density, at the pressure that survives the path to the injector. A cycle that heats or pressurizes a propellant on the way — a regenerative jacket, a pump — overrides `get_inlet_states` to say so.
+The default state is the tank fluid at the tank temperature and density, at the pressure the cycle delivers to the feedline, before the feedline loss.
+A cycle that heats or pressurizes a propellant on the way, such as a regenerative jacket or a pump, overrides `get_inlet_states` to say so.
 
-[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two: it reads every inlet state once per integration step, then calls [`Injector`][machwave.models.thrust_chamber.injector.Injector] with them at each chamber pressure the solver tries.
+[`machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep`][machwave.simulation.biliquid.states.BiliquidEngineState.run_timestep] composes the two.
+It reads every feedline head state once per integration step.
+Then, at each chamber pressure the solver tries, it solves the flow of every line through its [`Injector`][machwave.models.thrust_chamber.injector.Injector] element with the line's own flow-dependent loss.
 
 ## Public surface
 
