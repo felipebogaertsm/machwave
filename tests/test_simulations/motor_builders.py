@@ -9,6 +9,7 @@ stay independent of the example layer.
 
 from __future__ import annotations
 
+import machwave.models.feed_systems as feed_systems_models
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
 import machwave.models.nozzle_losses as nozzle_losses
@@ -224,8 +225,21 @@ def build_1kn_biliquid_engine() -> tuple[
             initial_fluid_mass=1.55,
         ),
         piston_loss=1e5,
-        oxidizer_line_loss=2e5,
-        fuel_line_loss=2e5,
+        # 2e5 Pa per line at the steady engine flow, through 1/2 in tube (10.9 mm bore)
+        oxidizer_line_resistance=(
+            feed_systems_models.FeedlineResistance.from_design_point(
+                pressure_drop=2e5,
+                mass_flow=0.8406,
+                density=724.7,
+                flow_area=9.37e-5,
+            )
+        ),
+        fuel_line_resistance=feed_systems_models.FeedlineResistance.from_design_point(
+            pressure_drop=2e5,
+            mass_flow=0.5015,
+            density=783.45,
+            flow_area=9.37e-5,
+        ),
     )
 
     thrust_chamber = BiliquidEngineThrustChamberFactory.build(
