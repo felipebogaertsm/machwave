@@ -116,7 +116,8 @@ A pressure deviation decays at the rate $\lambda = \partial \dot{P}_0 / \partial
 This rate is of the order of minus the inverse chamber residence time.
 $1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
 This can be shorter than the simulation step.
-A single Runge–Kutta step overshoots equilibrium below $\lambda \Delta t \approx -1.3$ and is unstable below $-2.785$.
+The last stage of a Runge–Kutta step evaluates the balance past equilibrium below $\lambda \Delta t \approx -1.3$.
+The step itself is unstable below $\lambda \Delta t \approx -2.785$.
 Each simulation step is therefore split into $N$ equal substeps:
 
 $$
