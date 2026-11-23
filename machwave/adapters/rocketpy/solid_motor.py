@@ -8,6 +8,24 @@ if typing.TYPE_CHECKING:
     import machwave.simulation.solid.results as solid_results
 
 
+def get_initial_grain_center_of_mass_position(
+    motor: "motors_models.SolidMotor",
+) -> float:
+    """
+    Return the initial grain center of mass axial position.
+
+    Args:
+        motor: The machwave solid motor.
+
+    Returns:
+        Axial position measured from the nozzle exit, positive toward the bulkhead [m].
+    """
+    return (
+        motor.grain.get_center_of_gravity(web_distance=0.0)[0]
+        + motor.thrust_chamber.nozzle_exit_to_grain_port_distance
+    )
+
+
 class RocketPySolidMotorAdapter(
     rocketpy_base.RocketPyMotorAdapter["solid_results.SolidSimulationResult"]
 ):
@@ -48,9 +66,8 @@ class RocketPySolidMotorAdapter(
         grain_initial_height = first_segment.length
         grain_initial_inner_radius = first_segment.core_diameter / 2
         throat_radius = motor.thrust_chamber.nozzle.throat_diameter / 2
-        grains_center_of_mass_position = (
-            motor.grain.get_center_of_gravity(web_distance=0.0)[0]
-            + motor.thrust_chamber.nozzle_exit_to_grain_port_distance
+        grains_center_of_mass_position = get_initial_grain_center_of_mass_position(
+            motor
         )
 
         # RocketPy handles real density internally
@@ -70,3 +87,8 @@ class RocketPySolidMotorAdapter(
         }
 
         return solid_motor_attrs
+
+    @property
+    def propellant_initial_mass(self) -> float:
+        """Return the initial propellant mass [kg]."""
+        return self.simulation_result.initial_propellant_mass
