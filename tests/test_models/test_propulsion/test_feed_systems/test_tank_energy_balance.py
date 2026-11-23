@@ -165,6 +165,7 @@ class TestEnergyBalanceTank:
         assert tank.get_temperature(fluid_mass, internal_energy) == pytest.approx(
             reference_temperature, abs=1e-6
         )
+        # a 1e-6 K error moves the saturation pressure by about 1e-8 relative
         assert tank.get_pressure(fluid_mass, internal_energy) == pytest.approx(
             CP.PropsSI("P", "T", reference_temperature, "Q", 0, FLUID), rel=1e-7
         )

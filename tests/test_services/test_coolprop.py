@@ -109,7 +109,7 @@ def test_a_state_off_the_chart_raises(service):
 
 
 class TestAStateTheFlashGetsWrong:
-    """CoolProp 6.8 flashes this two-phase N2O state to a single-phase 270.37 K."""
+    """CoolProp 6.8 flashes this nitrous oxide mix to a single-phase 270.37 K."""
 
     DENSITY = 454.50072100174214
     INTERNAL_ENERGY = 228590.2487156092

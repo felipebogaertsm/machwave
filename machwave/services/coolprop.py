@@ -14,7 +14,7 @@ except ImportError as e:  # pragma: no cover - exercised only without coolprop
 # a converged flash is off by under 1e-8 J/kg, a wrong one by tens of kJ/kg
 INTERNAL_ENERGY_TOLERANCE = 1.0  # [J/kg]
 # the saturation curve is undefined at the critical point itself
-CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8
+CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8  # [-]
 DOME_TEMPERATURE_TOLERANCE = 1e-10  # [K]
 
 
