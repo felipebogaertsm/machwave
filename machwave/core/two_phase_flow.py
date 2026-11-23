@@ -25,9 +25,8 @@ def get_homogeneous_equilibrium_mass_flux(
     A saturated inlet, at or below the saturation pressure, expands from the
     saturated liquid whatever its pressure, so its grid runs up to the saturation
     pressure and its maximum is kept for the next call at the same temperature and
-    downstream pressure. The line flow solve makes that call at every inlet pressure
-    it tries. An inlet below the pressure of the maximum passes the isentropic flux
-    at its own pressure.
+    downstream pressure. An inlet below the pressure of the maximum passes the
+    isentropic flux at its own pressure.
 
     Args:
         fluid_name: CoolProp fluid name.
