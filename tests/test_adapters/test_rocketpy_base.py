@@ -56,10 +56,10 @@ def test_mass_flow_rate_integrates_to_the_expelled_propellant_mass(adapter) -> N
 
 def test_mass_flow_rate_is_the_derivative_of_the_propellant_mass(adapter) -> None:
     result = adapter.simulation_result
-    burning = result.propellant_mass > 0
+    is_burning = result.propellant_mass > 0
 
-    mass_flow_rate = adapter.total_mass_flow_rate(result.time[burning])
-    finite_difference = np.gradient(result.propellant_mass, result.time)[burning]
+    mass_flow_rate = adapter.total_mass_flow_rate(result.time[is_burning])
+    finite_difference = np.gradient(result.propellant_mass, result.time)[is_burning]
 
     assert np.all(mass_flow_rate < 0)
     assert mass_flow_rate == pytest.approx(finite_difference)

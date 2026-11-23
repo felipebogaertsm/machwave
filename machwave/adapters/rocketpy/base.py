@@ -168,11 +168,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         Returns:
             `rocketpy.Function` with (time, mass) data [kg].
         """
-        data = np.column_stack(
+        mass_over_time = np.column_stack(
             (self.simulation_result.time, self.simulation_result.propellant_mass)
         )
         return rocketpy.Function(
-            data, interpolation=INTERPOLATION_METHOD, extrapolation="constant"
+            mass_over_time, interpolation=INTERPOLATION_METHOD, extrapolation="constant"
         )
 
     @property
@@ -188,9 +188,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         """
         time = self.simulation_result.time
         mass_flow_rate = np.gradient(self.simulation_result.propellant_mass, time)
-        data = np.column_stack((time, mass_flow_rate))
+        mass_flow_rate_over_time = np.column_stack((time, mass_flow_rate))
         return rocketpy.Function(
-            data, interpolation=INTERPOLATION_METHOD, extrapolation="zero"
+            mass_flow_rate_over_time,
+            interpolation=INTERPOLATION_METHOD,
+            extrapolation="zero",
         )
 
     @property
