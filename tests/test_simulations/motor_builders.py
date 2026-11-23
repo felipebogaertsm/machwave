@@ -25,7 +25,6 @@ from tests.factories import (
     FinocylGrainSegmentFactory,
     FuelComponentFactory,
     NozzleFactory,
-    OxidizerComponentFactory,
     SolidMotorFactory,
     SolidMotorThrustChamberFactory,
     StackedTankPressureFedFeedSystemFactory,
@@ -202,8 +201,10 @@ def build_1kn_biliquid_engine() -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
     """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
-    oxidizer = OxidizerComponentFactory.build(initial_temperature=300.0)
-    fuel = FuelComponentFactory.build(initial_temperature=300.0)
+    tank_temperature = 300.0
+    # the built-in "N2O" card is the 298.15 K gas, not the tank liquid
+    oxidizer = propellants.saturated_liquid_nitrous_oxide(tank_temperature)
+    fuel = FuelComponentFactory.build(initial_temperature=tank_temperature)
     propellant = BiliquidPropellantFactory.build(
         components=[oxidizer, fuel],
         oxidizer_to_fuel_ratio=1.9495,
@@ -213,13 +214,13 @@ def build_1kn_biliquid_engine() -> tuple[
         oxidizer_tank=TankFactory.build(
             fluid_name="N2O",
             volume=3.80e-3,
-            temperature=300,
+            temperature=tank_temperature,
             initial_fluid_mass=2.78,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
-            temperature=300,
+            temperature=tank_temperature,
             initial_fluid_mass=1.55,
         ),
         piston_loss=1e5,

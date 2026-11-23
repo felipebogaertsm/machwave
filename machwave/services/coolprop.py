@@ -39,6 +39,15 @@ class CoolPropService:
         """
         return CP.PropsSI("Ttriple", self.fluid_name)
 
+    def get_molar_mass(self) -> float:
+        """
+        Get the molar mass of the fluid.
+
+        Returns:
+            Molar mass [kg/mol].
+        """
+        return CP.PropsSI("M", self.fluid_name)
+
     def get_critical_temperature(self) -> float:
         """
         Get the critical temperature of the fluid.

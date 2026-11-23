@@ -137,3 +137,7 @@ class TestAStateTheFlashGetsWrong:
         ) == pytest.approx(
             CP.PropsSI("P", "T", self.TEMPERATURE, "Q", 0, FLUID_NAME), rel=1e-7
         )
+
+
+def test_get_molar_mass(service):
+    assert service.get_molar_mass() == CP.PropsSI("M", FLUID_NAME)
