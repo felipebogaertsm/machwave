@@ -65,11 +65,11 @@ MIN_DERIVATIVE_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near ze
 def get_substep_count(
     variables: dict[str, float],
     equation: Callable,
-    d_t: float,
+    time_step: float,
     **kwargs: Any,
 ) -> int:
     """
-    Return how many equal Runge-Kutta substeps keep a scalar equation stable over `d_t`.
+    Return how many equal Runge-Kutta substeps keep a scalar equation stable.
 
     Each substep spans at most one decay time, taken by central difference at the
     current value. A growing solution takes a single substep.
@@ -77,7 +77,7 @@ def get_substep_count(
     Args:
         variables: Mapping of the single variable name to its current value.
         equation: Callable returning the derivative of the variable.
-        d_t: Time step [s].
+        time_step: Time step [s].
         **kwargs: Additional keyword arguments forwarded to `equation`.
 
     Returns:
@@ -98,7 +98,7 @@ def get_substep_count(
         - equation(**{state_name: state - perturbation}, **kwargs)[0]
     ) / (2 * perturbation)
 
-    return max(1, math.ceil(decay_rate * d_t / MAX_DECAY_RATE_STEP_PRODUCT))
+    return max(1, math.ceil(decay_rate * time_step / MAX_DECAY_RATE_STEP_PRODUCT))
 
 
 def rk4th_ode_solver(

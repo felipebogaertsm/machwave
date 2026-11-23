@@ -20,13 +20,15 @@ def test_step_returns_one_value_per_variable():
 
 
 @pytest.mark.parametrize(
-    "d_t, expected_substep_count",
+    "time_step, expected_substep_count",
     [(0.5e-4, 1), (4.5e-4, 5), (1.025e-2, 103)],
 )
 def test_substep_count_keeps_each_substep_within_one_decay_time(
-    d_t, expected_substep_count
+    time_step, expected_substep_count
 ):
-    substep_count = rk4.get_substep_count({"quantity": 1.0}, exponential_decay, d_t)
+    substep_count = rk4.get_substep_count(
+        {"quantity": 1.0}, exponential_decay, time_step
+    )
 
     assert substep_count == expected_substep_count
 
@@ -40,26 +42,26 @@ def test_growing_solution_takes_a_single_step():
 
 def test_substep_count_rejects_more_than_one_variable():
     with pytest.raises(ValueError, match="single variable"):
-        rk4.get_substep_count({"a": 1.0, "b": 1.0}, lambda a, b: (a, b), 1e-3)
+        rk4.get_substep_count({"x": 1.0, "y": 1.0}, lambda x, y: (x, y), 1e-3)
 
 
 def test_solver_takes_a_single_step_when_it_is_stable():
-    d_t = 1.0e-4
+    time_step = 1.0e-4
 
     solved, substep_count = rk4.rk4th_ode_solver(
-        {"quantity": 1.0}, exponential_decay, d_t
+        {"quantity": 1.0}, exponential_decay, time_step
     )
 
     assert substep_count == 1
-    assert solved == rk4.rk4th_step({"quantity": 1.0}, exponential_decay, d_t)[0]
+    assert solved == rk4.rk4th_step({"quantity": 1.0}, exponential_decay, time_step)[0]
 
 
 def test_solver_stays_stable_past_the_single_step_limit():
-    d_t = 10 / DECAY_RATE
+    time_step = 10 / DECAY_RATE
 
-    single_step = rk4.rk4th_step({"quantity": 1.0}, exponential_decay, d_t)[0]
+    single_step = rk4.rk4th_step({"quantity": 1.0}, exponential_decay, time_step)[0]
     solved, substep_count = rk4.rk4th_ode_solver(
-        {"quantity": 1.0}, exponential_decay, d_t
+        {"quantity": 1.0}, exponential_decay, time_step
     )
 
     assert abs(single_step) > 1.0
