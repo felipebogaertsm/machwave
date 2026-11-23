@@ -8,5 +8,6 @@ Submodules:
 - [mass_balance](core/mass_balance.md) — Chamber-pressure ODE shared by solid motors and biliquid engines
 - [performance](core/performance.md) — Total and specific impulse
 - [solvers](core/solvers.md) — RK4 ODE solver
+- [two_phase_flow](core/two_phase_flow.md) — Homogeneous equilibrium and Dyer orifice mass flux
 
 ::: machwave.core

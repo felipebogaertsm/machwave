@@ -87,7 +87,6 @@ Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.g
 For the top tank it is evaluated at the volume the piston has swept to.
 Each line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes a loss that grows with the square of the line flow.
 [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] solves the injector element flow together with that loss at every chamber pressure the integrator tries.
-The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].
 A line with no resistance loses nothing.
 
 `line_losses`, `oxidizer_line_loss` and `fuel_line_loss` are deprecated.
