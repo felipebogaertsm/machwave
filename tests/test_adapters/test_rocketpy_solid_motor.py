@@ -6,9 +6,11 @@ import numpy as np
 import pytest
 
 import machwave.adapters.rocketpy as rocketpy_adapters
+import machwave.adapters.rocketpy.solid_motor as rocketpy_solid_motor
 import machwave.models.grain as grain_models
 
 from tests.factories import (
+    BatesSegmentFactory,
     ConicalGrainSegmentFactory,
     DGrainSegmentFactory,
     MultiPortGrainSegmentFactory,
@@ -61,6 +63,36 @@ def test_non_bates_geometry_raises_value_error(segment_factory) -> None:
 
     with pytest.raises(ValueError, match="only supports BATES grain geometry"):
         adapter._get_rocketpy_attributes()
+
+
+@pytest.mark.parametrize(
+    ("segments", "is_supported"),
+    [
+        ([BatesSegmentFactory.build()] * 3, True),
+        ([StarGrainSegmentFactory.build()] * 3, False),
+        (
+            [
+                BatesSegmentFactory.build(core_diameter=0.035),
+                BatesSegmentFactory.build(core_diameter=0.045),
+            ],
+            False,
+        ),
+    ],
+    ids=["identical_bates", "star", "mismatched_bates"],
+)
+def test_solid_motor_supports_only_identical_bates_segments(
+    segments, is_supported
+) -> None:
+    grain = grain_models.Grain()
+    for segment in segments:
+        grain.add_segment(segment)
+
+    assert rocketpy_solid_motor.is_supported_by_solid_motor(grain) is is_supported
+
+
+def test_empty_grain_raises_value_error() -> None:
+    with pytest.raises(ValueError, match="Grain must have at least one segment"):
+        rocketpy_solid_motor.is_supported_by_solid_motor(grain_models.Grain())
 
 
 def test_bates_geometry_produces_expected_keys() -> None:
