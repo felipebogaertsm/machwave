@@ -221,8 +221,8 @@ def test_run_timestep_sets_end_burn_when_oxidizer_exhausts() -> None:
 
 def test_a_line_capped_at_its_remaining_mass_drains_to_zero() -> None:
     state = _build_state_for_burnout_test()
-    # rounds up when divided and multiplied by the time step
-    state.fluid_mass_per_line["fuel"][-1] = 1.0000000000000006e-10
+    mass_that_rounds_up_through_the_time_step = 1.0000000000000006e-10
+    state.fluid_mass_per_line["fuel"][-1] = mass_that_rounds_up_through_the_time_step
 
     state.run_timestep(d_t=1e-4, external_pressure=1e5)
 
