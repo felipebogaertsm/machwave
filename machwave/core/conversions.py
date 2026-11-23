@@ -190,6 +190,19 @@ def convert_joules_per_mol_to_cal_per_mol(enthalpy_j_per_mol: float) -> float:
     return enthalpy_j_per_mol / 4.184
 
 
+def convert_cal_per_mol_to_joules_per_mol(enthalpy_cal_per_mol: float) -> float:
+    """
+    Converts enthalpy in cal/mol to J/mol.
+
+    Args:
+        enthalpy_cal_per_mol: Enthalpy [cal/mol].
+
+    Returns:
+        Enthalpy [J/mol].
+    """
+    return enthalpy_cal_per_mol * 4.184
+
+
 def convert_kgm3_to_gcc(density_kgm3: float) -> float:
     """
     Converts density in kg/m^3 to g/cc.

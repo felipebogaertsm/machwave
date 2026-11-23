@@ -3,7 +3,13 @@ from . import base as propellant_base
 
 
 class BiliquidPropellant(propellant_base.Propellant):
-    """Biliquid propellant with separate oxidizer and fuel."""
+    """
+    Biliquid propellant with separate oxidizer and fuel.
+
+    Each component's `name` is looked up in RocketCEA's built-in cards unless the
+    component sets `has_custom_card`. The built-in "N2O" card is the ideal gas at
+    298.15 K; use `saturated_liquid_nitrous_oxide` for a self-pressurized tank.
+    """
 
     mixture_type = propellant_base.MixtureType.BILIQUID
 
@@ -85,10 +91,40 @@ class BiliquidPropellant(propellant_base.Propellant):
 
         fuel = self._get_fuel()
         oxidizer = self._get_oxidizer()
+        oxidizer_name, oxidizer_card = self._get_reactant(oxidizer, "oxid")
+        fuel_name, fuel_card = self._get_reactant(fuel, "fuel")
 
         return cea_service.create_cea_service(
-            oxidizer_name=oxidizer.name,
-            fuel_name=fuel.name,
+            oxidizer_name=oxidizer_name,
+            oxidizer_card_string=oxidizer_card,
+            fuel_name=fuel_name,
+            fuel_card_string=fuel_card,
             oxidizer_to_fuel_ratio=self.oxidizer_to_fuel_ratio,
             has_condensed_phase=self.has_condensed_phase,
         )
+
+    @staticmethod
+    def _get_reactant(
+        component: propellant_components.PropellantComponent, reactant_type: str
+    ) -> tuple[str, str | None]:
+        """
+        Get the RocketCEA name and, for a custom component, its card string.
+
+        Args:
+            component: Oxidizer or fuel component.
+            reactant_type: CEA reactant keyword, "oxid" or "fuel".
+
+        Returns:
+            Name to register or look up, and the card string, or None to use
+            RocketCEA's built-in card for that name.
+        """
+        import machwave.services.cea as cea_service
+
+        if not component.has_custom_card:
+            return component.name, None
+
+        card = cea_service.generate_card_string(
+            [component.to_cea_dict(weight_percent=100.0)],
+            reactant_type=reactant_type,
+        )
+        return cea_service.normalize_custom_propellant_name(component.name), card
