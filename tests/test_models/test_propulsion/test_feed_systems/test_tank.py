@@ -40,6 +40,7 @@ def test_saturated_condition(fluid_name, temperature):
         volume=volume,
         temperature=temperature,
         initial_fluid_mass=fluid_mass,
+        isothermal=True,
     )
 
     # 4) Check the tank pressure ~ saturation
@@ -66,6 +67,7 @@ def test_all_vapor_condition(fluid_name, temperature):
         volume=volume,
         temperature=temperature,
         initial_fluid_mass=mass,
+        isothermal=True,
     )
 
     p_real = CP.PropsSI("P", "T", temperature, "D", mass / volume, fluid_name)
@@ -99,6 +101,7 @@ def test_near_critical_vapor_not_misclassified_as_two_phase():
         volume=volume,
         temperature=temperature,
         initial_fluid_mass=mass,
+        isothermal=True,
     )
 
     # Single-phase vapor: the pressure is the real-gas value and stays strictly
@@ -144,6 +147,7 @@ def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
         volume=volume,
         temperature=temperature,
         initial_fluid_mass=fluid_mass,
+        isothermal=True,
     )
 
     rho_liquid = CP.PropsSI("D", "T", temperature, "Q", 0, fluid_name)
@@ -165,6 +169,7 @@ def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
         volume=volume,
         temperature=temperature,
         initial_fluid_mass=2.5 * m_vap_sat,
+        isothermal=True,
     )
 
     # Both masses leave the tank two-phase (> m_vap_sat), so density is invariant.

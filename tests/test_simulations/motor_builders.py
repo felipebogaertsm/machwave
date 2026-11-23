@@ -198,10 +198,18 @@ def build_finocyl_motor() -> tuple[
     return motor, params
 
 
-def build_1kn_biliquid_engine() -> tuple[
+def build_1kn_biliquid_engine(
+    *, isothermal_tanks: bool = False
+) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
-    """1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like)."""
+    """
+    1 kN-class N2O / Ethanol biliquid engine (HalfCat Sphinx-like).
+
+    Args:
+        isothermal_tanks: Whether both tanks hold their loading temperature
+            instead of running an energy balance.
+    """
     tank_temperature = 300.0
     # the built-in "N2O" card is the 298.15 K gas, not the tank liquid
     oxidizer = propellants.saturated_liquid_nitrous_oxide(tank_temperature)
@@ -217,12 +225,14 @@ def build_1kn_biliquid_engine() -> tuple[
             volume=3.80e-3,
             temperature=tank_temperature,
             initial_fluid_mass=2.78,
+            isothermal=isothermal_tanks,
         ),
         fuel_tank=TankFactory.build(
             fluid_name="ETHANOL",
             volume=2.0e-3,
             temperature=tank_temperature,
             initial_fluid_mass=1.55,
+            isothermal=isothermal_tanks,
         ),
         piston_loss=1e5,
         # 2e5 Pa per line at the steady engine flow, through 1/2 in tube (10.9 mm bore)

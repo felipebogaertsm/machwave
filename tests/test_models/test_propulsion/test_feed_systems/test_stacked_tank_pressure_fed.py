@@ -73,12 +73,20 @@ class TestInletStates:
 
         assert inlet.fluid_name == "N2O"
         assert inlet.pressure == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_mass)
+            oxidizer_tank.get_pressure(
+                oxidizer_mass, oxidizer_tank.initial_internal_energy
+            )
         )
         assert inlet.temperature == pytest.approx(
-            oxidizer_tank.get_temperature(oxidizer_mass)
+            oxidizer_tank.get_temperature(
+                oxidizer_mass, oxidizer_tank.initial_internal_energy
+            )
         )
-        assert inlet.density == pytest.approx(oxidizer_tank.get_density(oxidizer_mass))
+        assert inlet.density == pytest.approx(
+            oxidizer_tank.get_density(
+                oxidizer_mass, oxidizer_tank.initial_internal_energy
+            )
+        )
 
     def test_the_fuel_inlet_is_piston_pressurized_fuel(self):
         feed_system = StackedTankPressureFedFeedSystemFactory.build(piston_loss=2e5)
@@ -91,10 +99,17 @@ class TestInletStates:
 
         assert inlet.fluid_name == fuel_tank.fluid_name
         assert inlet.pressure == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_mass) - 2e5
+            oxidizer_tank.get_pressure(
+                oxidizer_mass, oxidizer_tank.initial_internal_energy
+            )
+            - 2e5
         )
-        assert inlet.temperature == pytest.approx(fuel_tank.get_temperature(fuel_mass))
-        assert inlet.density == pytest.approx(fuel_tank.get_density(fuel_mass))
+        assert inlet.temperature == pytest.approx(
+            fuel_tank.get_temperature(fuel_mass, fuel_tank.initial_internal_energy)
+        )
+        assert inlet.density == pytest.approx(
+            fuel_tank.get_density(fuel_mass, fuel_tank.initial_internal_energy)
+        )
 
     def test_a_third_line_is_pressurized_through_the_piston_too(self):
         feed_system = build_triliquid(piston_loss=2e5)
@@ -104,7 +119,10 @@ class TestInletStates:
 
         assert inlet.fluid_name == "Water"
         assert inlet.pressure == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - 2e5
+            oxidizer_tank.get_pressure(
+                oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+            )
+            - 2e5
         )
 
     def test_rejects_a_missing_line_state(self):
@@ -128,7 +146,9 @@ class TestFeedlineHeadPressure:
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["oxidizer"] == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
+            oxidizer_tank.get_pressure(
+                oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+            )
         )
 
     def test_the_fuel_head_is_the_stack_pressure_less_the_piston(self):
@@ -143,14 +163,19 @@ class TestFeedlineHeadPressure:
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["fuel"] == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - piston_loss
+            oxidizer_tank.get_pressure(
+                oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+            )
+            - piston_loss
         )
 
     def test_the_piston_loss_holds_whatever_the_flow(self):
         """Seal friction is not a hydraulic loss. It is there at zero flow too."""
         feed_system = StackedTankPressureFedFeedSystemFactory.build(piston_loss=2e5)
         oxidizer_tank = feed_system.lines["oxidizer"].tank
-        stack_pressure = oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass)
+        stack_pressure = oxidizer_tank.get_pressure(
+            oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+        )
 
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
@@ -278,7 +303,11 @@ class TestDeprecatedLineLosses:
         pressures = feed_system.get_inlet_pressures(line_states(feed_system))
 
         assert pressures["diluent"] == pytest.approx(
-            oxidizer_tank.get_pressure(oxidizer_tank.initial_fluid_mass) - 2e5 - 1e5
+            oxidizer_tank.get_pressure(
+                oxidizer_tank.initial_fluid_mass, oxidizer_tank.initial_internal_energy
+            )
+            - 2e5
+            - 1e5
         )
 
     def test_the_two_line_constructor_still_carries_them(self):

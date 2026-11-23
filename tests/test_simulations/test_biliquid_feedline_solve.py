@@ -169,9 +169,13 @@ class TestHomogeneousEquilibrium:
         tank = TankFactory.build(fluid_name="N2O", temperature=300.0)
         head = FluidStateFactory.build(
             fluid_name="N2O",
-            pressure=tank.get_pressure(tank.initial_fluid_mass),
+            pressure=tank.get_pressure(
+                tank.initial_fluid_mass, tank.initial_internal_energy
+            ),
             temperature=300.0,
-            density=tank.get_density(tank.initial_fluid_mass),
+            density=tank.get_density(
+                tank.initial_fluid_mass, tank.initial_internal_energy
+            ),
         )
 
         assert solve(line, element, head_state=head) == pytest.approx(
