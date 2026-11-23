@@ -448,7 +448,8 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
         igniter_pressure=params.igniter_pressure,
         external_pressure=params.external_pressure,
     )
-    for _ in range(200):
+    steady_state_step_count = 200
+    for _ in range(steady_state_step_count):
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
 
     # the last step computed its flows at the pressure it started from
@@ -456,7 +457,7 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
     assert state.chamber_pressure[-1] == pytest.approx(chamber_pressure, rel=1e-12)
     mass_flow = sum(series[-1] for series in state.mass_flow_rate_per_line.values())
     throat_area = motor.thrust_chamber.nozzle.get_throat_area()
-    delivered_c_star = (
+    delivered_characteristic_velocity = (
         chamber_pressure * discharge_coefficient * throat_area / mass_flow
     )
 
@@ -469,11 +470,12 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
     vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
         2.0 / (specific_heat_ratio + 1.0)
     ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
-    ideal_c_star = (
+    ideal_characteristic_velocity = (
         np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
         / vandenkerckhove_function
     )
 
-    assert delivered_c_star / ideal_c_star == pytest.approx(
-        combustion_efficiency, rel=1e-9
+    assert (
+        delivered_characteristic_velocity / ideal_characteristic_velocity
+        == pytest.approx(combustion_efficiency, rel=1e-9)
     )

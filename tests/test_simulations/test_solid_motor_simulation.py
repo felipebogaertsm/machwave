@@ -221,7 +221,7 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
         - stored_gas_mass_rate
     )
     nozzle = motor.thrust_chamber.nozzle
-    delivered_c_star = (
+    delivered_characteristic_velocity = (
         chamber_pressure
         * nozzle.discharge_coefficient
         * nozzle.get_throat_area()
@@ -232,14 +232,15 @@ def test_combustion_efficiency_is_the_delivered_characteristic_velocity_efficien
     vandenkerckhove_function = np.sqrt(specific_heat_ratio) * (
         2.0 / (specific_heat_ratio + 1.0)
     ) ** ((specific_heat_ratio + 1.0) / (2.0 * (specific_heat_ratio - 1.0)))
-    ideal_c_star = (
+    ideal_characteristic_velocity = (
         np.sqrt(properties.R_chamber * properties.adiabatic_flame_temperature)
         / vandenkerckhove_function
     )
 
     # loose because the stored gas term is a finite difference in time
-    assert delivered_c_star / ideal_c_star == pytest.approx(
-        combustion_efficiency, rel=1e-4
+    assert (
+        delivered_characteristic_velocity / ideal_characteristic_velocity
+        == pytest.approx(combustion_efficiency, rel=1e-4)
     )
 
 
