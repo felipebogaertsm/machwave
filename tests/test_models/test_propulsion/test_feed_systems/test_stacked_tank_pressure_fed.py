@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import machwave.models.feed_systems as feed_systems_models
@@ -8,6 +9,7 @@ from tests.factories import (
     PropellantLineFactory,
     StackedTankPressureFedFeedSystemFactory,
     TankFactory,
+    TankPlacementFactory,
 )
 
 
@@ -196,6 +198,98 @@ class TestLines:
             feed_systems_models.StackedTankPressureFedFeedSystem(
                 lines=[line, line], pressurizing_line="oxidizer"
             )
+
+
+class TestPropellantMassProperties:
+    @staticmethod
+    def build_placed_feed_system():
+        return StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=TankPlacementFactory.build(
+                nozzle_exit_to_aft_end_distance=0.6
+            ),
+            fuel_tank_placement=TankPlacementFactory.build(
+                nozzle_exit_to_aft_end_distance=0.3
+            ),
+        )
+
+    def test_the_constructor_places_each_tank(self):
+        oxidizer_placement = TankPlacementFactory.build(
+            nozzle_exit_to_aft_end_distance=0.6
+        )
+        fuel_placement = TankPlacementFactory.build()
+
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=oxidizer_placement,
+            fuel_tank_placement=fuel_placement,
+        )
+
+        assert feed_system.lines["oxidizer"].tank_placement is oxidizer_placement
+        assert feed_system.lines["fuel"].tank_placement is fuel_placement
+
+    def test_combines_the_propellant_of_every_tank(self):
+        feed_system = self.build_placed_feed_system()
+        states = line_states(feed_system)
+
+        center_of_gravity, moment_of_inertia = (
+            feed_system.get_propellant_mass_properties(states)
+        )
+
+        masses = [states[name].fluid_mass for name in feed_system.lines]
+        line_mass_properties = [
+            line.get_mass_properties(states[name])
+            for name, line in feed_system.lines.items()
+        ]
+        expected_center_of_gravity = sum(
+            mass * line_center_of_gravity
+            for mass, (line_center_of_gravity, _) in zip(
+                masses, line_mass_properties, strict=True
+            )
+        ) / sum(masses)
+        np.testing.assert_allclose(center_of_gravity, expected_center_of_gravity)
+        # axial moments add without a parallel axis shift
+        assert moment_of_inertia[0, 0] == pytest.approx(
+            sum(
+                line_moment_of_inertia[0, 0]
+                for _, line_moment_of_inertia in line_mass_properties
+            )
+        )
+
+    def test_an_empty_tank_adds_nothing(self):
+        feed_system = self.build_placed_feed_system()
+        states = line_states(feed_system) | {
+            "fuel": line_models.LineState(fluid_mass=0.0)
+        }
+
+        center_of_gravity, moment_of_inertia = (
+            feed_system.get_propellant_mass_properties(states)
+        )
+
+        oxidizer_center_of_gravity, oxidizer_moment_of_inertia = feed_system.lines[
+            "oxidizer"
+        ].get_mass_properties(states["oxidizer"])
+        np.testing.assert_array_equal(center_of_gravity, oxidizer_center_of_gravity)
+        np.testing.assert_array_equal(moment_of_inertia, oxidizer_moment_of_inertia)
+
+    def test_every_tank_empty_leaves_no_center_of_gravity_and_zero_inertia(self):
+        feed_system = self.build_placed_feed_system()
+        states = {
+            name: line_models.LineState(fluid_mass=0.0) for name in feed_system.lines
+        }
+
+        center_of_gravity, moment_of_inertia = (
+            feed_system.get_propellant_mass_properties(states)
+        )
+
+        assert np.isnan(center_of_gravity).all()
+        np.testing.assert_array_equal(moment_of_inertia, np.zeros((3, 3)))
+
+    def test_rejects_a_line_without_a_tank_placement(self):
+        feed_system = StackedTankPressureFedFeedSystemFactory.build(
+            oxidizer_tank_placement=TankPlacementFactory.build()
+        )
+
+        with pytest.raises(ValueError, match="'fuel' has no tank_placement"):
+            feed_system.get_propellant_mass_properties(line_states(feed_system))
 
 
 class TestValidation:
