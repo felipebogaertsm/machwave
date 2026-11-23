@@ -56,6 +56,26 @@ class FeedSystem(ABC):
         """
         return {name: line.tank.volume for name, line in self.lines.items()}
 
+    def get_tank_volume_rates(
+        self,
+        fluid_masses: Mapping[str, float],
+        mass_flows: Mapping[str, float],
+    ) -> dict[str, float]:
+        """
+        Return the rate of change of the fluid volume of every line [m^3/s].
+
+        Zero for every line, since each tank has a fixed volume. Cycles with moving
+        tank boundaries override this.
+
+        Args:
+            fluid_masses: Fluid mass of every line [kg], keyed by line name.
+            mass_flows: Mass flow leaving every line [kg/s], keyed by line name.
+
+        Returns:
+            dV/dt of every line's fluid [m^3/s], keyed by line name.
+        """
+        return {name: 0.0 for name in self.lines}
+
     def get_lines_with_role(
         self, role: propellant_components.ComponentRole
     ) -> tuple[line_models.PropellantLine, ...]:

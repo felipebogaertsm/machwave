@@ -56,6 +56,17 @@ The **motor state** is what changes during a run: the time, the chamber pressure
 There is one state class per motor type, [`SolidMotorState`][machwave.simulation.solid.states.SolidMotorState], [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState], and so on, all extending [`MotorState`][machwave.simulation.states.MotorState].
 
 Each timestep, the state evaluates the motor at the current chamber pressure, records the operating point, and advances to the next timestep.
+
+How it advances depends on the motor type:
+
+- **Biliquid engine:** the chamber pressure, the fluid mass of every line and the internal energy of every tank that runs an energy balance advance together in one fourth-order Runge-Kutta step.
+  Line flows, tank states and thermochemistry are evaluated at every stage.
+  The step on which a line runs dry is first order.
+  See [Mass Balance](mass_balance.md#biliquid-rocket-engine).
+- **Solid motor:** the chamber pressure goes through a fourth-order Runge-Kutta step.
+  The burnt web advances by explicit Euler at the burn rate of the start of the step.
+  This makes the run first order in the step.
+
 It also decides when the run is over: once the stop criteria is met it sets `end_thrust` to `True`, and the simulation stops advancing.
 
 ![Animated simulation loop](../assets/explanations/simulation_loop/simulation_loop_animation.svg)
