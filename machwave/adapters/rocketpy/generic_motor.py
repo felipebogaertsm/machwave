@@ -41,7 +41,7 @@ class RocketPyGenericMotorAdapter(
         )
 
     def _get_rocketpy_attributes(self) -> dict[str, typing.Any]:
-        base_attrs = super()._get_rocketpy_attributes()
+        base_attributes = super()._get_rocketpy_attributes()
 
         motor = typing.cast("motors_models.SolidMotor", self.motor)
 
@@ -52,7 +52,7 @@ class RocketPyGenericMotorAdapter(
         )
 
         return {
-            **base_attrs,
+            **base_attributes,
             "chamber_radius": chamber_radius,
             "chamber_height": chamber_height,
             "chamber_position": chamber_position,

@@ -124,11 +124,11 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         Returns:
             Exhaust velocity [m/s] as a function of time.
         """
-        v_exh = (
+        exhaust_velocity = rocketpy.Function(
             self.simulation_result.total_impulse
             / self.simulation_result.initial_propellant_mass
         )
-        return rocketpy.Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
+        return exhaust_velocity.set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
 
     @property
     def center_of_propellant_mass(self) -> rocketpy.Function:

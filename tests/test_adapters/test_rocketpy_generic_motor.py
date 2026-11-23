@@ -1,16 +1,11 @@
 """Tests for the RocketPy GenericMotor adapter."""
 
-from types import SimpleNamespace
-
-import numpy as np
 import pytest
 import rocketpy
 
 import machwave.adapters.rocketpy as rocketpy_adapters
 from tests.factories import (
     BatesSegmentFactory,
-    SolidMotorFactory,
-    SolidMotorThrustChamberFactory,
     StarGrainSegmentFactory,
 )
 from tests.test_simulations.conftest import run_simulation
@@ -22,40 +17,24 @@ RAIL_LENGTH = 5.2
 CENTER_OF_MASS_TOLERANCE = 1e-6
 
 
-def _build_adapter_without_init(motor) -> rocketpy_adapters.RocketPyGenericMotorAdapter:
-    adapter = rocketpy_adapters.RocketPyGenericMotorAdapter.__new__(
-        rocketpy_adapters.RocketPyGenericMotorAdapter
-    )
-    adapter.motor = motor
-    adapter.simulation_result = SimpleNamespace(
-        time=np.array([0.0, 1.0]),
-        thrust=np.array([100.0, 100.0]),
-        thrust_time=1.0,
-        exit_pressure=np.array([1e5, 1e5]),
-        initial_propellant_mass=2.5,
-    )
-    return adapter
-
-
 def test_chamber_attributes_describe_the_grain_and_combustion_chamber() -> None:
-    thrust_chamber = SolidMotorThrustChamberFactory.build(
-        nozzle_exit_to_grain_port_distance=0.01
+    motor, params = motor_builders.build_rocketpy_example_motor()
+    result = run_simulation(motor, params)
+    adapter = rocketpy_adapters.RocketPyGenericMotorAdapter(
+        motor=motor, simulation_result=result
     )
-    motor = SolidMotorFactory.build(thrust_chamber=thrust_chamber)
-    adapter = _build_adapter_without_init(motor)
+    thrust_chamber = motor.thrust_chamber
 
-    attrs = adapter._get_rocketpy_attributes()
-
-    assert attrs["chamber_radius"] == pytest.approx(
+    assert adapter.chamber_radius == pytest.approx(
         thrust_chamber.combustion_chamber.inner_diameter / 2
     )
-    assert attrs["chamber_height"] == pytest.approx(motor.grain.total_length)
-    assert attrs["chamber_position"] == pytest.approx(
+    assert adapter.chamber_height == pytest.approx(motor.grain.total_length)
+    assert adapter.chamber_position == pytest.approx(
         motor.grain.get_center_of_gravity(web_distance=0.0)[0]
         + thrust_chamber.nozzle_exit_to_grain_port_distance
     )
-    assert attrs["propellant_initial_mass"] == pytest.approx(
-        adapter.simulation_result.initial_propellant_mass
+    assert adapter.propellant_initial_mass == pytest.approx(
+        result.initial_propellant_mass
     )
 
 
