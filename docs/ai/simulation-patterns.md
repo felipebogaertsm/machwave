@@ -29,6 +29,10 @@ Rules for the time-marched loop and the numerical methods in `machwave/simulatio
 
 - Loop cost is dominated by CEA and CoolProp calls. Optimize only with a measurement:
   count those calls, then time `make benchmark`.
-- A cache keyed on a raw float never hits. Quantize the key, as the thermochemistry
-  cache does with `CHAMBER_PRESSURE_QUANTIZATION_PA` and `MIXTURE_RATIO_QUANTIZATION`
+- A cache meant to hit across timesteps needs a quantized key, because the state
+  drifts and a raw float never repeats. The thermochemistry cache quantizes with
+  `CHAMBER_PRESSURE_QUANTIZATION_PA` and `MIXTURE_RATIO_QUANTIZATION`
   (`machwave/models/propellants/categories/base.py`).
+- A raw float key hits only within one solve, where the same inputs repeat across
+  iterations. Such a cache needs a `maxsize`, as the saturated inlet flux cache in
+  `machwave/core/two_phase_flow.py` has.
