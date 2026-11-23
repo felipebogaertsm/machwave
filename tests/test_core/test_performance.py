@@ -41,18 +41,13 @@ def test_effective_flame_temperature_unity_efficiency_is_unchanged():
 @pytest.mark.parametrize(
     "combustion_efficiency, adiabatic_flame_temperature, expected",
     [
-        (0.95, 2_800.0, 0.95 * 2_800.0),
-        (0.5, 2_800.0, 1_400.0),  # the efficiency scales the temperature directly
+        (0.95, 2_800.0, 0.95**2 * 2_800.0),
+        (0.5, 2_800.0, 700.0),
     ],
 )
-def test_effective_flame_temperature_applies_efficiency_linearly(
+def test_effective_flame_temperature_squares_the_characteristic_velocity_efficiency(
     combustion_efficiency, adiabatic_flame_temperature, expected
 ):
-    """T_eff = combustion_efficiency * T0 (a flame-temperature efficiency).
-
-    The characteristic-velocity efficiency is the square root of this value, since
-    c_star scales with sqrt(T).
-    """
     assert core_performance.get_effective_flame_temperature(
         adiabatic_flame_temperature=adiabatic_flame_temperature,
         combustion_efficiency=combustion_efficiency,

@@ -9,17 +9,23 @@ def get_effective_flame_temperature(
     adiabatic_flame_temperature: float, combustion_efficiency: float
 ) -> float:
     """
-    Apply the combustion efficiency to the adiabatic flame temperature.
+    Get the flame temperature corrected by the combustion efficiency.
+
+    The combustion efficiency is a characteristic velocity efficiency, so the flame
+    temperature scales with its square.
 
     Args:
         adiabatic_flame_temperature: Adiabatic flame temperature [K].
-        combustion_efficiency: Combustion efficiency in (0, 1], the ratio of the actual
-            to the ideal (adiabatic) flame temperature.
+        combustion_efficiency: Characteristic velocity efficiency in (0, 1].
 
     Returns:
         Effective flame temperature [K].
+
+    References:
+        Huzel, D. K., & Huang, D. H. (1967). Design of Liquid Propellant Rocket
+        Engines (2nd ed.). NASA SP-125. Eq. 1-41.
     """
-    return combustion_efficiency * adiabatic_flame_temperature
+    return combustion_efficiency**2 * adiabatic_flame_temperature
 
 
 def get_total_impulse(
