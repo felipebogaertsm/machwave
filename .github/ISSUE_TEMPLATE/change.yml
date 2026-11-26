@@ -5,13 +5,13 @@ body:
   - type: textarea
     attributes:
       label: What and why
-      description: The change and the reason for it, in one or two sentences.
+      description: The change and the reason for it. One or two sentences for a small change.
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Scope
-      description: What is out of scope, if it is not obvious.
+      label: Done when
+      description: The observable result that closes this issue, and what is out of scope if it is not obvious.
   - type: textarea
     attributes:
       label: References

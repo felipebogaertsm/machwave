@@ -5,6 +5,6 @@ body:
   - type: textarea
     attributes:
       label: Question
-      description: The question and the decision that depends on it.
+      description: The question, the decision that depends on it and what is already known.
     validations:
       required: true

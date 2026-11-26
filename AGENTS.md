@@ -64,7 +64,6 @@ workflow file.
     measured symptom. Stage files by explicit path.
   - Issues and pull requests follow the forms in `.github/ISSUE_TEMPLATE/` and
     `.github/PULL_REQUEST_TEMPLATE.md`, in plain language and standard propulsion terms
-    ("biliquid", spell out a symbol on first use). Short by default; a change to a
-    physical model, a solver or the simulation loop adds the results and performance
-    sections it needs.
+    ("biliquid", spell out a symbol on first use). Leave out the optional sections
+    that do not apply.
   - No tool or assistant attribution in commits, pull requests or issues.

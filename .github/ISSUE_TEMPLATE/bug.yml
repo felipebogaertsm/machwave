@@ -5,7 +5,7 @@ body:
   - type: textarea
     attributes:
       label: What happens
-      description: What is wrong and what you expected, in one or two sentences.
+      description: What is wrong and what you expected. For a wrong result, give the expected value and its source.
     validations:
       required: true
   - type: textarea
