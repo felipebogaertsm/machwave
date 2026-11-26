@@ -203,7 +203,10 @@ def build_finocyl_motor() -> tuple[
 
 
 def build_1kn_biliquid_engine(
-    *, isothermal_oxidizer_tank: bool = False, dyer_oxidizer: bool = False
+    *,
+    isothermal_oxidizer_tank: bool = False,
+    dyer_oxidizer: bool = False,
+    oxidizer_mass: float = 2.78,
 ) -> tuple[
     motors_models.BiliquidEngine, machwave_simulation.InternalBallisticsSimulationParams
 ]:
@@ -217,6 +220,7 @@ def build_1kn_biliquid_engine(
         dyer_oxidizer: Whether the oxidizer element blends in the equilibrium
             flow, as in the example. Each blended flow costs a CoolProp sweep, so
             the default runs the element in its incompressible limit.
+        oxidizer_mass: Nitrous oxide loaded in the oxidizer tank [kg].
     """
     if dyer_oxidizer:
         oxidizer_element = InjectorElementFactory.build(
@@ -245,7 +249,7 @@ def build_1kn_biliquid_engine(
             fluid_name="N2O",
             volume=3.80e-3,
             temperature=tank_temperature,
-            initial_fluid_mass=2.78,
+            initial_fluid_mass=oxidizer_mass,
             isothermal=isothermal_oxidizer_tank,
         ),
         fuel_tank=TankFactory.build(

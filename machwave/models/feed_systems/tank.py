@@ -398,6 +398,42 @@ class Tank:
             1.0 - vapor_density / liquid_density
         )
 
+    def get_vapor_density(
+        self,
+        fluid_mass: float,
+        internal_energy: float | None = None,
+        *,
+        volume: float | None = None,
+    ) -> float:
+        """
+        Return the density of the vapor in the tank [kg/m^3].
+
+        The saturated vapor in the ullage while liquid remains, the bulk density
+        once the tank holds vapor alone.
+
+        Args:
+            fluid_mass: Current total mass of fluid in the tank [kg].
+            internal_energy: Current internal energy of that fluid [J].
+                Required for a tank running an energy balance, unused
+                otherwise.
+            volume: Volume the fluid fills [m^3]. None for the tank volume.
+
+        Returns:
+            Vapor density [kg/m^3], zero for an empty tank.
+        """
+        if fluid_mass <= 0:
+            return 0.0
+
+        volume = self._get_volume(volume)
+        if not self.is_delivering_liquid(fluid_mass, internal_energy, volume=volume):
+            return fluid_mass / volume
+
+        if self.isothermal:
+            return self.saturated_vapor_density
+        return self._get_fluid_state(
+            fluid_mass, internal_energy, volume
+        ).saturated_vapor_density
+
     def get_outflow_specific_enthalpy(
         self,
         fluid_mass: float,
