@@ -86,19 +86,14 @@ This is the arrangement of an oxidizer-only hybrid feed and of a monoliquid engi
 
 ## The Orifice
 
-An injector element is a discharge coefficient, a flow area and a mass flow model.
+An injector element is a discharge coefficient, a flow area and a factor on Dyer's non-equilibrium parameter.
 It depends only on its own inlet state and the chamber pressure, and delivers no flow once the chamber pressure reaches the inlet pressure (backflow is not modeled).
 
-The **single-phase incompressible** (SPI) orifice equation applies to a subcooled liquid:
+Every element flows by Dyer's non-homogeneous non-equilibrium model.
+A subcooled liquid, whose vapor pressure is at or below the chamber pressure, takes the single-phase incompressible orifice flow:
 
 $$
 \dot{m} = C_d\, A\, \sqrt{2 \rho \left(P_\text{inlet} - P_0\right)}
-$$
-
-The **homogeneous equilibrium model** (HEM) applies to a self-pressurized propellant whose liquid flashes across the orifice and can choke at the two-phase speed of sound:
-
-$$
-\dot{m} = C_d\, A\, G_\text{HEM}
 $$
 
 where:
@@ -107,15 +102,9 @@ where:
 - $A$ is the orifice flow area [m²]
 - $\rho$ is the liquid density at the inlet [kg/m³]
 - $P_0$ is the chamber pressure [Pa]
-- $G_\text{HEM}$ is the homogeneous equilibrium mass flux [kg/(m²·s)]
 
-The mass flux is found by expanding the inlet fluid isentropically to a pressure $P$ between the chamber and the inlet, with the liquid and vapor in equilibrium at every point:
-
-$$
-G(P) = \rho(P)\, \sqrt{2 \left(h_\text{inlet} - h(P)\right)}, \qquad G_\text{HEM} = \max_{P_0 \le P \le P_\text{inlet}} G(P)
-$$
-
-The orifice is choked when the maximum lies above the chamber pressure, and then the flow no longer responds to $P_0$.
+A self-pressurized propellant that can flash across the orifice, such as nitrous oxide near saturation, takes a blend of that flow with the homogeneous equilibrium flow.
+The model and its calibration are explained in [Injector Flow](injector_flow.md).
 
 ## Coupling with the Chamber
 
