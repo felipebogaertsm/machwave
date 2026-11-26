@@ -40,7 +40,7 @@ class EquilibriumState:
 
 
 class CoolPropService:
-    """Thin wrapper around CoolProp `PropsSI` bound to a single fluid."""
+    """Thin wrapper around CoolProp bound to a single fluid."""
 
     def __init__(self, fluid_name: str) -> None:
         """
@@ -62,6 +62,12 @@ class CoolPropService:
         its own on first use.
         """
         return {**self.__dict__, "_abstract_state": None}
+
+    def _get_abstract_state(self) -> CP.AbstractState:
+        """Return the CoolProp state the flashes run on, made on first use."""
+        if self._abstract_state is None:
+            self._abstract_state = CP.AbstractState("HEOS", self.fluid_name)
+        return self._abstract_state
 
     def get_triple_point_temperature(self) -> float:
         """
@@ -215,10 +221,7 @@ class CoolPropService:
             ValueError: If the state is supercritical, or if it is neither a
                 converged single-phase state nor on the saturation dome.
         """
-        abstract_state = self._abstract_state
-        if abstract_state is None:
-            abstract_state = CP.AbstractState("HEOS", self.fluid_name)
-            self._abstract_state = abstract_state
+        abstract_state = self._get_abstract_state()
         try:
             abstract_state.update(CP.DmassUmass_INPUTS, density, internal_energy)
         except ValueError:
@@ -438,3 +441,26 @@ class CoolPropService:
             Specific enthalpy [J/kg].
         """
         return CP.PropsSI("H", "P", pressure, "S", entropy, self.fluid_name)
+
+    def get_density_and_enthalpy_at_pressure_entropy(
+        self, pressure: float, entropy: float
+    ) -> tuple[float, float]:
+        """
+        Get the density and specific enthalpy at a pressure and specific entropy.
+
+        Uses a single flash, so it is cheaper than calling
+        `get_density_at_pressure_entropy` and `get_enthalpy_at_pressure_entropy`.
+
+        Args:
+            pressure: Pressure [Pa].
+            entropy: Specific entropy [J/(kg K)].
+
+        Returns:
+            Tuple of density [kg/m^3] and specific enthalpy [J/kg].
+
+        Raises:
+            ValueError: If CoolProp cannot resolve the state.
+        """
+        state = self._get_abstract_state()
+        state.update(CP.PSmass_INPUTS, pressure, entropy)
+        return state.rhomass(), state.hmass()
