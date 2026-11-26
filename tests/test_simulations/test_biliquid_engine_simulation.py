@@ -76,9 +76,9 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
         np.interp(1.0, simulation_result.time, simulation_result.chamber_pressure),
         rel=3e-5,
     )
-    # line draining is first order, so burnout shifts with the step. Measured 1.3e-3
+    # burnout lands on a step and the impulse sum is trapezoidal. Measured 2.5e-5
     assert coarse_result.total_impulse == pytest.approx(
-        simulation_result.total_impulse, rel=3e-3
+        simulation_result.total_impulse, rel=1e-4
     )
 
 

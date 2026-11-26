@@ -345,6 +345,18 @@ class BiliquidEngineState(simulation_states.MotorState):
             vapor_pressures=vapor_pressures,
         )
         mass_flows = injector_flows(chamber_pressure)
+        vapor_inlet_states = self._get_vapor_inlet_states(
+            fluid_masses=fluid_masses,
+            inlet_states=inlet_states,
+            mass_flows=mass_flows,
+            d_t=d_t,
+        )
+        if vapor_inlet_states:
+            inlet_states = {**inlet_states, **vapor_inlet_states}
+            injector_flows = functools.partial(
+                injector_flows, inlet_states=inlet_states
+            )
+            mass_flows = injector_flows(chamber_pressure)
         for name, mass_flow in mass_flows.items():
             self.mass_flow_rate_per_line[name].append(mass_flow)
 
@@ -451,6 +463,54 @@ class BiliquidEngineState(simulation_states.MotorState):
                 volume=volumes[name],
                 swept_volume=new_volumes[name] - volumes[name],
             )
+
+    def _get_vapor_inlet_states(
+        self,
+        *,
+        fluid_masses: Mapping[str, float],
+        inlet_states: Mapping[str, fluid_state_models.FluidState],
+        mass_flows: Mapping[str, float],
+        d_t: float,
+    ) -> dict[str, fluid_state_models.FluidState]:
+        """
+        Feedline head states of the lines whose liquid runs out within the step.
+
+        A line draws liquid only while its tank holds the liquid for the whole
+        step. Once the draw at the liquid state exceeds the liquid left, while
+        vapor remains to be drawn, the line takes the tank vapor for the step. A
+        tank whose vapor condenses as it expands holds a little liquid again
+        after every step, so this check runs on every step.
+
+        Args:
+            fluid_masses: Fluid mass of every line at the start of the step [kg].
+            inlet_states: Feedline head states at the liquid outlet, keyed by
+                line name.
+            mass_flows: Line flows from those head states [kg/s].
+            d_t: Time increment [s].
+
+        Returns:
+            Head state at the tank vapor density of each line that switches to
+            vapor, keyed by line name.
+        """
+        volumes = self.motor.feed_system.get_tank_volumes(fluid_masses)
+        vapor_inlet_states = {}
+        for name, line in self.lines.items():
+            mass_drawn = mass_flows[name] * d_t
+            if mass_drawn >= fluid_masses[name]:
+                continue
+            internal_energy = self.internal_energy_per_line[name]
+            liquid_mass = line.tank.get_liquid_mass(
+                fluid_masses[name], internal_energy, volume=volumes[name]
+            )
+            if liquid_mass <= 0.0 or liquid_mass >= mass_drawn:
+                continue
+            vapor_inlet_states[name] = dataclasses.replace(
+                inlet_states[name],
+                density=line.tank.get_vapor_density(
+                    fluid_masses[name], internal_energy, volume=volumes[name]
+                ),
+            )
+        return vapor_inlet_states
 
     @staticmethod
     def _drain_internal_energy(

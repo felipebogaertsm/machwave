@@ -111,6 +111,10 @@ The model and its calibration are explained in [Injector Flow](injector_flow.md)
 Each timestep, the inlet state of every line is read once.
 The injector is then evaluated at each chamber pressure the Runge–Kutta solver tries.
 No line can deliver more than the mass it has left over the timestep.
+A line draws liquid only while its tank holds the liquid for the whole timestep.
+Once the liquid left is less than one timestep's liquid flow, the line draws the tank's vapor, at the saturated vapor density.
+Nitrous oxide vapor condenses a little as the tank expands, so this holds on every timestep and the thin liquid film never feeds a liquid-density flow.
+Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState].
 
 ```mermaid
 flowchart LR

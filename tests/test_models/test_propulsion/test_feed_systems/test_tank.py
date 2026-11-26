@@ -154,6 +154,45 @@ def test_two_phase_density_returns_saturated_liquid(fluid_name, temperature):
     assert tank.get_density(fluid_mass) == pytest.approx(rho_liquid, rel=1e-3)
 
 
+@pytest.mark.parametrize("isothermal", [True, False])
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_vapor_density_is_the_saturated_vapor_while_liquid_remains(
+    fluid_name, temperature, isothermal
+):
+    volume = 0.01
+    vapor_density = CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name)
+    fluid_mass = 1.5 * vapor_density * volume
+    tank = tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=fluid_mass,
+        isothermal=isothermal,
+    )
+
+    internal_energy = None if isothermal else tank.initial_internal_energy
+    # the energy balance tank reads the temperature back through a flash
+    assert tank.get_vapor_density(fluid_mass, internal_energy) == pytest.approx(
+        vapor_density, rel=1e-9
+    )
+
+
+@pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
+def test_vapor_density_is_the_bulk_once_the_liquid_is_gone(fluid_name, temperature):
+    volume = 0.01
+    fluid_mass = 0.5 * CP.PropsSI("D", "T", temperature, "Q", 1, fluid_name) * volume
+    tank = tank_models.Tank(
+        fluid_name=fluid_name,
+        volume=volume,
+        temperature=temperature,
+        initial_fluid_mass=fluid_mass,
+        isothermal=True,
+    )
+
+    assert tank.get_vapor_density(fluid_mass) == fluid_mass / volume
+    assert tank.get_vapor_density(0.0) == 0.0
+
+
 @pytest.mark.parametrize("fluid_name, temperature", TEST_FLUIDS)
 def test_two_phase_density_constant_while_two_phase(fluid_name, temperature):
     """
