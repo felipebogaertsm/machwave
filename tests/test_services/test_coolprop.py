@@ -1,5 +1,8 @@
 """Tests for CoolPropService."""
 
+import copy
+import pickle
+
 import CoolProp.CoolProp as CP
 import pytest
 
@@ -87,11 +90,19 @@ def test_get_enthalpy_at_pressure_entropy(service):
 def test_a_flash_coolprop_gets_right_is_kept(service, temperature, density):
     internal_energy = CP.PropsSI("U", "T", temperature, "D", density, FLUID_NAME)
 
-    assert service.get_temperature_pressure_at_density_internal_energy(
-        density, internal_energy
-    ) == (
-        CP.PropsSI("T", "D", density, "U", internal_energy, FLUID_NAME),
-        CP.PropsSI("P", "D", density, "U", internal_energy, FLUID_NAME),
+    state = service.get_equilibrium_state(density, internal_energy)
+
+    assert state.temperature == CP.PropsSI(
+        "T", "D", density, "U", internal_energy, FLUID_NAME
+    )
+    assert state.pressure == CP.PropsSI(
+        "P", "D", density, "U", internal_energy, FLUID_NAME
+    )
+    assert state.saturated_liquid_density == CP.PropsSI(
+        "D", "T", state.temperature, "Q", 0, FLUID_NAME
+    )
+    assert state.saturated_vapor_density == CP.PropsSI(
+        "D", "T", state.temperature, "Q", 1, FLUID_NAME
     )
 
 
@@ -100,14 +111,12 @@ def test_a_supercritical_state_raises(service):
     internal_energy = CP.PropsSI("U", "T", 320.0, "D", density, FLUID_NAME)
 
     with pytest.raises(ValueError, match="is supercritical at 320"):
-        service.get_temperature_pressure_at_density_internal_energy(
-            density, internal_energy
-        )
+        service.get_equilibrium_state(density, internal_energy)
 
 
 def test_a_state_off_the_chart_raises(service):
     with pytest.raises(ValueError, match="nor on the saturation dome"):
-        service.get_temperature_pressure_at_density_internal_energy(500.0, -1e12)
+        service.get_equilibrium_state(500.0, -1e12)
 
 
 class TestAStateTheFlashGetsWrong:
@@ -128,21 +137,36 @@ class TestAStateTheFlashGetsWrong:
 
     def test_the_temperature_is_on_the_dome(self, service):
         # 1e-6 K leaves room for round-off in the reference state
-        temperature, _ = service.get_temperature_pressure_at_density_internal_energy(
-            self.DENSITY, self.INTERNAL_ENERGY
-        )
+        state = service.get_equilibrium_state(self.DENSITY, self.INTERNAL_ENERGY)
 
-        assert temperature == pytest.approx(self.TEMPERATURE, abs=1e-6)
+        assert state.temperature == pytest.approx(self.TEMPERATURE, abs=1e-6)
 
     def test_the_pressure_is_the_saturation_pressure(self, service):
         # a 1e-6 K error moves the saturation pressure by about 1e-8 relative
-        _, pressure = service.get_temperature_pressure_at_density_internal_energy(
-            self.DENSITY, self.INTERNAL_ENERGY
-        )
+        state = service.get_equilibrium_state(self.DENSITY, self.INTERNAL_ENERGY)
 
-        assert pressure == pytest.approx(
+        assert state.pressure == pytest.approx(
             CP.PropsSI("P", "T", self.TEMPERATURE, "Q", 0, FLUID_NAME), rel=1e-7
         )
+
+    def test_the_saturation_densities_are_at_the_dome_temperature(self, service):
+        state = service.get_equilibrium_state(self.DENSITY, self.INTERNAL_ENERGY)
+
+        assert state.saturated_liquid_density == CP.PropsSI(
+            "D", "T", state.temperature, "Q", 0, FLUID_NAME
+        )
+        assert state.saturated_vapor_density == CP.PropsSI(
+            "D", "T", state.temperature, "Q", 1, FLUID_NAME
+        )
+
+
+def test_a_service_that_has_flashed_can_be_copied_and_pickled(service):
+    density = 500.0
+    internal_energy = CP.PropsSI("U", "T", 290.0, "D", density, FLUID_NAME)
+    state = service.get_equilibrium_state(density, internal_energy)
+
+    for copied in (copy.deepcopy(service), pickle.loads(pickle.dumps(service))):
+        assert copied.get_equilibrium_state(density, internal_energy) == state
 
 
 def test_get_molar_mass(service):
