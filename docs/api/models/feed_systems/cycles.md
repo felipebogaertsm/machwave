@@ -32,7 +32,10 @@ from machwave.models.feed_systems.tank import Tank
 
 feed_system = StackedTankPressureFedFeedSystem.from_oxidizer_and_fuel(
     oxidizer_tank=Tank("N2O", volume=0.010, temperature=298.0, initial_fluid_mass=5.0),
-    fuel_tank=Tank("Ethanol", volume=0.008, temperature=298.0, initial_fluid_mass=3.0),
+    fuel_tank=Tank(
+        "Ethanol", volume=0.008, temperature=298.0, initial_fluid_mass=3.0,
+        isothermal=True,
+    ),
     piston_loss=0.0,  # Pa
     # 2 bar at 0.83 kg/s of liquid N2O through a 10.9 mm bore
     oxidizer_line_resistance=FeedlineResistance.from_design_point(
@@ -66,9 +69,22 @@ feed_system = StackedTankPressureFedFeedSystem(
 )
 ```
 
+**Piston travel.** The lines below the piston stay liquid-full at their loading temperature.
+Their tanks must be built with `isothermal=True`.
+As they drain, the fluid at the top of the stack fills its own tank volume plus the liquid volume pushed out below:
+
+$$
+V_{top}(t) = V_{top,0} + \sum_j \frac{m_{j,0} - m_j(t)}{\rho_{l,j}}
+$$
+
+[`get_tank_volumes`][machwave.models.feed_systems.base.FeedSystem.get_tank_volumes] returns this volume for any set of line masses.
+The top tank state is evaluated at that volume.
+Its energy balance also subtracts the boundary work done on the piston.
+
 **Mass-flow model.** The feed system supplies the state at the head of every feedline.
 The line at the top of the stack gets the pressurizing tank pressure, and every line below the piston gets that pressure less `piston_loss`, whatever the flow.
 Density comes from [`Tank.get_density`][machwave.models.feed_systems.tank.Tank.get_density].
+For the top tank it is evaluated at the volume the piston has swept to.
 Each line's [`FeedlineResistance`][machwave.models.feed_systems.lines.FeedlineResistance] then takes a loss that grows with the square of the line flow.
 [`get_line_mass_flow`][machwave.simulation.biliquid.states.get_line_mass_flow] solves the injector element flow together with that loss at every chamber pressure the integrator tries.
 The injector picks the orifice model per line from its [`MassFlowModel`][machwave.models.thrust_chamber.injector.MassFlowModel].

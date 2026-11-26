@@ -33,8 +33,13 @@ def main():
         oxidizer_to_fuel_ratio=1.9495,
     )
 
+    # liquid-full below the piston, so it holds its loading temperature
     fuel_tank = tank.Tank(
-        FUEL_NAME.upper(), volume=2.0e-3, temperature=300, initial_fluid_mass=1.55
+        FUEL_NAME.upper(),
+        volume=2.0e-3,
+        temperature=300,
+        initial_fluid_mass=1.55,
+        isothermal=True,
     )
     oxidizer_tank = tank.Tank(
         OXIDIZER_NAME, volume=3.80e-3, temperature=300, initial_fluid_mass=2.78
