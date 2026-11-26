@@ -170,6 +170,61 @@ class TestInjectorElementMassFlow:
         )
 
 
+class TestInjectorElementSaturatedInletFluxMaximum:
+    @pytest.mark.parametrize("mass_flow_model", [MassFlowModel.HEM, MassFlowModel.DYER])
+    def test_a_given_maximum_leaves_the_flow_unchanged(
+        self, saturated_nitrous_oxide_inlet, mass_flow_model
+    ):
+        element = InjectorElementFactory.build(mass_flow_model=mass_flow_model)
+        inlet = FluidStateFactory.build(
+            fluid_name="N2O",
+            pressure=0.9 * saturated_nitrous_oxide_inlet.pressure,
+            temperature=saturated_nitrous_oxide_inlet.temperature,
+            density=saturated_nitrous_oxide_inlet.density,
+        )
+        chamber_pressure = 20e5
+
+        maximum = element.get_saturated_inlet_flux_maximum(
+            fluid_name="N2O",
+            temperature=inlet.temperature,
+            chamber_pressure=chamber_pressure,
+        )
+
+        assert maximum == two_phase_flow.get_saturated_inlet_flux_maximum(
+            "N2O", inlet.temperature, chamber_pressure
+        )
+        assert element.get_mass_flow(
+            inlet=inlet,
+            chamber_pressure=chamber_pressure,
+            saturated_inlet_flux_maximum=maximum,
+        ) == element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure)
+
+    @pytest.mark.parametrize(
+        "mass_flow_model,temperature,chamber_pressure",
+        [
+            # no equilibrium term
+            (MassFlowModel.SPI, 293.0, 20e5),
+            # supercritical
+            (MassFlowModel.HEM, 315.0, 20e5),
+            # chamber above the saturation pressure at 293 K, about 50.6 bar
+            (MassFlowModel.HEM, 293.0, 60e5),
+        ],
+    )
+    def test_none_where_no_inlet_can_flash_in_equilibrium(
+        self, mass_flow_model, temperature, chamber_pressure
+    ):
+        element = InjectorElementFactory.build(mass_flow_model=mass_flow_model)
+
+        assert (
+            element.get_saturated_inlet_flux_maximum(
+                fluid_name="N2O",
+                temperature=temperature,
+                chamber_pressure=chamber_pressure,
+            )
+            is None
+        )
+
+
 class TestInjectorMassFlows:
     def test_every_element_gets_a_flow_in_one_call(self, injector):
         inlet_states = {

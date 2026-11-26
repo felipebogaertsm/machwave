@@ -6,13 +6,16 @@ import numpy as np
 if typing.TYPE_CHECKING:
     import machwave.services.coolprop as coolprop_service
 
+DEFAULT_SWEEP_POINTS = 200  # [-]
+
 
 def get_homogeneous_equilibrium_mass_flux(
     fluid_name: str,
     temperature_upstream: float,
     pressure_downstream: float,
     pressure_upstream: float | None = None,
-    sweep_points: int = 200,
+    sweep_points: int = DEFAULT_SWEEP_POINTS,
+    saturated_inlet_flux_maximum: tuple[float, float] | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via the homogeneous-equilibrium model.
@@ -24,9 +27,10 @@ def get_homogeneous_equilibrium_mass_flux(
 
     A saturated inlet, at or below the saturation pressure, expands from the
     saturated liquid whatever its pressure, so its grid runs up to the saturation
-    pressure and its maximum is kept for the next call at the same temperature and
-    downstream pressure. An inlet below the pressure of the maximum passes the
-    isentropic flux at its own pressure.
+    pressure, and its maximum can be computed once with
+    `get_saturated_inlet_flux_maximum` and passed in for every inlet pressure. An
+    inlet below the pressure of the maximum passes the isentropic flux at its own
+    pressure.
 
     Args:
         fluid_name: CoolProp fluid name.
@@ -35,6 +39,9 @@ def get_homogeneous_equilibrium_mass_flux(
         pressure_upstream: Upstream stagnation pressure [Pa]. If `None`, the saturation
             pressure at the upstream temperature is used.
         sweep_points: Number of pressure points in the isentropic sweep.
+        saturated_inlet_flux_maximum: Result of `get_saturated_inlet_flux_maximum`
+            for the same fluid, temperature, downstream pressure and sweep points.
+            If `None`, it is computed when the inlet is saturated.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above the
@@ -61,8 +68,12 @@ def get_homogeneous_equilibrium_mass_flux(
         return 0.0
 
     if _is_saturated(coolprop, temperature_upstream, upstream_pressure):
-        maximum_flux, maximum_pressure = _get_saturated_inlet_flux_maximum(
-            fluid_name, temperature_upstream, pressure_downstream, sweep_points
+        maximum_flux, maximum_pressure = (
+            get_saturated_inlet_flux_maximum(
+                fluid_name, temperature_upstream, pressure_downstream, sweep_points
+            )
+            if saturated_inlet_flux_maximum is None
+            else saturated_inlet_flux_maximum
         )
         if upstream_pressure >= maximum_pressure:
             return maximum_flux
@@ -88,6 +99,7 @@ def get_dyer_mass_flux(
     density_upstream: float,
     pressure_upstream: float,
     pressure_downstream: float,
+    saturated_inlet_flux_maximum: tuple[float, float] | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
@@ -107,6 +119,8 @@ def get_dyer_mass_flux(
             [kg/m^3].
         pressure_upstream: Upstream stagnation pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
+        saturated_inlet_flux_maximum: Passed on to
+            `get_homogeneous_equilibrium_mass_flux`.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
@@ -151,21 +165,24 @@ def get_dyer_mass_flux(
         temperature_upstream=temperature_upstream,
         pressure_downstream=pressure_downstream,
         pressure_upstream=pressure_upstream,
+        saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
     )
     return (
         non_equilibrium_parameter * incompressible_mass_flux + equilibrium_mass_flux
     ) / (1.0 + non_equilibrium_parameter)
 
 
-@functools.lru_cache(maxsize=64)
-def _get_saturated_inlet_flux_maximum(
+def get_saturated_inlet_flux_maximum(
     fluid_name: str,
     temperature: float,
     pressure_downstream: float,
-    sweep_points: int,
+    sweep_points: int = DEFAULT_SWEEP_POINTS,
 ) -> tuple[float, float]:
     """
     Get the largest isentropic mass flux from the saturated liquid and its pressure.
+
+    This is the homogeneous-equilibrium flux of every saturated inlet at or above
+    that pressure, for the given temperature and downstream pressure.
 
     Args:
         fluid_name: CoolProp fluid name.
