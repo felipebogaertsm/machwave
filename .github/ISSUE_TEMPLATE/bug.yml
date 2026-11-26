@@ -1,0 +1,19 @@
+name: Bug
+description: Something gives a wrong result, fails or crashes.
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happens
+      description: What is wrong and what you expected. For a wrong result, give the expected value and its source.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: How to reproduce
+      description: The shortest script or steps that show it, with the full traceback if there is one.
+      render: python
+  - type: input
+    attributes:
+      label: Machwave version
+      placeholder: python -c "import machwave; print(machwave.__version__)"

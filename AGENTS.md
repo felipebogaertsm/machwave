@@ -62,7 +62,8 @@ workflow file.
     issues, branches and pull requests.
   - Commit subjects state the behaviour change; bodies explain the mechanism and the
     measured symptom. Stage files by explicit path.
-  - Pull request bodies are short and start with `Closes #<issue>.`
-  - Issues use standard propulsion terms ("biliquid", spell out a symbol on first use)
-    and one or two sentences.
+  - Issues and pull requests follow the forms in `.github/ISSUE_TEMPLATE/` and
+    `.github/PULL_REQUEST_TEMPLATE.md`, in plain language and standard propulsion terms
+    ("biliquid", spell out a symbol on first use). Leave out the optional sections
+    that do not apply.
   - No tool or assistant attribution in commits, pull requests or issues.
