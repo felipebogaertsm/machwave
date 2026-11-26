@@ -1,25 +1,8 @@
-import dataclasses
 import functools
+import typing
 
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class TankFluidState:
-    """
-    The fluid in a tank at one mass and internal energy.
-
-    Attributes:
-        temperature: Fluid temperature [K].
-        pressure: Tank pressure [Pa].
-        saturated_liquid_density: Saturated liquid density at the temperature
-            [kg/m^3].
-        saturated_vapor_density: Saturated vapor density at the temperature
-            [kg/m^3].
-    """
-
-    temperature: float
-    pressure: float
-    saturated_liquid_density: float
-    saturated_vapor_density: float
+if typing.TYPE_CHECKING:
+    import machwave.services.coolprop as coolprop_service
 
 
 class Tank:
@@ -31,15 +14,13 @@ class Tank:
     caller, which lets the integrator own that state and keeps the model
     re-runnable.
 
+    By default the tank runs an energy balance. Its state is the fluid mass and the
+    internal energy the integrator carries beside it. The saturation pressure falls
+    as the tank cools over the burn. Liquid and vapor share one temperature.
+
     An isothermal tank is a pure function of the fluid mass. Its temperature is
     held where it was loaded, so a self-pressurizing tank holds its saturation
     pressure flat for as long as any liquid remains.
-
-    A tank running an energy balance is a function of the fluid mass and of the
-    internal energy the integrator carries alongside it. Draining takes enthalpy
-    out with the fluid, the fluid left behind cools as it boils to refill the
-    ullage, and the saturation pressure follows the temperature down over the
-    burn.
 
     Assumptions:
       - Two-phase equilibrium if there's enough mass to form liquid + vapor.
@@ -47,6 +28,13 @@ class Tank:
         the real-gas equation of state.
       - Nothing crosses the tank wall: no heat in, and no work other than what
         the leaving fluid carries.
+
+    Verified against a slow adiabatic drain along the saturation curve, not validated.
+
+    References:
+        Zimmerman, J. E., Waxman, B. S., Cantwell, B. J., & Zilliac, G. G. (2013).
+        Review and Evaluation of Models for Self-Pressurizing Propellant Tank
+        Dynamics. AIAA 2013-4045, Eqs. 20-23, without wall heat transfer.
     """
 
     def __init__(
@@ -56,7 +44,7 @@ class Tank:
         temperature: float,
         initial_fluid_mass: float,
         overfill_tolerance: float = 0.01,
-        isothermal: bool = True,
+        isothermal: bool = False,
     ) -> None:
         """
         Initialize a two-phase tank model.
@@ -72,9 +60,9 @@ class Tank:
             overfill_tolerance: Allowed fraction over the saturated liquid
                 density, e.g. 0.01 = 1% (>=0).
             isothermal: Whether the temperature is held where the tank was
-                loaded. False runs an energy balance instead, and every query
-                then needs the internal energy the integrator carries beside
-                the mass, starting from `initial_internal_energy`.
+                loaded. False (the default) runs an energy balance. Every query
+                then needs the internal energy, which starts at
+                `initial_internal_energy`.
 
         Raises:
             ValueError: If the fluid is unknown to CoolProp, if any argument is
@@ -95,8 +83,7 @@ class Tank:
 
         self._validate()
 
-        # The tank is isothermal with a fixed fluid, so these properties are constant
-        # and cached
+        # saturation properties at the loaded temperature, constant only if isothermal
         self.saturation_pressure = self._coolprop.get_saturation_pressure(temperature)
         self.saturated_liquid_density = self._coolprop.get_saturated_liquid_density(
             temperature
@@ -107,7 +94,9 @@ class Tank:
         # Vapor pressure at the tank temperature, memoized per fluid mass.
         self._pressure_by_mass: dict[float, float] = {}
         # Energy balance state, memoized per fluid mass and internal energy.
-        self._fluid_state_by_state: dict[tuple[float, float], TankFluidState] = {}
+        self._fluid_state_by_state: dict[
+            tuple[float, float], coolprop_service.EquilibriumState
+        ] = {}
 
         self._check_not_overfilled()
 
@@ -202,7 +191,7 @@ class Tank:
 
     def _get_fluid_state(
         self, fluid_mass: float, internal_energy: float | None
-    ) -> TankFluidState:
+    ) -> "coolprop_service.EquilibriumState":
         """
         Resolve the fluid at a mass and internal energy, memoized on the pair.
 
@@ -229,20 +218,8 @@ class Tank:
         density = fluid_mass / self.volume
         specific_internal_energy = internal_energy / fluid_mass
         try:
-            temperature = self._coolprop.get_temperature_at_density_internal_energy(
+            fluid_state = self._coolprop.get_equilibrium_state(
                 density, specific_internal_energy
-            )
-            fluid_state = TankFluidState(
-                temperature=temperature,
-                pressure=self._coolprop.get_pressure_at_density_internal_energy(
-                    density, specific_internal_energy
-                ),
-                saturated_liquid_density=(
-                    self._coolprop.get_saturated_liquid_density(temperature)
-                ),
-                saturated_vapor_density=(
-                    self._coolprop.get_saturated_vapor_density(temperature)
-                ),
             )
         except ValueError as error:
             raise ValueError(
