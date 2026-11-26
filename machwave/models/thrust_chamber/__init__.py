@@ -9,7 +9,6 @@ from machwave.models.thrust_chamber.combustion_chamber import (
 from machwave.models.thrust_chamber.injector import (
     Injector,
     InjectorElement,
-    MassFlowModel,
 )
 from machwave.models.thrust_chamber.nozzle import Nozzle
 
@@ -19,7 +18,6 @@ __all__ = [
     "ThrustChamber",
     "Injector",
     "InjectorElement",
-    "MassFlowModel",
     "Nozzle",
     "CombustionChamber",
 ]

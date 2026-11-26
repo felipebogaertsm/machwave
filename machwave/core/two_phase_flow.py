@@ -1,4 +1,5 @@
 import functools
+import math
 import typing
 
 import numpy as np
@@ -99,7 +100,9 @@ def get_dyer_mass_flux(
     density_upstream: float,
     pressure_upstream: float,
     pressure_downstream: float,
+    non_equilibrium_factor: float = 1.0,
     saturated_inlet_flux_maximum: tuple[float, float] | None = None,
+    vapor_pressure: float | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
@@ -110,6 +113,9 @@ def get_dyer_mass_flux(
     Returns the incompressible flux when nothing can flash in the orifice. That is
     the case when the vapor pressure is at or below the downstream pressure, the inlet
     is at or above the critical temperature, or the inlet is all vapor.
+    `non_equilibrium_factor` scales the non-equilibrium parameter to calibrate a long
+    orifice, which is closer to equilibrium. An infinite factor returns the
+    incompressible flux without any fluid property.
     Verified, not validated against measured flow.
 
     Args:
@@ -119,8 +125,11 @@ def get_dyer_mass_flux(
             [kg/m^3].
         pressure_upstream: Upstream stagnation pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
+        non_equilibrium_factor: Multiplier on kappa (dimensionless).
         saturated_inlet_flux_maximum: Passed on to
             `get_homogeneous_equilibrium_mass_flux`.
+        vapor_pressure: Saturation pressure at the upstream temperature [Pa]. If
+            `None`, it is looked up when needed.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
@@ -145,11 +154,14 @@ def get_dyer_mass_flux(
 
     pressure_drop = pressure_upstream - pressure_downstream
     incompressible_mass_flux = float(np.sqrt(2.0 * density_upstream * pressure_drop))
+    if math.isinf(non_equilibrium_factor):
+        return incompressible_mass_flux
 
     coolprop = coolprop_service.CoolPropService(fluid_name)
     if temperature_upstream >= coolprop.get_critical_temperature():
         return incompressible_mass_flux
-    vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
+    if vapor_pressure is None:
+        vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
     if (
         vapor_pressure <= pressure_downstream
         or density_upstream
@@ -157,7 +169,7 @@ def get_dyer_mass_flux(
     ):
         return incompressible_mass_flux
 
-    non_equilibrium_parameter = float(
+    non_equilibrium_parameter = non_equilibrium_factor * float(
         np.sqrt(pressure_drop / (vapor_pressure - pressure_downstream))
     )
     equilibrium_mass_flux = get_homogeneous_equilibrium_mass_flux(

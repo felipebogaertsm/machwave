@@ -55,6 +55,7 @@ nav:
       - Propellants: explanations/propellants.md
       - Grain Regression: explanations/grain_regression.md
       - Feed Systems: explanations/feed_systems.md
+      - Injector Flow: explanations/injector_flow.md
   - Modules:
       - adapters:
           - Overview: api/adapters.md
@@ -66,6 +67,7 @@ nav:
           - mass_balance: api/core/mass_balance.md
           - performance: api/core/performance.md
           - solvers: api/core/solvers.md
+          - two_phase_flow: api/core/two_phase_flow.md
       - models:
           - Overview: api/models.md
           - feed_systems:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import io
+import math
 import warnings
 
 import CoolProp.CoolProp as CP
@@ -214,19 +215,17 @@ def test_exit_pressure_is_finite_and_positive(
     assert np.all(simulation_result.exit_pressure > 0.0)
 
 
-def test_the_dyer_oxidizer_element_flows_less_than_an_incompressible_one() -> None:
+def test_the_oxidizer_element_flows_less_than_its_incompressible_limit() -> None:
     first_oxidizer_flows = {}
-    for mass_flow_model in (
-        thrust_chamber_models.MassFlowModel.SPI,
-        thrust_chamber_models.MassFlowModel.DYER,
-    ):
+    for non_equilibrium_factor in (1.0, math.inf):
         motor, params = motor_builders.build_1kn_biliquid_engine(dyer_oxidizer=True)
         elements = motor.thrust_chamber.injector.elements
         motor.thrust_chamber.injector = thrust_chamber_models.Injector(
             elements={
                 **elements,
                 "oxidizer": dataclasses.replace(
-                    elements["oxidizer"], mass_flow_model=mass_flow_model
+                    elements["oxidizer"],
+                    non_equilibrium_factor=non_equilibrium_factor,
                 ),
             }
         )
@@ -236,13 +235,11 @@ def test_the_dyer_oxidizer_element_flows_less_than_an_incompressible_one() -> No
             external_pressure=params.external_pressure,
         )
         state.run_timestep(d_t=params.d_t, external_pressure=params.external_pressure)
-        first_oxidizer_flows[mass_flow_model] = state.mass_flow_rate_per_line[
+        first_oxidizer_flows[non_equilibrium_factor] = state.mass_flow_rate_per_line[
             "oxidizer"
         ][-1]
 
-    dyer_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.DYER]
-    incompressible_flow = first_oxidizer_flows[thrust_chamber_models.MassFlowModel.SPI]
-    assert 0.0 < dyer_flow < incompressible_flow
+    assert 0.0 < first_oxidizer_flows[1.0] < first_oxidizer_flows[math.inf]
 
 
 def _build_state_for_burnout_test() -> biliquid_simulation.BiliquidEngineState:
