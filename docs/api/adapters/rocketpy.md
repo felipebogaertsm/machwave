@@ -149,6 +149,7 @@ and its simulation result. The adapter currently provides:
 - nozzle radius, and the throat radius for `SolidMotor`
 - chamber radius, height, and position for `GenericMotor`, from the grain or, for a biliquid engine, from the cylinder enclosing every tank
 - propellant initial mass
+- propellant mass flow rate, from the thrust and a constant exhaust velocity, so the propellant mass ends at the residual mass left by the simulation
 - propellant center of mass over time
 - propellant inertia tensor components over time
 - reference pressure from the exit-pressure trace
