@@ -1,5 +1,6 @@
 """Fluid property service wrapper around CoolProp."""
 
+import dataclasses
 import typing
 
 import scipy.optimize
@@ -18,6 +19,26 @@ CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8  # [-]
 DOME_TEMPERATURE_TOLERANCE = 1e-10  # [K]
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class EquilibriumState:
+    """
+    A single fluid in equilibrium at one density and internal energy.
+
+    Attributes:
+        temperature: Fluid temperature [K].
+        pressure: Fluid pressure [Pa].
+        saturated_liquid_density: Saturated liquid density at the temperature
+            [kg/m^3].
+        saturated_vapor_density: Saturated vapor density at the temperature
+            [kg/m^3].
+    """
+
+    temperature: float
+    pressure: float
+    saturated_liquid_density: float
+    saturated_vapor_density: float
+
+
 class CoolPropService:
     """Thin wrapper around CoolProp bound to a single fluid."""
 
@@ -29,7 +50,24 @@ class CoolPropService:
             fluid_name: Name of the fluid in the CoolProp database.
         """
         self.fluid_name = fluid_name
-        self._pressure_entropy_state: typing.Any = None
+        self._critical_temperature: float | None = None
+        # created on first use, so an unknown fluid name fails where it is used
+        self._abstract_state: CP.AbstractState | None = None
+
+    def __getstate__(self) -> dict[str, typing.Any]:
+        """
+        Return the state to copy or pickle, without the CoolProp state.
+
+        A CoolProp `AbstractState` cannot be copied or pickled. The copy makes
+        its own on first use.
+        """
+        return {**self.__dict__, "_abstract_state": None}
+
+    def _get_abstract_state(self) -> CP.AbstractState:
+        """Return the CoolProp state the flashes run on, made on first use."""
+        if self._abstract_state is None:
+            self._abstract_state = CP.AbstractState("HEOS", self.fluid_name)
+        return self._abstract_state
 
     def get_triple_point_temperature(self) -> float:
         """
@@ -56,7 +94,9 @@ class CoolPropService:
         Returns:
             Critical temperature [K].
         """
-        return CP.PropsSI("Tcrit", self.fluid_name)
+        if self._critical_temperature is None:
+            self._critical_temperature = float(CP.PropsSI("Tcrit", self.fluid_name))
+        return self._critical_temperature
 
     def get_saturation_pressure(self, temperature: float) -> float:
         """
@@ -160,57 +200,11 @@ class CoolPropService:
         """
         return CP.PropsSI("U", "T", temperature, "D", density, self.fluid_name)
 
-    def get_temperature_at_density_internal_energy(
+    def get_equilibrium_state(
         self, density: float, internal_energy: float
-    ) -> float:
+    ) -> EquilibriumState:
         """
-        Get the temperature at a given density and specific internal energy.
-
-        The CoolProp flash is checked against the saturation curve.
-
-        Args:
-            density: Density [kg/m^3].
-            internal_energy: Specific internal energy [J/kg].
-
-        Returns:
-            Temperature [K].
-
-        Raises:
-            ValueError: If the state is supercritical, or if it is neither a
-                converged single-phase state nor on the saturation dome.
-        """
-        return self._get_temperature_pressure_at_density_internal_energy(
-            density, internal_energy
-        )[0]
-
-    def get_pressure_at_density_internal_energy(
-        self, density: float, internal_energy: float
-    ) -> float:
-        """
-        Get the pressure at a given density and specific internal energy.
-
-        The CoolProp flash is checked against the saturation curve.
-
-        Args:
-            density: Density [kg/m^3].
-            internal_energy: Specific internal energy [J/kg].
-
-        Returns:
-            Pressure [Pa].
-
-        Raises:
-            ValueError: If the state is supercritical, or if it is neither a
-                converged single-phase state nor on the saturation dome.
-        """
-        return self._get_temperature_pressure_at_density_internal_energy(
-            density, internal_energy
-        )[1]
-
-    def _get_temperature_pressure_at_density_internal_energy(
-        self, density: float, internal_energy: float
-    ) -> tuple[float, float]:
-        """
-        Get the temperature and pressure at a density and internal energy.
+        Get the equilibrium state at a density and specific internal energy.
 
         CoolProp 6.8 can silently return a single-phase state for a point inside the
         saturation dome. The flash is kept only if its temperature gives back the
@@ -221,21 +215,19 @@ class CoolPropService:
             internal_energy: Specific internal energy [J/kg].
 
         Returns:
-            Temperature [K] and pressure [Pa].
+            Temperature, pressure and saturation densities at that state.
 
         Raises:
             ValueError: If the state is supercritical, or if it is neither a
                 converged single-phase state nor on the saturation dome.
         """
+        abstract_state = self._get_abstract_state()
         try:
-            temperature = CP.PropsSI(
-                "T", "D", density, "U", internal_energy, self.fluid_name
-            )
-            pressure = CP.PropsSI(
-                "P", "D", density, "U", internal_energy, self.fluid_name
-            )
+            abstract_state.update(CP.DmassUmass_INPUTS, density, internal_energy)
         except ValueError:
             return self._solve_on_the_dome(density, internal_energy)
+        temperature = abstract_state.T()
+        pressure = abstract_state.p()
 
         critical_temperature = self.get_critical_temperature()
         if temperature >= critical_temperature:
@@ -245,10 +237,20 @@ class CoolPropService:
                 f"only below the critical temperature {critical_temperature} K"
             )
 
-        saturated_liquid_density = self.get_saturated_liquid_density(temperature)
-        saturated_vapor_density = self.get_saturated_vapor_density(temperature)
-        if saturated_vapor_density < density < saturated_liquid_density:
-            residual, _ = self._get_dome_residual(temperature, density, internal_energy)
+        state = EquilibriumState(
+            temperature=temperature,
+            pressure=pressure,
+            saturated_liquid_density=self.get_saturated_liquid_density(temperature),
+            saturated_vapor_density=self.get_saturated_vapor_density(temperature),
+        )
+        if state.saturated_vapor_density < density < state.saturated_liquid_density:
+            residual, _ = self._get_dome_residual(
+                temperature,
+                density,
+                internal_energy,
+                saturated_liquid_density=state.saturated_liquid_density,
+                saturated_vapor_density=state.saturated_vapor_density,
+            )
             is_consistent = abs(residual) <= INTERNAL_ENERGY_TOLERANCE
         else:
             is_consistent = (
@@ -262,11 +264,17 @@ class CoolPropService:
             )
 
         if is_consistent:
-            return temperature, pressure
+            return state
         return self._solve_on_the_dome(density, internal_energy)
 
     def _get_dome_residual(
-        self, temperature: float, density: float, internal_energy: float
+        self,
+        temperature: float,
+        density: float,
+        internal_energy: float,
+        *,
+        saturated_liquid_density: float,
+        saturated_vapor_density: float,
     ) -> tuple[float, float]:
         """
         Get the internal energy residual of a two-phase mix at the density.
@@ -275,12 +283,16 @@ class CoolPropService:
             temperature: Saturation temperature [K].
             density: Bulk density [kg/m^3].
             internal_energy: Specific internal energy [J/kg].
+            saturated_liquid_density: Saturated liquid density at the
+                temperature [kg/m^3].
+            saturated_vapor_density: Saturated vapor density at the
+                temperature [kg/m^3].
 
         Returns:
             The residual [J/kg] and the quality [-].
         """
-        liquid_volume = 1.0 / self.get_saturated_liquid_density(temperature)
-        vapor_volume = 1.0 / self.get_saturated_vapor_density(temperature)
+        liquid_volume = 1.0 / saturated_liquid_density
+        vapor_volume = 1.0 / saturated_vapor_density
         liquid_energy = CP.PropsSI("U", "T", temperature, "Q", 0, self.fluid_name)
         vapor_energy = CP.PropsSI("U", "T", temperature, "Q", 1, self.fluid_name)
         quality = (1.0 / density - liquid_volume) / (vapor_volume - liquid_volume)
@@ -291,9 +303,9 @@ class CoolPropService:
 
     def _solve_on_the_dome(
         self, density: float, internal_energy: float
-    ) -> tuple[float, float]:
+    ) -> EquilibriumState:
         """
-        Solve for the two-phase temperature at a density and internal energy.
+        Solve for the two-phase state at a density and internal energy.
 
         At constant density the mix internal energy rises with temperature. The root
         is bracketed between the triple point and just under the critical point.
@@ -303,7 +315,7 @@ class CoolPropService:
             internal_energy: Specific internal energy [J/kg].
 
         Returns:
-            Temperature [K] and saturation pressure [Pa].
+            The saturated state, at the saturation pressure.
 
         Raises:
             ValueError: If no two-phase state at that density holds that
@@ -311,7 +323,13 @@ class CoolPropService:
         """
 
         def get_residual(temperature: float) -> float:
-            return self._get_dome_residual(temperature, density, internal_energy)[0]
+            return self._get_dome_residual(
+                temperature,
+                density,
+                internal_energy,
+                saturated_liquid_density=self.get_saturated_liquid_density(temperature),
+                saturated_vapor_density=self.get_saturated_vapor_density(temperature),
+            )[0]
 
         not_on_the_dome = ValueError(
             f"{self.fluid_name} at {density} kg/m^3 and {internal_energy} J/kg is "
@@ -333,11 +351,23 @@ class CoolPropService:
                 xtol=DOME_TEMPERATURE_TOLERANCE,
             ),
         )
-        _, quality = self._get_dome_residual(temperature, density, internal_energy)
+        state = EquilibriumState(
+            temperature=temperature,
+            pressure=self.get_saturation_pressure(temperature),
+            saturated_liquid_density=self.get_saturated_liquid_density(temperature),
+            saturated_vapor_density=self.get_saturated_vapor_density(temperature),
+        )
+        _, quality = self._get_dome_residual(
+            temperature,
+            density,
+            internal_energy,
+            saturated_liquid_density=state.saturated_liquid_density,
+            saturated_vapor_density=state.saturated_vapor_density,
+        )
         if not 0.0 <= quality <= 1.0:
             raise not_on_the_dome
 
-        return temperature, self.get_saturation_pressure(temperature)
+        return state
 
     def get_enthalpy_at_temperature_density(
         self, temperature: float, density: float
@@ -431,8 +461,6 @@ class CoolPropService:
         Raises:
             ValueError: If CoolProp cannot resolve the state.
         """
-        if self._pressure_entropy_state is None:
-            self._pressure_entropy_state = CP.AbstractState("HEOS", self.fluid_name)
-        state = self._pressure_entropy_state
+        state = self._get_abstract_state()
         state.update(CP.PSmass_INPUTS, pressure, entropy)
         return state.rhomass(), state.hmass()
