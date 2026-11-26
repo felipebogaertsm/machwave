@@ -1,24 +1,29 @@
-## Summary
-
-A short description of what this pull request changes and why.
-
-## Linked issue
-
 Closes #
 
-## Test plan
+<!-- What changes and why. One to three sentences for a small change. -->
 
-- [ ] `make check` passes (format, lint, typecheck)
-- [ ] `make test` passes
-- [ ] New or updated tests cover the change
-- [ ] Manual verification steps (describe below, if any)
+## Verification
 
-## Documentation
+<!-- The tests and checks that ran, with their result. Say what could not run and why. -->
 
-- [ ] Public API or user-facing behaviour is documented in `docs/` or docstrings
-- [ ] Not applicable (internal change only)
+<!--
+Delete the sections below that do not apply. A change to a physical model, a solver,
+the simulation loop or the public API keeps every one that applies.
+-->
 
-## Additional notes
+## Approach
 
-Anything reviewers should pay particular attention to: tradeoffs, follow-ups,
-or context that is not obvious from the diff.
+<!-- The design choice a reviewer would question and the alternative it replaced. -->
+
+## Results
+
+<!-- The same case before and after: each quantity that changed, both values and the
+relative difference. Say why the change is expected. -->
+
+## Performance
+
+<!-- The case, how it was measured (CPU or wall time, number of runs) and both numbers. -->
+
+## Breaking changes
+
+<!-- What stops working for users and what they do instead. -->
