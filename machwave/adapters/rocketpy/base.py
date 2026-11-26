@@ -1,4 +1,5 @@
 import abc
+import functools
 import typing
 
 import numpy as np
@@ -156,6 +157,57 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
 
         data = np.column_stack((time, center_positions))
         return rocketpy.Function(data)
+
+    @functools.cached_property
+    def propellant_mass(self) -> rocketpy.Function:
+        """
+        Return the simulated propellant mass over time.
+
+        Replaces RocketPy's propellant mass, which integrates thrust over a constant
+        exhaust velocity.
+
+        Returns:
+            `rocketpy.Function` with (time, mass) data [kg].
+        """
+        mass_over_time = np.column_stack(
+            (self.simulation_result.time, self.simulation_result.propellant_mass)
+        )
+        return rocketpy.Function(
+            mass_over_time, interpolation=INTERPOLATION_METHOD, extrapolation="constant"
+        )
+
+    @functools.cached_property
+    def total_mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate over time.
+
+        Time derivative of the simulated propellant mass. It is negative while the
+        propellant burns, as RocketPy expects.
+
+        Returns:
+            `rocketpy.Function` with (time, mass flow rate) data [kg/s].
+        """
+        time = self.simulation_result.time
+        mass_flow_rate = np.gradient(self.simulation_result.propellant_mass, time)
+        mass_flow_rate_over_time = np.column_stack((time, mass_flow_rate))
+        return rocketpy.Function(
+            mass_flow_rate_over_time,
+            interpolation=INTERPOLATION_METHOD,
+            extrapolation="zero",
+        )
+
+    @functools.cached_property
+    def mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate over time.
+
+        Returns the same data as `total_mass_flow_rate`. RocketPy's `SolidMotor` and
+        `GenericMotor` read the two separately.
+
+        Returns:
+            `rocketpy.Function` with (time, mass flow rate) data [kg/s].
+        """
+        return self.total_mass_flow_rate
 
     def _get_inertia_tensor_over_time(self) -> npt.NDArray[np.float64]:
         """
