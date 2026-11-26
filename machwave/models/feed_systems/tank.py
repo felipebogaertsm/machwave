@@ -1,25 +1,8 @@
-import dataclasses
 import functools
+import typing
 
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class TankFluidState:
-    """
-    The fluid in a tank at one mass and internal energy.
-
-    Attributes:
-        temperature: Fluid temperature [K].
-        pressure: Tank pressure [Pa].
-        saturated_liquid_density: Saturated liquid density at the temperature
-            [kg/m^3].
-        saturated_vapor_density: Saturated vapor density at the temperature
-            [kg/m^3].
-    """
-
-    temperature: float
-    pressure: float
-    saturated_liquid_density: float
-    saturated_vapor_density: float
+if typing.TYPE_CHECKING:
+    import machwave.services.coolprop as coolprop_service
 
 
 class Tank:
@@ -113,7 +96,7 @@ class Tank:
         self._pressure_by_mass: dict[tuple[float, float], float] = {}
         # keyed by (fluid mass, internal energy, volume)
         self._fluid_state_by_state: dict[
-            tuple[float, float, float], TankFluidState
+            tuple[float, float, float], coolprop_service.EquilibriumState
         ] = {}
 
         self._check_not_overfilled()
@@ -222,7 +205,7 @@ class Tank:
 
     def _get_fluid_state(
         self, fluid_mass: float, internal_energy: float | None, volume: float
-    ) -> TankFluidState:
+    ) -> "coolprop_service.EquilibriumState":
         """
         Resolve the fluid at a mass, internal energy and volume, memoized.
 
@@ -249,20 +232,8 @@ class Tank:
         density = fluid_mass / volume
         specific_internal_energy = internal_energy / fluid_mass
         try:
-            temperature = self._coolprop.get_temperature_at_density_internal_energy(
+            fluid_state = self._coolprop.get_equilibrium_state(
                 density, specific_internal_energy
-            )
-            fluid_state = TankFluidState(
-                temperature=temperature,
-                pressure=self._coolprop.get_pressure_at_density_internal_energy(
-                    density, specific_internal_energy
-                ),
-                saturated_liquid_density=(
-                    self._coolprop.get_saturated_liquid_density(temperature)
-                ),
-                saturated_vapor_density=(
-                    self._coolprop.get_saturated_vapor_density(temperature)
-                ),
             )
         except ValueError as error:
             raise ValueError(

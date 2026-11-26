@@ -200,17 +200,20 @@ def test_get_homogeneous_equilibrium_mass_flux_honors_pressure_upstream_override
     assert default == pytest.approx(overridden)
 
 
-def test_get_homogeneous_equilibrium_mass_flux_reuses_the_saturated_inlet_sweep(
+def test_get_homogeneous_equilibrium_mass_flux_reuses_a_given_saturated_inlet_maximum(
     monkeypatch,
 ):
-    """A saturated inlet at another pressure costs no isentropic flash."""
+    """A saturated inlet given its maximum costs no isentropic flash."""
     temperature_upstream, pressure_downstream = 293.0, 20e5
     saturation_pressure = CP.PropsSI("P", "T", temperature_upstream, "Q", 0, "N2O")
     reference = two_phase_flow.get_homogeneous_equilibrium_mass_flux(
         "N2O",
         temperature_upstream,
         pressure_downstream,
-        pressure_upstream=0.95 * saturation_pressure,
+        pressure_upstream=0.9 * saturation_pressure,
+    )
+    saturated_inlet_flux_maximum = two_phase_flow.get_saturated_inlet_flux_maximum(
+        "N2O", temperature_upstream, pressure_downstream
     )
     flashes = []
     flash = (
@@ -232,6 +235,7 @@ def test_get_homogeneous_equilibrium_mass_flux_reuses_the_saturated_inlet_sweep(
         temperature_upstream,
         pressure_downstream,
         pressure_upstream=0.9 * saturation_pressure,
+        saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
     )
 
     assert actual == reference
