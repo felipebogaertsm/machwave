@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import IO, Any, Generic, TypeAlias, TypeVar
 
 import numpy as np
@@ -23,6 +23,8 @@ class SimulationResult(ABC, Generic[StateT]):
     time: SimulationResultArray
     propellant_mass: SimulationResultArray
     chamber_pressure: SimulationResultArray
+    # one entry per integrated timestep, so its length is len(time) - 1.
+    substep_count: npt.NDArray[np.int_] = field(metadata={"non_aligned": True})
     exit_pressure: SimulationResultArray
     thrust_coefficient: SimulationResultArray
     ideal_thrust_coefficient: SimulationResultArray
@@ -60,6 +62,7 @@ class SimulationResult(ABC, Generic[StateT]):
             "time": time,
             "propellant_mass": propellant_mass,
             "chamber_pressure": np.asarray(state.chamber_pressure),
+            "substep_count": np.asarray(state.substep_count, dtype=np.int_),
             "exit_pressure": np.asarray(state.exit_pressure),
             "thrust_coefficient": np.asarray(state.thrust_coefficient),
             "ideal_thrust_coefficient": np.asarray(state.ideal_thrust_coefficient),
