@@ -50,9 +50,6 @@ $\kappa$ is computed at every timestep from the inlet and chamber pressures, sin
 The tank cools and $P_v$ drops with it, and the chamber pressure follows the flow.
 
 Where $P_v \le P_2$ nothing can flash in the orifice and the flow is the incompressible one.
-Nitrous oxide at a tank temperature within a percent of its critical temperature still flows, but the saturated-liquid state the equilibrium term starts from is ill-conditioned there.
-An inlet already below its vapor pressure is flashing in the feedline, and the vapor formed there goes unaccounted for.
-A run reports both as a warning at their onset and keeps the time each line spent in them in the result.
 
 ## Calibration
 
@@ -66,7 +63,6 @@ An infinite factor is the incompressible flow alone, taken without any fluid pro
 
 [`InjectorElement`][machwave.models.thrust_chamber.injector.InjectorElement] holds the discharge coefficient, the flow area and the non-equilibrium factor, and computes its flow with [`get_dyer_mass_flux`][machwave.core.two_phase_flow.get_dyer_mass_flux].
 The equilibrium term is [`get_homogeneous_equilibrium_mass_flux`][machwave.core.two_phase_flow.get_homogeneous_equilibrium_mass_flux], which searches the isentrope for the choked flux with CoolProp.
-[`BiliquidEngineState`][machwave.simulation.biliquid.states.BiliquidEngineState] tracks the time each line spends with its inlet below its vapor pressure and with its tank near the critical point, and [`BiliquidSimulationResult`][machwave.simulation.biliquid.results.BiliquidSimulationResult] carries both.
 
 # References
 
