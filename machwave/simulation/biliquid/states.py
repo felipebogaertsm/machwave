@@ -33,6 +33,7 @@ def get_line_mass_flow(
     head_state: fluid_state_models.FluidState,
     lossless_flow: float,
     saturated_inlet_flux_maximum: tuple[float, float] | None = None,
+    vapor_pressure: float | None = None,
 ) -> float:
     """
     Flow a line delivers through its injector element [kg/s].
@@ -52,6 +53,8 @@ def get_line_mass_flow(
         saturated_inlet_flux_maximum: Result of
             `InjectorElement.get_saturated_inlet_flux_maximum` at the head
             temperature and chamber pressure, shared by every inlet of the solve.
+        vapor_pressure: Result of `InjectorElement.get_vapor_pressure` at the head
+            temperature, shared by every inlet of the solve.
 
     Returns:
         Mass flow rate of the line [kg/s]. The lossless flow itself when it is not
@@ -59,11 +62,6 @@ def get_line_mass_flow(
     """
     if lossless_flow <= 0.0:
         return lossless_flow
-
-    # every inlet of the solve shares the head temperature
-    vapor_pressure = element.get_vapor_pressure(
-        fluid_name=head_state.fluid_name, temperature=head_state.temperature
-    )
 
     def get_flow_residual(mass_flow: float) -> float:
         if mass_flow == 0.0:
@@ -105,6 +103,7 @@ def get_injector_mass_flows(
     line_masses: Mapping[str, float],
     is_feeding: bool,
     d_t: float,
+    vapor_pressures: Mapping[str, float | None] | None = None,
 ) -> dict[str, float]:
     """
     Injector flow on every line at the given chamber pressure [kg/s].
@@ -121,10 +120,14 @@ def get_injector_mass_flows(
         line_masses: Fluid mass left on every line [kg], keyed by line name.
         is_feeding: Whether the feed system is still delivering.
         d_t: Time increment [s].
+        vapor_pressures: Result of `InjectorElement.get_vapor_pressure` of every
+            line at its head temperature, keyed by line name. A line left out looks
+            it up when needed.
 
     Raises:
         ValueError: If any element of the injector has no inlet state.
     """
+    vapor_pressures = vapor_pressures or {}
     if not is_feeding:
         return {name: 0.0 for name in inlet_states}
 
@@ -134,6 +137,7 @@ def get_injector_mass_flows(
             fluid_name=inlet_states[name].fluid_name,
             temperature=inlet_states[name].temperature,
             chamber_pressure=chamber_pressure,
+            vapor_pressure=vapor_pressures.get(name),
         )
         for name, element in injector.elements.items()
         if name in inlet_states
@@ -142,6 +146,7 @@ def get_injector_mass_flows(
         inlet_states=inlet_states,
         chamber_pressure=chamber_pressure,
         saturated_inlet_flux_maxima=saturated_inlet_flux_maxima,
+        vapor_pressures=vapor_pressures,
     )
     flows = {
         name: (
@@ -154,6 +159,7 @@ def get_injector_mass_flows(
                 head_state=inlet_states[name],
                 lossless_flow=flow,
                 saturated_inlet_flux_maximum=saturated_inlet_flux_maxima[name],
+                vapor_pressure=vapor_pressures.get(name),
             )
         )
         for name, flow in lossless_flows.items()
@@ -318,14 +324,25 @@ class BiliquidEngineState(simulation_states.MotorState):
             and all(fluid_mass > 0 for fluid_mass in fluid_masses.values())
             and all(pressure > chamber_pressure for pressure in tank_pressures.values())
         )
+        injector = self.motor.thrust_chamber.injector
+        # the inlet temperatures hold over the step, and so do the vapor pressures
+        vapor_pressures = {
+            name: element.get_vapor_pressure(
+                fluid_name=inlet_states[name].fluid_name,
+                temperature=inlet_states[name].temperature,
+            )
+            for name, element in injector.elements.items()
+            if name in inlet_states
+        }
         injector_flows = functools.partial(
             get_injector_mass_flows,
-            injector=self.motor.thrust_chamber.injector,
+            injector=injector,
             lines=self.lines,
             inlet_states=inlet_states,
             line_masses=fluid_masses,
             is_feeding=is_feeding,
             d_t=d_t,
+            vapor_pressures=vapor_pressures,
         )
         mass_flows = injector_flows(chamber_pressure)
         for name, mass_flow in mass_flows.items():

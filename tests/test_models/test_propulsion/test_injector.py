@@ -255,6 +255,31 @@ class TestInjectorMassFlows:
         assert set(flows) == {"oxidizer", "fuel"}
         assert all(flow > 0.0 for flow in flows.values())
 
+    def test_given_vapor_pressures_leave_every_flow_unchanged(
+        self, injector, saturated_nitrous_oxide_inlet
+    ):
+        inlet_states = {
+            "oxidizer": saturated_nitrous_oxide_inlet,
+            "fuel": FluidStateFactory.build(
+                fluid_name="Ethanol", pressure=30e5, temperature=298.0, density=785.0
+            ),
+        }
+        chamber_pressure = 20e5
+        vapor_pressures = {
+            name: injector.elements[name].get_vapor_pressure(
+                fluid_name=inlet.fluid_name, temperature=inlet.temperature
+            )
+            for name, inlet in inlet_states.items()
+        }
+
+        assert injector.get_mass_flows(
+            inlet_states=inlet_states,
+            chamber_pressure=chamber_pressure,
+            vapor_pressures=vapor_pressures,
+        ) == injector.get_mass_flows(
+            inlet_states=inlet_states, chamber_pressure=chamber_pressure
+        )
+
     def test_each_element_flows_on_its_own_inlet(self):
         """One line's element and inlet decide its flow, not another line's."""
         injector = InjectorFactory.build(
