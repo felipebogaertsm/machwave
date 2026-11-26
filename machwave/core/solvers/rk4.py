@@ -1,9 +1,6 @@
 import math
 from typing import Any, Callable
 
-import numpy as np
-import numpy.typing as npt
-
 
 def rk4th_step(
     variables: dict[str, float],
@@ -131,57 +128,3 @@ def rk4th_ode_solver(
         )[0]
 
     return state, substep_count
-
-
-def rk4th_vector_ode_solver(
-    state: npt.NDArray[np.float64],
-    equation: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
-    time_step: float,
-    step_count: int = 1,
-    initial_derivative: npt.NDArray[np.float64] | None = None,
-) -> npt.NDArray[np.float64]:
-    """
-    Advance an autonomous system y' = f(y) in equal fourth-order Runge-Kutta steps.
-
-    Every component goes through every stage. A coupled right-hand side therefore
-    keeps fourth order.
-
-    Args:
-        state: Current state vector.
-        equation: Callable returning dy/dt at a state, with the shape of the
-            state.
-        time_step: Time step [s].
-        step_count: Number of equal Runge-Kutta steps to take over `time_step`
-            (>=1).
-        initial_derivative: Derivative at `state`, if already evaluated. Saves one
-            call to `equation`.
-
-    Returns:
-        The state after `time_step`.
-
-    Raises:
-        ValueError: If `step_count` is less than one.
-
-    References:
-        Hairer, E., Norsett, S. P., & Wanner, G. (1993). Solving Ordinary Differential
-        Equations I: Nonstiff Problems, 2nd ed., Section II.1.
-    """
-    if step_count < 1:
-        raise ValueError(f"step_count must be at least 1, got {step_count}")
-
-    substep = time_step / step_count
-    state = np.asarray(state, dtype=np.float64)
-    for index in range(step_count):
-        slope_1 = (
-            np.asarray(initial_derivative, dtype=np.float64)
-            if index == 0 and initial_derivative is not None
-            else equation(state)
-        )
-        slope_2 = equation(state + 0.5 * substep * slope_1)
-        slope_3 = equation(state + 0.5 * substep * slope_2)
-        slope_4 = equation(state + substep * slope_3)
-        state = state + (substep / 6.0) * (
-            slope_1 + 2.0 * (slope_2 + slope_3) + slope_4
-        )
-
-    return state
