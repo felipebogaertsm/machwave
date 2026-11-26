@@ -29,6 +29,7 @@ class CoolPropService:
             fluid_name: Name of the fluid in the CoolProp database.
         """
         self.fluid_name = fluid_name
+        self._critical_temperature: float | None = None
 
     def get_triple_point_temperature(self) -> float:
         """
@@ -55,7 +56,9 @@ class CoolPropService:
         Returns:
             Critical temperature [K].
         """
-        return CP.PropsSI("Tcrit", self.fluid_name)
+        if self._critical_temperature is None:
+            self._critical_temperature = float(CP.PropsSI("Tcrit", self.fluid_name))
+        return self._critical_temperature
 
     def get_saturation_pressure(self, temperature: float) -> float:
         """
@@ -159,53 +162,7 @@ class CoolPropService:
         """
         return CP.PropsSI("U", "T", temperature, "D", density, self.fluid_name)
 
-    def get_temperature_at_density_internal_energy(
-        self, density: float, internal_energy: float
-    ) -> float:
-        """
-        Get the temperature at a given density and specific internal energy.
-
-        The CoolProp flash is checked against the saturation curve.
-
-        Args:
-            density: Density [kg/m^3].
-            internal_energy: Specific internal energy [J/kg].
-
-        Returns:
-            Temperature [K].
-
-        Raises:
-            ValueError: If the state is supercritical, or if it is neither a
-                converged single-phase state nor on the saturation dome.
-        """
-        return self._get_temperature_pressure_at_density_internal_energy(
-            density, internal_energy
-        )[0]
-
-    def get_pressure_at_density_internal_energy(
-        self, density: float, internal_energy: float
-    ) -> float:
-        """
-        Get the pressure at a given density and specific internal energy.
-
-        The CoolProp flash is checked against the saturation curve.
-
-        Args:
-            density: Density [kg/m^3].
-            internal_energy: Specific internal energy [J/kg].
-
-        Returns:
-            Pressure [Pa].
-
-        Raises:
-            ValueError: If the state is supercritical, or if it is neither a
-                converged single-phase state nor on the saturation dome.
-        """
-        return self._get_temperature_pressure_at_density_internal_energy(
-            density, internal_energy
-        )[1]
-
-    def _get_temperature_pressure_at_density_internal_energy(
+    def get_temperature_pressure_at_density_internal_energy(
         self, density: float, internal_energy: float
     ) -> tuple[float, float]:
         """

@@ -233,14 +233,14 @@ class Tank:
         density = fluid_mass / self.volume
         specific_internal_energy = internal_energy / fluid_mass
         try:
-            temperature = self._coolprop.get_temperature_at_density_internal_energy(
-                density, specific_internal_energy
+            temperature, pressure = (
+                self._coolprop.get_temperature_pressure_at_density_internal_energy(
+                    density, specific_internal_energy
+                )
             )
             fluid_state = TankFluidState(
                 temperature=temperature,
-                pressure=self._coolprop.get_pressure_at_density_internal_energy(
-                    density, specific_internal_energy
-                ),
+                pressure=pressure,
                 saturated_liquid_density=(
                     self._coolprop.get_saturated_liquid_density(temperature)
                 ),

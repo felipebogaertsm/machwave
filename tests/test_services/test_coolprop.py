@@ -87,12 +87,12 @@ def test_get_enthalpy_at_pressure_entropy(service):
 def test_a_flash_coolprop_gets_right_is_kept(service, temperature, density):
     internal_energy = CP.PropsSI("U", "T", temperature, "D", density, FLUID_NAME)
 
-    assert service.get_temperature_at_density_internal_energy(
+    assert service.get_temperature_pressure_at_density_internal_energy(
         density, internal_energy
-    ) == CP.PropsSI("T", "D", density, "U", internal_energy, FLUID_NAME)
-    assert service.get_pressure_at_density_internal_energy(
-        density, internal_energy
-    ) == CP.PropsSI("P", "D", density, "U", internal_energy, FLUID_NAME)
+    ) == (
+        CP.PropsSI("T", "D", density, "U", internal_energy, FLUID_NAME),
+        CP.PropsSI("P", "D", density, "U", internal_energy, FLUID_NAME),
+    )
 
 
 def test_a_supercritical_state_raises(service):
@@ -100,12 +100,14 @@ def test_a_supercritical_state_raises(service):
     internal_energy = CP.PropsSI("U", "T", 320.0, "D", density, FLUID_NAME)
 
     with pytest.raises(ValueError, match="is supercritical at 320"):
-        service.get_pressure_at_density_internal_energy(density, internal_energy)
+        service.get_temperature_pressure_at_density_internal_energy(
+            density, internal_energy
+        )
 
 
 def test_a_state_off_the_chart_raises(service):
     with pytest.raises(ValueError, match="nor on the saturation dome"):
-        service.get_temperature_at_density_internal_energy(500.0, -1e12)
+        service.get_temperature_pressure_at_density_internal_energy(500.0, -1e12)
 
 
 class TestAStateTheFlashGetsWrong:
@@ -126,15 +128,19 @@ class TestAStateTheFlashGetsWrong:
 
     def test_the_temperature_is_on_the_dome(self, service):
         # 1e-6 K leaves room for round-off in the reference state
-        assert service.get_temperature_at_density_internal_energy(
+        temperature, _ = service.get_temperature_pressure_at_density_internal_energy(
             self.DENSITY, self.INTERNAL_ENERGY
-        ) == pytest.approx(self.TEMPERATURE, abs=1e-6)
+        )
+
+        assert temperature == pytest.approx(self.TEMPERATURE, abs=1e-6)
 
     def test_the_pressure_is_the_saturation_pressure(self, service):
         # a 1e-6 K error moves the saturation pressure by about 1e-8 relative
-        assert service.get_pressure_at_density_internal_energy(
+        _, pressure = service.get_temperature_pressure_at_density_internal_energy(
             self.DENSITY, self.INTERNAL_ENERGY
-        ) == pytest.approx(
+        )
+
+        assert pressure == pytest.approx(
             CP.PropsSI("P", "T", self.TEMPERATURE, "Q", 0, FLUID_NAME), rel=1e-7
         )
 
