@@ -194,9 +194,14 @@ def test_grains_unsupported_by_solid_motor_fly(segments) -> None:
     assert flight.z(flight.t_final) > RAIL_LENGTH
 
 
-def test_biliquid_engine_flies() -> None:
+@pytest.fixture(scope="module")
+def biliquid_engine_and_result():
     motor, params = motor_builders.build_1kn_biliquid_engine()
-    result = run_simulation(motor, params)
+    return motor, run_simulation(motor, params)
+
+
+def test_biliquid_engine_flies(biliquid_engine_and_result) -> None:
+    motor, result = biliquid_engine_and_result
     adapter = rocketpy_adapters.RocketPyGenericMotorAdapter(
         motor=motor, simulation_result=result
     )
@@ -215,3 +220,25 @@ def test_biliquid_engine_flies() -> None:
         / (dry_mass + propellant_mass)
     )
     assert flight.z(flight.t_final) > RAIL_LENGTH
+
+
+def test_biliquid_engine_propellant_mass_ends_at_the_residual(
+    biliquid_engine_and_result,
+) -> None:
+    motor, result = biliquid_engine_and_result
+    adapter = rocketpy_adapters.RocketPyGenericMotorAdapter(
+        motor=motor, simulation_result=result
+    )
+    residual_propellant_mass = result.propellant_mass[-1]
+    expelled_propellant_mass = result.initial_propellant_mass - residual_propellant_mass
+
+    assert residual_propellant_mass > 0.0
+    assert adapter.total_mass_flow_rate.integral(
+        0.0, result.thrust_time
+    ) == pytest.approx(-expelled_propellant_mass)
+    assert adapter.propellant_mass(result.thrust_time) == pytest.approx(
+        residual_propellant_mass
+    )
+    assert adapter.propellant_mass(result.thrust_time + 1.0) == pytest.approx(
+        residual_propellant_mass
+    )

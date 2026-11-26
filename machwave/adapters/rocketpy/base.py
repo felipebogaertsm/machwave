@@ -118,19 +118,38 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         """
         Return exhaust velocity as a function of time.
 
-        Computed as total impulse divided by propellant initial mass,
-        assumed constant and discretized over the burn time.
+        Computed as total impulse divided by expelled propellant mass, assumed
+        constant and discretized over the burn time. RocketPy's propellant mass then
+        ends at the residual propellant mass left by the simulation.
 
         Returns:
             Exhaust velocity [m/s] as a function of time.
         """
+        expelled_propellant_mass = (
+            self.simulation_result.initial_propellant_mass
+            - self.simulation_result.propellant_mass[-1]
+        )
         exhaust_velocity = (
-            self.simulation_result.total_impulse
-            / self.simulation_result.initial_propellant_mass
+            self.simulation_result.total_impulse / expelled_propellant_mass
         )
         return rocketpy.Function(exhaust_velocity).set_discrete_based_on_model(
             self.thrust  # type: ignore[attr-defined]
         )
+
+    @property
+    def total_mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate as a function of time.
+
+        Computed as the negative of thrust divided by `exhaust_velocity`, so the
+        integrated flow equals the expelled propellant mass.
+
+        Returns:
+            Time derivative of the propellant mass [kg/s] as a function of time.
+        """
+        return (
+            -1 * self.thrust / self.exhaust_velocity  # type: ignore[attr-defined]
+        ).set_extrapolation("zero")
 
     @property
     def center_of_propellant_mass(self) -> rocketpy.Function:
