@@ -1,4 +1,5 @@
 import abc
+import functools
 import typing
 
 import numpy as np
@@ -157,7 +158,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         data = np.column_stack((time, center_positions))
         return rocketpy.Function(data)
 
-    @property
+    @functools.cached_property
     def propellant_mass(self) -> rocketpy.Function:
         """
         Return the simulated propellant mass over time.
@@ -175,7 +176,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
             mass_over_time, interpolation=INTERPOLATION_METHOD, extrapolation="constant"
         )
 
-    @property
+    @functools.cached_property
     def total_mass_flow_rate(self) -> rocketpy.Function:
         """
         Return the propellant mass flow rate over time.
@@ -195,7 +196,7 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
             extrapolation="zero",
         )
 
-    @property
+    @functools.cached_property
     def mass_flow_rate(self) -> rocketpy.Function:
         """
         Return the propellant mass flow rate over time.

@@ -73,6 +73,14 @@ def test_mass_flow_rate_matches_the_total_mass_flow_rate(adapter) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "curve_name", ["propellant_mass", "total_mass_flow_rate", "mass_flow_rate"]
+)
+def test_mass_curves_are_built_once(adapter, curve_name) -> None:
+    # RocketPy's grain regression reads the mass flow rate at every ODE step.
+    assert getattr(adapter, curve_name) is getattr(adapter, curve_name)
+
+
 def test_total_mass_at_burnout_equals_dry_mass(adapter) -> None:
     burn_out_time = adapter.burn_out_time
     dry_mass = adapter.motor.thrust_chamber.dry_mass_properties.dry_mass
