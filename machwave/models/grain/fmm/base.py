@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
-from scipy.ndimage import binary_erosion, distance_transform_edt
 from numpy.typing import NDArray
+from scipy.ndimage import binary_erosion, distance_transform_edt
 
 import machwave.common.extras as extras
 import machwave.models.grain as grain

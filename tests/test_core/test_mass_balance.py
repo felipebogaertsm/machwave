@@ -4,7 +4,6 @@ import pytest
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 
-
 BASE_KWARGS = {
     "external_pressure": 101_325.0,
     "free_chamber_volume": 1.0e-3,

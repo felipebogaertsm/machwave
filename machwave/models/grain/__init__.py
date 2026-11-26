@@ -6,7 +6,10 @@ from machwave.models.grain.base import (
     GrainSegment3D,
     InhibitedSurfaces,
 )
-from machwave.models.grain import geometries  # noqa: E402  (must follow base; geometries pulls names from .base)
+
+# The geometries subclass through this package namespace, so they load after base.
+# isort: split
+from machwave.models.grain import geometries
 
 __all__ = [
     "GrainGeometryError",
