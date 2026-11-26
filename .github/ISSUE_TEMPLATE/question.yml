@@ -1,0 +1,10 @@
+name: Question
+description: Something to investigate or decide before any code changes.
+labels: [question]
+body:
+  - type: textarea
+    attributes:
+      label: Question
+      description: The question and the decision that depends on it.
+    validations:
+      required: true
