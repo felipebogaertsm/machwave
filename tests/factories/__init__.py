@@ -4,6 +4,35 @@ sub-component construction to lower-level factories so overrides apply at any
 layer.
 """
 
+__all__ = [
+    "BatesSegmentFactory",
+    "BiliquidEngineFactory",
+    "BiliquidEngineThrustChamberFactory",
+    "BiliquidPropellantFactory",
+    "BiliquidPropellantPropertiesFactory",
+    "CombustionChamberFactory",
+    "ConicalGrainSegmentFactory",
+    "DGrainSegmentFactory",
+    "FinocylGrainSegmentFactory",
+    "FluidStateFactory",
+    "FuelComponentFactory",
+    "InjectorElementFactory",
+    "InjectorFactory",
+    "MultiPortGrainSegmentFactory",
+    "NozzleFactory",
+    "OxidizerComponentFactory",
+    "PropellantLineFactory",
+    "RodAndTubeGrainSegmentFactory",
+    "SingleLinePressureFedFeedSystemFactory",
+    "SolidMotorFactory",
+    "SolidMotorThrustChamberFactory",
+    "SolidPropellantPropertiesFactory",
+    "StackedTankPressureFedFeedSystemFactory",
+    "StarGrainSegmentFactory",
+    "TankFactory",
+    "WagonWheelGrainSegmentFactory",
+]
+
 from tests.factories.common import FluidStateFactory
 from tests.factories.feed_systems import (
     PropellantLineFactory,
@@ -40,32 +69,3 @@ from tests.factories.thrust_chamber import (
     NozzleFactory,
     SolidMotorThrustChamberFactory,
 )
-
-__all__ = [
-    "BatesSegmentFactory",
-    "BiliquidEngineFactory",
-    "BiliquidEngineThrustChamberFactory",
-    "BiliquidPropellantFactory",
-    "BiliquidPropellantPropertiesFactory",
-    "CombustionChamberFactory",
-    "ConicalGrainSegmentFactory",
-    "DGrainSegmentFactory",
-    "FinocylGrainSegmentFactory",
-    "FluidStateFactory",
-    "FuelComponentFactory",
-    "InjectorElementFactory",
-    "InjectorFactory",
-    "MultiPortGrainSegmentFactory",
-    "NozzleFactory",
-    "OxidizerComponentFactory",
-    "PropellantLineFactory",
-    "RodAndTubeGrainSegmentFactory",
-    "SingleLinePressureFedFeedSystemFactory",
-    "SolidMotorFactory",
-    "SolidMotorThrustChamberFactory",
-    "SolidPropellantPropertiesFactory",
-    "StackedTankPressureFedFeedSystemFactory",
-    "StarGrainSegmentFactory",
-    "TankFactory",
-    "WagonWheelGrainSegmentFactory",
-]
