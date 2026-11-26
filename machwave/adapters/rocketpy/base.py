@@ -13,6 +13,7 @@ except ImportError as e:  # pragma: no cover - exercised only without rocketpy
     raise extras.MissingOptionalDependencyError("rocketpy", extras.ROCKETPY) from e
 
 if typing.TYPE_CHECKING:
+    import machwave.common.mass_properties as mass_properties
     import machwave.simulation as ib_simulation
     from machwave.models.motors import Motor
 
@@ -68,19 +69,28 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         attrs = self._get_rocketpy_attributes()
         super().__init__(**attrs)
 
+    def _get_dry_mass_properties(self) -> "mass_properties.DryMassProperties":
+        """
+        Return the dry mass properties of the thrust chamber.
+
+        Raises:
+            ValueError: If the thrust chamber does not define dry mass properties.
+        """
+        dry_mass_properties = self.motor.thrust_chamber.dry_mass_properties
+        if dry_mass_properties is None:
+            raise ValueError("RocketPy's 6DOF simulation requires dry mass properties")
+        return dry_mass_properties
+
     def _get_rocketpy_attributes(self) -> dict[str, typing.Any]:
         """Extract motor attributes and time series compatible with RocketPy."""
         time = self.simulation_result.time
         thrust = self.simulation_result.thrust
 
-        thrust_chamber = self.motor.thrust_chamber
-        nozzle = thrust_chamber.nozzle
+        nozzle = self.motor.thrust_chamber.nozzle
 
         thrust_source = np.column_stack((time, thrust))
 
-        dry_mass_properties = thrust_chamber.dry_mass_properties
-        if dry_mass_properties is None:
-            raise ValueError("RocketPy's 6DOF simulation requires dry mass properties")
+        dry_mass_properties = self._get_dry_mass_properties()
 
         # Both machwave and RocketPy use nozzle exit as origin, positive toward the
         # bulkhead ("nozzle_to_combustion_chamber" orientation).
@@ -108,19 +118,38 @@ class RocketPyMotorAdapter(abc.ABC, typing.Generic[R]):
         """
         Return exhaust velocity as a function of time.
 
-        Computed as total impulse divided by propellant initial mass,
-        assumed constant and discretized over the burn time.
+        Computed as total impulse divided by expelled propellant mass, assumed
+        constant and discretized over the burn time. RocketPy's propellant mass then
+        ends at the residual propellant mass left by the simulation.
 
         Returns:
             Exhaust velocity [m/s] as a function of time.
         """
-        v_exh = self.simulation_result.total_impulse / self.propellant_initial_mass
-        return rocketpy.Function(v_exh).set_discrete_based_on_model(self.thrust)  # type: ignore[attr-defined]
+        expelled_propellant_mass = (
+            self.simulation_result.initial_propellant_mass
+            - self.simulation_result.propellant_mass[-1]
+        )
+        exhaust_velocity = (
+            self.simulation_result.total_impulse / expelled_propellant_mass
+        )
+        return rocketpy.Function(exhaust_velocity).set_discrete_based_on_model(
+            self.thrust  # type: ignore[attr-defined]
+        )
 
     @property
-    def propellant_initial_mass(self) -> float:
-        """Return the initial propellant mass [kg]."""
-        return self.simulation_result.initial_propellant_mass
+    def total_mass_flow_rate(self) -> rocketpy.Function:
+        """
+        Return the propellant mass flow rate as a function of time.
+
+        Computed as the negative of thrust divided by `exhaust_velocity`, so the
+        integrated flow equals the expelled propellant mass.
+
+        Returns:
+            Time derivative of the propellant mass [kg/s] as a function of time.
+        """
+        return (
+            -1 * self.thrust / self.exhaust_velocity  # type: ignore[attr-defined]
+        ).set_extrapolation("zero")
 
     @property
     def center_of_propellant_mass(self) -> rocketpy.Function:
