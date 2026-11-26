@@ -1,6 +1,7 @@
 """Fluid property service wrapper around CoolProp."""
 
 import dataclasses
+import functools
 import typing
 
 import scipy.optimize
@@ -17,6 +18,11 @@ INTERNAL_ENERGY_TOLERANCE = 1.0  # [J/kg]
 # the saturation curve is undefined at the critical point itself
 CRITICAL_TEMPERATURE_BRACKET_MARGIN = 1e-8  # [-]
 DOME_TEMPERATURE_TOLERANCE = 1e-10  # [K]
+
+
+@functools.cache
+def _get_fluid_constant(key: str, fluid_name: str) -> float:
+    return CP.PropsSI(key, fluid_name)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -50,7 +56,6 @@ class CoolPropService:
             fluid_name: Name of the fluid in the CoolProp database.
         """
         self.fluid_name = fluid_name
-        self._critical_temperature: float | None = None
         # created on first use, so an unknown fluid name fails where it is used
         self._abstract_state: CP.AbstractState | None = None
 
@@ -76,7 +81,7 @@ class CoolPropService:
         Returns:
             Triple point temperature [K].
         """
-        return CP.PropsSI("Ttriple", self.fluid_name)
+        return _get_fluid_constant("Ttriple", self.fluid_name)
 
     def get_molar_mass(self) -> float:
         """
@@ -85,7 +90,7 @@ class CoolPropService:
         Returns:
             Molar mass [kg/mol].
         """
-        return CP.PropsSI("M", self.fluid_name)
+        return _get_fluid_constant("M", self.fluid_name)
 
     def get_critical_temperature(self) -> float:
         """
@@ -94,9 +99,7 @@ class CoolPropService:
         Returns:
             Critical temperature [K].
         """
-        if self._critical_temperature is None:
-            self._critical_temperature = float(CP.PropsSI("Tcrit", self.fluid_name))
-        return self._critical_temperature
+        return _get_fluid_constant("Tcrit", self.fluid_name)
 
     def get_saturation_pressure(self, temperature: float) -> float:
         """

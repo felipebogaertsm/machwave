@@ -6,13 +6,16 @@ import numpy as np
 if typing.TYPE_CHECKING:
     import machwave.services.coolprop as coolprop_service
 
+DEFAULT_SWEEP_POINTS = 200  # [-]
+
 
 def get_homogeneous_equilibrium_mass_flux(
     fluid_name: str,
     temperature_upstream: float,
     pressure_downstream: float,
     pressure_upstream: float | None = None,
-    sweep_points: int = 200,
+    sweep_points: int = DEFAULT_SWEEP_POINTS,
+    saturated_inlet_flux_maximum: tuple[float, float] | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via the homogeneous-equilibrium model.
@@ -22,6 +25,13 @@ def get_homogeneous_equilibrium_mass_flux(
     the value at the downstream pressure. The maximum is found by bisection. Where
     CoolProp cannot resolve a state, every grid point is evaluated instead.
 
+    A saturated inlet, at or below the saturation pressure, expands from the
+    saturated liquid whatever its pressure, so its grid runs up to the saturation
+    pressure, and its maximum can be computed once with
+    `get_saturated_inlet_flux_maximum` and passed in for every inlet pressure. An
+    inlet below the pressure of the maximum passes the isentropic flux at its own
+    pressure.
+
     Args:
         fluid_name: CoolProp fluid name.
         temperature_upstream: Upstream stagnation temperature [K].
@@ -29,6 +39,9 @@ def get_homogeneous_equilibrium_mass_flux(
         pressure_upstream: Upstream stagnation pressure [Pa]. If `None`, the saturation
             pressure at the upstream temperature is used.
         sweep_points: Number of pressure points in the isentropic sweep.
+        saturated_inlet_flux_maximum: Result of `get_saturated_inlet_flux_maximum`
+            for the same fluid, temperature, downstream pressure and sweep points.
+            If `None`, it is computed when the inlet is saturated.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above the
@@ -54,31 +67,30 @@ def get_homogeneous_equilibrium_mass_flux(
     if pressure_downstream >= upstream_pressure:
         return 0.0
 
+    if _is_saturated(coolprop, temperature_upstream, upstream_pressure):
+        maximum_flux, maximum_pressure = (
+            get_saturated_inlet_flux_maximum(
+                fluid_name, temperature_upstream, pressure_downstream, sweep_points
+            )
+            if saturated_inlet_flux_maximum is None
+            else saturated_inlet_flux_maximum
+        )
+        if upstream_pressure >= maximum_pressure:
+            return maximum_flux
+        return _get_isentropic_mass_flux(
+            coolprop,
+            upstream_pressure,
+            coolprop.get_saturated_liquid_enthalpy(temperature_upstream),
+            coolprop.get_saturated_liquid_entropy(temperature_upstream),
+        )
+
     upstream_enthalpy, upstream_entropy = _get_stagnation_enthalpy_and_entropy(
         coolprop, temperature_upstream, upstream_pressure
     )
-
     pressures = np.linspace(pressure_downstream, upstream_pressure, sweep_points)
-
-    @functools.cache
-    def get_mass_flux(index: int) -> float:
-        return _get_isentropic_mass_flux(
-            coolprop, pressures[index], upstream_enthalpy, upstream_entropy
-        )
-
-    lower_index, upper_index = 0, sweep_points - 1
-    while lower_index < upper_index:
-        middle_index = (lower_index + upper_index) // 2
-        mass_flux = get_mass_flux(middle_index)
-        next_mass_flux = get_mass_flux(middle_index + 1)
-        if mass_flux == next_mass_flux or min(mass_flux, next_mass_flux) == 0.0:
-            return max(get_mass_flux(index) for index in range(sweep_points))
-        if mass_flux < next_mass_flux:
-            lower_index = middle_index + 1
-        else:
-            upper_index = middle_index
-
-    return get_mass_flux(lower_index)
+    return _get_isentropic_flux_maximum(
+        coolprop, pressures, upstream_enthalpy, upstream_entropy
+    )[0]
 
 
 def get_dyer_mass_flux(
@@ -87,6 +99,7 @@ def get_dyer_mass_flux(
     density_upstream: float,
     pressure_upstream: float,
     pressure_downstream: float,
+    saturated_inlet_flux_maximum: tuple[float, float] | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
@@ -106,6 +119,8 @@ def get_dyer_mass_flux(
             [kg/m^3].
         pressure_upstream: Upstream stagnation pressure [Pa].
         pressure_downstream: Downstream pressure [Pa].
+        saturated_inlet_flux_maximum: Passed on to
+            `get_homogeneous_equilibrium_mass_flux`.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
@@ -150,10 +165,99 @@ def get_dyer_mass_flux(
         temperature_upstream=temperature_upstream,
         pressure_downstream=pressure_downstream,
         pressure_upstream=pressure_upstream,
+        saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
     )
     return (
         non_equilibrium_parameter * incompressible_mass_flux + equilibrium_mass_flux
     ) / (1.0 + non_equilibrium_parameter)
+
+
+def get_saturated_inlet_flux_maximum(
+    fluid_name: str,
+    temperature: float,
+    pressure_downstream: float,
+    sweep_points: int = DEFAULT_SWEEP_POINTS,
+) -> tuple[float, float]:
+    """
+    Get the largest isentropic mass flux from the saturated liquid and its pressure.
+
+    This is the homogeneous-equilibrium flux of every saturated inlet at or above
+    that pressure, for the given temperature and downstream pressure.
+
+    Args:
+        fluid_name: CoolProp fluid name.
+        temperature: Saturation temperature of the inlet [K].
+        pressure_downstream: Downstream pressure [Pa].
+        sweep_points: Number of pressure points between the downstream and the
+            saturation pressure.
+
+    Returns:
+        Tuple of mass flux [kg/(m^2-s)] and the pressure it occurs at [Pa].
+    """
+    import machwave.services.coolprop as coolprop_service
+
+    coolprop = coolprop_service.CoolPropService(fluid_name)
+    pressures = np.linspace(
+        pressure_downstream, coolprop.get_saturation_pressure(temperature), sweep_points
+    )
+    return _get_isentropic_flux_maximum(
+        coolprop,
+        pressures,
+        coolprop.get_saturated_liquid_enthalpy(temperature),
+        coolprop.get_saturated_liquid_entropy(temperature),
+    )
+
+
+def _get_isentropic_flux_maximum(
+    coolprop: "coolprop_service.CoolPropService",
+    pressures: np.ndarray,
+    enthalpy_upstream: float,
+    entropy_upstream: float,
+) -> tuple[float, float]:
+    """
+    Get the largest isentropic mass flux over a pressure grid and its pressure.
+
+    Bisects on the sign of the flux difference between neighbouring points, and
+    evaluates every point where a zero or a tie breaks the single-maximum shape.
+
+    Args:
+        coolprop: Fluid-property service bound to the working fluid.
+        pressures: Increasing pressure grid [Pa].
+        enthalpy_upstream: Upstream stagnation enthalpy [J/kg].
+        entropy_upstream: Upstream stagnation entropy [J/(kg K)].
+
+    Returns:
+        Tuple of mass flux [kg/(m^2-s)] and the grid pressure it occurs at [Pa].
+    """
+
+    @functools.cache
+    def get_mass_flux(index: int) -> float:
+        return _get_isentropic_mass_flux(
+            coolprop, pressures[index], enthalpy_upstream, entropy_upstream
+        )
+
+    lower_index, upper_index = 0, len(pressures) - 1
+    while lower_index < upper_index:
+        middle_index = (lower_index + upper_index) // 2
+        mass_flux = get_mass_flux(middle_index)
+        next_mass_flux = get_mass_flux(middle_index + 1)
+        if mass_flux == next_mass_flux or min(mass_flux, next_mass_flux) == 0.0:
+            index = max(range(len(pressures)), key=get_mass_flux)
+            return get_mass_flux(index), float(pressures[index])
+        if mass_flux < next_mass_flux:
+            lower_index = middle_index + 1
+        else:
+            upper_index = middle_index
+
+    return get_mass_flux(lower_index), float(pressures[lower_index])
+
+
+def _is_saturated(
+    coolprop: "coolprop_service.CoolPropService", temperature: float, pressure: float
+) -> bool:
+    return temperature < coolprop.get_critical_temperature() and (
+        pressure <= coolprop.get_saturation_pressure(temperature)
+    )
 
 
 def _get_stagnation_enthalpy_and_entropy(
@@ -175,10 +279,7 @@ def _get_stagnation_enthalpy_and_entropy(
     Returns:
         Tuple of enthalpy [J/kg] and entropy [J/(kg K)].
     """
-    is_saturated = temperature < coolprop.get_critical_temperature() and (
-        pressure <= coolprop.get_saturation_pressure(temperature)
-    )
-    if not is_saturated:
+    if not _is_saturated(coolprop, temperature, pressure):
         try:
             enthalpy = coolprop.get_enthalpy_at_temperature_pressure(
                 temperature, pressure

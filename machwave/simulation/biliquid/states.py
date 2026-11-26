@@ -32,6 +32,7 @@ def get_line_mass_flow(
     resistance: line_models.FeedlineResistance,
     head_state: fluid_state_models.FluidState,
     lossless_flow: float,
+    saturated_inlet_flux_maximum: tuple[float, float] | None = None,
 ) -> float:
     """
     Flow a line delivers through its injector element [kg/s].
@@ -48,6 +49,9 @@ def get_line_mass_flow(
         head_state: Propellant state at the head of the feedline, with no
             line loss taken.
         lossless_flow: Flow the element passes from the head state [kg/s].
+        saturated_inlet_flux_maximum: Result of
+            `InjectorElement.get_saturated_inlet_flux_maximum` at the head
+            temperature and chamber pressure, shared by every inlet of the solve.
 
     Returns:
         Mass flow rate of the line [kg/s]. The lossless flow itself when it is not
@@ -57,6 +61,8 @@ def get_line_mass_flow(
         return lossless_flow
 
     def get_flow_residual(mass_flow: float) -> float:
+        if mass_flow == 0.0:
+            return -lossless_flow
         inlet = fluid_state_models.FluidState(
             fluid_name=head_state.fluid_name,
             pressure=head_state.pressure
@@ -65,7 +71,9 @@ def get_line_mass_flow(
             density=head_state.density,
         )
         return mass_flow - element.get_mass_flow(
-            inlet=inlet, chamber_pressure=chamber_pressure
+            inlet=inlet,
+            chamber_pressure=chamber_pressure,
+            saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
         )
 
     if get_flow_residual(lossless_flow) <= 0.0:
@@ -114,8 +122,20 @@ def get_injector_mass_flows(
     if not is_feeding:
         return {name: 0.0 for name in inlet_states}
 
+    # every inlet of a line shares the head temperature, so one sweep serves the line
+    saturated_inlet_flux_maxima = {
+        name: element.get_saturated_inlet_flux_maximum(
+            fluid_name=inlet_states[name].fluid_name,
+            temperature=inlet_states[name].temperature,
+            chamber_pressure=chamber_pressure,
+        )
+        for name, element in injector.elements.items()
+        if name in inlet_states
+    }
     lossless_flows = injector.get_mass_flows(
-        inlet_states=inlet_states, chamber_pressure=chamber_pressure
+        inlet_states=inlet_states,
+        chamber_pressure=chamber_pressure,
+        saturated_inlet_flux_maxima=saturated_inlet_flux_maxima,
     )
     flows = {
         name: (
@@ -127,6 +147,7 @@ def get_injector_mass_flows(
                 resistance=resistance,
                 head_state=inlet_states[name],
                 lossless_flow=flow,
+                saturated_inlet_flux_maximum=saturated_inlet_flux_maxima[name],
             )
         )
         for name, flow in lossless_flows.items()

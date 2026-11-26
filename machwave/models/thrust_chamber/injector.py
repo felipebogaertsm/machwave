@@ -61,6 +61,7 @@ class InjectorElement:
         *,
         inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
+        saturated_inlet_flux_maximum: tuple[float, float] | None = None,
     ) -> float:
         """
         Compute the mass flow rate through this element.
@@ -68,6 +69,9 @@ class InjectorElement:
         Args:
             inlet: Propellant state at the injector inlet.
             chamber_pressure: Chamber pressure [Pa].
+            saturated_inlet_flux_maximum: Result of
+                `get_saturated_inlet_flux_maximum` at the inlet temperature and
+                chamber pressure. If `None`, it is computed when needed.
 
         Returns:
             Mass flow rate [kg/s]. Zero once the chamber has caught up with the
@@ -85,6 +89,7 @@ class InjectorElement:
                 temperature_upstream=inlet.temperature,
                 pressure_downstream=chamber_pressure,
                 pressure_upstream=inlet.pressure,
+                saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
             )
             return self.discharge_coefficient * self.area * mass_flux
         elif self.mass_flow_model == MassFlowModel.DYER:
@@ -94,6 +99,7 @@ class InjectorElement:
                 density_upstream=inlet.density,
                 pressure_upstream=inlet.pressure,
                 pressure_downstream=chamber_pressure,
+                saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
             )
             return self.discharge_coefficient * self.area * mass_flux
         elif self.mass_flow_model == MassFlowModel.SPI:
@@ -106,6 +112,44 @@ class InjectorElement:
             )
 
         raise ValueError(f"Unsupported mass flow model: {self.mass_flow_model}")
+
+    def get_saturated_inlet_flux_maximum(
+        self,
+        *,
+        fluid_name: str,
+        temperature: float,
+        chamber_pressure: float,
+    ) -> tuple[float, float] | None:
+        """
+        Compute the equilibrium flux maximum shared by saturated inlets.
+
+        Every saturated inlet at the given temperature and chamber pressure reuses it
+        through `get_mass_flow`, whatever its pressure.
+
+        Args:
+            fluid_name: CoolProp fluid name.
+            temperature: Inlet temperature [K].
+            chamber_pressure: Chamber pressure [Pa].
+
+        Returns:
+            Mass flux [kg/(m^2-s)] and the pressure it occurs at [Pa], from
+            `machwave.core.two_phase_flow.get_saturated_inlet_flux_maximum`.
+            `None` if the element has no equilibrium term, the temperature is at or
+            above the critical temperature, or the chamber is at or above the
+            saturation pressure.
+        """
+        if self.mass_flow_model == MassFlowModel.SPI:
+            return None
+        import machwave.services.coolprop as coolprop_service
+
+        coolprop = coolprop_service.CoolPropService(fluid_name)
+        if temperature >= coolprop.get_critical_temperature():
+            return None
+        if chamber_pressure >= coolprop.get_saturation_pressure(temperature):
+            return None
+        return two_phase_flow.get_saturated_inlet_flux_maximum(
+            fluid_name, temperature, chamber_pressure
+        )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -129,6 +173,9 @@ class Injector:
         *,
         inlet_states: Mapping[str, fluid_state_models.FluidState],
         chamber_pressure: float,
+        saturated_inlet_flux_maxima: (
+            Mapping[str, tuple[float, float] | None] | None
+        ) = None,
     ) -> dict[str, float]:
         """
         Compute the mass flow rate through every element.
@@ -137,6 +184,9 @@ class Injector:
             inlet_states: Propellant state at the inlet of every line, keyed by
                 line name.
             chamber_pressure: Chamber pressure [Pa].
+            saturated_inlet_flux_maxima: Result of
+                `InjectorElement.get_saturated_inlet_flux_maximum` of every line,
+                keyed by line name. A line left out computes it when needed.
 
         Returns:
             Mass flow rate of every line [kg/s], keyed by line name.
@@ -150,7 +200,11 @@ class Injector:
 
         return {
             name: element.get_mass_flow(
-                inlet=inlet_states[name], chamber_pressure=chamber_pressure
+                inlet=inlet_states[name],
+                chamber_pressure=chamber_pressure,
+                saturated_inlet_flux_maximum=(saturated_inlet_flux_maxima or {}).get(
+                    name
+                ),
             )
             for name, element in self.elements.items()
         }
