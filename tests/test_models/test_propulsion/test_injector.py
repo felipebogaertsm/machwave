@@ -188,6 +188,59 @@ class TestInjectorElementSaturatedInletFluxMaximum:
         )
 
 
+class TestInjectorElementVaporPressure:
+    @pytest.mark.parametrize(
+        "inlet_pressure,chamber_pressure",
+        [
+            # nitrous oxide flashes in the orifice
+            (45e5, 20e5),
+            # chamber above the saturation pressure at 293 K, about 50.6 bar
+            (70e5, 60e5),
+        ],
+    )
+    def test_a_given_vapor_pressure_leaves_the_flow_unchanged(
+        self, inlet_pressure, chamber_pressure
+    ):
+        element = InjectorElementFactory.build()
+        inlet = FluidStateFactory.build(
+            fluid_name="N2O", pressure=inlet_pressure, temperature=293.0, density=780.0
+        )
+
+        vapor_pressure = element.get_vapor_pressure(
+            fluid_name="N2O", temperature=inlet.temperature
+        )
+
+        assert vapor_pressure == coolprop_service.CoolPropService(
+            "N2O"
+        ).get_saturation_pressure(inlet.temperature)
+        assert element.get_mass_flow(
+            inlet=inlet,
+            chamber_pressure=chamber_pressure,
+            vapor_pressure=vapor_pressure,
+        ) == element.get_mass_flow(inlet=inlet, chamber_pressure=chamber_pressure)
+
+    @pytest.mark.parametrize(
+        "non_equilibrium_factor,temperature",
+        [
+            # no equilibrium term
+            (math.inf, 293.0),
+            # supercritical
+            (1.0, 315.0),
+        ],
+    )
+    def test_none_where_the_flow_needs_no_vapor_pressure(
+        self, non_equilibrium_factor, temperature
+    ):
+        element = InjectorElementFactory.build(
+            non_equilibrium_factor=non_equilibrium_factor
+        )
+
+        assert (
+            element.get_vapor_pressure(fluid_name="N2O", temperature=temperature)
+            is None
+        )
+
+
 class TestInjectorMassFlows:
     def test_every_element_gets_a_flow_in_one_call(self, injector):
         inlet_states = {

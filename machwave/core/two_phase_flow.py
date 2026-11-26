@@ -102,6 +102,7 @@ def get_dyer_mass_flux(
     pressure_downstream: float,
     non_equilibrium_factor: float = 1.0,
     saturated_inlet_flux_maximum: tuple[float, float] | None = None,
+    vapor_pressure: float | None = None,
 ) -> float:
     """
     Get the mass flux through an orifice via Dyer's non-equilibrium model.
@@ -127,6 +128,8 @@ def get_dyer_mass_flux(
         non_equilibrium_factor: Multiplier on kappa (dimensionless).
         saturated_inlet_flux_maximum: Passed on to
             `get_homogeneous_equilibrium_mass_flux`.
+        vapor_pressure: Saturation pressure at the upstream temperature [Pa]. If
+            `None`, it is looked up when needed.
 
     Returns:
         Mass flux [kg/(m^2-s)]. Zero if the downstream pressure is at or above
@@ -157,7 +160,8 @@ def get_dyer_mass_flux(
     coolprop = coolprop_service.CoolPropService(fluid_name)
     if temperature_upstream >= coolprop.get_critical_temperature():
         return incompressible_mass_flux
-    vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
+    if vapor_pressure is None:
+        vapor_pressure = coolprop.get_saturation_pressure(temperature_upstream)
     if (
         vapor_pressure <= pressure_downstream
         or density_upstream

@@ -60,6 +60,11 @@ def get_line_mass_flow(
     if lossless_flow <= 0.0:
         return lossless_flow
 
+    # every inlet of the solve shares the head temperature
+    vapor_pressure = element.get_vapor_pressure(
+        fluid_name=head_state.fluid_name, temperature=head_state.temperature
+    )
+
     def get_flow_residual(mass_flow: float) -> float:
         if mass_flow == 0.0:
             return -lossless_flow
@@ -74,6 +79,7 @@ def get_line_mass_flow(
             inlet=inlet,
             chamber_pressure=chamber_pressure,
             saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
+            vapor_pressure=vapor_pressure,
         )
 
     if get_flow_residual(lossless_flow) <= 0.0:

@@ -54,6 +54,7 @@ class InjectorElement:
         inlet: fluid_state_models.FluidState,
         chamber_pressure: float,
         saturated_inlet_flux_maximum: tuple[float, float] | None = None,
+        vapor_pressure: float | None = None,
     ) -> float:
         """
         Compute the mass flow rate through this element.
@@ -64,6 +65,8 @@ class InjectorElement:
             saturated_inlet_flux_maximum: Result of
                 `get_saturated_inlet_flux_maximum` at the inlet temperature and
                 chamber pressure. If `None`, it is computed when needed.
+            vapor_pressure: Result of `get_vapor_pressure` at the inlet
+                temperature. If `None`, it is looked up when needed.
 
         Returns:
             Mass flow rate [kg/s]. Zero once the chamber has caught up with the
@@ -80,8 +83,33 @@ class InjectorElement:
             pressure_downstream=chamber_pressure,
             non_equilibrium_factor=self.non_equilibrium_factor,
             saturated_inlet_flux_maximum=saturated_inlet_flux_maximum,
+            vapor_pressure=vapor_pressure,
         )
         return self.discharge_coefficient * self.area * mass_flux
+
+    def get_vapor_pressure(
+        self, *, fluid_name: str, temperature: float
+    ) -> float | None:
+        """
+        Compute the vapor pressure every inlet at the given temperature shares.
+
+        Args:
+            fluid_name: CoolProp fluid name.
+            temperature: Inlet temperature [K].
+
+        Returns:
+            Saturation pressure [Pa]. `None` if the non-equilibrium factor is
+            infinite or the temperature is at or above the critical temperature,
+            where the flow needs no vapor pressure.
+        """
+        if math.isinf(self.non_equilibrium_factor):
+            return None
+        import machwave.services.coolprop as coolprop_service
+
+        coolprop = coolprop_service.CoolPropService(fluid_name)
+        if temperature >= coolprop.get_critical_temperature():
+            return None
+        return coolprop.get_saturation_pressure(temperature)
 
     def get_saturated_inlet_flux_maximum(
         self,
