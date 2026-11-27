@@ -2,7 +2,6 @@ import pytest
 
 import machwave.core.geometric as geometric
 import machwave.models.thrust_chamber.nozzle as nozzle_model
-
 from tests.factories import NozzleFactory
 
 

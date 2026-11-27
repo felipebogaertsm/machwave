@@ -4,7 +4,6 @@ import pytest
 import machwave.core.mass_balance as mass_balance
 import machwave.core.solvers.rk4 as rk4
 
-
 BASE_KWARGS = {
     "external_pressure": 101_325.0,
     "free_chamber_volume": 1.0e-3,
@@ -14,6 +13,20 @@ BASE_KWARGS = {
     "flame_temperature": 2_800.0,
     "nozzle_discharge_coefficient": 0.95,
 }
+
+# Lumped solid chamber for the staged-inflow convergence test: choked outflow
+# plus a Saint Robert inflow r = a * Pc^n, so the inflow depends on pressure.
+STAGED_CHAMBER_KWARGS = {
+    "external_pressure": 101_325.0,
+    "free_chamber_volume": 9.0e-4,
+    "throat_area": 7.7e-5,
+    "k": 1.2,
+    "R": 320.0,
+    "flame_temperature": 2_800.0,
+    "nozzle_discharge_coefficient": 0.95,
+}
+BURN_RATE_COEFFICIENT = 1.2e-4
+BURN_RATE_EXPONENT = 0.5
 
 
 def constant(value):
@@ -127,21 +140,6 @@ def test_inflow_callable_is_evaluated_at_each_rk4_stage_pressure():
 
     assert len(seen_pressures) == 4
     assert len(set(seen_pressures)) > 1
-
-
-# Lumped solid chamber for the staged-inflow convergence test: choked outflow
-# plus a Saint Robert inflow r = a * Pc^n, so the inflow depends on pressure.
-STAGED_CHAMBER_KWARGS = {
-    "external_pressure": 101_325.0,
-    "free_chamber_volume": 9.0e-4,
-    "throat_area": 7.7e-5,
-    "k": 1.2,
-    "R": 320.0,
-    "flame_temperature": 2_800.0,
-    "nozzle_discharge_coefficient": 0.95,
-}
-BURN_RATE_COEFFICIENT = 1.2e-4
-BURN_RATE_EXPONENT = 0.5
 
 
 def saint_robert_inflow(chamber_pressure):

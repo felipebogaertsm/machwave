@@ -6,7 +6,6 @@ import machwave.models.motors.base as motors_base
 import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants as propellants
 import machwave.models.propellants.formulations.solid as solid_propellants
-
 from tests.factories import BiliquidEngineFactory, SolidMotorFactory
 from tests.factories.thrust_chamber import SolidMotorThrustChamberFactory
 

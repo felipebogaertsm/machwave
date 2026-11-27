@@ -3,7 +3,6 @@
 import pytest
 
 import machwave.models.grain as grain_models
-
 from tests.factories import BatesSegmentFactory
 
 

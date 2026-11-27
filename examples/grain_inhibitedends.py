@@ -6,7 +6,6 @@ import machwave.models.grain as grain
 import machwave.models.grain.geometries as geometries
 import machwave.services.plots.fmm as fmm_plots
 
-
 STAR_GRAIN_PARAMS = dict(
     length=100e-3,
     outer_diameter=50e-3,

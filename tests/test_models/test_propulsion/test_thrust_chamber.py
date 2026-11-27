@@ -1,7 +1,6 @@
 import pytest
 
 from machwave.common.mass_properties import DryMassProperties
-
 from tests.factories import SolidMotorThrustChamberFactory
 
 

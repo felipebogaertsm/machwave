@@ -44,3 +44,18 @@ does not enforce.
   numbers in source, docstrings or tests.
 - Raise specific exceptions whose message gives the quantity, its value and the allowed
   range. Warn with `stacklevel` set. New code never prints; reports return text.
+
+## Module layout
+
+1. Module docstring.
+2. `from __future__` imports.
+3. Module dunders such as `__all__`.
+4. Imports, grouped standard library, third party, local. Ruff checks this part.
+5. Module constants and globals.
+6. Functions and classes.
+
+- Constants go right after the imports, never between functions. The only exception is
+  a constant built from a function or class defined in the same module, such as
+  `_GENERATOR_REGISTRY` in `machwave/montecarlo/random.py`.
+- An import that needs a name its package is still binding goes after an
+  `# isort: split` comment that says why, as in `machwave/models/grain/__init__.py`.

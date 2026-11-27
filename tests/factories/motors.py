@@ -5,7 +5,6 @@ from typing import Any
 import machwave.models.grain as grain_models
 import machwave.models.motors as motors_models
 import machwave.models.propellants.formulations.solid as solid_propellants
-
 from tests.factories.feed_systems import StackedTankPressureFedFeedSystemFactory
 from tests.factories.grain import BatesSegmentFactory
 from tests.factories.propellants import BiliquidPropellantFactory
