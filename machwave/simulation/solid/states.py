@@ -257,10 +257,11 @@ class SolidMotorState(simulation_states.MotorState):
             combustion_efficiency=self.motor.combustion_efficiency,
         )
 
-        new_chamber_pressure, substep_count = rk4.rk4th_ode_solver(
-            variables={"chamber_pressure": self.chamber_pressure[-1]},
-            equation=mass_balance.compute_chamber_pressure_mass_balance,
-            d_t=d_t,
+        new_chamber_pressure, substep_count = rk4.integrate_scalar_ode(
+            variable_name="chamber_pressure",
+            initial_value=self.chamber_pressure[-1],
+            compute_derivatives=mass_balance.compute_chamber_pressure_mass_balance,
+            interval=d_t,
             external_pressure=external_pressure,
             mass_flow_in=functools.partial(
                 get_grain_mass_flow, mass_flow_per_segment=mass_flow_per_segment
@@ -274,4 +275,4 @@ class SolidMotorState(simulation_states.MotorState):
             free_chamber_volume_rate=free_chamber_volume_rate,
         )
         self.chamber_pressure.append(new_chamber_pressure)
-        self.substep_count.append(substep_count)
+        self.chamber_pressure_substep_count.append(substep_count)

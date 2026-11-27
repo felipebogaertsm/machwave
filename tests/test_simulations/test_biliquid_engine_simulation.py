@@ -63,8 +63,10 @@ def test_a_step_past_the_rk4_stability_limit_matches_the_default_step(
 ) -> None:
     motor, params = motor_builders.build_1kn_biliquid_engine()
 
-    coarse_step = 4e-4
-    coarse_result = run_simulation(motor, dataclasses.replace(params, d_t=coarse_step))
+    coarse_time_step = 4e-4
+    coarse_result = run_simulation(
+        motor, dataclasses.replace(params, d_t=coarse_time_step)
+    )
 
     # the steady state at 1 s does not depend on the step
     assert np.interp(

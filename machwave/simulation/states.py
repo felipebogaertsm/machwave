@@ -42,7 +42,7 @@ class MotorState(ABC):
 
         self.time: SimulationStateArray = [0.0]
         self.chamber_pressure: SimulationStateArray = [igniter_pressure]
-        self.substep_count: list[int] = []
+        self.chamber_pressure_substep_count: list[int] = []
 
         self.propellant_mass: SimulationStateArray = []
         self.exit_pressure: SimulationStateArray = []

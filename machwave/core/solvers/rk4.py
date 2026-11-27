@@ -1,130 +1,150 @@
 import math
 from typing import Any, Callable
 
+# past about 1.3 the last stage overshoots equilibrium, well before the limit of 2.785
+_MAX_DECAY_TIMES_PER_STEP = 1.0
 
-def rk4th_step(
-    variables: dict[str, float],
-    equation: Callable,
-    d_t: float,
-    **kwargs: Any,
+# near the square root of machine epsilon, balancing truncation and round-off error
+_RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
+_MIN_FINITE_DIFFERENCE_SCALE = 1.0
+
+
+def step_ode_system(
+    initial_values: dict[str, float],
+    compute_derivatives: Callable,
+    time_step: float,
+    **constant_arguments: Any,
 ) -> tuple[float, ...]:
     """
     Advance a system of ODEs by one step using the 4th-order Runge-Kutta method.
 
     Args:
-        variables: Mapping of variable name to current value.
-        equation: Callable returning the derivatives of the variables.
-        d_t: Time step [s].
-        **kwargs: Additional keyword arguments forwarded to `equation`. These
-            are held constant across all four stages, while `variables` are
-            advanced; a term that depends on a `variables` entry must be
-            computed inside `equation` (or passed as a callable it resolves)
-            so it stays consistent across the stages.
+        initial_values: Mapping of variable name to its value at the start of the step.
+        compute_derivatives: Callable returning the derivatives of the variables.
+        time_step: Time step [s].
+        **constant_arguments: Additional keyword arguments forwarded to
+            `compute_derivatives`. These are held constant across all four stages,
+            while `initial_values` are advanced; a term that depends on a variable
+            must be computed inside `compute_derivatives` (or passed as a callable it
+            resolves) so it stays consistent across the stages.
 
     Returns:
-        New values of the variables, in the order of `variables`.
+        New values of the variables, in the order of `initial_values`.
     """
-    k_1 = equation(**variables, **kwargs)
-    k_2 = equation(
+    stage_1_derivatives = compute_derivatives(**initial_values, **constant_arguments)
+    stage_2_derivatives = compute_derivatives(
         **{
-            key: value + 0.5 * k_1[index] * d_t
-            for index, (key, value) in enumerate(variables.items())
+            name: value + 0.5 * stage_1_derivatives[index] * time_step
+            for index, (name, value) in enumerate(initial_values.items())
         },
-        **kwargs,
+        **constant_arguments,
     )
-    k_3 = equation(
+    stage_3_derivatives = compute_derivatives(
         **{
-            key: value + 0.5 * k_2[index] * d_t
-            for index, (key, value) in enumerate(variables.items())
+            name: value + 0.5 * stage_2_derivatives[index] * time_step
+            for index, (name, value) in enumerate(initial_values.items())
         },
-        **kwargs,
+        **constant_arguments,
     )
-    k_4 = equation(
+    stage_4_derivatives = compute_derivatives(
         **{
-            key: value + k_3[index] * d_t
-            for index, (key, value) in enumerate(variables.items())
+            name: value + stage_3_derivatives[index] * time_step
+            for index, (name, value) in enumerate(initial_values.items())
         },
-        **kwargs,
+        **constant_arguments,
     )
 
     return tuple(
         value
-        + (1 / 6) * (k_1[index] + 2 * (k_2[index] + k_3[index]) + k_4[index]) * d_t
-        for index, value in enumerate(variables.values())
+        + (1 / 6)
+        * (
+            stage_1_derivatives[index]
+            + 2 * (stage_2_derivatives[index] + stage_3_derivatives[index])
+            + stage_4_derivatives[index]
+        )
+        * time_step
+        for index, value in enumerate(initial_values.values())
     )
 
 
-# past about 1.3 the last stage overshoots equilibrium, well before the limit of 2.785
-MAX_DECAY_RATE_STEP_PRODUCT = 1.0
-
-# near the square root of machine epsilon, balancing truncation and round-off error
-RELATIVE_DERIVATIVE_PERTURBATION = 1e-6
-MIN_DERIVATIVE_PERTURBATION_SCALE = 1.0  # keeps the perturbation finite near zero
-
-
-def get_substep_count(
-    variables: dict[str, float],
-    equation: Callable,
-    time_step: float,
-    **kwargs: Any,
+def get_stable_step_count(
+    variable_name: str,
+    initial_value: float,
+    compute_derivatives: Callable,
+    interval: float,
+    **constant_arguments: Any,
 ) -> int:
     """
-    Return how many equal Runge-Kutta substeps keep a scalar equation stable.
+    Return how many equal Runge-Kutta steps keep a scalar ODE stable over `interval`.
 
-    Each substep spans at most one decay time, taken by central difference at the
-    current value. A growing solution takes a single substep.
+    Each step spans at most one decay time, taken by central difference at
+    `initial_value`. A growing solution takes a single step.
 
     Args:
-        variables: Mapping of the single variable name to its current value.
-        equation: Callable returning the derivative of the variable.
-        time_step: Time step [s].
-        **kwargs: Additional keyword arguments forwarded to `equation`.
+        variable_name: Keyword under which `compute_derivatives` takes the variable.
+        initial_value: Value of the variable at the start of the interval.
+        compute_derivatives: Callable returning the derivative of the variable.
+        interval: Time interval to integrate over [s].
+        **constant_arguments: Additional keyword arguments forwarded to
+            `compute_derivatives`.
 
     Returns:
-        Number of substeps, at least one.
-
-    Raises:
-        ValueError: If `variables` does not hold exactly one variable.
+        Number of steps, at least one.
     """
-    if len(variables) != 1:
-        raise ValueError(f"expected a single variable, got {len(variables)}")
-
-    ((state_name, state),) = variables.items()
-    perturbation = RELATIVE_DERIVATIVE_PERTURBATION * max(
-        abs(state), MIN_DERIVATIVE_PERTURBATION_SCALE
+    finite_difference_step = _RELATIVE_FINITE_DIFFERENCE_STEP * max(
+        abs(initial_value), _MIN_FINITE_DIFFERENCE_SCALE
     )
     decay_rate = -(
-        equation(**{state_name: state + perturbation}, **kwargs)[0]
-        - equation(**{state_name: state - perturbation}, **kwargs)[0]
-    ) / (2 * perturbation)
+        compute_derivatives(
+            **{variable_name: initial_value + finite_difference_step},
+            **constant_arguments,
+        )[0]
+        - compute_derivatives(
+            **{variable_name: initial_value - finite_difference_step},
+            **constant_arguments,
+        )[0]
+    ) / (2 * finite_difference_step)
 
-    return max(1, math.ceil(decay_rate * time_step / MAX_DECAY_RATE_STEP_PRODUCT))
+    return max(1, math.ceil(decay_rate * interval / _MAX_DECAY_TIMES_PER_STEP))
 
 
-def rk4th_ode_solver(
-    variables: dict[str, float],
-    equation: Callable,
-    d_t: float,
-    **kwargs: Any,
+def integrate_scalar_ode(
+    variable_name: str,
+    initial_value: float,
+    compute_derivatives: Callable,
+    interval: float,
+    **constant_arguments: Any,
 ) -> tuple[float, int]:
     """
-    Advance a scalar equation over `d_t` in as many Runge-Kutta substeps as it needs.
+    Integrate a scalar ODE over `interval` in as many Runge-Kutta steps as it needs.
 
     Args:
-        variables: Mapping of the single variable name to its current value.
-        equation: Callable returning the derivative of the variable.
-        d_t: Time step [s].
-        **kwargs: Additional keyword arguments forwarded to `equation`.
+        variable_name: Keyword under which `compute_derivatives` takes the variable.
+        initial_value: Value of the variable at the start of the interval.
+        compute_derivatives: Callable returning the derivative of the variable.
+        interval: Time interval to integrate over [s].
+        **constant_arguments: Additional keyword arguments forwarded to
+            `compute_derivatives`.
 
     Returns:
-        New value of the variable and the number of substeps taken.
+        Value of the variable at the end of the interval and the number of steps
+        taken.
     """
-    substep_count = get_substep_count(variables, equation, d_t, **kwargs)
-    ((state_name, state),) = variables.items()
+    step_count = get_stable_step_count(
+        variable_name,
+        initial_value,
+        compute_derivatives,
+        interval,
+        **constant_arguments,
+    )
+    value = initial_value
 
-    for _ in range(substep_count):
-        state = rk4th_step(
-            {state_name: state}, equation, d_t / substep_count, **kwargs
+    for _ in range(step_count):
+        value = step_ode_system(
+            {variable_name: value},
+            compute_derivatives,
+            interval / step_count,
+            **constant_arguments,
         )[0]
 
-    return state, substep_count
+    return value, step_count

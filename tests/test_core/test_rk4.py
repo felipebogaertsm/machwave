@@ -16,68 +16,64 @@ def test_step_returns_one_value_per_variable():
     def rotation(x, y):
         return (-y, x)
 
-    assert len(rk4.rk4th_step({"x": 1.0, "y": 0.0}, rotation, 0.1)) == 2
+    assert len(rk4.step_ode_system({"x": 1.0, "y": 0.0}, rotation, 0.1)) == 2
 
 
 @pytest.mark.parametrize(
-    "time_step, expected_substep_count",
+    "interval, expected_step_count",
     [(0.5e-4, 1), (4.5e-4, 5), (1.025e-2, 103)],
 )
-def test_substep_count_keeps_each_substep_within_one_decay_time(
-    time_step, expected_substep_count
+def test_stable_step_count_keeps_each_step_within_one_decay_time(
+    interval, expected_step_count
 ):
-    substep_count = rk4.get_substep_count(
-        {"quantity": 1.0}, exponential_decay, time_step
-    )
+    step_count = rk4.get_stable_step_count("quantity", 1.0, exponential_decay, interval)
 
-    assert substep_count == expected_substep_count
+    assert step_count == expected_step_count
 
 
 def test_growing_solution_takes_a_single_step():
     def exponential_growth(quantity):
         return (DECAY_RATE * quantity,)
 
-    assert rk4.get_substep_count({"quantity": 1.0}, exponential_growth, 1.0) == 1
+    assert rk4.get_stable_step_count("quantity", 1.0, exponential_growth, 1.0) == 1
 
 
-def test_substep_count_rejects_more_than_one_variable():
-    with pytest.raises(ValueError, match="single variable"):
-        rk4.get_substep_count({"x": 1.0, "y": 1.0}, lambda x, y: (x, y), 1e-3)
+def test_stable_interval_is_integrated_in_one_step():
+    interval = 1.0e-4
 
-
-def test_solver_takes_a_single_step_when_it_is_stable():
-    time_step = 1.0e-4
-
-    solved, substep_count = rk4.rk4th_ode_solver(
-        {"quantity": 1.0}, exponential_decay, time_step
+    integrated, step_count = rk4.integrate_scalar_ode(
+        "quantity", 1.0, exponential_decay, interval
     )
 
-    assert substep_count == 1
-    assert solved == rk4.rk4th_step({"quantity": 1.0}, exponential_decay, time_step)[0]
+    assert step_count == 1
+    assert (
+        integrated
+        == rk4.step_ode_system({"quantity": 1.0}, exponential_decay, interval)[0]
+    )
 
 
-def test_solver_stays_stable_past_the_single_step_limit():
-    time_step = 10 / DECAY_RATE
+def test_integration_stays_stable_past_the_single_step_limit():
+    interval = 10 / DECAY_RATE
 
-    single_step = rk4.rk4th_step({"quantity": 1.0}, exponential_decay, time_step)[0]
-    solved, substep_count = rk4.rk4th_ode_solver(
-        {"quantity": 1.0}, exponential_decay, time_step
+    single_step = rk4.step_ode_system({"quantity": 1.0}, exponential_decay, interval)[0]
+    integrated, step_count = rk4.integrate_scalar_ode(
+        "quantity", 1.0, exponential_decay, interval
     )
 
     assert abs(single_step) > 1.0
-    assert substep_count == 10
-    assert 0.0 < solved < 1.0
+    assert step_count == 10
+    assert 0.0 < integrated < 1.0
 
 
-def test_solver_is_fourth_order_on_exponential_decay():
+def test_integration_is_fourth_order_on_exponential_decay():
     horizon = 10 / DECAY_RATE
     expected = math.exp(-DECAY_RATE * horizon)
     errors = []
-    for step_count in (40, 80, 160, 320):
+    for interval_count in (40, 80, 160, 320):
         quantity = 1.0
-        for _ in range(step_count):
-            quantity, _ = rk4.rk4th_ode_solver(
-                {"quantity": quantity}, exponential_decay, horizon / step_count
+        for _ in range(interval_count):
+            quantity, _ = rk4.integrate_scalar_ode(
+                "quantity", quantity, exponential_decay, horizon / interval_count
             )
         errors.append(abs(quantity - expected))
 

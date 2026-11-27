@@ -332,8 +332,8 @@ def test_short_residence_time_is_substepped_and_keeps_the_pressure_positive() ->
     result = run_simulation(motor, params)
 
     assert np.all(result.chamber_pressure > 0.0)
-    assert len(result.substep_count) == len(result.time) - 1
-    assert result.substep_count.max() > 1
+    assert len(result.chamber_pressure_substep_count) == len(result.time) - 1
+    assert result.chamber_pressure_substep_count.max() > 1
 
 
 def test_propellant_center_of_gravity_is_measured_from_the_nozzle_exit() -> None:

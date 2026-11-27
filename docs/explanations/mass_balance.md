@@ -128,7 +128,7 @@ with $\lambda$ estimated by central difference at the start of the step.
 Only the chamber pressure is substepped.
 Grain geometry, propellant properties and feed system state advance once per simulation step.
 
-Implemented in [`rk4th_ode_solver`][machwave.core.solvers.rk4th_ode_solver].
+Implemented in [`integrate_scalar_ode`][machwave.core.solvers.rk4.integrate_scalar_ode].
 [`SimulationResult`][machwave.simulation.results.SimulationResult] records the substep count of each step.
 
 ## Solid Rocket Motor
