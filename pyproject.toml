@@ -64,7 +64,10 @@ Homepage = "https://github.com/felipebogaertsm/machwave"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["D"] # Docstring rules
+# D: docstring rules
+# E402: module-level imports at the top of the file
+# I001: sorted imports, grouped standard library, third party, local
+select = ["D", "E402", "I001"]
 # Extended:
 #   D213: Multi-line docstring summary should start at the second line
 #   D407: Missing dashed underline after section heading
@@ -74,6 +77,9 @@ extend-select = ["D213", "D407"]
 #   D105, D107: magic methods, __init__s
 #   D203, D212: incompatible with Google docstring style
 ignore = ["D100", "D104", "D105", "D107", "D203", "D212"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["machwave"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

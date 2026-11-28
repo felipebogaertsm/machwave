@@ -5,6 +5,9 @@ from typing import TypeAlias, TypeVar
 
 import numpy as np
 
+T = TypeVar("T", bound="RandomGenerator")
+FactoryFn: TypeAlias = Callable[..., T]
+
 
 @dataclass(slots=True, frozen=True)
 class RandomGenerator(ABC):
@@ -112,9 +115,6 @@ class UniformRandomGenerator(RandomGenerator):
             high=upper_bound,
         )
 
-
-T = TypeVar("T", bound="RandomGenerator")
-FactoryFn: TypeAlias = Callable[..., T]
 
 _GENERATOR_REGISTRY: dict[str, FactoryFn] = {
     "normal": NormalRandomGenerator,

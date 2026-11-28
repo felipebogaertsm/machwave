@@ -10,6 +10,8 @@ This example demonstrates how to:
 
 import time
 
+from rocketpy import Environment, Flight, Rocket
+
 import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.common.mass_properties as mass_properties
 import machwave.models.grain as grain_models
@@ -18,7 +20,6 @@ import machwave.models.nozzle_losses as nozzle_losses
 import machwave.models.propellants.formulations as formulations
 import machwave.models.thrust_chamber as thrust_chamber_models
 import machwave.simulation as simulation
-from rocketpy import Environment, Flight, Rocket
 
 
 def main():

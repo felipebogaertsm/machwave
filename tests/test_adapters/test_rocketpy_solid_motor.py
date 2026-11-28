@@ -7,7 +7,6 @@ import pytest
 
 import machwave.adapters.rocketpy as rocketpy_adapters
 import machwave.models.grain as grain_models
-
 from tests.factories import (
     ConicalGrainSegmentFactory,
     DGrainSegmentFactory,

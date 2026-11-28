@@ -3,7 +3,6 @@
 import pytest
 
 import machwave.models.propellants.formulations.solid as solid_propellants
-
 from tests.factories import (
     BiliquidEngineFactory,
     BiliquidPropellantFactory,

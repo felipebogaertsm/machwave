@@ -7,7 +7,6 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
 import machwave.simulation as simulation_module
-
 from tests.test_simulations import motor_builders
 
 

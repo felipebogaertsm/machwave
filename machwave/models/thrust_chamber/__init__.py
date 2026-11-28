@@ -1,3 +1,14 @@
+__all__ = [
+    "BiliquidEngineThrustChamber",
+    "SolidMotorThrustChamber",
+    "ThrustChamber",
+    "Injector",
+    "InjectorElement",
+    "MassFlowModel",
+    "Nozzle",
+    "CombustionChamber",
+]
+
 from machwave.models.thrust_chamber.base import (
     BiliquidEngineThrustChamber,
     SolidMotorThrustChamber,
@@ -12,14 +23,3 @@ from machwave.models.thrust_chamber.injector import (
     MassFlowModel,
 )
 from machwave.models.thrust_chamber.nozzle import Nozzle
-
-__all__ = [
-    "BiliquidEngineThrustChamber",
-    "SolidMotorThrustChamber",
-    "ThrustChamber",
-    "Injector",
-    "InjectorElement",
-    "MassFlowModel",
-    "Nozzle",
-    "CombustionChamber",
-]
