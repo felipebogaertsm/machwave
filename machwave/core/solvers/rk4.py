@@ -1,11 +1,11 @@
 import math
 from typing import Any, Callable
 
-# RK4 overshoots equilibrium past 1.3 and diverges past 2.785
+# a step longer than the chamber time constant can drive the chamber pressure negative
 _MAX_TIME_CONSTANTS_PER_STEP = 1.0
-# central difference optimum, near the cube root of machine epsilon
+# the chamber time constant is measured by perturbing the pressure by this fraction
 _RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
-# floor on the scale, for values near zero
+# perturb as if the pressure were at least 1 Pa
 _MIN_FINITE_DIFFERENCE_SCALE = 1.0
 
 
@@ -77,11 +77,12 @@ def get_stable_step_count(
     **constant_arguments: Any,
 ) -> int:
     """
-    Return the number of equal Runge-Kutta steps that integrate a scalar ODE stably.
+    Return the number of equal Runge-Kutta steps to split `interval` into.
 
-    The ODE is linearized at `initial_value` by central difference. Each step is at
-    most one time constant of the linearized ODE. A variable that does not decay
-    toward equilibrium takes a single step.
+    Each step is at most one time constant of the variable, measured at
+    `initial_value`. For the chamber pressure it is close to the chamber residence
+    time. A longer step can drive the chamber pressure negative. A variable that is
+    not settling toward equilibrium takes a single step.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
@@ -124,7 +125,10 @@ def integrate_scalar_ode(
     **constant_arguments: Any,
 ) -> tuple[float, int]:
     """
-    Integrate a scalar ODE over `interval` in equal, stable Runge-Kutta substeps.
+    Integrate a scalar ODE over `interval` in equal Runge-Kutta substeps.
+
+    The substeps are short enough to keep the chamber pressure from going negative
+    when `interval` is longer than the chamber time constant.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
