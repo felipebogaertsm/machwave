@@ -127,8 +127,7 @@ def integrate_scalar_ode(
     """
     Integrate a scalar ODE over `interval` in equal Runge-Kutta substeps.
 
-    The substeps are short enough to keep the chamber pressure from going negative
-    when `interval` is longer than the chamber time constant.
+    The number of substeps comes from `get_stable_step_count`.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
@@ -141,7 +140,7 @@ def integrate_scalar_ode(
 
     Returns:
         Value of the variable at the end of the interval and the number of substeps
-        taken, from `get_stable_step_count`.
+        taken.
     """
     step_count = get_stable_step_count(
         variable_name,
