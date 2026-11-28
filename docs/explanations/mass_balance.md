@@ -109,24 +109,39 @@ The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid
 
 ## Integrating the Chamber Pressure
 
-The equation is integrated with the classical fourth-order Runge–Kutta method.
+The equation is integrated with the classical fourth-order Runge–Kutta (RK4) method.
 Both $\dot{m}_{in}$ and $\dot{m}_{out}$ are evaluated at the pressure of each stage.
 
-A pressure deviation decays at the rate $\lambda = \partial \dot{P}_0 / \partial P_0$.
-This rate is of the order of minus the inverse chamber residence time.
-$1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
-This can be shorter than the simulation step.
-The last stage of a Runge–Kutta step evaluates the balance past equilibrium below $\lambda \Delta t \approx -1.3$.
-The step itself is unstable below $\lambda \Delta t \approx -2.785$.
-Each simulation step is therefore split into $N$ equal substeps:
+Near equilibrium, a pressure deviation $\delta$ follows the Dahlquist test equation $\dot{\delta} = \lambda \delta$, with $\lambda = \partial \dot{P}_0 / \partial P_0$ (Dahlquist 1963).
+The outflow alone gives $\lambda = -1/t_r$, where $t_r$ is the chamber residence time:
+
+$$
+t_r = \frac{V_0}{C_d A_{t,\text{geo}} H \sqrt{R T}}
+$$
+
+The pressure-dependent inflow shifts $\lambda$ from this value.
+The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
+When it is shorter than the simulation step, the equation is stiff: stability, rather than accuracy, limits the step.
+
+One RK4 step multiplies $\delta$ by the stability function
+
+$$
+G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
+$$
+
+Its region of absolute stability, $|G(z)| \le 1$, meets the negative real axis at $z \approx -2.785$ (Hairer and Wanner 1996, Chapter IV).
+Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit.
+The fourth internal stage of classical RK4 evaluates the balance at $\delta \left(1 + z + z^2/2 + z^3/4\right)$, which crosses equilibrium below $z \approx -1.3$.
+A stage past equilibrium can reach a pressure that the inflow and nozzle models do not accept.
+
+The chamber pressure is therefore subcycled: each simulation step takes $N$ equal RK4 substeps, so each substep has $|z| \le 1$:
 
 $$
 N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)
 $$
 
 with $\lambda$ estimated by central difference at the start of the step.
-Only the chamber pressure is substepped.
-Grain geometry, propellant properties and feed system state advance once per simulation step.
+Grain geometry, propellant properties and feed system state change on the time scale of the burn and advance once per simulation step.
 
 Implemented in [`integrate_scalar_ode`][machwave.core.solvers.rk4.integrate_scalar_ode].
 [`SimulationResult`][machwave.simulation.results.SimulationResult] records the substep count of each step.
@@ -190,3 +205,5 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
+4. Dahlquist, G. (1963). A special stability problem for linear multistep methods. *BIT Numerical Mathematics*, 3, 27–43.
+5. Hairer, E., & Wanner, G. (1996). *Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems* (2nd ed.). Springer.

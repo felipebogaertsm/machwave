@@ -1,7 +1,8 @@
 import math
 from typing import Any, Callable
 
-# past about 1.3 the last stage overshoots equilibrium, well before the limit of 2.785
+# the fourth internal stage crosses equilibrium past 1.3 decay times per step, well
+# inside the real-axis absolute stability limit of 2.785
 _MAX_DECAY_TIMES_PER_STEP = 1.0
 
 # near the square root of machine epsilon, balancing truncation and round-off error
@@ -77,8 +78,8 @@ def get_stable_step_count(
     """
     Return how many equal Runge-Kutta steps keep a scalar ODE stable over `interval`.
 
-    Each step spans at most one decay time, taken by central difference at
-    `initial_value`. A growing solution takes a single step.
+    Each step spans at most one decay time, with the decay rate taken by central
+    difference at `initial_value`. A growing solution takes a single step.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
@@ -90,6 +91,12 @@ def get_stable_step_count(
 
     Returns:
         Number of steps, at least one.
+
+    References:
+        Dahlquist, G., "A Special Stability Problem for Linear Multistep Methods",
+        BIT 3, 1963, pp. 27-43.
+        Hairer, E., and Wanner, G., "Solving Ordinary Differential Equations II",
+        2nd ed., Springer, 1996, Chapter IV.
     """
     finite_difference_step = _RELATIVE_FINITE_DIFFERENCE_STEP * max(
         abs(initial_value), _MIN_FINITE_DIFFERENCE_SCALE
@@ -116,7 +123,7 @@ def integrate_scalar_ode(
     **constant_arguments: Any,
 ) -> tuple[float, int]:
     """
-    Integrate a scalar ODE over `interval` in as many Runge-Kutta steps as it needs.
+    Integrate a scalar ODE over `interval`, subcycled into stable Runge-Kutta steps.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
