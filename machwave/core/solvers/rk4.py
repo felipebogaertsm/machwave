@@ -79,10 +79,9 @@ def get_stable_step_count(
     """
     Return the number of equal Runge-Kutta steps to split `interval` into.
 
-    Each step is at most one time constant of the variable, measured at
-    `initial_value`. For the chamber pressure it is close to the chamber residence
-    time. A longer step can drive the chamber pressure negative. A variable that is
-    not settling toward equilibrium takes a single step.
+    Each step is at most one time constant of the variable, since a longer step can
+    drive the chamber pressure negative. A variable that is not settling toward
+    equilibrium takes a single step.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
@@ -127,8 +126,6 @@ def integrate_scalar_ode(
     """
     Integrate a scalar ODE over `interval` in equal Runge-Kutta substeps.
 
-    The number of substeps comes from `get_stable_step_count`.
-
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
         initial_value: Value of the variable at the start of the interval.
@@ -136,7 +133,7 @@ def integrate_scalar_ode(
             derivative of the variable.
         interval: Time interval to integrate over [s].
         **constant_arguments: Keyword arguments passed unchanged to
-            `compute_derivatives` at every stage of every substep.
+            `compute_derivatives`.
 
     Returns:
         Value of the variable at the end of the interval and the number of substeps
