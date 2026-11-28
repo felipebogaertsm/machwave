@@ -5,7 +5,7 @@ body:
   - type: textarea
     attributes:
       label: What happens
-      description: What is wrong and what you expected. For a wrong result, give the expected value and its source.
+      description: One or two sentences on what is wrong and what you expected. For a wrong result, give the expected value and its source.
     validations:
       required: true
   - type: textarea
@@ -13,6 +13,10 @@ body:
       label: How to reproduce
       description: The shortest script or steps that show it, with the full traceback if there is one.
       render: python
+  - type: textarea
+    attributes:
+      label: Why it happens
+      description: The mechanism, if known. The chain from the governing equation or numerical property to the symptom, each symbol named on first use, with the magnitudes that put this case where it fails.
   - type: input
     attributes:
       label: Machwave version
