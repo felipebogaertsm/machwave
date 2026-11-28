@@ -112,7 +112,7 @@ The forms of $\dot{m}_{in}$ for each motor/engine category are derived in [Solid
 The equation is integrated with the classical fourth-order Runge–Kutta (RK4) method.
 Both $\dot{m}_{in}$ and $\dot{m}_{out}$ are evaluated at the pressure of each stage.
 
-Near equilibrium, a pressure deviation $\delta$ follows the Dahlquist test equation $\dot{\delta} = \lambda \delta$, with $\lambda = \partial \dot{P}_0 / \partial P_0$ (Dahlquist 1963).
+Near equilibrium, a pressure deviation $\delta$ follows the Dahlquist test equation $\dot{\delta} = \lambda \delta$, with $\lambda = \partial \dot{P}_0 / \partial P_0$ (Dahlquist 1963, Eq. 1.8).
 The outflow alone gives $\lambda = -1/t_r$, where $t_r$ is the chamber residence time:
 
 $$
@@ -129,8 +129,10 @@ $$
 G(z) = 1 + z + \frac{z^2}{2} + \frac{z^3}{6} + \frac{z^4}{24}, \qquad z = \lambda \Delta t
 $$
 
-Its region of absolute stability, $|G(z)| \le 1$, meets the negative real axis at $z \approx -2.785$ (Hairer and Wanner 1996, Chapter IV).
-Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit.
+(Dahlquist 1963, p. 32)
+
+Its region of absolute stability, $|G(z)| \le 1$, meets the negative real axis at $z \approx -2.785$, the real root of $z^3 + 4z^2 + 12z + 24 = 0$.
+Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit (Hairer and Wanner 1996, Chapter IV).
 The fourth stage of classical RK4 evaluates the balance at $\delta \left(1 + z + z^2/2 + z^3/4\right)$, which changes sign below $z \approx -1.3$.
 The stage then sits on the other side of equilibrium, where it can reach a pressure that the inflow and nozzle models do not accept.
 
@@ -205,5 +207,5 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 1. Seidel, H. H. (1965). *Transient Chamber Pressure and Thrust in Solid Rocket Motors*. Brown Engineering Company, Inc., Huntsville, AL (DTIC AD-613962).
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
-4. Dahlquist, G. (1963). A special stability problem for linear multistep methods. *BIT Numerical Mathematics*, 3, 27–43.
+4. Dahlquist, G. (1963). A special stability problem for linear multistep methods. *BIT*, 3, 27–43.
 5. Hairer, E., & Wanner, G. (1996). *Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems* (2nd ed.). Springer.
