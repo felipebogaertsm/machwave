@@ -20,6 +20,7 @@ biliquid engines, built on internal ballistics.
 - **`tests/`, or adding tests for a change:** read `docs/ai/testing-patterns.md`.
 - **`docs/`, `mkdocs.yml`, or a change to public API or behaviour:** read
   `docs/ai/documentation.md`.
+- **An issue or pull request description:** read `docs/ai/issues-and-pull-requests.md`.
 - **This file or anything in `docs/ai/`:** read `docs/ai/README.md`.
 
 ## Key commands
@@ -63,7 +64,6 @@ workflow file.
   - Commit subjects state the behaviour change; bodies explain the mechanism and the
     measured symptom. Stage files by explicit path.
   - Issues and pull requests follow the forms in `.github/ISSUE_TEMPLATE/` and
-    `.github/PULL_REQUEST_TEMPLATE.md`, in plain language and standard propulsion terms
-    ("biliquid", spell out a symbol on first use). Leave out the optional sections
-    that do not apply.
+    `.github/PULL_REQUEST_TEMPLATE.md`, filled as `docs/ai/issues-and-pull-requests.md`
+    describes.
   - No tool or assistant attribution in commits, pull requests or issues.
