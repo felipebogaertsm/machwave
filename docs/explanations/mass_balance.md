@@ -120,7 +120,7 @@ t_r = \frac{V_0}{C_d A_{t,\text{geo}} H \sqrt{R T}}
 $$
 
 The pressure-dependent inflow shifts $\lambda$ from this value.
-The decay time $1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
+The time constant $1/|\lambda|$ is near 0.1 ms for a liquid engine and 1 to 2 ms for a solid motor.
 When it is shorter than the simulation step, the equation is stiff: stability, rather than accuracy, limits the step.
 
 One RK4 step multiplies $\delta$ by the stability function
@@ -131,10 +131,10 @@ $$
 
 Its region of absolute stability, $|G(z)| \le 1$, meets the negative real axis at $z \approx -2.785$ (Hairer and Wanner 1996, Chapter IV).
 Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit.
-The fourth internal stage of classical RK4 evaluates the balance at $\delta \left(1 + z + z^2/2 + z^3/4\right)$, which crosses equilibrium below $z \approx -1.3$.
-A stage past equilibrium can reach a pressure that the inflow and nozzle models do not accept.
+The fourth stage of classical RK4 evaluates the balance at $\delta \left(1 + z + z^2/2 + z^3/4\right)$, which changes sign below $z \approx -1.3$.
+The stage then sits on the other side of equilibrium, where it can reach a pressure that the inflow and nozzle models do not accept.
 
-The chamber pressure is therefore subcycled: each simulation step takes $N$ equal RK4 substeps, so each substep has $|z| \le 1$:
+The chamber pressure is therefore subcycled: each simulation step takes $N$ equal RK4 substeps, so each substep is at most one time constant, $|z| \le 1$:
 
 $$
 N = \max\left(1, \left\lceil -\lambda \Delta t \right\rceil\right)

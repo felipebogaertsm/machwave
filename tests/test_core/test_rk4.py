@@ -23,7 +23,7 @@ def test_step_returns_one_value_per_variable():
     "interval, expected_step_count",
     [(0.5e-4, 1), (4.5e-4, 5), (1.025e-2, 103)],
 )
-def test_stable_step_count_keeps_each_step_within_one_decay_time(
+def test_stable_step_count_keeps_each_step_within_one_time_constant(
     interval, expected_step_count
 ):
     step_count = rk4.get_stable_step_count("quantity", 1.0, exponential_decay, interval)
@@ -79,5 +79,5 @@ def test_integration_is_fourth_order_on_exponential_decay():
 
     observed_orders = np.log2(np.array(errors[:-1]) / np.array(errors[1:]))
 
-    # measured 4.15, 4.08 and 4.04
+    # measured orders of convergence: 4.15, 4.08 and 4.04
     np.testing.assert_allclose(observed_orders, 4.0, atol=0.2)

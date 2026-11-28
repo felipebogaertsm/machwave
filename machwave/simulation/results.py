@@ -23,7 +23,7 @@ class SimulationResult(ABC, Generic[StateT]):
     time: SimulationResultArray
     propellant_mass: SimulationResultArray
     chamber_pressure: SimulationResultArray
-    # one entry per integrated timestep, so its length is len(time) - 1.
+    # Runge-Kutta substeps taken in each time step, so its length is len(time) - 1.
     chamber_pressure_substep_count: npt.NDArray[np.int_] = field(
         metadata={"non_aligned": True}
     )

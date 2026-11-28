@@ -1,12 +1,14 @@
 import math
 from typing import Any, Callable
 
-# the fourth internal stage crosses equilibrium past 1.3 decay times per step, well
-# inside the real-axis absolute stability limit of 2.785
-_MAX_DECAY_TIMES_PER_STEP = 1.0
+# step size over the time constant of the linearized ODE. Classical RK4 is absolutely
+# stable up to 2.785, but evaluates its fourth stage past equilibrium beyond 1.3
+_MAX_TIME_CONSTANTS_PER_STEP = 1.0
 
-# near the square root of machine epsilon, balancing truncation and round-off error
+# near the cube root of machine epsilon, where the truncation and round-off errors of a
+# central difference balance
 _RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
+# keeps the perturbation nonzero when the value is near zero
 _MIN_FINITE_DIFFERENCE_SCALE = 1.0
 
 
@@ -17,20 +19,22 @@ def step_ode_system(
     **constant_arguments: Any,
 ) -> tuple[float, ...]:
     """
-    Advance a system of ODEs by one step using the 4th-order Runge-Kutta method.
+    Advance a system of ODEs by one classical fourth-order Runge-Kutta step.
 
     Args:
         initial_values: Mapping of variable name to its value at the start of the step.
-        compute_derivatives: Callable returning the derivatives of the variables.
-        time_step: Time step [s].
-        **constant_arguments: Additional keyword arguments forwarded to
-            `compute_derivatives`. These are held constant across all four stages,
-            while `initial_values` are advanced; a term that depends on a variable
-            must be computed inside `compute_derivatives` (or passed as a callable it
-            resolves) so it stays consistent across the stages.
+        compute_derivatives: Callable taking the variables and `constant_arguments`
+            as keywords and returning the time derivatives of the variables, in the
+            order of `initial_values`.
+        time_step: Step size [s].
+        **constant_arguments: Keyword arguments passed unchanged to
+            `compute_derivatives` at all four stages. A term that depends on a
+            variable must be evaluated inside `compute_derivatives`, or passed as a
+            callable it evaluates, so that it follows the stage values.
 
     Returns:
-        New values of the variables, in the order of `initial_values`.
+        Values of the variables at the end of the step, in the order of
+        `initial_values`.
     """
     stage_1_derivatives = compute_derivatives(**initial_values, **constant_arguments)
     stage_2_derivatives = compute_derivatives(
@@ -76,17 +80,19 @@ def get_stable_step_count(
     **constant_arguments: Any,
 ) -> int:
     """
-    Return how many equal Runge-Kutta steps keep a scalar ODE stable over `interval`.
+    Return the number of equal Runge-Kutta steps that integrate a scalar ODE stably.
 
-    Each step spans at most one decay time, with the decay rate taken by central
-    difference at `initial_value`. A growing solution takes a single step.
+    The ODE is linearized at `initial_value` by central difference. Each step is at
+    most one time constant of the linearized ODE. A variable that does not decay
+    toward equilibrium takes a single step.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
         initial_value: Value of the variable at the start of the interval.
-        compute_derivatives: Callable returning the derivative of the variable.
+        compute_derivatives: Callable returning a tuple whose first item is the time
+            derivative of the variable.
         interval: Time interval to integrate over [s].
-        **constant_arguments: Additional keyword arguments forwarded to
+        **constant_arguments: Keyword arguments passed unchanged to
             `compute_derivatives`.
 
     Returns:
@@ -112,7 +118,7 @@ def get_stable_step_count(
         )[0]
     ) / (2 * finite_difference_step)
 
-    return max(1, math.ceil(decay_rate * interval / _MAX_DECAY_TIMES_PER_STEP))
+    return max(1, math.ceil(decay_rate * interval / _MAX_TIME_CONSTANTS_PER_STEP))
 
 
 def integrate_scalar_ode(
@@ -123,19 +129,20 @@ def integrate_scalar_ode(
     **constant_arguments: Any,
 ) -> tuple[float, int]:
     """
-    Integrate a scalar ODE over `interval`, subcycled into stable Runge-Kutta steps.
+    Integrate a scalar ODE over `interval` in equal, stable Runge-Kutta substeps.
 
     Args:
         variable_name: Keyword under which `compute_derivatives` takes the variable.
         initial_value: Value of the variable at the start of the interval.
-        compute_derivatives: Callable returning the derivative of the variable.
+        compute_derivatives: Callable returning a tuple whose first item is the time
+            derivative of the variable.
         interval: Time interval to integrate over [s].
-        **constant_arguments: Additional keyword arguments forwarded to
-            `compute_derivatives`.
+        **constant_arguments: Keyword arguments passed unchanged to
+            `compute_derivatives` at every stage of every substep.
 
     Returns:
-        Value of the variable at the end of the interval and the number of steps
-        taken.
+        Value of the variable at the end of the interval and the number of substeps
+        taken, from `get_stable_step_count`.
     """
     step_count = get_stable_step_count(
         variable_name,
