@@ -1,12 +1,12 @@
 import math
 from typing import Any, Callable
 
-# RK4 overshoots equilibrium past 1.3 and diverges past 2.785
+# a step longer than the chamber time constant can drive the chamber pressure negative
 _MAX_TIME_CONSTANTS_PER_STEP = 1.0
 
-# central difference optimum, near the cube root of machine epsilon
+# the chamber time constant is measured by perturbing the pressure by this fraction
 _RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
-# floor on the scale, for values near zero
+# perturb as if the pressure were at least 1 Pa
 _MIN_FINITE_DIFFERENCE_SCALE = 1.0
 
 
