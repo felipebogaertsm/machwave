@@ -1,14 +1,12 @@
 import math
 from typing import Any, Callable
 
-# step size over the time constant of the linearized ODE. Classical RK4 is absolutely
-# stable up to 2.785, but evaluates its fourth stage past equilibrium beyond 1.3
+# RK4 overshoots equilibrium past 1.3 and diverges past 2.785
 _MAX_TIME_CONSTANTS_PER_STEP = 1.0
 
-# near the cube root of machine epsilon, where the truncation and round-off errors of a
-# central difference balance
+# central difference optimum, near the cube root of machine epsilon
 _RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
-# keeps the perturbation nonzero when the value is near zero
+# floor on the scale, for values near zero
 _MIN_FINITE_DIFFERENCE_SCALE = 1.0
 
 
