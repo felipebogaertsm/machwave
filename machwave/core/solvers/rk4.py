@@ -101,8 +101,6 @@ def get_stable_step_count(
     References:
         Dahlquist, G., "A Special Stability Problem for Linear Multistep Methods",
         BIT 3, 1963, pp. 27-43.
-        Hairer, E., and Wanner, G., "Solving Ordinary Differential Equations II",
-        2nd ed., Springer, 1996, Chapter IV.
     """
     finite_difference_step = _RELATIVE_FINITE_DIFFERENCE_STEP * max(
         abs(initial_value), _MIN_FINITE_DIFFERENCE_SCALE

@@ -132,7 +132,7 @@ $$
 (Dahlquist 1963, p. 32)
 
 Its region of absolute stability, $|G(z)| \le 1$, meets the negative real axis at $z \approx -2.785$, the real root of $z^3 + 4z^2 + 12z + 24 = 0$.
-Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit (Hairer and Wanner 1996, Chapter IV).
+Every explicit four-stage, fourth-order Runge–Kutta method shares this function and this limit, because its stability function is a fourth-degree polynomial that matches $e^z$ to fourth order.
 The fourth stage of classical RK4 evaluates the balance at $\delta \left(1 + z + z^2/2 + z^3/4\right)$, which changes sign below $z \approx -1.3$.
 The stage then sits on the other side of equilibrium, where it can reach a pressure that the inflow and nozzle models do not accept.
 
@@ -208,4 +208,3 @@ Implemented in [`BiliquidEngineState`][machwave.simulation.biliquid.states.Biliq
 2. Sutton, G. P., & Biblarz, O. (2001). *Rocket Propulsion Elements* (7th ed.). Wiley.
 3. Huzel, D. K., & Huang, D. H. (1992). *Modern Engineering for Design of Liquid-Propellant Rocket Engines*. AIAA Progress in Astronautics and Aeronautics, Vol. 147.
 4. Dahlquist, G. (1963). A special stability problem for linear multistep methods. *BIT*, 3, 27–43.
-5. Hairer, E., & Wanner, G. (1996). *Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems* (2nd ed.). Springer.
