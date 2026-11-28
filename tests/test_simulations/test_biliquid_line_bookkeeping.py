@@ -145,6 +145,7 @@ class TestResultPerLine:
         expected = {"oxidizer", "fuel", DILUENT_LINE_NAME}
 
         assert set(result.fluid_mass_per_line) == expected
+        assert set(result.mass_flow_rate_per_line) == expected
         assert set(result.tank_pressure_per_line) == expected
         assert set(result.tank_temperature_per_line) == expected
         assert set(result.final_fluid_mass_per_line) == expected
@@ -155,6 +156,33 @@ class TestResultPerLine:
 
     def test_recorded_arrays_stay_aligned(self, result):
         assert_recorded_arrays_aligned(result)
+
+    def test_the_flows_and_the_mixture_ratio_have_one_value_per_timestep(self, result):
+        assert result.oxidizer_to_fuel_ratio.shape == result.time.shape
+        for series in result.mass_flow_rate_per_line.values():
+            assert series.shape == result.time.shape
+
+    def test_the_mixture_ratio_is_the_oxidizer_flow_over_the_fuel_flow(self, result):
+        oxidizer_flow = result.mass_flow_rate_per_line["oxidizer"]
+        fuel_flow = result.mass_flow_rate_per_line["fuel"]
+        flowing = (oxidizer_flow > 0.0) & (fuel_flow > 0.0)
+        assert flowing.sum() > 1
+
+        np.testing.assert_allclose(
+            result.oxidizer_to_fuel_ratio[flowing],
+            oxidizer_flow[flowing] / fuel_flow[flowing],
+            rtol=1e-12,
+        )
+        assert np.isnan(result.oxidizer_to_fuel_ratio[~flowing]).all()
+
+    def test_no_line_flows_and_the_ratio_is_nan_after_burnout(self, result):
+        assert result.burn_time is not None
+        after_burnout = result.time >= result.burn_time
+        assert after_burnout.any(), "run ended before burnout"
+
+        assert np.isnan(result.oxidizer_to_fuel_ratio[after_burnout]).all()
+        for name, series in result.mass_flow_rate_per_line.items():
+            assert (series[after_burnout] == 0.0).all(), f"{name} kept flowing"
 
     def test_the_report_lists_every_line(self, result):
         file = io.StringIO()
