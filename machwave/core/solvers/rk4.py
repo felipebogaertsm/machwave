@@ -3,7 +3,6 @@ from typing import Any, Callable
 
 # RK4 overshoots equilibrium past 1.3 and diverges past 2.785
 _MAX_TIME_CONSTANTS_PER_STEP = 1.0
-
 # central difference optimum, near the cube root of machine epsilon
 _RELATIVE_FINITE_DIFFERENCE_STEP = 1e-6
 # floor on the scale, for values near zero
